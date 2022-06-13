@@ -603,11 +603,13 @@ IntelManager = Class {
                 end
             end
         end
-        for c, b in self.Brain.Zones.Land.zones do
-            RNGLOG('-- Zone Angle Loop --')
-            RNGLOG('Zone Position : '..repr(b.pos))
-            RNGLOG('Angles : '..repr(b.baseangles))
-            RNGLOG('---------------------')
+        if self.Brain.RNGDEBUG then
+            for c, b in self.Brain.Zones.Land.zones do
+                RNGLOG('-- Zone Angle Loop --')
+                RNGLOG('Zone Position : '..repr(b.pos))
+                RNGLOG('Angles : '..repr(b.baseangles))
+                RNGLOG('---------------------')
+            end
         end
     end,
 

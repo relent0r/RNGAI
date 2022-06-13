@@ -25,6 +25,17 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
+    Builder {
+        BuilderName = 'RNGAI Factory LandScout T1 Burst',
+        PlatoonTemplate = 'T1LandScout',
+        Priority = 895,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
+            { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
+            { UCBC, 'GreaterThanArmyThreat', { 'LandNow', 20}},
+        },
+        BuilderType = 'Air',
+    },
 }
 
 BuilderGroup {

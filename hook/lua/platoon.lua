@@ -1166,19 +1166,34 @@ Platoon = Class(RNGAIPlatoonClass) {
             local targetData = false
             local findPlatoonCounter = 0
             local excessPathFailures = 0
+            local currentGameTime = GetGameTimeSeconds()
 
             --For every scouts we send to all opponents, send one to scout a low pri area.
             if aiBrain.IntelData.HiPriScouts < aiBrain.NumOpponents and next(aiBrain.InterestList.HighPriority) then
                 targetData = aiBrain.InterestList.HighPriority[1]
                 aiBrain.IntelData.HiPriScouts = aiBrain.IntelData.HiPriScouts + 1
-                targetData.LastScouted = GetGameTimeSeconds()
+                targetData.LastScouted = currentGameTime
 
                 RUtils.SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.HighPriority)
-
+            elseif next(aiBrain.InterestList.PerimeterPoints.Restricted) then
+                RUtils.SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.PerimeterPoints.Restricted)
+                for k, point in aiBrain.InterestList.PerimeterPoints.Restricted do
+                    --RNGLOG('LastScouted Restricted '..aiBrain.InterestList.PerimeterPoints.Restricted[k].LastScouted)
+                    if currentGameTime - point.LastScouted > 120 then
+                        --RNGLOG('LastScoutedRestricted > 90 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
+                        targetData = aiBrain.InterestList.PerimeterPoints.Restricted[k]
+                        --RNGLOG('targetData is set to '..repr(targetData.Position))
+                        point.LastScouted = currentGameTime
+                        targetArea = targetData.Position
+                        break
+                    else
+                        --RNGLOG('LastScoutedRestricted < 90 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
+                    end
+                end
             elseif next(aiBrain.InterestList.LowPriority) then
                 targetData = aiBrain.InterestList.LowPriority[1]
                 aiBrain.IntelData.HiPriScouts = 0
-                targetData.LastScouted = GetGameTimeSeconds()
+                targetData.LastScouted = currentGameTime
 
                 RUtils.SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.LowPriority)
             else
@@ -2773,7 +2788,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                 end
 
-                if not target or target.Dead then
+                if not data.Defensive and not target or target.Dead then
                     --RNGLOG('Checking for possible acu snipe')
                     --RNGLOG('Checking for director target')
                     --RNGLOG('CheckDirectorTargetAvailable : Threat type is AntiAir, platoon threat is '..self.CurrentPlatoonThreat..' strike damage is '..self.PlatoonStrikeDamage)
@@ -3398,6 +3413,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
             RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            --RNGLOG('baseTmplList '..repr(baseTmplList))
         elseif cons.OrderedTemplate then
             local relativeTo = RNGCOPY(eng:GetPosition())
             --RNGLOG('relativeTo is'..repr(relativeTo))
@@ -3866,6 +3882,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                 closestMarker = VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3])
             end
         end
+        if aiBrain.RNGDEBUG then
+            RNGLOG('Number of close mass points '..table.getn(buildMassPoints))
+            RNGLOG('Number of distant mass points '..table.getn(buildMassDistantPoints))
+        end
         --RNGLOG('CommanderInitializeAIRNG : Closest Marker Distance is '..closestMarker)
         local closestHydro = RUtils.ClosestResourceMarkersWithinRadius(aiBrain, engPos, 'Hydrocarbon', 65, false, false, false)
         --RNGLOG('CommanderInitializeAIRNG : HydroTable '..repr(closestHydro))
@@ -4020,10 +4040,15 @@ Platoon = Class(RNGAIPlatoonClass) {
             --RNGLOG('CommanderInitializeAIRNG : No hydro present, we should be building a little more power')
             if closeMarkers > 0 then
                 if closeMarkers < 4 then
-                    energyCount = 3
+                    if closeMarkers < 4 and distantMarkers > 1 then
+                        energyCount = 4
+                    else
+                        energyCount = 3
+                    end
                 else
                     energyCount = 4
                 end
+                
             end
             for i=1, energyCount do
                 buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)
@@ -6290,7 +6315,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             end
                         end
                         --LOG('MoveWithMicro - platoon threat '..self.CurrentPlatoonThreat.. ' Enemy Threat '..totalThreat)
-                        if avoid and totalThreat > self.CurrentPlatoonThreat then
+                        if avoid and totalThreat >= self.CurrentPlatoonThreat then
                             --LOG('MoveWithMicro - Threat too high are we are in avoid mode')
                             local alternatePos = false
                             local mergePlatoon = false
@@ -6683,7 +6708,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                     
                     if next(defensiveStructureTable) then
-                        LOG('defensiveStructureTable has units')
+                        if aiBrain.RNGDEBUG then
+                            LOG('defensiveStructureTable has units')
+                        end
                         for _, turret in defensiveStructureTable do
                             if not turret.Dead then
                                 local turretDistance = VDist3Sq(PlatoonPosition, turret:GetPosition())
@@ -8419,6 +8446,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             categories.COMMAND,
             categories.STRUCTURE * categories.ENERGYPRODUCTION * ( categories.TECH2 + categories.TECH3 ),
             categories.MOBILE * categories.LAND * categories.EXPERIMENTAL,
+            categories.STRUCTURE * categories.DEFENSE * categories.TACTICALMISSILEPLATFORM,
             categories.STRUCTURE * categories.DEFENSE * ( categories.TECH2 + categories.TECH3 ),
             categories.MOBILE * categories.NAVAL * ( categories.TECH2 + categories.TECH3 ),
             categories.STRUCTURE * categories.FACTORY * ( categories.TECH2 + categories.TECH3 ),

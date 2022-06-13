@@ -3269,8 +3269,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     local validPosition = false
     for _, threat in acuThreatTable do
         if threat[3] > 0 then
-            local unitsAtLocation = GetUnitsAroundPoint(aiBrain, ParseEntityCategory('COMMAND'), {threat[1], 0, threat[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
-            
+            local unitsAtLocation = GetUnitsAroundPoint(aiBrain, categories.COMMAND, {threat[1], 0, threat[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
             for _, unit in unitsAtLocation do
                 if not unit.Dead then
                     RNGINSERT(targetPositions, {unit:GetPosition(), type = 'COMMAND'})
@@ -3319,12 +3318,12 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     end
 
     -- Look for a cluster of structures
+    local SMDPositions = {}
     local highestValue = -1
     local bestThreat = 1
     for idx, threat in bestBaseThreat do
         if threat[3] > 0 then
             local numunits = 0
-            local SMDPositions = { Position = {}, Radius = 0}
             local massValue = 0
             local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, {threat[1], 0, threat[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
             for k, v in unitsAtLocation do
@@ -3332,6 +3331,9 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
                 local unitPos = v:GetPosition()
                 if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE * categories.SILO, v) then
                     --RNGLOG('Found SMD')
+                    if not aiBrain.EnemyIntel.SMD[v.Sync.id] then
+                        aiBrain.EnemyIntel.SMD[v.Sync.id] = {object = v, Position=unitPos }
+                    end
                     if v:GetFractionComplete() == 1 then
                         for _, weapon in ALLBPS[v.UnitId].Weapon do
                             if weapon.MaxRadius then

@@ -109,9 +109,9 @@ local BomberResponse = function(self, aiBrain, builderManager, builderData)
         --RNGLOG('Bomber Response for land phase < 2 and enemy air threat low')
         return 890
     end
-    if aiBrain.BasePerimeterMonitor[builderManager.LocationType].LandUnits > 0 and aiBrain.BasePerimeterMonitor[builderManager.LocationType].AirUnits < 2 then
+    if aiBrain.BasePerimeterMonitor[builderManager.LocationType].LandUnits > 0 and aiBrain.BasePerimeterMonitor[builderManager.LocationType].AirUnits < 3 then
         --RNGLOG('Bomber Response for Perimeter Monitor is true')
-        return 895
+        return 920
     end
     return 0
 end
@@ -132,7 +132,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Factory Intie Enemy Threat',
-        PlatoonTemplate = 'RNGAIFighterGroup',
+        PlatoonTemplate = 'T1AirFighter',
         Priority = 0,
         PriorityFunction = AirDefenseMode,
         BuilderConditions = { 
@@ -163,7 +163,7 @@ BuilderGroup {
         Priority = 890,	
         PriorityFunction = BomberResponse,
         BuilderConditions = {	
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.7 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.7 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.5}},	
         },	
         BuilderType = 'Air',	
@@ -286,7 +286,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Factory ASF Scramble',
-        PlatoonTemplate = 'RNGAIT3AirResponse',
+        PlatoonTemplate = 'T3AirFighter',
         Priority = 0,
         PriorityFunction = AirDefenseScramble,
         BuilderConditions = { 

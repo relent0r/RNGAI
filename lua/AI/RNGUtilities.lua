@@ -35,6 +35,7 @@ local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 -- Cached categories
 local CategoriesShield = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE
 local CategoriesLandDefense = categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE
+local CategoriesSMD = categories.TECH3 * categories.ANTIMISSILE * categories.SILO
 
 --[[
 Valid Threat Options:
@@ -3213,6 +3214,11 @@ LastKnownThread = function(aiBrain)
                                 aiBrain.EnemyIntel.TML[id] = {object = v, Position=unitPosition }
                                 aiBrain.BasePerimeterMonitor['MAIN'].RecentTMLAngle = angle
                             end
+                        elseif EntityCategoryContains(CategoriesSMD, v) then
+                            aiBrain.lastknown[id].type='smd'
+                            if not aiBrain.EnemyIntel.SMD[id] then
+                                aiBrain.EnemyIntel.SMD[id] = {object = v, Position=unitPosition, Detected=GetGameTimeSeconds() }
+                            end
                         end
                     end
                     aiBrain.lastknown[id].object=v
@@ -4375,6 +4381,9 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
                 local pointCheck = aiBrain.BasePerimeterMonitor[baseLocation].RecentTMLAngle
                 for _, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
                     local pointAngle = GetAngleToPosition(basePosition, v.Position)
+                    if bestPoint.Angle then
+                        RNGLOG('Defensive Point Check '..(math.abs(pointCheck - pointAngle)..' is it less than '..bestPoint.Angle))
+                    end
                     if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
                         if bestPoint then
                             --RNGLOG('TML Angle to find '..aiBrain.BasePerimeterMonitor[baseLocation].RecentTMLAngle..' bestPoint was '..bestPoint.Angle..' but is now '..repr({ Position = v, Angle = pointAngle}))
@@ -4384,6 +4393,7 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
                 end
             end
         end
+        RNGLOG('bestPoint for TMD is '..repr(bestPoint.Position))
         if bestPoint then
             defensivePoint = bestPoint.Position
         end
@@ -4629,6 +4639,12 @@ CanPathToCurrentEnemyRNG = function(aiBrain) -- Uveso's function modified to run
     end
 end
 
+ProcessSourceOnKilled = function(aiBrain, targetUnit, sourceUnit)
+    --RNGLOG('We are going to do stuff here')
+    --RNGLOG('Target '..targetUnit.UnitId)
+    --RNGLOG('Source '..sourceUnit.UnitId)
+
+end
 
 --[[
 RNGLOG('Mex Upgrade Mass in storage is '..GetEconomyStored(aiBrain, 'MASS'))

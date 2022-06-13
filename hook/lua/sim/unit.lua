@@ -1,11 +1,15 @@
+local RNGEventCallbacks = import('/mods/RNGAI/lua/AI/RNGEventCallbacks.lua')
+
 local RNGUnitClass = Unit
 Unit = Class(RNGUnitClass) {
     OnStopBeingCaptured = function(self, captor)
         RNGUnitClass.OnStopBeingCaptured(self, captor)
-        local aiBrain = self:GetAIBrain()
-        if aiBrain.RNG then
-            self:Kill()
-        end
+        RNGEventCallbacks.OnStopBeingCaptured(self, captor)
+    end,
+
+    OnKilled = function(self, instigator, type, overkillRatio)
+        RNGEventCallbacks.OnKilled(self, instigator, type, overkillRatio)
+        RNGUnitClass.OnKilled(self, instigator, type, overkillRatio)
     end,
 
     --[[

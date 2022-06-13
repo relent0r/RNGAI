@@ -285,14 +285,13 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Pgen Scale Expansion',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 900,
-        InstanceCount = 2,
+        InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 0.1 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.0}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
         BuilderType = 'Any',

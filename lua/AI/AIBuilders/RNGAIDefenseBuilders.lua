@@ -66,7 +66,7 @@ BuilderGroup {
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIT1PDTemplate.lua',
                 BaseTemplate = 'T1PDTemplate',
                 BuildClose = true,
                 OrderedTemplate = true,
@@ -123,7 +123,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.DIRECTFIRE}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LANDNAVAL' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.6 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 0.6 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
@@ -132,6 +132,8 @@ BuilderGroup {
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
+                BaseTemplate = 'DefenseTemplate',
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
                 OrderedTemplate = true,
@@ -283,6 +285,8 @@ BuilderGroup {
             JobType = 'BuildStructure',
             NumAssistees = 5,
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
+                BaseTemplate = 'DefenseTemplate',
                 BuildClose = true,
                 NearDefensivePoints = true,
                 Type = 'TML',
@@ -422,7 +426,7 @@ BuilderGroup {
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/RNGAIT1PDTemplate.lua',
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIT1PDTemplate.lua',
                 BaseTemplate = 'T1PDTemplate',
                 BuildClose = false,
                 NearDefensivePoints = false,

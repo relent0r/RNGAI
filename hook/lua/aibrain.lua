@@ -42,7 +42,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
             self.RNG = true
-            self.RNGDEBUG = true
+            self.RNGDEBUG = false
             ForkThread(RUtils.AIWarningChecks, self)
         end
         if string.find(per, 'RNGStandardExperimental') then
@@ -848,6 +848,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.ACU = {}
         self.EnemyIntel.Phase = 1
         self.EnemyIntel.TML = {}
+        self.EnemyIntel.SMD = {}
         self.EnemyIntel.DirectorData = {
             Strategic = {},
             Energy = {},
@@ -1116,6 +1117,15 @@ AIBrain = Class(RNGAIBrainClass) {
             --RNGLOG('Current Interest List HighPriority'..reprs(self.InterestList.HighPriority))
             --RNGLOG('Current Interest List LowPriority'..reprs(self.InterestList.LowPriority))
             RNGLOG('Current Interest List MustScout'..reprs(self.InterestList.MustScout))
+            if next(self.EnemyIntel.SMD) then
+                RNGLOG('SMD Table')
+                RNGLOG(repr(self.EnemyIntel.SMD))
+            end
+            if next(self.EnemyIntel.TML) then
+                RNGLOG('TML Table')
+                RNGLOG(reprs(self.EnemyIntel.TML))
+                RNGLOG('Recent Angle '..self.BasePerimeterMonitor['MAIN'].RecentTMLAngle)
+            end
             coroutine.yield(100)
         end
     end,
@@ -1169,41 +1179,53 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.InterestList.PerimeterPoints then
                 for k, v in self.InterestList.PerimeterPoints do
                     for c, b in v do
-                        if b.Position then
-                            --RNGLOG('PerimeterPoints pos '..repr(b.Position))
-                            DrawCircle(b.Position, 10, 'FFFF00')
+                        if b.Position[1] and b.Position[2] and b.Position[3] then
+                            DrawCircle(b.Position, 10, 'FFA500')
+                        else
+                            RNGLOG('Perimeter position was invalid '..repr(b))
                         end
                     end
                 end
             end
             if self.InterestList.HighPriority then
                 for k, v in self.InterestList.HighPriority do
-                    for c, b in v do
-                        if b.Position then
-                            --RNGLOG('HighPriority pos '..repr(b.Position))
-                            DrawCircle(b.Position, 10, 'FFFF00')
-                        end
+                    if v.Position[1] and v.Position[2] and v.Position[3] then
+                        DrawCircle(v.Position, 10, 'FFA500')
+                    else
+                        RNGLOG('High Priority position was invalid '..repr(b))
                     end
                 end
             end
             if self.InterestList.LowPriority then
                 for k, v in self.InterestList.LowPriority do
-                    for c, b in v do
-                        if b.Position then
-                            DrawCircle(b.Position, 10, 'FFFF00')
-                        end
+                    if v.Position[1] and v.Position[2] and v.Position[3] then
+                        DrawCircle(v.Position, 10, 'FFA500')
+                    else
+                        RNGLOG('High Priority position was invalid '..repr(b))
                     end
                 end
             end
             if self.InterestList.MustScout then
                 for k, v in self.InterestList.MustScout do
-                    for c, b in v do
-                        if b.Position then
-                            DrawCircle(b.Position, 10, 'FFA500')
-                        end
+                    if v.Position[1] and v.Position[2] and v.Position[3] then
+                        DrawCircle(v.Position, 10, 'FFA500')
+                    else
+                        RNGLOG('High Priority position was invalid '..repr(b))
                     end
                 end
             end
+            if self.BuilderManagers['MAIN'].DefensivePoints[1] then
+                for _, v in self.BuilderManagers['MAIN'].DefensivePoints[1] do
+                    DrawCircle(v.Position, 10, 'FFA500')
+                end
+            end
+            if self.BuilderManagers['MAIN'].DefensivePoints[2] then
+                for _, v in self.BuilderManagers['MAIN'].DefensivePoints[2] do
+                    DrawCircle(v.Position, 10, 'FFA500')
+                end
+            end
+                    
+
             WaitTicks(2)
         end
     end,
@@ -1681,6 +1703,8 @@ AIBrain = Class(RNGAIBrainClass) {
             return extractorPoints
         end
 
+        local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+        --RNGLOG('playableArea '..repr(playableArea) )
         local opponentStarts = {}
         local startLocations = {}
         local startPosMarkers = {}
@@ -1830,7 +1854,9 @@ AIBrain = Class(RNGAIBrainClass) {
             for i=1, 3 do
                 local tempPoints = DrawCirclePoints(8, perimeterMap[i], {self.BrainIntel.StartPos[1], 0 , self.BrainIntel.StartPos[3]})
                 for _, v in tempPoints do
-                    if v[1] <= 15 or v[1] >= ScenarioInfo.size[1] - 15 or v[3] <= 15 or v[3] >= ScenarioInfo.size[2] - 15 then
+                    --RNGLOG('TempPoints '..repr(v))
+                    if v[1] - playableArea[1] <= 8 or v[1] >= playableArea[3] - 8 or v[3] - playableArea[2] <= 8 or v[3] >= playableArea[4] - 8 then
+                    --if v[1] <= 15 or v[1] >= playableArea[1] - 15 or v[3] <= 15 or v[3] >= playableArea[2] - 15 then
                         continue
                     end
                     local belowWater = false
@@ -1867,11 +1893,26 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            for k, massMarker in massLocations do
+            if self.RNGDEBUG then
+                RNGLOG('Number of Naval Zones '..table.getn(self.Zones.Naval.zones))
+            end
+            for k, zone in self.Zones.Naval.zones do
                 --RNGLOG('* AI-RNG: Inserting Mass Marker Position : '..repr(massMarker.Position))
                 RNGINSERT(self.InterestList.LowPriority,
                         {
-                            Position = massMarker.Position,
+                            Position = zone.pos,
+                            LastScouted = 0,
+                        }
+                    )
+            end
+            if self.RNGDEBUG then
+                RNGLOG('Number of Land Zones '..table.getn(self.Zones.Land.zones))
+            end
+            for k, zone in self.Zones.Land.zones do
+                --RNGLOG('* AI-RNG: Inserting Mass Marker Position : '..repr(massMarker.Position))
+                RNGINSERT(self.InterestList.LowPriority,
+                        {
+                            Position = zone.pos,
                             LastScouted = 0,
                         }
                     )
