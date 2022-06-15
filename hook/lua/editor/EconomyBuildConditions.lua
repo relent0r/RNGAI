@@ -417,15 +417,15 @@ function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)
         elseif noStorageCheck then
             return true
         elseif uType == 'Air' then
-            if (GetEconomyStored(aiBrain, 'MASS') >= 10 and GetEconomyStored(aiBrain, 'ENERGY') >= 1000) then
+            if (GetEconomyStored(aiBrain, 'MASS') >= 5 and GetEconomyStored(aiBrain, 'ENERGY') >= 1000) then
                 return true
             end
         elseif uType == 'Land' then
-            if  GetEconomyStored(aiBrain, 'MASS') >= 10 and (aiBrain.EnemyIntel.EnemyThreatCurrent.Land > aiBrain.BrainIntel.SelfThreat.LandNow or GetEconomyStored(aiBrain, 'ENERGY') >= 200) then
+            if  GetEconomyStored(aiBrain, 'MASS') >= 5 and (aiBrain.EnemyIntel.EnemyThreatCurrent.Land > aiBrain.BrainIntel.SelfThreat.LandNow or GetEconomyStored(aiBrain, 'ENERGY') >= 200) then
                 return true
             end
         else
-            if GetEconomyStored(aiBrain, 'MASS') >= 10 and GetEconomyStored(aiBrain, 'ENERGY') >= 200 then
+            if GetEconomyStored(aiBrain, 'MASS') >= 5 and GetEconomyStored(aiBrain, 'ENERGY') >= 200 then
                 return true
             end
         end

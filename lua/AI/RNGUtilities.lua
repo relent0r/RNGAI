@@ -4646,6 +4646,32 @@ ProcessSourceOnKilled = function(aiBrain, targetUnit, sourceUnit)
 
 end
 
+GetHoldingPosition = function(aiBrain, platoonPos, platoon, threatType)
+    local holdingPos = false
+    local threatLocations = aiBrain:GetThreatsAroundPosition( aiBrain.BuilderManagers['MAIN'].Position, 16, true, threatType )
+    local bestThreat
+    local bestThreatPos
+    if aiBrain.RNGDEBUG then
+        RNGLOG('CurrentPlatoonThreat '..platoon.CurrentPlatoonThreat)
+        RNGLOG('threatLocations for antiair platoon '..repr(threatLocations))
+    end
+
+    if next(threatLocations) then
+        for k, v in threatLocations do
+            if not bestThreat or v[3] < bestThreat then
+                bestThreat = v[3]
+                bestThreatPos = {v[1],0,v[2]}
+            end
+        end
+    end
+    if bestThreatPos and platoonPos then
+        local distance = VDist3(platoonPos, bestThreatPos)
+        holdingPos = lerpy(platoonPos, bestThreatPos, {distance, (distance / 2)})
+        RNGLOG('Holding Position is set to '..repr(holdingPos))
+    end
+    return holdingPos
+end
+
 --[[
 RNGLOG('Mex Upgrade Mass in storage is '..GetEconomyStored(aiBrain, 'MASS'))
 RNGLOG('Unit Being built BP is '..unit.UnitBeingBuilt:GetBlueprint().BlueprintId)

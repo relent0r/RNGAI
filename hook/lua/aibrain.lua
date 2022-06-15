@@ -42,7 +42,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
             self.RNG = true
-            self.RNGDEBUG = false
+            self.RNGDEBUG = true
             ForkThread(RUtils.AIWarningChecks, self)
         end
         if string.find(per, 'RNGStandardExperimental') then
@@ -959,6 +959,8 @@ AIBrain = Class(RNGAIBrainClass) {
         if self.CheatEnabled then
             self.EcoManager.EcoMultiplier = tonumber(ScenarioInfo.Options.BuildMult)
         end
+        --This coin flip is done for aggressive expansion chances
+        self.coinFlip = math.random(1,3)
        --LOG('Build Multiplier now set, this impacts many economy checks that look at income '..self.EcoManager.EcoMultiplier)
 
         self.MapWaterRatio = self:GetMapWaterRatio()
@@ -1109,6 +1111,8 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Current Enemy Extractor Count :'..self.EnemyIntel.EnemyThreatCurrent.ExtractorCount)
             RNGLOG('Current Self Extractor Threat :'..self.BrainIntel.SelfThreat.Extractor)
             RNGLOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
+            RNGLOG('Current Ally Extractor Count :'..self.BrainIntel.SelfThreat.AllyExtractorCount)
+            RNGLOG('Current Extractor share per team is '..(self.BrainIntel.SelfThreat.MassMarker / 2))
             RNGLOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
             RNGLOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
             RNGLOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
@@ -3582,7 +3586,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         local priorityNum = 0
                         local priorityUnit = false
                         --RNGLOG('Threat Stats Self + ally :'..self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat..'Enemy : '..self.EnemyIntel.EnemyThreatCurrent.Land)
-                        if (self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat) > (self.EnemyIntel.EnemyThreatCurrent.Land * 1.3) and (self.BrainIntel.SelfThreat.AirNow + self.BrainIntel.SelfThreat.AllyAirThreat) > (self.EnemyIntel.EnemyThreatCurrent.Air * 1.3) then
+                        if (self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat) > (self.EnemyIntel.EnemyThreatCurrent.Land * 1.3) and (self.BrainIntel.SelfThreat.AirNow + self.BrainIntel.SelfThreat.AllyAirThreat) > (self.EnemyIntel.EnemyThreatCurrent.Air * 1.3) and self.BasePerimeterMonitor['MAIN'].LandUnits < 1 then
                             massPriorityTable = self.EcoManager.MassPriorityTable.Advantage
                             --RNGLOG('Land threat advantage mass priority table')
                         else
@@ -5035,7 +5039,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         pgens.T3=pgens.T3+1
                     end
                 elseif ALLBPS[unit.UnitId].CategoriesHash.LAND then
-                    totalLandThreat = totalLandThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
+                    if not ALLBPS[unit.UnitId].CategoriesHash.EXPERIMENTAL then
+                        totalLandThreat = totalLandThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
+                    end
                     if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                         armyLandTiers.T1=armyLandTiers.T1+1
                         if ALLBPS[unit.UnitId].CategoriesHash.SCOUT then
@@ -5095,7 +5101,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                 elseif ALLBPS[unit.UnitId].CategoriesHash.AIR then
-                    totalAirThreat = totalAirThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
+                    if not ALLBPS[unit.UnitId].CategoriesHash.EXPERIMENTAL then
+                        totalAirThreat = totalAirThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
+                    end
                     if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                         armyAirTiers.T1=armyAirTiers.T1+1
                         if ALLBPS[unit.UnitId].CategoriesHash.SCOUT then
@@ -5161,8 +5169,10 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                 elseif ALLBPS[unit.UnitId].CategoriesHash.NAVAL then
-                    totalNavalThreat = totalNavalThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
-                    totalNavalSubThreat = totalNavalSubThreat + ALLBPS[unit.UnitId].Defense.SubThreatLevel
+                    if not ALLBPS[unit.UnitId].CategoriesHash.EXPERIMENTAL then
+                        totalNavalThreat = totalNavalThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
+                        totalNavalSubThreat = totalNavalSubThreat + ALLBPS[unit.UnitId].Defense.SubThreatLevel
+                    end
                     if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
                         armyNavalTiers.T1=armyNavalTiers.T1+1
                         if ALLBPS[unit.UnitId].CategoriesHash.FRIGATE then

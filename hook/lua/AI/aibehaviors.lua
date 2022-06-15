@@ -30,6 +30,7 @@ local ALLBPS = __blueprints
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
 local RNGSORT = table.sort
+local CategoryT2Defense = categories.STRUCTURE * categories.DEFENSE * (categories.TECH2 + categories.TECH3)
 
 function CommanderBehaviorRNG(platoon)
     local aiBrain = platoon:GetBrain()
@@ -204,13 +205,13 @@ function CDRBrainThread(cdr)
         if cdr.Active then
             if cdr.DistanceToHome > 900 and cdr.CurrentEnemyThreat > 0 then
                 if cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat and not cdr.SupportPlatoon or cdr.SupportPlatoon.Dead and (gameTime - 15) > lastPlatoonCall then
-                    --RNGLOG('CDR Support Platoon doesnt exist and I need it, calling platoon')
-                    --RNGLOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
+                    RNGLOG('CDR Support Platoon doesnt exist and I need it, calling platoon')
+                    RNGLOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
                     CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.2 - cdr.CurrentFriendlyThreat)
                     lastPlatoonCall = gameTime
-                elseif cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat and (gameTime - 15) > lastPlatoonCall then
-                    --RNGLOG('CDR Support Platoon exist but we have too much threat, calling platoon')
-                    --RNGLOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
+                elseif cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat and (gameTime - 25) > lastPlatoonCall then
+                    RNGLOG('CDR Support Platoon exist but we have too much threat, calling platoon')
+                    RNGLOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
                     CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.2 - cdr.CurrentFriendlyThreat)
                     lastPlatoonCall = gameTime
                 elseif cdr.Health < 6000 and (gameTime - 15) > lastPlatoonCall then
@@ -259,7 +260,7 @@ function CDRCallPlatoon(cdr, threatRequired)
     if not aiBrain then
         return
     end
-    --RNGLOG('ACU call platoon , threat required '..threatRequired)
+    RNGLOG('ACU call platoon , threat required '..threatRequired)
     threatRequired = threatRequired + 10
 
     local supportPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
@@ -338,7 +339,7 @@ function CDRCallPlatoon(cdr, threatRequired)
     else
         return false
     end
-    --RNGLOG('ACU call platoon , threat required '..threatRequired..' threat from surounding units '..threatValue)
+    RNGLOG('ACU call platoon , threat required '..threatRequired..' threat from surounding units '..threatValue)
     local dontStopPlatoon = false
     if bValidUnits and not supportPlatoonAvailable then
         --RNGLOG('No Support Platoon, creating new one')
@@ -1279,8 +1280,8 @@ function CDRThreatAssessmentRNG(cdr)
             for k,v in enemyUnits do
                 if v and not v.Dead then
                     if VDist3Sq(v:GetPosition(), cdr.Position) < 1225 then
-                        if EntityCategoryContains(categories.STRUCTURE * categories.DEFENSE, v) then
-                            enemyUnitThreatInner = enemyUnitThreatInner + 10
+                        if EntityCategoryContains(CategoryT2Defense, v) then
+                            enemyUnitThreatInner = enemyUnitThreatInner + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
                         end
                         if EntityCategoryContains(categories.COMMAND, v) then
                             enemyACUPresent = true
@@ -1290,8 +1291,8 @@ function CDRThreatAssessmentRNG(cdr)
                             enemyUnitThreatInner = enemyUnitThreatInner + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
                         end
                     else
-                        if EntityCategoryContains(categories.STRUCTURE * categories.DEFENSE, v) then
-                            enemyUnitThreat = enemyUnitThreatInner + 10
+                        if EntityCategoryContains(CategoryT2Defense, v) then
+                            enemyUnitThreat = enemyUnitThreatInner + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
                         end
                         if EntityCategoryContains(categories.COMMAND, v) then
                             enemyACUPresent = true
@@ -1777,7 +1778,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     --RNGLOG('ACU Low health and no gun upgrade, set required')
                     cdr.GunUpgradeRequired = true
                 end
-                if (not cdr.HighThreatUpgradePresent) then
+                if (not cdr.HighThreatUpgradePresent) and cdr.CurrentEnemyThreat > cdr.ThreatLimit then
                     cdr.HighThreatUpgradeRequired = true
                 end
                 return CDRRetreatRNG(aiBrain, cdr)

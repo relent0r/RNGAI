@@ -299,46 +299,10 @@ IntelManager = Class {
                 elseif type == 'control' then
                     local compare = 0
                    --RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
-                    --[[for k, v in aiBrain.Zones.Land.zones[platoon.Zone].edges do
-                        local distanceModifier = VDist2(aiBrain.Zones.Land.zones[v.zone.id].pos[1],aiBrain.Zones.Land.zones[v.zone.id].pos[3],enemyX, enemyZ)
-                        local enemyModifier = 1
-                        if zoneSet[v.zone.id].enemythreat > 0 then
-                            enemyModifier = enemyModifier + 2
-                        end
-                        if zoneSet[v.zone.id].friendlythreat > 0 then
-                            if zoneSet[v.zone.id].enemythreat == 0 or zoneSet[v.zone.id].enemythreat < zoneSet[v.zone.id].friendlythreat then
-                                enemyModifier = enemyModifier - 1
-                            else
-                                enemyModifier = enemyModifier + 1
-                            end
-                        end
-                        if enemyModifier < 0 then
-                            enemyModifier = 0
-                        end
-                        local controlValue = zoneSet[v.zone.id].control
-                        if controlValue <= 0 then
-                            controlValue = 0.1
-                        end
-                        local resourceValue = zoneSet[v.zone.id].resourcevalue or 1
-                        if resourceValue then
-                           --RNGLOG('Current platoon zone '..platoon.Zone..' target zone is '..v.zone.id..' enemythreat is '..zoneSet[v.zone.id].enemythreat..' friendly threat is '..zoneSet[v.zone.id].friendlythreat)
-                           --RNGLOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
-                        else
-                            --RNGLOG('No resource against zone '..v.zone.id)
-                        end
-                        compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier
-                       --RNGLOG('Compare variable '..compare)
-                        if compare > 0 then
-                            if not selection or compare > selection then
-                                selection = compare
-                                zoneSelection = v.zone.id
-                               --RNGLOG('Zone Control Query Select priority '..selection)
-                            end
-                        end
-                    end]]
                     for k, v in aiBrain.Zones.Land.zones do
                         local distanceModifier = VDist3(aiBrain.Zones.Land.zones[v.id].pos,aiBrain.BrainIntel.StartPos)
                         local enemyModifier = 1
+                        local startPos = 1
                         if zoneSet[v.id].enemythreat > 0 then
                             enemyModifier = enemyModifier + 2
                         end
@@ -350,11 +314,11 @@ IntelManager = Class {
                             end
                         end
                         if enemyModifier < 0 then
-                            enemyModifier = 0
+                            enemyModifier = 0.5
                         end
                         local controlValue = zoneSet[v.id].control
                         if controlValue <= 0 then
-                            controlValue = 0.1
+                            controlValue = 0.5
                         end
                         local resourceValue = zoneSet[v.id].resourcevalue or 1
                         if resourceValue then
@@ -363,8 +327,19 @@ IntelManager = Class {
                         else
                             --RNGLOG('No resource against zone '..v.zone.id)
                         end
-                        compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier
-                       --RNGLOG('Compare variable '..compare)
+                        if zoneSet[v.id].startpositionclose then
+                            startPos = 0.7
+                        end
+                        if distanceModifier and resourceValue and controlValue and enemyModifier then
+                            RNGLOG('distanceModifier '..distanceModifier)
+                            RNGLOG('resourceValue '..resourceValue)
+                            RNGLOG('controlValue '..controlValue)
+                            RNGLOG('enemyModifier '..enemyModifier)
+                        end
+                        compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * startPos
+                        if compare then
+                            RNGLOG('Compare variable '..compare)
+                        end
                         if compare > 0 then
                             if not selection or compare > selection then
                                 selection = compare
