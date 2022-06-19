@@ -52,8 +52,7 @@ local ReclaimBasedFactoryPriority = function(self, aiBrain, builderManager)
         return 740
     end
     if aiBrain:GetNumPlatoonsTemplateNamed('RNGAI T1EngineerReclaimer') < 5 then
-        --RNGLOG('Priority Function less than 5 reclaim engineers')
-        return 740
+        return 756
     end
     return 0
 end
@@ -73,7 +72,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 MassRatioAvailable',
         PlatoonTemplate = 'T1BuildEngineer',
-        Priority = 755,
+        Priority = 756,
         BuilderConditions = {
             { MIBC, 'MassPointRatioAvailable', {}},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },

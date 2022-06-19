@@ -126,6 +126,15 @@ IntelManager = Class {
         end
     end,
 
+    WaitForMarkerInfection = function(self)
+        RNGLOG('Wait for marker infection at '..GetGameTimeSeconds())
+        while not ScenarioInfo.MarkersInfectedRNG do
+            coroutine.yield(20)
+        end
+        RNGLOG('Markers infection completed at '..GetGameTimeSeconds())
+    end,
+
+
     ZoneControlMonitorRNG = function(self)
         -- This is doing the maths stuff on understand the zone control level
         self:WaitForZoneInitialization()
@@ -205,6 +214,7 @@ IntelManager = Class {
             local zoneSelection = 999
             local selection = false
             local enemyMexmodifier = 0.1
+            local enemyDanger = 1.0
             local enemyX, enemyZ
             if not platoon.Zone then
                 WARN('RNGAI : Select Zone platoon has no zone attribute '..platoon.PlanName)
@@ -330,14 +340,21 @@ IntelManager = Class {
                         if zoneSet[v.id].startpositionclose then
                             startPos = 0.7
                         end
-                        if distanceModifier and resourceValue and controlValue and enemyModifier then
-                            RNGLOG('distanceModifier '..distanceModifier)
-                            RNGLOG('resourceValue '..resourceValue)
-                            RNGLOG('controlValue '..controlValue)
-                            RNGLOG('enemyModifier '..enemyModifier)
+                        if zoneSet[v.id].enemythreat > zoneSet[v.id].friendlythreat then
+                            if platoon.CurrentPlatoonThreat and platoon.CurrentPlatoonThreat < zoneSet[v.id].enemythreat then
+                                enemyDanger = 0.2
+                            end
                         end
-                        compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * startPos
-                        if compare then
+                        if aiBrain.RNGDEBUG then
+                            if distanceModifier and resourceValue and controlValue and enemyModifier then
+                                RNGLOG('distanceModifier '..distanceModifier)
+                                RNGLOG('resourceValue '..resourceValue)
+                                RNGLOG('controlValue '..controlValue)
+                                RNGLOG('enemyModifier '..enemyModifier)
+                            end
+                        end
+                        compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger
+                        if aiBrain.RNGDEBUG and compare then
                             RNGLOG('Compare variable '..compare)
                         end
                         if compare > 0 then
@@ -569,20 +586,41 @@ IntelManager = Class {
 
     EnemyPositionAngleAssignment = function(self)
         self:WaitForZoneInitialization()
+        self:WaitForMarkerInfection()
         WaitTicks(100)
-        if next(self.Brain.EnemyIntel.EnemyStartLocations) then
-            for k, v in self.Brain.EnemyIntel.EnemyStartLocations do
-                for c, b in self.Brain.Zones.Land.zones do
-                    local angle = RUtils.GetAngleToPosition(v.Position, b.pos)
-                    b.baseangles[v.Index] = angle
+        if next(self.Brain.Zones.Land.zones) then
+            if next(self.Brain.EnemyIntel.EnemyStartLocations) then
+                for k, v in self.Brain.EnemyIntel.EnemyStartLocations do
+                    for c, b in self.Brain.Zones.Land.zones do
+                        local angle = RUtils.GetAngleToPosition(v.Position, b.pos)
+                        b.baseangles[v.Index] = angle
+                    end
+                end
+            end
+            if next(self.Brain.BrainIntel.AllyStartLocations) then
+                for k, v in self.Brain.BrainIntel.AllyStartLocations do
+                    for c, b in self.Brain.Zones.Land.zones do
+                        local angle = RUtils.GetAngleToPosition(v.Position, b.pos)
+                        b.baseangles[v.Index] = angle
+                    end
+                end
+            end
+            for k, v in self.Brain.Zones.Land.zones do
+                local pathNode = GetClosestPathNodeInRadiusByLayerRNG(v.pos, 30, 'Land')
+                if pathNode.BestArmy then
+                    v.bestarmy = pathNode.BestArmy
                 end
             end
         end
+        
         if self.Brain.RNGDEBUG then
             for c, b in self.Brain.Zones.Land.zones do
                 RNGLOG('-- Zone Angle Loop --')
                 RNGLOG('Zone Position : '..repr(b.pos))
                 RNGLOG('Angles : '..repr(b.baseangles))
+                if b.bestarmy then
+                    RNGLOG('Army team is '..b.bestarmy)
+                end
                 RNGLOG('---------------------')
             end
         end

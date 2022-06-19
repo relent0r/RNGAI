@@ -42,7 +42,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
             self.RNG = true
-            self.RNGDEBUG = true
+            self.RNGDEBUG = false
             ForkThread(RUtils.AIWarningChecks, self)
         end
         if string.find(per, 'RNGStandardExperimental') then
@@ -917,6 +917,7 @@ AIBrain = Class(RNGAIBrainClass) {
             Rings = 0,
         }
         self.BrainIntel.AllyCount = 0
+        self.BrainIntel.AllyStartLocations = {}
         self.BrainIntel.LandPhase = 1
         self.BrainIntel.AirPhase = 1
         self.BrainIntel.NavalPhase = 1
@@ -1751,24 +1752,26 @@ AIBrain = Class(RNGAIBrainClass) {
                 -- Don't scout areas owned by us or our allies.
                 local numOpponents = 0
                 local enemyStarts = {}
+                local allyTempStarts = {}
                 for i = 1, 16 do
                     local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
                     local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
                     if army and startPos then
-                        RNGINSERT(startLocations, startPos)
+                        RNGINSERT(startLocations, {Position = startPos, Index = army.ArmyIndex})
                         if army.ArmyIndex ~= myArmy.ArmyIndex and (army.Team ~= myArmy.Team or army.Team == 1) then
-                        -- Add the army start location to the list of interesting spots.
-                        opponentStarts['ARMY_' .. i] = startPos
-                        numOpponents = numOpponents + 1
-                        -- I would rather use army ndexes for the table keys of the enemyStarts so I can easily reference them in queries. To be pondered.
-                        RNGINSERT(enemyStarts, {Position = startPos, Index = army.ArmyIndex})
-                        RNGINSERT(self.InterestList.HighPriority,
-                            {
-                                Position = startPos,
-                                LastScouted = 0,
-                            }
-                        )
+                            -- Add the army start location to the list of interesting spots.
+                            opponentStarts['ARMY_' .. i] = startPos
+                            numOpponents = numOpponents + 1
+                            -- I would rather use army ndexes for the table keys of the enemyStarts so I can easily reference them in queries. To be pondered.
+                            RNGINSERT(enemyStarts, {Position = startPos, Index = army.ArmyIndex})
+                            RNGINSERT(self.InterestList.HighPriority,
+                                {
+                                    Position = startPos,
+                                    LastScouted = 0,
+                                }
+                            )
                         else
+                            RNGINSERT(allyTempStarts, {Position = startPos, Index = army.ArmyIndex})
                             allyStarts['ARMY_' .. i] = startPos
                         end
                     end
@@ -1814,14 +1817,17 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
                 self.EnemyIntel.EnemyStartLocations = enemyStarts
+                self.BrainIntel.AllyStartLocations = allyTempStarts
             else -- Spawn locations were random. We don't know where our opponents are. Add all non-ally start locations to the scout list
                 local numOpponents = 0
+                local allyTempStarts = {}
                 for i = 1, 16 do
                     local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
                     local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
                     if army and startPos then
                         if army.ArmyIndex == myArmy.ArmyIndex or (army.Team == myArmy.Team and army.Team ~= 1) then
                             allyStarts['ARMY_' .. i] = startPos
+                            RNGINSERT(allyTempStarts, {Position = startPos, Index = army.ArmyIndex})
                         else
                             numOpponents = numOpponents + 1
                             RNGINSERT(startLocations, {Position = startPos, Index = army.ArmyIndex})
@@ -1848,6 +1854,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 -- Set Start Locations for brain to reference
                 --RNGLOG('Start Locations are '..repr(startLocations))
                 self.EnemyIntel.EnemyStartLocations = startLocations
+                self.BrainIntel.AllyStartLocations = allyTempStarts
             end
             --RNGLOG('Perimeter Points Pre '..repr(self.InterestList.PerimeterPoints))
             local perimeterMap = {
@@ -1883,7 +1890,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local massLocations = RUtils.AIGetMassMarkerLocations(self, true)
         
             for _, start in startLocations do
-                markersStartPos = AIUtils.AIGetMarkersAroundLocationRNG(self, 'Mass', start, 30)
+                markersStartPos = AIUtils.AIGetMarkersAroundLocationRNG(self, 'Mass', start.Position, 30)
                 for _, marker in markersStartPos do
                     --RNGLOG('* AI-RNG: Start Mass Marker ..'..repr(marker))
                     RNGINSERT(startPosMarkers, marker)

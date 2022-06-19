@@ -56,6 +56,7 @@ RNGLandResourceSet = Class(ZoneSet){
        --RNGLOG('GenerateZoneList for custom Zone')
         local armyStarts = {}
         local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
+        local mapCenterPoint = { (ScenarioInfo.size[1] / 2), 0 ,(ScenarioInfo.size[2] / 2) }
         local zoneRadius = 50 * 50
         if maxmapdimension < 512 then
             zoneRadius = 35 * 35
@@ -128,7 +129,7 @@ RNGLandResourceSet = Class(ZoneSet){
                 end
             end
             --LOG('Resource Group value '..table.getn(resourceGroup))
-            self:AddZone({pos={x,GetSurfaceHeight(x,z),z}, component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), weight=best.weight, startpositionclose=startPos, enemythreat=0, friendlythreat=0, resourcevalue=table.getn(resourceGroup), resourcemarkers=resourceGroup, zonealert=false, control=1, baseangles = {}})
+            self:AddZone({pos={x,GetSurfaceHeight(x,z),z}, component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), weight=best.weight, startpositionclose=startPos, enemythreat=0, friendlythreat=0, resourcevalue=table.getn(resourceGroup), resourcemarkers=resourceGroup, zonealert=false, control=1, baseangles = {}, bestarmy = false})
         end
     end,
 }

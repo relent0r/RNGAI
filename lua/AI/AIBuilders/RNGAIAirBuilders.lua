@@ -443,7 +443,7 @@ BuilderGroup {
         InstanceCount = 10,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
+            { TBC, 'LandThreatAtBaseOwnZones', { }},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1 } },
         },
         BuilderData = {

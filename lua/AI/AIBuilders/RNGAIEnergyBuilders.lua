@@ -61,7 +61,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
-            { EBC, 'LessThanEnergyTrendRNG', { 8 } }, -- If our energy is trending into negatives
+            { EBC, 'LessThanEnergyTrendRNG', { 10.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
         BuilderType = 'Any',
@@ -361,6 +361,26 @@ BuilderGroup {
             }
         }
 
+    },
+    Builder {
+        BuilderName = 'RNGAI T1Engineer Hydro 120',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 850,
+        InstanceCount = 1,
+        BuilderConditions = { 
+            { UCBC, 'CanBuildOnHydroLessThanDistanceRNG', { 'LocationType', 120, 1, 'AntiSurface'}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildPower',
+            NeedGuard = false,
+            DesiresAssist = true,
+            Construction = {
+                BuildStructures = {
+                    'T1HydroCarbon',
+                },
+            }
+        }
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Hydro 250',
