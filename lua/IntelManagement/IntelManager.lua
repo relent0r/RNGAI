@@ -19,6 +19,8 @@ local CategoriesIntelligence = categories.INTELLIGENCE * (categories.TECH2 + cat
 local CategoriesFactory = categories.FACTORY * (categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY - categories.EXPERIMENTAL - categories.CRABEGG - categories.CARRIER
 local CategoriesShield = categories.SHIELD * categories.STRUCTURE
 
+local ALLBPS = __blueprints
+
 local RNGMAX = math.max
 local RNGPOW = math.pow
 local RNGSQRT = math.sqrt
@@ -41,6 +43,84 @@ IntelManager = Class {
         -- Used for scout assignments to zones
         self.ZoneIntel = {
             Assignment = { }
+        }
+        self.UnitStats = {
+            Land = {
+                Deaths = {
+                    Total = {
+                        Air = 0,
+                        Defense = 0,
+                        Land = 0,
+                        Naval = 0,
+                        Experimental = 0,
+                        ACU = 0
+                    },
+                    OverTime = {
+                        Air = 0,
+                        Defense = 0,
+                        Land = 0,
+                        ACU = 0
+                    }
+                },
+                Kills = {}
+            },
+            Air = {
+                Deaths = {
+                    Total = {
+                        Air = 0,
+                        Defense = 0,
+                        Land = 0,
+                        Naval = 0,
+                        Experimental = 0,
+                        ACU = 0
+                    },
+                    OverTime = {
+                        Air = 0,
+                        Defense = 0,
+                        Land = 0,
+                        ACU = 0
+                    }
+                },
+                Kills = {}
+            },
+            Naval = {
+                Deaths = {
+                    Total = {
+                        Air = 0,
+                        Defense = 0,
+                        Land = 0,
+                        Naval = 0,
+                        Experimental = 0,
+                        ACU = 0
+                    },
+                    OverTime = {
+                        Air = 0,
+                        Defense = 0,
+                        Land = 0,
+                        ACU = 0
+                    }
+                },
+                Kills = {}
+            },
+            Structure = {
+                Deaths = {
+                    Total = {
+                        Air = 0,
+                        Defense = 0,
+                        Land = 0,
+                        Naval = 0,
+                        Experimental = 0,
+                        ACU = 0
+                    },
+                    OverTime = {
+                        Air = 0,
+                        Defense = 0,
+                        Land = 0,
+                        ACU = 0
+                    }
+                },
+                Kills = {}
+            }
         }
     end,
 
@@ -624,6 +704,13 @@ IntelManager = Class {
                 RNGLOG('---------------------')
             end
         end
+    end,
+
+    ProcessSourceOnKilled = function(aiBrain, targetUnit, sourceUnit)
+        --RNGLOG('We are going to do stuff here')
+        --RNGLOG('Target '..targetUnit.UnitId)
+        --RNGLOG('Source '..sourceUnit.UnitId)
+    
     end,
 
 }

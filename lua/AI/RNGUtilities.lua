@@ -4578,13 +4578,6 @@ CanPathToCurrentEnemyRNG = function(aiBrain) -- Uveso's function modified to run
     end
 end
 
-ProcessSourceOnKilled = function(aiBrain, targetUnit, sourceUnit)
-    --RNGLOG('We are going to do stuff here')
-    --RNGLOG('Target '..targetUnit.UnitId)
-    --RNGLOG('Source '..sourceUnit.UnitId)
-
-end
-
 GetHoldingPosition = function(aiBrain, platoonPos, platoon, threatType)
     local holdingPos = false
     local threatLocations = aiBrain:GetThreatsAroundPosition( aiBrain.BuilderManagers['MAIN'].Position, 16, true, threatType )
