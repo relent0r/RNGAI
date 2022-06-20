@@ -20,7 +20,7 @@ function OnKilled(self, instigator, type, overkillRatio)
                 sourceUnit = instigator.unit
             end
             if sourceUnit and sourceUnit.GetAIBrain then
-                im.ProcessSourceOnKilled(aiBrain, self, sourceUnit)
+                im.ProcessSourceOnKilled(im, self, sourceUnit)
             end
         end
     end

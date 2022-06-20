@@ -706,11 +706,39 @@ IntelManager = Class {
         end
     end,
 
-    ProcessSourceOnKilled = function(aiBrain, targetUnit, sourceUnit)
+    ProcessSourceOnKilled = function(self, targetUnit, sourceUnit)
         --RNGLOG('We are going to do stuff here')
         --RNGLOG('Target '..targetUnit.UnitId)
         --RNGLOG('Source '..sourceUnit.UnitId)
-    
+        local data = {
+            targetcat = false,
+            sourcecat = false
+        }
+
+
+        if ALLBPS[targetUnit.UnitId].CategoriesHash.EXPERIMENTAL then
+            data.targetcat = 'Experimental'
+        elseif ALLBPS[targetUnit.UnitId].CategoriesHash.AIR then
+            data.targetcat = 'Air'
+        elseif ALLBPS[targetUnit.UnitId].CategoriesHash.LAND then
+            data.targetcat = 'Land'
+        elseif ALLBPS[targetUnit.UnitId].CategoriesHash.STRUCTURE then
+            data.targetcat = 'Structure'
+        end
+          
+        if ALLBPS[sourceUnit.UnitId].CategoriesHash.EXPERIMENTAL then
+            data.sourcecat = 'Experimental'
+        elseif ALLBPS[sourceUnit.UnitId].CategoriesHash.AIR then
+            data.sourcecat = 'Air'
+        elseif ALLBPS[sourceUnit.UnitId].CategoriesHash.LAND then
+            data.sourcecat = 'Land'
+        elseif ALLBPS[sourceUnit.UnitId].CategoriesHash.STRUCTURE then
+            data.sourcecat = 'Structure'
+        end
+
+        if data.targetcat and data.sourcecat then
+            self.UnitStats[data.targetcat].Deaths.Total[data.sourcecat] = self.UnitStats[data.targetcat].Deaths.Total[data.sourcecat] + 1
+        end
     end,
 
 }
