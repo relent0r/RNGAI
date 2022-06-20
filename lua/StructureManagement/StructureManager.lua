@@ -991,6 +991,22 @@ StructureManager = Class {
             coroutine.yield(30)
         end
     end,
+
+    ExtractorTMLCheck = function(self, extractor)
+        local defended = true
+        if extractor.TMLInRange then
+            for k, v in extractor.TMLInRange do
+                if not aiBrain.EnemyIntel.TML[k] or aiBrain.EnemyIntel.TML[k].object.Dead then
+                    extractor.TMLInRange[k] = nil
+                    continue
+                end    
+            end
+            if not extractor.TMDInRange then
+                defended = false
+            end
+        end
+        return defended
+    end,
     
     ValidateExtractorUpgradeRNG = function(self, aiBrain, ALLBPS, extractorTable, allTiers)
         --LOG('ValidateExtractorUpgrade Stuff')
@@ -999,57 +1015,56 @@ StructureManager = Class {
         local LowestDistanceToBase
         local lowestUnit = false
         local BasePosition = aiBrain.BuilderManagers['MAIN'].Position
+        local 
         --LOG('BasePosition is '..repr(BasePosition))
         if extractorTable then
-            --LOG('extractorTable present in upgrade validation')
-            for _, v in extractorTable do
-                if not allTiers and RNGGETN(extractorTable.TECH1) > 0 then
-                    for _, c in extractorTable.TECH1 do
-                        if c and not c.Dead then
-                            if c.InitialDelayCompleted then
-                                UnitPos = c:GetPosition()
-                                DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                                if DistanceToBase < 2500 then
-                                    c.MAINBASE = true
-                                end
-                                if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
-                                    LowestDistanceToBase = DistanceToBase
-                                    lowestUnit = c
-                                    --LOG('T1 lowestUnit added alltiers false')
-                                end
+            --LOG('extractorTable present in upgrade validation')                
+            if not allTiers then
+                for _, c in extractorTable.TECH1 do
+                    if c and not c.Dead then
+                        if c.InitialDelayCompleted then
+                            UnitPos = c:GetPosition()
+                            DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
+                            if DistanceToBase < 2500 then
+                                c.MAINBASE = true
+                            end
+                            if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
+                                LowestDistanceToBase = DistanceToBase
+                                lowestUnit = c
+                                --LOG('T1 lowestUnit added alltiers false')
                             end
                         end
                     end
-                else
-                    for _, c in extractorTable.TECH1 do
-                        if c and not c.Dead then
-                            if c.InitialDelayCompleted then
-                                UnitPos = c:GetPosition()
-                                DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                                if DistanceToBase < 2500 then
-                                    c.MAINBASE = true
-                                end
-                                if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
-                                    LowestDistanceToBase = DistanceToBase
-                                    lowestUnit = c
-                                    --LOG('T1 lowestUnit added alltiers true')
-                                end
+                end
+            else
+                for _, c in extractorTable.TECH1 do
+                    if c and not c.Dead then
+                        if c.InitialDelayCompleted then
+                            UnitPos = c:GetPosition()
+                            DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
+                            if DistanceToBase < 2500 then
+                                c.MAINBASE = true
+                            end
+                            if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
+                                LowestDistanceToBase = DistanceToBase
+                                lowestUnit = c
+                                --LOG('T1 lowestUnit added alltiers true')
                             end
                         end
                     end
-                    for _, c in extractorTable.TECH2 do
-                        if c and not c.Dead then
-                            if c.InitialDelayCompleted then
-                                UnitPos = c:GetPosition()
-                                DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                                if DistanceToBase < 2500 then
-                                    c.MAINBASE = true
-                                end
-                                if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
-                                    LowestDistanceToBase = DistanceToBase
-                                    lowestUnit = c
-                                    --LOG('T2 lowestUnit added alltiers true')
-                                end
+                end
+                for _, c in extractorTable.TECH2 do
+                    if c and not c.Dead then
+                        if c.InitialDelayCompleted then
+                            UnitPos = c:GetPosition()
+                            DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
+                            if DistanceToBase < 2500 then
+                                c.MAINBASE = true
+                            end
+                            if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
+                                LowestDistanceToBase = DistanceToBase
+                                lowestUnit = c
+                                --LOG('T2 lowestUnit added alltiers true')
                             end
                         end
                     end
@@ -1203,7 +1218,7 @@ StructureManager = Class {
                 if not extractor.InitialDelayStarted then
                     self:ForkThread(self.ExtractorInitialDelay, aiBrain, extractor)
                 end
-                if EntityCategoryContains( categories.TECH1, extractor) then
+                if ALLBPS[extractor.UnitId].CategoriesHash.TECH1 then
                     tech1Total = tech1Total + 1
                     if not aiBrain.EcoManager.T2ExtractorSpend then
                         local upgradeId = ALLBPS[extractor.UnitId].General.UpgradesTo
@@ -1218,7 +1233,7 @@ StructureManager = Class {
                         extractor.Upgrading = false
                         RNGINSERT(extractorTable.TECH1, extractor)
                     end
-                elseif EntityCategoryContains( categories.TECH2, extractor) then
+                elseif ALLBPS[extractor.UnitId].CategoriesHash.TECH2 then
                     tech2Total = tech2Total + 1
                     if not aiBrain.EcoManager.T3ExtractorSpend then
                         local upgradeId = ALLBPS[extractor.UnitId].General.UpgradesTo
@@ -1233,7 +1248,7 @@ StructureManager = Class {
                         extractor.Upgrading = false
                         RNGINSERT(extractorTable.TECH2, extractor)
                     end
-                elseif EntityCategoryContains( categories.TECH3, extractor) then
+                elseif ALLBPS[extractor.UnitId].CategoriesHash.TECH3 then
                     tech3Total = tech3Total + 1
                 end
             end

@@ -3146,6 +3146,7 @@ GrabRandomDistinctColor = function(num)
     return output[math.random(RNGGETN(output))]
 end
 LastKnownThread = function(aiBrain)
+    local ALLBPS = __blueprints
     aiBrain.lastknown={}
     --aiBrain:ForkThread(ShowLastKnown)
     aiBrain:ForkThread(TruePlatoonPriorityDirector)
@@ -3211,7 +3212,7 @@ LastKnownThread = function(aiBrain)
                             aiBrain.lastknown[id].type='tml'
                             if not aiBrain.EnemyIntel.TML[id] then
                                 local angle = GetAngleToPosition(aiBrain.BuilderManagers['MAIN'].Position, unitPosition)
-                                aiBrain.EnemyIntel.TML[id] = {object = v, Position=unitPosition }
+                                aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=ALLBPS[v.UnitId].Weapon[1].MaxRadius }
                                 aiBrain.BasePerimeterMonitor['MAIN'].RecentTMLAngle = angle
                             end
                         elseif EntityCategoryContains(CategoriesSMD, v) then

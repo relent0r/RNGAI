@@ -1467,6 +1467,29 @@ TacticalThreatAnalysisRNG = function(aiBrain)
         aiBrain.EnemyIntel.DirectorData.Defense = defensiveUnits
     end
 
+    if next(aiBrain.EnemyIntel.TML) then
+        for k, v in aiBrain.EnemyIntel.TML do
+            if not v.object.Dead then 
+                if not v.validated then
+                    local extractors = GetListOfUnits(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL, false, false)
+                    for c, b in extractors do
+                        if VDist3Sq(b:GetPosition(), v.Position) < v.radius * v.radius then
+                            if not b.TMLInRange then
+                                b.TMLInRange = {}
+                            end
+                            b.TMLInRange[v.object.Sync.id] = true
+                        end
+                    end
+                    v.validated = true
+                end
+            else
+                aiBrain.EnemyIntel.TML[k] = nil
+            end
+        end
+    end
+
+
+
     -- populate the director
     aiBrain.EnemyIntel.DirectorData.Strategic = strategicUnits
     aiBrain.EnemyIntel.DirectorData.Intel = intelUnits
