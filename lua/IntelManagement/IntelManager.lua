@@ -53,6 +53,7 @@ IntelManager = Class {
                         Land = 0,
                         Naval = 0,
                         Experimental = 0,
+                        Structure = 0,
                         ACU = 0
                     },
                     OverTime = {
@@ -72,6 +73,7 @@ IntelManager = Class {
                         Land = 0,
                         Naval = 0,
                         Experimental = 0,
+                        Structure = 0,
                         ACU = 0
                     },
                     OverTime = {
@@ -91,6 +93,7 @@ IntelManager = Class {
                         Land = 0,
                         Naval = 0,
                         Experimental = 0,
+                        Structure = 0,
                         ACU = 0
                     },
                     OverTime = {
@@ -110,6 +113,7 @@ IntelManager = Class {
                         Land = 0,
                         Naval = 0,
                         Experimental = 0,
+                        Structure = 0,
                         ACU = 0
                     },
                     OverTime = {

@@ -1015,7 +1015,6 @@ StructureManager = Class {
         local LowestDistanceToBase
         local lowestUnit = false
         local BasePosition = aiBrain.BuilderManagers['MAIN'].Position
-        local 
         --LOG('BasePosition is '..repr(BasePosition))
         if extractorTable then
             --LOG('extractorTable present in upgrade validation')                

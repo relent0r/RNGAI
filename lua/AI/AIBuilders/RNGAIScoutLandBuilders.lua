@@ -13,23 +13,11 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI ScoutLandBuilder',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI Factory Scout',
-        PlatoonTemplate = 'T1LandScout',
-        Priority = 755, -- After second engie group
-        InstanceCount = 1,
-        BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.5}},
-            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.LAND * categories.SCOUT }},
-            { UCBC, 'UnitToThreatRatio', { 0.2, categories.SCOUT * categories.LAND, 'Land', '<'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.3, 0.5 }},
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
         BuilderName = 'RNGAI Factory LandScout T1 Burst',
         PlatoonTemplate = 'T1LandScout',
         Priority = 895,
         BuilderConditions = {
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 3, categories.LAND * categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
             { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
             { UCBC, 'GreaterThanArmyThreat', { 'LandNow', 20}},

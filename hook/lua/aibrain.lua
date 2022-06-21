@@ -42,7 +42,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
             self.RNG = true
-            self.RNGDEBUG = false
+            self.RNGDEBUG = true
             ForkThread(RUtils.AIWarningChecks, self)
         end
         if string.find(per, 'RNGStandardExperimental') then
@@ -1131,6 +1131,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 RNGLOG(reprs(self.EnemyIntel.TML))
                 RNGLOG('Recent Angle '..self.BasePerimeterMonitor['MAIN'].RecentTMLAngle)
             end
+            local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager()
+            RNGLOG('Unit Stats '..repr(im.UnitStats))
             coroutine.yield(100)
         end
     end,
