@@ -1142,6 +1142,45 @@ CreateReclaimGrid = function(aiBrain)
     aiBrain.MapReclaimTable = reclaimGrid
 end
 
+CreateIntelGrid = function(aiBrain)
+    coroutine.yield(Random(30,70))
+    -- by default, 16x16 iMAP
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+    --LOG('playableArea is '..repr(playableArea))
+    local n = 16 
+    local mx = ScenarioInfo.size[1]
+    local mz = ScenarioInfo.size[2]
+    local GetTerrainHeight = GetTerrainHeight
+
+    -- smaller maps have a 8x8 iMAP
+    if mx == mz and mx == 5 then 
+        n = 8
+    end
+    
+    local intelGrid = {}
+    
+    -- distance per cell
+    local fx = 1 / n * mx 
+    local fz = 1 / n * mz 
+
+    -- draw iMAP information
+    for z = 1, n do 
+        intelGrid[z] = {}
+        for x = 1, n do 
+            intelGrid[z][x] = {}
+            local cx = fx * (x - 0.5)
+            local cz = fz * (z - 0.5)
+            if cx < playableArea[1] or cz < playableArea[2] or cx > playableArea[3] or cz > playableArea[4] then
+                continue
+            end
+            intelGrid[z][x][Position] = {cx, GetTerrainHeight(cx, cz), cz}
+            intelGrid[z][x][Size] = { sx = fx, sz = fz}
+            intelGrid[z][x][LastScouted] = 0
+        end
+    end
+    aiBrain.MapIntelTable = intelGrid
+end
+
 --[[
     info:   { table: 26D1E5A0 
     info:     AirThreat=0,
