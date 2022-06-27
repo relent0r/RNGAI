@@ -7,6 +7,7 @@ local GetClosestPathNodeInRadiusByLayerRNG = import('/lua/AI/aiattackutilities.l
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
+local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
 
 
@@ -60,6 +61,9 @@ IntelManager = Class {
                         Air = 0,
                         Defense = 0,
                         Land = 0,
+                        Naval = 0,
+                        Experimental = 0,
+                        Structure = 0,
                         ACU = 0
                     }
                 },
@@ -80,6 +84,9 @@ IntelManager = Class {
                         Air = 0,
                         Defense = 0,
                         Land = 0,
+                        Naval = 0,
+                        Experimental = 0,
+                        Structure = 0,
                         ACU = 0
                     }
                 },
@@ -100,6 +107,9 @@ IntelManager = Class {
                         Air = 0,
                         Defense = 0,
                         Land = 0,
+                        Naval = 0,
+                        Experimental = 0,
+                        Structure = 0,
                         ACU = 0
                     }
                 },
@@ -120,6 +130,32 @@ IntelManager = Class {
                         Air = 0,
                         Defense = 0,
                         Land = 0,
+                        Naval = 0,
+                        Experimental = 0,
+                        Structure = 0,
+                        ACU = 0
+                    }
+                },
+                Kills = {}
+            },
+            Experimental = {
+                Deaths = {
+                    Total = {
+                        Air = 0,
+                        Defense = 0,
+                        Land = 0,
+                        Naval = 0,
+                        Experimental = 0,
+                        Structure = 0,
+                        ACU = 0
+                    },
+                    OverTime = {
+                        Air = 0,
+                        Defense = 0,
+                        Land = 0,
+                        Naval = 0,
+                        Experimental = 0,
+                        Structure = 0,
                         ACU = 0
                     }
                 },
@@ -710,40 +746,7 @@ IntelManager = Class {
         end
     end,
 
-    ProcessSourceOnKilled = function(self, targetUnit, sourceUnit)
-        --RNGLOG('We are going to do stuff here')
-        --RNGLOG('Target '..targetUnit.UnitId)
-        --RNGLOG('Source '..sourceUnit.UnitId)
-        local data = {
-            targetcat = false,
-            sourcecat = false
-        }
-
-
-        if ALLBPS[targetUnit.UnitId].CategoriesHash.EXPERIMENTAL then
-            data.targetcat = 'Experimental'
-        elseif ALLBPS[targetUnit.UnitId].CategoriesHash.AIR then
-            data.targetcat = 'Air'
-        elseif ALLBPS[targetUnit.UnitId].CategoriesHash.LAND then
-            data.targetcat = 'Land'
-        elseif ALLBPS[targetUnit.UnitId].CategoriesHash.STRUCTURE then
-            data.targetcat = 'Structure'
-        end
-          
-        if ALLBPS[sourceUnit.UnitId].CategoriesHash.EXPERIMENTAL then
-            data.sourcecat = 'Experimental'
-        elseif ALLBPS[sourceUnit.UnitId].CategoriesHash.AIR then
-            data.sourcecat = 'Air'
-        elseif ALLBPS[sourceUnit.UnitId].CategoriesHash.LAND then
-            data.sourcecat = 'Land'
-        elseif ALLBPS[sourceUnit.UnitId].CategoriesHash.STRUCTURE then
-            data.sourcecat = 'Structure'
-        end
-
-        if data.targetcat and data.sourcecat then
-            self.UnitStats[data.targetcat].Deaths.Total[data.sourcecat] = self.UnitStats[data.targetcat].Deaths.Total[data.sourcecat] + 1
-        end
-    end,
+    
 
 }
 
@@ -757,7 +760,47 @@ end
 
 
 function GetIntelManager()
+    if im then
+        LOG('Returning Intel Manager')
+    else
+        LOG('Intel Manager doesnt exist yet')
+    end
     return im
+end
+
+function ProcessSourceOnKilled(targetUnit, sourceUnit)
+    RNGLOG('We are going to do stuff here')
+    RNGLOG('Target '..targetUnit.UnitId)
+    RNGLOG('Source '..sourceUnit.UnitId)
+    local data = {
+        targetcat = false,
+        sourcecat = false
+    }
+
+
+    if ALLBPS[targetUnit.UnitId].CategoriesHash.EXPERIMENTAL then
+        data.targetcat = 'Experimental'
+    elseif ALLBPS[targetUnit.UnitId].CategoriesHash.AIR then
+        data.targetcat = 'Air'
+    elseif ALLBPS[targetUnit.UnitId].CategoriesHash.LAND then
+        data.targetcat = 'Land'
+    elseif ALLBPS[targetUnit.UnitId].CategoriesHash.STRUCTURE then
+        data.targetcat = 'Structure'
+    end
+      
+    if ALLBPS[sourceUnit.UnitId].CategoriesHash.EXPERIMENTAL then
+        data.sourcecat = 'Experimental'
+    elseif ALLBPS[sourceUnit.UnitId].CategoriesHash.AIR then
+        data.sourcecat = 'Air'
+    elseif ALLBPS[sourceUnit.UnitId].CategoriesHash.LAND then
+        data.sourcecat = 'Land'
+    elseif ALLBPS[sourceUnit.UnitId].CategoriesHash.STRUCTURE then
+        data.sourcecat = 'Structure'
+    end
+
+    if data.targetcat and data.sourcecat then
+        im.UnitStats[data.targetcat].Deaths.Total[data.sourcecat] = im.UnitStats[data.targetcat].Deaths.Total[data.sourcecat] + 1
+    end
 end
 
 function AIConfigureExpansionWatchTableRNG(aiBrain)
@@ -1516,7 +1559,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                 if not v.validated then
                     local extractors = GetListOfUnits(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL, false, false)
                     for c, b in extractors do
-                        if VDist3Sq(b:GetPosition(), v.Position) < v.radius * v.radius then
+                        if VDist3Sq(b:GetPosition(), v.position) < v.range * v.range then
                             if not b.TMLInRange then
                                 b.TMLInRange = {}
                             end

@@ -413,7 +413,7 @@ BuilderGroup {
                 AdjacencyDistance = 100,
                 BuildClose = false,
                 ThreatMin = -3,
-                ThreatMax = 0,
+                ThreatMax = 5,
                 ThreatRings = 0,
                 BuildStructures = {
                     'MassStorage',
@@ -466,7 +466,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyCategory = 'MASSEXTRACTION TECH3, MASSEXTRACTION TECH2',
+                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 100,
                 BuildClose = false,
                 ThreatMin = -3,

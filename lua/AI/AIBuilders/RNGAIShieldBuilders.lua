@@ -50,6 +50,36 @@ BuilderGroup {
         },
     },
     Builder {
+        BuilderName = 'RNGAI T2 Shield DefensivePoint',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 700,
+        DelayEqualBuildPlattons = {'Shield', 5},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'DefensivePointShieldRequired', { 'LocationType' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 1.0 }},
+            { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.SHIELD}},
+            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
+                BaseTemplate = 'DefenseTemplate',
+                DesiresAssist = true,
+                NumAssistees = 4,
+                BuildClose = false,
+                OrderedTemplate = true,
+                NearDefensivePoints = true,
+                LocationType = 'LocationType',
+                BuildStructures = {
+                    'T2ShieldDefense',
+                },
+            },
+        },
+    },
+    Builder {
         BuilderName = 'RNGAI T2 Shield Ratio',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 625,

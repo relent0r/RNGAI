@@ -2533,7 +2533,15 @@ ZoneUpdate = function(platoon)
         if zoneID > 0 then
             platoon.Zone = zoneID
         else
-            platoon.Zone = false
+            local searchPoints = RUtils.DrawCirclePoints(4, 5, pos)
+            for k, v in searchPoints do
+                zoneID = MAP:GetZoneID(v,zoneIndex)
+                if zoneID > 0 then
+                    RNGLOG('We found a zone when we couldnt before '..zoneID)
+                    platoon.Zone = zoneID
+                    break
+                end
+            end
         end
     end
     if not platoon.MovementLayer then

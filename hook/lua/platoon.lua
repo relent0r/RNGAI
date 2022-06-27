@@ -66,6 +66,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local avoidBases = data.AvoidBases or false
         local platoonLimit = self.PlatoonData.PlatoonLimit or 18
         local defensive = data.Defensive or false
+        local restrictedZone = BaseRestrictedArea * BaseRestrictedArea
         self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Air', categories.ALLUNITS)
         self.HoldingPosition = aiBrain.BuilderManagers['MAIN'].Position
         if data.PrioritizedCategories then
@@ -158,14 +159,16 @@ Platoon = Class(RNGAIPlatoonClass) {
                     local targetThreat = GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
                     --RNGLOG('Air threat at target position '..targetThreat)
                     --RNGLOG('Current Platoon threat '..self.CurrentPlatoonThreat)
-                    if (threatCountLimit < 6 ) and (VDist2Sq(currentPlatPos[1], currentPlatPos[2], startX, startZ) < 22500) and (targetThreat * 1.3 > self.CurrentPlatoonThreat) and platoonCount < platoonLimit and not aiBrain.CDRUnit.Caution then
-                        --RNGLOG('Target air threat too high')
-                        threatCountLimit = threatCountLimit + 1
-                        self:MoveToLocation(aiBrain.BuilderManagers['MAIN'].Position, false)
-                        coroutine.yield(80)
-                        self:Stop()
-                        self:MergeWithNearbyPlatoonsRNG('AirHuntAIRNG', 60, 20)
-                        continue
+                    if VDist3Sq(currentPlatPos, targetPos) > restrictedZone then
+                        if (threatCountLimit < 6 ) and (VDist2Sq(currentPlatPos[1], currentPlatPos[2], startX, startZ) < 22500) and (targetThreat * 1.3 > self.CurrentPlatoonThreat) and platoonCount < platoonLimit and not aiBrain.CDRUnit.Caution then
+                            --RNGLOG('Target air threat too high')
+                            threatCountLimit = threatCountLimit + 1
+                            self:MoveToLocation(aiBrain.BuilderManagers['MAIN'].Position, false)
+                            coroutine.yield(80)
+                            self:Stop()
+                            self:MergeWithNearbyPlatoonsRNG('AirHuntAIRNG', 60, 20)
+                            continue
+                        end
                     end
                     self:Stop()
                     --RNGLOG('* AI-RNG: Attacking Target')
@@ -5046,8 +5049,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             return self:ZoneRaidRNG()
         else
-           --RNGLOG('No Zone Raid Position')
-            coroutine.yield( 50 )
+            RNGLOG('No Zone Raid Position, starting huntaipathrng')
+            coroutine.yield( 30 )
+            return self:SetAIPlanRNG('HuntAIPATHRNG')
         end
     end,
 

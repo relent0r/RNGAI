@@ -3888,6 +3888,18 @@ function ClosestResourceMarkersWithinRadius(aiBrain, pos, markerType, radius, ca
     return false
 end
 
+function DrawCirclePoints(points, radius, center)
+    local circlePoints = {}
+    local slice = 2 * math.pi / points
+    for i=1, points do
+        local angle = slice * i
+        local newX = center[1] + radius * math.cos(angle)
+        local newY = center[3] + radius * math.sin(angle)
+        table.insert(circlePoints, { newX, 0 , newY})
+    end
+    return circlePoints
+end
+
 function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition, targetPosition, targetDistance)
     local function DrawCirclePoints(points, radius, center)
         local circlePoints = {}
@@ -4383,6 +4395,8 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
                     RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].IndirectFire, finishedUnit)
                 elseif EntityCategoryContains(categories.DIRECTFIRE, finishedUnit) then
                     RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].DirectFire, finishedUnit)
+                elseif EntityCategoryContains(categories.SHIELD, finishedUnit) then
+                    RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Shields, finishedUnit)
                 end
             end
         end

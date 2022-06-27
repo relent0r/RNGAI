@@ -55,7 +55,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.DIRECTFIRE}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.DIRECTFIRE}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.6 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -95,7 +95,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.ANTIAIR}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.ANTIAIR}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -121,7 +121,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.DIRECTFIRE}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 8, categories.DEFENSE * categories.TECH2 * categories.DIRECTFIRE}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LANDNAVAL' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 0.6 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -134,8 +134,6 @@ BuilderGroup {
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
                 BaseTemplate = 'DefenseTemplate',
-                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
-                AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
                 OrderedTemplate = true,
                 NearDefensivePoints = true,
                 Type = 'Land',
@@ -157,7 +155,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.ANTIAIR}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 6, categories.DEFENSE * categories.TECH2 * categories.ANTIAIR}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },

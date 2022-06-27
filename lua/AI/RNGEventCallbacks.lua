@@ -1,5 +1,5 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
-local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager()
+local IntelManager = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 
 function OnBombReleased(weapon, projectile)
     -- Placeholder
@@ -20,7 +20,7 @@ function OnKilled(self, instigator, type, overkillRatio)
                 sourceUnit = instigator.unit
             end
             if sourceUnit and sourceUnit.GetAIBrain then
-                im.ProcessSourceOnKilled(im, self, sourceUnit)
+                IntelManager.ProcessSourceOnKilled(self, sourceUnit)
             end
         end
     end

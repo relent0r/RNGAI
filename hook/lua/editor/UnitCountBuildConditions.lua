@@ -34,7 +34,7 @@ function LastKnownUnitDetection(aiBrain, locationType, type)
     if aiBrain.EnemyIntel.TML then
         for _, v in aiBrain.EnemyIntel.TML do
             if v.object and not v.object.Dead then
-                if VDist3Sq(aiBrain.BuilderManagers[locationType].Position, v.Position) < 75625 then
+                if VDist3Sq(aiBrain.BuilderManagers[locationType].Position, v.position) < 75625 then
                     --RNGLOG('LastKnownUnitDetection true for TML at '..repr(v.Position))
                     return true
                 end
@@ -1248,6 +1248,25 @@ function CheckTargetInRangeRNG(aiBrain, locationType, unitType, category, factio
 
     if retUnit then
         return true
+    end
+    return false
+end
+
+function DefensivePointShieldRequired(aiBrain, locationType)
+    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[2] do
+        local unitCount = 0
+        if next(v.DirectFire) then
+            for c, b in v.DirectFire do
+                unitCount = unitCount + 1
+                RNGLOG('We have a directfire unit at this defensive point, current count is '..unitCount)
+            end
+        end
+        if unitCount > 2 then
+            if not next(v.Shields) then
+                RNGLOG('We can have a shield at this defensive point')
+                return true
+            end
+        end
     end
     return false
 end
