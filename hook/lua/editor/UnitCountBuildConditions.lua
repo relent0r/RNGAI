@@ -31,12 +31,17 @@ function GreaterThanArmyThreat(aiBrain, type, number)
 end
 
 function LastKnownUnitDetection(aiBrain, locationType, type)
-    if aiBrain.EnemyIntel.TML then
-        for _, v in aiBrain.EnemyIntel.TML do
-            if v.object and not v.object.Dead then
-                if VDist3Sq(aiBrain.BuilderManagers[locationType].Position, v.position) < 75625 then
-                    --RNGLOG('LastKnownUnitDetection true for TML at '..repr(v.Position))
-                    return true
+    if type == 'tml' then
+        if aiBrain.EnemyIntel.TML then
+            for _, v in aiBrain.EnemyIntel.TML do
+                if v.object and not v.object.Dead then
+                    if VDist3Sq(aiBrain.BuilderManagers[locationType].Position, v.position) < 75625 then
+                        local defensiveUnitCount = RUtils.DefensivePointUnitCountRNG(aiBrain, locationType, 1, type)
+                        --RNGLOG('LastKnownUnitDetection true for TML at '..repr(v.Position))
+                        if defensiveUnitCount < 5 then
+                            return true
+                        end
+                    end
                 end
             end
         end

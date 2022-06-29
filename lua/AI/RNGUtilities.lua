@@ -4352,16 +4352,89 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
     return false
 end
 
+DefensivePointUnitCountRNG = function(aiBrain, baseLocation, pointTier, type, count)
+    -- Finds the best defensive point based on tier and angle of last seen enemy, requires base perimeter monitoring system
+    local defensivePointUnitCount = 0
+    local basePosition = aiBrain.BuilderManagers[baseLocation].Position
+    if type == 'Land' then
+        local bestPoint = false
+        local bestIndex = false
+        if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
+            if aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle then
+                local pointCheck = aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle
+                for _, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
+                    local pointAngle = GetAngleToPosition(basePosition, v.Position)
+                    if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                        if bestPoint then
+                            --RNGLOG('Angle to find '..aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle..' bestPoint was '..bestPoint.Angle..' but is now '..repr({ Position = v, Angle = pointAngle}))
+                        end
+                        bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                    end
+                end
+            end
+        end
+        if bestPoint then
+            defensivePointUnitCount = table.getn(bestPoint.DirectFire)
+        end
+        --RNGLOG('defensivePoint being passed to engineer build platoon function'..repr(defensivePoint)..' bestpointangle is '..bestPoint.Angle)
+    elseif type == 'TML' then
+        local bestPoint = false
+        local bestIndex = false
+        if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
+            if aiBrain.BasePerimeterMonitor[baseLocation].RecentTMLAngle then
+                local pointCheck = aiBrain.BasePerimeterMonitor[baseLocation].RecentTMLAngle
+                for _, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
+                    local pointAngle = GetAngleToPosition(basePosition, v.Position)
+                    if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                        if bestPoint then
+                            --RNGLOG('TML Angle to find '..aiBrain.BasePerimeterMonitor[baseLocation].RecentTMLAngle..' bestPoint was '..bestPoint.Angle..' but is now '..repr({ Position = v, Angle = pointAngle}))
+                        end
+                        bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                    end
+                end
+            end
+        end
+        if bestPoint then
+            defensivePointUnitCount = table.getn(bestPoint.TML)
+        end
+    elseif type == 'TMD' then
+        local bestPoint = false
+        local bestIndex = false
+        if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
+            if aiBrain.BasePerimeterMonitor[baseLocation].RecentTMLAngle then
+                local pointCheck = aiBrain.BasePerimeterMonitor[baseLocation].RecentTMLAngle
+                for _, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
+                    local pointAngle = GetAngleToPosition(basePosition, v.Position)
+                    if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                        if bestPoint then
+                            --RNGLOG('TML Angle to find '..aiBrain.BasePerimeterMonitor[baseLocation].RecentTMLAngle..' bestPoint was '..bestPoint.Angle..' but is now '..repr({ Position = v, Angle = pointAngle}))
+                        end
+                        bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                    end
+                end
+            end
+        end
+        if bestPoint then
+            defensivePointUnitCount = table.getn(bestPoint.TMD)
+        end
+    end
+    if defensivePointUnitCount then
+        RNGLOG('Number of defensive units at defensive point are '..defensivePointUnitCount)
+        return defensivePointUnitCount
+    end
+    return false
+end
+
 AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
     -- Adding a defense unit to a base
     local closestPoint = false
     local closestDistance = false
     if not finishedUnit.Dead then
-        --RNGLOG('Attempting to add defensive unit to defensepoint table at '..locationType)
+        RNGLOG('Attempting to add defensive unit to defensepoint table at '..locationType)
         local unitPos = finishedUnit:GetPosition()
         if EntityCategoryContains(categories.TECH1, finishedUnit) then
             for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[1] do
-                local distance = VDist3Sq(aiBrain.BuilderManagers[locationType].Position, unitPos)
+                local distance = VDist3(aiBrain.BuilderManagers[locationType].Position, unitPos)
                 if not closestPoint or closestDistance > distance then
                     closestPoint = k
                     closestDistance = distance
@@ -4376,27 +4449,51 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
                 end
             end
         elseif EntityCategoryContains(categories.TECH2, finishedUnit) then
-            for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[1] do
-                local distance = VDist3Sq(aiBrain.BuilderManagers[locationType].Position, unitPos)
-                if not closestPoint or closestDistance > distance then
-                    closestPoint = k
-                    closestDistance = distance
+            if EntityCategoryContains(categories.ANTIMISSILE, finishedUnit) then
+                RNGLOG('TMD defensive unit to defensepoint table')
+                for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[1] do
+                    local distance = VDist3(aiBrain.BuilderManagers[locationType].Position, unitPos)
+                    if not closestPoint or closestDistance > distance then
+                        closestPoint = k
+                        closestDistance = distance
+                    end
                 end
-            end
-            if closestPoint and closestDistance <= aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Radius then
-                --RNGLOG('Adding T2 defensive unit to defensepoint table')
-                if EntityCategoryContains(categories.ANTIMISSILE, finishedUnit) then
-                    RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TMD, finishedUnit)
-                elseif EntityCategoryContains(categories.TACTICALMISSILEPLATFORM, finishedUnit) then
-                    RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TML, finishedUnit)
-                elseif EntityCategoryContains(categories.ANTIAIR, finishedUnit) then
-                    RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiAir, finishedUnit)
-                elseif EntityCategoryContains(categories.INDIRECTFIRE, finishedUnit) then
-                    RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].IndirectFire, finishedUnit)
-                elseif EntityCategoryContains(categories.DIRECTFIRE, finishedUnit) then
-                    RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].DirectFire, finishedUnit)
-                elseif EntityCategoryContains(categories.SHIELD, finishedUnit) then
-                    RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Shields, finishedUnit)
+                if closestPoint then
+                    RNGLOG('Closest point key is '..closestPoint)
+                    RNGLOG('Closest point distance is '..closestDistance)
+                else
+                    RNGLOG('No closestPoint available')
+                end
+                if closestPoint and closestDistance <= aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].Radius then
+                    RNGLOG('Adding T2 defensive unit to defensepoint table')
+                    RNGLOG('Unit ID is '..finishedUnit.UnitId)
+                    if EntityCategoryContains(categories.ANTIMISSILE, finishedUnit) then
+                        RNGLOG('Adding TMD to DefensivePoints pos 1 TMD table')
+                        RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TMD, finishedUnit)
+                    end
+                end
+            else
+                for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[1] do
+                    local distance = VDist3(aiBrain.BuilderManagers[locationType].Position, unitPos)
+                    if not closestPoint or closestDistance > distance then
+                        closestPoint = k
+                        closestDistance = distance
+                    end
+                end
+                if closestPoint and closestDistance <= aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Radius then
+                    if EntityCategoryContains(categories.ANTIMISSILE, finishedUnit) then
+                        RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TMD, finishedUnit)
+                    elseif EntityCategoryContains(categories.TACTICALMISSILEPLATFORM, finishedUnit) then
+                        RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TML, finishedUnit)
+                    elseif EntityCategoryContains(categories.ANTIAIR, finishedUnit) then
+                        RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiAir, finishedUnit)
+                    elseif EntityCategoryContains(categories.INDIRECTFIRE, finishedUnit) then
+                        RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].IndirectFire, finishedUnit)
+                    elseif EntityCategoryContains(categories.DIRECTFIRE, finishedUnit) then
+                        RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].DirectFire, finishedUnit)
+                    elseif EntityCategoryContains(categories.SHIELD, finishedUnit) then
+                        RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Shields, finishedUnit)
+                    end
                 end
             end
         end
