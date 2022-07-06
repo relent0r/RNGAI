@@ -176,6 +176,7 @@ IntelManager = Class {
         if self.Debug then
             self:ForkThread(self.IntelDebugThread)
         end
+
         LOG('RNGAI : IntelManager Started')
         self.Initialized = true
     end,
@@ -1165,7 +1166,7 @@ CreateReclaimGrid = function(aiBrain)
     local GetTerrainHeight = GetTerrainHeight
 
     -- smaller maps have a 8x8 iMAP
-    if mx == mz and mx == 5 then 
+    if mx == mz and mx == 256 then 
         n = 8
     end
     
@@ -1199,8 +1200,10 @@ CreateIntelGrid = function(aiBrain)
     local mz = ScenarioInfo.size[2]
     local GetTerrainHeight = GetTerrainHeight
 
+    RNGLOG('Intel Grid Size X : '..mx..' Z: '..mz)
+
     -- smaller maps have a 8x8 iMAP
-    if mx == mz and mx == 5 then 
+    if mx == mz and mx == 256 then 
         n = 8
     end
     
@@ -1214,18 +1217,24 @@ CreateIntelGrid = function(aiBrain)
     for z = 1, n do 
         intelGrid[z] = {}
         for x = 1, n do 
-            intelGrid[z][x] = {}
+            intelGrid[z][x] = { }
+            intelGrid[z][x].Position = { }
+            intelGrid[z][x].Size = { }
+            intelGrid[z][x].LastScouted = 0
+            intelGrid[z][x].Enabled = false
             local cx = fx * (x - 0.5)
             local cz = fz * (z - 0.5)
             if cx < playableArea[1] or cz < playableArea[2] or cx > playableArea[3] or cz > playableArea[4] then
                 continue
             end
-            intelGrid[z][x][Position] = {cx, GetTerrainHeight(cx, cz), cz}
-            intelGrid[z][x][Size] = { sx = fx, sz = fz}
-            intelGrid[z][x][LastScouted] = 0
+            intelGrid[z][x].Position = {cx, GetTerrainHeight(cx, cz), cz}
+            intelGrid[z][x].Size = { sx = fx, sz = fz}
+            intelGrid[z][x].LastScouted = 0
+            intelGrid[z][x].Enabled = true
         end
     end
     aiBrain.MapIntelTable = intelGrid
+    RNGLOG('Map Intel Grid '..repr(aiBrain.MapIntelTable))
 end
 
 --[[

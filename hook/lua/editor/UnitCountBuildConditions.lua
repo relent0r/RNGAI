@@ -36,8 +36,8 @@ function LastKnownUnitDetection(aiBrain, locationType, type)
             for _, v in aiBrain.EnemyIntel.TML do
                 if v.object and not v.object.Dead then
                     if VDist3Sq(aiBrain.BuilderManagers[locationType].Position, v.position) < 75625 then
-                        local defensiveUnitCount = RUtils.DefensivePointUnitCountRNG(aiBrain, locationType, 1, type)
-                        --RNGLOG('LastKnownUnitDetection true for TML at '..repr(v.Position))
+                        local defensiveUnitCount = RUtils.DefensivePointUnitCountRNG(aiBrain, locationType, 1, 'TMD')
+                        RNGLOG('LastKnownUnitDetection true for TML at '..repr(v.position))
                         if defensiveUnitCount < 5 then
                             return true
                         end
@@ -1266,7 +1266,7 @@ function DefensivePointShieldRequired(aiBrain, locationType)
                 RNGLOG('We have a directfire unit at this defensive point, current count is '..unitCount)
             end
         end
-        if unitCount > 2 then
+        if unitCount > 1 then
             if not next(v.Shields) then
                 RNGLOG('We can have a shield at this defensive point')
                 return true

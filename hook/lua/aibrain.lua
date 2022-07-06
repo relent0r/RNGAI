@@ -1045,6 +1045,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(RUtils.CanPathToCurrentEnemyRNG)
         self:ForkThread(Mapping.SetMarkerInformation)
         self:ForkThread(IntelManagerRNG.MapReclaimAnalysis)
+        self:ForkThread(IntelManagerRNG.CreateIntelGrid)
         self:CalculateMassMarkersRNG()
         self:ForkThread(self.SetupIntelTriggersRNG)
         self:ForkThread(IntelManagerRNG.ExpansionIntelScanRNG)
