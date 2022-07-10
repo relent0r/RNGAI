@@ -3,6 +3,7 @@ local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
+local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local Utils = import('/lua/utilities.lua')
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
@@ -16,6 +17,7 @@ local GetConsumptionPerSecondMass = moho.unit_methods.GetConsumptionPerSecondMas
 local GetConsumptionPerSecondEnergy = moho.unit_methods.GetConsumptionPerSecondEnergy
 local GetProductionPerSecondMass = moho.unit_methods.GetProductionPerSecondMass
 local GetProductionPerSecondEnergy = moho.unit_methods.GetProductionPerSecondEnergy
+local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local ALLBPS = __blueprints
 
 -- TEMPORARY LOUD LOCALS
@@ -4576,6 +4578,116 @@ SortScoutingAreasRNG = function(aiBrain, list)
             return a.LastScouted < b.LastScouted
         end
     end)
+end
+
+GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
+    local scoutingData = false
+    local scoutType = false
+    local platoonNeedScout = false
+    local supportPlatoon = false
+    local currentGameTime = GetGameTimeSeconds()
+    local scoutPos = scout:GetPosition()
+    local im = IntelManagerRNG:GetIntelManager()
+    if not aiBrain.InterestList then
+        aiBrain:BuildScoutLocations()
+    end
+
+    if aiBrain.CDRUnit.Active then
+        if not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead then
+            RNGLOG('Scout Has active ACU without Scout')
+            if AIAttackUtils.CanGraphToRNG(scoutPos, aiBrain.CDRUnit.Position, platoon.MovementLayer) then
+                aiBrain.CDRUnit.Scout = scout
+                scoutType = 'AssistUnit'
+                
+                RNGLOG('ScoutDest is acu support')
+                return aiBrain.CDRUnit, scoutType
+            end
+        end
+    end
+    if platoon.PlatoonData.ExcessScout and (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
+        --RNGLOG('Look for platoon that needs a scout')
+        coroutine.yield(10)
+        platoonNeedScout, supportPlatoon = platoon:ScoutFindNearbyPlatoonsRNG(250)
+        platoon.FindPlatoonCounter = platoon.FindPlatoonCounter + 1
+    end
+    if platoon.PlatoonData.ExcessScout and platoonNeedScout then
+        if supportPlatoon and PlatoonExists(aiBrain, supportPlatoon) then
+            scoutType = 'AssistPlatoon'
+            RNGLOG('ScoutDest is assist platoon')
+            return supportPlatoon, scoutType
+        end
+    end
+    if platoon.PlatoonData.ExcessScout and (not platoonNeedScout) and (not platoon.ZonesValidated) then
+        --RNGLOG('Excess scout looking for expansion')
+        scoutPos = scout:GetPosition()
+        local scoutMarker
+        if next(im.ZoneIntel.Assignment) then
+            --RNGLOG('Scout ZoneIntel Assignment table is present')
+            for k, v in im.ZoneIntel.Assignment do
+                if (not v.RadarCoverage) and (not v.ScoutUnit or v.ScoutUnit.Dead) and (not v.StartPosition) then
+                    --RNGLOG('Scout ZoneIntel Assignment has found a zone with no radar and no scout')
+                    if AIAttackUtils.CanGraphToRNG(scoutPos, v.Position, platoon.MovementLayer) then
+                        --RNGLOG('Scout ZoneIntel Assignment scout is assigning itself to the zone')
+                        scoutMarker = v
+                        im.ZoneIntel.Assignment[k].ScoutUnit = scout
+                        break
+                    else
+                        coroutine.yield(5)
+                    end
+                end
+
+            end
+        else
+            WARN('ZoneIntel Assignment table is empty, it shouldnt be')
+        end
+
+        if scoutMarker then
+            --RNGLOG('Scout Marker Found, moving to position')
+            scoutType = 'ZoneLocation'
+            RNGLOG('ScoutDest is zone location')
+            return scoutMarker, scoutType
+        else
+            platoon.ZonesValidated = true
+        end
+    end
+    RNGLOG('GetLandScoutLocationRNG ')
+    RNGLOG(repr(aiBrain.IntelData.HiPriScouts))
+    RNGLOG(repr(aiBrain.NumOpponents))
+    RNGLOG(repr(aiBrain.InterestList.HighPriority))
+    if aiBrain.IntelData.HiPriScouts < aiBrain.NumOpponents and next(aiBrain.InterestList.HighPriority) then
+        RNGLOG(repr(aiBrain.InterestList.HighPriority[1]))
+        scoutingData = aiBrain.InterestList.HighPriority[1]
+        aiBrain.IntelData.HiPriScouts = aiBrain.IntelData.HiPriScouts + 1
+        scoutingData.LastScouted = currentGameTime
+        scoutType = 'Location'
+        SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.HighPriority)
+    elseif next(aiBrain.InterestList.PerimeterPoints.Restricted) then
+        SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.PerimeterPoints.Restricted)
+        for k, point in aiBrain.InterestList.PerimeterPoints.Restricted do
+            --RNGLOG('LastScouted Restricted '..aiBrain.InterestList.PerimeterPoints.Restricted[k].LastScouted)
+            if currentGameTime - point.LastScouted > 120 then
+                --RNGLOG('LastScoutedRestricted > 90 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
+                scoutingData = aiBrain.InterestList.PerimeterPoints.Restricted[k]
+                --RNGLOG('scoutingData is set to '..repr(scoutingData.Position))
+                point.LastScouted = currentGameTime
+                scoutType = 'Location'
+                break
+            else
+                --RNGLOG('LastScoutedRestricted < 90 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
+            end
+        end
+    elseif next(aiBrain.InterestList.LowPriority) then
+        scoutingData = aiBrain.InterestList.LowPriority[1]
+        aiBrain.IntelData.HiPriScouts = 0
+        scoutingData.LastScouted = currentGameTime
+        scoutType = 'Location'
+        SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.LowPriority)
+    else
+        --Reset number of scoutings and start over
+        aiBrain.IntelData.HiPriScouts = 0
+    end
+    RNGLOG('ScoutDest is interest list')
+    return scoutingData, scoutType
 end
 
 DrawCircleAtPosition = function(aiBrain, position)

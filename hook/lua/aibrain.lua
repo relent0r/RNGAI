@@ -1244,6 +1244,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.Zones.Naval = MAP:GetZoneSet('RNGNavalResourceSet',2)
         self.ZonesInitialized = true
         --self:ForkThread(import('/mods/RNGAI/lua/AI/RNGDebug.lua').DrawReclaimGrid)
+        self:ForkThread(import('/mods/RNGAI/lua/AI/RNGDebug.lua').DrawIntelGrid)
     end,
 
     WaitForZoneInitialization = function(self)

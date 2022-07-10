@@ -9,6 +9,7 @@ local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
+local MapIntelGridSize = 32
 
 
 -- pre-compute categories for performance
@@ -653,7 +654,7 @@ IntelManager = Class {
             unit.zoneid = MAP:GetZoneID(radarPosition,self.Brain.Zones.Land.index)
             if unit.zoneid then
                 for k, v in self.ZoneIntel.Assignment do
-                    if VDist2Sq(radarPosition[1], radarPosition[3], v.Position[1], v.Position[3]) < intelRadius then
+                    if VDist3Sq(radarPosition, v.Position) < intelRadius then
                         --RNGLOG('Radar coverage has been set true for zone '..unit.zoneid)
                         RNGINSERT(v.RadarUnits, unit)
                         v.RadarCoverage = true
@@ -683,6 +684,14 @@ IntelManager = Class {
             end
         end
     end,
+
+    --[[
+            for k, v in self.MapIntelGrid do
+                if VDist3Sq(radarPosition, v.Position) < intelRadius then
+                    v.RadarCoverage = true
+                end
+            end
+    ]]
 
     ZoneIntelAssignment = function(self)
         -- Will setup table for scout assignment to zones
@@ -1177,8 +1186,8 @@ CreateReclaimGrid = function(aiBrain)
     local fz = 1 / n * mz 
 
     -- draw iMAP information
-    for z = 1, n do 
-        for x = 1, n do 
+    for x = 1, n do 
+        for z = 1, n do 
             local cx = fx * (x - 0.5)
             local cz = fz * (z - 0.5)
             if cx < playableArea[1] or cz < playableArea[2] or cx > playableArea[3] or cz > playableArea[4] then
@@ -1200,7 +1209,7 @@ CreateIntelGrid = function(aiBrain)
     local mz = ScenarioInfo.size[2]
     local GetTerrainHeight = GetTerrainHeight
 
-    RNGLOG('Intel Grid Size X : '..mx..' Z: '..mz)
+    RNGLOG('Intel Grid MapSize X : '..mx..' Z: '..mz)
 
     -- smaller maps have a 8x8 iMAP
     if mx == mz and mx == 256 then 
@@ -1214,27 +1223,51 @@ CreateIntelGrid = function(aiBrain)
     local fz = 1 / n * mz 
 
     -- draw iMAP information
-    for z = 1, n do 
-        intelGrid[z] = {}
-        for x = 1, n do 
-            intelGrid[z][x] = { }
-            intelGrid[z][x].Position = { }
-            intelGrid[z][x].Size = { }
-            intelGrid[z][x].LastScouted = 0
-            intelGrid[z][x].Enabled = false
+    for x = 1, n do 
+        intelGrid[x] = {}
+        for z = 1, n do 
+            intelGrid[x][z] = { }
+            intelGrid[x][z].Position = { }
+            intelGrid[x][z].Size = { }
+            intelGrid[x][z].LastScouted = 0
+            intelGrid[x][z].Enabled = false
+            intelGrid[x][z].IntelCoverage = false
+            intelGrid[x][z].LandThreat = 0
+            intelGrid[x][z].AirThreat = 0
+            intelGrid[x][z].ACUThreat = 0
+            intelGrid[x][z].AdjacentGrids = {}
             local cx = fx * (x - 0.5)
             local cz = fz * (z - 0.5)
             if cx < playableArea[1] or cz < playableArea[2] or cx > playableArea[3] or cz > playableArea[4] then
                 continue
             end
-            intelGrid[z][x].Position = {cx, GetTerrainHeight(cx, cz), cz}
-            intelGrid[z][x].Size = { sx = fx, sz = fz}
-            intelGrid[z][x].LastScouted = 0
-            intelGrid[z][x].Enabled = true
+            intelGrid[x][z].Position = {cx, GetTerrainHeight(cx, cz), cz}
+            intelGrid[x][z].Size = { sx = fx, sz = fz}
+            intelGrid[x][z].LastScouted = 0
+            intelGrid[x][z].Enabled = true
         end
     end
-    aiBrain.MapIntelTable = intelGrid
-    RNGLOG('Map Intel Grid '..repr(aiBrain.MapIntelTable))
+    im.MapIntelGrid = intelGrid
+    MapIntelGridSize = fx
+    RNGLOG('Map Intel Grid '..repr(im.MapIntelGrid))
+end
+
+function GetIntelGrid(Position)
+    --Base level segment numbers
+    if Position then
+        local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+        --LOG('Temp log for GetPathingSegmentFromPosition: tPosition='..repru((tPosition or {'nil'}))..'; rPlayableArea='..repru((rPlayableArea or {'nil'})))
+        --LOG('iBaseSegmentSize='..(iBaseSegmentSize or 'nil'))
+        RNGLOG('Grid Size '..MapIntelGridSize)
+        local gridx = math.floor((Position[1] - playableArea[1]) / MapIntelGridSize) + 1
+        local gridy = math.floor((Position[3] - playableArea[2]) / MapIntelGridSize) + 1
+        RNGLOG('Grid return X '..gridx..' Y '..gridy)
+        RNGLOG('Unit Position '..repr(Position))
+        RNGLOG('Attempt to return grid location '..repr(im.MapIntelGrid[gridx][gridy]))
+
+        return math.floor( (Position[1] - playableArea[1]) / MapIntelGridSize) + 1, math.floor((Position[3] - playableArea[2]) / MapIntelGridSize) + 1
+    end
+    return false, false
 end
 
 --[[

@@ -61,3 +61,52 @@ DrawReclaimGrid = function()
         WaitTicks(2)
     end
 end
+
+DrawIntelGrid = function()
+
+    coroutine.yield(100)
+    --LOG('RNG Mapping Class Playable Area is '..repr(import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua'.GetPlayableArea()))
+    -- by default, 16x16 iMAP
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+    local n = 16 
+    local mx = ScenarioInfo.size[1]
+    local mz = ScenarioInfo.size[2]
+
+
+    -- smaller maps have a 8x8 iMAP
+    if mx == mz and mx == 256 then 
+        n = 8
+    end
+
+    local color = "ffffff"
+    local a = Vector(0, 0, 0)
+    local b = Vector(0, 0, 0)
+    local GetTerrainHeight = GetTerrainHeight
+    local DrawLine = DrawLine 
+
+    local function Line(x1, z1, x2, z2, color)
+        a[1] = x1
+        a[3] = z1
+        a[2] = GetTerrainHeight(x1, z1)
+
+        b[1] = x2 
+        b[3] = z2
+        b[2] = GetTerrainHeight(x2, z2)
+        DrawLine(a, b, color)
+    end
+    local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager()
+    while true do 
+        -- draw iMAP information
+        for _, v in im.MapIntelGrid do 
+            for _, c in v do 
+                if c.Enabled then
+                    local rect = Rect(c.Postion[1] - (c.Size.sx / 2), c.Postion[3] - (c.Size.sz / 2), c.Postion[1] + (c.Size.sx / 2), c.Postion[3] + (c.Size.sz / 2))
+                    RNGLOG('rect '..repr(rect))
+                end
+            end
+
+            --DrawCircle({cx, GetTerrainHeight(cx, cz), cz}, 10, '0000FF')
+        end
+        WaitTicks(20)
+    end
+end
