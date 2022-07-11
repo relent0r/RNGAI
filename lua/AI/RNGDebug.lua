@@ -100,13 +100,16 @@ DrawIntelGrid = function()
         for _, v in im.MapIntelGrid do 
             for _, c in v do 
                 if c.Enabled then
-                    local rect = Rect(c.Postion[1] - (c.Size.sx / 2), c.Postion[3] - (c.Size.sz / 2), c.Postion[1] + (c.Size.sx / 2), c.Postion[3] + (c.Size.sz / 2))
-                    RNGLOG('rect '..repr(rect))
+                    RNGLOG('MapIntelGrid '..repr(c))
+                    DrawCircle(c.Position, 10, '0000FF')
+                    --Line(c.Position[1] - (c.Size.sx / 2), c.Position[3] - (c.Size.sz / 2), c.Position[1] + (c.Size.sx / 2), c.Position[3] + (c.Size.sz / 2), "ffffff")
+                    --local rect = Rect(c.Position[1] - (c.Size.sx / 2), c.Position[3] - (c.Size.sz / 2), c.Position[1] + (c.Size.sx / 2), c.Position[3] + (c.Size.sz / 2))
+                    --RNGLOG('rect '..repr(rect))
                 end
             end
 
             --DrawCircle({cx, GetTerrainHeight(cx, cz), cz}, 10, '0000FF')
         end
-        WaitTicks(20)
+        WaitTicks(2)
     end
 end
