@@ -557,6 +557,7 @@ BuilderGroup {
         },
         BuilderData = {
             Avoid        = true,
+            ZoneType     = 'raid',
             IncludeWater = false,
             IgnoreFriendlyBase = true,
             LocationType = 'LocationType',
@@ -769,6 +770,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER } },
         },
         BuilderData = {
+            ZoneType     = 'raid',
             IncludeWater = false,
             IgnoreFriendlyBase = true,
             LocationType = 'LocationType',
@@ -1020,6 +1022,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
+            ZoneType     = 'control',
             UseFormation = 'None',
             LocationType = 'LocationType',
             TargetSearchPriorities = {
@@ -1554,6 +1557,7 @@ BuilderGroup {
         },
         BuilderData = {
             Avoid        = true,
+            ZoneType     = 'raid',
             SearchRadius = BaseEnemyArea,
             LocationType = 'LocationType',
             IncludeWater = false,
@@ -1602,6 +1606,7 @@ BuilderGroup {
         },
         BuilderData = {
             Avoid        = true,
+            ZoneType     = 'raid',
             SearchRadius = BaseEnemyArea,
             LocationType = 'LocationType',
             IncludeWater = false,
@@ -1649,6 +1654,7 @@ BuilderGroup {
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER} },  	
         },
         BuilderData = {
+            ZoneType     = 'raid',
             SearchRadius = BaseEnemyArea,
             LocationType = 'LocationType',
             IncludeWater = false,

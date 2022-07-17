@@ -275,7 +275,7 @@ function CDRCallPlatoon(cdr, threatRequired)
         if aPlat == cdr.PlatoonHandle or aPlat == supportPlatoonAvailable then
             continue
         end
-        if aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' or aPlat.PlanName == 'GuardMarkerRNG' or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlanName == 'ZoneControlRNG' or aPlat.PlanName == 'ZoneRaidRNG' then
+        if aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' or aPlat.PlanName == 'GuardMarkerRNG' or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlanName == 'ZoneControlRNG' then
             if aPlat.UsingTransport then
                 continue
             end
@@ -1903,7 +1903,7 @@ function CDRRetreatRNG(aiBrain, cdr, base)
         else
             local AlliedPlatoons = aiBrain:GetPlatoonsList()
             for _,aPlat in AlliedPlatoons do
-                if aPlat.PlanName == 'MassRaidRNG' or aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' or aPlat.PlanName == 'GuardMarkerRNG' or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlanName == 'ZoneControlRNG' or aPlat.PlanName == 'ZoneRaidRNG' then 
+                if aPlat.PlanName == 'MassRaidRNG' or aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' or aPlat.PlanName == 'GuardMarkerRNG' or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlanName == 'ZoneControlRNG' then 
                     --RNGLOG('Allied platoon name '..aPlat.PlanName)
                     if aPlat.UsingTransport then 
                         continue 
