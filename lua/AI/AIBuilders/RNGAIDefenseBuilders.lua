@@ -121,7 +121,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 8, categories.DEFENSE * categories.TECH2 * categories.DIRECTFIRE}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 12, categories.DEFENSE * categories.TECH2 * categories.DIRECTFIRE}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LANDNAVAL' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 0.6 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },

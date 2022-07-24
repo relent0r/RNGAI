@@ -101,7 +101,9 @@ DrawIntelGrid = function()
             for _, c in v do 
                 if c.Enabled then
                     RNGLOG('MapIntelGrid '..repr(c))
-                    DrawCircle(c.Position, 10, '0000FF')
+                    DrawLine({c.Position[1]-c.Size.sx/2, c.Position[2], c.Position[3]-c.Size.sz/2}, {c.Position[1]+c.Size.sx/2, c.Position[2], c.Position[3]-c.Size.sz/2}, 'FFA500')
+                    DrawLine({c.Position[1]-c.Size.sx/2, c.Position[2], c.Position[3]-c.Size.sz/2}, {c.Position[1]-c.Size.sx/2, c.Position[2], c.Position[3]+c.Size.sz/2}, 'FFA500')
+                    --DrawCircle(c.Position, 10, '0000FF')
                     --Line(c.Position[1] - (c.Size.sx / 2), c.Position[3] - (c.Size.sz / 2), c.Position[1] + (c.Size.sx / 2), c.Position[3] + (c.Size.sz / 2), "ffffff")
                     --local rect = Rect(c.Position[1] - (c.Size.sx / 2), c.Position[3] - (c.Size.sz / 2), c.Position[1] + (c.Size.sx / 2), c.Position[3] + (c.Size.sz / 2))
                     --RNGLOG('rect '..repr(rect))

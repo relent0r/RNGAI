@@ -105,7 +105,7 @@ end
 
 local BomberResponse = function(self, aiBrain, builderManager, builderData)
     --RNGLOG('BomberResponse location is '..builderManager.LocationType)
-    if aiBrain.BrainIntel.AirPhase < 2 and aiBrain.EnemyIntel.EnemyThreatCurrent.Air < aiBrain.BrainIntel.SelfThreat.AirNow then
+    if aiBrain.BrainIntel.AirPhase < 2 and aiBrain.EnemyIntel.EnemyThreatCurrent.Air < aiBrain.BrainIntel.SelfThreat.AntiAirNow then
         --RNGLOG('Bomber Response for land phase < 2 and enemy air threat low')
         return 890
     end

@@ -4650,10 +4650,10 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             platoon.ZonesValidated = true
         end
     end
-    RNGLOG('GetLandScoutLocationRNG ')
-    RNGLOG(repr(aiBrain.IntelData.HiPriScouts))
-    RNGLOG(repr(aiBrain.NumOpponents))
-    RNGLOG(repr(aiBrain.InterestList.HighPriority))
+    --RNGLOG('GetLandScoutLocationRNG ')
+    --RNGLOG(repr(aiBrain.IntelData.HiPriScouts))
+    --RNGLOG(repr(aiBrain.NumOpponents))
+    --RNGLOG(repr(aiBrain.InterestList.HighPriority))
     if aiBrain.IntelData.HiPriScouts < aiBrain.NumOpponents and next(aiBrain.InterestList.HighPriority) then
         RNGLOG(repr(aiBrain.InterestList.HighPriority[1]))
         scoutingData = aiBrain.InterestList.HighPriority[1]
@@ -4686,7 +4686,6 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         --Reset number of scoutings and start over
         aiBrain.IntelData.HiPriScouts = 0
     end
-    RNGLOG('ScoutDest is interest list')
     return scoutingData, scoutType
 end
 

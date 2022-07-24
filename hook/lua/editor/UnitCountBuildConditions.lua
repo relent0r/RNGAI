@@ -1263,7 +1263,7 @@ function DefensivePointShieldRequired(aiBrain, locationType)
         if next(v.DirectFire) then
             for c, b in v.DirectFire do
                 unitCount = unitCount + 1
-                RNGLOG('We have a directfire unit at this defensive point, current count is '..unitCount)
+                --RNGLOG('We have a directfire unit at this defensive point, current count is '..unitCount)
             end
         end
         if unitCount > 1 then

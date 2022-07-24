@@ -2376,7 +2376,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local perimeterMonitorRadius = BaseRestrictedArea * 1.2
         self.BasePerimeterMonitor = {}
         if self.RNGDEBUG then
-            self:ForkThread(self.drawMainRestricted)
+            --self:ForkThread(self.drawMainRestricted)
         end
         while true do
             for k, v in self.BuilderManagers do

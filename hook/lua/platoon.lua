@@ -1212,21 +1212,13 @@ Platoon = Class(RNGAIPlatoonClass) {
         local scoutPos = false
         self.FindPlatoonCounter = 0
         
-        
-        -- build scoutlocations if not already done.
-
-        --If we have cloaking (are cybran), then turn on our cloaking
-        --DUNCAN - Fixed to use same bits
         self:ConfigurePlatoon()
         while not scout.Dead do
             --Head towards the the area that has not had a scout sent to it in a while
-            RNGLOG('Scout Starts loop')
+            --RNGLOG('Scout Starts loop')
             local targetData = false
             
             local excessPathFailures = 0
-            if targetData then
-                RNGLOG('Scout Has targetData')
-            end
             local targetData, scoutType = RUtils.GetLandScoutLocationRNG(self, aiBrain, scout)
             if targetData then
                 --Can we get there safely?

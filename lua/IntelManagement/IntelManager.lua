@@ -770,11 +770,6 @@ end
 
 
 function GetIntelManager()
-    if im then
-        LOG('Returning Intel Manager')
-    else
-        LOG('Intel Manager doesnt exist yet')
-    end
     return im
 end
 
