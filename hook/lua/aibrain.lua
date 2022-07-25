@@ -1395,7 +1395,25 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
-    
+    CreateFloatingEngineerBase = function(self, position)
+        local baseLayer = 'Land'
+        position[2] = GetTerrainHeight( position[1], position[3] )
+        if GetSurfaceHeight( position[1], position[3] ) > position[2] then
+            position[2] = GetSurfaceHeight( position[1], position[3] )
+            baseLayer = 'Water'
+        end
+        self.BuilderManagers['FLOATING'] = {
+            EngineerManager = EngineerManager.CreateFloatingEM(self, position),
+            BuilderHandles = {},
+            Position = position,
+            Layer = baseLayer,
+            BaseType = 'FLOATING'
+            }
+        if self.RNGDEBUG then
+            RNGLOG('Floating base setup')
+        end
+        import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(self, 'FLOATING', 'FloatingBaseTemplate')
+    end,
 
     GetGraphArea = function(self, position, baseName, baseLayer)
         -- This will set the graph area of the factory manager so we don't need to look it up every time

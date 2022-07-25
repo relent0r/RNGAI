@@ -37,6 +37,25 @@ EngineerManager = Class(RNGEngineerManager) {
         --self.Brain:RemoveConsumption(self.LocationType, unit)
     end,
 
+    CreateFloatingEM = function(self, brain, location)
+        BuilderManager.Create(self,brain)
+
+        if location then
+            error('*PLATOOM FORM MANAGER ERROR: Invalid parameters; requires locationType, location, and radius')
+            return false
+        end
+
+        self.Location = location
+        self.Radius = 0
+        self.LocationType = 'FLOATING'
+
+        self.ConsumptionUnits = {
+            Engineers = { Category = categories.ENGINEER, Units = {}, UnitsList = {}, Count = 0, },
+        }
+
+        self:AddBuilderType('Any')
+    end,
+
     AddUnitRNG = function(self, unit, dontAssign)
         --LOG('+ AddUnit')
         if EntityCategoryContains(categories.STRUCTURE * categories.DEFENSE, unit) then
