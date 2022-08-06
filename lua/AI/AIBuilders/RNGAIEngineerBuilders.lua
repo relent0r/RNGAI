@@ -43,6 +43,9 @@ local StartingReclaimPresent = function(self, aiBrain, builderManager)
     if aiBrain.StartMassReclaimTotal > 500 then
         return 1002
     end
+    if aiBrain.StartEnergyReclaimTotal > 5000 then
+        return 1002
+    end
     return 950
 end
 
@@ -1012,7 +1015,7 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderConditions = {
                 { MIBC, 'CheckIfReclaimEnabled', {}},
-                { EBC, 'GreaterThanEnergyStorageRatioRNG', { 0.40 } },
+                --{ EBC, 'GreaterThanEnergyStorageRatioRNG', { 0.40 } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER - categories.COMMAND}},
                 
             },

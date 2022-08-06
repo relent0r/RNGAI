@@ -71,7 +71,7 @@ local AirAttackMode = function(self, aiBrain, builderManager, builderData)
     if aiBrain.EnemyIntel.EnemyCount > 0 then
         enemyCount = aiBrain.EnemyIntel.EnemyCount
     end
-    if myAirThreat / 1.3 > (enemyAirThreat / enemyCount) then
+    if aiBrain.BrainIntel.SelfThreat.AntiAirNow > 30 and myAirThreat / 1.3 > (enemyAirThreat / enemyCount) then
         --RNGLOG('Enable Air Attack Queue')
         aiBrain.BrainIntel.AirAttackMode = true
         if builderData.BuilderData.TechLevel == 1 then

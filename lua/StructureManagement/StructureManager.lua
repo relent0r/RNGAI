@@ -248,7 +248,7 @@ StructureManager = Class {
                 TotalT3NAVAL = 0,
             }
             for k, manager in self.Brain.BuilderManagers do
-                if RNGGETN(manager.FactoryManager.FactoryList) > 0 then
+                if manager.FactoryManager.FactoryList and RNGGETN(manager.FactoryManager.FactoryList) > 0 then
                     for c, unit in manager.FactoryManager.FactoryList do
                         if not unit.Dead and not unit:BeenDestroyed() then
                             if ALLBPS[unit.UnitId].CategoriesHash.LAND then
@@ -841,29 +841,31 @@ StructureManager = Class {
             IssueUpgrade({unit}, upgradeID)
             
             coroutine.yield(2)
-            local upgradedFactory = unit.UnitBeingBuilt
-            local fractionComplete = upgradedFactory:GetFractionComplete()
-            unit.Upgrading = true
-            unit.Offline = true
-            if hq == 'LAND' then
-                self.Brain.EngineerAssistManagerFocusLandUpgrade = true
-            elseif hq =='AIR' then
-                self.Brain.EngineerAssistManagerFocusAirUpgrade = true
-                
+            if not unit.Dead and not unit:BeenDestroyed() then
+                local upgradedFactory = unit.UnitBeingBuilt
+                local fractionComplete = upgradedFactory:GetFractionComplete()
+                unit.Upgrading = true
+                unit.Offline = true
+                if hq == 'LAND' then
+                    self.Brain.EngineerAssistManagerFocusLandUpgrade = true
+                elseif hq =='AIR' then
+                    self.Brain.EngineerAssistManagerFocusAirUpgrade = true
+                    
+                end
+                while upgradedFactory and not upgradedFactory.Dead and not upgradedFactory:BeenDestroyed() and fractionComplete < 1 do
+                    fractionComplete = upgradedFactory:GetFractionComplete()
+                    coroutine.yield(20)
+                end
+                if hq == 'LAND' then
+                    self.Brain.EngineerAssistManagerFocusLandUpgrade = false
+                    self.Brain.EngineerAssistManagerFocusCategory = false
+                elseif hq =='AIR' then
+                    self.Brain.EngineerAssistManagerFocusAirUpgrade = false
+                    self.Brain.EngineerAssistManagerFocusCategory = false
+                end
+                unit.Upgrading = false
+                unit.Offline = false
             end
-            while upgradedFactory and not upgradedFactory.Dead and not upgradedFactory:BeenDestroyed() and fractionComplete < 1 do
-                fractionComplete = upgradedFactory:GetFractionComplete()
-                coroutine.yield(20)
-            end
-            if hq == 'LAND' then
-                self.Brain.EngineerAssistManagerFocusLandUpgrade = false
-                self.Brain.EngineerAssistManagerFocusCategory = false
-            elseif hq =='AIR' then
-                self.Brain.EngineerAssistManagerFocusAirUpgrade = false
-                self.Brain.EngineerAssistManagerFocusCategory = false
-            end
-            unit.Upgrading = false
-            unit.Offline = false
         end
     end,
 

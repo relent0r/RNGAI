@@ -40,8 +40,8 @@ EngineerManager = Class(RNGEngineerManager) {
     CreateFloatingEM = function(self, brain, location)
         BuilderManager.Create(self,brain)
 
-        if location then
-            error('*PLATOOM FORM MANAGER ERROR: Invalid parameters; requires locationType, location, and radius')
+        if not location then
+            error('*PLATOOM FORM MANAGER ERROR: Invalid parameters; location')
             return false
         end
 
@@ -55,7 +55,7 @@ EngineerManager = Class(RNGEngineerManager) {
 
         self:AddBuilderType('Any')
     end,
-
+    
     AddUnitRNG = function(self, unit, dontAssign)
         --LOG('+ AddUnit')
         if EntityCategoryContains(categories.STRUCTURE * categories.DEFENSE, unit) then
@@ -120,6 +120,50 @@ EngineerManager = Class(RNGEngineerManager) {
         end
     end,
 
+    TaskFinishedRNG = function(manager, unit)
+        if manager.LocationType ~= 'FLOATING' and VDist3(manager.Location, unit:GetPosition()) > manager.Radius and not EntityCategoryContains(categories.COMMAND, unit) then
+            LOG('Engineer is more than distance from manager, radius is '..manager.Radius..' distance is '..VDist3(manager.Location, unit:GetPosition()))
+            manager:ReassignUnitRNG(unit)
+        else
+            manager:ForkEngineerTask(unit)
+        end
+    end,
+
+    ReassignUnitRNG = function(self, unit)
+        local managers = self.Brain.BuilderManagers
+        local bestManager = false
+        local distance = false
+        local unitPos = unit:GetPosition()
+        LOG('Reassigning Engineer')
+        for k,v in managers do
+            if (v.FactoryManager.LocationActive and v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) > 0) or v == 'MAIN' then
+                local checkDistance = VDist3(v.EngineerManager:GetLocationCoords(), unitPos)
+                if not distance then
+                    distance = checkDistance
+                end
+                if checkDistance < v.EngineerManager.Radius and checkDistance < distance then
+                    LOG('Manager radius is '..v.EngineerManager.Radius)
+                    if distance then
+                        LOG('Manager distance is '..distance)
+                    end
+                    distance = checkDistance
+                    bestManager = v.EngineerManager
+                    LOG('Engineer Being reassigned to '..bestManager.LocationType)
+                end
+            end
+        end
+        if not bestManager then
+            if self.Brain.BuilderManagers['FLOATING'].EngineerManager then
+                LOG('Engineer Being reassigned to floating engineer manager')
+                bestManager = self.Brain.BuilderManagers['FLOATING'].EngineerManager
+            end
+        end
+        self:RemoveUnit(unit)
+        if bestManager and not unit.Dead then
+            bestManager:AddUnit(unit)
+        end
+    end,
+
     ManagerLoopBody = function(self,builder,bType)
         if not self.Brain.RNG then
             return RNGEngineerManager.ManagerLoopBody(self,builder,bType)
@@ -163,6 +207,10 @@ EngineerManager = Class(RNGEngineerManager) {
 
         if builder and ((not unit.Combat) or (not unit.GoingHome) or (not unit.Upgrading) or (not unit.Active)) then
             -- Fork off the platoon here
+            if self.LocationType == 'FLOATING' then
+                LOG('Engineer being assigned job from floating engineer manager')
+                LOG(repr(builder.BuilderName))
+            end
             local template = self:GetEngineerPlatoonTemplate(builder:GetPlatoonTemplate())
             local hndl = self.Brain:MakePlatoon(template[1], template[2])
             self.Brain:AssignUnitsToPlatoon(hndl, {unit}, 'support', 'none')
@@ -300,3 +348,11 @@ EngineerManager = Class(RNGEngineerManager) {
         end
     end,
 }
+
+CreateFloatingEngineerManager = function(brain, location)
+    local em = EngineerManager()
+    LOG('brain nickname '..repr(brain.Nickname))
+    LOG('location is '..repr(location))
+    em:CreateFloatingEM(brain, location)
+    return em
+end

@@ -887,8 +887,11 @@ function FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCa
         WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
         return false
     end
-    local numUnits = factoryManager:GetNumCategoryFactories(testCat)
-    return CompareBody(numUnits, unitCount, compareType)
+    if factoryManager.LocationActive then
+        local numUnits = factoryManager:GetNumCategoryFactories(testCat)
+        return CompareBody(numUnits, unitCount, compareType)
+    end
+    return false
 end
 
 function FactoryLessAtLocationRNG(aiBrain, locationType, unitCount, unitCategory)
@@ -938,7 +941,7 @@ end
 -- { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 'Naval Area', 3,  categories.FACTORY * categories.STRUCTURE * categories.TECH3 }},
 function ExistingNavalExpansionFactoryGreaterRNG( aiBrain, markerType, numReq, category )
     for k,v in aiBrain.BuilderManagers do
-        if markerType == v.BaseType and v.FactoryManager.FactoryList then
+        if v.FactoryManager.LocationActive and markerType == v.BaseType and v.FactoryManager.FactoryList then
             if numReq > EntityCategoryCount(category, v.FactoryManager.FactoryList) then
                 --RNGLOG('ExistingExpansionFactoryGreater = false')
 				return false
@@ -1057,7 +1060,7 @@ function GreaterThanFactoryCountRNG(aiBrain, count, category, navalOnly)
         if navalOnly and v.BaseType ~= 'Naval Area' then
             continue
         end
-        if v.FactoryManager then
+        if v.FactoryManager and v.FactoryManager.LocationActive then
             factoryCount = factoryCount + v.FactoryManager:GetNumCategoryFactories(category)
             --LOG('factoryCount '..factoryCount..' number to compare '..count)
             if factoryCount > count then
@@ -1076,7 +1079,7 @@ function LessThanFactoryCountRNG(aiBrain, count, category, navalOnly)
         if navalOnly and v.BaseType ~= 'Naval Area' then
             continue
         end
-        if v.FactoryManager then
+        if v.FactoryManager and v.FactoryManager.LocationActive then
             factoryCount = factoryCount + v.FactoryManager:GetNumCategoryFactories(category)
             --LOG('factoryCount '..factoryCount..' number to compare '..count)
             if factoryCount >= count then

@@ -1028,7 +1028,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         local plat = self:GetPlatoonUniquelyNamed('ArmyPool')
         plat:ForkThread(plat.BaseManagersDistressAIRNG)
-        self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitor)
+        self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitorRNG)
         self.EnemyPickerThread = self:ForkThread(self.PickEnemyRNG)
         self:ForkThread(self.CivilianPDCheckRNG)
         self:ForkThread(self.EcoPowerManagerRNG)
@@ -1063,6 +1063,8 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     LogDataThreadRNG = function(self)
+        coroutine.yield(50)
+        self:CreateFloatingEngineerBase(self.BrainIntel.StartPos)
         coroutine.yield(300)
         RNGLOG('Current Interest List PeimeterPoints'..reprs(self.InterestList.PerimeterPoints))
         while true do
@@ -1076,6 +1078,13 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('MassEfficiencyOverTime --'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime)
             RNGLOG('EnergyTrendOverTime --'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
             RNGLOG('MassTrendOverTime --'..self.EconomyOverTimeCurrent.MassTrendOverTime)
+            RNGLOG('---------------')
+            RNGLOG('Current Land Factory Spend '..self.cmanager.categoryspend.fact['Land'])
+            RNGLOG('Ratio Land Spend Target '..(self.cmanager.income.r.m * self.ProductionRatios['Land']))
+            RNGLOG('Current Air Factory Spend '..self.cmanager.categoryspend.fact['Air'])
+            RNGLOG('Ratio Air Spend Target '..(self.cmanager.income.r.m * self.ProductionRatios['Air']))
+            RNGLOG('Current Naval Factory Spend '..self.cmanager.categoryspend.fact['Naval'])
+            RNGLOG('Ratio Naval Spend Target '..(self.cmanager.income.r.m * self.ProductionRatios['Naval']))
             RNGLOG('---------------')
             RNGLOG('Current income from extractors '..self.cmanager.income.r.m)
             RNGLOG('self.cmanager.buildpower.eng '..repr(self.cmanager.buildpower.eng))
@@ -1102,9 +1111,10 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
             RNGLOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
             RNGLOG('Current Self Sub Threat :'..self.BrainIntel.SelfThreat.NavalSubNow)
+            RNGLOG('Current Enemy Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
             RNGLOG('Current Self Naval Threat :'..self.BrainIntel.SelfThreat.NavalNow)
             RNGLOG('Current Self Land Threat :'..self.BrainIntel.SelfThreat.LandNow)
-            RNGLOG('Current Enemy Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.NavalSub)
+            RNGLOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
             RNGLOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
             RNGLOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
             RNGLOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
@@ -1118,7 +1128,6 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
             RNGLOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
             RNGLOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
-            RNGLOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
             RNGLOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
             --RNGLOG('Current Interest List HighPriority'..reprs(self.InterestList.HighPriority))
             --RNGLOG('Current Interest List LowPriority'..reprs(self.InterestList.LowPriority))
@@ -1234,6 +1243,16 @@ AIBrain = Class(RNGAIBrainClass) {
             end
                     
 
+            WaitTicks(2)
+        end
+    end,
+
+    drawMarker = function(self, position)
+        --RNGLOG('Starting drawMainRestricted')
+        local counter = 0
+        while counter < 60 do
+            DrawCircle(position, 10, '0000FF')
+            counter = counter + 1
             WaitTicks(2)
         end
     end,
@@ -1396,6 +1415,10 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     CreateFloatingEngineerBase = function(self, position)
+        if self.RNGDEBUG then
+            RNGLOG('Creating Floating base setup at pos '..repr(position))
+        end
+        --local EngineerManager = import('/mods/RNGAI/hook/lua/sim/EngineerManager.lua')
         local baseLayer = 'Land'
         position[2] = GetTerrainHeight( position[1], position[3] )
         if GetSurfaceHeight( position[1], position[3] ) > position[2] then
@@ -1403,14 +1426,15 @@ AIBrain = Class(RNGAIBrainClass) {
             baseLayer = 'Water'
         end
         self.BuilderManagers['FLOATING'] = {
-            EngineerManager = EngineerManager.CreateFloatingEM(self, position),
+            FactoryManager = { FactoryList = {}},
+            EngineerManager = EngineerManager.CreateFloatingEngineerManager(self, position),
             BuilderHandles = {},
             Position = position,
             Layer = baseLayer,
             BaseType = 'FLOATING'
             }
         if self.RNGDEBUG then
-            RNGLOG('Floating base setup')
+            RNGLOG('Floating base setup, adding global base template')
         end
         import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(self, 'FLOATING', 'FloatingBaseTemplate')
     end,
@@ -1577,6 +1601,33 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.BaseMonitorZoneThreatThreadRNG)
     end,
 
+    DeadBaseMonitorRNG = function(self)
+        while true do
+            WaitSeconds(5)
+            local needSort = false
+            for k, v in self.BuilderManagers do
+                if k ~= 'MAIN' and k ~= 'FLOATING' and v.EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) <= 0 and v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) <= 0 then
+                    v.EngineerManager:SetEnabled(false)
+                    v.EngineerManager:Destroy()
+                    v.FactoryManager:SetEnabled(false)
+                    v.FactoryManager:Destroy()
+                    v.PlatoonFormManager:SetEnabled(false)
+                    v.PlatoonFormManager:Destroy()
+                    if v.StrategyManager then
+                        v.StrategyManager:SetEnabled(false)
+                        v.StrategyManager:Destroy()
+                    end
+                    self.BuilderManagers[k] = nil
+                    self.NumBases = self.NumBases - 1
+                    needSort = true
+                end
+            end
+            if needSort then
+                self.BuilderManagers = self:RebuildTable(self.BuilderManagers)
+            end
+        end
+    end,
+
     GetStructureVectorsRNG = function(self)
         -- This will get the closest IMAPposition  based on where the structure is. Though I don't think it works on 5km maps because the imap grid is different.
         local structures = GetListOfUnits(self, categories.STRUCTURE - categories.DEFENSE - categories.WALL - categories.MASSEXTRACTION, false)
@@ -1729,6 +1780,11 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             return extractorPoints
         end
+        local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager()
+        while not im.MapIntelGrid do
+            RNGLOG('Waiting for MapIntelGrid to exist...')
+            coroutine.yield(30)
+        end
 
         local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
         --RNGLOG('playableArea '..repr(playableArea) )
@@ -1767,6 +1823,11 @@ AIBrain = Class(RNGAIBrainClass) {
                             LastScouted = 0,
                         }
                     )
+                    local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(v.Position)
+                    im.MapIntelGrid[gridXID][gridYID].MustScout = true
+                    RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
+                    RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
+                    self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
                 end
             end
             if ScenarioInfo.Options.TeamSpawn == 'fixed' then
@@ -1792,6 +1853,11 @@ AIBrain = Class(RNGAIBrainClass) {
                                     LastScouted = 0,
                                 }
                             )
+                            local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(startPos)
+                            im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 100
+                            RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
+                            RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
+                            self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
                         else
                             RNGINSERT(allyTempStarts, {Position = startPos, Index = army.ArmyIndex})
                             allyStarts['ARMY_' .. i] = startPos
@@ -1835,6 +1901,11 @@ AIBrain = Class(RNGAIBrainClass) {
                                     LastScouted = 0,
                                 }
                             )
+                            local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(loc.Position)
+                            im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                            RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
+                            RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
+                            self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
                         end
                     end
                 end
@@ -1870,7 +1941,11 @@ AIBrain = Class(RNGAIBrainClass) {
                                 LastScouted = 0,
                             }
                         )
-                        
+                        local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(loc.Position)
+                        im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                        RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
+                        RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
+                        self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
                     end
                 end
                 -- Set Start Locations for brain to reference
@@ -1937,6 +2012,11 @@ AIBrain = Class(RNGAIBrainClass) {
                             LastScouted = 0,
                         }
                     )
+                    local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(zone.pos)
+                    im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                    RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
+                    RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
+                    self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
             end
             if self.RNGDEBUG then
                 RNGLOG('Number of Land Zones '..table.getn(self.Zones.Land.zones))
@@ -1949,6 +2029,11 @@ AIBrain = Class(RNGAIBrainClass) {
                             LastScouted = 0,
                         }
                     )
+                local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(zone.pos)
+                im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
+                RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
+                self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
             end
             self:ForkThread(self.ParseIntelThreadRNG)
         end
@@ -2169,7 +2254,7 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.BuilderManagers do
                 --RNGLOG('build k is '..k)
                 if (string.find(k, 'Expansion Area')) or (string.find(k, 'ARMY_')) then
-                    if v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) > 0 then
+                    if v.FactoryManager.LocationActive and v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) > 0 then
                         local exDistance = VDist2Sq(self.BuilderManagers[k].Position[1], self.BuilderManagers[k].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
                         --RNGLOG('Distance to Enemy for '..k..' is '..exDistance)
                         if (exDistance < closest) and (mainDist > exDistance) then
@@ -2409,7 +2494,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 local enemySurfaceAirAngle = false
                 local enemyAirAngle = false
                 local enemyNavalAngle = false
-                if self.BuilderManagers[k].FactoryManager and next(self.BuilderManagers[k].FactoryManager.FactoryList) then
+                if v.FactoryManager.LocationActive and self.BuilderManagers[k].FactoryManager and next(self.BuilderManagers[k].FactoryManager.FactoryList) then
                     if not self.BasePerimeterMonitor[k] then
                         self.BasePerimeterMonitor[k] = {}
                     end

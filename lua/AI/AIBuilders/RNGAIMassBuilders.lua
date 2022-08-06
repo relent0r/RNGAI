@@ -332,12 +332,11 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1ResourceEngineer 1000 Expansion',
+        BuilderName = 'RNGAI T1ResourceEngineer 2000 Expansion',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 550,
         InstanceCount = 2,
         BuilderConditions = {
-                { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
                 { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 100, 2000, -500, 2, 0, 'AntiSurface', 1}},
             },
         BuilderType = 'Any',
