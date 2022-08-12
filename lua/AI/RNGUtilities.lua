@@ -4660,36 +4660,45 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     --RNGLOG(repr(aiBrain.NumOpponents))
     --RNGLOG(repr(aiBrain.InterestList.HighPriority))
     if aiBrain.IntelData.HiPriScouts < aiBrain.NumOpponents then
-        local highestPri
-        local lowestScoutTime
-        local closestGrid
+        local highestGrid = {x = 0, z = 0, Priority = 0}
+        local currentGrid = {x = 0, z = 0, Priority = 0}
         for i=1, im.MapIntelGridRes do
             for k=1, im.MapIntelGridRes do
-                if not highestPri or im.MapIntelGrid[i][k].ScoutPriority >= highestPri then
-                    closestGrid = im.MapIntelGrid[i][k].DistanceToMain
-                    highestPri = im.MapIntelGrid[i][k].ScoutPriority
-                    lowestScoutTime = im.MapIntelGrid[i][k].LastScouted
-                    if not lowestScoutTime or (im.MapIntelGrid[i][k].LastScouted <= lowestScoutTime and im.MapIntelGrid[i][k].ScoutPriority >=highestPri) then
-                        closestGrid = im.MapIntelGrid[i][k].DistanceToMain
-                        highestPri = im.MapIntelGrid[i][k].ScoutPriority
-                        lowestScoutTime = im.MapIntelGrid[i][k].LastScouted
-                        if not closestGrid or (im.MapIntelGrid[i][k].DistanceToMain <= closestGrid and im.MapIntelGrid[i][k].LastScouted <= lowestScoutTime and im.MapIntelGrid[i][k].ScoutPriority >=highestPri) then
-                            closestGrid = im.MapIntelGrid[i][k].DistanceToMain
-                            highestPri = im.MapIntelGrid[i][k].ScoutPriority
-                            lowestScoutTime = im.MapIntelGrid[i][k].LastScouted
-                            scoutingData = im.MapIntelGrid[i][k]
+                if im.MapIntelGrid[i][k].ScoutPriority == 100 then
+                    if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 30 then
+                        RNGLOG('ScoutPriority is '..im.MapIntelGrid[i][k].ScoutPriority)
+                        RNGLOG('LastScouted is '..im.MapIntelGrid[i][k].LastScouted)
+                        RNGLOG('DistanceToMain is '..im.MapIntelGrid[i][k].DistanceToMain)
+                        if im.MapIntelGrid[i][k].LastScouted == 0 then
+                            im.MapIntelGrid[i][k].LastScouted = 1
+                        end
+                        if im.MapIntelGrid[i][k].DistanceToMain == 0 then
+                            im.MapIntelGrid[i][k].DistanceToMain = 1
+                        end
+                        if im.MapIntelGrid[i][k].TimeScouted == 0 then
+                            im.MapIntelGrid[i][k].TimeScouted = 1
+                        end
+                        currentGrid = {x = i, z = k, Priority = im.MapIntelGrid[i][k].ScoutPriority * (im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].TimeScouted) / im.MapIntelGrid[i][k].DistanceToMain }
+                        RNGLOG('CurrentGrid Priority is '..currentGrid.Priority)
+                        RNGLOG('TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
+                        if currentGrid.Priority > highestGrid.Priority then
+                            highestGrid = currentGrid
                         end
                     end
                 end
             end
         end
-        --RNGLOG(repr(aiBrain.InterestList.HighPriority[1]))
-        --scoutingData = aiBrain.InterestList.HighPriority[1]
+        if highestGrid.Priority > 0 then
+            scoutingData = im.MapIntelGrid[highestGrid.x][highestGrid.z]
+            --RNGLOG(repr(aiBrain.InterestList.HighPriority[1]))
+            --scoutingData = aiBrain.InterestList.HighPriority[1]
+            scoutingData.LastScouted = currentGameTime
+            scoutingData.TimeScouted = 1
+            scoutType = 'Location'
+            RNGLOG('Current Game Time '..currentGameTime)
+            RNGLOG('HighPri Scouting Data '..repr(scoutingData))
+        end
         aiBrain.IntelData.HiPriScouts = aiBrain.IntelData.HiPriScouts + 1
-        scoutingData.LastScouted = currentGameTime
-        scoutType = 'Location'
-        RNGLOG('Current Game Time '..currentGameTime)
-        RNGLOG('HighPri Scouting Data '..repr(scoutingData))
         --SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.HighPriority)
     elseif next(aiBrain.InterestList.PerimeterPoints.Restricted) then
         SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.PerimeterPoints.Restricted)
@@ -4707,11 +4716,48 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             end
         end
     elseif next(aiBrain.InterestList.LowPriority) then
-        scoutingData = aiBrain.InterestList.LowPriority[1]
-        aiBrain.IntelData.HiPriScouts = 0
-        scoutingData.LastScouted = currentGameTime
-        scoutType = 'Location'
-        SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.LowPriority)
+        local highestGrid = {x = 0, z = 0, Priority = 0}
+        local currentGrid = {x = 0, z = 0, Priority = 0}
+        for i=1, im.MapIntelGridRes do
+            for k=1, im.MapIntelGridRes do
+                if im.MapIntelGrid[i][k].ScoutPriority == 50 then
+                    if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 45 then
+                        --RNGLOG('LastScouted is '..im.MapIntelGrid[i][k].LastScouted)
+                        --RNGLOG('DistanceToMain is '..im.MapIntelGrid[i][k].DistanceToMain)
+                        if im.MapIntelGrid[i][k].LastScouted == 0 then
+                            im.MapIntelGrid[i][k].LastScouted = 1
+                        end
+                        if im.MapIntelGrid[i][k].DistanceToMain == 0 then
+                            im.MapIntelGrid[i][k].DistanceToMain = 1
+                        end
+                        currentGrid = {x = i, z = k, Priority = im.MapIntelGrid[i][k].ScoutPriority * (im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].TimeScouted) / im.MapIntelGrid[i][k].DistanceToMain }
+                        --RNGLOG('CurrentGrid Priority is '..currentGrid.Priority)
+                        RNGLOG(im.MapIntelGrid[i][k].ScoutPriority..','..im.MapIntelGrid[i][k].LastScouted..','..im.MapIntelGrid[i][k].DistanceToMain..','..im.MapIntelGrid[i][k].TimeScouted..','..currentGrid.Priority)
+                        --RNGLOG('TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
+                        if currentGrid.Priority > highestGrid.Priority then
+                            highestGrid = currentGrid
+                        end
+                    end
+                end
+            end
+        end
+        if highestGrid.Priority > 0 then
+            scoutingData = im.MapIntelGrid[highestGrid.x][highestGrid.z]
+            --RNGLOG(repr(aiBrain.InterestList.HighPriority[1]))
+            --scoutingData = aiBrain.InterestList.HighPriority[1]
+            scoutingData.LastScouted = currentGameTime
+            scoutType = 'Location'
+            RNGLOG('Current Game Time '..currentGameTime)
+            RNGLOG('LowPri Scouting Data '..repr(scoutingData))
+            RNGLOG('Scouting LowPriority Point')
+            aiBrain.IntelData.HiPriScouts = 0
+            scoutingData.LastScouted = currentGameTime
+            scoutingData.TimeScouted = 1
+            scoutType = 'Location'
+        end
+        aiBrain.IntelData.HiPriScouts = aiBrain.IntelData.HiPriScouts + 1
+        --scoutingData = aiBrain.InterestList.LowPriority[1]
+        --SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.LowPriority)
     else
         --Reset number of scoutings and start over
         aiBrain.IntelData.HiPriScouts = 0
@@ -4726,7 +4772,7 @@ end
 drawScoutMarker = function(brain, position)
     RNGLOG('Starting DrawScout position at '..repr(position))
     local counter = 0
-    while counter < 120 do
+    while counter < 180 do
         DrawCircle(position, 10, '0000FF')
         counter = counter + 1
         WaitTicks(2)

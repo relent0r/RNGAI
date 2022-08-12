@@ -760,15 +760,17 @@ IntelManager = Class {
         while not self.MapIntelGrid do
             coroutine.yield(30)
         end
-        local n = 16
         while not aiBrain.defeat do
             coroutine.yield(20)
-            local time = GetGameTimeSeconds()
-            for c, b in self.MapIntelGrid do 
-                for k , v in b do
-                    if v.Enabled and not v.Water then
-                        if v.LastScouted == 0 or time - v.LastScouted > 30 then
-                            --RNGLOG('Grid square at position '..repr(v.Position)..' is not scouted')
+            for i=1, self.MapIntelGridRes do
+                for k=1, self.MapIntelGridRes do
+                    local time = GetGameTimeSeconds()
+                    if self.MapIntelGrid[i][k].Enabled and not self.MapIntelGrid[i][k].Water then
+                        self.MapIntelGrid[i][k].TimeScouted = time - self.MapIntelGrid[i][k].LastScouted
+                        if self.MapIntelGrid[i][k].TimeScouted < 0 then
+                            RNGLOG('TimeScouted is less than zero')
+                            RNGLOG('LastScouted time was '..self.MapIntelGrid[i][k].LastScouted)
+                            RNGLOG('Current time is '..time)
                         end
                     end
                     coroutine.yield(1)
@@ -1245,6 +1247,7 @@ CreateIntelGrid = function(aiBrain)
             intelGrid[x][z].Size = { }
             intelGrid[x][z].DistanceToMain = 0
             intelGrid[x][z].LastScouted = 0
+            intelGrid[x][z].TimeScouted = 0
             intelGrid[x][z].Enabled = false
             intelGrid[x][z].MustScout = false
             intelGrid[x][z].ScoutPriority = 0

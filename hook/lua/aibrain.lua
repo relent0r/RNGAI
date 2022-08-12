@@ -2035,6 +2035,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
                 self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
             end
+            RNGLOG('Current MapIntelGrid post scout build '..repr(im.MapIntelGrid))
             self:ForkThread(self.ParseIntelThreadRNG)
         end
     end,

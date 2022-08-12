@@ -56,7 +56,7 @@ Platoon = Class(RNGAIPlatoonClass) {
 
     AirHuntAIRNG = function(self)
         self:Stop()
-        RNGLOG('AirHuntAI Starting')
+        --RNGLOG('AirHuntAI Starting')
         local aiBrain = self:GetBrain()
         local data = self.PlatoonData
         local categoryList = {}
@@ -1288,6 +1288,12 @@ Platoon = Class(RNGAIPlatoonClass) {
                             scoutPos = scout:GetPosition()
                             if VDist2Sq(scoutPos[1],scoutPos[3], targetData.Position[1],targetData.Position[3]) < 225 then
                                 IssueStop({scout})
+                                local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(targetData.Position)
+                                RNGLOG('Setting GRID '..gridXID..' '..gridYID..' Last scouted on arrival')
+                                im.MapIntelGrid[gridXID][gridYID].LastScouted = GetGameTimeSeconds()
+                                if im.MapIntelGrid[gridXID][gridYID].MustScout then
+                                    im.MapIntelGrid[gridXID][gridYID].MustScout = false
+                                end
                                 --RNGLOG('Scout has arrived at expansion, scanning for engineers')
                                 local radarCoverage = false
                                 while PlatoonExists(aiBrain, self) do
@@ -6664,7 +6670,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local rangeModifier = 0
 
         for i=1, pathNodesCount do
-            RNGLOG('HUNTAIPATH moving in path count')
+            --RNGLOG('HUNTAIPATH moving in path count')
             local PlatoonPosition
             local distEnd = false
             local currentLayerSeaBed = false
@@ -6680,7 +6686,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
             if bAggroMove and attackUnits and (not currentLayerSeaBed) then
-                RNGLOG('HUNTAIPATH Attack and Guard moving Aggro')
+                --RNGLOG('HUNTAIPATH Attack and Guard moving Aggro')
                 if distEnd and distEnd > 6400 then
                     self:SetPlatoonFormationOverride('NoFormation')
                     attackFormation = false
@@ -6688,7 +6694,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 self:AggressiveMoveToLocation(path[i], 'Attack')
                 self:AggressiveMoveToLocation(path[i], 'Guard')
             elseif attackUnits then
-                RNGLOG('HUNTAIPATH Attack and Guard moving non aggro')
+                --RNGLOG('HUNTAIPATH Attack and Guard moving non aggro')
                 if distEnd and distEnd > 6400 then
                     self:SetPlatoonFormationOverride('NoFormation')
                     attackFormation = false
@@ -6700,7 +6706,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local dist
             local Stuck = 0
             while PlatoonExists(aiBrain, self) do
-                RNGLOG('HUNTAIPATH movement loop')
+                --RNGLOG('HUNTAIPATH movement loop')
                 local SquadPosition = self:GetSquadPosition('Attack') or nil
                 if not SquadPosition then break end
                 if self.ScoutUnit and (not self.ScoutUnit.Dead) then
@@ -6842,7 +6848,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 -- are we closer then 15 units from the next marker ? Then break and move to the next marker
                 if dist < 400 then
                     -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
-                    RNGLOG('HUNTAIPATH issuing clear commands due to close dist')
+                    --RNGLOG('HUNTAIPATH issuing clear commands due to close dist')
                     IssueClearCommands(GetPlatoonUnits(self))
                     break
                 end
@@ -6854,12 +6860,12 @@ Platoon = Class(RNGAIPlatoonClass) {
                 else
                     Stuck = Stuck + 1
                     if Stuck > 15 then
-                        RNGLOG('HUNTAIPATH issue stop and break')
+                        --RNGLOG('HUNTAIPATH issue stop and break')
                         self:Stop()
                         break
                     end
                 end
-                RNGLOG('Lastdist '..Lastdist..' dist '..dist)
+                --RNGLOG('Lastdist '..Lastdist..' dist '..dist)
                 coroutine.yield(15)
             end
         end

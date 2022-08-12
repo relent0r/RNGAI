@@ -40,6 +40,7 @@ function CommanderBehaviorRNG(platoon)
             v.CDRBrainThread = v:ForkThread(CDRBrainThread)
             v.CDRThreatAssessment = v:ForkThread(CDRThreatAssessmentRNG)
             v.CommanderThread = v:ForkThread(CommanderThreadRNG, platoon)
+            aiBrain:ForkThread(aiBrain.BuildScoutLocationsRNG)
             if aiBrain.RNGDEBUG then
                 v.DebugACU = v:ForkThread(DrawACUInfo, v)
             end
@@ -156,9 +157,6 @@ function CDRBrainThread(cdr)
     -- A way of maintaining an up to date health check
     local aiBrain = cdr:GetAIBrain()
     local acuIMAPThreat
-    -- Run this one first
-    aiBrain:BuildScoutLocationsRNG()
-    
     SetCDRDefaults(aiBrain, cdr)
     -- Check starting reclaim
     aiBrain:ForkThread(GetStartingReclaim)
@@ -1254,6 +1252,9 @@ function CDRThreatAssessmentRNG(cdr)
     local UnitCategories = (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT )
     while not cdr.Dead do
         if cdr.Active then
+            if not cdr.Position then
+                cdr.Position = cdr:GetPosition()
+            end
             local enemyACUPresent = false
             local enemyUnits = GetUnitsAroundPoint(aiBrain, UnitCategories, cdr:GetPosition(), 80, 'Enemy')
             local friendlyUnits = GetUnitsAroundPoint(aiBrain, UnitCategories, cdr:GetPosition(), 70, 'Ally')
