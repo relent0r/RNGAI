@@ -785,7 +785,7 @@ AIBrain = Class(RNGAIBrainClass) {
             EcoMultiplier = 1,
             T3ExtractorSpend = false,
             T2ExtractorSpend = false,
-            EcoMassUpgradeTimeout = 300,
+            EcoMassUpgradeTimeout = 280,
             EcoPowerPreemptive = false,
         }
         self.EcoManager.PowerPriorityTable = {
@@ -1143,6 +1143,10 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager()
             RNGLOG('Unit Stats '..repr(im.UnitStats))
+            RNGLOG('IntelCoverage Percentage '..repr(im.MapIntelStats.IntelCoverage))
+            local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+            local maxGridSizeX,MaxGridSizeZ = IntelManagerRNG.GetIntelGrid({playableArea[3], 0, playableArea[4]})
+            RNGLOG('Max GridSizeX '..maxGridSizeX..' Max GridSizeZ '..MaxGridSizeZ)
             coroutine.yield(100)
         end
     end,

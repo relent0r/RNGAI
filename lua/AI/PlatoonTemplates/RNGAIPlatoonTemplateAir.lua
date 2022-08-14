@@ -108,7 +108,7 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'RNGAIT1ScoutBurst',
+    Name = 'RNGAIT1AirScoutBurst',
     FactionSquads = {
         UEF = {
             { 'uea0101', 1, 3, 'scout', 'None' },

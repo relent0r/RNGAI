@@ -46,6 +46,12 @@ IntelManager = Class {
         self.ZoneIntel = {
             Assignment = { }
         }
+        self.MapIntelGridXRes = 0
+        self.MapIntelGridZRes = 0
+        self.MapIntelGrid = false
+        self.MapIntelStats = {
+            IntelCoverage = 0
+        }
         self.UnitStats = {
             Land = {
                 Deaths = {
@@ -467,17 +473,17 @@ IntelManager = Class {
                                 enemyDanger = 0.2
                             end
                         end
-                        if aiBrain.RNGDEBUG then
+                       --[[ if aiBrain.RNGDEBUG then
                             if distanceModifier and resourceValue and controlValue and enemyModifier then
                                 RNGLOG('distanceModifier '..distanceModifier)
                                 RNGLOG('resourceValue '..resourceValue)
                                 RNGLOG('controlValue '..controlValue)
                                 RNGLOG('enemyModifier '..enemyModifier)
                             end
-                        end
+                        end]]
                         compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger
                         if aiBrain.RNGDEBUG and compare then
-                            RNGLOG('Compare variable '..compare)
+                            --RNGLOG('Compare variable '..compare)
                         end
                         if compare > 0 then
                             if not selection or compare > selection then
@@ -663,11 +669,15 @@ IntelManager = Class {
             else
                 WARN('No ZoneID for Radar, unable to set coverage area')
             end
+            local gridX, gridZ = GetIntelGrid(radarPosition)
+            self.MapIntelGrid[gridX][gridZ].Radars[unit.Sync.id] = unit
+            RNGLOG('Assigned Intel Unit. Number of units in table '..RNGGETN(self.MapIntelGrid[gridX][gridZ].Radars))
         end
     end,
 
     UnassignIntelUnit = function(self, unit)
         local ALLBPS = __blueprints
+        local radarPosition = unit:GetPosition()
         if ALLBPS[unit.UnitId].CategoriesHash.RADAR then
             --RNGLOG('Unassigning Radar Unit')
             for k, v in self.ZoneIntel.Assignment do
@@ -682,6 +692,9 @@ IntelManager = Class {
                     v.RadarCoverage = false
                 end
             end
+            local gridX, gridZ = GetIntelGrid(radarPosition)
+            self.MapIntelGrid[gridX][gridZ].Radars[unit.Sync.id] = nil
+            RNGLOG('Unassigned Intel Units. Number of units in table '..RNGGETN(self.MapIntelGrid[gridX][gridZ].Radars))
         end
     end,
 
@@ -762,20 +775,24 @@ IntelManager = Class {
         end
         while not aiBrain.defeat do
             coroutine.yield(20)
-            for i=1, self.MapIntelGridRes do
-                for k=1, self.MapIntelGridRes do
+            local intelCoverage = 0
+            for i=1, self.MapIntelGridXRes do
+                for k=1, self.MapIntelGridZRes do
                     local time = GetGameTimeSeconds()
                     if self.MapIntelGrid[i][k].Enabled and not self.MapIntelGrid[i][k].Water then
                         self.MapIntelGrid[i][k].TimeScouted = time - self.MapIntelGrid[i][k].LastScouted
-                        if self.MapIntelGrid[i][k].TimeScouted < 0 then
+                        if self.MapIntelGrid[i][k].ScoutPriority > 0 and self.MapIntelGrid[i][k].TimeScouted ~= 0 and self.MapIntelGrid[i][k].TimeScouted < 120 then
+                            intelCoverage = intelCoverage + 1
                             RNGLOG('TimeScouted is less than zero')
                             RNGLOG('LastScouted time was '..self.MapIntelGrid[i][k].LastScouted)
                             RNGLOG('Current time is '..time)
                         end
+
                     end
                     coroutine.yield(1)
                 end
             end
+            self.MapIntelStats.IntelCoverage = intelCoverage / (self.MapIntelGridXRes * self.MapIntelGridZRes) * 100
         end
     end,
 
@@ -1244,6 +1261,7 @@ CreateIntelGrid = function(aiBrain)
         for z = 1, n do 
             intelGrid[x][z] = { }
             intelGrid[x][z].Position = { }
+            intelGrid[x][z].Radars = { }
             intelGrid[x][z].Size = { }
             intelGrid[x][z].DistanceToMain = 0
             intelGrid[x][z].LastScouted = 0
@@ -1270,7 +1288,13 @@ CreateIntelGrid = function(aiBrain)
     end
     im.MapIntelGrid = intelGrid
     MapIntelGridSize = fx
-    im.MapIntelGridRes = n
+    local gridSizeX, gridSizeZ = GetIntelGrid({playableArea[3] - 16, 0, playableArea[4] - 16})
+    im.MapIntelGridXRes = gridSizeX
+    im.MapIntelGridZRes = gridSizeZ
+    RNGLOG('MapIntelGridXRes '..repr(im.MapIntelGridXRes))
+    RNGLOG('MapIntelGridZRes '..repr(im.MapIntelGridZRes))
+
+
     RNGLOG('Map Intel Grid '..repr(im.MapIntelGrid))
 end
 

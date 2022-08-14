@@ -4662,8 +4662,8 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     if aiBrain.IntelData.HiPriScouts < aiBrain.NumOpponents then
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
-        for i=1, im.MapIntelGridRes do
-            for k=1, im.MapIntelGridRes do
+        for i=1, im.MapIntelGridXRes do
+            for k=1, im.MapIntelGridZRes do
                 if im.MapIntelGrid[i][k].ScoutPriority == 100 then
                     if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 30 then
                         RNGLOG('ScoutPriority is '..im.MapIntelGrid[i][k].ScoutPriority)
@@ -4718,8 +4718,8 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     elseif next(aiBrain.InterestList.LowPriority) then
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
-        for i=1, im.MapIntelGridRes do
-            for k=1, im.MapIntelGridRes do
+        for i=1, im.MapIntelGridXRes do
+            for k=1, im.MapIntelGridZRes do
                 if im.MapIntelGrid[i][k].ScoutPriority == 50 then
                     if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 45 then
                         --RNGLOG('LastScouted is '..im.MapIntelGrid[i][k].LastScouted)

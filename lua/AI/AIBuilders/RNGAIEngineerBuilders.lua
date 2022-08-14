@@ -514,7 +514,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistUnfinished', 1},
         InstanceCount = 3,
         BuilderConditions = {
-                { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * (categories.FACTORY + categories.ENERGYPRODUCTION + categories.MASSEXTRACTION) }},
+                { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * (categories.DEFENSE + categories.FACTORY + categories.ENERGYPRODUCTION + categories.MASSEXTRACTION) }},
                 { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             },
         BuilderData = {
@@ -1120,7 +1120,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Engineer Reclaim T1 Excess Expansion',
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         Priority = 900,
-        InstanceCount = 8,
+        InstanceCount = 16,
         BuilderConditions = {
                 { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH1 }},
                 { MIBC, 'CheckIfReclaimEnabled', {}},

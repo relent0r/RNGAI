@@ -1022,8 +1022,8 @@ function CDRCheckForCloseMassPoints(aiBrain, cdr)
         --RNGLOG('CDR is away from base and assume no caution or retreat')
         local canBuild, closeMassPoints = CanBuildOnCloseMass(aiBrain, cdr.Position, 60)
         if canBuild then
-            --RNGLOG('CDR can build on a mass point')
-            --RNGLOG('Number of masspoints in closeMassPoints table '..table.getn(closeMassPoints))
+            RNGLOG('CDR can build on a mass point')
+            RNGLOG('Number of masspoints in closeMassPoints table '..table.getn(closeMassPoints))
             local massPoint = false
             for k, v in closeMassPoints do
                 if GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 10 and AIAttackUtils.CanGraphToRNG(cdr.Position,v.Position,'Amphibious') then
@@ -1035,7 +1035,7 @@ function CDRCheckForCloseMassPoints(aiBrain, cdr)
                 end
             end
             if massPoint then
-                --RNGLOG('CDR trying to move to masspoint')
+                RNGLOG('CDR trying to move to masspoint')
                 local cautionTrigger = false
                 IssueClearCommands({cdr})
                 IssueMove({cdr}, massPoint.Position)
@@ -1051,7 +1051,7 @@ function CDRCheckForCloseMassPoints(aiBrain, cdr)
                     coroutine.yield(25)
                 end
                 if not cautionTrigger then
-                    --RNGLOG('CDR Triggering build function')
+                    RNGLOG('CDR Triggering build function')
                     CDRBuildFunction(aiBrain, cdr, 'mass')
                 end
             else

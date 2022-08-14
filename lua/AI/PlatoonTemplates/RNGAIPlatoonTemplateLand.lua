@@ -292,6 +292,24 @@ PlatoonTemplate {
     },
 }
 
+PlatoonTemplate {
+    Name = 'RNGAIT1LandScoutBurst',
+    FactionSquads = {
+        UEF = {
+            { 'uel0101', 1, 3, 'scout', 'None' },
+        },
+        Aeon = {
+            { 'ual0101', 1, 3, 'scout', 'None' },
+        },
+        Cybran = {
+            { 'url0101', 1, 3, 'scout', 'None' },
+        },
+        Seraphim = {
+            { 'xsl0101', 1, 3, 'scout', 'None' },
+        },
+    }
+}
+
 PlatoonTemplate { Name = 'RNGAIT2AttackBot',
     FactionSquads = {
         UEF = {

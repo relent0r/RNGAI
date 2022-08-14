@@ -902,6 +902,16 @@ function FactoryGreaterAtLocationRNG(aiBrain, locationType, unitCount, unitCateg
     return FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, '>')
 end
 
+function ForcePathLimit(aiBrain, locationType, unitCategory, pathType, unitCount)
+    local EnemyIndex = ArmyBrains[aiBrain:GetCurrentEnemy():GetArmyIndex()].Nickname
+    local OwnIndex = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
+    if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] ~= pathType and FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, '>') then
+        RNGLOG('ForcePathLimit has no path and more than 3 land factories')
+        return false
+    end
+    return true
+end
+
 function ACUOnField(aiBrain, gun)
     for k, v in aiBrain.EnemyIntel.ACU do
         if v.OnField and v.Gun and gun then

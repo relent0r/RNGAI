@@ -14,7 +14,7 @@ BuilderGroup {
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI Factory LandScout T1 Burst',
-        PlatoonTemplate = 'T1LandScout',
+        PlatoonTemplate = 'RNGAIT1LandScoutBurst',
         Priority = 895,
         BuilderConditions = {
             { UCBC, 'PoolLessAtLocation', {'LocationType', 3, categories.LAND * categories.SCOUT }},
@@ -22,7 +22,7 @@ BuilderGroup {
             { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
             { UCBC, 'GreaterThanArmyThreat', { 'LandNow', 20}},
         },
-        BuilderType = 'Air',
+        BuilderType = 'Land',
     },
 }
 

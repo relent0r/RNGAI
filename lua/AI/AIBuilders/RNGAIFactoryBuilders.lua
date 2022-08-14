@@ -76,6 +76,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { UCBC, 'ForcePathLimit', {'LocationType', categories.FACTORY * categories.LAND, 'LAND', 2}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.70 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
