@@ -3036,7 +3036,8 @@ end
 
 FindExperimentalTargetRNG = function(self)
     local aiBrain = self:GetBrain()
-    if not aiBrain.InterestList or not aiBrain.InterestList.HighPriority then
+    local im = IntelManagerRNG:GetIntelManager()
+    if not im.MapIntelStats.ScoutLocationsBuilt then
         -- No target
         return
     end
@@ -3194,6 +3195,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
 
     -- Look for commander first
     local AIFindNumberOfUnitsBetweenPointsRNG = import('/lua/ai/aiattackutilities.lua').AIFindNumberOfUnitsBetweenPointsRNG
+    local im = IntelManagerRNG:GetIntelManager()
     local platoonPosition = GetPlatoonPosition(platoon)
     -- minimumValue : I want to make sure that whatever we shoot at it either an ACU or is worth more than the missile we just built.
     local minimumValue = 0
@@ -3226,7 +3228,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
         end
     end
 
-    if not aiBrain.InterestList or not aiBrain.InterestList.HighPriority then
+    if not im.MapIntelStats.ScoutLocationsBuilt then
         -- No target
         return aiBrain:GetHighestThreatPosition(0, true, 'Economy')
     end

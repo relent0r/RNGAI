@@ -886,10 +886,11 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         --RNGLOG('* AI-RNG: Patrol function is :'..tostring(patrol))
         local aiBrain = self:GetBrain()
+        local im = IntelManagerRNG:GetIntelManager()
 
         -- build scoutlocations if not already done.
-        if not aiBrain.InterestList then
-            aiBrain:BuildScoutLocations()
+        if not im.MapIntelStats.ScoutLocationsBuilt then
+            aiBrain:BuildScoutLocationsRNG()
         end
 
         --If we have Stealth (are cybran), then turn on our Stealth

@@ -50,7 +50,9 @@ IntelManager = Class {
         self.MapIntelGridZRes = 0
         self.MapIntelGrid = false
         self.MapIntelStats = {
-            IntelCoverage = 0
+            ScoutLocationsBuilt = false,
+            IntelCoverage = 0,
+            MustScoutArea = false
         }
         self.UnitStats = {
             Land = {
@@ -776,9 +778,13 @@ IntelManager = Class {
         while not aiBrain.defeat do
             coroutine.yield(20)
             local intelCoverage = 0
+            local mustScoutPresent = false
             for i=1, self.MapIntelGridXRes do
                 for k=1, self.MapIntelGridZRes do
                     local time = GetGameTimeSeconds()
+                    if self.MapIntelGrid[i][k].MustScout and (not self.MapIntelGrid[i][k].ScoutAsigned or self.MapIntelGrid[i][k].ScoutAsigned.Dead) then
+                        mustScoutPresent = true
+                    end
                     if self.MapIntelGrid[i][k].Enabled and not self.MapIntelGrid[i][k].Water then
                         self.MapIntelGrid[i][k].TimeScouted = time - self.MapIntelGrid[i][k].LastScouted
                         if self.MapIntelGrid[i][k].ScoutPriority > 0 and self.MapIntelGrid[i][k].TimeScouted ~= 0 and self.MapIntelGrid[i][k].TimeScouted < 120 then
@@ -793,6 +799,7 @@ IntelManager = Class {
                 end
             end
             self.MapIntelStats.IntelCoverage = intelCoverage / (self.MapIntelGridXRes * self.MapIntelGridZRes) * 100
+            self.MapIntelStats.MustScoutArea = mustScoutPresent
         end
     end,
 
@@ -994,7 +1001,6 @@ ExpansionIntelScanRNG = function(aiBrain)
         -- don't do this, it might have a platoon inside it--RNGLOG('Current Expansion Watch Table '..repr(aiBrain.BrainIntel.ExpansionWatchTable))
     end
 end
-
 
 
 function InitialNavalAttackCheck(aiBrain)
@@ -1264,6 +1270,7 @@ CreateIntelGrid = function(aiBrain)
             intelGrid[x][z].Radars = { }
             intelGrid[x][z].Size = { }
             intelGrid[x][z].DistanceToMain = 0
+            intelGrid[x][z].AssignedScout = false
             intelGrid[x][z].LastScouted = 0
             intelGrid[x][z].TimeScouted = 0
             intelGrid[x][z].Enabled = false
