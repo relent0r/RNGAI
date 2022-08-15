@@ -783,6 +783,8 @@ IntelManager = Class {
                 for k=1, self.MapIntelGridZRes do
                     local time = GetGameTimeSeconds()
                     if self.MapIntelGrid[i][k].MustScout and (not self.MapIntelGrid[i][k].ScoutAsigned or self.MapIntelGrid[i][k].ScoutAsigned.Dead) then
+                        RNGLOG('mustScoutPresent in '..i..k)
+                        RNGLOG(repr(self.MapIntelGrid[i][k]))
                         mustScoutPresent = true
                     end
                     if self.MapIntelGrid[i][k].Enabled and not self.MapIntelGrid[i][k].Water then
@@ -800,6 +802,11 @@ IntelManager = Class {
             end
             self.MapIntelStats.IntelCoverage = intelCoverage / (self.MapIntelGridXRes * self.MapIntelGridZRes) * 100
             self.MapIntelStats.MustScoutArea = mustScoutPresent
+            if mustScoutPresent then
+                RNGLOG('mustScoutPresent is true after loop')
+            else
+                RNGLOG('mustScoutPresent is false after loop')
+            end
         end
     end,
 

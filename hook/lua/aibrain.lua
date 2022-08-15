@@ -2287,6 +2287,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     ParseIntelThreadRNG = function(self)
+        local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager()
         if not self.InterestList or not self.InterestList.MustScout then
             error('Scouting areas must be initialized before calling AIBrain:ParseIntelThread.', 2)
         end
@@ -2339,17 +2340,14 @@ AIBrain = Class(RNGAIBrainClass) {
                 local dupe = false
                 if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
                     --RNGLOG('ACU last spotted '..(GetGameTimeSeconds() - v.LastSpotted)..' seconds ago')
-                    if (GetGameTimeSeconds() - 30) > v.LastSpotted then
-                        for _, loc in self.InterestList.HighPriority do
-                            if VDist2Sq(v.Position[1], v.Position[3], loc.Position[1], loc.Position[3]) < 10000 then
-                                dupe = true
-                                break
-                            end
+                    if (GetGameTimeSeconds() - 45) > v.LastSpotted then
+                        local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(v.Position)
+                        if not im.MapIntelGrid[gridXID][gridYID].MustScout then
+                            im.MapIntelGrid[gridXID][gridYID].MustScout = true
                         end
-                        if not dupe then
-                            --RNGLOG('Insert scout position of last known acu location')
-                            RNGINSERT(self.InterestList.HighPriority, { Position = v.Position, LastScouted = gameTime })
-                        end
+                        RNGLOG('ACU Spotted at : X'..gridXID..' Y: '..gridYID)
+                        RNGLOG('ACU Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
+                        self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
                     end
                 end
             end

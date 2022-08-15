@@ -4783,21 +4783,32 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
     end
 
     RNGLOG('GetAirScoutLocationRNG ')
+    if im.MapIntelStats.MustScoutArea then
+        RNGLOG('im.MapIntelStats.MustScoutArea is true')
+    else
+        RNGLOG('im.MapIntelStats.MustScoutArea is false')
+    end
 
     if im.MapIntelStats.MustScoutArea then
+        RNGLOG('AirScout MustScoutArea is set')
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
+        local mustScoutArea = false
         for i=1, im.MapIntelGridXRes do
             for k=1, im.MapIntelGridZRes do
                 if im.MapIntelGrid[i][k].MustScout then
                     if not im.MapIntelGrid[i][k].ScoutAssigned or im.MapIntelGrid[i][k].ScoutAssigned.Dead then
-                        currentGrid = {x = i, z = k, Priority = im.MapIntelGrid[i][k].ScoutPriority * (im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].TimeScouted) / im.MapIntelGrid[i][k].DistanceToMain }
+                        mustScoutArea = true
+                        currentGrid = {x = i, z = k, Priority = im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].TimeScouted / im.MapIntelGrid[i][k].DistanceToMain }
                         if currentGrid.Priority > highestGrid.Priority then
                             highestGrid = currentGrid
                         end
                     end
                 end
             end
+        end
+        if not mustScoutArea then
+            im.MapIntelStats.MustScoutArea = false
         end
         if highestGrid.Priority > 0 then
             scoutingData = im.MapIntelGrid[highestGrid.x][highestGrid.z]
@@ -4811,6 +4822,7 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
             RNGLOG('AirScouting MustScout Scouting Data '..repr(scoutingData))
         end
     elseif aiBrain.IntelData.AirHiPriScouts < aiBrain.NumOpponents and aiBrain.IntelData.AirLowPriScouts < 1 then
+        RNGLOG('AirScout HiPriArea is set')
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
         for i=1, im.MapIntelGridXRes do
@@ -4851,22 +4863,8 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
         end
         aiBrain.IntelData.AirHiPriScouts = aiBrain.IntelData.AirHiPriScouts + 1
         --SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.HighPriority)
-    elseif next(aiBrain.InterestList.PerimeterPoints.Restricted) then
-        SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.PerimeterPoints.Restricted)
-        for k, point in aiBrain.InterestList.PerimeterPoints.Restricted do
-            --RNGLOG('LastScouted Restricted '..aiBrain.InterestList.PerimeterPoints.Restricted[k].LastScouted)
-            if currentGameTime - point.LastScouted > 120 then
-                --RNGLOG('LastScoutedRestricted > 90 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
-                scoutingData = aiBrain.InterestList.PerimeterPoints.Restricted[k]
-                --RNGLOG('scoutingData is set to '..repr(scoutingData.Position))
-                point.LastScouted = currentGameTime
-                scoutType = 'Location'
-                break
-            else
-                --RNGLOG('LastScoutedRestricted < 90 '..scout.Sync.id..' difference is '..(currentGameTime - point.LastScouted))
-            end
-        end
     elseif aiBrain.IntelData.AirLowPriScouts < 1 then
+        RNGLOG('AirScout LowPri is set')
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
         for i=1, im.MapIntelGridXRes do
@@ -4912,6 +4910,7 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
         --SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.LowPriority)
     else
         --Reset number of scoutings and start over
+        RNGLOG('AirScout Resetting AirLowPriScouts and AirHiPriScouts')
         aiBrain.IntelData.AirLowPriScouts = 0
         aiBrain.IntelData.AirHiPriScouts = 0
     end

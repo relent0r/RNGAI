@@ -902,6 +902,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local estartZ = nil
         local targetData = {}
         local currentGameTime = GetGameTimeSeconds()
+        --[[
         if aiBrain.CDRUnit.Active and (not aiBrain.CDRUnit.AirScout or aiBrain.CDRUnit.AirScout.Dead) then
             aiBrain.CDRUnit.AirScout = scout
             while not scout.Dead and aiBrain.CDRUnit.Active do
@@ -1098,83 +1099,46 @@ Platoon = Class(RNGAIPlatoonClass) {
             else
                 self.ExpansionsValidated = true
             end
-        else
+        else]]
             while not scout.Dead do
-                currentGameTime = GetGameTimeSeconds()
-                --RNGLOG('Air Scout loop start for InterestList'..scout.Sync.id)
-                local targetArea = false
-                local highPri = false
+                RNGLOG('AirScout looking for AirScout location')
+                targetData = RUtils.GetAirScoutLocationRNG(self, aiBrain, scout)
+                if targetData then
+                    RNGLOG('targetData received')
+                else
+                    RNGLOG('No targetData received')
+                end
 
-                local mustScoutArea, mustScoutIndex = aiBrain:GetUntaggedMustScoutArea()
                 local unknownThreats = aiBrain:GetThreatsAroundPosition(scout:GetPosition(), 16, true, 'Unknown')
                 --RNGLOG('Unknown Threat is'..repr(unknownThreats))
 
-                --1) If we have any "must scout" (manually added) locations that have not been scouted yet, then scout them
-                if mustScoutArea then
-                    mustScoutArea.TaggedBy = scout
-                    targetArea = mustScoutArea.Position
-
-                --2) Scout high priority locations
-                elseif aiBrain.IntelData.AirHiPriScouts < aiBrain.NumOpponents and aiBrain.IntelData.AirLowPriScouts < 1
-                and next(aiBrain.InterestList.HighPriority) then
-                    aiBrain.IntelData.AirHiPriScouts = aiBrain.IntelData.AirHiPriScouts + 1
-                    highPri = true
-                    targetData = aiBrain.InterestList.HighPriority[1]
-                    targetData.LastScouted = currentGameTime
-                    targetArea = targetData.Position
-                    RUtils.SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.HighPriority)
-
-                --3) Every time we scout NumOpponents number of high priority locations, scout a low priority location
-                elseif aiBrain.IntelData.AirLowPriScouts < 1 and RNGGETN(aiBrain.InterestList.LowPriority) > 0 then
-                    aiBrain.IntelData.AirHiPriScouts = 0
-                    --RNGLOG('Increase AirlowPriScouts')
-                    aiBrain.IntelData.AirLowPriScouts = aiBrain.IntelData.AirLowPriScouts + 1
-                    targetData = aiBrain.InterestList.LowPriority[1]
-                    targetData.LastScouted = currentGameTime
-                    targetArea = targetData.Position
-                    RUtils.SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.LowPriority)
-
-                --4) Scout "unknown threat" areas with a threat higher than 25
-                elseif next(unknownThreats) and unknownThreats[1][3] > 25 and unknownLoop < 3 then
-                    --RNGLOG('Unknown Threats adding to scouts')
-                    aiBrain:AddScoutArea({unknownThreats[1][1], 0, unknownThreats[1][2]})
-                    unknownLoop = unknownLoop + 1
-                
-                else
-                    --RNGLOG('Reset scout priorities')
-                    --Reset number of scoutings and start over
-                    aiBrain.IntelData.AirLowPriScouts = 0
-                    aiBrain.IntelData.AirHiPriScouts = 0
-                end
-
                 --Air scout do scoutings.
-                if targetArea then
+                if targetData then
                     self:Stop()
 
-                    local vec = self:DoAirScoutVecs(scout, targetArea)
+                    local vec = self:DoAirScoutVecs(scout, targetData.Position)
 
                     while not scout.Dead and not scout:IsIdleState() do
 
                         --If we're close enough...
                         if VDist3Sq(vec, scout:GetPosition()) < 15625 then
-                           if mustScoutArea then
+                            if targetData.MustScout then
                             --Untag and remove
-                                for idx,loc in aiBrain.InterestList.MustScout do
-                                    if loc == mustScoutArea then
-                                       table.remove(aiBrain.InterestList.MustScout, idx)
-                                       break
-                                    end
-                                end
+                                targetData.MustScout = false
+                                RNGLOG('Removing MustScout')
+                                RNGLOG(repr(targetData))
                             end
+                            targetData.LastScouted = GetGameTimeSeconds()
+                            targetData.ScoutAssigned = false
                             --Break within 125 ogrids of destination so we don't decelerate trying to stop on the waypoint.
                             break
                         end
 
-                        if VDist3(scout:GetPosition(), targetArea) < 25 then
+                        if VDist3(scout:GetPosition(), targetData.Position) < 25 then
                             break
                         end
 
-                        coroutine.yield(50)
+                        coroutine.yield(30)
                         --RNGLOG('* AI-RNG: Scout looping position < 25 to targetArea')
                     end
                 else
@@ -1188,7 +1152,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 coroutine.yield(10)
                 --RNGLOG('* AI-RNG: Scout looping end of scouting interest table')
             end
-        end
+        --end
         --RNGLOG('* AI-RNG: Scout Returning to base : {'..startX..', 0, '..startZ..'}')
         self:MoveToLocation(startPos, false)
         while not scout.Dead and not scout:IsIdleState() do
