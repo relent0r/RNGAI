@@ -1164,7 +1164,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             coroutine.yield(20)
         end
         coroutine.yield(50)
-        self:PlatoonDisband()
+        if PlatoonExists(aiBrain, self) and not scout.Dead then
+            return self:SetAIPlanRNG('GuardMarkerRNG')
+        end
     end,
 
     LandScoutingAIRNG = function(self)

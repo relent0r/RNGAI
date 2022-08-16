@@ -1286,6 +1286,7 @@ CreateIntelGrid = function(aiBrain)
             intelGrid[x][z].IntelCoverage = false
             intelGrid[x][z].LandThreat = 0
             intelGrid[x][z].AirThreat = 0
+            intelGrid[x][z].ACUIndexes = { }
             intelGrid[x][z].ACUThreat = 0
             intelGrid[x][z].AdjacentGrids = {}
             local cx = fx * (x - 0.5)

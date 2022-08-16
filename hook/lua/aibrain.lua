@@ -3439,35 +3439,36 @@ AIBrain = Class(RNGAIBrainClass) {
         local potentialTargetValue = 0
 
         local enemyACUIndexes = {}
+        local im = IntelManagerRNG.GetIntelManager()
 
         for k, v in self.EnemyIntel.ACU do
             if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
                 if platoonType == 'GUNSHIP' and platoonDPS then
                     if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and (GetGameTimeSeconds() - 120) < v.LastSpotted then
                         RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
+                        local gridX, gridY = GetIntelGrid(v.Position)
                         local scoutRequired = true
-                        for c, b in self.InterestList.MustScout do
-                            if b.ACUIndex == k then
-                                scoutRequired = false
-                                break
-                            end
+                        if im.MapIntelGrid[gridX][gridY].MustScout and im.MapIntelGrid[gridX][gridY].ACUIndexes[k] then
+                            scoutRequired = false
                         end
                         if scoutRequired then
-                            RNGINSERT(self.InterestList.MustScout, { Position = v.Position, LastScouted = 0, ACUIndex = k })
+                            im.MapIntelGrid[gridX][gridY].MustScout = true
+                            im.MapIntelGrid[gridX][gridY].ACUIndexes[k] = true
+                            RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(im.MapIntelGrid[gridX][gridY]))
                         end
                     end
                 elseif platoonType == 'BOMBER' and strikeDamage then
                     if strikeDamage > v.HP * 0.80 then
                         RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position })
+                        local gridX, gridY = GetIntelGrid(v.Position)
                         local scoutRequired = true
-                        for c, b in self.InterestList.MustScout do
-                            if b.ACUIndex == k then
-                                scoutRequired = false
-                                break
-                            end
+                        if im.MapIntelGrid[gridX][gridY].MustScout and im.MapIntelGrid[gridX][gridY].ACUIndexes[k] then
+                            scoutRequired = false
                         end
                         if scoutRequired then
-                            RNGINSERT(self.InterestList.MustScout, { Position = v.Position, LastScouted = 0, ACUIndex = k })
+                            im.MapIntelGrid[gridX][gridY].MustScout = true
+                            im.MapIntelGrid[gridX][gridY].ACUIndexes[k] = true
+                            RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(im.MapIntelGrid[gridX][gridY]))
                         end
                     end
                 end
