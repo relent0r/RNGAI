@@ -48,11 +48,13 @@ IntelManager = Class {
         }
         self.MapIntelGridXRes = 0
         self.MapIntelGridZRes = 0
+        self.MapIntelGridSize = 0
         self.MapIntelGrid = false
         self.MapIntelStats = {
             ScoutLocationsBuilt = false,
             IntelCoverage = 0,
-            MustScoutArea = false
+            MustScoutArea = false,
+            PerimeterExpired = false
         }
         self.UnitStats = {
             Land = {
@@ -671,9 +673,7 @@ IntelManager = Class {
             else
                 WARN('No ZoneID for Radar, unable to set coverage area')
             end
-            local gridX, gridZ = GetIntelGrid(radarPosition)
-            self.MapIntelGrid[gridX][gridZ].Radars[unit.Sync.id] = unit
-            RNGLOG('Assigned Intel Unit. Number of units in table '..RNGGETN(self.MapIntelGrid[gridX][gridZ].Radars))
+            --self:InfectGridPosition(position, gridSize, type, property, value)
         end
     end,
 
@@ -694,9 +694,9 @@ IntelManager = Class {
                     v.RadarCoverage = false
                 end
             end
-            local gridX, gridZ = GetIntelGrid(radarPosition)
-            self.MapIntelGrid[gridX][gridZ].Radars[unit.Sync.id] = nil
-            RNGLOG('Unassigned Intel Units. Number of units in table '..RNGGETN(self.MapIntelGrid[gridX][gridZ].Radars))
+            --local gridX, gridZ = GetIntelGrid(radarPosition)
+            --self.MapIntelGrid[gridX][gridZ].Radars[unit.Sync.id] = nil
+            --RNGLOG('Unassigned Intel Units. Number of units in table '..RNGGETN(self.MapIntelGrid[gridX][gridZ].Radars))
         end
     end,
 
@@ -779,6 +779,7 @@ IntelManager = Class {
             coroutine.yield(20)
             local intelCoverage = 0
             local mustScoutPresent = false
+            local perimeterExpired = false
             for i=1, self.MapIntelGridXRes do
                 for k=1, self.MapIntelGridZRes do
                     local time = GetGameTimeSeconds()
@@ -795,19 +796,86 @@ IntelManager = Class {
                             RNGLOG('LastScouted time was '..self.MapIntelGrid[i][k].LastScouted)
                             RNGLOG('Current time is '..time)
                         end
-
                     end
-                    coroutine.yield(1)
+                    if self.MapIntelGrid[i][k].Perimeter == 'Restricted' and self.MapIntelGrid[i][k].TimeScouted > 180 and self.MapIntelGrid[i][k].Graphs['MAIN'].Land then
+                        perimeterExpired = true
+                    end
                 end
+                coroutine.yield(1)
             end
             self.MapIntelStats.IntelCoverage = intelCoverage / (self.MapIntelGridXRes * self.MapIntelGridZRes) * 100
             self.MapIntelStats.MustScoutArea = mustScoutPresent
+            self.MapIntelStats.PerimeterExpired = perimeterExpired
             if mustScoutPresent then
                 RNGLOG('mustScoutPresent is true after loop')
             else
                 RNGLOG('mustScoutPresent is false after loop')
             end
+            if perimeterExpired then
+                RNGLOG('perimeterExpired is true after loop')
+            else
+                RNGLOG('perimeterExpired is false after loop')
+            end
         end
+    end,
+
+    IntelGridSetGraph = function(self, locationType, x, z, startPos, endPos)
+        RNGLOG('IntelGridSetGraph')
+        RNGLOG(repr(locationType))
+        RNGLOG(repr(x))
+        RNGLOG(repr(z))
+        RNGLOG(repr(startPos))
+        RNGLOG(repr(endPos))
+        if not self.MapIntelGrid[x][z].Graphs[locationType] then
+            self.MapIntelGrid[x][z].Graphs[locationType] = { GraphChecked = false, Land = false, Amphibious = false, NoGraph = false}
+        end
+        if not self.MapIntelGrid[x][z].Graphs[locationType].GraphChecked then
+            if AIAttackUtils.CanGraphToRNG(startPos, endPos, 'Land') then
+                self.MapIntelGrid[x][z].Graphs[locationType].Land = true
+                self.MapIntelGrid[x][z].Graphs[locationType].Amphibious = true
+                self.MapIntelGrid[x][z].Graphs[locationType].GraphChecked = true
+            elseif AIAttackUtils.CanGraphToRNG(startPos, endPos, 'Amphibious') then
+                self.MapIntelGrid[x][z].Graphs[locationType].Amphibious = true
+                self.MapIntelGrid[x][z].Graphs[locationType].GraphChecked = true
+            else
+                self.MapIntelGrid[x][z].Graphs[locationType].NoGraph = true
+                self.MapIntelGrid[x][z].Graphs[locationType].GraphChecked = true
+            end
+        end
+    end,
+
+    InfectGridPosition = function (self, position, gridSize, type, property, value)
+        local gridX, gridZ = GetIntelGrid(position)
+        local gridsSet = 0
+        if type == 'Radar' then
+            self.MapIntelGrid[gridX][gridZ].Radars[unit.Sync.id] = unit
+            self.MapIntelGrid[gridX][gridZ].IntelCoverage = true
+            gridsSet = gridsSet + 1
+        end
+        for x = math.max(1, gridX - gridSize), math.min(im.MapIntelGridXRes, gridX + gridSize) do
+            for z = math.max(1, gridZ - gridSize), math.min(im.MapIntelGridZRes, gridZ + gridSize) do
+                im.MapIntelGrid[x][z][property] = value
+                gridsSet = gridsSet + 1
+            end
+        end
+        RNGLOG('Number of grids set '..gridsSet..'with property '..property..' with the value '..repr(value))
+    end,
+
+    DisinfectGridPosition = function (self, position, gridSize, type, property, value)
+        local gridX, gridZ = GetIntelGrid(position)
+        local gridsSet = 0
+        local intelRadius
+        if type == 'Radar' then
+            self.MapIntelGrid[gridX][gridZ].Radars[unit.Sync.id] = nil
+            gridsSet = gridsSet + 1
+        end
+        for x = math.max(1, gridX - gridSize), math.min(im.MapIntelGridXRes, gridX + gridSize) do
+            for z = math.max(1, gridZ - gridSize), math.min(im.MapIntelGridZRes, gridZ + gridSize) do
+                im.MapIntelGrid[x][z][property] = value
+                gridsSet = gridsSet + 1
+            end
+        end
+        RNGLOG('Number of grids set '..gridsSet..'with property '..property..' with the value '..repr(value))
     end,
 
 }
@@ -1283,12 +1351,15 @@ CreateIntelGrid = function(aiBrain)
             intelGrid[x][z].Enabled = false
             intelGrid[x][z].MustScout = false
             intelGrid[x][z].ScoutPriority = 0
+            intelGrid[x][z].Perimeter = false
             intelGrid[x][z].IntelCoverage = false
             intelGrid[x][z].LandThreat = 0
             intelGrid[x][z].AirThreat = 0
             intelGrid[x][z].ACUIndexes = { }
             intelGrid[x][z].ACUThreat = 0
             intelGrid[x][z].AdjacentGrids = {}
+            intelGrid[x][z].Graphs = { }
+            intelGrid[x][z].Graphs.MAIN = { GraphChecked = false, Land = false, Amphibious = false, NoGraph = false }
             local cx = fx * (x - 0.5)
             local cz = fz * (z - 0.5)
             if cx < playableArea[1] or cz < playableArea[2] or cx > playableArea[3] or cz > playableArea[4] then
@@ -1330,6 +1401,8 @@ function GetIntelGrid(Position)
     end
     return false, false
 end
+
+
 
 --[[
     info:   { table: 26D1E5A0 

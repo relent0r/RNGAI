@@ -17,7 +17,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAIT1LandScoutBurst',
         Priority = 895,
         BuilderConditions = {
-            { UCBC, 'PoolLessAtLocation', {'LocationType', 3, categories.LAND * categories.SCOUT }},
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.LAND * categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
             { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
             { UCBC, 'GreaterThanArmyThreat', { 'LandNow', 20}},

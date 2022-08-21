@@ -1,5 +1,6 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local CanGraphToRNG = import('/lua/AI/aiattackutilities.lua').CanGraphToRNG
+local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local BASEPOSTITIONS = {}
 local mapSizeX, mapSizeZ = GetMapSize()
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
@@ -1153,13 +1154,9 @@ end
 
 function CheckPerimeterPointsExpired(aiBrain, pointTable)
     -- Checks if the perimeter points have been scouted recently
-    local gameTime = GetGameTimeSeconds()
-    if aiBrain.InterestList.PerimeterPoints[pointTable] then
-        for K, v in aiBrain.InterestList.PerimeterPoints[pointTable] do
-            if gameTime - v.LastScouted > 120 then
-                return true
-            end
-        end
+    local im = IntelManagerRNG:GetIntelManager()
+    if im.MapIntelStats.PerimeterExpired then
+        return true
     end
     return false
 end

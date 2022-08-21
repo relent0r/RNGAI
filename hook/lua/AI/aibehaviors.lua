@@ -74,7 +74,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.GunUpgradeRequired = false
     cdr.GunUpgradePresent = false
     cdr.WeaponRange = false
-    cdr.DefaultRange = 256
+    cdr.DefaultRange = 384
     cdr.MaxBaseRange = 0
     cdr.OverCharge = false
     cdr.ThreatLimit = 35
@@ -1460,7 +1460,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         return
     end
     if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > maxRadius * maxRadius then
-        --RNGLOG('ACU is beyond maxRadius of '..maxRadius)
+        RNGLOG('ACU is beyond maxRadius of '..maxRadius)
         return CDRRetreatRNG(aiBrain, cdr, true)
     end
 
@@ -1502,7 +1502,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 --RNGLOG('OverCharge running but ACU is beyond its MaxBaseRange property')
                 cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
                 coroutine.yield(40)
-                --RNGLOG('cdr retreating due to beyond max range and not building')
+                RNGLOG('cdr retreating due to beyond max range and not building '..(cdr.MaxBaseRange * cdr.MaxBaseRange)..' current distance '..acuDistanceToBase)
                 return CDRRetreatRNG(aiBrain, cdr)
             end
             --[[
@@ -1583,6 +1583,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                                     cdr.PlatoonHandle:MoveToLocation(cdr.CDRHome, false)
                                     coroutine.yield(40)
                                 end
+                                RNGLOG('cdr retreating due to enemy threat within overcharge')
                                 return CDRRetreatRNG(aiBrain, cdr)
                             end
                         end
@@ -1777,6 +1778,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                             coroutine.yield(40)
                         end
                     end
+                    RNGLOG('cdr retreating due to caution or phase 3')
                     return CDRRetreatRNG(aiBrain, cdr)
                 end
             end
@@ -1791,6 +1793,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 if (not cdr.HighThreatUpgradePresent) and cdr.CurrentEnemyThreat > cdr.ThreatLimit then
                     cdr.HighThreatUpgradeRequired = true
                 end
+                RNGLOG('cdr retreating due to low health')
                 return CDRRetreatRNG(aiBrain, cdr)
             elseif cdr.HealthPercent < 0.4 and not cdr.SuicideMode then
                 RNGLOG('cdr.active is false, continueFighting is false')
@@ -1802,6 +1805,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 if (not cdr.HighThreatUpgradePresent) then
                     cdr.HighThreatUpgradeRequired = true
                 end
+                RNGLOG('cdr retreating due to low health')
                 return CDRRetreatRNG(aiBrain, cdr)
             end
             if (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired)and cdr.Active and not cdr.SuicideMode then
@@ -1964,6 +1968,11 @@ function CDRRetreatRNG(aiBrain, cdr, base)
                 end
             end
         end
+        if cdr.Caution then
+            RNGLOG('CDR is in caution when retreating')
+        end
+        RNGLOG('ClosestDistance is '..closestBaseDistance)
+        RNGLOG('ClosestBase is '..closestBase)
     end
     if closestBase and closestPlatoon then
         if closestBaseDistance < closestPlatoonDistance then

@@ -16,8 +16,6 @@ local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
-local GiveResource = moho.aibrain_methods.GiveResource
-local TakeResource = moho.aibrain_method.TakeResource
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetThreatsAroundPosition = moho.aibrain_methods.GetThreatsAroundPosition
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
@@ -1066,7 +1064,6 @@ AIBrain = Class(RNGAIBrainClass) {
         coroutine.yield(50)
         self:CreateFloatingEngineerBase(self.BrainIntel.StartPos)
         coroutine.yield(300)
-        RNGLOG('Current Interest List PeimeterPoints'..reprs(self.InterestList.PerimeterPoints))
         while true do
             local factionIndex = self:GetFactionIndex()
             RNGLOG('-- Eco Stats --')
@@ -1129,9 +1126,6 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
             RNGLOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
             RNGLOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
-            --RNGLOG('Current Interest List HighPriority'..reprs(self.InterestList.HighPriority))
-            --RNGLOG('Current Interest List LowPriority'..reprs(self.InterestList.LowPriority))
-            RNGLOG('Current Interest List MustScout'..reprs(self.InterestList.MustScout))
             if next(self.EnemyIntel.SMD) then
                 RNGLOG('SMD Table')
                 RNGLOG(repr(self.EnemyIntel.SMD))
@@ -1144,9 +1138,6 @@ AIBrain = Class(RNGAIBrainClass) {
             local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager()
             RNGLOG('Unit Stats '..repr(im.UnitStats))
             RNGLOG('IntelCoverage Percentage '..repr(im.MapIntelStats.IntelCoverage))
-            local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
-            local maxGridSizeX,MaxGridSizeZ = IntelManagerRNG.GetIntelGrid({playableArea[3], 0, playableArea[4]})
-            RNGLOG('Max GridSizeX '..maxGridSizeX..' Max GridSizeZ '..MaxGridSizeZ)
             coroutine.yield(100)
         end
     end,
@@ -1193,48 +1184,19 @@ AIBrain = Class(RNGAIBrainClass) {
 
     drawMainRestricted = function(self)
         coroutine.yield(100)
-        --RNGLOG('Starting drawMainRestricted')
+        local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager()
+        RNGLOG('Starting drawMainRestricted')
         while true do
             DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea, '0000FF')
             DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea/2, 'FF0000')
-            if self.InterestList.PerimeterPoints then
-                for k, v in self.InterestList.PerimeterPoints do
-                    for c, b in v do
-                        if b.Position[1] and b.Position[2] and b.Position[3] then
-                            DrawCircle(b.Position, 10, 'FFA500')
-                        else
-                            RNGLOG('Perimeter position was invalid '..repr(b))
-                        end
+            for i=1, im.MapIntelGridXRes do
+                for k=1, im.MapIntelGridZRes do
+                    if im.MapIntelGrid[i][k].ScoutPriority > 0 then
+                        DrawCircle(im.MapIntelGrid[i][k].Position, 10, 'FFA500')
                     end
                 end
             end
-            if self.InterestList.HighPriority then
-                for k, v in self.InterestList.HighPriority do
-                    if v.Position[1] and v.Position[2] and v.Position[3] then
-                        DrawCircle(v.Position, 10, 'FFA500')
-                    else
-                        RNGLOG('High Priority position was invalid '..repr(b))
-                    end
-                end
-            end
-            if self.InterestList.LowPriority then
-                for k, v in self.InterestList.LowPriority do
-                    if v.Position[1] and v.Position[2] and v.Position[3] then
-                        DrawCircle(v.Position, 10, 'FFA500')
-                    else
-                        RNGLOG('High Priority position was invalid '..repr(b))
-                    end
-                end
-            end
-            if self.InterestList.MustScout then
-                for k, v in self.InterestList.MustScout do
-                    if v.Position[1] and v.Position[2] and v.Position[3] then
-                        DrawCircle(v.Position, 10, 'FFA500')
-                    else
-                        RNGLOG('High Priority position was invalid '..repr(b))
-                    end
-                end
-            end
+            --[[
             if self.BuilderManagers['MAIN'].DefensivePoints[1] then
                 for _, v in self.BuilderManagers['MAIN'].DefensivePoints[1] do
                     DrawCircle(v.Position, 10, 'FFA500')
@@ -1244,7 +1206,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 for _, v in self.BuilderManagers['MAIN'].DefensivePoints[2] do
                     DrawCircle(v.Position, 10, 'FFA500')
                 end
-            end
+            end]]
                     
 
             WaitTicks(2)
@@ -1773,6 +1735,10 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     BuildScoutLocationsRNG = function(self)
+        while not ScenarioInfo.MarkersInfectedRNG do
+            RNGLOG('Waiting for markers to be infected in order to build scout locations')
+            coroutine.yield(20)
+        end
         local function DrawCirclePoints(points, radius, center)
             local extractorPoints = {}
             local slice = 2 * math.pi / points
@@ -1801,6 +1767,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if not self.InterestList then
             self.InterestList = {}
             self.IntelData.HiPriScouts = 0
+            self.IntelData.LowPriScouts = 0
             self.IntelData.AirHiPriScouts = 0
             self.IntelData.AirLowPriScouts = 0
             
@@ -1809,24 +1776,11 @@ AIBrain = Class(RNGAIBrainClass) {
             self.InterestList.HighPriority = {}
             self.InterestList.LowPriority = {}
             self.InterestList.MustScout = {}
-            self.InterestList.PerimeterPoints = {
-                RestrictedClose = {},
-                Restricted = {},
-                Military = {},
-                DMZ = {}
-            }
-
             local myArmy = ScenarioInfo.ArmySetup[self.Name]
             if self.BrainIntel.ExpansionWatchTable then
                 for _, v in self.BrainIntel.ExpansionWatchTable do
                     -- Add any expansion table locations to the must scout table
                     --RNGLOG('Expansion of type '..v.Type..' found, seeting scout location')
-                    RNGINSERT(self.InterestList.MustScout, 
-                        {
-                            Position = v.Position,
-                            LastScouted = 0,
-                        }
-                    )
                     local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(v.Position)
                     im.MapIntelGrid[gridXID][gridYID].MustScout = true
                     RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
@@ -1957,13 +1911,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 self.EnemyIntel.EnemyStartLocations = startLocations
                 self.BrainIntel.AllyStartLocations = allyTempStarts
             end
-            --RNGLOG('Perimeter Points Pre '..repr(self.InterestList.PerimeterPoints))
             local perimeterMap = {
                 BaseRestrictedArea, 
-                BaseMilitaryArea, 
-                BaseDMZArea
+                BaseMilitaryArea
             }
-            for i=1, 3 do
+            for i=1, 2 do
                 local tempPoints = DrawCirclePoints(8, perimeterMap[i], {self.BrainIntel.StartPos[1], 0 , self.BrainIntel.StartPos[3]})
                 for _, v in tempPoints do
                     --RNGLOG('TempPoints '..repr(v))
@@ -1971,21 +1923,32 @@ AIBrain = Class(RNGAIBrainClass) {
                     --if v[1] <= 15 or v[1] >= playableArea[1] - 15 or v[3] <= 15 or v[3] >= playableArea[2] - 15 then
                         continue
                     end
-                    local belowWater = false
-                    if GetTerrainHeight(v[1], v[3]) < GetSurfaceHeight(v[1], v[3]) then
-                        belowWater = true
-                    end
                     if i == 1 then
-                        RNGINSERT(self.InterestList.PerimeterPoints.Restricted, {Position = v, Scout = false, LastScouted = 0, BelowWater = belowWater})
+                        local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(v)
+                        if im.MapIntelGrid[gridXID][gridYID].ScoutPriority < 50 then
+                            im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                        end
+                        im.MapIntelGrid[gridXID][gridYID].Perimeter = 'Restricted'
+                        if not im.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked then
+                            im:IntelGridSetGraph('MAIN', gridXID, gridYID, self.BrainIntel.StartPos, v)
+                        end
+                        RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
+                        RNGLOG('Perimeter Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
+                        self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
                     elseif i == 2 then
-                        RNGINSERT(self.InterestList.PerimeterPoints.Military, {Position = v, Scout = false, LastScouted = 0, BelowWater = belowWater})
-                    elseif i == 3 then
-                        RNGINSERT(self.InterestList.PerimeterPoints.DMZ, {Position = v, Scout = false, LastScouted = 0, BelowWater = belowWater})
+                        local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(v)
+                        if im.MapIntelGrid[gridXID][gridYID].ScoutPriority < 50 then
+                            im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                        end
+                        im.MapIntelGrid[gridXID][gridYID].Perimeter = 'Military'
+                        if not im.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked then
+                            im:IntelGridSetGraph('MAIN', gridXID, gridYID, self.BrainIntel.StartPos, v)
+                        end
+                        RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
+                        RNGLOG('Perimeter Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
+                        self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
                     end
                 end
-            end
-            if self.RNGDEBUG then
-                RNGLOG('Perimeter Points Post '..repr(self.InterestList.PerimeterPoints))
             end
             --RNGLOG('* AI-RNG: EnemyStartLocations : '..repr(aiBrain.EnemyIntel.EnemyStartLocations))
             local massLocations = RUtils.AIGetMassMarkerLocations(self, true)
@@ -2483,7 +2446,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local perimeterMonitorRadius = BaseRestrictedArea * 1.2
         self.BasePerimeterMonitor = {}
         if self.RNGDEBUG then
-            --self:ForkThread(self.drawMainRestricted)
+            self:ForkThread(self.drawMainRestricted)
         end
         while true do
             for k, v in self.BuilderManagers do
@@ -4944,11 +4907,11 @@ AIBrain = Class(RNGAIBrainClass) {
                         if IsAlly(selfIndex, brain:GetArmyIndex()) then
                             if GetEconomyStoredRatio(brain, 'ENERGY') < 0.01 then
                                 --RNGLOG('Transfer Energy to team mate')
-                                SUtils.AISendChat('allies', self.Nickname, 'AI '..self.Nickname..' Sending '..amount..' energy to '..brain.Nickname, ArmyBrains[brain:GetArmyIndex()].Nickname)
                                 local amount
                                 amount = GetEconomyStored( self, 'ENERGY') / 8
-                                TakeResource(self, 'Energy', amount)
-                                GiveResource(brain, 'Energy', amount)
+                                SUtils.AISendChat('allies', self.Nickname, 'AI '..self.Nickname..' Sending '..amount..' energy to '..brain.Nickname, ArmyBrains[brain:GetArmyIndex()].Nickname)
+                                self:TakeResource('Energy', amount)
+                                brain:GiveResource( 'Energy', amount)
                             end
                         end
                     end
