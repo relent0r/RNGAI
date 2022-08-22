@@ -673,7 +673,8 @@ IntelManager = Class {
             else
                 WARN('No ZoneID for Radar, unable to set coverage area')
             end
-            local gridSearch = math.floor(intelRadius / MapIntelGridSize)
+            local gridSearch = math.floor(ALLBPS[unit.UnitId].Intel.RadarRadius / MapIntelGridSize)
+            RNGLOG('GridSearch for IntelCoverage is '..gridSearch)
             self:InfectGridPosition(radarPosition, gridSearch, 'Radar', 'IntelCoverage', true, unit)
         end
     end,
@@ -695,7 +696,7 @@ IntelManager = Class {
                     v.RadarCoverage = false
                 end
             end
-            local gridSearch = math.floor(intelRadius / MapIntelGridSize)
+            local gridSearch = math.floor(ALLBPS[unit.UnitId].Intel.RadarRadius / MapIntelGridSize)
             self:DisinfectGridPosition(radarPosition, gridSearch, 'Radar', 'IntelCoverage', false, unit)
         end
     end,
@@ -790,7 +791,7 @@ IntelManager = Class {
                     end
                     if self.MapIntelGrid[i][k].Enabled and not self.MapIntelGrid[i][k].Water then
                         self.MapIntelGrid[i][k].TimeScouted = time - self.MapIntelGrid[i][k].LastScouted
-                        if self.MapIntelGrid[i][k].ScoutPriority > 0 and self.MapIntelGrid[i][k].TimeScouted ~= 0 and self.MapIntelGrid[i][k].TimeScouted < 120 then
+                        if self.MapIntelGrid[i][k].IntelCoverage or (self.MapIntelGrid[i][k].ScoutPriority > 0 and self.MapIntelGrid[i][k].TimeScouted ~= 0 and self.MapIntelGrid[i][k].TimeScouted < 120) then
                             intelCoverage = intelCoverage + 1
                             RNGLOG('TimeScouted is less than zero')
                             RNGLOG('LastScouted time was '..self.MapIntelGrid[i][k].LastScouted)
@@ -857,15 +858,16 @@ IntelManager = Class {
     InfectGridPosition = function (self, position, gridSize, type, property, value, unit)
         local gridX, gridZ = GetIntelGrid(position)
         local gridsSet = 0
+        RNGLOG('Infecting Grid Positions, grid size is '..gridSize)
         if type == 'Radar' then
             self.MapIntelGrid[gridX][gridZ].Radars[unit.Sync.id] = unit
             self.MapIntelGrid[gridX][gridZ].IntelCoverage = true
             self.Brain:ForkThread(self.DrawInfection, self.MapIntelGrid[gridX][gridZ].Position)
             gridsSet = gridsSet + 1
         end
-        for x = math.max(1, gridX - gridSize), math.min(im.MapIntelGridXRes, gridX + gridSize) do
-            for z = math.max(1, gridZ - gridSize), math.min(im.MapIntelGridZRes, gridZ + gridSize) do
-                im.MapIntelGrid[x][z][property] = value
+        for x = math.max(1, gridX - gridSize), math.min(self.MapIntelGridXRes, gridX + gridSize), 1 do
+            for z = math.max(1, gridZ - gridSize), math.min(self.MapIntelGridZRes, gridZ + gridSize), 1 do
+                self.MapIntelGrid[x][z][property] = value
                 if type == 'Radar' then
                     self.MapIntelGrid[x][z].Radars[unit.Sync.id] = unit
                 end
@@ -880,27 +882,28 @@ IntelManager = Class {
         local gridX, gridZ = GetIntelGrid(position)
         local gridsSet = 0
         local intelRadius
+        RNGLOG('Disinfecting Grid Positions, grid size is '..gridSize)
         if type == 'Radar' then
             self.MapIntelGrid[gridX][gridZ].Radars[unit.Sync.id] = nil
             local radarCoverage = false
-            for k, v in im.MapIntelGrid[gridX][gridZ].Radars do
+            for k, v in self.MapIntelGrid[gridX][gridZ].Radars do
                 if v and not v.Dead then
                     radarCoverage = true
                     break
                 end
             end
             if not radarCoverage then
-                im.MapIntelGrid[gridX][gridZ][property] = value
+                self.MapIntelGrid[gridX][gridZ][property] = value
             end
             self.Brain:ForkThread(self.DrawInfection, self.MapIntelGrid[gridX][gridZ].Position)
             gridsSet = gridsSet + 1
         end
-        for x = math.max(1, gridX - gridSize), math.min(im.MapIntelGridXRes, gridX + gridSize) do
-            for z = math.max(1, gridZ - gridSize), math.min(im.MapIntelGridZRes, gridZ + gridSize) do
+        for x = math.max(1, gridX - gridSize), math.min(self.MapIntelGridXRes, gridX + gridSize) do
+            for z = math.max(1, gridZ - gridSize), math.min(self.MapIntelGridZRes, gridZ + gridSize) do
                 if type == 'Radar' then
                     RNGLOG('Check for another radar and then confirm radius is same or greater?')
                     local radarCoverage = false
-                    for k, v in im.MapIntelGrid[x][z].Radars do
+                    for k, v in self.MapIntelGrid[x][z].Radars do
                         if v and not v.Dead then
                             radarCoverage = true
                             break
@@ -908,7 +911,7 @@ IntelManager = Class {
                     end
                 end
                 if not radarCoverage then
-                    im.MapIntelGrid[x][z][property] = value
+                    self.MapIntelGrid[x][z][property] = value
                 end
                 self.Brain:ForkThread(self.DrawInfection, self.MapIntelGrid[x][z].Position)
                 gridsSet = gridsSet + 1
