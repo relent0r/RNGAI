@@ -695,9 +695,8 @@ IntelManager = Class {
                     v.RadarCoverage = false
                 end
             end
-            --local gridX, gridZ = GetIntelGrid(radarPosition)
-            --self.MapIntelGrid[gridX][gridZ].Radars[unit.Sync.id] = nil
-            --RNGLOG('Unassigned Intel Units. Number of units in table '..RNGGETN(self.MapIntelGrid[gridX][gridZ].Radars))
+            local gridSearch = math.floor(intelRadius / MapIntelGridSize)
+            self:DisinfectGridPosition(radarPosition, gridSearch, 'Radar', 'IntelCoverage', false, unit)
         end
     end,
 
@@ -883,14 +882,34 @@ IntelManager = Class {
         local intelRadius
         if type == 'Radar' then
             self.MapIntelGrid[gridX][gridZ].Radars[unit.Sync.id] = nil
+            local radarCoverage = false
+            for k, v in im.MapIntelGrid[gridX][gridZ].Radars do
+                if v and not v.Dead then
+                    radarCoverage = true
+                    break
+                end
+            end
+            if not radarCoverage then
+                im.MapIntelGrid[gridX][gridZ][property] = value
+            end
+            self.Brain:ForkThread(self.DrawInfection, self.MapIntelGrid[gridX][gridZ].Position)
             gridsSet = gridsSet + 1
         end
         for x = math.max(1, gridX - gridSize), math.min(im.MapIntelGridXRes, gridX + gridSize) do
             for z = math.max(1, gridZ - gridSize), math.min(im.MapIntelGridZRes, gridZ + gridSize) do
                 if type == 'Radar' then
                     RNGLOG('Check for another radar and then confirm radius is same or greater?')
+                    local radarCoverage = false
+                    for k, v in im.MapIntelGrid[x][z].Radars do
+                        if v and not v.Dead then
+                            radarCoverage = true
+                            break
+                        end
+                    end
                 end
-                im.MapIntelGrid[x][z][property] = value
+                if not radarCoverage then
+                    im.MapIntelGrid[x][z][property] = value
+                end
                 self.Brain:ForkThread(self.DrawInfection, self.MapIntelGrid[x][z].Position)
                 gridsSet = gridsSet + 1
             end
