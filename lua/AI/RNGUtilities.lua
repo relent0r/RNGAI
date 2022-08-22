@@ -4659,7 +4659,6 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     --RNGLOG('GetLandScoutLocationRNG ')
     --RNGLOG(repr(aiBrain.IntelData.HiPriScouts))
     --RNGLOG(repr(aiBrain.NumOpponents))
-    --RNGLOG(repr(aiBrain.InterestList.HighPriority))
     if aiBrain.IntelData.HiPriScouts < aiBrain.NumOpponents then
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
@@ -4694,8 +4693,6 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         end
         if highestGrid.Priority > 0 then
             scoutingData = im.MapIntelGrid[highestGrid.x][highestGrid.z]
-            --RNGLOG(repr(aiBrain.InterestList.HighPriority[1]))
-            --scoutingData = aiBrain.InterestList.HighPriority[1]
             scoutingData.LastScouted = currentGameTime
             scoutingData.TimeScouted = 1
             scoutType = 'Location'
@@ -4703,7 +4700,6 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             RNGLOG('HighPri Scouting Data '..repr(scoutingData))
         end
         aiBrain.IntelData.HiPriScouts = aiBrain.IntelData.HiPriScouts + 1
-        --SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.HighPriority)
     elseif aiBrain.IntelData.LowPriScouts < 2 then
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
@@ -4735,8 +4731,6 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         end
         if highestGrid.Priority > 0 then
             scoutingData = im.MapIntelGrid[highestGrid.x][highestGrid.z]
-            --RNGLOG(repr(aiBrain.InterestList.HighPriority[1]))
-            --scoutingData = aiBrain.InterestList.HighPriority[1]
             scoutingData.LastScouted = currentGameTime
             scoutType = 'Location'
             RNGLOG('Current Game Time '..currentGameTime)
@@ -4748,8 +4742,6 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             scoutType = 'Location'
         end
         aiBrain.IntelData.LowPriScouts = aiBrain.IntelData.LowPriScouts + 1
-        --scoutingData = aiBrain.InterestList.LowPriority[1]
-        --SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.LowPriority)
     else
         --Reset number of scoutings and start over
         aiBrain.IntelData.HiPriScouts = 0
@@ -4806,8 +4798,6 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
         if highestGrid.Priority > 0 then
             scoutingData = im.MapIntelGrid[highestGrid.x][highestGrid.z]
             scoutingData.ScoutAssigned = scout
-            --RNGLOG(repr(aiBrain.InterestList.HighPriority[1]))
-            --scoutingData = aiBrain.InterestList.HighPriority[1]
             scoutingData.LastScouted = currentGameTime
             scoutingData.TimeScouted = 1
             scoutType = 'Location'
@@ -4846,8 +4836,6 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
         end
         if highestGrid.Priority > 0 then
             scoutingData = im.MapIntelGrid[highestGrid.x][highestGrid.z]
-            --RNGLOG(repr(aiBrain.InterestList.HighPriority[1]))
-            --scoutingData = aiBrain.InterestList.HighPriority[1]
             scoutingData.LastScouted = currentGameTime
             scoutingData.TimeScouted = 1
             scoutType = 'Location'
@@ -4855,7 +4843,6 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
             RNGLOG('AirScouting HighPri Scouting Data '..repr(scoutingData))
         end
         aiBrain.IntelData.AirHiPriScouts = aiBrain.IntelData.AirHiPriScouts + 1
-        --SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.HighPriority)
     elseif aiBrain.IntelData.AirLowPriScouts < 1 then
         RNGLOG('AirScout LowPri is set')
         local highestGrid = {x = 0, z = 0, Priority = 0}
@@ -4885,8 +4872,6 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
         end
         if highestGrid.Priority > 0 then
             scoutingData = im.MapIntelGrid[highestGrid.x][highestGrid.z]
-            --RNGLOG(repr(aiBrain.InterestList.HighPriority[1]))
-            --scoutingData = aiBrain.InterestList.HighPriority[1]
             scoutingData.LastScouted = currentGameTime
             scoutType = 'Location'
             RNGLOG('AirScouting Current Game Time '..currentGameTime)
@@ -4899,8 +4884,6 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
         end
         aiBrain.IntelData.AirHiPriScouts = 0
         aiBrain.IntelData.AirLowPriScouts = aiBrain.IntelData.AirLowPriScouts + 1
-        --scoutingData = aiBrain.InterestList.LowPriority[1]
-        --SortScoutingAreasRNG(aiBrain, aiBrain.InterestList.LowPriority)
     else
         --Reset number of scoutings and start over
         RNGLOG('AirScout Resetting AirLowPriScouts and AirHiPriScouts')

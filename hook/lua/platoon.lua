@@ -1053,7 +1053,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                     --RNGLOG('No target area, number of high pri scouts is '..aiBrain.IntelData.AirHiPriScouts)
                     --RNGLOG('Num opponents is '..aiBrain.NumOpponents)
                     --RNGLOG('Low pri scouts '..aiBrain.IntelData.AirLowPriScouts)
-                    --RNGLOG('HighPri Interest table scout is '..RNGGETN(aiBrain.InterestList.HighPriority))
                     coroutine.yield(10)
                 end
                 coroutine.yield(10)

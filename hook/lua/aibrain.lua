@@ -1764,18 +1764,12 @@ AIBrain = Class(RNGAIBrainClass) {
         local allyStarts = {}
         
 
-        if not self.InterestList then
-            self.InterestList = {}
+        if not im.MapIntelStats.ScoutLocationsBuilt then
             self.IntelData.HiPriScouts = 0
             self.IntelData.LowPriScouts = 0
             self.IntelData.AirHiPriScouts = 0
             self.IntelData.AirLowPriScouts = 0
             
-
-            -- Add each enemy's start location to the InterestList as a new sub table
-            self.InterestList.HighPriority = {}
-            self.InterestList.LowPriority = {}
-            self.InterestList.MustScout = {}
             local myArmy = ScenarioInfo.ArmySetup[self.Name]
             if self.BrainIntel.ExpansionWatchTable then
                 for _, v in self.BrainIntel.ExpansionWatchTable do
@@ -1805,12 +1799,6 @@ AIBrain = Class(RNGAIBrainClass) {
                             numOpponents = numOpponents + 1
                             -- I would rather use army ndexes for the table keys of the enemyStarts so I can easily reference them in queries. To be pondered.
                             RNGINSERT(enemyStarts, {Position = startPos, Index = army.ArmyIndex})
-                            RNGINSERT(self.InterestList.HighPriority,
-                                {
-                                    Position = startPos,
-                                    LastScouted = 0,
-                                }
-                            )
                             local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(startPos)
                             im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 100
                             RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
@@ -1853,12 +1841,6 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
 
                         if closeToEnemy then
-                            RNGINSERT(self.InterestList.LowPriority,
-                                {
-                                    Position = loc.Position,
-                                    LastScouted = 0,
-                                }
-                            )
                             local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(loc.Position)
                             im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
                             RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
@@ -1893,12 +1875,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 for _, loc in starts do
                     -- If vacant
                     if not allyStarts[loc.Name] then
-                        RNGINSERT(self.InterestList.LowPriority,
-                            {
-                                Position = loc.Position,
-                                LastScouted = 0,
-                            }
-                        )
                         local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(loc.Position)
                         im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
                         RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
@@ -1973,12 +1949,6 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             for k, zone in self.Zones.Naval.zones do
                 --RNGLOG('* AI-RNG: Inserting Mass Marker Position : '..repr(massMarker.Position))
-                RNGINSERT(self.InterestList.LowPriority,
-                        {
-                            Position = zone.pos,
-                            LastScouted = 0,
-                        }
-                    )
                     local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(zone.pos)
                     im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
                     RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
@@ -1990,12 +1960,6 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             for k, zone in self.Zones.Land.zones do
                 --RNGLOG('* AI-RNG: Inserting Mass Marker Position : '..repr(massMarker.Position))
-                RNGINSERT(self.InterestList.LowPriority,
-                        {
-                            Position = zone.pos,
-                            LastScouted = 0,
-                        }
-                    )
                 local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(zone.pos)
                 im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
                 RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)

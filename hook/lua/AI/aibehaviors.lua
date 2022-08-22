@@ -3053,6 +3053,7 @@ FindExperimentalTargetRNG = function(self)
 
     -- For each priority in SurfacePriorities list, check against each enemy base we're aware of (through scouting/intel),
     -- The base with the most number of the highest-priority targets gets selected. If there's a tie, pick closer
+    -- This must be changed!! to no longer use interest list.
     local enemyBases = aiBrain.InterestList.HighPriority
     for _, priority in SurfacePrioritiesRNG do
         local bestBase = false
@@ -3243,6 +3244,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     end
 
     -- Now look through the bases for the highest economic threat and largest cluster of units
+    -- This must be changed!! to no longer use interest list.
     local enemyBases = aiBrain.InterestList.HighPriority
     local bestBaseThreat = nil
     local maxBaseThreat = 0
