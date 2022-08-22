@@ -123,6 +123,10 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('Map X size is : '..mapSizeX..'Map Z size is : '..mapSizeZ)
         -- Stores handles to all builders for quick iteration and updates to all
         self.BuilderHandles = {}
+        self.NoRush = {
+            Active = false,
+            Radius = 0
+            }
 
         self.MapSize = 10
         local mapSizeX, mapSizeZ = GetMapSize()
@@ -1139,6 +1143,24 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Unit Stats '..repr(im.UnitStats))
             RNGLOG('IntelCoverage Percentage '..repr(im.MapIntelStats.IntelCoverage))
             coroutine.yield(100)
+        end
+    end,
+
+    NoRushCheck = function(self)
+
+        if ScenarioInfo.Options.NoRushOption and not(ScenarioInfo.Options.NoRushOption == 'Off') then
+            self.NoRush.Active = true
+            self.NoRush.Radius = ScenarioInfo.norushradius
+            self:ForkThread(self.NoRushMonitor)
+        end
+    end,
+
+    NoRushMonitor = function(self)
+        while self.NoRush.Active do
+            coroutine.yield(5)
+            if aiBrain:GetNoRushTicks() <= 0 then
+                self.NoRush.Active = false
+            end
         end
     end,
 
