@@ -4665,7 +4665,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         local currentGrid = {x = 0, z = 0, Priority = 0}
         for i=1, im.MapIntelGridXRes do
             for k=1, im.MapIntelGridZRes do
-                if im.MapIntelGrid[i][k].ScoutPriority == 100 then
+                if not im.MapIntelGrid[i][k].IntelCoverage and im.MapIntelGrid[i][k].ScoutPriority == 100 then
                     if not im.MapIntelGrid[i][k].Graphs[locationType].GraphChecked then
                         im:IntelGridSetGraph(locationType, i, k, aiBrain.BuilderManagers[locationType].Position, im.MapIntelGrid[i][k].Position)
                     end
@@ -4709,7 +4709,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         local currentGrid = {x = 0, z = 0, Priority = 0}
         for i=1, im.MapIntelGridXRes do
             for k=1, im.MapIntelGridZRes do
-                if im.MapIntelGrid[i][k].ScoutPriority == 50 then
+                if not im.MapIntelGrid[i][k].IntelCoverage and im.MapIntelGrid[i][k].ScoutPriority == 50 then
                     if not im.MapIntelGrid[i][k].Graphs[locationType].GraphChecked then
                         im:IntelGridSetGraph(locationType, i, k, aiBrain.BuilderManagers[locationType].Position, im.MapIntelGrid[i][k].Position)
                     end

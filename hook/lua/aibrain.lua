@@ -2251,52 +2251,18 @@ AIBrain = Class(RNGAIBrainClass) {
 
     ParseIntelThreadRNG = function(self)
         local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager()
-        if not self.InterestList or not self.InterestList.MustScout then
+        if not im.MapIntelStats.ScoutLocationsBuilt then
             error('Scouting areas must be initialized before calling AIBrain:ParseIntelThread.', 2)
         end
         while true do
             local structures = GetThreatsAroundPosition(self, self.BuilderManagers.MAIN.Position, 16, true, 'StructuresNotMex')
             local gameTime = GetGameTimeSeconds()
             for _, struct in structures do
-                local dupe = false
                 local newPos = {struct[1], 0, struct[2]}
-
-                for _, loc in self.InterestList.HighPriority do
-                    if VDist2Sq(newPos[1], newPos[3], loc.Position[1], loc.Position[3]) < 10000 then
-                        dupe = true
-                        break
-                    end
-                end
-
-                if not dupe then
-                    -- Is it in the low priority list?
-                    for i = 1, RNGGETN(self.InterestList.LowPriority) do
-                        local loc = self.InterestList.LowPriority[i]
-                        if VDist2Sq(newPos[1], newPos[3], loc.Position[1], loc.Position[3]) < 10000 then
-                            -- Found it in the low pri list. Remove it so we can add it to the high priority list.
-                            table.remove(self.InterestList.LowPriority, i)
-                            break
-                        end
-                    end
-
-                    RNGINSERT(self.InterestList.HighPriority,
-                        {
-                            Position = newPos,
-                            LastScouted = gameTime,
-                        }
-                    )
-                    -- Sort the list based on low long it has been since it was scouted
-                    table.sort(self.InterestList.HighPriority, function(a, b)
-                        if a.LastScouted == b.LastScouted then
-                            local MainPos = self.BuilderManagers.MAIN.Position
-                            local distA = VDist2(MainPos[1], MainPos[3], a.Position[1], a.Position[3])
-                            local distB = VDist2(MainPos[1], MainPos[3], b.Position[1], b.Position[3])
-
-                            return distA < distB
-                        else
-                            return a.LastScouted < b.LastScouted
-                        end
-                    end)
+                local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(newPos)
+                if im.MapIntelGrid[gridXID][gridYID].ScoutPriority == 0 then
+                    im.MapIntelGrid[gridXID][gridYID].MustScout = true
+                    im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
                 end
             end
             for k, v in self.EnemyIntel.ACU do
