@@ -905,13 +905,14 @@ IntelManager = Class {
                     local radarCoverage = false
                     for k, v in self.MapIntelGrid[x][z].Radars do
                         if v and not v.Dead then
+                            RNGLOG('Found another radar, dont set this grid to false')
                             radarCoverage = true
                             break
                         end
                     end
-                end
-                if not radarCoverage then
-                    self.MapIntelGrid[x][z][property] = value
+                    if not radarCoverage then
+                        self.MapIntelGrid[x][z][property] = value
+                    end
                 end
                 self.Brain:ForkThread(self.DrawInfection, self.MapIntelGrid[x][z].Position)
                 gridsSet = gridsSet + 1
