@@ -1025,6 +1025,7 @@ AIBrain = Class(RNGAIBrainClass) {
         
         self:IMAPConfigurationRNG()
         -- Begin the base monitor process
+        self:NoRushCheck()
 
         self:BaseMonitorInitializationRNG()
 
@@ -1147,6 +1148,8 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     NoRushCheck = function(self)
+        -- Sets brain flags for NoRush options
+        -- Other functions should be looking at these brain flags for decision making.
 
         if ScenarioInfo.Options.NoRushOption and not(ScenarioInfo.Options.NoRushOption == 'Off') then
             self.NoRush.Active = true
@@ -1158,7 +1161,10 @@ AIBrain = Class(RNGAIBrainClass) {
     NoRushMonitor = function(self)
         while self.NoRush.Active do
             coroutine.yield(5)
-            if aiBrain:GetNoRushTicks() <= 0 then
+            if self:GetNoRushTicks() <= 0 then
+                if self.RNGDEBUG then
+                    RNGLOG('NoRush has ended, setting brain flag')
+                end
                 self.NoRush.Active = false
             end
         end
