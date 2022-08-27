@@ -793,9 +793,6 @@ IntelManager = Class {
                         self.MapIntelGrid[i][k].TimeScouted = time - self.MapIntelGrid[i][k].LastScouted
                         if self.MapIntelGrid[i][k].IntelCoverage or (self.MapIntelGrid[i][k].ScoutPriority > 0 and self.MapIntelGrid[i][k].TimeScouted ~= 0 and self.MapIntelGrid[i][k].TimeScouted < 120) then
                             intelCoverage = intelCoverage + 1
-                            RNGLOG('TimeScouted is less than zero')
-                            RNGLOG('LastScouted time was '..self.MapIntelGrid[i][k].LastScouted)
-                            RNGLOG('Current time is '..time)
                         end
                     end
                     if self.MapIntelGrid[i][k].Perimeter == 'Restricted' and self.MapIntelGrid[i][k].TimeScouted > 180 and self.MapIntelGrid[i][k].Graphs['MAIN'].Land then

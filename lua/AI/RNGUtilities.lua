@@ -111,9 +111,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
         local engPos = self:GetPosition()
         local minRec = platoon.PlatoonData.MinimumReclaim
-        if aiBrain.RNGDEBUG then
-            self:SetCustomName('Engineer in main reclaim loop')
-        end
         if not aiBrain.StartReclaimTaken then
             --self:SetCustomName('StartReclaim Logic Start')
             --RNGLOG('Reclaim Function - Starting reclaim is false')
@@ -162,9 +159,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         local reclaimTimeout = 0
                         local massOverflow = false
                         while aiBrain:PlatoonExists(platoon) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 40) do
-                            if aiBrain.RNGDEBUG then
-                                self:SetCustomName('Engineer in early reclaim loop')
-                            end
                             reclaimTimeout = reclaimTimeout + 1
                             --RNGLOG('Waiting for reclaim to no longer exist')
                             if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
@@ -205,9 +199,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         if engReclaiming then
                             local idleCounter = 0
                             while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
-                                if aiBrain.RNGDEBUG then
-                                    self:SetCustomName('Engineer in start reclaim loop')
-                                end
                                 if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
                                     --RNGLOG('We are not reclaiming or moving in the reclaim loop')
                                     --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
@@ -294,9 +285,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         local Lastdist
                         local dist
                         while not self.Dead and aiBrain:PlatoonExists(platoon) do
-                            if aiBrain.RNGDEBUG then
-                                self:SetCustomName('Engineer moving in reclaim table loop')
-                            end
                             engPos = self:GetPosition()
                             dist = VDist3Sq(engPos, validLocation)
                             if dist < 144 then
@@ -339,9 +327,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                 end
                             end
                             coroutine.yield(25)
-                        end
-                        if aiBrain.RNGDEBUG then
-                            self:SetCustomName('Engineer into reclaimGridLoop')
                         end
                         if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
                             coroutine.yield(1)
@@ -414,9 +399,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                     if engReclaiming then
                                         local idleCounter = 0
                                         while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
-                                            if aiBrain.RNGDEBUG then
-                                                self:SetCustomName('Engineer in reclaim table loop')
-                                            end
                                             if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
                                                 --RNGLOG('We are not reclaiming or moving in the reclaim loop')
                                                 --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
@@ -429,10 +411,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                             --RNGLOG('We are reclaiming stuff')
                                             coroutine.yield(30)
                                         end
-                                    end
-                                else
-                                    if aiBrain.RNGDEBUG then
-                                        self:SetCustomName('Engineer reclaim no graph to square location')
                                     end
                                 end
                                 MexBuild(platoon, self, aiBrain)
@@ -571,9 +549,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local idleCount = 0
         while reclaiming do
             --RNGLOG('* AI-RNG: Engineer is reclaiming')
-            if aiBrain.RNGDEBUG then
-                self:SetCustomName('Engineer in attack reclaim loop')
-            end
             coroutine.yield(100)
             currentTime = currentTime + 10
             if currentTime > max_time then
@@ -587,9 +562,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             end
             MexBuild(platoon, self, aiBrain)
             --self:SetCustomName('reclaim loop end')
-        end
-        if aiBrain.RNGDEBUG then
-            self:SetCustomName('Engineer at end of reclaim loop')
         end
         --RNGLOG('* AI-RNG: basePosition random location :'..repr(location))
         IssueClearCommands({self})
@@ -4722,7 +4694,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
                         end
                         currentGrid = {x = i, z = k, Priority = im.MapIntelGrid[i][k].ScoutPriority * (im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].TimeScouted) / im.MapIntelGrid[i][k].DistanceToMain }
                         --RNGLOG('CurrentGrid Priority is '..currentGrid.Priority)
-                        RNGLOG(im.MapIntelGrid[i][k].ScoutPriority..','..im.MapIntelGrid[i][k].LastScouted..','..im.MapIntelGrid[i][k].DistanceToMain..','..im.MapIntelGrid[i][k].TimeScouted..','..currentGrid.Priority)
+                        --RNGLOG(im.MapIntelGrid[i][k].ScoutPriority..','..im.MapIntelGrid[i][k].LastScouted..','..im.MapIntelGrid[i][k].DistanceToMain..','..im.MapIntelGrid[i][k].TimeScouted..','..currentGrid.Priority)
                         --RNGLOG('TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
                         if currentGrid.Priority > highestGrid.Priority then
                             highestGrid = currentGrid
@@ -5044,8 +5016,8 @@ GetHoldingPosition = function(aiBrain, platoonPos, platoon, threatType)
     local bestThreat
     local bestThreatPos
     if aiBrain.RNGDEBUG then
-        RNGLOG('CurrentPlatoonThreat '..platoon.CurrentPlatoonThreat)
-        RNGLOG('threatLocations for antiair platoon '..repr(threatLocations))
+        --RNGLOG('CurrentPlatoonThreat '..platoon.CurrentPlatoonThreat)
+        --RNGLOG('threatLocations for antiair platoon '..repr(threatLocations))
     end
 
     if next(threatLocations) then

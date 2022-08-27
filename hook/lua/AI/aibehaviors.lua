@@ -223,7 +223,7 @@ function CDRBrainThread(cdr)
                 if v.Position[1] and gameTime - 60 < v.LastSpotted then
                     --LOG('Enemy Start Position '..repr(aiBrain.EnemyIntel.EnemyStartLocations))
                     for c, b in aiBrain.EnemyIntel.EnemyStartLocations do
-                        if b.Index == k then
+                        if c == k then
                             --LOG('Enemy ACU distance from start position is '..VDist2Sq(v.Position[1], v.Position[3], aiBrain.EnemyIntel.EnemyStartLocations[c].Position[1], aiBrain.EnemyIntel.EnemyStartLocations[c].Position[3]))
                             enemyStartPos = aiBrain.EnemyIntel.EnemyStartLocations[c].Position
                         end
@@ -3249,15 +3249,17 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
 
     -- Now look through the bases for the highest economic threat and largest cluster of units
     -- This must be changed!! to no longer use interest list.
-    local enemyBases = aiBrain.InterestList.HighPriority
+    local enemyBases = aiBrain.EnemyIntel.EnemyThreatLocations
     local bestBaseThreat = nil
     local maxBaseThreat = 0
     for _, base in enemyBases do
-        local threatTable = aiBrain:GetThreatsAroundPosition(base.Position, 1, true, 'Economy')
-        if RNGGETN(threatTable) ~= 0 then
-            if threatTable[1][3] > maxBaseThreat then
-                maxBaseThreat = threatTable[1][3]
-                bestBaseThreat = threatTable
+        if base.ThreatType == 'StructuresNotMex' then
+            local threatTable = aiBrain:GetThreatsAroundPosition(base.Position, 1, true, 'Economy')
+            if RNGGETN(threatTable) ~= 0 then
+                if threatTable[1][3] > maxBaseThreat then
+                    maxBaseThreat = threatTable[1][3]
+                    bestBaseThreat = threatTable
+                end
             end
         end
     end

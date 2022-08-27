@@ -739,7 +739,6 @@ Platoon = Class(RNGAIPlatoonClass) {
     end,
     
     ReclaimAIRNG = function(self)
-        RNGLOG('* AI-RNG: ReclaimAIRNG has been started from '..self.BuilderName)
         local aiBrain = self:GetBrain()
         local platoonUnits = GetPlatoonUnits(self)
         AIAttackUtils.GetMostRestrictiveLayerRNG(self)
@@ -759,12 +758,6 @@ Platoon = Class(RNGAIPlatoonClass) {
             eng.CustomReclaim = nil
         else
             --RNGLOG('* AI-RNG: Engineer Condition is false')
-        end
-        RNGLOG('* AI-RNG: Ending ReclaimAIRNG..Disbanding')
-        if eng.BuilderManagerData.EngineerManager then
-            RNGLOG('Engineer has BuilderManagerData and EngineerManager prior to disband')
-        else
-            RNGLOG('Engineer doesnt BuilderManagerData and EngineerManager prior to disband')
         end
         self:PlatoonDisband()
     end,
@@ -1013,12 +1006,13 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
         else]]
             while not scout.Dead do
-                RNGLOG('AirScout looking for AirScout location')
                 targetData = RUtils.GetAirScoutLocationRNG(self, aiBrain, scout)
-                if targetData then
-                    RNGLOG('targetData received')
-                else
-                    RNGLOG('No targetData received')
+                if aiBrain.RNGDEBUG then
+                    if targetData then
+                        RNGLOG('AirScout targetData received')
+                    else
+                        RNGLOG('AirScout No targetData received')
+                    end
                 end
 
                 local unknownThreats = aiBrain:GetThreatsAroundPosition(scout:GetPosition(), 16, true, 'Unknown')

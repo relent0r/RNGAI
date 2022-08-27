@@ -1897,10 +1897,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     if army and startPos then
                         if army.ArmyIndex == myArmy.ArmyIndex or (army.Team == myArmy.Team and army.Team ~= 1) then
                             allyStarts['ARMY_' .. i] = startPos
-                            RNGINSERT(allyTempStarts, {Position = startPos, Index = army.ArmyIndex})
+                            allyTempStarts[army.ArmyIndex] = {Position = startPos}
                         else
                             numOpponents = numOpponents + 1
-                            RNGINSERT(startLocations, {Position = startPos, Index = army.ArmyIndex})
+                            startLocations[army.ArmyIndex] = {Position = startPos}
                         end
                     end
                 end
@@ -1915,8 +1915,6 @@ AIBrain = Class(RNGAIBrainClass) {
                         local gridXID, gridYID = im:GetIntelGrid(loc.Position)
                         if im.MapIntelGrid[gridXID][gridYID].Enabled then
                             im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
-                            RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
-                            RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
                             self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
                         end
                     end
@@ -1995,8 +1993,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     local gridXID, gridYID = im:GetIntelGrid(zone.pos)
                     if im.MapIntelGrid[gridXID][gridYID].Enabled then
                         im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
-                        RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
-                        RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
                         self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
                     end
             end
@@ -2004,22 +2000,17 @@ AIBrain = Class(RNGAIBrainClass) {
                 RNGLOG('Number of Land Zones '..table.getn(self.Zones.Land.zones))
             end
             for k, zone in self.Zones.Land.zones do
-                --RNGLOG('* AI-RNG: Inserting Mass Marker Position : '..repr(massMarker.Position))
-                local gridXID, gridYID = im:GetIntelGrid(zone.pos)
-                if im.MapIntelGrid[gridXID][gridYID].Enabled then
-                    im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
-                    RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
-                    RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
-                    self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                if VDist3Sq(self.BrainIntel.StartPos , zone.pos) > 900 then
+                    --RNGLOG('* AI-RNG: Inserting Mass Marker Position : '..repr(massMarker.Position))
+                    local gridXID, gridYID = im:GetIntelGrid(zone.pos)
+                    if im.MapIntelGrid[gridXID][gridYID].Enabled then
+                        im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                        self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                    end
                 end
             end
-            RNGLOG('Current MapIntelGrid post scout build '..repr(im.MapIntelGrid))
             im.MapIntelStats.ScoutLocationsBuilt = true
             self:ForkThread(self.ParseIntelThreadRNG)
-        else
-            if self.RNGDEBUG then
-                RNGLOG('Scout Locations already built for '..self.Nickname)
-            end
         end
     end,
 
@@ -3261,10 +3252,6 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         self.EnemyIntel.EnemyThreatLocations = {}
 
-        -- debug, remove later on
-        if enemyStarts then
-            --RNGLOG('* AI-RNG: Enemy Start Locations :'..repr(enemyStarts))
-        end
         local selfIndex = self:GetArmyIndex()
         local potentialThreats = {}
         local threatTypes = {
@@ -3347,7 +3334,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 threat.InsertTime = currentGameTime
                 RNGINSERT(self.EnemyIntel.EnemyThreatLocations, threat)
             end
-            RNGLOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
+            --RNGLOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
         coroutine.yield(2)
 
