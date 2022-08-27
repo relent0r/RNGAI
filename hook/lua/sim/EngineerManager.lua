@@ -113,7 +113,7 @@ EngineerManager = Class(RNGEngineerManager) {
                     self:ForkEngineerTask(unit)
                 end
                 if EntityCategoryContains(categories.STRUCTURE * (categories.SONAR + categories.RADAR + categories.OMNI), unit) then
-                    IntelManagerRNG.GetIntelManager():AssignIntelUnit(unit)
+                    IntelManagerRNG.GetIntelManager(self.Brain):AssignIntelUnit(unit)
                 end
                 return
             end
@@ -310,7 +310,7 @@ EngineerManager = Class(RNGEngineerManager) {
                 end
             end
             if EntityCategoryContains(categories.STRUCTURE * (categories.SONAR + categories.RADAR + categories.OMNI), unit) then
-                IntelManagerRNG.GetIntelManager():UnassignIntelUnit(unit)
+                IntelManagerRNG.GetIntelManager(self.Brain):UnassignIntelUnit(unit)
             end
             if found then
                 break

@@ -9,8 +9,8 @@
 BaseBuilderTemplate {
     BaseTemplateName = 'FloatingBaseTemplate',
     Builders = {       
-                'RNGAI Mass Builder Expansion',
-                'RNGAI T1 Reclaim Builders Expansion',
+                'RNGAI Mass Builder Floating',
+                'RNGAI T1 Reclaim Floating',
 
 		},
     NonCheatBuilders = { },

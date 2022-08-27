@@ -280,6 +280,36 @@ BuilderGroup {
 }
 
 BuilderGroup {
+    BuilderGroupName = 'RNGAI Mass Builder Floating',
+    BuildersType = 'EngineerBuilder',
+    
+    Builder {
+        BuilderName = 'RNGAI T1ResourceEngineer 2000 Floating',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 910,
+        InstanceCount = 2,
+        BuilderConditions = {
+                { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 100, 2000, -500, 2, 0, 'AntiSurface', 1}},
+            },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'Mass',
+            NeedGuard = false,
+            DesiresAssist = false,
+            Construction = {
+                MaxDistance = 2000,
+                ThreatMin = -500,
+                ThreatMax = 30,
+                ThreatType = 'AntiSurface',
+                BuildStructures = {
+                    'T1Resource',
+                }
+            }
+        }
+    },
+}
+
+BuilderGroup {
     BuilderGroupName = 'RNGAI Mass Builder Expansion',
     BuildersType = 'EngineerBuilder',
     Builder {

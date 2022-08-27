@@ -739,7 +739,7 @@ Platoon = Class(RNGAIPlatoonClass) {
     end,
     
     ReclaimAIRNG = function(self)
-        --RNGLOG('* AI-RNG: ReclaimAIRNG has been started')
+        RNGLOG('* AI-RNG: ReclaimAIRNG has been started from '..self.BuilderName)
         local aiBrain = self:GetBrain()
         local platoonUnits = GetPlatoonUnits(self)
         AIAttackUtils.GetMostRestrictiveLayerRNG(self)
@@ -760,7 +760,12 @@ Platoon = Class(RNGAIPlatoonClass) {
         else
             --RNGLOG('* AI-RNG: Engineer Condition is false')
         end
-        --RNGLOG('* AI-RNG: Ending ReclaimAIRNG..Disbanding')
+        RNGLOG('* AI-RNG: Ending ReclaimAIRNG..Disbanding')
+        if eng.BuilderManagerData.EngineerManager then
+            RNGLOG('Engineer has BuilderManagerData and EngineerManager prior to disband')
+        else
+            RNGLOG('Engineer doesnt BuilderManagerData and EngineerManager prior to disband')
+        end
         self:PlatoonDisband()
     end,
 
@@ -886,7 +891,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         --RNGLOG('* AI-RNG: Patrol function is :'..tostring(patrol))
         local aiBrain = self:GetBrain()
-        local im = IntelManagerRNG:GetIntelManager()
+        local im = IntelManagerRNG.GetIntelManager(aiBrain)
 
         -- build scoutlocations if not already done.
         if not im.MapIntelStats.ScoutLocationsBuilt then
@@ -902,7 +907,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         local estartZ = nil
         local targetData = {}
         local currentGameTime = GetGameTimeSeconds()
-        --[[
         if aiBrain.CDRUnit.Active and (not aiBrain.CDRUnit.AirScout or aiBrain.CDRUnit.AirScout.Dead) then
             aiBrain.CDRUnit.AirScout = scout
             while not scout.Dead and aiBrain.CDRUnit.Active do
@@ -921,7 +925,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                 coroutine.yield(2)
             end
             aiBrain.CDRUnit.AirScout = false
-        elseif patrol == true then
+        end
+        --[[if patrol == true then
             --RNGLOG('* AI-RNG: Patrol function is true, starting patrol function')
             local patrolTime = self.PlatoonData.PatrolTime or 30
             --local baseArea = self.PlatoonData.MilitaryArea or 'BaseDMZArea'
@@ -1080,7 +1085,7 @@ Platoon = Class(RNGAIPlatoonClass) {
 
         local aiBrain = self:GetBrain()
         local scout = GetPlatoonUnits(self)[1]
-        local im = IntelManagerRNG:GetIntelManager()
+        local im = IntelManagerRNG.GetIntelManager(aiBrain)
         local intelRange = ALLBPS[scout.UnitId].Intel.RadarRadius
         if intelRange then
             self.IntelRange = intelRange
@@ -1161,7 +1166,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             scoutPos = scout:GetPosition()
                             if VDist2Sq(scoutPos[1],scoutPos[3], targetData.Position[1],targetData.Position[3]) < 225 then
                                 IssueStop({scout})
-                                local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(targetData.Position)
+                                local gridXID, gridYID = im:GetIntelGrid(targetData.Position)
                                 RNGLOG('Setting GRID '..gridXID..' '..gridYID..' Last scouted on arrival')
                                 im.MapIntelGrid[gridXID][gridYID].LastScouted = GetGameTimeSeconds()
                                 if im.MapIntelGrid[gridXID][gridYID].MustScout then
@@ -4530,7 +4535,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
         end
         self:SetPrioritizedTargetList('Attack', categoryList)
-        self.TargetZone = IntelManagerRNG.GetIntelManager():SelectZoneRNG(aiBrain, self, self.ZoneType)
+        self.TargetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType)
         local zonePosition = false
         if self.TargetZone then
             --RNGLOG('Target Zone Selected is '..self.TargetZone..' at '..repr(aiBrain.Zones.Land.zones[self.TargetZone].pos))
@@ -5809,7 +5814,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 return mod
             end
         end
-        local im = IntelManagerRNG:GetIntelManager()
+        local im = IntelManagerRNG.GetIntelManager(aiBrain)
         local pathLength = RNGGETN(path)
         for i=1, pathLength do
             RNGLOG('Moving to path number '..i)
@@ -5830,7 +5835,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                 dist = VDist2Sq(path[i][1], path[i][3], PlatoonPosition[1], PlatoonPosition[3])
                 if dist < 400 then
-                    local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(PlatoonPosition)
+                    local gridXID, gridYID = im:GetIntelGrid(PlatoonPosition)
                     RNGLOG('Setting GRID '..gridXID..' '..gridYID..' on scout movement end')
                     self:ForkThread(self.DrawTargetRadius, im.MapIntelGrid[gridXID][gridYID].Position, 10)
                     im.MapIntelGrid[gridXID][gridYID].LastScouted = GetGameTimeSeconds()

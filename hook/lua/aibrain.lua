@@ -1047,8 +1047,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(RUtils.LastKnownThread)
         self:ForkThread(RUtils.CanPathToCurrentEnemyRNG)
         self:ForkThread(Mapping.SetMarkerInformation)
-        self:ForkThread(IntelManagerRNG.MapReclaimAnalysis)
-        self:ForkThread(IntelManagerRNG.CreateIntelGrid)
         self:CalculateMassMarkersRNG()
         self:ForkThread(self.SetupIntelTriggersRNG)
         self:ForkThread(IntelManagerRNG.ExpansionIntelScanRNG)
@@ -1060,6 +1058,8 @@ AIBrain = Class(RNGAIBrainClass) {
         self.IntelManager:Run()
         self.StructureManager = StructureManagerRNG.CreateStructureManager(self)
         self.StructureManager:Run()
+        self:ForkThread(IntelManagerRNG.MapReclaimAnalysis)
+        self:ForkThread(IntelManagerRNG.CreateIntelGrid, self.IntelManager)
         if self.RNGDEBUG then
             self:ForkThread(self.LogDataThreadRNG)
         end
@@ -1140,7 +1140,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 RNGLOG(reprs(self.EnemyIntel.TML))
                 RNGLOG('Recent Angle '..self.BasePerimeterMonitor['MAIN'].RecentTMLAngle)
             end
-            local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager()
+            local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(self)
             RNGLOG('Unit Stats '..repr(im.UnitStats))
             RNGLOG('IntelCoverage Percentage '..repr(im.MapIntelStats.IntelCoverage))
             coroutine.yield(100)
@@ -1212,13 +1212,13 @@ AIBrain = Class(RNGAIBrainClass) {
 
     drawMainRestricted = function(self)
         coroutine.yield(100)
-        local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager()
+        local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(self)
         RNGLOG('Starting drawMainRestricted')
         while true do
             DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea, '0000FF')
             DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea/2, 'FF0000')
-            for i=1, im.MapIntelGridXRes do
-                for k=1, im.MapIntelGridZRes do
+            for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
+                for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
                     if im.MapIntelGrid[i][k].ScoutPriority > 0 then
                         DrawCircle(im.MapIntelGrid[i][k].Position, 10, 'FFA500')
                     end
@@ -1763,6 +1763,9 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     BuildScoutLocationsRNG = function(self)
+        if self.RNGDEBUG then
+            RNGLOG('Building Scout Locations for '..self.Nickname)
+        end
         while not ScenarioInfo.MarkersInfectedRNG do
             RNGLOG('Waiting for markers to be infected in order to build scout locations')
             coroutine.yield(20)
@@ -1778,7 +1781,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             return extractorPoints
         end
-        local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager()
+        local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(self)
         while not im.MapIntelGrid do
             RNGLOG('Waiting for MapIntelGrid to exist...')
             coroutine.yield(30)
@@ -1803,11 +1806,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 for _, v in self.BrainIntel.ExpansionWatchTable do
                     -- Add any expansion table locations to the must scout table
                     --RNGLOG('Expansion of type '..v.Type..' found, seeting scout location')
-                    local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(v.Position)
-                    im.MapIntelGrid[gridXID][gridYID].MustScout = true
-                    RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
-                    RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
-                    self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                    local gridXID, gridYID = im:GetIntelGrid(v.Position)
+                    if im.MapIntelGrid[gridXID][gridYID].Enabled then
+                        im.MapIntelGrid[gridXID][gridYID].MustScout = true
+                        RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
+                        RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
+                        self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                    end
                 end
             end
             if ScenarioInfo.Options.TeamSpawn == 'fixed' then
@@ -1827,11 +1832,13 @@ AIBrain = Class(RNGAIBrainClass) {
                             numOpponents = numOpponents + 1
                             -- I would rather use army ndexes for the table keys of the enemyStarts so I can easily reference them in queries. To be pondered.
                             RNGINSERT(enemyStarts, {Position = startPos, Index = army.ArmyIndex})
-                            local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(startPos)
-                            im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 100
-                            RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
-                            RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
-                            self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                            local gridXID, gridYID = im:GetIntelGrid(startPos)
+                            if im.MapIntelGrid[gridXID][gridYID].Enabled then
+                                im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 100
+                                RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
+                                RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
+                                self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                            end
                         else
                             RNGINSERT(allyTempStarts, {Position = startPos, Index = army.ArmyIndex})
                             allyStarts['ARMY_' .. i] = startPos
@@ -1869,11 +1876,13 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
 
                         if closeToEnemy then
-                            local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(loc.Position)
-                            im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
-                            RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
-                            RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
-                            self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                            local gridXID, gridYID = im:GetIntelGrid(loc.Position)
+                            if im.MapIntelGrid[gridXID][gridYID].Enabled then
+                                im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                                RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
+                                RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
+                                self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                            end
                         end
                     end
                 end
@@ -1903,11 +1912,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 for _, loc in starts do
                     -- If vacant
                     if not allyStarts[loc.Name] then
-                        local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(loc.Position)
-                        im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
-                        RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
-                        RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
-                        self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                        local gridXID, gridYID = im:GetIntelGrid(loc.Position)
+                        if im.MapIntelGrid[gridXID][gridYID].Enabled then
+                            im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                            RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
+                            RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
+                            self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                        end
                     end
                 end
                 -- Set Start Locations for brain to reference
@@ -1928,29 +1939,33 @@ AIBrain = Class(RNGAIBrainClass) {
                         continue
                     end
                     if i == 1 then
-                        local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(v)
-                        if im.MapIntelGrid[gridXID][gridYID].ScoutPriority < 50 then
-                            im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                        local gridXID, gridYID = im:GetIntelGrid(v)
+                        if im.MapIntelGrid[gridXID][gridYID].Enabled then
+                            if im.MapIntelGrid[gridXID][gridYID].ScoutPriority < 50 then
+                                im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                            end
+                            im.MapIntelGrid[gridXID][gridYID].Perimeter = 'Restricted'
+                            if not im.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked then
+                                im:IntelGridSetGraph('MAIN', gridXID, gridYID, self.BrainIntel.StartPos, v)
+                            end
+                            RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
+                            RNGLOG('Perimeter Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
+                            self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
                         end
-                        im.MapIntelGrid[gridXID][gridYID].Perimeter = 'Restricted'
-                        if not im.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked then
-                            im:IntelGridSetGraph('MAIN', gridXID, gridYID, self.BrainIntel.StartPos, v)
-                        end
-                        RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
-                        RNGLOG('Perimeter Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
-                        self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
                     elseif i == 2 then
-                        local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(v)
-                        if im.MapIntelGrid[gridXID][gridYID].ScoutPriority < 50 then
-                            im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                        local gridXID, gridYID = im:GetIntelGrid(v)
+                        if im.MapIntelGrid[gridXID][gridYID].Enabled then
+                            if im.MapIntelGrid[gridXID][gridYID].ScoutPriority < 50 then
+                                im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                            end
+                            im.MapIntelGrid[gridXID][gridYID].Perimeter = 'Military'
+                            if not im.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked then
+                                im:IntelGridSetGraph('MAIN', gridXID, gridYID, self.BrainIntel.StartPos, v)
+                            end
+                            RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
+                            RNGLOG('Perimeter Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
+                            self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
                         end
-                        im.MapIntelGrid[gridXID][gridYID].Perimeter = 'Military'
-                        if not im.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked then
-                            im:IntelGridSetGraph('MAIN', gridXID, gridYID, self.BrainIntel.StartPos, v)
-                        end
-                        RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
-                        RNGLOG('Perimeter Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
-                        self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
                     end
                 end
             end
@@ -1977,26 +1992,34 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             for k, zone in self.Zones.Naval.zones do
                 --RNGLOG('* AI-RNG: Inserting Mass Marker Position : '..repr(massMarker.Position))
-                    local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(zone.pos)
-                    im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
-                    RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
-                    RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
-                    self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                    local gridXID, gridYID = im:GetIntelGrid(zone.pos)
+                    if im.MapIntelGrid[gridXID][gridYID].Enabled then
+                        im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                        RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
+                        RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
+                        self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                    end
             end
             if self.RNGDEBUG then
                 RNGLOG('Number of Land Zones '..table.getn(self.Zones.Land.zones))
             end
             for k, zone in self.Zones.Land.zones do
                 --RNGLOG('* AI-RNG: Inserting Mass Marker Position : '..repr(massMarker.Position))
-                local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(zone.pos)
-                im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
-                RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
-                RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
-                self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                local gridXID, gridYID = im:GetIntelGrid(zone.pos)
+                if im.MapIntelGrid[gridXID][gridYID].Enabled then
+                    im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                    RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
+                    RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
+                    self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                end
             end
             RNGLOG('Current MapIntelGrid post scout build '..repr(im.MapIntelGrid))
             im.MapIntelStats.ScoutLocationsBuilt = true
             self:ForkThread(self.ParseIntelThreadRNG)
+        else
+            if self.RNGDEBUG then
+                RNGLOG('Scout Locations already built for '..self.Nickname)
+            end
         end
     end,
 
@@ -2242,7 +2265,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     ParseIntelThreadRNG = function(self)
-        local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager()
+        local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(self)
         if not im.MapIntelStats.ScoutLocationsBuilt then
             error('Scouting areas must be initialized before calling AIBrain:ParseIntelThread.', 2)
         end
@@ -2251,7 +2274,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local gameTime = GetGameTimeSeconds()
             for _, struct in structures do
                 local newPos = {struct[1], 0, struct[2]}
-                local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(newPos)
+                local gridXID, gridYID = im:GetIntelGrid(newPos)
                 if im.MapIntelGrid[gridXID][gridYID].ScoutPriority == 0 then
                     im.MapIntelGrid[gridXID][gridYID].MustScout = true
                     im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
@@ -2262,7 +2285,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
                     --RNGLOG('ACU last spotted '..(GetGameTimeSeconds() - v.LastSpotted)..' seconds ago')
                     if (GetGameTimeSeconds() - 45) > v.LastSpotted then
-                        local gridXID, gridYID = IntelManagerRNG.GetIntelGrid(v.Position)
+                        local gridXID, gridYID = im:GetIntelGrid(v.Position)
                         if not im.MapIntelGrid[gridXID][gridYID].MustScout then
                             im.MapIntelGrid[gridXID][gridYID].MustScout = true
                         end
@@ -3281,7 +3304,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     else
                         onWater = false
                     end
-                    threatLocation = {Position = {threat.posX, threat.posZ}, EnemyBaseRadius = false, Threat=threat.rThreat, ThreatType=threat.rThreatType, PositionOnWater=onWater }
+                    threatLocation = {Position = {threat.posX, GetSurfaceHeight(threat.posX, threat.posZ), threat.posZ}, EnemyBaseRadius = false, Threat=threat.rThreat, ThreatType=threat.rThreatType, PositionOnWater=onWater }
                     RNGINSERT(phaseTwoThreats, threatLocation)
                 end
             end
@@ -3289,7 +3312,7 @@ AIBrain = Class(RNGAIBrainClass) {
             for _, threat in phaseTwoThreats do
                 for q, pos in enemyStarts do
                     --RNGLOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]))
-                    if VDist2Sq(threat.Position[1], threat.Position[2], pos.Position[1], pos.Position[3]) < 10000 then
+                    if VDist3Sq(threat.Position, pos.Position) < 10000 then
                         threat.EnemyBaseRadius = true
                     end
                 end
@@ -3324,7 +3347,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 threat.InsertTime = currentGameTime
                 RNGINSERT(self.EnemyIntel.EnemyThreatLocations, threat)
             end
-            --RNGLOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
+            RNGLOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
         coroutine.yield(2)
 
@@ -3333,7 +3356,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if next(self.EnemyIntel.EnemyThreatLocations) then
             for k, threat in self.EnemyIntel.EnemyThreatLocations do
                 if threat.ThreatType == 'Land' then
-                    local threatDistance = VDist2Sq(startX, startZ, threat.Position[1], threat.Position[2])
+                    local threatDistance = VDist2Sq(startX, startZ, threat.Position[1], threat.Position[3])
                     if threatDistance < 32400 then
                         landThreatAroundBase = landThreatAroundBase + threat.Threat
                     end
@@ -3360,14 +3383,14 @@ AIBrain = Class(RNGAIBrainClass) {
         local potentialTargetValue = 0
 
         local enemyACUIndexes = {}
-        local im = IntelManagerRNG.GetIntelManager()
+        local im = IntelManagerRNG.GetIntelManager(self)
 
         for k, v in self.EnemyIntel.ACU do
             if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
                 if platoonType == 'GUNSHIP' and platoonDPS then
                     if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and (GetGameTimeSeconds() - 120) < v.LastSpotted then
                         RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
-                        local gridX, gridY = GetIntelGrid(v.Position)
+                        local gridX, gridY = im:GetIntelGrid(v.Position)
                         local scoutRequired = true
                         if im.MapIntelGrid[gridX][gridY].MustScout and im.MapIntelGrid[gridX][gridY].ACUIndexes[k] then
                             scoutRequired = false
@@ -3381,7 +3404,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 elseif platoonType == 'BOMBER' and strikeDamage then
                     if strikeDamage > v.HP * 0.80 then
                         RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position })
-                        local gridX, gridY = GetIntelGrid(v.Position)
+                        local gridX, gridY = im:GetIntelGrid(v.Position)
                         local scoutRequired = true
                         if im.MapIntelGrid[gridX][gridY].MustScout and im.MapIntelGrid[gridX][gridY].ACUIndexes[k] then
                             scoutRequired = false
@@ -3590,12 +3613,12 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             if closestMex then
-                --RNGLOG('We have a mex to target from the director')
+                RNGLOG('We have a mex to target from the director')
                 potentialTarget = closestMex
             end
         end
         if potentialTarget and not potentialTarget.Dead then
-           --RNGLOG('Target being returned is '..potentialTarget.UnitId)
+           RNGLOG('Target being returned is '..potentialTarget.UnitId)
             if strikeDamage then
                --RNGLOG('Strike Damage for target is '..strikeDamage)
             else
@@ -4060,17 +4083,17 @@ AIBrain = Class(RNGAIBrainClass) {
                 if not v.Dead and not v.BuildCompleted then
                     if EntityCategoryContains(categories.ENGINEER, v) then
                         if v.UnitBeingBuilt then
-                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.NUKE and v:GetFractionComplete() < 0.7 then
+                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.NUKE and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Nuke Launcher being built')
                                 potentialPowerConsumption = potentialPowerConsumption + GetMissileConsumption(ALLBPS, v.UnitBeingBuilt.UnitId, multiplier)
                                 continue
                             end
-                            if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.7 then
+                            if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Anti Nuke Launcher being built')
                                 potentialPowerConsumption = potentialPowerConsumption + GetMissileConsumption(ALLBPS, v.UnitBeingBuilt.UnitId, multiplier)
                                 continue
                             end
-                            if EntityCategoryContains(categories.TECH3 * categories.MASSFABRICATION, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.7 then
+                            if EntityCategoryContains(categories.TECH3 * categories.MASSFABRICATION, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Mass Fabricator being built')
                                 if ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy then
                                     --RNGLOG('Fabricator being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
@@ -4078,7 +4101,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 end
                                 continue
                             end
-                            if EntityCategoryContains(categories.STRUCTURE * categories.SHIELD, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.7 then
+                            if EntityCategoryContains(categories.STRUCTURE * categories.SHIELD, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Shield being built')
                                 if ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy then
                                     --RNGLOG('Shield being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
@@ -4086,9 +4109,9 @@ AIBrain = Class(RNGAIBrainClass) {
                                 end
                                 continue
                             end
-                            if EntityCategoryContains(categories.STRUCTURE * categories.FACTORY * categories.AIR, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.7 then
+                            if EntityCategoryContains(categories.STRUCTURE * categories.FACTORY * categories.AIR, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Shield being built')
-                                potentialPowerConsumption = potentialPowerConsumption + (100 * multiplier)
+                                potentialPowerConsumption = potentialPowerConsumption + (150 * multiplier)
                                 continue
                             end
                         end

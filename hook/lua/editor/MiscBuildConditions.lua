@@ -87,7 +87,7 @@ function CheckIfReclaimEnabled(aiBrain)
 end
 
 function CheckMustScoutAreas(aiBrain)
-    local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager()
+    local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(aiBrain)
     if im.MapIntelStats.MustScoutArea then
         return true
     else

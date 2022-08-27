@@ -4,12 +4,37 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local ExBaseTmpl = 'ExpansionBaseTemplates'
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
+local ExperimentalDelayWaterMap = function(self, aiBrain, builderManager)
+    if aiBrain.MapWaterRatio > 0.60 then
+        local enemyX, enemyZ
+        if aiBrain:GetCurrentEnemy() then
+            enemyX, enemyZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
+            if not enemyX then
+                return 910
+            end
+        else
+            return 910
+        end
+
+        -- Get the armyindex from the enemy
+        local EnemyIndex = ArmyBrains[aiBrain:GetCurrentEnemy():GetArmyIndex()].Nickname
+        local OwnIndex = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
+        if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] ~= 'LAND' then
+            RNGLOG('Map ratio is '..aiBrain.MapWaterRatio..' and we cant path to the enemy via land')
+            return 0
+        end
+
+    end
+    return 910
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Experimental Builders',
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Experimental1 1st',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PriorityFunction = ExperimentalDelayWaterMap,
         Priority = 910,
         DelayEqualBuildPlattons = {'HighValue', 10},
         InstanceCount = 1,
@@ -48,7 +73,7 @@ BuilderGroup {
             { UCBC, 'ValidateLateGameBuild', { }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.2 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.40, 0.95 } },
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
         },
         BuilderType = 'Any',

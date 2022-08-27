@@ -1154,7 +1154,7 @@ end
 
 function CheckPerimeterPointsExpired(aiBrain, pointTable)
     -- Checks if the perimeter points have been scouted recently
-    local im = IntelManagerRNG:GetIntelManager()
+    local im = IntelManagerRNG.GetIntelManager(aiBrain)
     if im.MapIntelStats.PerimeterExpired then
         return true
     end

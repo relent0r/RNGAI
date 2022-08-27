@@ -4589,7 +4589,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     local supportPlatoon = false
     local currentGameTime = GetGameTimeSeconds()
     local scoutPos = scout:GetPosition()
-    local im = IntelManagerRNG:GetIntelManager()
+    local im = IntelManagerRNG.GetIntelManager(aiBrain)
     local locationType = platoon.PlatoonData.LocationType or 'MAIN'
     if not im.MapIntelGrid then
         WARN('MapIntelGrid is not initialized')
@@ -4657,15 +4657,16 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         end
     end
     --RNGLOG('GetLandScoutLocationRNG ')
-    --RNGLOG(repr(aiBrain.IntelData.HiPriScouts))
-    --RNGLOG(repr(aiBrain.NumOpponents))
+    RNGLOG(repr(aiBrain.IntelData.HiPriScouts))
+    RNGLOG(repr(aiBrain.NumOpponents))
     if aiBrain.IntelData.HiPriScouts < aiBrain.NumOpponents then
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
-        for i=1, im.MapIntelGridXRes do
-            for k=1, im.MapIntelGridZRes do
-                if not im.MapIntelGrid[i][k].IntelCoverage and im.MapIntelGrid[i][k].ScoutPriority == 100 then
+        for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
+            for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
+                if im.MapIntelGrid[i][k].Enabled and not im.MapIntelGrid[i][k].IntelCoverage and im.MapIntelGrid[i][k].ScoutPriority == 100 then
                     if not im.MapIntelGrid[i][k].Graphs[locationType].GraphChecked then
+                        RNGLOG('Trying to set graphs for '..i..k..' current grid position is '..repr(im.MapIntelGrid[i][k].Position))
                         im:IntelGridSetGraph(locationType, i, k, aiBrain.BuilderManagers[locationType].Position, im.MapIntelGrid[i][k].Position)
                     end
                     if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 30 then
@@ -4703,10 +4704,11 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     elseif aiBrain.IntelData.LowPriScouts < 2 then
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
-        for i=1, im.MapIntelGridXRes do
-            for k=1, im.MapIntelGridZRes do
-                if not im.MapIntelGrid[i][k].IntelCoverage and im.MapIntelGrid[i][k].ScoutPriority == 50 then
+        for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
+            for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
+                if im.MapIntelGrid[i][k].Enabled and not im.MapIntelGrid[i][k].IntelCoverage and im.MapIntelGrid[i][k].ScoutPriority == 50 then
                     if not im.MapIntelGrid[i][k].Graphs[locationType].GraphChecked then
+                        RNGLOG('Trying to set graphs for '..i..k..' current grid position is '..repr(im.MapIntelGrid[i][k].Position))
                         im:IntelGridSetGraph(locationType, i, k, aiBrain.BuilderManagers[locationType].Position, im.MapIntelGrid[i][k].Position)
                     end
                     if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 45 then
@@ -4759,7 +4761,7 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
     local scoutType = false
     local currentGameTime = GetGameTimeSeconds()
     local scoutPos = scout:GetPosition()
-    local im = IntelManagerRNG:GetIntelManager()
+    local im = IntelManagerRNG.GetIntelManager(aiBrain)
     if not im.MapIntelGrid then
         WARN('MapIntelGrid is not initialized')
     end
@@ -4779,15 +4781,27 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
         local mustScoutArea = false
-        for i=1, im.MapIntelGridXRes do
-            for k=1, im.MapIntelGridZRes do
+        for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
+            for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
                 if im.MapIntelGrid[i][k].MustScout then
                     if not im.MapIntelGrid[i][k].ScoutAssigned or im.MapIntelGrid[i][k].ScoutAssigned.Dead then
                         mustScoutArea = true
+                        if im.MapIntelGrid[i][k].DistanceToMain == 0 then
+                            im.MapIntelGrid[i][k].DistanceToMain = 1
+                        end
+                        if im.MapIntelGrid[i][k].TimeScouted == 0 then
+                            im.MapIntelGrid[i][k].TimeScouted = 1
+                        end
                         currentGrid = {x = i, z = k, Priority = im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].TimeScouted / im.MapIntelGrid[i][k].DistanceToMain }
                         if currentGrid.Priority > highestGrid.Priority then
                             highestGrid = currentGrid
                         end
+                        RNGLOG(' TimeScouted '..repr(im.MapIntelGrid[i][k].TimeScouted))
+                        RNGLOG(' Distance to main '..repr(im.MapIntelGrid[i][k].DistanceToMain))
+                        RNGLOG('Current Grid for mustscout '..repr(currentGrid))
+                    else
+                        RNGLOG('MustScout Area already has scout assigned '..im.MapIntelGrid[i][k].ScoutAssigned.UnitId)
+                        RNGLOG('Scout is current at pos '..repr(im.MapIntelGrid[i][k].ScoutAssigned:GetPosition()))
                     end
                 end
             end
@@ -4808,8 +4822,8 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
         RNGLOG('AirScout HiPriArea is set')
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
-        for i=1, im.MapIntelGridXRes do
-            for k=1, im.MapIntelGridZRes do
+        for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
+            for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
                 if im.MapIntelGrid[i][k].ScoutPriority == 100 then
                     if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 30 then
                         RNGLOG('AirScouting ScoutPriority is '..im.MapIntelGrid[i][k].ScoutPriority)
@@ -4847,8 +4861,8 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
         RNGLOG('AirScout LowPri is set')
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
-        for i=1, im.MapIntelGridXRes do
-            for k=1, im.MapIntelGridZRes do
+        for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
+            for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
                 if im.MapIntelGrid[i][k].ScoutPriority == 50 then
                     if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 45 then
                         --RNGLOG('LastScouted is '..im.MapIntelGrid[i][k].LastScouted)
@@ -4923,8 +4937,8 @@ CanPathToCurrentEnemyRNG = function(aiBrain) -- Uveso's function modified to run
     coroutine.yield(Random(5,20))
     while true do
         if aiBrain.RNGDEBUG then
-            RNGLOG('Start path checking')
-            RNGLOG('CanPathToEnemyRNG Table '..repr(aiBrain.CanPathToEnemyRNG))
+            --RNGLOG('Start path checking')
+            --RNGLOG('CanPathToEnemyRNG Table '..repr(aiBrain.CanPathToEnemyRNG))
         end
         if not ScenarioInfo.PathGraphsRNG then
             WARN('No PathGraph Cache yet, waiting...')

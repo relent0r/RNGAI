@@ -1114,6 +1114,29 @@ BuilderGroup {
 }
 
 BuilderGroup {
+    BuilderGroupName = 'RNGAI T1 Reclaim Floating',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI Engineer Reclaim T1 Floating',
+        PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
+        Priority = 900,
+        InstanceCount = 16,
+        BuilderConditions = {
+                { MIBC, 'CheckIfReclaimEnabled', {}},
+                { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
+            },
+        BuilderData = {
+            JobType = 'Expansion',
+            ReclaimTable = true,
+            LocationType = 'LocationType',
+            ReclaimTime = 80,
+            MinimumReclaim = 4
+        },
+        BuilderType = 'Any',
+    },
+}
+
+BuilderGroup {
     BuilderGroupName = 'RNGAI T1 Reclaim Builders Expansion',
     BuildersType = 'EngineerBuilder',
     Builder {

@@ -1259,15 +1259,14 @@ StructureManager = Class {
     end,
 }
 
-local sm 
-
 function CreateStructureManager(brain)
+    local sm 
     sm = StructureManager()
     sm:Create(brain)
     return sm
 end
 
 
-function GetStructureManager()
-    return sm
+function GetStructureManager(brain)
+    return brain.StructureManager
 end

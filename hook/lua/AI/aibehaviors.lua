@@ -3045,7 +3045,7 @@ end
 
 FindExperimentalTargetRNG = function(self)
     local aiBrain = self:GetBrain()
-    local im = IntelManagerRNG:GetIntelManager()
+    local im = IntelManagerRNG.GetIntelManager(aiBrain)
     if not im.MapIntelStats.ScoutLocationsBuilt then
         -- No target
         return
@@ -3054,41 +3054,45 @@ FindExperimentalTargetRNG = function(self)
     -- For each priority in SurfacePriorities list, check against each enemy base we're aware of (through scouting/intel),
     -- The base with the most number of the highest-priority targets gets selected. If there's a tie, pick closer
     -- This must be changed!! to no longer use interest list.
-    local enemyBases = aiBrain.InterestList.HighPriority
+    local enemyBases = aiBrain.EnemyIntel.EnemyThreatLocations
     for _, priority in SurfacePrioritiesRNG do
         local bestBase = false
         local mostUnits = 0
         local bestUnit = false
         for _, base in enemyBases do
-            local unitsAtBase = aiBrain:GetUnitsAroundPoint(priority, base.Position, 100, 'Enemy')
-            local numUnitsAtBase = 0
-            local notDeadUnit = false
+            if base.ThreatType == 'StructuresNotMex' then
+                RNGLOG('Base Position with '..base.Threat..' threat')
+                local unitsAtBase = aiBrain:GetUnitsAroundPoint(priority, base.Position, 100, 'Enemy')
+                local numUnitsAtBase = 0
+                local notDeadUnit = false
 
-            for _, unit in unitsAtBase do
-                if not unit.Dead then
-                    notDeadUnit = unit
-                    numUnitsAtBase = numUnitsAtBase + 1
+                for _, unit in unitsAtBase do
+                    if not unit.Dead then
+                        notDeadUnit = unit
+                        numUnitsAtBase = numUnitsAtBase + 1
+                    end
                 end
-            end
 
-            if numUnitsAtBase > 0 then
-                if numUnitsAtBase > mostUnits then
-                    bestBase = base
-                    mostUnits = numUnitsAtBase
-                    bestUnit = notDeadUnit
-                elseif numUnitsAtBase == mostUnits then
-                    local myPos = GetPlatoonPosition(self)
-                    local dist1 = VDist2(myPos[1], myPos[3], base.Position[1], base.Position[3])
-                    local dist2 = VDist2(myPos[1], myPos[3], bestBase.Position[1], bestBase.Position[3])
-
-                    if dist1 < dist2 then
+                if numUnitsAtBase > 0 then
+                    if numUnitsAtBase > mostUnits then
                         bestBase = base
+                        mostUnits = numUnitsAtBase
                         bestUnit = notDeadUnit
+                    elseif numUnitsAtBase == mostUnits then
+                        local myPos = GetPlatoonPosition(self)
+                        local dist1 = VDist2(myPos[1], myPos[3], base.Position[1], base.Position[3])
+                        local dist2 = VDist2(myPos[1], myPos[3], bestBase.Position[1], bestBase.Position[3])
+
+                        if dist1 < dist2 then
+                            bestBase = base
+                            bestUnit = notDeadUnit
+                        end
                     end
                 end
             end
         end
         if bestBase and bestUnit then
+            RNGLOG('Best base '..bestBase.Threat..' threat '..' at '..repr(bestBase.Position))
             return bestUnit, bestBase
         end
     end
@@ -3205,7 +3209,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
 
     -- Look for commander first
     local AIFindNumberOfUnitsBetweenPointsRNG = import('/lua/ai/aiattackutilities.lua').AIFindNumberOfUnitsBetweenPointsRNG
-    local im = IntelManagerRNG:GetIntelManager()
+    local im = IntelManagerRNG.GetIntelManager(aiBrain)
     local platoonPosition = GetPlatoonPosition(platoon)
     -- minimumValue : I want to make sure that whatever we shoot at it either an ACU or is worth more than the missile we just built.
     local minimumValue = 0
