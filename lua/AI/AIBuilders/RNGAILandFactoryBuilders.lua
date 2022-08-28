@@ -3,18 +3,6 @@ local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
-local LandMode = function(self, aiBrain, builderManager, builderData)
-    --RNGLOG('Setting T1 Queue to Eng')
-    if builderData.BuilderData.TechLevel == 1 then
-        return 745
-    elseif builderData.BuilderData.TechLevel == 2 then
-        return 750
-    elseif builderData.BuilderData.TechLevel == 3 then
-        return 755
-    end
-    return 0
-end
-
 BuilderGroup {
     BuilderGroupName = 'RNGAI LandBuilder T1',
     BuildersType = 'FactoryBuilder',

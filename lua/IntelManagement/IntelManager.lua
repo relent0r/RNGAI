@@ -855,7 +855,7 @@ IntelManager = Class {
         if type == 'Radar' then
             self.MapIntelGrid[gridX][gridZ].Radars[unit.Sync.id] = unit
             self.MapIntelGrid[gridX][gridZ].IntelCoverage = true
-            self.Brain:ForkThread(self.DrawInfection, self.MapIntelGrid[gridX][gridZ].Position)
+            --self.Brain:ForkThread(self.DrawInfection, self.MapIntelGrid[gridX][gridZ].Position)
             gridsSet = gridsSet + 1
         end
         for x = math.max(self.MapIntelGridXMin, gridX - gridSize), math.min(self.MapIntelGridXMax, gridX + gridSize), 1 do
@@ -864,7 +864,7 @@ IntelManager = Class {
                 if type == 'Radar' then
                     self.MapIntelGrid[x][z].Radars[unit.Sync.id] = unit
                 end
-                self.Brain:ForkThread(self.DrawInfection, self.MapIntelGrid[x][z].Position)
+                --self.Brain:ForkThread(self.DrawInfection, self.MapIntelGrid[x][z].Position)
                 gridsSet = gridsSet + 1
             end
         end
@@ -888,7 +888,7 @@ IntelManager = Class {
             if not radarCoverage then
                 self.MapIntelGrid[gridX][gridZ][property] = value
             end
-            self.Brain:ForkThread(self.DrawInfection, self.MapIntelGrid[gridX][gridZ].Position)
+            --self.Brain:ForkThread(self.DrawInfection, self.MapIntelGrid[gridX][gridZ].Position)
             gridsSet = gridsSet + 1
         end
         for x = math.max(1, gridX - gridSize), math.min(self.MapIntelGridXRes, gridX + gridSize) do
@@ -907,7 +907,7 @@ IntelManager = Class {
                         self.MapIntelGrid[x][z][property] = value
                     end
                 end
-                self.Brain:ForkThread(self.DrawInfection, self.MapIntelGrid[x][z].Position)
+                --self.Brain:ForkThread(self.DrawInfection, self.MapIntelGrid[x][z].Position)
                 gridsSet = gridsSet + 1
             end
         end

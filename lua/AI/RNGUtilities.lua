@@ -4572,7 +4572,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         aiBrain:BuildScoutLocationsRNG()
     end
 
-    if aiBrain.CDRUnit.Active then
+    if platoon.PlatoonData.ExcessScout and aiBrain.CDRUnit.Active then
         if not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead then
             --RNGLOG('Scout Has active ACU without Scout')
             if AIAttackUtils.CanGraphToRNG(scoutPos, aiBrain.CDRUnit.Position, platoon.MovementLayer) then

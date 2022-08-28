@@ -5814,7 +5814,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local dist
             local Stuck = 0
             while PlatoonExists(aiBrain, self) do
-                if aiBrain.CDRUnit.Active then
+                if self.PlatoonData.ExcessScout and aiBrain.CDRUnit.Active then
                     if not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead then
                         --RNGLOG('ACU is active, this scout is going to help him')
                         return
