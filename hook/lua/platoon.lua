@@ -314,10 +314,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                 end
             end
-            if not target then
-                RNGLOG('No target for airhunt')
-            end
-
             coroutine.yield(25)
         end
     end,
@@ -1031,8 +1027,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                             if targetData.MustScout then
                             --Untag and remove
                                 targetData.MustScout = false
-                                RNGLOG('Removing MustScout')
-                                RNGLOG(repr(targetData))
+                                --RNGLOG('Removing MustScout')
+                                --RNGLOG(repr(targetData))
                             end
                             targetData.LastScouted = GetGameTimeSeconds()
                             targetData.ScoutAssigned = false
@@ -1125,17 +1121,17 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                 end
 
-                RNGLOG('Scout Has targetData and is performing path')
-                RNGLOG('Position to scout is '..repr(targetData.Position))
+                --RNGLOG('Scout Has targetData and is performing path')
+                --RNGLOG('Position to scout is '..repr(targetData.Position))
                 scoutPos = scout:GetPosition()
                 local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, scoutPos, targetData.Position, 50) --DUNCAN - Increase threatwieght from 100
                 self:Stop()
                 coroutine.yield(20)
                 --Scout until we reach our destination
                 if path then
-                    RNGLOG('Scout is performing movewithmicro')
+                    --RNGLOG('Scout is performing movewithmicro')
                     self:ScoutMoveWithMicro(aiBrain, path)
-                    RNGLOG('Scout has completed movewithmicro')
+                    --RNGLOG('Scout has completed movewithmicro')
                     scoutPos = scout:GetPosition()
                     if aiBrain.CDRUnit.Active then
                         if not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead then
@@ -1161,7 +1157,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             if VDist2Sq(scoutPos[1],scoutPos[3], targetData.Position[1],targetData.Position[3]) < 225 then
                                 IssueStop({scout})
                                 local gridXID, gridYID = im:GetIntelGrid(targetData.Position)
-                                RNGLOG('Setting GRID '..gridXID..' '..gridYID..' Last scouted on arrival')
+                                --RNGLOG('Setting GRID '..gridXID..' '..gridYID..' Last scouted on arrival')
                                 im.MapIntelGrid[gridXID][gridYID].LastScouted = GetGameTimeSeconds()
                                 if im.MapIntelGrid[gridXID][gridYID].MustScout then
                                     im.MapIntelGrid[gridXID][gridYID].MustScout = false
@@ -1207,7 +1203,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                     end
                 else
-                    RNGLOG('Scout Has no path to targetData location')
+                    --RNGLOG('Scout Has no path to targetData location')
                     coroutine.yield(50)
                 end
             end
@@ -1652,7 +1648,7 @@ Platoon = Class(RNGAIPlatoonClass) {
     end,
 
     HuntAIPATHRNG = function(self)
-        RNGLOG('* AI-RNG: * HuntAIPATH: Starting')
+        --RNGLOG('* AI-RNG: * HuntAIPATH: Starting')
         self:Stop()
         AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         local DEBUG = false
@@ -1722,7 +1718,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                 end
             end
-            RNGLOG('Looking for target for HUNTAIPATH')
+            --RNGLOG('Looking for target for HUNTAIPATH')
             if not target or target.Dead then
                 if data.RangedAttack and aiBrain.EnemyIntel.EnemyFireBaseDetected then
                     target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, false, self, 'Attack', maxRadius, {categories.STRUCTURE * categories.DEFENSE, categories.STRUCTURE})
@@ -1733,7 +1729,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
             local platoonCount = RNGGETN(GetPlatoonUnits(self))
             if target and not target.Dead then
-                RNGLOG('HUNTAIPATH target found')
+                --RNGLOG('HUNTAIPATH target found')
                 local targetPosition = target:GetPosition()
                 local platoonPos = GetPlatoonPosition(self)
                 local targetThreat
@@ -1750,7 +1746,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         targetThreat = GetThreatAtPosition(aiBrain, targetPosition, 0, true, 'AntiSurface')
                         --RNGLOG('HuntAIPath targetThreat is '..targetThreat)
                         if targetThreat > self.CurrentPlatoonThreat then
-                            RNGLOG('HuntAIPath attempting merge and formation ')
+                            --RNGLOG('HuntAIPath attempting merge and formation ')
                             if aiBrain.RNGDEBUG then
                                 for _, v in platoonUnits do
                                     if v and not v.Dead then
@@ -1775,7 +1771,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     --RNGLOG('Setting platoon to full as platoonCount is greater than 15')
                     self.PlatoonFull = true
                 end
-                RNGLOG('* AI-RNG: * HuntAIPATH: Performing Path Check')
+                --RNGLOG('* AI-RNG: * HuntAIPATH: Performing Path Check')
                 --RNGLOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' Target Position :'..repr(targetPosition))
                 local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), targetPosition, 10 , maxPathDistance)
                 local success = AIAttackUtils.CanGraphToRNG(platoonPos, targetPosition, self.MovementLayer)
@@ -1783,21 +1779,21 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local usedTransports = false
                 if path then
                     --RNGLOG('* AI-RNG: * HuntAIPATH:: Target Found')
-                    RNGLOG('* AI-RNG: * HuntAIPATH: Path found')
+                    --RNGLOG('* AI-RNG: * HuntAIPATH: Path found')
                     platoonPos = GetPlatoonPosition(self)
                     if not success or VDist2(platoonPos[1], platoonPos[3], targetPosition[1], targetPosition[3]) > 512 then
-                        RNGLOG('* AI-RNG: * HuntAIPATH: Requesting Transport range > 512')
+                        --RNGLOG('* AI-RNG: * HuntAIPATH: Requesting Transport range > 512')
                         usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true, false, true)
                     elseif VDist2(platoonPos[1], platoonPos[3], targetPosition[1], targetPosition[3]) > 256 then
-                        RNGLOG('* AI-RNG: * HuntAIPATH: Requesting Transport range > 256')
+                        --RNGLOG('* AI-RNG: * HuntAIPATH: Requesting Transport range > 256')
                         usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, false, false, true)
                     end
                     if not usedTransports then
-                       RNGLOG('HUNTAIPATH performing platoonmovewithattackmicro')
+                       --RNGLOG('HUNTAIPATH performing platoonmovewithattackmicro')
                         self:PlatoonMoveWithAttackMicro(aiBrain, path, false, bAggroMove)
                     end
                 elseif (not path and reason == 'NoPath') then
-                    RNGLOG('* AI-RNG: * HuntAIPATH: NoPath reason from path')
+                    --RNGLOG('* AI-RNG: * HuntAIPATH: NoPath reason from path')
                     --RNGLOG('Guardmarker requesting transports')
                     usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true, false, true)
                     --DUNCAN - if we need a transport and we cant get one the disband
@@ -1808,13 +1804,13 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                     --RNGLOG('Guardmarker found transports')
                 else
-                    RNGLOG('* AI-RNG: * HuntAIPATH: No Path found, no reason')
+                    --RNGLOG('* AI-RNG: * HuntAIPATH: No Path found, no reason')
                     coroutine.yield(2)
                     return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                 end
 
                 if (not path or not success) and not usedTransports then
-                    RNGLOG('* AI-RNG: * HuntAIPATH: No Path found, no transports used')
+                    --RNGLOG('* AI-RNG: * HuntAIPATH: No Path found, no transports used')
                     coroutine.yield(2)
                     return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                 end
@@ -1822,7 +1818,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 coroutine.yield(2)
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG')
             end
-            RNGLOG('* AI-RNG: * HuntAIPATH: No target, waiting 5 seconds')
+            --RNGLOG('* AI-RNG: * HuntAIPATH: No target, waiting 5 seconds')
             coroutine.yield(50)
         end
     end,
@@ -5757,7 +5753,7 @@ Platoon = Class(RNGAIPlatoonClass) {
 
     ScoutMoveWithMicro = function(self, aiBrain, path)
         -- I've tried to split out the platoon movement function as its getting too messy and hard to maintain
-        RNGLOG('Scout starts ScoutMoveWithMicro')
+        --RNGLOG('Scout starts ScoutMoveWithMicro')
 
         if not path then
             WARN('No path passed to PlatoonMoveWithMicro')
@@ -5811,7 +5807,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local im = IntelManagerRNG.GetIntelManager(aiBrain)
         local pathLength = RNGGETN(path)
         for i=1, pathLength do
-            RNGLOG('Moving to path number '..i)
+            --RNGLOG('Moving to path number '..i)
             self:MoveToLocation(path[i], false)
             local PlatoonPosition
             local Lastdist
@@ -5820,7 +5816,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             while PlatoonExists(aiBrain, self) do
                 if aiBrain.CDRUnit.Active then
                     if not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead then
-                        RNGLOG('ACU is active, this scout is going to help him')
+                        --RNGLOG('ACU is active, this scout is going to help him')
                         return
                     end
                 end
@@ -5830,8 +5826,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                 dist = VDist2Sq(path[i][1], path[i][3], PlatoonPosition[1], PlatoonPosition[3])
                 if dist < 400 then
                     local gridXID, gridYID = im:GetIntelGrid(PlatoonPosition)
-                    RNGLOG('Setting GRID '..gridXID..' '..gridYID..' on scout movement end')
-                    self:ForkThread(self.DrawTargetRadius, im.MapIntelGrid[gridXID][gridYID].Position, 10)
+                    --RNGLOG('Setting GRID '..gridXID..' '..gridYID..' on scout movement end')
+                    --self:ForkThread(self.DrawTargetRadius, im.MapIntelGrid[gridXID][gridYID].Position, 10)
                     im.MapIntelGrid[gridXID][gridYID].LastScouted = GetGameTimeSeconds()
                     if im.MapIntelGrid[gridXID][gridYID].MustScout then
                         im.MapIntelGrid[gridXID][gridYID].MustScout = false
@@ -5863,7 +5859,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 coroutine.yield(15)
             end
         end
-        RNGLOG('Scout should be at destination')
+        --RNGLOG('Scout should be at destination')
     end,
 
     PlatoonMoveWithMicro = function(self, aiBrain, path, avoid, ignoreUnits)
@@ -6023,7 +6019,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 end
                             end
                         end
-                        LOG('MoveWithMicro - platoon threat '..self.CurrentPlatoonThreat.. ' Enemy Threat '..totalThreat * 1.5)
+                        --LOG('MoveWithMicro - platoon threat '..self.CurrentPlatoonThreat.. ' Enemy Threat '..totalThreat * 1.5)
                         if avoid and totalThreat * 1.5 >= self.CurrentPlatoonThreat then
                             --LOG('MoveWithMicro - Threat too high are we are in avoid mode')
                             local alternatePos = false
@@ -6750,11 +6746,11 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             if  VDist3Sq(platPos, allyPlatPos) <= radiusSq then
                 if not AIAttackUtils.CanGraphToRNG(platPos, allyPlatPos, self.MovementLayer) then continue end
-                RNGLOG("*AI DEBUG: Scout moving to allied platoon position")
+                --RNGLOG("*AI DEBUG: Scout moving to allied platoon position")
                 return true, aPlat
             end
         end
-        RNGLOG('no platoons found that need scout')
+        --RNGLOG('no platoons found that need scout')
         return false
     end,
 
@@ -7219,7 +7215,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     --RNGLOG('Air Unit Distance from platoon to bestBase position for Air units is'..VDist2Sq(currentPlatPos[1], currentPlatPos[3], bestBase.Position[1], bestBase.Position[3]))
                     --RNGLOG('Air Unit Platoon Position is :'..repr(currentPlatPos))
                     local distSq = VDist2Sq(currentPlatPos[1], currentPlatPos[3], movePosition[1], movePosition[3])
-                    if distSq < 6400 then
+                    if distSq < 3600 then
                         break
                     end
                     coroutine.yield(15)
@@ -9401,7 +9397,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local function SimpleRetreat(self,aiBrain)--basic retreat function
             local threat=RUtils.GrabPosDangerRNG(aiBrain,GetPlatoonPosition(self),self.EnemyRadius)
             --RNGLOG('Simple Retreat Threat Stats '..repr(threat))
-            if threat.ally*1.1<threat.enemy then
+            if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
                 self.retreat=true
                 return true
             else

@@ -296,16 +296,16 @@ PlatoonTemplate {
     Name = 'RNGAIT1LandScoutBurst',
     FactionSquads = {
         UEF = {
-            { 'uel0101', 1, 3, 'scout', 'None' },
+            { 'uel0101', 1, 2, 'scout', 'None' },
         },
         Aeon = {
-            { 'ual0101', 1, 3, 'scout', 'None' },
+            { 'ual0101', 1, 2, 'scout', 'None' },
         },
         Cybran = {
-            { 'url0101', 1, 3, 'scout', 'None' },
+            { 'url0101', 1, 2, 'scout', 'None' },
         },
         Seraphim = {
-            { 'xsl0101', 1, 3, 'scout', 'None' },
+            { 'xsl0101', 1, 2, 'scout', 'None' },
         },
     }
 }

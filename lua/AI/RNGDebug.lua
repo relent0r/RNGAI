@@ -100,7 +100,7 @@ DrawIntelGrid = function()
         for _, v in im.MapIntelGrid do 
             for _, c in v do 
                 if c.Enabled then
-                    RNGLOG('MapIntelGrid '..repr(c))
+                    --RNGLOG('MapIntelGrid '..repr(c))
                     DrawLine({c.Position[1]-c.Size.sx/2, c.Position[2], c.Position[3]-c.Size.sz/2}, {c.Position[1]+c.Size.sx/2, c.Position[2], c.Position[3]-c.Size.sz/2}, 'FFA500')
                     DrawLine({c.Position[1]-c.Size.sx/2, c.Position[2], c.Position[3]-c.Size.sz/2}, {c.Position[1]-c.Size.sx/2, c.Position[2], c.Position[3]+c.Size.sz/2}, 'FFA500')
                     --DrawCircle(c.Position, 10, '0000FF')

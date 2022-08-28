@@ -469,7 +469,7 @@ function GetClosestPathNodeInRadiusByLayerRNG(location, radius, layer)
 
     local graphTable =  GetPathGraphsRNG()[layer]
     if graphTable == false then
-        RNGLOG('graphTable doesnt exist yet')
+        --RNGLOG('graphTable doesnt exist yet')
         return false
     end
 

@@ -260,11 +260,11 @@ IntelManager = Class {
     end,
 
     WaitForMarkerInfection = function(self)
-        RNGLOG('Wait for marker infection at '..GetGameTimeSeconds())
+        --RNGLOG('Wait for marker infection at '..GetGameTimeSeconds())
         while not ScenarioInfo.MarkersInfectedRNG do
             coroutine.yield(20)
         end
-        RNGLOG('Markers infection completed at '..GetGameTimeSeconds())
+        --RNGLOG('Markers infection completed at '..GetGameTimeSeconds())
     end,
 
     ZoneControlMonitorRNG = function(self)
@@ -674,7 +674,7 @@ IntelManager = Class {
                 WARN('No ZoneID for Radar, unable to set coverage area')
             end
             local gridSearch = math.floor(ALLBPS[unit.UnitId].Intel.RadarRadius / MapIntelGridSize)
-            RNGLOG('GridSearch for IntelCoverage is '..gridSearch)
+            --RNGLOG('GridSearch for IntelCoverage is '..gridSearch)
             self:InfectGridPosition(radarPosition, gridSearch, 'Radar', 'IntelCoverage', true, unit)
         end
     end,
@@ -784,9 +784,9 @@ IntelManager = Class {
             for i=self.MapIntelGridXMin, self.MapIntelGridXMax do
                 for k=self.MapIntelGridZMin, self.MapIntelGridZMax do
                     local time = GetGameTimeSeconds()
-                    if self.MapIntelGrid[i][k].MustScout and (not self.MapIntelGrid[i][k].ScoutAsigned or self.MapIntelGrid[i][k].ScoutAsigned.Dead) then
-                        RNGLOG('mustScoutPresent in '..i..k)
-                        RNGLOG(repr(self.MapIntelGrid[i][k]))
+                    if self.MapIntelGrid[i][k].MustScout and (not self.MapIntelGrid[i][k].ScoutAssigned or self.MapIntelGrid[i][k].ScoutAssigned.Dead) then
+                        --RNGLOG('mustScoutPresent in '..i..k)
+                        --RNGLOG(repr(self.MapIntelGrid[i][k]))
                         mustScoutPresent = true
                     end
                     if self.MapIntelGrid[i][k].Enabled and not self.MapIntelGrid[i][k].Water then
@@ -804,26 +804,22 @@ IntelManager = Class {
             self.MapIntelStats.IntelCoverage = intelCoverage / (self.MapIntelGridXRes * self.MapIntelGridZRes) * 100
             self.MapIntelStats.MustScoutArea = mustScoutPresent
             self.MapIntelStats.PerimeterExpired = perimeterExpired
-            if mustScoutPresent then
-                RNGLOG('mustScoutPresent is true after loop')
-            else
-                RNGLOG('mustScoutPresent is false after loop')
-            end
-            if perimeterExpired then
-                RNGLOG('perimeterExpired is true after loop')
-            else
-                RNGLOG('perimeterExpired is false after loop')
+            if aiBrain.RNGDEBUG then
+                if mustScoutPresent then
+                    RNGLOG('mustScoutPresent is true after loop')
+                else
+                    RNGLOG('mustScoutPresent is false after loop')
+                end
+                if perimeterExpired then
+                    RNGLOG('perimeterExpired is true after loop')
+                else
+                    RNGLOG('perimeterExpired is false after loop')
+                end
             end
         end
     end,
 
     IntelGridSetGraph = function(self, locationType, x, z, startPos, endPos)
-        RNGLOG('IntelGridSetGraph')
-        RNGLOG(repr(locationType))
-        RNGLOG(repr(x))
-        RNGLOG(repr(z))
-        RNGLOG('Start Pos '..repr(startPos))
-        RNGLOG('End pos '..repr(endPos))
         if not self.MapIntelGrid[x][z].Graphs[locationType] then
             self.MapIntelGrid[x][z].Graphs[locationType] = { GraphChecked = false, Land = false, Amphibious = false, NoGraph = false}
         end
@@ -855,7 +851,7 @@ IntelManager = Class {
     InfectGridPosition = function (self, position, gridSize, type, property, value, unit)
         local gridX, gridZ = self:GetIntelGrid(position)
         local gridsSet = 0
-        RNGLOG('Infecting Grid Positions, grid size is '..gridSize)
+        --RNGLOG('Infecting Grid Positions, grid size is '..gridSize)
         if type == 'Radar' then
             self.MapIntelGrid[gridX][gridZ].Radars[unit.Sync.id] = unit
             self.MapIntelGrid[gridX][gridZ].IntelCoverage = true
@@ -872,14 +868,14 @@ IntelManager = Class {
                 gridsSet = gridsSet + 1
             end
         end
-        RNGLOG('Number of grids set '..gridsSet..'with property '..property..' with the value '..repr(value))
+        --RNGLOG('Number of grids set '..gridsSet..'with property '..property..' with the value '..repr(value))
     end,
 
     DisinfectGridPosition = function (self, position, gridSize, type, property, value, unit)
         local gridX, gridZ = self:GetIntelGrid(position)
         local gridsSet = 0
         local intelRadius
-        RNGLOG('Disinfecting Grid Positions, grid size is '..gridSize)
+        --RNGLOG('Disinfecting Grid Positions, grid size is '..gridSize)
         if type == 'Radar' then
             self.MapIntelGrid[gridX][gridZ].Radars[unit.Sync.id] = nil
             local radarCoverage = false
@@ -898,11 +894,11 @@ IntelManager = Class {
         for x = math.max(1, gridX - gridSize), math.min(self.MapIntelGridXRes, gridX + gridSize) do
             for z = math.max(1, gridZ - gridSize), math.min(self.MapIntelGridZRes, gridZ + gridSize) do
                 if type == 'Radar' then
-                    RNGLOG('Check for another radar and then confirm radius is same or greater?')
+                    --RNGLOG('Check for another radar and then confirm radius is same or greater?')
                     local radarCoverage = false
                     for k, v in self.MapIntelGrid[x][z].Radars do
                         if v and not v.Dead then
-                            RNGLOG('Found another radar, dont set this grid to false')
+                            --RNGLOG('Found another radar, dont set this grid to false')
                             radarCoverage = true
                             break
                         end
@@ -915,7 +911,7 @@ IntelManager = Class {
                 gridsSet = gridsSet + 1
             end
         end
-        RNGLOG('Number of grids set '..gridsSet..'with property '..property..' with the value '..repr(value))
+        --RNGLOG('Number of grids set '..gridsSet..'with property '..property..' with the value '..repr(value))
     end,
 
     GetIntelGrid = function(self, Position)
@@ -951,9 +947,9 @@ function GetIntelManager(brain)
 end
 
 function ProcessSourceOnKilled(targetUnit, sourceUnit, aiBrain)
-    RNGLOG('We are going to do stuff here')
-    RNGLOG('Target '..targetUnit.UnitId)
-    RNGLOG('Source '..sourceUnit.UnitId)
+    --RNGLOG('We are going to do stuff here')
+    --RNGLOG('Target '..targetUnit.UnitId)
+    --RNGLOG('Source '..sourceUnit.UnitId)
     local data = {
         targetcat = false,
         sourcecat = false
@@ -1022,7 +1018,7 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
                         massPointValidated = true
                         table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = v.MassSpotsInRange, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false, Zone = false, Radar = false})
                     else
-                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAsigned = false, Zone = false, Radar = false})
+                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false, Zone = false, Radar = false})
                     end
                 end
             end
@@ -1379,8 +1375,9 @@ CreateIntelGrid = function(aiBrain)
     local mx = ScenarioInfo.size[1]
     local mz = ScenarioInfo.size[2]
     local GetTerrainHeight = GetTerrainHeight
-
-    RNGLOG('Intel Grid MapSize X : '..mx..' Z: '..mz)
+    if aiBrain.RNGDEBUG then
+        RNGLOG('Intel Grid MapSize X : '..mx..' Z: '..mz)
+    end
 
     -- smaller maps have a 8x8 iMAP
     if mx == mz and mx == 256 then 
@@ -1446,13 +1443,15 @@ CreateIntelGrid = function(aiBrain)
     local gridSizeX, gridSizeZ = aiBrain.IntelManager:GetIntelGrid({playableArea[3] - 16, 0, playableArea[4] - 16})
     aiBrain.IntelManager.MapIntelGridXRes = gridSizeX
     aiBrain.IntelManager.MapIntelGridZRes = gridSizeZ
-    RNGLOG('MapIntelGridXRes '..repr(aiBrain.IntelManager.MapIntelGridXRes))
-    RNGLOG('MapIntelGridZRes '..repr(aiBrain.IntelManager.MapIntelGridZRes))
-    RNGLOG('aiBrain.IntelManager.MapIntelGridXMin '..aiBrain.IntelManager.MapIntelGridXMin)
-    RNGLOG('aiBrain.IntelManager.MapIntelGridXMax '..aiBrain.IntelManager.MapIntelGridXMax)
-    RNGLOG('aiBrain.IntelManager.MapIntelGridZMin '..aiBrain.IntelManager.MapIntelGridZMin)
-    RNGLOG('aiBrain.IntelManager.MapIntelGridZMax '..aiBrain.IntelManager.MapIntelGridZMax)
-    RNGLOG('Map Intel Grid '..repr(aiBrain.IntelManager.MapIntelGrid))
+    if aiBrain.RNGDEBUG then
+        RNGLOG('MapIntelGridXRes '..repr(aiBrain.IntelManager.MapIntelGridXRes))
+        RNGLOG('MapIntelGridZRes '..repr(aiBrain.IntelManager.MapIntelGridZRes))
+        RNGLOG('aiBrain.IntelManager.MapIntelGridXMin '..aiBrain.IntelManager.MapIntelGridXMin)
+        RNGLOG('aiBrain.IntelManager.MapIntelGridXMax '..aiBrain.IntelManager.MapIntelGridXMax)
+        RNGLOG('aiBrain.IntelManager.MapIntelGridZMin '..aiBrain.IntelManager.MapIntelGridZMin)
+        RNGLOG('aiBrain.IntelManager.MapIntelGridZMax '..aiBrain.IntelManager.MapIntelGridZMax)
+        RNGLOG('Map Intel Grid '..repr(aiBrain.IntelManager.MapIntelGrid))
+    end
 end
 
 --[[

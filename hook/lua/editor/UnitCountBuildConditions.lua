@@ -7,6 +7,7 @@ local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local IsAnyEngineerBuilding = moho.aibrain_methods.IsAnyEngineerBuilding
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
+local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
@@ -38,7 +39,7 @@ function LastKnownUnitDetection(aiBrain, locationType, type)
                 if v.object and not v.object.Dead then
                     if VDist3Sq(aiBrain.BuilderManagers[locationType].Position, v.position) < 75625 then
                         local defensiveUnitCount = RUtils.DefensivePointUnitCountRNG(aiBrain, locationType, 1, 'TMD')
-                        RNGLOG('LastKnownUnitDetection true for TML at '..repr(v.position))
+                        --RNGLOG('LastKnownUnitDetection true for TML at '..repr(v.position))
                         if defensiveUnitCount < 5 then
                             return true
                         end
@@ -907,7 +908,7 @@ function ForcePathLimit(aiBrain, locationType, unitCategory, pathType, unitCount
     local EnemyIndex = ArmyBrains[aiBrain:GetCurrentEnemy():GetArmyIndex()].Nickname
     local OwnIndex = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
     if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] ~= pathType and FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, '>') then
-        RNGLOG('ForcePathLimit has no path and more than 3 land factories')
+        --RNGLOG('ForcePathLimit has no path and more than 3 land factories')
         return false
     end
     return true
@@ -1161,6 +1162,19 @@ function CheckPerimeterPointsExpired(aiBrain, pointTable)
     return false
 end
 
+function RatioToZones(aiBrain, zoneType, unitCat, ratio)
+    if zoneType == 'Land' then
+        if aiBrain.ZoneCount.Land * ratio > GetCurrentUnits(aiBrain, unitCat) then
+            return true
+        end
+    elseif zoneType == 'Naval' then
+        if aiBrain.ZoneCount.Naval * ratio > GetCurrentUnits(aiBrain, unitCat) then
+            return true
+        end
+    end
+    return false
+end
+
 function AdjacencyCheckRNG(aiBrain, locationType, category, radius, testUnit)
     local ALLBPS = __blueprints
     local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
@@ -1278,7 +1292,7 @@ function DefensivePointShieldRequired(aiBrain, locationType)
         end
         if unitCount > 1 then
             if not next(v.Shields) then
-                RNGLOG('We can have a shield at this defensive point')
+                --RNGLOG('We can have a shield at this defensive point')
                 return true
             end
         end

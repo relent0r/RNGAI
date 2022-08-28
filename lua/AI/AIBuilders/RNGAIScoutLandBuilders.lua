@@ -23,6 +23,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
             { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
             { UCBC, 'GreaterThanArmyThreat', { 'LandNow', 20}},
+            { UCBC, 'RatioToZones', { 'Land', categories.LAND * categories.SCOUT, 1.5}},
         },
         BuilderType = 'Land',
     },

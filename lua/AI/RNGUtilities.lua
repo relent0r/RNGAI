@@ -4303,7 +4303,7 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
                 for _, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
                     local pointAngle = GetAngleToPosition(basePosition, v.Position)
                     if bestPoint.Angle then
-                        RNGLOG('Defensive Point Check '..(math.abs(pointCheck - pointAngle)..' is it less than '..bestPoint.Angle))
+                        --RNGLOG('Defensive Point Check '..(math.abs(pointCheck - pointAngle)..' is it less than '..bestPoint.Angle))
                     end
                     if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
                         if bestPoint then
@@ -4314,7 +4314,7 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
                 end
             end
         end
-        RNGLOG('bestPoint for TMD is '..repr(bestPoint.Position))
+        --RNGLOG('bestPoint for TMD is '..repr(bestPoint.Position))
         if bestPoint then
             defensivePoint = bestPoint.Position
         end
@@ -4394,12 +4394,12 @@ DefensivePointUnitCountRNG = function(aiBrain, baseLocation, pointTier, type, co
             end
         end
         if bestPoint then
-            RNGLOG('TMD Table '..repr(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier][bestIndex].TMD))
+            --RNGLOG('TMD Table '..repr(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier][bestIndex].TMD))
             defensivePointUnitCount = table.getn(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier][bestIndex].TMD)
         end
     end
     if defensivePointUnitCount then
-        RNGLOG('Number of defensive units at defensive point are '..defensivePointUnitCount)
+        --RNGLOG('Number of defensive units at defensive point are '..defensivePointUnitCount)
         return defensivePointUnitCount
     end
     return false
@@ -4410,8 +4410,8 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
     local closestPoint = false
     local closestDistance = false
     if not finishedUnit.Dead then
-        RNGLOG('Attempting to add defensive unit to defensepoint table at '..locationType)
-        RNGLOG('Unit ID is '..finishedUnit.UnitId)
+        --RNGLOG('Attempting to add defensive unit to defensepoint table at '..locationType)
+        --RNGLOG('Unit ID is '..finishedUnit.UnitId)
         local unitPos = finishedUnit:GetPosition()
         if EntityCategoryContains(categories.TECH1, finishedUnit) then
             for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[1] do
@@ -4431,7 +4431,7 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
             end
         elseif EntityCategoryContains(categories.TECH2, finishedUnit) then
             if EntityCategoryContains(categories.ANTIMISSILE, finishedUnit) then
-                RNGLOG('TMD defensive unit to defensepoint table')
+                --RNGLOG('TMD defensive unit to defensepoint table')
                 for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[1] do
                     local distance = VDist3(v.Position, unitPos)
                     if not closestPoint or closestDistance > distance then
@@ -4439,17 +4439,19 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
                         closestDistance = distance
                     end
                 end
-                if closestPoint then
-                    RNGLOG('Closest point key is '..closestPoint)
-                    RNGLOG('Closest point distance is '..closestDistance)
-                else
-                    RNGLOG('No closestPoint available')
+                if aiBrain.RNGDEBUG then
+                    if closestPoint then
+                        RNGLOG('Closest point key is '..closestPoint)
+                        RNGLOG('Closest point distance is '..closestDistance)
+                    else
+                        RNGLOG('No closestPoint available')
+                    end
                 end
                 if closestPoint and closestDistance <= aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].Radius then
-                    RNGLOG('Adding T2 defensive unit to defensepoint table')
-                    RNGLOG('Unit ID is '..finishedUnit.UnitId)
+                    --RNGLOG('Adding T2 defensive unit to defensepoint table')
+                    --RNGLOG('Unit ID is '..finishedUnit.UnitId)
                     if EntityCategoryContains(categories.ANTIMISSILE, finishedUnit) then
-                        RNGLOG('Adding TMD to DefensivePoints pos 1 TMD table')
+                        --RNGLOG('Adding TMD to DefensivePoints pos 1 TMD table')
                         RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].TMD, finishedUnit)
                     end
                 end
@@ -4572,12 +4574,11 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
 
     if aiBrain.CDRUnit.Active then
         if not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead then
-            RNGLOG('Scout Has active ACU without Scout')
+            --RNGLOG('Scout Has active ACU without Scout')
             if AIAttackUtils.CanGraphToRNG(scoutPos, aiBrain.CDRUnit.Position, platoon.MovementLayer) then
                 aiBrain.CDRUnit.Scout = scout
                 scoutType = 'AssistUnit'
-                
-                RNGLOG('ScoutDest is acu support')
+                --RNGLOG('ScoutDest is acu support')
                 return aiBrain.CDRUnit, scoutType
             end
         end
@@ -4591,7 +4592,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     if platoon.PlatoonData.ExcessScout and platoonNeedScout then
         if supportPlatoon and PlatoonExists(aiBrain, supportPlatoon) then
             scoutType = 'AssistPlatoon'
-            RNGLOG('ScoutDest is assist platoon')
+            --RNGLOG('ScoutDest is assist platoon')
             return supportPlatoon, scoutType
         end
     end
@@ -4622,15 +4623,15 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         if scoutMarker then
             --RNGLOG('Scout Marker Found, moving to position')
             scoutType = 'ZoneLocation'
-            RNGLOG('ScoutDest is zone location')
+            --RNGLOG('ScoutDest is zone location')
             return scoutMarker, scoutType
         else
             platoon.ZonesValidated = true
         end
     end
     --RNGLOG('GetLandScoutLocationRNG ')
-    RNGLOG(repr(aiBrain.IntelData.HiPriScouts))
-    RNGLOG(repr(aiBrain.NumOpponents))
+    --RNGLOG(repr(aiBrain.IntelData.HiPriScouts))
+    --RNGLOG(repr(aiBrain.NumOpponents))
     if aiBrain.IntelData.HiPriScouts < aiBrain.NumOpponents then
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
@@ -4638,13 +4639,13 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
                 if im.MapIntelGrid[i][k].Enabled and not im.MapIntelGrid[i][k].IntelCoverage and im.MapIntelGrid[i][k].ScoutPriority == 100 then
                     if not im.MapIntelGrid[i][k].Graphs[locationType].GraphChecked then
-                        RNGLOG('Trying to set graphs for '..i..k..' current grid position is '..repr(im.MapIntelGrid[i][k].Position))
+                        --RNGLOG('Trying to set graphs for '..i..k..' current grid position is '..repr(im.MapIntelGrid[i][k].Position))
                         im:IntelGridSetGraph(locationType, i, k, aiBrain.BuilderManagers[locationType].Position, im.MapIntelGrid[i][k].Position)
                     end
                     if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 30 then
-                        RNGLOG('ScoutPriority is '..im.MapIntelGrid[i][k].ScoutPriority)
-                        RNGLOG('LastScouted is '..im.MapIntelGrid[i][k].LastScouted)
-                        RNGLOG('DistanceToMain is '..im.MapIntelGrid[i][k].DistanceToMain)
+                        --RNGLOG('ScoutPriority is '..im.MapIntelGrid[i][k].ScoutPriority)
+                        --RNGLOG('LastScouted is '..im.MapIntelGrid[i][k].LastScouted)
+                        --RNGLOG('DistanceToMain is '..im.MapIntelGrid[i][k].DistanceToMain)
                         if im.MapIntelGrid[i][k].LastScouted == 0 then
                             im.MapIntelGrid[i][k].LastScouted = 1
                         end
@@ -4655,8 +4656,8 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
                             im.MapIntelGrid[i][k].TimeScouted = 1
                         end
                         currentGrid = {x = i, z = k, Priority = im.MapIntelGrid[i][k].ScoutPriority * (im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].TimeScouted) / im.MapIntelGrid[i][k].DistanceToMain }
-                        RNGLOG('CurrentGrid Priority is '..currentGrid.Priority)
-                        RNGLOG('TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
+                        --RNGLOG('CurrentGrid Priority is '..currentGrid.Priority)
+                        --RNGLOG('TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
                         if currentGrid.Priority > highestGrid.Priority then
                             highestGrid = currentGrid
                         end
@@ -4669,8 +4670,8 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             scoutingData.LastScouted = currentGameTime
             scoutingData.TimeScouted = 1
             scoutType = 'Location'
-            RNGLOG('Current Game Time '..currentGameTime)
-            RNGLOG('HighPri Scouting Data '..repr(scoutingData))
+            --RNGLOG('Current Game Time '..currentGameTime)
+            --RNGLOG('HighPri Scouting Data '..repr(scoutingData))
         end
         aiBrain.IntelData.HiPriScouts = aiBrain.IntelData.HiPriScouts + 1
     elseif aiBrain.IntelData.LowPriScouts < 2 then
@@ -4680,7 +4681,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
                 if im.MapIntelGrid[i][k].Enabled and not im.MapIntelGrid[i][k].IntelCoverage and im.MapIntelGrid[i][k].ScoutPriority == 50 then
                     if not im.MapIntelGrid[i][k].Graphs[locationType].GraphChecked then
-                        RNGLOG('Trying to set graphs for '..i..k..' current grid position is '..repr(im.MapIntelGrid[i][k].Position))
+                        --RNGLOG('Trying to set graphs for '..i..k..' current grid position is '..repr(im.MapIntelGrid[i][k].Position))
                         im:IntelGridSetGraph(locationType, i, k, aiBrain.BuilderManagers[locationType].Position, im.MapIntelGrid[i][k].Position)
                     end
                     if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 45 then
@@ -4707,9 +4708,9 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             scoutingData = im.MapIntelGrid[highestGrid.x][highestGrid.z]
             scoutingData.LastScouted = currentGameTime
             scoutType = 'Location'
-            RNGLOG('Current Game Time '..currentGameTime)
-            RNGLOG('LowPri Scouting Data '..repr(scoutingData))
-            RNGLOG('Scouting LowPriority Point')
+            --RNGLOG('Current Game Time '..currentGameTime)
+            --RNGLOG('LowPri Scouting Data '..repr(scoutingData))
+            --RNGLOG('Scouting LowPriority Point')
             aiBrain.IntelData.HiPriScouts = 0
             scoutingData.LastScouted = currentGameTime
             scoutingData.TimeScouted = 1
@@ -4721,9 +4722,11 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         aiBrain.IntelData.HiPriScouts = 0
         aiBrain.IntelData.LowPriScouts = 0
     end
-    if scoutingData.Position then
-        RNGLOG('Trying to draw scoutingData position '..repr(scoutingData.Position))
-        aiBrain:ForkThread(drawScoutMarker, scoutingData.Position)
+    if aiBrain.RNGDEBUG then
+        if scoutingData.Position then
+            RNGLOG('Trying to draw scoutingData position '..repr(scoutingData.Position))
+            aiBrain:ForkThread(drawScoutMarker, scoutingData.Position)
+        end
     end
     return scoutingData, scoutType
 end
@@ -4741,15 +4744,17 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
         aiBrain:BuildScoutLocationsRNG()
     end
 
-    RNGLOG('GetAirScoutLocationRNG ')
-    if im.MapIntelStats.MustScoutArea then
-        RNGLOG('im.MapIntelStats.MustScoutArea is true')
-    else
-        RNGLOG('im.MapIntelStats.MustScoutArea is false')
+    --RNGLOG('GetAirScoutLocationRNG ')
+    if aiBrain.RNGDEBUG then
+        if im.MapIntelStats.MustScoutArea then
+            RNGLOG('im.MapIntelStats.MustScoutArea is true')
+        else
+            RNGLOG('im.MapIntelStats.MustScoutArea is false')
+        end
     end
 
     if im.MapIntelStats.MustScoutArea then
-        RNGLOG('AirScout MustScoutArea is set')
+        --RNGLOG('AirScout MustScoutArea is set')
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
         local mustScoutArea = false
@@ -4768,12 +4773,12 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
                         if currentGrid.Priority > highestGrid.Priority then
                             highestGrid = currentGrid
                         end
-                        RNGLOG(' TimeScouted '..repr(im.MapIntelGrid[i][k].TimeScouted))
-                        RNGLOG(' Distance to main '..repr(im.MapIntelGrid[i][k].DistanceToMain))
-                        RNGLOG('Current Grid for mustscout '..repr(currentGrid))
+                        --RNGLOG(' TimeScouted '..repr(im.MapIntelGrid[i][k].TimeScouted))
+                        --RNGLOG(' Distance to main '..repr(im.MapIntelGrid[i][k].DistanceToMain))
+                        --RNGLOG('Current Grid for mustscout '..repr(currentGrid))
                     else
-                        RNGLOG('MustScout Area already has scout assigned '..im.MapIntelGrid[i][k].ScoutAssigned.UnitId)
-                        RNGLOG('Scout is current at pos '..repr(im.MapIntelGrid[i][k].ScoutAssigned:GetPosition()))
+                        --RNGLOG('MustScout Area already has scout assigned '..im.MapIntelGrid[i][k].ScoutAssigned.UnitId)
+                        --RNGLOG('Scout is current at pos '..repr(im.MapIntelGrid[i][k].ScoutAssigned:GetPosition()))
                     end
                 end
             end
@@ -4787,20 +4792,20 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
             scoutingData.LastScouted = currentGameTime
             scoutingData.TimeScouted = 1
             scoutType = 'Location'
-            RNGLOG('AirScouting Current Game Time '..currentGameTime)
-            RNGLOG('AirScouting MustScout Scouting Data '..repr(scoutingData))
+            --RNGLOG('AirScouting Current Game Time '..currentGameTime)
+            --RNGLOG('AirScouting MustScout Scouting Data '..repr(scoutingData))
         end
     elseif aiBrain.IntelData.AirHiPriScouts < aiBrain.NumOpponents and aiBrain.IntelData.AirLowPriScouts < 1 then
-        RNGLOG('AirScout HiPriArea is set')
+        --RNGLOG('AirScout HiPriArea is set')
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
             for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
                 if im.MapIntelGrid[i][k].ScoutPriority == 100 then
                     if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 30 then
-                        RNGLOG('AirScouting ScoutPriority is '..im.MapIntelGrid[i][k].ScoutPriority)
-                        RNGLOG('AirScouting LastScouted is '..im.MapIntelGrid[i][k].LastScouted)
-                        RNGLOG('AirScouting DistanceToMain is '..im.MapIntelGrid[i][k].DistanceToMain)
+                        --RNGLOG('AirScouting ScoutPriority is '..im.MapIntelGrid[i][k].ScoutPriority)
+                        --RNGLOG('AirScouting LastScouted is '..im.MapIntelGrid[i][k].LastScouted)
+                        --RNGLOG('AirScouting DistanceToMain is '..im.MapIntelGrid[i][k].DistanceToMain)
                         if im.MapIntelGrid[i][k].LastScouted == 0 then
                             im.MapIntelGrid[i][k].LastScouted = 1
                         end
@@ -4811,8 +4816,8 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
                             im.MapIntelGrid[i][k].TimeScouted = 1
                         end
                         currentGrid = {x = i, z = k, Priority = im.MapIntelGrid[i][k].ScoutPriority * (im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].TimeScouted) / im.MapIntelGrid[i][k].DistanceToMain }
-                        RNGLOG('AirScouting CurrentGrid Priority is '..currentGrid.Priority)
-                        RNGLOG('AirScouting TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
+                        --RNGLOG('AirScouting CurrentGrid Priority is '..currentGrid.Priority)
+                        --RNGLOG('AirScouting TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
                         if currentGrid.Priority > highestGrid.Priority then
                             highestGrid = currentGrid
                         end
@@ -4825,12 +4830,12 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
             scoutingData.LastScouted = currentGameTime
             scoutingData.TimeScouted = 1
             scoutType = 'Location'
-            RNGLOG('AirScouting Current Game Time '..currentGameTime)
-            RNGLOG('AirScouting HighPri Scouting Data '..repr(scoutingData))
+            --RNGLOG('AirScouting Current Game Time '..currentGameTime)
+            --RNGLOG('AirScouting HighPri Scouting Data '..repr(scoutingData))
         end
         aiBrain.IntelData.AirHiPriScouts = aiBrain.IntelData.AirHiPriScouts + 1
     elseif aiBrain.IntelData.AirLowPriScouts < 1 then
-        RNGLOG('AirScout LowPri is set')
+        --RNGLOG('AirScout LowPri is set')
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
@@ -4847,7 +4852,7 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
                         end
                         currentGrid = {x = i, z = k, Priority = im.MapIntelGrid[i][k].ScoutPriority * (im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].TimeScouted) / im.MapIntelGrid[i][k].DistanceToMain }
                         --RNGLOG('CurrentGrid Priority is '..currentGrid.Priority)
-                        RNGLOG(im.MapIntelGrid[i][k].ScoutPriority..','..im.MapIntelGrid[i][k].LastScouted..','..im.MapIntelGrid[i][k].DistanceToMain..','..im.MapIntelGrid[i][k].TimeScouted..','..currentGrid.Priority)
+                        --RNGLOG(im.MapIntelGrid[i][k].ScoutPriority..','..im.MapIntelGrid[i][k].LastScouted..','..im.MapIntelGrid[i][k].DistanceToMain..','..im.MapIntelGrid[i][k].TimeScouted..','..currentGrid.Priority)
                         --RNGLOG('TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
                         if currentGrid.Priority > highestGrid.Priority then
                             highestGrid = currentGrid
@@ -4860,9 +4865,9 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
             scoutingData = im.MapIntelGrid[highestGrid.x][highestGrid.z]
             scoutingData.LastScouted = currentGameTime
             scoutType = 'Location'
-            RNGLOG('AirScouting Current Game Time '..currentGameTime)
-            RNGLOG('AirScouting LowPri Scouting Data '..repr(scoutingData))
-            RNGLOG('AirScouting Scouting LowPriority Point')
+            --RNGLOG('AirScouting Current Game Time '..currentGameTime)
+            --RNGLOG('AirScouting LowPri Scouting Data '..repr(scoutingData))
+            --RNGLOG('AirScouting Scouting LowPriority Point')
             aiBrain.IntelData.HiPriScouts = 0
             scoutingData.LastScouted = currentGameTime
             scoutingData.TimeScouted = 1
@@ -4872,19 +4877,21 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
         aiBrain.IntelData.AirLowPriScouts = aiBrain.IntelData.AirLowPriScouts + 1
     else
         --Reset number of scoutings and start over
-        RNGLOG('AirScout Resetting AirLowPriScouts and AirHiPriScouts')
+        --RNGLOG('AirScout Resetting AirLowPriScouts and AirHiPriScouts')
         aiBrain.IntelData.AirLowPriScouts = 0
         aiBrain.IntelData.AirHiPriScouts = 0
     end
-    if scoutingData.Position then
-        RNGLOG('Trying to draw scoutingData position '..repr(scoutingData.Position))
-        aiBrain:ForkThread(drawScoutMarker, scoutingData.Position)
+    if aiBrain.RNGDEBUG then
+        if scoutingData.Position then
+            --RNGLOG('Trying to draw scoutingData position '..repr(scoutingData.Position))
+            aiBrain:ForkThread(drawScoutMarker, scoutingData.Position)
+        end
     end
     return scoutingData, scoutType
 end
 
 drawScoutMarker = function(brain, position)
-    RNGLOG('Starting DrawScout position at '..repr(position))
+    --RNGLOG('Starting DrawScout position at '..repr(position))
     local counter = 0
     while counter < 180 do
         DrawCircle(position, 10, '0000FF')
