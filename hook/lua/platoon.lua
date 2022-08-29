@@ -8933,7 +8933,6 @@ Platoon = Class(RNGAIPlatoonClass) {
             if reclaimunit and not reclaimunit.Dead then
                 local unitDestroyed = false
                 local reclaimUnitPos = reclaimunit:GetPosition()
-                local reclaimUnitId = false
                 counter = 0
                 -- Set ReclaimInProgress to prevent repairing (see RepairAI)
                 reclaimunit.ReclaimInProgress = true
@@ -8944,32 +8943,32 @@ Platoon = Class(RNGAIPlatoonClass) {
                 if not EntityCategoryContains(categories.ENERGYPRODUCTION + categories.MASSFABRICATION + categories.ENERGYSTORAGE, reclaimunit) then
                     --RNGLOG('Getting Position')
                     reclaimUnitPos = reclaimunit:GetPosition()
-                    --RNGLOG('Killing Unit')
+                    local engineers = self:GetPlatoonUnits()
+                    local oldCreateWreckage = reclaimunit.CreateWreckage
+                    reclaimunit.CreateWreckage = function(self, overkillRatio)
+                        local wreckage = oldCreateWreckage(self, overkillRatio)
+
+                        -- can be nil, so we better check
+                        if wreckage then
+                            IssueClearCommands(engineers)
+                            IssueReclaim(engineers, wreckage)
+                        end
+
+                        return wreckage
+                    end
                     reclaimunit:Kill()
                     unitDestroyed = true
-                    --RNGLOG('Wait One Second')
                     IssueMove(self:GetPlatoonUnits(), reclaimUnitPos )
-                    coroutine.yield(30)
+                    coroutine.yield(10)
+                end
+                if unitDestroyed then
                     local reclaimTimeout = 0
                     while VDist3Sq(self:GetPlatoonPosition() ,reclaimUnitPos) > 25 do
-                        --RNGLOG('Distance from reclaim unit '..VDist3Sq(self:GetPlatoonPosition() ,reclaimUnitPos))
-                        --RNGLOG('reclaimTimeout is '..reclaimTimeout)
                         reclaimTimeout = reclaimTimeout + 1
                         if reclaimTimeout > 20 then
                             break
                         end
                         coroutine.yield(10)
-
-                    end
-                    IssueClearCommands(self:GetPlatoonUnits())
-                end
-                if unitDestroyed then
-                    local wreckReclaim = GetReclaimablesInRect(Rect(reclaimUnitPos[1], reclaimUnitPos[3], reclaimUnitPos[1], reclaimUnitPos[3]))
-                    --RNGLOG('Wrecks at reclaim unit position table is '..table.getn(wreckReclaim))
-                    for _, v in wreckReclaim do
-                        if not v.IsWreckage then continue end
-                        --RNGLOG('Issuing Reclaim for unit wrecked')
-                        IssueReclaim(self:GetPlatoonUnits(), v)
                     end
                 else
                     IssueReclaim(self:GetPlatoonUnits(), reclaimunit)
