@@ -40,7 +40,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
             self.RNG = true
-            self.RNGDEBUG = false
+            self.RNGDEBUG = true
             ForkThread(RUtils.AIWarningChecks, self)
         end
         if string.find(per, 'RNGStandardExperimental') then
@@ -3428,7 +3428,14 @@ AIBrain = Class(RNGAIBrainClass) {
         
 
         if not potentialTarget then
+            if self.RNGDEBUG then
+                RNGLOG('Director searching for EnemyIntel Target')
+            end
             if self.EnemyIntel.DirectorData.Intel and next(self.EnemyIntel.DirectorData.Intel) then
+                if self.RNGDEBUG then
+                    RNGLOG('Director looking at intel table')
+                    RNGLOG('Director number of intel items '..table.getn(self.EnemyIntel.DirectorData.Intel))
+                end
                 for k, v in self.EnemyIntel.DirectorData.Intel do
                     --RNGLOG('Intel Target Data ')
                     --RNGLOG('Air Threat Around unit is '..v.Air)
@@ -3466,6 +3473,10 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             if self.EnemyIntel.DirectorData.Energy and next(self.EnemyIntel.DirectorData.Energy) then
+                if self.RNGDEBUG then
+                    RNGLOG('Director looking at energy table')
+                    RNGLOG('Director number of energy items '..table.getn(self.EnemyIntel.DirectorData.Intel))
+                end
                 for k, v in self.EnemyIntel.DirectorData.Energy do
                     --RNGLOG('Energy Target Data ')
                     --RNGLOG('Air Threat Around unit is '..v.Air)
@@ -3503,6 +3514,10 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             if self.EnemyIntel.DirectorData.Factory and next(self.EnemyIntel.DirectorData.Factory) then
+                if self.RNGDEBUG then
+                    RNGLOG('Director looking at factory table')
+                    RNGLOG('Director number of factory items '..table.getn(self.EnemyIntel.DirectorData.Factory))
+                end
                 for k, v in self.EnemyIntel.DirectorData.Factory do
                     --RNGLOG('Energy Target Data ')
                     --RNGLOG('Air Threat Around unit is '..v.Air)
@@ -3541,6 +3556,10 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             if self.EnemyIntel.DirectorData.Strategic and next(self.EnemyIntel.DirectorData.Strategic) then
+                if self.RNGDEBUG then
+                    RNGLOG('Director looking at strategic table')
+                    RNGLOG('Director number of strategic items '..table.getn(self.EnemyIntel.DirectorData.Strategic))
+                end
                 for k, v in self.EnemyIntel.DirectorData.Strategic do
                     --RNGLOG('Energy Target Data ')
                     --RNGLOG('Air Threat Around unit is '..v.Air)
@@ -3578,6 +3597,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
+        if self.RNGDEBUG then
+            RNGLOG('Director no target after EnemyIntel Check')
+        end
         if not potentialTarget then
             local closestMex = false
             local airThreat = false
@@ -3607,8 +3629,12 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             if closestMex then
-                --RNGLOG('We have a mex to target from the director')
+                RNGLOG('We have a mex to target from the director')
                 potentialTarget = closestMex
+            else
+                if self.RNGDEBUG then
+                    RNGLOG('Director no target after mex Check')
+                end
             end
         end
         if potentialTarget and not potentialTarget.Dead then
@@ -3619,6 +3645,10 @@ AIBrain = Class(RNGAIBrainClass) {
                --RNGLOG('No Strike Damage was passed for this target strike')
             end
             return potentialTarget
+        else
+            if self.RNGDEBUG then
+                RNGLOG('Director no target after director search')
+            end
         end
         return false
     end,

@@ -8,7 +8,6 @@ BaseBuilderTemplate {
 
         -- Sea Builders --
         'RNGAI Factory Builder Sea Large',
-        'RNGAI Sea Upgrade Builders',
         'RNGAI T12 Perimeter Defenses Naval',
 
         -- Sea Unit Builders

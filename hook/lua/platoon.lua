@@ -2607,8 +2607,15 @@ Platoon = Class(RNGAIPlatoonClass) {
                 if not data.Defensive and (not target or target.Dead) then
                     --RNGLOG('Checking for possible acu snipe')
                     --RNGLOG('Checking for director target')
-                    --RNGLOG('CheckDirectorTargetAvailable : Threat type is AntiAir, platoon threat is '..self.CurrentPlatoonThreat..' strike damage is '..self.PlatoonStrikeDamage)
+                    if aiBrain.RNGDEBUG then
+                        RNGLOG('CheckDirectorTargetAvailable : Threat type is AntiAir, platoon threat is '..self.CurrentPlatoonThreat..' strike damage is '..self.PlatoonStrikeDamage)
+                    end
                     target = aiBrain:CheckDirectorTargetAvailable('AntiAir', self.CurrentPlatoonThreat, data.UnitType, self.PlatoonStrikeDamage)
+                    if aiBrain.RNGDEBUG then
+                        if not target then
+                            RNGLOG('CheckDirectorTargetAvailable : no target found')
+                        end
+                    end
                 end
                 if not target or target.Dead then
                     --RNGLOG('Standard Target search for strikeforce platoon ')
@@ -4313,9 +4320,12 @@ Platoon = Class(RNGAIPlatoonClass) {
                             if self.MovementLayer == 'Air' then
                                 --RNGLOG('Unit id is '..v.UnitId..' Configure Platoon Weapon Category'..weaponBlueprint.WeaponCategory..' Damage Radius '..weaponBlueprint.DamageRadius)
                             end
-                            if weaponBlueprint.WeaponCategory == 'Bomb' and weaponBlueprint.DamageRadius > 2 then
+                            if ALLBPS[v.UnitId].CategoriesHash.BOMBER and (weaponBlueprint.WeaponCategory == 'Bomb' or weaponBlueprint.RangeCategory == 'UWRC_DirectFire') then
                                 v.DamageRadius = weaponBlueprint.DamageRadius
                                 v.StrikeDamage = weaponBlueprint.Damage * weaponBlueprint.MuzzleSalvoSize
+                                if weaponBlueprint.InitialDamage then
+                                    v.StrikeDamage = v.StrikeDamage + (weaponBlueprint.InitialDamage * weaponBlueprint.MuzzleSalvoSize)
+                                end
                                 v.StrikeRadiusDistance = weaponBlueprint.MaxRadius
                                 maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + v.StrikeDamage
                                 if weaponBlueprint.DamageRadius > 0 or  weaponBlueprint.DamageRadius < maxPlatoonStrikeRadius then
@@ -4326,7 +4336,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 end
                                 --RNGLOG('Have set units DamageRadius to '..v.DamageRadius)
                             end
-                            if weaponBlueprint.RangeCategory == 'UWRC_DirectFire' then
+                            if ALLBPS[v.UnitId].CategoriesHash.GUNSHIP and weaponBlueprint.RangeCategory == 'UWRC_DirectFire' then
                                 v.ApproxDPS = RUtils.CalculatedDPSRNG(weaponBlueprint) --weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
                                 maxPlatoonDPS = maxPlatoonDPS + v.ApproxDPS
                             end
@@ -8923,11 +8933,12 @@ Platoon = Class(RNGAIPlatoonClass) {
             if reclaimunit and not reclaimunit.Dead then
                 local unitDestroyed = false
                 local reclaimUnitPos = reclaimunit:GetPosition()
+                local reclaimUnitId = false
                 counter = 0
                 -- Set ReclaimInProgress to prevent repairing (see RepairAI)
                 reclaimunit.ReclaimInProgress = true
                 reclaimCount = reclaimCount + 1
-                --[[
+                
                 -- This doesn't work yet, I'm not sure why.
                 -- Should be simple enough to kill a unit and then reclaim it. Turns out no.
                 if not EntityCategoryContains(categories.ENERGYPRODUCTION + categories.MASSFABRICATION + categories.ENERGYSTORAGE, reclaimunit) then
@@ -8937,7 +8948,20 @@ Platoon = Class(RNGAIPlatoonClass) {
                     reclaimunit:Kill()
                     unitDestroyed = true
                     --RNGLOG('Wait One Second')
+                    IssueMove(self:GetPlatoonUnits(), reclaimUnitPos )
                     coroutine.yield(30)
+                    local reclaimTimeout = 0
+                    while VDist3Sq(self:GetPlatoonPosition() ,reclaimUnitPos) > 25 do
+                        --RNGLOG('Distance from reclaim unit '..VDist3Sq(self:GetPlatoonPosition() ,reclaimUnitPos))
+                        --RNGLOG('reclaimTimeout is '..reclaimTimeout)
+                        reclaimTimeout = reclaimTimeout + 1
+                        if reclaimTimeout > 20 then
+                            break
+                        end
+                        coroutine.yield(10)
+
+                    end
+                    IssueClearCommands(self:GetPlatoonUnits())
                 end
                 if unitDestroyed then
                     local wreckReclaim = GetReclaimablesInRect(Rect(reclaimUnitPos[1], reclaimUnitPos[3], reclaimUnitPos[1], reclaimUnitPos[3]))
@@ -8945,12 +8969,12 @@ Platoon = Class(RNGAIPlatoonClass) {
                     for _, v in wreckReclaim do
                         if not v.IsWreckage then continue end
                         --RNGLOG('Issuing Reclaim for unit wrecked')
-                        IssueReclaim(self:GetPlatoonUnits(), wreckReclaim)
+                        IssueReclaim(self:GetPlatoonUnits(), v)
                     end
                 else
                     IssueReclaim(self:GetPlatoonUnits(), reclaimunit)
-                end]]
-                IssueReclaim(self:GetPlatoonUnits(), reclaimunit)
+                end
+                --IssueReclaim(self:GetPlatoonUnits(), reclaimunit)
                 repeat
                     coroutine.yield(30)
                     if not aiBrain:PlatoonExists(self) then

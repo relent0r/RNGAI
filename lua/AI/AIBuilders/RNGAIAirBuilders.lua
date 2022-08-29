@@ -477,7 +477,7 @@ BuilderGroup {
         },
         BuilderData = {
             AvoidBases = true,
-            Defensive = true,
+            Defensive = false,
             SearchRadius = BaseEnemyArea,
             UnitType = 'BOMBER',
             IgnoreCivilian = true,

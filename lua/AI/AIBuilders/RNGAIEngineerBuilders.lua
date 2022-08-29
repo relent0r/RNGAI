@@ -425,7 +425,6 @@ BuilderGroup {
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
-                PermanentAssist = true,
                 AssisteeType = categories.FACTORY,
                 AssistRange = 80,
                 BeingBuiltCategories = {categories.STRUCTURE * categories.LAND * categories.FACTORY * categories.TECH2},
@@ -449,7 +448,6 @@ BuilderGroup {
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
-                PermanentAssist = true,
                 AssisteeType = categories.FACTORY,
                 AssistRange = 80,
                 BeingBuiltCategories = {categories.STRUCTURE * categories.LAND * categories.FACTORY * categories.TECH3, categories.STRUCTURE * categories.AIR * categories.FACTORY * categories.TECH3 },
@@ -474,7 +472,6 @@ BuilderGroup {
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
-                PermanentAssist = true,
                 AssisteeType = categories.STRUCTURE,
                 AssistRange = 80,
                 BeingBuiltCategories = {categories.STRUCTURE * categories.ARTILLERY * categories.STRATEGIC},
@@ -892,8 +889,8 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.NAVAL * categories.FACTORY }},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.NAVAL}},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.NAVAL * categories.FACTORY - categories.SUPPORTFACTORY }},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.NAVAL}},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, (categories.TECH2 + categories.TECH3) * categories.NAVAL * categories.FACTORY - categories.SUPPORTFACTORY }},
                 { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
             },
         BuilderData = {
@@ -912,8 +909,8 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH2 * categories.NAVAL * categories.FACTORY * categories.SUPPORTFACTORY }},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH3 * categories.SUPPORTFACTORY * categories.NAVAL }},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.NAVAL * categories.FACTORY - categories.SUPPORTFACTORY }},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.SUPPORTFACTORY * categories.NAVAL }},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.TECH3 * categories.NAVAL * categories.FACTORY - categories.SUPPORTFACTORY }},
                 { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
             },
         BuilderData = {
@@ -994,7 +991,6 @@ BuilderGroup {
                 AssistUntilFinished = true,
                 AssistFactoryUnit = true,
                 AssisteeType = categories.FACTORY,
-                PermanentAssist = true,
                 AssistClosestUnit = false,                                       
                 AssistHighestTier = true,
                 AssistUntilFinished = false,
@@ -1418,7 +1414,6 @@ BuilderGroup {
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
-                PermanentAssist = true,
                 AssisteeType = categories.FACTORY,
                 AssistRange = 80,
                 BeingBuiltCategories = {categories.SUBCOMMANDER},
@@ -1442,7 +1437,6 @@ BuilderGroup {
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
-                PermanentAssist = true,
                 AssisteeType = categories.FACTORY,
                 AssistRange = 80,
                 BeingBuiltCategories = {categories.STRUCTURE * categories.FACTORY * ( categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY},
