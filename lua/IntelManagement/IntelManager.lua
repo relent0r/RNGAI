@@ -738,16 +738,19 @@ IntelManager = Class {
             if next(self.Brain.EnemyIntel.EnemyStartLocations) then
                 for k, v in self.Brain.EnemyIntel.EnemyStartLocations do
                     for c, b in self.Brain.Zones.Land.zones do
-                        local angle = RUtils.GetAngleToPosition(v.Position, b.pos)
-                        b.baseangles[v.Index] = angle
+                        b.enemystartdata[v.Index] = { }
+                        b.enemystartdata[v.Index].startangle = RUtils.GetAngleToPosition(v.Position, b.pos)
+                        b.enemystartdata[v.Index].startdistance = VDist3Sq(v.Position, b.pos)
+                        
                     end
                 end
             end
             if next(self.Brain.BrainIntel.AllyStartLocations) then
                 for k, v in self.Brain.BrainIntel.AllyStartLocations do
                     for c, b in self.Brain.Zones.Land.zones do
-                        local angle = RUtils.GetAngleToPosition(v.Position, b.pos)
-                        b.baseangles[v.Index] = angle
+                        b.enemystartdata[v.Index] = { }
+                        b.enemystartdata[v.Index].startangle = RUtils.GetAngleToPosition(v.Position, b.pos)
+                        b.enemystartdata[v.Index].startdistance = VDist3Sq(v.Position, b.pos)
                     end
                 end
             end
@@ -763,7 +766,11 @@ IntelManager = Class {
             for c, b in self.Brain.Zones.Land.zones do
                 RNGLOG('-- Zone Angle Loop --')
                 RNGLOG('Zone Position : '..repr(b.pos))
-                RNGLOG('Angles : '..repr(b.baseangles))
+                for v, n in b.enemystartdata do
+                    RNGLOG('Player Index '..v)
+                    RNGLOG('Start Angle : '..repr(n.startangle))
+                    RNGLOG('Start Distance : '..repr(n.startdistance))
+                end
                 if b.bestarmy then
                     RNGLOG('Army team is '..b.bestarmy)
                 end
@@ -930,6 +937,30 @@ IntelManager = Class {
             return math.floor( (Position[1] - playableArea[1]) / MapIntelGridSize) + self.MapIntelGridXMin, math.floor((Position[3] - playableArea[2]) / MapIntelGridSize) + self.MapIntelGridZMin
         end
         return false, false
+    end,
+
+    CheckZoneStrikePotential = function(self, type, desiredStrikeDamage)
+        local Zones = {
+            'Land',
+        }
+        local threatType
+        local minimumExtractorTier
+        if type == 'AirAntiSurface' then
+            threatType = 'AntiAir'
+            minimumExtractorTier = 2
+        end
+
+        for k, v in Zones do
+            for k1, v1 in self.Brain.Zones[v].zones do
+                if minimumExtractorTier >= 2 then
+                    if RNGGETN(self.Brain.emanager.mex[v1.id].T2) > 0 or RNGGETN(self.Brain.emanager.mex[v1.id].T3) > 0 then
+                        RNGLOG('Enemy has T2+ mexes in zone')
+                        RNGLOG('Enemystartdata '..repr(v1.enemystartdata))
+                    end
+                end
+            end
+        end
+
     end,
 
 }
