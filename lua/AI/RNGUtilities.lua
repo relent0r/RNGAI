@@ -4094,12 +4094,12 @@ function ValidateMainBase(platoon, squad, aiBrain)
     }
     if platoon.Zone and platoon.PlatoonData.LocationType then
         if platoon.Zone == aiBrain.BuilderManagers[platoon.PlatoonData.LocationType].Zone then
-            if aiBrain.Brain.Zones.Land.zones[platoon.Zone].enemythreat > 0 then
+            if aiBrain.Brain.Zones.Land.zones[platoon.Zone].enemylandthreat > 0 then
                 target = AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, platoon:GetPlatoonPosition(), 'Attack', 120, categories.LAND, TargetSearchPriorities)
             end
             if not target then
                 for _, v in aiBrain.Zones.Land.zones[platoon.Zone].edges do
-                    if v.zone.enemythreat > 0 then
+                    if v.zone.enemylandthreat > 0 then
                         target = AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, platoon:GetPlatoonPosition(), 'Attack', 120, categories.LAND, TargetSearchPriorities)
                     end
                     if target then

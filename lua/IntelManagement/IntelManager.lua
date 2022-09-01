@@ -209,8 +209,8 @@ IntelManager = Class {
         while true do
             for _, z in self.Brain.Zones.Land.zones do
                 DrawCircle(z.pos,3*z.weight,'b967ff')
-                if z.enemythreat > 0 then
-                    DrawCircle(z.pos,math.max(20,z.enemythreat),'d62d20')
+                if z.enemylandthreat > 0 then
+                    DrawCircle(z.pos,math.max(20,z.enemylandthreat),'d62d20')
                 end
                 if z.friendlythreat > 0 then
                     DrawCircle(z.pos,math.max(20,z.friendlythreat),'aa44ff44')
@@ -379,7 +379,7 @@ IntelManager = Class {
                                 local compare
                                 local enemyDistanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],enemyX, enemyZ)
                                 local zoneDistanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],platoonPosition[1], platoonPosition[3])
-                                local enemyModifier = aiBrain.Zones.Land.zones[v.id].enemythreat
+                                local enemyModifier = aiBrain.Zones.Land.zones[v.id].enemylandthreat
                                 if not zoneSet[v.id].control then
                                     --RNGLOG('control is nil, here is the table '..repr(zoneSet[v.id]))
                                 end
@@ -445,11 +445,11 @@ IntelManager = Class {
                         local distanceModifier = VDist3(aiBrain.Zones.Land.zones[v.id].pos,aiBrain.BrainIntel.StartPos)
                         local enemyModifier = 1
                         local startPos = 1
-                        if zoneSet[v.id].enemythreat > 0 then
+                        if zoneSet[v.id].enemylandthreat > 0 then
                             enemyModifier = enemyModifier + 2
                         end
                         if zoneSet[v.id].friendlythreat > 0 then
-                            if zoneSet[v.id].enemythreat == 0 or zoneSet[v.id].enemythreat < zoneSet[v.id].friendlythreat then
+                            if zoneSet[v.id].enemylandthreat == 0 or zoneSet[v.id].enemylandthreat < zoneSet[v.id].friendlythreat then
                                 enemyModifier = enemyModifier - 1
                             else
                                 enemyModifier = enemyModifier + 1
@@ -464,7 +464,7 @@ IntelManager = Class {
                         end
                         local resourceValue = zoneSet[v.id].resourcevalue or 1
                         if resourceValue then
-                           --RNGLOG('Current platoon zone '..platoon.Zone..' target zone is '..v.zone.id..' enemythreat is '..zoneSet[v.zone.id].enemythreat..' friendly threat is '..zoneSet[v.zone.id].friendlythreat)
+                           --RNGLOG('Current platoon zone '..platoon.Zone..' target zone is '..v.zone.id..' enemythreat is '..zoneSet[v.zone.id].enemylandthreat..' friendly threat is '..zoneSet[v.zone.id].friendlythreat)
                            --RNGLOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
                         else
                             --RNGLOG('No resource against zone '..v.zone.id)
@@ -472,8 +472,8 @@ IntelManager = Class {
                         if zoneSet[v.id].startpositionclose then
                             startPos = 0.7
                         end
-                        if zoneSet[v.id].enemythreat > zoneSet[v.id].friendlythreat then
-                            if platoon.CurrentPlatoonThreat and platoon.CurrentPlatoonThreat < zoneSet[v.id].enemythreat then
+                        if zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlythreat then
+                            if platoon.CurrentPlatoonThreat and platoon.CurrentPlatoonThreat < zoneSet[v.id].enemylandthreat then
                                 enemyDanger = 0.2
                             end
                         end
@@ -502,11 +502,11 @@ IntelManager = Class {
                             if not v.startpositionclose then
                                 local distanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],enemyX, enemyZ)
                                 local enemyModifier = 1
-                                if zoneSet[v.id].enemythreat > 0 then
+                                if zoneSet[v.id].enemylandthreat > 0 then
                                     enemyModifier = enemyModifier + 2
                                 end
                                 if zoneSet[v.id].friendlythreat > 0 then
-                                    if zoneSet[v.id].enemythreat < zoneSet[v.id].friendlythreat then
+                                    if zoneSet[v.id].enemylandthreat < zoneSet[v.id].friendlythreat then
                                         enemyModifier = enemyModifier - 1
                                     else
                                         enemyModifier = enemyModifier + 1
@@ -563,9 +563,9 @@ IntelManager = Class {
         while self.Brain.Result ~= "defeat" do
             for k, v in Zones do
                 for k1, v1 in self.Brain.Zones[v].zones do
-                    if not v1.startpositionclose and v1.control < 1 and v1.enemythreat > 0 then
+                    if not v1.startpositionclose and v1.control < 1 and v1.enemylandthreat > 0 then
                         --RNGLOG('Try create zone alert for threat')
-                        self.Brain:BaseMonitorZoneThreatRNG(v1.id, v1.enemythreat)
+                        self.Brain:BaseMonitorZoneThreatRNG(v1.id, v1.enemylandthreat)
                     end
                     coroutine.yield(5)
                 end
@@ -590,7 +590,8 @@ IntelManager = Class {
         while self.Brain.Result ~= "defeat" do
             for k, v in Zones do
                 for k1, v1 in self.Brain.Zones[v].zones do
-                    self.Brain.Zones.Land.zones[k1].enemythreat = GetThreatAtPosition(self.Brain, v1.pos, self.Brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+                    self.Brain.Zones.Land.zones[k1].enemylandthreat = GetThreatAtPosition(self.Brain, v1.pos, self.Brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+                    self.Brain.Zones.Land.zones[k1].enemyantiairthreat = GetThreatAtPosition(self.Brain, v1.pos, self.Brain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
                     coroutine.yield(1)
                 end
                 coroutine.yield(3)

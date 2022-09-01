@@ -4608,13 +4608,13 @@ Platoon = Class(RNGAIPlatoonClass) {
             -- we're there... lets look for bad guys
             local zoneCounter = 0
             if self.ZoneType == 'control' then
-                while (aiBrain.Zones.Land.zones[self.TargetZone].enemythreat > 0.5 or aiBrain.Zones.Land.zones[self.TargetZone].control > 0) and PlatoonExists(aiBrain, self) do
+                while (aiBrain.Zones.Land.zones[self.TargetZone].enemylandthreat > 0.5 or aiBrain.Zones.Land.zones[self.TargetZone].control > 0) and PlatoonExists(aiBrain, self) do
                     --RNGLOG('At Zone location')
                     --RNGLOG('We are at the zone')
                     zoneCounter = zoneCounter + 1
                     --RNGLOG('zoneCounter is '..zoneCounter)
                     --RNGLOG('Current control is '..aiBrain.Zones.Land.zones[self.TargetZone].control)
-                    --RNGLOG('Current enemy presense is '..aiBrain.Zones.Land.zones[self.TargetZone].enemythreat)
+                    --RNGLOG('Current enemy presense is '..aiBrain.Zones.Land.zones[self.TargetZone].enemylandthreat)
                     --RNGLOG('Current Zone Position is '..repr(aiBrain.Zones.Land.zones[self.TargetZone].pos))
                     platLoc = GetPlatoonPosition(self)
                     self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
@@ -4750,7 +4750,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             IssueFormAggressiveMove(GetPlatoonUnits(self), formPos, 'AttackFormation', direction)
                             --RNGLOG('IssueFormAggressiveMove Performed')
                             coroutine.yield(40)
-                            if aiBrain.Zones.Land.zones[self.TargetZone].enemythreat > self.CurrentPlatoonThreat then
+                            if aiBrain.Zones.Land.zones[self.TargetZone].enemylandthreat > self.CurrentPlatoonThreat then
                                 if self:MergeWithNearbyPlatoonsRNG('ZoneControlRNG', 30, 30) then
                                     self:ConfigurePlatoon()
                                 end
@@ -4970,10 +4970,10 @@ Platoon = Class(RNGAIPlatoonClass) {
         local currentZoneDistanceToHome = VDist2Sq(aiBrain.Zones.Land.zones[self.TargetZone].pos[1],aiBrain.Zones.Land.zones[self.TargetZone].pos[3],aiBrain.BuilderManagers['MAIN'].Position[1], aiBrain.BuilderManagers['MAIN'].Position[3])
        --RNGLOG('Performing defensive adjacent zone check')
         for k, v in aiBrain.Zones.Land.zones[self.TargetZone].edges do
-            if v.zone.enemythreat > 0 then
+            if v.zone.enemylandthreat > 0 then
                 local currentEdgeDistanceToHome = VDist2Sq(v.zone.pos[1],v.zone.pos[3],aiBrain.BuilderManagers['MAIN'].Position[1], aiBrain.BuilderManagers['MAIN'].Position[3])
-                if currentEdgeDistanceToHome < currentZoneDistanceToHome and v.zone.enemythreat > highestThreat then
-                    highestThreat = v.zone.enemythreat
+                if currentEdgeDistanceToHome < currentZoneDistanceToHome and v.zone.enemylandthreat > highestThreat then
+                    highestThreat = v.zone.enemylandthreat
                     currentZoneDistanceToHome = currentEdgeDistanceToHome
                     selectedPosition = v.zone.pos
                     selectedZone = v.zone.id

@@ -25,7 +25,8 @@ local MAP = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMa
     pos=Zone Center Position, 
     weight=weight based on masspoints, 
     startpositionclose=do we have a live start position within the radius, 
-    enemythreat=currently populated by imap, 
+    enemylandthreat=currently populated by imap,
+    enemyantiairthreat=currently populated by imap,
     friendlythreat=currently populated by the intel manager according to the platoons threat values, 
     massmarkers=all the mass markers in the zone,
     control=information on how the AI thinks it controls a zone
@@ -129,7 +130,7 @@ RNGLandResourceSet = Class(ZoneSet){
                 end
             end
             --LOG('Resource Group value '..table.getn(resourceGroup))
-            self:AddZone({pos={x,GetSurfaceHeight(x,z),z}, component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), weight=best.weight, startpositionclose=startPos, enemythreat=0, friendlythreat=0, resourcevalue=table.getn(resourceGroup), resourcemarkers=resourceGroup, zonealert=false, control=1, enemystartdata = { },  bestarmy = false})
+            self:AddZone({pos={x,GetSurfaceHeight(x,z),z}, component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), weight=best.weight, startpositionclose=startPos, enemylandthreat=0, enemyantiairthreat=0 friendlythreat=0, resourcevalue=table.getn(resourceGroup), resourcemarkers=resourceGroup, zonealert=false, control=1, enemystartdata = { },  bestarmy = false})
         end
     end,
 }

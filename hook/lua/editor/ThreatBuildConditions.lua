@@ -142,7 +142,7 @@ function LandThreatAtBaseOwnZones(aiBrain)
         return true
     end
     for k, v in aiBrain.Zones.Land.zones do
-        if v.enemythreat > 0 then
+        if v.enemylandthreat > 0 then
             if v.bestarmy == aiBrain.Name then
                 return true
             end

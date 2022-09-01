@@ -2546,7 +2546,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                         end
                     else
-                        threat = self.Zones.Land.zones[k].enemythreat
+                        threat = self.Zones.Land.zones[k].enemylandthreat
                         if threat > 0 then
                             local unitsAtPosition = GetUnitsAroundPoint(self, categories.LAND * categories.MOBILE,  self.Zones.Land.zones[k].pos, 60, 'Ally')
                             for k, v in unitsAtPosition do
