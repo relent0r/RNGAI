@@ -368,23 +368,23 @@ StructureManager = Class {
     GetClosestFactory = function(self, base, type, tech, hqFlag)
         local ALLBPS = __blueprints
         if base == 'NAVAL' then
-            RNGLOG('Naval upgrade wanted, finding closest base')
+            --RNGLOG('Naval upgrade wanted, finding closest base')
             local closestBase = false
             local closestDistance = 0
             for k, v in self.Brain.BuilderManagers do
                 if v.Layer == 'Water' then
-                    RNGLOG('Found Water manager')
+                    --RNGLOG('Found Water manager')
                     local baseDistance = VDist3Sq(v.Position, self.Brain.BuilderManagers['MAIN'].Position)
-                    RNGLOG('Distance to main is '..baseDistance)
-                    RNGLOG('Factory List '..repr(v.FactoryManager.FactoryList))
-                    RNGLOG('Base name is '..v.BaseType)
+                    --RNGLOG('Distance to main is '..baseDistance)
+                    --RNGLOG('Factory List '..repr(v.FactoryManager.FactoryList))
+                    --RNGLOG('Base name is '..v.BaseType)
                     if not closestBase or baseDistance < closestBase then
                         local factoryList = v.FactoryManager.FactoryList
                         if factoryList then
                             for c, b in factoryList do
                                 if ALLBPS[b.UnitId].CategoriesHash[type] and ALLBPS[b.UnitId].CategoriesHash[tech] then
-                                    RNGLOG('Found correct tech factory manager')
-                                    RNGLOG('This should upgrade now')
+                                    --RNGLOG('Found correct tech factory manager')
+                                    --RNGLOG('This should upgrade now')
                                     closestBase = v
                                     closestDistance = baseDistance
                                     base = k
@@ -765,18 +765,18 @@ StructureManager = Class {
         end
         local t2NavalPass = false
         if totalNavalT2HQCount < 1 and totalNavalT3HQCount < 1 and self.Factories.NAVAL[1].UpgradingCount < 1 and self.Factories.NAVAL[1].Total > 0 then
-            RNGLOG('Factory Naval T1 Upgrade HQ Check passed')
+            --RNGLOG('Factory Naval T1 Upgrade HQ Check passed')
             if actualMexIncome > (55 * self.Brain.EcoManager.EcoMultiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 50.0 then
-                RNGLOG('Factory Naval Upgrade actual mex income is '..actualMexIncome)
+                --RNGLOG('Factory Naval Upgrade actual mex income is '..actualMexIncome)
                 if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.025 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
-                    RNGLOG('Factory Naval Upgrade efficiency over time check passed')
+                    --RNGLOG('Factory Naval Upgrade efficiency over time check passed')
                     local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                     local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
                     if MassEfficiency >= 1.025 and EnergyEfficiency >= 1.0 then
-                        RNGLOG('Factory Naval Upgrade efficiency check passed, get closest factory')
+                        --RNGLOG('Factory Naval Upgrade efficiency check passed, get closest factory')
                         local factoryToUpgrade = self:GetClosestFactory('NAVAL', 'NAVAL', 'TECH1')
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
-                            RNGLOG('Factory Naval Structure Manager Triggering T2 Naval HQ Upgrade')
+                            --RNGLOG('Factory Naval Structure Manager Triggering T2 Naval HQ Upgrade')
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'NAVAL')
                             t2NavalPass = true
                             coroutine.yield(30)
