@@ -726,6 +726,77 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                 },
             },
+            Demand = {
+                Land = {
+                    T1 = {
+                        scout=0,
+                        tank=0,
+                        arty=0,
+                        aa=0
+                    },
+                    T2 = {
+                        tank=0,
+                        mml=0,
+                        aa=0,
+                        shield=0,
+                        stealth=0,
+                        bot=0
+                    },
+                    T3 = {
+                        tank=0,
+                        sniper=0,
+                        arty=0,
+                        mml=0,
+                        aa=0,
+                        shield=0,
+                        armoured=0
+                    }
+                },
+                Air = {
+                    T1 = {
+                        scout=0,
+                        interceptor=0,
+                        bomber=0,
+                        gunship=0
+                    },
+                    T2 = {
+                        bomber=0,
+                        gunship=0,
+                        fighter=0,
+                        mercy=0,
+                        torpedo=0,
+                    },
+                    T3 = {
+                        scout=0,
+                        asf=0,
+                        bomber=0,
+                        gunship=0,
+                        torpedo=0,
+                        transport=0
+                    }
+                },
+                Naval = {
+                    T1 = {
+                        frigate=0,
+                        sub=0,
+                        shard=0
+                    },
+                    T2 = {
+                        tank=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    },
+                    T3 = {
+                        tank=0,
+                        sniper=0,
+                        arty=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    }
+                },
+            },
         }
         self.smanager = {
             fact = {
@@ -2892,10 +2963,12 @@ AIBrain = Class(RNGAIBrainClass) {
     TacticalAnalysisThreadRNG = function(self)
         local ALLBPS = __blueprints
         coroutine.yield(Random(150,200))
+        local im = IntelManagerRNG.GetIntelManager(self)
         while true do
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 --RNGLOG('Run TacticalThreatAnalysisRNG')
                 self:ForkThread(IntelManagerRNG.TacticalThreatAnalysisRNG, self)
+                im:ForkThread(im.CheckZoneStrikePotential, 'AirAntiSurface', 1000, 20)
             end
             self:CalculateMassMarkersRNG()
             local enemyCount = 0

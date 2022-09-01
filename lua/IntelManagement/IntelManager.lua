@@ -5,6 +5,7 @@ local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMa
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local GetClosestPathNodeInRadiusByLayerRNG = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayerRNG
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
+local GetThreatBetweenPositions = moho.aibrain_methods.GetThreatBetweenPositions
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
@@ -749,9 +750,9 @@ IntelManager = Class {
             if next(self.Brain.BrainIntel.AllyStartLocations) then
                 for k, v in self.Brain.BrainIntel.AllyStartLocations do
                     for c, b in self.Brain.Zones.Land.zones do
-                        b.enemystartdata[v.Index] = { }
-                        b.enemystartdata[v.Index].startangle = RUtils.GetAngleToPosition(v.Position, b.pos)
-                        b.enemystartdata[v.Index].startdistance = VDist3Sq(v.Position, b.pos)
+                        b.allystartdata[v.Index] = { }
+                        b.allystartdata[v.Index].startangle = RUtils.GetAngleToPosition(v.Position, b.pos)
+                        b.allystartdata[v.Index].startdistance = VDist3Sq(v.Position, b.pos)
                     end
                 end
             end
@@ -940,28 +941,69 @@ IntelManager = Class {
         return false, false
     end,
 
-    CheckZoneStrikePotential = function(self, type, desiredStrikeDamage)
+    CheckZoneStrikePotential = function(self, type, desiredStrikeDamage, threatMax)
+        local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = RUtils.GetMOARadii()
         local Zones = {
             'Land',
         }
         local threatType
         local minimumExtractorTier
+        local potentialStrikes = {}
+        local minThreatRisk = 0
         if type == 'AirAntiSurface' then
             threatType = 'AntiAir'
             minimumExtractorTier = 2
         end
-
-        for k, v in Zones do
-            for k1, v1 in self.Brain.Zones[v].zones do
-                if minimumExtractorTier >= 2 then
-                    if RNGGETN(self.Brain.emanager.mex[v1.id].T2) > 0 or RNGGETN(self.Brain.emanager.mex[v1.id].T3) > 0 then
-                        RNGLOG('Enemy has T2+ mexes in zone')
-                        RNGLOG('Enemystartdata '..repr(v1.enemystartdata))
+        if type == 'AirAntiSurface' then
+            RNGLOG('self.Brain.BrainIntel.SelfThreat.AirNow '..self.Brain.BrainIntel.SelfThreat.AirNow)
+            RNGLOG('self.Brain.EnemyIntel.EnemyThreatCurrent.Air '..self.Brain.EnemyIntel.EnemyThreatCurrent.Air)
+            if self.Brain.BrainIntel.SelfThreat.AirNow > self.Brain.EnemyIntel.EnemyThreatCurrent.Air * 1.5 then
+                minThreatRisk = 80
+            elseif self.Brain.BrainIntel.SelfThreat.AirNow > self.Brain.EnemyIntel.EnemyThreatCurrent.Air then
+                minThreatRisk = 50
+            elseif self.Brain.BrainIntel.SelfThreat.AirNow * 1.5 > self.Brain.EnemyIntel.EnemyThreatCurrent.Air then
+                minThreatRisk = 25
+            end
+        end
+        RNGLOG('CheckStrikPotential')
+        RNGLOG('ThreatRisk is '..minThreatRisk)
+        local abortZone = true
+        if minThreatRisk > 0 then
+            for k, v in Zones do
+                for k1, v1 in self.Brain.Zones[v].zones do
+                    if minimumExtractorTier >= 2 then
+                        if self.Brain.emanager.mex[v1.id].T2 > 0 or self.Brain.emanager.mex[v1.id].T3 > 0 then
+                            RNGLOG('Enemy has T2+ mexes in zone')
+                            RNGLOG('Enemystartdata '..repr(v1.enemystartdata))
+                            if type == 'AirAntiSurface' then
+                                if minThreatRisk < 60 then
+                                    for c, b in v1.enemystartdata do
+                                        if b.startdistance > BaseRestrictedArea * BaseRestrictedArea then
+                                            abortZone = false
+                                        end
+                                    end
+                                end
+                                if not abortZone then
+                                    if v1.enemyantiairthreat < threatMax then
+                                        RNGLOG('Zone air threat level below max')
+                                        if GetThreatBetweenPositions(self.Brain, self.Brain.BrainIntel.StartPos, v1.pos, nil, threatType) < threatMax * 2 then
+                                            RNGLOG('Zone air threat between points below max')
+                                            RNGLOG('Adding zone as potential strike target')
+                                            table.insert( potentialStrikes, { ZoneID = v1.id, Position = v1.pos} )
+                                        end
+                                    end
+                                end
+                            end
+                        end
                     end
+                    coroutine.yield(1)
                 end
             end
         end
-
+        if type == 'AirAntiSurface' and table.getn(potentialStrikes) > 0 then
+            local count = math.ceil(desiredStrikeDamage / 1000)
+            self.amanager.Demand.Air.T2.bomber = count
+        end
     end,
 
 }
