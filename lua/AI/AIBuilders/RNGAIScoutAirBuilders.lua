@@ -30,11 +30,25 @@ BuilderGroup {
         Priority = 760,
         BuilderConditions = {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
-            { UCBC, 'UnitToThreatRatio', { 0.2, categories.SCOUT * categories.AIR, 'Air', '<'}},
+            { UCBC, 'PoolLessAtLocation', { 'LocationType', 2, categories.AIR * categories.SCOUT } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
+            { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 10}},
         },
         BuilderType = 'Air',
     },
+    Builder {
+        BuilderName = 'RNGAI Factory AirScout T1 Burst',
+        PlatoonTemplate = 'RNGAIT1AirScoutBurst',
+        Priority = 895,
+        BuilderConditions = {
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
+            { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
+            { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 20}},
+        },
+        BuilderType = 'Air',
+    },
+    
     Builder {
         BuilderName = 'RNGAI Factory AirScout T3',
         PlatoonTemplate = 'T3AirScout',
@@ -49,11 +63,23 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory AirScout T3 Excess',
         PlatoonTemplate = 'T3AirScout',
-        Priority = 900,
+        Priority = 761,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { UCBC, 'UnitToThreatRatio', { 0.1, categories.SCOUT * categories.AIR, 'Air', '<'}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
+            { UCBC, 'PoolLessAtLocation', { 'LocationType', 2, categories.AIR * categories.SCOUT } },
+            { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 30}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory AirScout T3 Burst',
+        PlatoonTemplate = 'T3AirScout',
+        Priority = 897,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
+            { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
+            { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 120}},
         },
         BuilderType = 'Air',
     },
@@ -67,7 +93,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Former Scout Air',
         PlatoonTemplate = 'RNGAI AirScoutForm',
         InstanceCount = 1,
-        Priority = 900,
+        Priority = 910,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.SCOUT } },
         },
@@ -86,6 +112,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.AIR * categories.SCOUT } },
         },
         BuilderData = {
+            PerimeterPoints = true,
             ExpansionPatrol = true,
             ScanWait = 20,
         },

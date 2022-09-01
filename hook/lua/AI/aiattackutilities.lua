@@ -20,7 +20,7 @@ local RNGCAT = table.cat
 
 function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, optThreatWeight, optMaxMarkerDist)
     local VDist2Sq = VDist2Sq
-    if not GetPathGraphs()[platoonLayer] then
+    if not GetPathGraphsRNG()[platoonLayer] then
         return false, 'NoGraph'
     end
 
@@ -121,7 +121,7 @@ function EngineerGeneratePathRNG(aiBrain, startNode, endNode, threatType, threat
     local tableindex = 0
     local armyIndex = aiBrain:GetArmyIndex()
     -- Get all the waypoints that are from the same movementlayer than the start point.
-    local graph = GetPathGraphs()[startNode.layer][startNode.graphName]
+    local graph = GetPathGraphsRNG()[startNode.layer][startNode.graphName]
     -- For the beginning we store the startNode here as first path node.
     local queue = {
         {
@@ -196,7 +196,7 @@ end
 
 function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination, optThreatWeight, optMaxMarkerDist, testPathDist, acuPath)
     -- if we don't have markers for the platoonLayer, then we can't build a path.
-    if not GetPathGraphs()[platoonLayer] then
+    if not GetPathGraphsRNG()[platoonLayer] then
         return false, 'NoGraph'
     end
     local location = start
@@ -240,7 +240,7 @@ end
 
 function PlatoonGeneratePathToRNG(aiBrain, platoonLayer, start, destination, optMaxMarkerDist, testPathDist)
     -- if we don't have markers for the platoonLayer, then we can't build a path.
-    if not GetPathGraphs()[platoonLayer] then
+    if not GetPathGraphsRNG()[platoonLayer] then
         return false, 'NoGraph'
     end
     local location = start
@@ -345,7 +345,7 @@ function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, 
     local mapSizeX = ScenarioInfo.size[1]
     local mapSizeZ = ScenarioInfo.size[2]
     -- Get all the waypoints that are from the same movementlayer than the start point.
-    local graph = GetPathGraphs()[startNode.layer][startNode.graphName]
+    local graph = GetPathGraphsRNG()[startNode.layer][startNode.graphName]
     -- For the beginning we store the startNode here as first path node.
     local queue = {
         {
@@ -451,11 +451,11 @@ function GetPathGraphsRNG()
             ScenarioInfo.PathGraphsRNG[gk][marker.graph] = ScenarioInfo.PathGraphsRNG[gk][marker.graph] or {}
             -- If the marker has no adjacentTo then don't use it. We can't build a path with this node.
             if not (marker.adjacentTo) then
-                WARN('*AI DEBUG: GetPathGraphs(): Path Node '..marker.name..' has no adjacentTo entry!')
+                WARN('*AI DEBUG: GetPathGraphsRNG(): Path Node '..marker.name..' has no adjacentTo entry!')
                 continue
             end
             --Add the marker to the graph.
-            ScenarioInfo.PathGraphsRNG[gk][marker.graph][marker.name] = {name = marker.name, layer = gk, graphName = marker.graph, position = marker.position, RNGArea = marker.RNGArea, adjacent = STR_GetTokens(marker.adjacentTo, ' '), color = marker.color}
+            ScenarioInfo.PathGraphsRNG[gk][marker.graph][marker.name] = {name = marker.name, layer = gk, graphName = marker.graph, position = marker.position, RNGArea = marker.RNGArea, BestArmy = marker.bestarmy ,adjacent = STR_GetTokens(marker.adjacentTo, ' '), color = marker.color}
         end
     end
 
@@ -469,6 +469,7 @@ function GetClosestPathNodeInRadiusByLayerRNG(location, radius, layer)
 
     local graphTable =  GetPathGraphsRNG()[layer]
     if graphTable == false then
+        --RNGLOG('graphTable doesnt exist yet')
         return false
     end
 
@@ -531,7 +532,9 @@ end
 
 function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1EngOnly, bRequired, bSkipLastMove, safeZone)
 
-    GetMostRestrictiveLayerRNG(platoon)
+    if not platoon.MovementLayer then
+        GetMostRestrictiveLayerRNG(platoon)
+    end
 
     local units = platoon:GetPlatoonUnits()
     local transportplatoon = false
@@ -848,7 +851,7 @@ function GeneratePathNoThreatRNG(aiBrain, startNode, endNode, endPos, startPos)
     local mapSizeX = ScenarioInfo.size[1]
     local mapSizeZ = ScenarioInfo.size[2]
     -- Get all the waypoints that are from the same movementlayer than the start point.
-    local graph = GetPathGraphs()[startNode.layer][startNode.graphName]
+    local graph = GetPathGraphsRNG()[startNode.layer][startNode.graphName]
     -- For the beginning we store the startNode here as first path node.
     local queue = {
         {

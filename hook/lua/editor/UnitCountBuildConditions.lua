@@ -1,11 +1,13 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local CanGraphToRNG = import('/lua/AI/aiattackutilities.lua').CanGraphToRNG
+local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local BASEPOSTITIONS = {}
 local mapSizeX, mapSizeZ = GetMapSize()
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local IsAnyEngineerBuilding = moho.aibrain_methods.IsAnyEngineerBuilding
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
+local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
@@ -17,6 +19,35 @@ function LessThanGameTimeSecondsRNG(aiBrain, num)
         return true
     end
     --RNGLOG('Less than game time is false'..num)
+    return false
+end
+
+function GreaterThanArmyThreat(aiBrain, type, number)
+    
+    if aiBrain.BrainIntel.SelfThreat[type] then
+        if aiBrain.BrainIntel.SelfThreat[type] > number then
+            return true
+        end
+    end
+
+end
+
+function LastKnownUnitDetection(aiBrain, locationType, type)
+    if type == 'tml' then
+        if aiBrain.EnemyIntel.TML then
+            for _, v in aiBrain.EnemyIntel.TML do
+                if v.object and not v.object.Dead then
+                    if VDist3Sq(aiBrain.BuilderManagers[locationType].Position, v.position) < 75625 then
+                        local defensiveUnitCount = RUtils.DefensivePointUnitCountRNG(aiBrain, locationType, 1, 'TMD')
+                        --RNGLOG('LastKnownUnitDetection true for TML at '..repr(v.position))
+                        if defensiveUnitCount < 5 then
+                            return true
+                        end
+                    end
+                end
+            end
+        end
+    end
     return false
 end
 
@@ -858,8 +889,11 @@ function FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCa
         WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
         return false
     end
-    local numUnits = factoryManager:GetNumCategoryFactories(testCat)
-    return CompareBody(numUnits, unitCount, compareType)
+    if factoryManager.LocationActive then
+        local numUnits = factoryManager:GetNumCategoryFactories(testCat)
+        return CompareBody(numUnits, unitCount, compareType)
+    end
+    return false
 end
 
 function FactoryLessAtLocationRNG(aiBrain, locationType, unitCount, unitCategory)
@@ -868,6 +902,16 @@ end
 
 function FactoryGreaterAtLocationRNG(aiBrain, locationType, unitCount, unitCategory)
     return FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, '>')
+end
+
+function ForcePathLimit(aiBrain, locationType, unitCategory, pathType, unitCount)
+    local EnemyIndex = ArmyBrains[aiBrain:GetCurrentEnemy():GetArmyIndex()].Nickname
+    local OwnIndex = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
+    if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] ~= pathType and FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, '>') then
+        --RNGLOG('ForcePathLimit has no path and more than 3 land factories')
+        return false
+    end
+    return true
 end
 
 function ACUOnField(aiBrain, gun)
@@ -909,7 +953,7 @@ end
 -- { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 'Naval Area', 3,  categories.FACTORY * categories.STRUCTURE * categories.TECH3 }},
 function ExistingNavalExpansionFactoryGreaterRNG( aiBrain, markerType, numReq, category )
     for k,v in aiBrain.BuilderManagers do
-        if markerType == v.BaseType and v.FactoryManager.FactoryList then
+        if v.FactoryManager.LocationActive and markerType == v.BaseType and v.FactoryManager.FactoryList then
             if numReq > EntityCategoryCount(category, v.FactoryManager.FactoryList) then
                 --RNGLOG('ExistingExpansionFactoryGreater = false')
 				return false
@@ -952,13 +996,13 @@ function ArmyManagerBuild(aiBrain, uType, tier, unit)
         --RNGLOG('Cant find unit '..unit..' in faction index ratio table') 
         return false 
     end
-    --[[if tier == 'T3' then
-       --RNGLOG('T3 query')
-       --RNGLOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
-       --RNGLOG('Ratio for '..unit)
-       --RNGLOG('Current '..aiBrain.amanager.Current[uType][tier][unit])
-       --RNGLOG('Total '..aiBrain.amanager.Total[uType][tier])
-       --RNGLOG('should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
+    --[[if unit == 'aa' then
+       RNGLOG('AA query')
+       RNGLOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
+       RNGLOG('Ratio for '..unit)
+       RNGLOG('Current '..aiBrain.amanager.Current[uType][tier][unit])
+       RNGLOG('Total '..aiBrain.amanager.Total[uType][tier])
+       RNGLOG('should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
     end]]
     --RNGLOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
     if aiBrain.amanager.Current[uType][tier][unit] < 1 then
@@ -984,7 +1028,7 @@ end
 function ValidateLateGameBuild(aiBrain)
     -- Returns true if no engineer is building anything in the category and if the economy is good. 
     -- Used to avoid building multiple late game things when the AI can't support them but other conditions are right.
-    if IsAnyEngineerBuilding(aiBrain, categories.EXPERIMENTAL + (categories.STRATEGIC - categories.TACTICALMISSILEPLATFORM - categories.AIRSTAGINGPLATFORM)) then
+    if IsAnyEngineerBuilding(aiBrain, categories.EXPERIMENTAL + (categories.STRATEGIC * categories.TECH3)) then
         if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime < 1.3 or aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.2 or GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 then
             return false
         end
@@ -1028,7 +1072,7 @@ function GreaterThanFactoryCountRNG(aiBrain, count, category, navalOnly)
         if navalOnly and v.BaseType ~= 'Naval Area' then
             continue
         end
-        if v.FactoryManager then
+        if v.FactoryManager and v.FactoryManager.LocationActive then
             factoryCount = factoryCount + v.FactoryManager:GetNumCategoryFactories(category)
             --LOG('factoryCount '..factoryCount..' number to compare '..count)
             if factoryCount > count then
@@ -1047,7 +1091,7 @@ function LessThanFactoryCountRNG(aiBrain, count, category, navalOnly)
         if navalOnly and v.BaseType ~= 'Naval Area' then
             continue
         end
-        if v.FactoryManager then
+        if v.FactoryManager and v.FactoryManager.LocationActive then
             factoryCount = factoryCount + v.FactoryManager:GetNumCategoryFactories(category)
             --LOG('factoryCount '..factoryCount..' number to compare '..count)
             if factoryCount >= count then
@@ -1058,6 +1102,202 @@ function LessThanFactoryCountRNG(aiBrain, count, category, navalOnly)
     end
     --LOG('LessThanFactoryCountRNG is false')
     return true
+end
+
+function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
+    local currentIncome = aiBrain.cmanager.income.r.m
+    local currentBuildPower = 0
+    local engSpend = 0.4
+    local availableIncome = engSpend * currentIncome
+    local multiplier
+    if aiBrain.CheatEnabled then
+        multiplier = aiBrain.EcoManager.EcoMultiplier
+    else
+        multiplier = 1
+    end
+    for k, v in aiBrain.cmanager.buildpower.eng do
+        if ignoreT1 then
+            if k == 'T1' then continue end
+        end
+        currentBuildPower = currentBuildPower + v
+    end
+    currentBuildPower = currentBuildPower * 0.7
+    if type == 1 then
+        return false
+    elseif type == 2 then
+        if aiBrain.cmanager.buildpower.eng.T2 == 0 then
+            return true
+        end
+        if aiBrain.cmanager.income.r.m > 55 and aiBrain.cmanager.buildpower.eng.T2 < 75 then
+
+            return true
+        end
+        if availableIncome - aiBrain.cmanager.buildpower.eng.T2 > 0 then
+            return true
+        end
+    elseif type == 3 then
+        if aiBrain.cmanager.buildpower.eng.T3 == 0 then
+            return true
+        end
+        if aiBrain.cmanager.income.r.m > 110 and aiBrain.cmanager.buildpower.eng.T3 < 225 then
+            return true
+        end
+        if availableIncome - aiBrain.cmanager.buildpower.eng.T3 > 0 then
+            return true
+        end
+    elseif type == 4 then
+        if availableIncome - currentBuildPower > 0 then
+            return true
+        end
+    end
+    return false
+end
+
+function CheckPerimeterPointsExpired(aiBrain, pointTable)
+    -- Checks if the perimeter points have been scouted recently
+    local im = IntelManagerRNG.GetIntelManager(aiBrain)
+    if im.MapIntelStats.PerimeterExpired then
+        return true
+    end
+    return false
+end
+
+function RatioToZones(aiBrain, zoneType, unitCat, ratio)
+    if zoneType == 'Land' then
+        if aiBrain.ZoneCount.Land * ratio > GetCurrentUnits(aiBrain, unitCat) then
+            return true
+        end
+    elseif zoneType == 'Naval' then
+        if aiBrain.ZoneCount.Naval * ratio > GetCurrentUnits(aiBrain, unitCat) then
+            return true
+        end
+    end
+    return false
+end
+
+function AdjacencyCheckRNG(aiBrain, locationType, category, radius, testUnit)
+    local ALLBPS = __blueprints
+    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+    if not factoryManager then
+        WARN('*AI WARNING: AdjacencyCheck - Invalid location - ' .. locationType)
+        return false
+    end
+
+    local testCat = category
+    if type(category) == 'string' then
+        testCat = ParseEntityCategory(category)
+    end
+
+    local reference  = AIUtils.GetOwnUnitsAroundPoint(aiBrain, testCat, factoryManager:GetLocationCoords(), radius)
+    if not reference or table.empty(reference) then
+        return false
+    end
+
+    local template = {}
+    local unitSize = ALLBPS[testUnit].Physics
+    for k,v in reference do
+        if not v.Dead then
+            local targetSize = ALLBPS[v.UnitId].Physics
+            local targetPos = v:GetPosition()
+            targetPos[1] = targetPos[1] - (targetSize.SkirtSizeX/2)
+            targetPos[3] = targetPos[3] - (targetSize.SkirtSizeZ/2)
+            # Top/bottom of unit
+            for i=0,((targetSize.SkirtSizeX/2)-1) do
+                local testPos = { targetPos[1] + 1 + (i * 2), targetPos[3]-(unitSize.SkirtSizeZ/2), 0 }
+                local testPos2 = { targetPos[1] + 1 + (i * 2), targetPos[3]+targetSize.SkirtSizeZ+(unitSize.SkirtSizeZ/2), 0 }
+                table.insert(template, testPos)
+                table.insert(template, testPos2)
+            end
+            # Sides of unit
+            for i=0,((targetSize.SkirtSizeZ/2)-1) do
+                local testPos = { targetPos[1]+targetSize.SkirtSizeX + (unitSize.SkirtSizeX/2), targetPos[3] + 1 + (i * 2), 0 }
+                local testPos2 = { targetPos[1]-(unitSize.SkirtSizeX/2), targetPos[3] + 1 + (i*2), 0 }
+                table.insert(template, testPos)
+                table.insert(template, testPos2)
+            end
+        end
+    end
+
+    for k,v in template do
+        if aiBrain:CanBuildStructureAt(testUnit, { v[1], 0, v[2] }) then
+            return true
+        end
+    end
+    return false
+end
+
+function CheckTargetInRangeRNG(aiBrain, locationType, unitType, category, factionIndex)
+
+    local ALLBPS = __blueprints
+    local template = import('/lua/BuildingTemplates.lua').BuildingTemplates[factionIndex or aiBrain:GetFactionIndex()]
+    local buildingId = false
+    for k,v in template do
+        if v[1] == unitType then
+            buildingId = v[2]
+            break
+        end
+    end
+    if not buildingId then
+        WARN('*AI ERROR: Invalid building type - ' .. unitType)
+        return false
+    end
+
+    local bp = ALLBPS[buildingId]
+    if not bp.Economy.BuildTime or not bp.Economy.BuildCostMass then
+        WARN('*AI ERROR: Unit for EconomyCheckStructure is missing blueprint values - ' .. unitType)
+        return false
+    end
+
+    local range = false
+    for k,v in bp.Weapon do
+        if not range or v.MaxRadius > range then
+            range = v.MaxRadius
+        end
+    end
+    if not range then
+        WARN('*AI ERROR: No MaxRadius for unit type - ' .. unitType)
+        return false
+    end
+
+    local basePosition = aiBrain.BuilderManagers[locationType].Position
+
+    # Check around basePosition for StructureThreat
+    local targetUnits = aiBrain:GetUnitsAroundPoint(category, basePosition, range, 'Enemy')
+    local retUnit = false
+    local distance = false
+    for num, unit in targetUnits do
+        if not unit.Dead then
+            local unitPos = unit:GetPosition()
+            if not retUnit or VDist3Sq(basePosition, unitPos) < distance then
+                retUnit = unit
+                distance = VDist3Sq(basePosition, unitPos)
+            end
+        end
+    end
+
+    if retUnit then
+        return true
+    end
+    return false
+end
+
+function DefensivePointShieldRequired(aiBrain, locationType)
+    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[2] do
+        local unitCount = 0
+        if next(v.DirectFire) then
+            for c, b in v.DirectFire do
+                unitCount = unitCount + 1
+                --RNGLOG('We have a directfire unit at this defensive point, current count is '..unitCount)
+            end
+        end
+        if unitCount > 1 then
+            if not next(v.Shields) then
+                --RNGLOG('We can have a shield at this defensive point')
+                return true
+            end
+        end
+    end
+    return false
 end
 
 --[[

@@ -3,18 +3,6 @@ local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
-local LandMode = function(self, aiBrain, builderManager, builderData)
-    --RNGLOG('Setting T1 Queue to Eng')
-    if builderData.BuilderData.TechLevel == 1 then
-        return 745
-    elseif builderData.BuilderData.TechLevel == 2 then
-        return 750
-    elseif builderData.BuilderData.TechLevel == 3 then
-        return 755
-    end
-    return 0
-end
-
 BuilderGroup {
     BuilderGroupName = 'RNGAI LandBuilder T1',
     BuildersType = 'FactoryBuilder',
@@ -23,7 +11,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandScout',
         Priority = 755,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'scout'} },
         },
@@ -34,7 +22,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandDFTank',
         Priority = 748,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             --{ EBC, 'FactorySpendRatioRNG', {'Land', true}},
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'tank'} },
@@ -50,7 +38,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandArtillery',
         Priority = 747,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             --{ EBC, 'FactorySpendRatioRNG', {'Land', true}},
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'arty'} },
@@ -66,7 +54,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandAA',
         Priority = 742,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'aa'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -86,7 +74,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2LandDFTank',
         Priority = 750,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'tank'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -101,7 +89,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAIT2AttackBot',
         Priority = 749,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'bot'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -116,7 +104,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2LandAA',
         Priority = 746,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'aa'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -131,7 +119,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2MobileShields',
         Priority = 747,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'shield'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -146,7 +134,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2LandArtillery',
         Priority = 748,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'mml'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -161,7 +149,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAIT2MobileStealth',
         Priority = 746,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'stealth'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -181,7 +169,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3LandBot',
         Priority = 755,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'tank'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -196,7 +184,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3ArmoredAssault',
         Priority = 755,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'armoured'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -211,7 +199,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3LandAA',
         Priority = 752,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'aa'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -226,7 +214,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3LandArtillery',
         Priority = 753,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'arty'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -241,7 +229,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3MobileShields',
         Priority = 751,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'shield'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -256,7 +244,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3SniperBots',
         Priority = 754,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'sniper'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -271,7 +259,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3MobileMissile',
         Priority = 754,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'mml'} },
 
@@ -293,7 +281,7 @@ BuilderGroup {
         Priority = 744,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }},
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'scout'} },
         },
@@ -305,7 +293,7 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }},
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.20}},
             --{ UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'tank'} },
@@ -322,7 +310,7 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 4 }},
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.20}},
             --{ UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'arty'} },

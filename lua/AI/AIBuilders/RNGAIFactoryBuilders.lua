@@ -76,13 +76,12 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 105, 1050 } },
+            { UCBC, 'ForcePathLimit', {'LocationType', categories.FACTORY * categories.LAND, 'LAND', 2}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.70 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
-            --{ UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -105,7 +104,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'GreaterThanEconStorageCurrentRNG', { 240, 1050 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.70, 0.60 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -133,9 +132,9 @@ BuilderGroup {
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
@@ -154,13 +153,40 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNG Factory Builder Land T3 MainBase',
+        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        Priority = 1000,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.95}},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 8, categories.FACTORY * categories.LAND * categories.TECH3 }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = false,
+                AdjacencyPriority = {categories.ENERGYPRODUCTION},
+                BuildStructures = {
+                    'T3SupportLandFactory',
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNG Factory Builder Land T1',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 900,
         DelayEqualBuildPlattons = {'Factories', 3},
         InstanceCount = 2,
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.7 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -189,7 +215,7 @@ BuilderGroup {
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.30}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
@@ -220,6 +246,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { UCBC, 'ForcePathLimit', {'LocationType', categories.FACTORY * categories.LAND, 'LAND', 2}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -246,6 +273,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80, 'FACTORY'}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -270,7 +298,7 @@ BuilderGroup {
         Priority = 1010,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.30, 'FACTORY'}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.80 }},
@@ -356,7 +384,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 0,
         PriorityFunction = AirDefenseScramble,
-        DelayEqualBuildPlattons = {'Factories', 15},
+        DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.95 }},
@@ -494,7 +522,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 0,
         PriorityFunction = AirDefenseScramble,
-        DelayEqualBuildPlattons = {'Factories', 15},
+        DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.85 }},
@@ -585,7 +613,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.0 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
@@ -667,6 +695,33 @@ BuilderGroup {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.50}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
+            { UCBC, 'LessThanFactoryCountRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) }, true },
+            { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            Construction = {
+                NearMarkerType = 'Naval Area',
+                LocationRadius = 90,
+                Location = 'LocationType',
+                BuildStructures = {
+                    'T1SeaFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Sea T1 Marker Large Excess',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 650,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
+            --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.50}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
@@ -697,11 +752,9 @@ BuilderGroup {
             -- When do we want to build this ?
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.AIRSTAGINGPLATFORM }},
             -- Do we need additional conditions to build it ?
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 5, categories.STRUCTURE * categories.ENERGYPRODUCTION } },
+            { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 20.0 }},
             -- Have we the eco to build it ?
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.70}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.2, 4.0 }}, -- relative income
-            -- Don't build it if...
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.AIRSTAGINGPLATFORM }},
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
         },
@@ -719,337 +772,6 @@ BuilderGroup {
         }
     },
 }
---[[
-BuilderGroup {
-    BuilderGroupName = 'RNGAI Land Upgrade Builders',
-    BuildersType = 'PlatoonFormBuilder',
-    Builder {
-        BuilderName = 'RNGAI T1 Land Factory Upgrade HQ',
-        PlatoonTemplate = 'T1LandFactoryUpgrade',
-        Priority = 800,
-        InstanceCount = 1,
-        BuilderConditions = {
-                { MIBC, 'GreaterThanGameTimeRNG', { 450, true } },
-                { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
-                { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 2.5, 20.0 }},
-                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.3}},
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.025, 1.025 }},
-            },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T1 Land Factory Upgrade HQ Enemy',
-        PlatoonTemplate = 'T1LandFactoryUpgrade',
-        Priority = 825,
-        InstanceCount = 1,
-        BuilderConditions = {
-                { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
-                { UCBC, 'EnemyLandPhaseRNG', { 2 }},
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.025, 1.025 }},
-                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.60}},
-            },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T1 Land Factory Upgrade HQ Excess',
-        PlatoonTemplate = 'T1LandFactoryUpgrade',
-        Priority = 900,
-        InstanceCount = 1,
-        BuilderConditions = {
-                { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
-                { EBC, 'GreaterThanEconStorageCurrentRNG', { 1200, 1000 } },
-            },
-        BuilderType = 'Any',
-    },
-   Builder {
-        BuilderName = 'RNGAI T1 Land Factory Upgrade Support',
-        PlatoonTemplate = 'T1LandFactoryUpgrade',
-        Priority = 850,
-        InstanceCount = 1,
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9501', 'zab9501', 'zrb9501', 'zsb9501', 'znb9501' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-                { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY } },
-                { UCBC, 'LessThanFactoryCountRNG', { 10, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) * categories.SUPPORTFACTORY } },
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
-                --{ EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.015, 1.015 }},
-            },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T1 Land Factory Upgrade Support Excess',
-        PlatoonTemplate = 'T1LandFactoryUpgrade',
-        Priority = 875,
-        InstanceCount = 2,
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9501', 'zab9501', 'zrb9501', 'zsb9501', 'znb9501' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-                { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY } },
-                { UCBC, 'LessThanFactoryCountRNG', { 10, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) * categories.SUPPORTFACTORY } },
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1 }},
-                { EBC, 'GreaterThanEconStorageCurrentRNG', { 1300, 3990 } },
-            },
-        BuilderType = 'Any',
-    },
-    
-    Builder {
-        BuilderName = 'RNGAI T2 Land Factory Upgrade HQ',
-        PlatoonTemplate = 'T2LandFactoryUpgrade',
-        Priority = 875,
-        InstanceCount = 1,
-        BuilderConditions = {
-                { MIBC, 'GreaterThanGameTimeRNG', { 960 } },
-                { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 5.0, 100.0}},
-                { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY } },
-                { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 - categories.SUPPORTFACTORY } },
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 }},
-            },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Land Factory Upgrade HQ Enemy',
-        PlatoonTemplate = 'T2LandFactoryUpgrade',
-        Priority = 900,
-        InstanceCount = 1,
-        BuilderConditions = {
-                { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY } },
-                { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 - categories.SUPPORTFACTORY } },
-                { UCBC, 'EnemyLandPhaseRNG', { 3 }},
-                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.3}},
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 }},
-            },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Land Factory Upgrade HQ Excess',
-        PlatoonTemplate = 'T2LandFactoryUpgrade',
-        Priority = 925,
-        InstanceCount = 1,
-        BuilderConditions = {
-                { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
-                { EBC, 'GreaterThanEconStorageCurrentRNG', { 1800, 9000 } },
-                { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY } },
-                { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 } },
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.025, 1.025 }},
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2 }},
-            },
-        BuilderType = 'Any',
-    },
-    Builder { 
-        BuilderName = 'RNGAI T2 Land Factory Upgrade Support UEF',
-        PlatoonTemplate = 'T2LandSupFactoryUpgrade1',
-        Priority = 875,
-        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9601', 'zab9601', 'zrb9601', 'zsb9601', 'znb9601' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.UEF * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.UEF * categories.SUPPORTFACTORY * categories.LAND * categories.TECH2 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.020, 1.020 }},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH2 }},
-        },
-        BuilderType = 'Any',
-    },
-    Builder { 
-        BuilderName = 'RNGAI T2 Land Factory Upgrade Support AEON',
-        PlatoonTemplate = 'T2LandSupFactoryUpgrade2',
-        Priority = 875,
-        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9601', 'zab9601', 'zrb9601', 'zsb9601', 'znb9601' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.AEON * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.AEON * categories.SUPPORTFACTORY * categories.LAND * categories.TECH2 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.020, 1.020 }},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH2 }},
-        },
-        BuilderType = 'Any',
-    },
-    Builder { 
-        BuilderName = 'RNGAI T2 Land Factory Upgrade Support Cybran',
-        PlatoonTemplate = 'T2LandSupFactoryUpgrade3',
-        Priority = 875,
-        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9601', 'zab9601', 'zrb9601', 'zsb9601', 'znb9601' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.CYBRAN * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.CYBRAN * categories.SUPPORTFACTORY * categories.LAND * categories.TECH2 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.020, 1.020 }},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH2 }},
-        },
-        BuilderType = 'Any',
-    },
-    Builder { BuilderName = 'RNGAI T2 Land Factory Upgrade Support Sera',
-        PlatoonTemplate = 'T2LandSupFactoryUpgrade4',
-        Priority = 875,
-        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9601', 'zab9601', 'zrb9601', 'zsb9601', 'znb9601' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.SERAPHIM * categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3 - categories.SUPPORTFACTORY} },
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.SERAPHIM * categories.SUPPORTFACTORY * categories.LAND * categories.TECH2 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.020, 1.020 }},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH2 }},
-        },
-        BuilderType = 'Any',
-    },
-}]]
---[[
-BuilderGroup {
-    BuilderGroupName = 'RNGAI Air Upgrade Builders',
-    BuildersType = 'PlatoonFormBuilder',
-    Builder {
-        BuilderName = 'RNGAI T1 Air Factory Upgrade HQ',
-        PlatoonTemplate = 'T1AirFactoryUpgrade',
-        Priority = 900,
-        InstanceCount = 1,
-        BuilderConditions = {
-                { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
-                { UCBC, 'LessThanFactoryCountRNG', { 1, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY}},
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH1 }},
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.025, 1.025 }},
-            },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T1 Air Factory Upgrade HQ CloseACU',
-        PlatoonTemplate = 'T1AirFactoryUpgrade',
-        PriorityFunction = ACUClosePriority,
-        Priority = 0,
-        InstanceCount = 1,
-        BuilderConditions = {
-                { UCBC, 'LessThanFactoryCountRNG', { 1, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY}},
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH1 }},
-                { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.FACTORY * categories.AIR}},
-                { EBC, 'GreaterThanEconTrendOverTimeRNG', { 0.0, 0.0 } },
-            },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T1 Air Factory Upgrade Support',
-        PlatoonTemplate = 'T1AirFactoryUpgrade',
-        Priority = 850,
-        InstanceCount = 1,
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9502', 'zab9502', 'zrb9502', 'zsb9502', 'znb9502' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-                { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.AIR * ( categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY } },
-                { UCBC, 'LessThanFactoryCountRNG', { 8, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH1 }},
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)}},
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.025, 1.025 }},
-            },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Air Factory Upgrade HQ',
-        PlatoonTemplate = 'T2AirFactoryUpgrade',
-        Priority = 900,
-        InstanceCount = 1,
-        BuilderConditions = {
-                { MIBC, 'GreaterThanGameTimeRNG', { 990 } },
-                { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.AIR }},
-                { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH2 - categories.SUPPORTFACTORY } },
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.015, 1.015 }},
-            },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Air Factory Upgrade Support UEF',
-        PlatoonTemplate = 'T2AirSupFactoryUpgrade1',
-        Priority = 760,
-        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9602', 'zab9602', 'zrb9602', 'zsb9602', 'znb9602' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.UEF * categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY} },
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.UEF * categories.AIR * categories.SUPPORTFACTORY * categories.TECH2 }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.3}},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.AIR }},
-        },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Air Factory Upgrade Support Aeon',
-        PlatoonTemplate = 'T2AirSupFactoryUpgrade2',
-        Priority = 760,
-        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9602', 'zab9602', 'zrb9602', 'zsb9602', 'znb9602' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.AEON * categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY} },
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.AEON * categories.AIR * categories.SUPPORTFACTORY * categories.TECH2 }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.3}},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.AIR }},
-        },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Air Factory Upgrade Support Cybran',
-        PlatoonTemplate = 'T2AirSupFactoryUpgrade3',
-        Priority = 760,
-        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9602', 'zab9602', 'zrb9602', 'zsb9602', 'znb9602' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.CYBRAN * categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY} },
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.CYBRAN * categories.AIR * categories.SUPPORTFACTORY * categories.TECH2 }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.3}},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.AIR }},
-        },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Air Factory Upgrade Support Seraphim',
-        PlatoonTemplate = 'T2AirSupFactoryUpgrade4',
-        Priority = 760,
-        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9602', 'zab9602', 'zrb9602', 'zsb9602', 'znb9602' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.SERAPHIM * categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY} },
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.SERAPHIM * categories.AIR * categories.SUPPORTFACTORY * categories.TECH2 }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.3}},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.AIR }},
-        },
-        BuilderType = 'Any',
-    },
-}]]
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Upgrade Builders Expansion',
@@ -1176,132 +898,6 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.3}},
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.AIR }},
-        },
-        BuilderType = 'Any',
-    },
-}
-
-BuilderGroup {
-    BuilderGroupName = 'RNGAI Sea Upgrade Builders',
-    BuildersType = 'PlatoonFormBuilder',
-    Builder {
-        BuilderName = 'RNGAI T1 Sea Factory Upgrade HQ',
-        PlatoonTemplate = 'T1SeaFactoryUpgrade',
-        Priority = 800,
-        InstanceCount = 1,
-        BuilderConditions = {
-                { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
-                { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 5.5, 50.0}},
-                { UCBC, 'LessThanFactoryCountRNG', { 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3)}},
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH1 }},
-                { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.FACTORY * categories.NAVAL}, true},
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)}},
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
-            },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T1 Sea Factory Upgrade Support',
-        PlatoonTemplate = 'T1SeaFactoryUpgrade',
-        Priority = 750,
-        InstanceCount = 1,
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9503', 'zab9503', 'zrb9503', 'zsb9503', 'znb9503' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-                { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.NAVAL * categories.TECH2 - categories.SUPPORTFACTORY}, true},
-                { UCBC, 'LessThanFactoryCountRNG', { 7, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3)}},
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH1 }},
-                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.5}},
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
-            },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Sea Factory Upgrade HQ',
-        PlatoonTemplate = 'T2SeaFactoryUpgrade',
-        Priority = 810,
-        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
-        BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 1500 } },
-            { UCBC, 'CheckBuildPlattonDelay', { 'FactoryUpgrade' }},
-            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH3 - categories.SUPPORTFACTORY } },
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 - categories.SUPPORTFACTORY }, true},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 }},
-        },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Sea Factory Upgrade Support UEF',
-        PlatoonTemplate = 'T2SeaSupFactoryUpgrade1',
-        Priority = 760,
-        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9603', 'zab9603', 'zrb9603', 'zsb9603', 'znb9603' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.UEF * categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH3 - categories.SUPPORTFACTORY}, true },
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.UEF * categories.SUPPORTFACTORY * categories.NAVAL * categories.TECH2 }, true },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.8}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.1 }},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH2 }},
-        },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Sea Factory Upgrade Support Aeon',
-        PlatoonTemplate = 'T2SeaSupFactoryUpgrade2',
-        Priority = 760,
-        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9603', 'zab9603', 'zrb9603', 'zsb9603', 'znb9603' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.AEON * categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH3 - categories.SUPPORTFACTORY}, true },
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.AEON * categories.SUPPORTFACTORY * categories.NAVAL * categories.TECH2 }, true },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.8}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.1 }},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH2 }},
-        },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Sea Factory Upgrade Support Cybran',
-        PlatoonTemplate = 'T2SeaSupFactoryUpgrade3',
-        Priority = 760,
-        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9603', 'zab9603', 'zrb9603', 'zsb9603', 'znb9603' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.CYBRAN * categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH3 - categories.SUPPORTFACTORY}, true },
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.CYBRAN * categories.SUPPORTFACTORY * categories.NAVAL * categories.TECH2 }, true },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.8}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.1 }},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH2 }},
-        },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Sea Factory Upgrade Support Sera',
-        PlatoonTemplate = 'T2SeaSupFactoryUpgrade4',
-        Priority = 760,
-        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9603', 'zab9603', 'zrb9603', 'zsb9603', 'znb9603' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.SERAPHIM * categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH3 - categories.SUPPORTFACTORY}, true },
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.SERAPHIM * categories.SUPPORTFACTORY * categories.NAVAL * categories.TECH2 }, true },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.8}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.1 }},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.TECH2 }},
         },
         BuilderType = 'Any',
     },
@@ -1499,7 +1095,7 @@ BuilderGroup {
         Priority = 800,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', true } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
@@ -1542,6 +1138,7 @@ BuilderGroup {
             },
         BuilderType = 'Any',
     },
+    --[[
     Builder {
         BuilderName = 'RNGAI T1 Land Factory Upgrade Support Expansions Active',
         PlatoonTemplate = 'T1LandFactoryUpgrade',
@@ -1560,7 +1157,7 @@ BuilderGroup {
                 { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             },
         BuilderType = 'Any',
-    },
+    },]]
 }
 
 BuilderGroup {
@@ -1600,7 +1197,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { MIBC, 'CanPathToCurrentEnemyRNG', { 'LocationType', false } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
             { TBC, 'ThreatPresentInGraphRNG', {'LocationType', 'StructuresNotMex'} },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -1740,147 +1337,3 @@ BuilderGroup {
         }
     },
 }
-
---[[BuilderGroup {
-    BuilderGroupName = 'RNGEXP Air Upgrade Builders',
-    BuildersType = 'PlatoonFormBuilder',
-    Builder {
-        BuilderName = 'RNGEXP T1 Air Factory Upgrade HQ',
-        PlatoonTemplate = 'T1AirFactoryUpgrade',
-        Priority = 900,
-        InstanceCount = 1,
-        BuilderConditions = {
-                { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 2.3, 20.0}},
-                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.3}},
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 10, categories.ENERGYPRODUCTION * (categories.TECH1 + categories.TECH2 + categories.TECH3)}},
-                { UCBC, 'LessThanFactoryCountRNG', { 1, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY}},
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH1 }},
-                { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.FACTORY * categories.AIR}},
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
-            },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGEXP T1 Air Factory Upgrade HQ CloseACU',
-        PlatoonTemplate = 'T1AirFactoryUpgrade',
-        PriorityFunction = ACUClosePriority,
-        Priority = 0,
-        InstanceCount = 1,
-        BuilderConditions = {
-                { UCBC, 'LessThanFactoryCountRNG', { 1, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY}},
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH1 }},
-                { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.FACTORY * categories.AIR}},
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
-            },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGEXP T1 Air Factory Upgrade Support',
-        PlatoonTemplate = 'T1AirFactoryUpgrade',
-        Priority = 700,
-        InstanceCount = 1,
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9502', 'zab9502', 'zrb9502', 'zsb9502', 'znb9502' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-                { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH1 }},
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH2}},
-                { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.FACTORY * categories.AIR * categories.TECH1}},
-                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.80}},
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
-            },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGEXP T2 Air Factory Upgrade HQ',
-        PlatoonTemplate = 'T2AirFactoryUpgrade',
-        Priority = 900,
-        InstanceCount = 1,
-        BuilderConditions = {
-                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH2}},
-                { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
-                { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.AIR }},
-                { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH2 - categories.SUPPORTFACTORY } },
-                { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.3}},
-                { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
-            },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGEXP T2 Air Factory Upgrade Support UEF',
-        PlatoonTemplate = 'T2AirSupFactoryUpgrade1',
-        Priority = 750,
-        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9602', 'zab9602', 'zrb9602', 'zsb9602', 'znb9602' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.UEF * categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY} },
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.UEF * categories.AIR * categories.SUPPORTFACTORY * categories.TECH2 }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.3}},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.AIR }},
-        },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGEXP T2 Air Factory Upgrade Support Aeon',
-        PlatoonTemplate = 'T2AirSupFactoryUpgrade2',
-        Priority = 750,
-        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9602', 'zab9602', 'zrb9602', 'zsb9602', 'znb9602' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.AEON * categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY} },
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.AEON * categories.AIR * categories.SUPPORTFACTORY * categories.TECH2 }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.3}},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.AIR }},
-        },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGEXP T2 Air Factory Upgrade Support Cybran',
-        PlatoonTemplate = 'T2AirSupFactoryUpgrade3',
-        Priority = 750,
-        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9602', 'zab9602', 'zrb9602', 'zsb9602', 'znb9602' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.CYBRAN * categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY} },
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.CYBRAN * categories.AIR * categories.SUPPORTFACTORY * categories.TECH2 }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.3}},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.AIR }},
-        },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGEXP T2 Air Factory Upgrade Support Seraphim',
-        PlatoonTemplate = 'T2AirSupFactoryUpgrade4',
-        Priority = 750,
-        DelayEqualBuildPlattons = {'FactoryUpgrade', 3},
-        BuilderData = {
-            OverideUpgradeBlueprint = { 'zeb9602', 'zab9602', 'zrb9602', 'zsb9602', 'znb9602' }, -- overides Upgrade blueprint for all 5 factions. Used for support factories
-        },
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.SERAPHIM * categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY} },
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.SERAPHIM * categories.AIR * categories.SUPPORTFACTORY * categories.TECH2 }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.3}},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'FactoryUpgrade' }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.AIR }},
-        },
-        BuilderType = 'Any',
-    },
-}]]

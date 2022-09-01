@@ -24,7 +24,7 @@ PlatoonTemplate {
     Name = 'RNGAI AirScoutForm',
     Plan = 'ScoutingAIRNG',
     GlobalSquads = {
-        { categories.AIR * categories.SCOUT * (categories.TECH1 + categories.TECH3), 1, 4, 'scout', 'None' },
+        { categories.AIR * categories.SCOUT * (categories.TECH1 + categories.TECH3), 1, 1, 'scout', 'None' },
     }
 }
 
@@ -106,6 +106,43 @@ PlatoonTemplate {
         },
     }
 }
+
+PlatoonTemplate {
+    Name = 'RNGAIT1AirScoutBurst',
+    FactionSquads = {
+        UEF = {
+            { 'uea0101', 1, 3, 'scout', 'None' },
+        },
+        Aeon = {
+            { 'uaa0101', 1, 3, 'scout', 'None' },
+        },
+        Cybran = {
+            { 'ura0101', 1, 3, 'scout', 'None' },
+        },
+        Seraphim = {
+            { 'xsa0101', 1, 3, 'scout', 'None' },
+        },
+    }
+}
+
+PlatoonTemplate {
+    Name = 'RNGAIT3ScoutBurst',
+    FactionSquads = {
+        UEF = {
+            { 'uea0302', 1, 3, 'scout', 'none' },      -- Scout
+        },
+        Aeon = {
+            { 'uaa0302', 1, 3, 'scout', 'None' },
+        },
+        Cybran = {
+            { 'ura0302', 1, 3, 'scout', 'None' },
+        },
+        Seraphim = {
+            { 'xsa0302', 1, 3, 'scout', 'None' },
+        },
+    }
+}
+
 PlatoonTemplate {
     Name = 'RNGAIFighterGroup',
     FactionSquads = {
@@ -224,19 +261,19 @@ PlatoonTemplate {
 PlatoonTemplate { Name = 'RNGAIT3AirResponse',
     FactionSquads = {
         UEF = {
-            { 'uea0303', 1, 3, 'Attack', 'none' },      -- Air Superiority Fighter
+            { 'uea0303', 1, 2, 'Attack', 'none' },      -- Air Superiority Fighter
             { 'uea0302', 1, 1, 'Attack', 'none' },      -- Scout
          },
         Aeon = {
-            { 'uaa0303', 1, 3, 'Attack', 'none' },      -- Air Superiority Fighter
+            { 'uaa0303', 1, 2, 'Attack', 'none' },      -- Air Superiority Fighter
             { 'uaa0302', 1, 1, 'Attack', 'none' },      -- Scout
         },
         Cybran = {
-            { 'ura0303', 1, 3, 'Attack', 'none' },      -- Air Superiority Fighter
+            { 'ura0303', 1, 2, 'Attack', 'none' },      -- Air Superiority Fighter
             { 'ura0302', 1, 1, 'Attack', 'none' },      -- Scout
         },
         Seraphim = {
-            { 'xsa0303', 1, 3, 'Attack', 'none' },      -- Air Superiority Fighter
+            { 'xsa0303', 1, 2, 'Attack', 'none' },      -- Air Superiority Fighter
             { 'xsa0302', 1, 1, 'Attack', 'none' },      -- Scout
         },
     }

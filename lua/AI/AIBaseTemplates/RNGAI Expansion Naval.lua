@@ -9,7 +9,6 @@ BaseBuilderTemplate {
 
         -- Sea Builders --
         'RNGAI Factory Builder Sea',
-        'RNGAI Sea Upgrade Builders',
         'RNGAI T12 Perimeter Defenses Naval',
 
         -- Sea Unit Builders
@@ -27,7 +26,7 @@ BaseBuilderTemplate {
         FactoryCount = {
             Land = 0,
             Air = 0,
-            Sea = 6,
+            Sea = 5,
             Gate = 0,
         },
         EngineerCount = {

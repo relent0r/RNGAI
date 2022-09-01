@@ -56,9 +56,6 @@ BaseBuilderTemplate {
         'RNGEXP Factory Builder Air',
         'RNGAI Air Staging Platform',
         
-        -- Air Factory Formers --
-        'RNGEXP Air Upgrade Builders',
-
         -- Air Unit Builders --
         'RNGAI ScoutAirBuilder',
         'RNGAI Air Builder T1',

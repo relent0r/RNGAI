@@ -9,19 +9,19 @@ EngineerManager = Class(RNGEngineerManager) {
         if not self.Brain.RNG then
             return RNGEngineerManager.UnitConstructionFinished(self, unit, finishedUnit)
         end
-        if EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit) and finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() and finishedUnit:GetFractionComplete() == 1 then
-            self.Brain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
-        end
-        if EntityCategoryContains(categories.MASSEXTRACTION * categories.STRUCTURE, finishedUnit) and finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() then
-            if not self.Brain.StructurePool then
-                RUtils.CheckCustomPlatoons(self.Brain)
+        if finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() and finishedUnit:GetFractionComplete() == 1 then
+            if EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit) then
+                self.Brain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
             end
-            local unitBp = finishedUnit:GetBlueprint()
-            local StructurePool = self.Brain.StructurePool
-            --RNGLOG('* AI-RNG: Assigning built extractor to StructurePool')
-            self.Brain:AssignUnitsToPlatoon(StructurePool, {finishedUnit}, 'Support', 'none' )
-        end
-        if finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() then
+            if EntityCategoryContains(categories.MASSEXTRACTION * categories.STRUCTURE, finishedUnit) then
+                if not self.Brain.StructurePool then
+                    RUtils.CheckCustomPlatoons(self.Brain)
+                end
+                local unitBp = finishedUnit:GetBlueprint()
+                local StructurePool = self.Brain.StructurePool
+                --RNGLOG('* AI-RNG: Assigning built extractor to StructurePool')
+                self.Brain:AssignUnitsToPlatoon(StructurePool, {finishedUnit}, 'Support', 'none' )
+            end
             self:AddUnitRNG(finishedUnit)
         end
         local guards = unit:GetGuards()
@@ -37,8 +37,30 @@ EngineerManager = Class(RNGEngineerManager) {
         --self.Brain:RemoveConsumption(self.LocationType, unit)
     end,
 
+    CreateFloatingEM = function(self, brain, location)
+        BuilderManager.Create(self,brain)
+
+        if not location then
+            error('*PLATOOM FORM MANAGER ERROR: Invalid parameters; location')
+            return false
+        end
+
+        self.Location = location
+        self.Radius = 0
+        self.LocationType = 'FLOATING'
+
+        self.ConsumptionUnits = {
+            Engineers = { Category = categories.ENGINEER, Units = {}, UnitsList = {}, Count = 0, },
+        }
+
+        self:AddBuilderType('Any')
+    end,
+    
     AddUnitRNG = function(self, unit, dontAssign)
         --LOG('+ AddUnit')
+        if EntityCategoryContains(categories.STRUCTURE * categories.DEFENSE, unit) then
+            RUtils.AddDefenseUnit(self.Brain, self.LocationType, unit)
+        end
         for k,v in self.ConsumptionUnits do
             if EntityCategoryContains(v.Category, unit) then
                 table.insert(v.Units, { Unit = unit, Status = true })
@@ -91,10 +113,51 @@ EngineerManager = Class(RNGEngineerManager) {
                     self:ForkEngineerTask(unit)
                 end
                 if EntityCategoryContains(categories.STRUCTURE * (categories.SONAR + categories.RADAR + categories.OMNI), unit) then
-                    IntelManagerRNG.GetIntelManager():AssignIntelUnit(unit)
+                    IntelManagerRNG.GetIntelManager(self.Brain):AssignIntelUnit(unit)
                 end
                 return
             end
+        end
+    end,
+
+    TaskFinishedRNG = function(manager, unit)
+        if manager.LocationType ~= 'FLOATING' and VDist3(manager.Location, unit:GetPosition()) > manager.Radius and not EntityCategoryContains(categories.COMMAND, unit) then
+            --LOG('Engineer is more than distance from manager, radius is '..manager.Radius..' distance is '..VDist3(manager.Location, unit:GetPosition()))
+            manager:ReassignUnitRNG(unit)
+        else
+            manager:ForkEngineerTask(unit)
+        end
+    end,
+
+    ReassignUnitRNG = function(self, unit)
+        local managers = self.Brain.BuilderManagers
+        local bestManager = false
+        local distance = false
+        local unitPos = unit:GetPosition()
+        --LOG('Reassigning Engineer')
+        for k,v in managers do
+            if (v.FactoryManager.LocationActive and v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) > 0) or v == 'MAIN' then
+                local checkDistance = VDist3(v.EngineerManager:GetLocationCoords(), unitPos)
+                if not distance then
+                    distance = checkDistance
+                end
+                if checkDistance < v.EngineerManager.Radius and checkDistance < distance then
+                    --LOG('Manager radius is '..v.EngineerManager.Radius)
+                    distance = checkDistance
+                    bestManager = v.EngineerManager
+                    --LOG('Engineer Being reassigned to '..bestManager.LocationType)
+                end
+            end
+        end
+        if not bestManager then
+            if self.Brain.BuilderManagers['FLOATING'].EngineerManager then
+                --LOG('Engineer Being reassigned to floating engineer manager')
+                bestManager = self.Brain.BuilderManagers['FLOATING'].EngineerManager
+            end
+        end
+        self:RemoveUnit(unit)
+        if bestManager and not unit.Dead then
+            bestManager:AddUnit(unit)
         end
     end,
 
@@ -240,7 +303,7 @@ EngineerManager = Class(RNGEngineerManager) {
                 end
             end
             if EntityCategoryContains(categories.STRUCTURE * (categories.SONAR + categories.RADAR + categories.OMNI), unit) then
-                IntelManagerRNG.GetIntelManager():UnassignIntelUnit(unit)
+                IntelManagerRNG.GetIntelManager(self.Brain):UnassignIntelUnit(unit)
             end
             if found then
                 break
@@ -278,3 +341,12 @@ EngineerManager = Class(RNGEngineerManager) {
         end
     end,
 }
+
+CreateFloatingEngineerManager = function(brain, location)
+    local em = EngineerManager()
+    --LOG('brain nickname '..repr(brain.Nickname))
+    --LOG('location is '..repr(location))
+    LOG('Starting Floating Engineer Manager...')
+    em:CreateFloatingEM(brain, location)
+    return em
+end

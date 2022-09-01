@@ -97,7 +97,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 400 MexBuild',
         PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 997,
-        InstanceCount = 2,
+        InstanceCount = 3,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 400, nil, nil, 0, 'AntiSurface', 1}},
         },
@@ -280,6 +280,36 @@ BuilderGroup {
 }
 
 BuilderGroup {
+    BuilderGroupName = 'RNGAI Mass Builder Floating',
+    BuildersType = 'EngineerBuilder',
+    
+    Builder {
+        BuilderName = 'RNGAI T1ResourceEngineer 2000 Floating',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 910,
+        InstanceCount = 2,
+        BuilderConditions = {
+                { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 100, 2000, -500, 2, 0, 'AntiSurface', 1}},
+            },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'Mass',
+            NeedGuard = false,
+            DesiresAssist = false,
+            Construction = {
+                MaxDistance = 2000,
+                ThreatMin = -500,
+                ThreatMax = 30,
+                ThreatType = 'AntiSurface',
+                BuildStructures = {
+                    'T1Resource',
+                }
+            }
+        }
+    },
+}
+
+BuilderGroup {
     BuilderGroupName = 'RNGAI Mass Builder Expansion',
     BuildersType = 'EngineerBuilder',
     Builder {
@@ -309,7 +339,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 150 Expansion',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 700,
         InstanceCount = 2,
         BuilderConditions = {
@@ -332,12 +362,11 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1ResourceEngineer 1000 Expansion',
+        BuilderName = 'RNGAI T1ResourceEngineer 2000 Expansion',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 550,
         InstanceCount = 2,
         BuilderConditions = {
-                { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
                 { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 100, 2000, -500, 2, 0, 'AntiSurface', 1}},
             },
         BuilderType = 'Any',
@@ -373,7 +402,7 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
+            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -403,7 +432,7 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 80 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
+            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -413,7 +442,7 @@ BuilderGroup {
                 AdjacencyDistance = 100,
                 BuildClose = false,
                 ThreatMin = -3,
-                ThreatMax = 0,
+                ThreatMax = 5,
                 ThreatRings = 0,
                 BuildStructures = {
                     'MassStorage',
@@ -433,7 +462,7 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 500 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 500, 'ueb1106' } },
+            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 500, 'ueb1106' } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -461,12 +490,12 @@ BuilderGroup {
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 0, 0}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.20}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheck', { 'LocationType', 'MASSEXTRACTION', 150, 'ueb1106' } },
+            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', 'MASSEXTRACTION', 150, 'ueb1106' } },
         },
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyCategory = 'MASSEXTRACTION TECH3, MASSEXTRACTION TECH2',
+                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 100,
                 BuildClose = false,
                 ThreatMin = -3,
@@ -495,7 +524,7 @@ BuilderGroup {
             { EBC, 'LessThanEconStorageRatioRNG', { 1, 1.1 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 200, categories.MASSEXTRACTION}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION, 100, 'ueb1103' } },
+            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION, 100, 'ueb1103' } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -524,7 +553,7 @@ BuilderGroup {
             { EBC, 'LessThanEconStorageRatioRNG', { 0.2, 1.1 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 200, categories.MASSEXTRACTION}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheck', { 'LocationType', categories.MASSEXTRACTION, 500, 'ueb1103' } },
+            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION, 500, 'ueb1103' } },
         },
         BuilderType = 'Any',
         BuilderData = {

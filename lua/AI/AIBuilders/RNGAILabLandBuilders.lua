@@ -38,7 +38,7 @@ BuilderGroup {
         Priority = 1000,
         InstanceCount = 3,
         BuilderConditions = {  
-                { MIBC, 'LessThanGameTime', { 320 } },
+                { MIBC, 'LessThanGameTime', { 300 } },
                 { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE } },      	
             },
         BuilderType = 'Any',
