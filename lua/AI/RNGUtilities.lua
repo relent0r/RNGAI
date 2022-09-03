@@ -4318,6 +4318,39 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
         if bestPoint then
             defensivePoint = bestPoint.Position
         end
+    elseif type == 'STRUCTURE' then
+        local bestPoint = false
+        local bestIndex = false
+        --RNGLOG('Performing TML Structure Check')
+        if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
+            local bestTargetDistance
+            local bestTargetPoint
+            for k, v in aiBrain.EnemyIntel.EnemyStartLocations do
+                local currentTargetDistance = VDist3Sq(aiBrain.BuilderManagers[baseLocation].Position, v.Position)
+                if not bestTargetPoint or currentTargetDistance < bestTargetDistance then
+                    bestTargetDistance = currentTargetDistance
+                    bestTargetPoint = v.Position
+                end
+            end
+            if not bestTargetPoint then
+                bestTargetPoint = aiBrain.MapCenterPoint
+            end
+            if bestTargetPoint then
+                --RNGLOG('BestTargetPoint is '..repr(bestTargetPoint))
+                local pointCheck = GetAngleToPosition(basePosition, bestTargetPoint)
+                --RNGLOG('Angle to pointCheck is '..pointCheck)
+                for _, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
+                    local pointAngle = GetAngleToPosition(basePosition, v.Position)
+                    if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                        bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                    end
+                end
+            end
+        end
+        if bestPoint then
+            --RNGLOG('bestPoint is '..repr(bestPoint.Position))
+            defensivePoint = bestPoint.Position
+        end
     end
     if defensivePoint then
         if aiBrain.RNGDEBUG then

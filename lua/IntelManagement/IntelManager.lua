@@ -829,6 +829,10 @@ IntelManager = Class {
     end,
 
     IntelGridSetGraph = function(self, locationType, x, z, startPos, endPos)
+        if (not startPos) or (not endPos) then
+            WARN('IntelGridSetGraph start or end position was nil')
+            return
+        end
         if not self.MapIntelGrid[x][z].Graphs[locationType] then
             self.MapIntelGrid[x][z].Graphs[locationType] = { GraphChecked = false, Land = false, Amphibious = false, NoGraph = false}
         end
@@ -1002,7 +1006,8 @@ IntelManager = Class {
         end
         if type == 'AirAntiSurface' and table.getn(potentialStrikes) > 0 then
             local count = math.ceil(desiredStrikeDamage / 1000)
-            self.amanager.Demand.Air.T2.bomber = count
+            RNGLOG('Number of T2 Bombers wanted '..count)
+            self.Brain.amanager.Demand.Air.T2.bomber = count
         end
     end,
 

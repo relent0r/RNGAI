@@ -3221,7 +3221,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         elseif cons.NearDefensivePoints then
             relative = false
             reference = RUtils.GetDefensivePointRNG(aiBrain, cons.Location or 'MAIN', cons.Tier or 2, cons.Type)
-            --RNGLOG('reference for defensivepoint is '..repr(reference))
+            RNGLOG('reference for defensivepoint is '..repr(reference))
             --baseTmpl = baseTmplFile[cons.BaseTemplate][factionIndex]
             -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG

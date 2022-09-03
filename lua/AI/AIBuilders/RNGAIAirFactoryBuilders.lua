@@ -79,7 +79,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2FighterBomber',
         Priority = 749,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Air', 'T2', 'bomber'} },
+            { UCBC, 'UnitBuildDemand', {'Air', 'T2', 'bomber'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -88,6 +88,7 @@ BuilderGroup {
             TechLevel = 2
         },
     },
+    --[[
     Builder {
         BuilderName = 'RNGAI T2 Gunship',
         PlatoonTemplate = 'T2AirGunship',
@@ -101,7 +102,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 2
         },
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI T2 Fighter',
         PlatoonTemplate = 'T2FighterBomber',

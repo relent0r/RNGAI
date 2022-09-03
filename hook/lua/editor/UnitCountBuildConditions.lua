@@ -1300,6 +1300,18 @@ function DefensivePointShieldRequired(aiBrain, locationType)
     return false
 end
 
+function UnitBuildDemand(aiBrain, type, tier, unit)
+
+    if aiBrain.amanager.Demand[type][tier][unit] > aiBrain.amanager.Current[type][tier][unit] then
+        RNGLOG('UnitBuild Demand has gone true ')
+        RNGLOG('Unit Demand  of type '..type..' tier '..tier..' unit '..unit..' count '..repr(aiBrain.amanager.Demand[type][tier][unit]))
+        RNGLOG('Current units '..repr(aiBrain.amanager.Current[type][tier][unit]))
+        return true
+    end
+    return false
+
+end
+
 --[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.

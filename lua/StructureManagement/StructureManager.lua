@@ -539,11 +539,11 @@ StructureManager = Class {
         end
         if (self.Brain.RNGEXP or (factionIndex == 2 and actualMexIncome > (25 * self.Brain.EcoManager.EcoMultiplier))) and totalAirT2HQCount < 1 and totalAirT3HQCount < 1 and self.Factories.AIR[1].UpgradingCount < 1 then
             --RNGLOG('Factory T1 Air RNGEXP Upgrade HQ Check passed')
-            if self.Brain.EconomyOverTimeCurrent.EnergyIncome > 32.0 and self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 0.9 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.9 then
+            if self.Brain.EconomyOverTimeCurrent.EnergyIncome > 32.0 and self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 0.9 and (self.Brain.RNGEXP and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.9 or self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05) then
                 --RNGLOG('RNGEXP Factory Upgrade efficiency over time check passed')
                 local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                 local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
-                if MassEfficiency >= 0.9 and EnergyEfficiency >= 0.9 then
+                if MassEfficiency >= 0.9 and (self.Brain.RNGEXP and EnergyEfficiency >= 0.9 or EnergyEfficiency >= 1.05)  then
                     --RNGLOG('RNGEXP Factory Upgrade efficiency check passed, get closest factory')
                     local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH1')
                     if factoryToUpgrade and not factoryToUpgrade.Dead then

@@ -167,7 +167,7 @@ AIBrain = Class(RNGAIBrainClass) {
             --RNGLOG('5 KM Map Check true')
             self.MapSize = 5
         end
-        self.MapCenterPoint = { (ScenarioInfo.size[1] / 2), 0 ,(ScenarioInfo.size[2] / 2) }
+        self.MapCenterPoint = { (ScenarioInfo.size[1] / 2), GetSurfaceHeight((ScenarioInfo.size[1] / 2), (ScenarioInfo.size[2] / 2)) ,(ScenarioInfo.size[2] / 2) }
 
         -- Condition monitor for the whole brain
         self.ConditionsMonitor = BrainConditionsMonitor.CreateConditionsMonitor(self)
@@ -431,8 +431,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T2 = {
-                            bomber=10,
-                            gunship=10,
+                            bomber=0,
+                            gunship=0,
                             torpedo=0,
                             total=0
                         },
@@ -495,8 +495,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T2 = {
-                            fighter=85,
-                            gunship=15,
+                            fighter=100,
+                            gunship=0,
                             torpedo=0,
                             total=0
                         },
@@ -562,8 +562,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T2 = {
-                            bomber=15,
-                            gunship=10,
+                            bomber=0,
+                            gunship=0,
                             torpedo=0,
                             total=0
                         },
@@ -625,8 +625,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T2 = {
-                            bomber=30,
-                            gunship=10,
+                            bomber=0,
+                            gunship=0,
                             torpedo=0,
                             total=0
                         },
@@ -690,8 +690,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T2 = {
-                            bomber=30,
-                            gunship=10,
+                            bomber=0,
+                            gunship=0,
                             torpedo=0,
                             total=0
                         },
@@ -2968,7 +2968,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 --RNGLOG('Run TacticalThreatAnalysisRNG')
                 self:ForkThread(IntelManagerRNG.TacticalThreatAnalysisRNG, self)
-                im:ForkThread(im.CheckZoneStrikePotential, 'AirAntiSurface', 1000, 20)
+                im:ForkThread(im.CheckZoneStrikePotential, 'AirAntiSurface', 2000, 20)
             end
             self:CalculateMassMarkersRNG()
             local enemyCount = 0

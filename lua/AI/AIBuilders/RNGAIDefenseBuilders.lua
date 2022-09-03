@@ -314,7 +314,9 @@ BuilderGroup {
             JobType = 'BuildStructure',
             Construction = {
                 BuildClose = true,
-                NearDefensivePoints = false,
+                NearDefensivePoints = true,
+                Type = 'STRUCTURE',
+                Tier = 1,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2)},
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY,
                 maxUnits = 1,
@@ -345,7 +347,9 @@ BuilderGroup {
             JobType = 'BuildStructure',
             Construction = {
                 BuildClose = true,
-                NearDefensivePoints = false,
+                NearDefensivePoints = true,
+                Type = 'STRUCTURE',
+                Tier = 1,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2)},
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY,
                 maxUnits = 1,

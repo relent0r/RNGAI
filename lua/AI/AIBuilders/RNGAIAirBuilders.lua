@@ -176,6 +176,7 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T2',
     BuildersType = 'FactoryBuilder',
+    --[[
     Builder {
         BuilderName = 'RNGAI Air Attack Queue T2',
         PlatoonTemplate = 'RNGAIT2AirQueue',
@@ -190,7 +191,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 2
         },
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI Factory Intie Enemy Threat T2',
         PlatoonTemplate = 'RNGAIT2FighterAeon',
