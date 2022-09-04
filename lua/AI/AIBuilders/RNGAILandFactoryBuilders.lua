@@ -132,11 +132,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 MML',
         PlatoonTemplate = 'T2LandArtillery',
-        Priority = 748,
+        Priority = 750,
         BuilderConditions = {
+            { UCBC, 'UnitBuildDemand', {'Land', 'T2', 'mml'} },
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'mml'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',

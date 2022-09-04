@@ -408,8 +408,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         },
                         T2 = {
                             tank=55,
-                            mml=5,
-                            bot=20,
+                            mml=0,
+                            bot=25,
                             aa=10,
                             shield=10,
                             total=0
@@ -474,9 +474,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         },
                         T2 = {
                             tank=75,
-                            mml=5,
+                            mml=0,
                             aa=10,
-                            shield=10,
+                            shield=15,
                             total=0
                         },
                         T3 = {
@@ -539,8 +539,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         },
                         T2 = {
                             tank=55,
-                            mml=5,
-                            bot=25,
+                            mml=0,
+                            bot=30,
                             aa=10,
                             stealth=5,
                             total=0
@@ -603,8 +603,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T2 = {
-                            tank=75,
-                            mml=10,
+                            tank=80,
+                            mml=0,
                             aa=15,
                             total=0
                         },
@@ -667,8 +667,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         },
                         T2 = {
                             tank=55,
-                            mml=5,
-                            bot=20,
+                            mml=0,
+                            bot=25,
                             aa=10,
                             shield=10,
                             total=0
@@ -1679,12 +1679,18 @@ AIBrain = Class(RNGAIBrainClass) {
             local needSort = false
             for k, v in self.BuilderManagers do
                 if k ~= 'MAIN' and k ~= 'FLOATING' and v.EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) <= 0 and v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) <= 0 then
-                    v.EngineerManager:SetEnabled(false)
-                    v.EngineerManager:Destroy()
-                    v.FactoryManager:SetEnabled(false)
-                    v.FactoryManager:Destroy()
-                    v.PlatoonFormManager:SetEnabled(false)
-                    v.PlatoonFormManager:Destroy()
+                    if v.EngineerManager then
+                        v.EngineerManager:SetEnabled(false)
+                        v.EngineerManager:Destroy()
+                    end
+                    if v.FactoryManager then
+                        v.FactoryManager:SetEnabled(false)
+                        v.FactoryManager:Destroy()
+                    end
+                    if v.PlatoonFormManager then
+                        v.PlatoonFormManager:SetEnabled(false)
+                        v.PlatoonFormManager:Destroy()
+                    end
                     if v.StrategyManager then
                         v.StrategyManager:SetEnabled(false)
                         v.StrategyManager:Destroy()
@@ -2968,7 +2974,8 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 --RNGLOG('Run TacticalThreatAnalysisRNG')
                 self:ForkThread(IntelManagerRNG.TacticalThreatAnalysisRNG, self)
-                im:ForkThread(im.CheckZoneStrikePotential, 'AirAntiSurface', 2000, 20)
+                im:ForkThread(im.CheckStrikePotential, 'AirAntiSurface', 2000, 20)
+                im:ForkThread(im.CheckStrikePotential, 'DefensiveAntiSurface')
             end
             self:CalculateMassMarkersRNG()
             local enemyCount = 0

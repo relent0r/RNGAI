@@ -16,7 +16,7 @@ local MapIntelGridSize = 32
 -- pre-compute categories for performance
 local CategoriesStructuresNotMex = categories.STRUCTURE - categories.TECH1 - categories.WALL - categories.MASSEXTRACTION
 local CategoriesEnergy = categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL)
-local CategoriesDefense = categories.DEFENSE * (categories.TECH2 + categories.TECH3)
+local CategoriesDefense = categories.DEFENSE * categories.STRUCTURE - categories.WALL - categories.SILO
 local CategoriesStrategic = categories.STRATEGIC * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL)
 local CategoriesIntelligence = categories.INTELLIGENCE * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL)
 local CategoriesFactory = categories.FACTORY * (categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY - categories.EXPERIMENTAL - categories.CRABEGG - categories.CARRIER
@@ -945,7 +945,7 @@ IntelManager = Class {
         return false, false
     end,
 
-    CheckZoneStrikePotential = function(self, type, desiredStrikeDamage, threatMax)
+    CheckStrikePotential = function(self, type, desiredStrikeDamage, threatMax)
         local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = RUtils.GetMOARadii()
         local Zones = {
             'Land',
@@ -968,11 +968,34 @@ IntelManager = Class {
             elseif self.Brain.BrainIntel.SelfThreat.AirNow * 1.5 > self.Brain.EnemyIntel.EnemyThreatCurrent.Air then
                 minThreatRisk = 25
             end
+        elseif type == 'DefensiveAntiSurface' then
+            local defensiveUnitsFound = false
+            for k, v in self.Brain.EnemyIntel.DirectorData.Defense do
+                if v.Object and not v.Object.Dead then
+                    RNGLOG('Found Defensive unit in directordata defense table')
+                    if v.Land > 0 then
+                        local gridXID, gridYID = self:GetIntelGrid(v.IMAP)
+                        self.MapIntelGrid[gridXID][gridYID].DefenseThreat = self.MapIntelGrid[gridXID][gridYID].DefenseThreat + v.Land
+                        if self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked and self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.Land then
+                            defensiveUnitsFound = true
+                            if self.Brain.amanager.Demand.Land.T2.mml < 8 then
+                                RNGLOG('Directordata Increasing mml production count by 2')
+                                self.Brain.amanager.Demand.Land.T2.mml = self.Brain.amanager.Demand.Land.T2.mml + 2
+                            end
+                        end
+                    end
+                end
+            end
+            if not defensiveUnitsFound then
+                self.Brain.amanager.Demand.Land.T2.mml = 0
+            end
+            RNGLOG('Directordata current mml production count '..self.Brain.amanager.Demand.Land.T2.mml)
+            
         end
         RNGLOG('CheckStrikPotential')
         RNGLOG('ThreatRisk is '..minThreatRisk)
         local abortZone = true
-        if minThreatRisk > 0 then
+        if type == 'AirAntiSurface' and minThreatRisk > 0 then
             for k, v in Zones do
                 for k1, v1 in self.Brain.Zones[v].zones do
                     if minimumExtractorTier >= 2 then
@@ -1491,6 +1514,7 @@ CreateIntelGrid = function(aiBrain)
             intelGrid[x][z].Perimeter = false
             intelGrid[x][z].IntelCoverage = false
             intelGrid[x][z].LandThreat = 0
+            intelGrid[x][z].DefenseThreat = 0
             intelGrid[x][z].AirThreat = 0
             intelGrid[x][z].ACUIndexes = { }
             intelGrid[x][z].ACUThreat = 0
@@ -1852,7 +1876,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
             --LOG('Firebase Detected')
             --LOG('Firebase Table '..repr(self.EnemyIntel.EnemyFireBaseTable))
         end
-        aiBrain.EnemyIntel.DirectorData.Defense = defensiveUnits
+        
     end
 
     if next(aiBrain.EnemyIntel.TML) then
@@ -1883,6 +1907,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
     aiBrain.EnemyIntel.DirectorData.Intel = intelUnits
     aiBrain.EnemyIntel.DirectorData.Factory = factoryUnits
     aiBrain.EnemyIntel.DirectorData.Energy = energyUnits
+    aiBrain.EnemyIntel.DirectorData.Defense = defensiveUnits
 
     --RNGLOG("Finished analysis for: " .. aiBrain.Nickname)
     local finishedAnalysisAt = GetSystemTimeSecondsOnlyForProfileUse()
