@@ -970,22 +970,31 @@ IntelManager = Class {
             end
         elseif type == 'DefensiveAntiSurface' then
             local defensiveUnitsFound = false
-            for k, v in self.Brain.EnemyIntel.DirectorData.Defense do
-                if v.Object and not v.Object.Dead then
-                    RNGLOG('Found Defensive unit in directordata defense table')
-                    if v.Land > 0 then
-                        local gridXID, gridYID = self:GetIntelGrid(v.IMAP)
-                        self.MapIntelGrid[gridXID][gridYID].DefenseThreat = self.MapIntelGrid[gridXID][gridYID].DefenseThreat + v.Land
-                        if self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked and self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.Land then
-                            defensiveUnitsFound = true
-                            if self.Brain.amanager.Demand.Land.T2.mml < 8 then
-                                RNGLOG('Directordata Increasing mml production count by 2')
-                                self.Brain.amanager.Demand.Land.T2.mml = self.Brain.amanager.Demand.Land.T2.mml + 2
+            local defensiveUnitThreat = 0
+            if next(self.Brain.EnemyIntel.DirectorData.Defense) then
+                for k, v in self.Brain.EnemyIntel.DirectorData.Defense do
+                    if v.Object and not v.Object.Dead then
+                        RNGLOG('Found Defensive unit in directordata defense table')
+                        if v.Land > 0 then
+                            local gridXID, gridYID = self:GetIntelGrid(v.IMAP)
+                            self.MapIntelGrid[gridXID][gridYID].DefenseThreat = self.MapIntelGrid[gridXID][gridYID].DefenseThreat + v.Land
+                            if self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked and self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.Land then
+                                defensiveUnitsFound = true
+                                defensiveUnitThreat = defensiveUnitThreat + v.Land
+                                
                             end
                         end
                     end
                 end
             end
+            if defensiveUnitsFound and defensiveUnitThreat > 0 then
+                local numberRequired = math.ceil(defensiveUnitThreat / 6)
+                if self.Brain.amanager.Demand.Land.T2.mml < numberRequired then
+                    self.Brain.amanager.Demand.Land.T2.mml = numberRequired
+                    RNGLOG('Directordata Increasing mml production count by '..numberRequired)
+                end
+            end
+
             if not defensiveUnitsFound then
                 self.Brain.amanager.Demand.Land.T2.mml = 0
             end
@@ -1908,6 +1917,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
     aiBrain.EnemyIntel.DirectorData.Factory = factoryUnits
     aiBrain.EnemyIntel.DirectorData.Energy = energyUnits
     aiBrain.EnemyIntel.DirectorData.Defense = defensiveUnits
+    aiBrain.EnemyIntel.DirectorData.DefenseCluster = firebaseaggregationTable
 
     --RNGLOG("Finished analysis for: " .. aiBrain.Nickname)
     local finishedAnalysisAt = GetSystemTimeSecondsOnlyForProfileUse()
