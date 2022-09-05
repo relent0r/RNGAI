@@ -1881,6 +1881,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
             end
         end
         --LOG('firebaseaggregationTable '..repr(firebaseaggregationTable))
+        aiBrain.EnemyIntel.DirectorData.DefenseCluster = firebaseaggregationTable
         if aiBrain.EnemyIntel.EnemyFireBaseDetected then
             --LOG('Firebase Detected')
             --LOG('Firebase Table '..repr(self.EnemyIntel.EnemyFireBaseTable))
@@ -1917,7 +1918,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
     aiBrain.EnemyIntel.DirectorData.Factory = factoryUnits
     aiBrain.EnemyIntel.DirectorData.Energy = energyUnits
     aiBrain.EnemyIntel.DirectorData.Defense = defensiveUnits
-    aiBrain.EnemyIntel.DirectorData.DefenseCluster = firebaseaggregationTable
+    
 
     --RNGLOG("Finished analysis for: " .. aiBrain.Nickname)
     local finishedAnalysisAt = GetSystemTimeSecondsOnlyForProfileUse()

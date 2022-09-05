@@ -7264,6 +7264,50 @@ Platoon = Class(RNGAIPlatoonClass) {
     
     DistressResponseAIRNG = function(self)
         local aiBrain = self:GetBrain()
+        local function VariableKite(platoon,unit,target)
+            local function KiteDist(pos1,pos2,distance)
+                local vec={}
+                local dist=VDist3(pos1,pos2)
+                for i,k in pos2 do
+                    if type(k)~='number' then continue end
+                    vec[i]=k+distance/dist*(pos1[i]-k)
+                end
+                return vec
+            end
+            local function CheckRetreat(pos1,pos2,target)
+                local vel = {}
+                vel[1], vel[2], vel[3]=target:GetVelocity()
+                local dotp=0
+                for i,k in pos2 do
+                    if type(k)~='number' then continue end
+                    dotp=dotp+(pos1[i]-k)*vel[i]
+                end
+                return dotp<0
+            end
+            if target.Dead then return end
+            if unit.Dead then return end
+                
+            local pos=unit:GetPosition()
+            local tpos=target:GetPosition()
+            local dest
+            local mod=3
+            if CheckRetreat(pos,tpos,target) then
+                mod=8
+            end
+            if unit.MaxWeaponRange then
+                dest=KiteDist(pos,tpos,unit.MaxWeaponRange-math.random(1,3)-mod)
+            else
+                dest=KiteDist(pos,tpos,self.MaxWeaponRange+5-math.random(1,3)-mod)
+            end
+            if VDist3Sq(pos,dest)>6 then
+                IssueMove({unit},dest)
+                coroutine.yield(2)
+                return mod
+            else
+                coroutine.yield(2)
+                return mod
+            end
+        end
         if not self.MovementLayer then
             AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         end
@@ -7324,51 +7368,51 @@ Platoon = Class(RNGAIPlatoonClass) {
                             -- Continue to position until the distress call wanes
                            --RNGLOG('Start platoon response--LOGic')
                             repeat
-                               --RNGLOG('Start platoon response loop')
+                               RNGLOG('Start platoon response loop')
                                 moveLocation = distressLocation
                                 self:Stop()
                                 self:SetPlatoonFormationOverride('NoFormation')
-                                local cmd = self:MoveToLocation(distressLocation, false)
-                                coroutine.yield(20)
-                                --RNGLOG('Moving to distressLocation for platoon at '..repr(GetPlatoonPosition(self)))
-                                repeat
-                                   --RNGLOG('Start distressLocation movement loop')
-                                    coroutine.yield(reactionTime)
-                                    platoonPos = GetPlatoonPosition(self)
-                                    if not PlatoonExists(aiBrain, self) then
-                                        return
-                                    end
-                                    if VDist2Sq(platoonPos[1], platoonPos[3], distressLocation[1], distressLocation[3]) < 900 then
-                                       --RNGLOG('Closer than 30 to distress location for platoon at '..repr(GetPlatoonPosition(self)))
-                                        break
-                                    end
-                                   --RNGLOG('End distressLocation movement loop')
-                                until not self:IsCommandsActive(cmd) or GetThreatAtPosition(aiBrain, moveLocation, 0, true, threatType) <= threatThreshold
+                                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), distressLocation, 10 , 250)
+                                if path then
+                                    self:PlatoonMoveWithMicro(aiBrain, path, false, false)
+                                end
                                --RNGLOG('Initial Distress Response Loop finished')
                                 local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, distressLocation, 'Attack', 80, categories.ALLUNITS, atkPri, false)
-                                local targetPos
                                 if target or acuInRange then
                                    --RNGLOG('Target or acu found in distress location 60 range, moving to attack')
                                     -- Should we just suicide into whatever it is or threat check and decide?
                                     if not target and acuInRange then
-                                        targetPos = acuUnit:GetPosition()
                                         target = acuUnit
-                                    else
-                                        targetPos = target:GetPosition()
                                     end
-                                else
-                                   --RNGLOG('No target found in distressLocation radius of 80 for platoon at '..repr(GetPlatoonPosition(self)))
-                                   --RNGLOG('Total threat detected was '..totalThreat)
                                 end
                                 if target then
-                                   --RNGLOG('Target or acu found, moving to attack for platoon at '..repr(GetPlatoonPosition(self)))
                                     while PlatoonExists(aiBrain, self) do
-                                        self:Stop()
-                                        self:SetPlatoonFormationOverride('NoFormation')
-                                        self:AggressiveMoveToLocation(targetPos)
-                                        coroutine.yield(reactionTime)
-                                        if not target or target.Dead then
-                                           --RNGLOG('Lost target for platoon at '..repr(GetPlatoonPosition(self)))
+                                        local retreatTrigger
+                                        local retreatTimeout = 0
+                                        if target and not target.Dead then
+                                            local targetPosition = target:GetPosition()
+                                            local attackSquad = self:GetSquadUnits('Attack')
+                                            local microCap = 50
+                                            for _, unit in attackSquad do
+                                                microCap = microCap - 1
+                                                if microCap <= 0 then break end
+                                                if unit.Dead then continue end
+                                                if not unit.MaxWeaponRange then
+                                                    continue
+                                                end
+                                                IssueClearCommands({unit})
+                                                retreatTrigger = VariableKite(self,unit,target)
+                                            end
+                                        else
+                                            self:MoveToLocation(distressLocation, false)
+                                            break
+                                        end
+                                        if retreatTrigger > 5 then
+                                            retreatTimeout = retreatTimeout + 1
+                                        end
+                                        coroutine.yield(15)
+                                        if retreatTimeout > 3 then
+                                            --RNGLOG('platoon stopped chasing unit')
                                             break
                                         end
                                     end
