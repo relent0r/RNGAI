@@ -1015,7 +1015,6 @@ AIBrain = Class(RNGAIBrainClass) {
             AllyExtractor = 0,
             AllyLandThreat = 0,
             AllyAirThreat = 0,
-            BaseThreatCaution = false,
             AntiAirNow = 0,
             AirNow = 0,
             LandNow = 0,
@@ -3346,7 +3345,7 @@ AIBrain = Class(RNGAIBrainClass) {
             'AntiAir',
             'Naval',
             'StructuresNotMex',
-            --'AntiSurface'
+            'AntiSurface'
         }
         -- Get threats for each threat type listed on the threatTypes table. Full map scan.
         for _, t in threatTypes do
@@ -3383,6 +3382,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             --RNGLOG('* AI-RNG: Pre Sorted Potential Valid Threat Locations :'..repr(phaseTwoThreats))
+            local currentGameTime = GetGameTimeSeconds()
             for _, threat in phaseTwoThreats do
                 for q, pos in enemyStarts do
                     --RNGLOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]))
@@ -3390,63 +3390,11 @@ AIBrain = Class(RNGAIBrainClass) {
                         threat.EnemyBaseRadius = true
                     end
                 end
-            end
-            --[[for Index_1, value_1 in phaseTwoThreats do
-                for Index_2, value_2 in phaseTwoThreats do
-                    -- no need to check against self
-                    if Index_1 == Index_2 then 
-                        continue
-                    end
-                    -- check if we have the same position
-                    --RNGLOG('* AI-RNG: checking '..repr(value_1.Position)..' == '..repr(value_2.Position))
-                    if value_1.Position[1] == value_2.Position[1] and value_1.Position[2] == value_2.Position[2] then
-                        --RNGLOG('* AI-RNG: eual position '..repr(value_1.Position)..' == '..repr(value_2.Position))
-                        if value_1.EnemyBaseRadius == false then
-                            --RNGLOG('* AI-RNG: deleating '..repr(value_1))
-                            phaseTwoThreats[Index_1] = nil
-                            break
-                        elseif value_2.EnemyBaseRadius == false then
-                            --RNGLOG('* AI-RNG: deleating '..repr(value_2))
-                            phaseTwoThreats[Index_2] = nil
-                            break
-                        else
-                            --RNGLOG('* AI-RNG: Both entires have true, deleting nothing')
-                        end
-                    end
-                end
-            end]]
-            --RNGLOG('* AI-RNG: second table pass :'..repr(potentialThreats))
-            local currentGameTime = GetGameTimeSeconds()
-            for _, threat in phaseTwoThreats do
                 threat.InsertTime = currentGameTime
                 RNGINSERT(self.EnemyIntel.EnemyThreatLocations, threat)
             end
+            --RNGLOG('* AI-RNG: second table pass :'..repr(potentialThreats))
             --RNGLOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
-        end
-        coroutine.yield(2)
-
-        local landThreatAroundBase = 0
-        --RNGLOG(repr(self.EnemyIntel.EnemyThreatLocations))
-        if next(self.EnemyIntel.EnemyThreatLocations) then
-            for k, threat in self.EnemyIntel.EnemyThreatLocations do
-                if threat.ThreatType == 'Land' then
-                    local threatDistance = VDist2Sq(startX, startZ, threat.Position[1], threat.Position[3])
-                    if threatDistance < 32400 then
-                        landThreatAroundBase = landThreatAroundBase + threat.Threat
-                    end
-                end
-            end
-            --RNGLOG('Total land threat around base '..landThreatAroundBase)
-            if (gameTime < 900) and (landThreatAroundBase > 30) then
-                --RNGLOG('BaseThreatCaution True')
-                self.BrainIntel.SelfThreat.BaseThreatCaution = true
-            elseif (gameTime > 900) and (landThreatAroundBase > 60) then
-                --RNGLOG('BaseThreatCaution True')
-                self.BrainIntel.SelfThreat.BaseThreatCaution = true
-            else
-                --RNGLOG('BaseThreatCaution False')
-                self.BrainIntel.SelfThreat.BaseThreatCaution = false
-            end
         end
         coroutine.yield(2)
     end,

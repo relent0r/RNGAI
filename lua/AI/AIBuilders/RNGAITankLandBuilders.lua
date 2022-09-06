@@ -1120,6 +1120,7 @@ BuilderGroup {
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             LocationType = 'LocationType',
             TargetSearchPriorities = {
+                categories.STRUCTURE * categories.DEFENSE,
                 categories.EXPERIMENTAL * categories.LAND,
                 categories.STRUCTURE,
                 categories.MOBILE * categories.LAND

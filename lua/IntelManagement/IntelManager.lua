@@ -975,17 +975,37 @@ IntelManager = Class {
                 for k, v in self.Brain.EnemyIntel.DirectorData.Defense do
                     if v.Object and not v.Object.Dead then
                         RNGLOG('Found Defensive unit in directordata defense table')
-                        if v.Land > 0 then
+                        RNGLOG('Table entry '..repr(v))
+                        RNGLOG('Land threat at position '..self.Brain:GetThreatAtPosition(v.IMAP, 0, true, 'Land'))
+                        RNGLOG('AntiSurface threat at position '..self.Brain:GetThreatAtPosition(v.IMAP, 0, true, 'AntiSurface'))
+                        if v.AntiSurface > 0 then
                             local gridXID, gridYID = self:GetIntelGrid(v.IMAP)
-                            self.MapIntelGrid[gridXID][gridYID].DefenseThreat = self.MapIntelGrid[gridXID][gridYID].DefenseThreat + v.Land
+                            self.MapIntelGrid[gridXID][gridYID].DefenseThreat = self.MapIntelGrid[gridXID][gridYID].DefenseThreat + v.AntiSurface
+                            if not self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked then
+                                if AIAttackUtils.CanGraphToRNG(self.Brain.BuilderManagers['MAIN'].Position, self.MapIntelGrid[gridXID][gridYID].Position, 'Land') then
+                                    self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked = true
+                                    self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.Land = true
+                                elseif AIAttackUtils.CanGraphToRNG(self.Brain.BuilderManagers['MAIN'].Position, self.MapIntelGrid[gridXID][gridYID].Position, 'Amphibious') then
+                                    self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked = true
+                                    self.MapIntelGrid[gridXID][gridYID].Graphs.Graphs.MAIN.Amphibious = true
+                                else
+                                    self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked = true
+                                    self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.NoGraph = true
+                                end
+                            end
                             if self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked and self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.Land then
                                 defensiveUnitsFound = true
-                                defensiveUnitThreat = defensiveUnitThreat + v.Land
-                                
+                                defensiveUnitThreat = defensiveUnitThreat + v.AntiSurface
                             end
                         end
                     end
                 end
+            end
+            if defensiveUnitsFound then
+                RNGLOG('directordata defensiveUnitsFound is true')
+            end
+            if defensiveUnitThreat then
+                RNGLOG('defensiveUnitThreat is '..defensiveUnitThreat)
             end
             if defensiveUnitsFound and defensiveUnitThreat > 0 then
                 local numberRequired = math.ceil(defensiveUnitThreat / 6)
@@ -1669,6 +1689,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
 
         local LookupAirThreat = { }
         local LookupLandThreat = { }
+        local LookupAntiSurfaceThreat = { }
 
         -- pre-process all threat to populate lookup tables for anti air and land
         for k, threat in aiBrain.EnemyIntel.EnemyThreatLocations do
@@ -1678,6 +1699,9 @@ TacticalThreatAnalysisRNG = function(aiBrain)
             elseif threat.ThreatType == "Land" then 
                 LookupLandThreat[threat.Position[1]] = LookupLandThreat[threat.Position[1]] or { }
                 LookupLandThreat[threat.Position[1]][threat.Position[3]] = threat.Threat
+            elseif threat.ThreatType == "AntiSurface" then 
+                LookupAntiSurfaceThreat[threat.Position[1]] = LookupAntiSurfaceThreat[threat.Position[1]] or { }
+                LookupAntiSurfaceThreat[threat.Position[1]][threat.Position[3]] = threat.Threat
             end
         end
 
@@ -1713,7 +1737,8 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
                                 IMAP = threat.Position, 
                                 Air = LookupAirThreat[threat.Position[1]][threat.Position[3]] or 0, 
-                                Land = LookupLandThreat[threat.Position[1]][threat.Position[3]] or 0 
+                                Land = LookupLandThreat[threat.Position[1]][threat.Position[3]] or 0,
+                                AntiSurface = LookupAntiSurfaceThreat[threat.Position[1]][threat.Position[3]] or 0
                             })
                         elseif EntityCategoryContains( CategoriesDefense, unit) then
                             --RNGLOG('Inserting Enemy Defensive Structure '..unit.UnitId)
@@ -1726,7 +1751,8 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
                                 IMAP = threat.Position, 
                                 Air = LookupAirThreat[threat.Position[1]][threat.Position[3]] or 0, 
-                                Land = LookupLandThreat[threat.Position[1]][threat.Position[3]] or 0 
+                                Land = LookupLandThreat[threat.Position[1]][threat.Position[3]] or 0,
+                                AntiSurface = LookupAntiSurfaceThreat[threat.Position[1]][threat.Position[3]] or 0
                             })
                         elseif EntityCategoryContains( CategoriesStrategic, unit) then
                             --RNGLOG('Inserting Enemy Strategic Structure '..unit.UnitId)
@@ -1738,7 +1764,8 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
                                 IMAP = threat.Position, 
                                 Air = LookupAirThreat[threat.Position[1]][threat.Position[3]] or 0, 
-                                Land = LookupLandThreat[threat.Position[1]][threat.Position[3]] or 0 
+                                Land = LookupLandThreat[threat.Position[1]][threat.Position[3]] or 0,
+                                AntiSurface = LookupAntiSurfaceThreat[threat.Position[1]][threat.Position[3]] or 0
                             })
                         elseif EntityCategoryContains( CategoriesIntelligence, unit) then
                             --RNGLOG('Inserting Enemy Intel Structure '..unit.UnitId)
@@ -1750,7 +1777,8 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
                                 IMAP = threat.Position, 
                                 Air = LookupAirThreat[threat.Position[1]][threat.Position[3]] or 0, 
-                                Land = LookupLandThreat[threat.Position[1]][threat.Position[3]] or 0 
+                                Land = LookupLandThreat[threat.Position[1]][threat.Position[3]] or 0,
+                                AntiSurface = LookupAntiSurfaceThreat[threat.Position[1]][threat.Position[3]] or 0
                             })
                         elseif EntityCategoryContains( CategoriesFactory, unit) then
                             --RNGLOG('Inserting Enemy Intel Structure '..unit.UnitId)
@@ -1762,7 +1790,8 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
                                 IMAP = threat.Position, 
                                 Air = LookupAirThreat[threat.Position[1]][threat.Position[3]] or 0, 
-                                Land = LookupLandThreat[threat.Position[1]][threat.Position[3]] or 0 
+                                Land = LookupLandThreat[threat.Position[1]][threat.Position[3]] or 0,
+                                AntiSurface = LookupAntiSurfaceThreat[threat.Position[1]][threat.Position[3]] or 0
                             })
                         end
                     end
@@ -1784,6 +1813,8 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                     unit.Air = threat.Threat
                 elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'Land' then
                     unit.Land = threat.Threat
+                elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'AntiSurface' then
+                    unit.AntiSurface = threat.Threat
                 elseif table.equal(unit.IMAP,threat.Position) and threat.ThreatType == 'StructuresNotMex' then
                     if ALLBPS[unit.Object.UnitId].Defense.SurfaceThreatLevel > 0 then
                         threat.LandDefStructureCount = threat.LandDefStructureCount + 1
