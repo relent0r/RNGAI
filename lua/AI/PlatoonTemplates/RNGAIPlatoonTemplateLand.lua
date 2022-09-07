@@ -6,6 +6,24 @@
 ]]
 
 PlatoonTemplate {
+    Name = 'InitialBuildQueueRNG',
+    FactionSquads = {
+        UEF = {
+            { 'uel0105', 1, 1, 'support', 'None' }
+        },
+        Aeon = {
+            { 'ual0105', 1, 1, 'support', 'None' }
+        },
+        Cybran = {
+            { 'url0105', 1, 1, 'support', 'None' }
+        },
+        Seraphim = {
+            { 'xsl0105', 1, 1, 'support', 'None' }
+        },
+    }
+}
+
+PlatoonTemplate {
     Name = 'RNGAI T1LandScoutForm',
     Plan = 'ScoutingAIRNG',
     GlobalSquads = {

@@ -72,6 +72,17 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Small',
     BuildersType = 'FactoryBuilder',
     Builder {
+        BuilderName = 'RNGAI Initial Queue Small',
+        PlatoonTemplate = 'InitialBuildQueueRNG',
+        Priority = 820, -- After Second Engie Group
+        BuilderConditions = {
+            { UCBC, 'LessThanGameTimeSecondsRNG', { 120 } }, -- don't build after 6 minutes
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    --[[
+    Builder {
         BuilderName = 'RNGAI Factory Initial Queue 10km Small',
         PlatoonTemplate = 'RNGAIT1InitialAttackBuild10k',
         Priority = 820, -- After Second Engie Group
@@ -92,7 +103,7 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Small',
         PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
@@ -126,6 +137,17 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Large',
     BuildersType = 'FactoryBuilder',
     Builder {
+        BuilderName = 'RNGAI Initial Queue Large',
+        PlatoonTemplate = 'InitialBuildQueueRNG',
+        Priority = 820, -- After Second Engie Group
+        BuilderConditions = {
+            { UCBC, 'LessThanGameTimeSecondsRNG', { 120 } }, -- don't build after 6 minutes
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    --[[]
+    Builder {
         BuilderName = 'RNGAI Factory Initial Queue 20km',
         PlatoonTemplate = 'RNGAIT1InitialAttackBuild20k',
         Priority = 820, -- After Second Engie Group
@@ -146,7 +168,7 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Large',
         PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
