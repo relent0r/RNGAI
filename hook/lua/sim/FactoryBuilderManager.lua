@@ -518,7 +518,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
 
     GetFactoryTemplate = function(self, templateName, factory)
         if not self.Brain.RNG then
-            return RNGFactoryBuilderManager.GetFactoryTemplate(self, self, templateName, factory)
+            return RNGFactoryBuilderManager.GetFactoryTemplate(self, templateName, factory)
         end
         local template
         if templateName == 'InitialBuildQueueRNG' then
