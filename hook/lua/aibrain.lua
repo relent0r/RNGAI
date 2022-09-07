@@ -1199,6 +1199,7 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Current Ally Extractor Count :'..self.BrainIntel.SelfThreat.AllyExtractorCount)
             RNGLOG('Current Extractor share per team is '..(self.BrainIntel.SelfThreat.MassMarker / 2))
             RNGLOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
+            RNGLOG('Current mass share per player '..self.BrainIntel.MassSharePerPlayer)
             RNGLOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
             RNGLOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
             RNGLOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
