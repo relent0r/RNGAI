@@ -8216,6 +8216,7 @@ Platoon = Class(RNGAIPlatoonClass) {
 
     TMLAIRNG = function(self)
         local aiBrain = self:GetBrain()
+        local missileTerrainCallbackRNG = import('/mods/RNGAI/lua/AI/RNGEventCallbacks.lua').MissileCallbackRNG
         local platoonUnits
         local enemyShield = 0
         local targetHealth
@@ -8246,6 +8247,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                 if not tml or tml.Dead or tml:BeenDestroyed() then
                     self:PlatoonDisbandNoAssign()
                     return
+                end
+                if not tml.terraincallbackset then
+                    tml:AddMissileImpactTerrainCallback(missileTerrainCallbackRNG)
+                    tml.terraincallbackset = true
                 end
                 tml:SetAutoMode(true)
                 IssueClearCommands({tml})
@@ -8351,9 +8356,19 @@ Platoon = Class(RNGAIPlatoonClass) {
                                         if missileCount > 0 and VDist2Sq(tmlPosition[1], tmlPosition[3], targetPosition[1], targetPosition[3]) < tmlMaxRange * tmlMaxRange then
                                             if (missileCount >= missilesRequired) and (enemyTmdCount < 1) and (shieldMissilesRequired < 1) and missilesRequired == 1 then
                                                 --RNGLOG('Only 1 missile required')
+                                                if tml.TargetBlackList then
+                                                    if tml.TargetBlackList[targetPosition[1]][targetPosition[3]] then
+                                                        continue
+                                                    end
+                                                end
                                                 RNGINSERT(inRangeTmlLaunchers, tml)
                                                 break
                                             else
+                                                if tml.TargetBlackList then
+                                                    if tml.TargetBlackList[targetPosition[1]][targetPosition[3]] then
+                                                        continue
+                                                    end
+                                                end
                                                 RNGINSERT(inRangeTmlLaunchers, tml)
                                                 local readyTML = RNGGETN(inRangeTmlLaunchers)
                                                 if (readyTML >= missilesRequired) and (readyTML > enemyTmdCount + shieldMissilesRequired) then
