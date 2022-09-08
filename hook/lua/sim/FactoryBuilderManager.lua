@@ -248,246 +248,225 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
     GenerateInitialBO = function(self, factory)
         RNGLOG('GenerateInitialBO')
         local faction = self:GetFactoryFaction(factory)
-        local queue = {}
+        local queue = {
+            'T1BuildEngineer',
+            'T1BuildEngineer',
+        }
         if faction then
             local mapSizeX, mapSizeZ = GetMapSize()
             RNGLOG('Map Size is X '..mapSizeX..' Z '..mapSizeZ)
+            local OwnIndex = ArmyBrains[self.Brain:GetArmyIndex()].Nickname
+            local EnemyIndex = ArmyBrains[self.Brain:GetCurrentEnemy():GetArmyIndex()].Nickname
             if mapSizeX >= 4000 and mapSizeZ >= 4000 then
-                if faction == 'SERAPHIM' then
-                    queue = {
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFTank',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandArtillery',
-                        'T1LandAA',
-                        'T1LandScout',
-                        'T1LandScout',
-                        'T1LandScout',
-                    }
+                --RNGLOG('20 KM Map Check true')
+                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                    for i=1, 4 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    if faction == 'SERAPHIM' then
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    else
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    end
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
                 else
-                    queue = {
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFBot',
-                        'T1LandScout',
-                        'T1LandDFBot',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandArtillery',
-                        'T1LandAA',
-                        'T1LandScout',
-                        'T1LandScout',
-                        'T1LandScout',
-                    }
+                    for i=1, 6 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    table.insert(queue, 'T1LandScout')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
                 end
+                table.insert(queue, 'T1LandScout')
+                table.insert(queue, 'T1LandScout')
             elseif mapSizeX >= 2000 and mapSizeZ >= 2000 then
-                if faction == 'SERAPHIM' then
-                    queue = {
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFTank',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandArtillery',
-                        'T1LandAA',
-                        'T1LandScout',
-                        'T1LandScout',
-                        'T1LandScout',
-                    }
+                --RNGLOG('20 KM Map Check true')
+                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                    for i=1, 4 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    if faction == 'SERAPHIM' then
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    else
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    end
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
                 else
-                    queue = {
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFBot',
-                        'T1LandScout',
-                        'T1LandDFBot',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandArtillery',
-                        'T1LandAA',
-                        'T1LandScout',
-                        'T1LandScout',
-                        'T1LandScout',
-                    }
+                    for i=1, 6 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    table.insert(queue, 'T1LandScout')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
+                    table.insert(queue, 'T1LandAA')
                 end
+                table.insert(queue, 'T1LandScout')
+                table.insert(queue, 'T1LandScout')
             elseif mapSizeX >= 1000 and mapSizeZ >= 1000 then
                 --RNGLOG('20 KM Map Check true')
-                if faction == 'SERAPHIM' then
-                    queue = {
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFTank',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandArtillery',
-                        'T1LandAA',
-                        'T1LandScout',
-                        'T1LandScout',
-                        'T1LandScout',
-                    }
+                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                    for i=1, 2 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    if faction == 'SERAPHIM' then
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    else
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    end
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
                 else
-                    queue = {
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFBot',
-                        'T1LandScout',
-                        'T1LandDFBot',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandArtillery',
-                        'T1LandAA',
-                        'T1LandScout',
-                        'T1LandScout',
-                        'T1LandScout',
-                    }
+                    for i=1, 4 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    table.insert(queue, 'T1LandScout')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
                 end
+                table.insert(queue, 'T1LandScout')
+                table.insert(queue, 'T1LandScout')
             elseif mapSizeX >= 500 and mapSizeZ >= 500 then
                 --RNGLOG('10 KM Map Check true')
-                if faction == 'SERAPHIM' then
-                    queue = {
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFTank',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandArtillery',
-                        'T1LandAA',
-                        'T1LandScout',
-                        'T1LandScout',
-                        'T1LandScout',
-                    }
+                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                    for i=1, 1 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    if faction == 'SERAPHIM' then
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    else
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    end
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
+                    table.insert(queue, 'T1LandScout')
                 else
-                    queue = {
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFBot',
-                        'T1LandScout',
-                        'T1LandDFBot',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandArtillery',
-                        'T1LandAA',
-                        'T1LandScout',
-                        'T1LandScout',
-                        'T1LandScout',
-                    }
+                    for i=1, 3 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    table.insert(queue, 'T1LandScout')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
+                    table.insert(queue, 'T1LandAA')
                 end
+                table.insert(queue, 'T1LandScout')
+                table.insert(queue, 'T1LandScout')
             elseif mapSizeX >= 200 and mapSizeZ >= 200 then
-                --RNGLOG('5 KM Map Check true')
-                if faction == 'SERAPHIM' then
-                    queue = {
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFTank',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandArtillery',
-                        'T1LandAA',
-                        'T1LandScout',
-                        'T1LandScout',
-                        'T1LandScout',
-                    }
+                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                    for i=1, 1 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    if faction == 'SERAPHIM' then
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    else
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    end
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
+                    table.insert(queue, 'T1LandScout')
                 else
-                    queue = {
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFBot',
-                        'T1LandScout',
-                        'T1LandDFBot',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1LandScout',
-                        'T1LandDFTank',
-                        'T1BuildEngineer',
-                        'T1BuildEngineer',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandDFTank',
-                        'T1LandArtillery',
-                        'T1LandAA',
-                        'T1LandScout',
-                        'T1LandScout',
-                        'T1LandScout',
-                    }
+                    for i=1, 3 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    table.insert(queue, 'T1LandScout')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
+                    table.insert(queue, 'T1LandAA')
                 end
+                table.insert(queue, 'T1LandScout')
+                table.insert(queue, 'T1LandScout')
             else
                 queue = {
                     'T1BuildEngineer',
