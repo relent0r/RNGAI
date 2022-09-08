@@ -8358,6 +8358,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                                 --RNGLOG('Only 1 missile required')
                                                 if tml.TargetBlackList then
                                                     if tml.TargetBlackList[targetPosition[1]][targetPosition[3]] then
+                                                        RNGLOG('TargetPos found in blacklist, skip')
                                                         continue
                                                     end
                                                 end
@@ -8366,6 +8367,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                             else
                                                 if tml.TargetBlackList then
                                                     if tml.TargetBlackList[targetPosition[1]][targetPosition[3]] then
+                                                        RNGLOG('TargetPos found in blacklist, skip')
                                                         continue
                                                     end
                                                 end

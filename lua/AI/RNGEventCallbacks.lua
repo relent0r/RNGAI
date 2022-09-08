@@ -34,7 +34,7 @@ function OnStopBeingCaptured(self, captor)
 end
 
 function MissileCallbackRNG(unit, targetPos, impactPos)
-    if targetPos then
+    if unit and not unit.Dead and targetPos then
         if not unit.TargetBlackList then
             unit.TargetBlackList = {}
         end
