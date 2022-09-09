@@ -50,6 +50,266 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    OnDefeat = function(self)
+        if not self.RNG then
+            return RNGAIBrainClass.OnDefeat(self)
+        end
+        self.Status = 'Defeat'
+
+        import('/lua/SimUtils.lua').UpdateUnitCap(self:GetArmyIndex())
+        import('/lua/SimPing.lua').OnArmyDefeat(self:GetArmyIndex())
+
+        local function KillArmy()
+            local shareOption = ScenarioInfo.Options.Share
+
+            local function KillWalls()
+                -- Kill all walls while the ACU is blowing up
+                local tokill = self:GetListOfUnits(categories.WALL, false)
+                if tokill and not table.empty(tokill) then
+                    for index, unit in tokill do
+                        unit:Kill()
+                    end
+                end
+            end
+
+            if shareOption == 'ShareUntilDeath' then
+                ForkThread(KillWalls)
+            end
+
+            WaitSeconds(10) -- Wait for commander explosion, then transfer units.
+            local selfIndex = self:GetArmyIndex()
+            local shareOption = ScenarioInfo.Options.Share
+            local victoryOption = ScenarioInfo.Options.Victory
+            local BrainCategories = {Enemies = {}, Civilians = {}, Allies = {}}
+
+            -- Used to have units which were transferred to allies noted permanently as belonging to the new player
+            local function TransferOwnershipOfBorrowedUnits(brains)
+                for index, brain in brains do
+                    local units = brain:GetListOfUnits(categories.ALLUNITS, false)
+                    if units and not table.empty(units) then
+                        for _, unit in units do
+                            if unit.oldowner == selfIndex then
+                                unit.oldowner = nil
+                            end
+                        end
+                    end
+                end
+            end
+
+            -- Transfer our units to other brains. Wait in between stops transfer of the same units to multiple armies.
+            local function TransferUnitsToBrain(brains)
+                if not table.empty(brains) then
+                    if shareOption == 'FullShare' then
+                        local indexes = {}
+                        for _, brain in brains do
+                            table.insert(indexes, brain.index)
+                        end
+                        local units = self:GetListOfUnits(categories.ALLUNITS - categories.WALL - categories.COMMAND, false)
+                        TransferUnfinishedUnitsAfterDeath(units, indexes)
+                    end
+
+                    for k, brain in brains do
+                        local units = self:GetListOfUnits(categories.ALLUNITS - categories.WALL - categories.COMMAND, false)
+                        if units and not table.empty(units) then
+                            local givenUnitCount = table.getn(TransferUnitsOwnership(units, brain.index))
+
+                            -- only show message when we actually gift that player some units
+                            if givenUnitCount > 0 then 
+                                Sync.ArmyTransfer = { { from = selfIndex, to = brain.index, reason = "fullshare" } }
+                            end
+
+                            WaitSeconds(1)
+                        end
+                    end
+                end
+            end
+
+            -- Sort the destiniation brains (armies/players) by rating (and if rating does not exist (such as with regular AI's), by score, after players with positive rating)
+            local function TransferUnitsToHighestBrain(brains)
+                if not table.empty(brains) then
+                    local ratings = ScenarioInfo.Options.Ratings
+                    for i, brain in brains do 
+                        if ratings[brain.Nickname] then
+                            brain.rating = ratings[brain.Nickname]
+                        else 
+                            -- if there is no rating, create a fake negative rating based on score
+                            brain.rating = - (1 / brain.score)
+                        end
+                    end
+                    -- sort brains by rating
+                    table.sort(brains, function(a, b) return a.rating > b.rating end)
+                    TransferUnitsToBrain(brains)
+                end
+            end
+
+            -- Transfer units to the player who killed me
+            local function TransferUnitsToKiller()
+                local KillerIndex = 0
+                local units = self:GetListOfUnits(categories.ALLUNITS - categories.WALL - categories.COMMAND, false)
+                if units and not table.empty(units) then
+                    if victoryOption == 'demoralization' then
+                        KillerIndex = ArmyBrains[selfIndex].CommanderKilledBy or selfIndex
+                        TransferUnitsOwnership(units, KillerIndex)
+                    else
+                        KillerIndex = ArmyBrains[selfIndex].LastUnitKilledBy or selfIndex
+                        TransferUnitsOwnership(units, KillerIndex)
+                    end
+                end
+                WaitSeconds(1)
+            end
+
+            -- Return units transferred during the game to me
+            local function ReturnBorrowedUnits()
+                local units = self:GetListOfUnits(categories.ALLUNITS - categories.WALL, false)
+                local borrowed = {}
+                for index, unit in units do
+                    local oldowner = unit.oldowner
+                    if oldowner and oldowner ~= self:GetArmyIndex() and not GetArmyBrain(oldowner):IsDefeated() then
+                        if not borrowed[oldowner] then
+                            borrowed[oldowner] = {}
+                        end
+                        table.insert(borrowed[oldowner], unit)
+                    end
+                end
+
+                for owner, units in borrowed do
+                    TransferUnitsOwnership(units, owner)
+                end
+
+                WaitSeconds(1)
+            end
+
+            -- Return units I gave away to my control. Mainly needed to stop EcoManager mods bypassing all this stuff with auto-give
+            local function GetBackUnits(brains)
+                local given = {}
+                for index, brain in brains do
+                    local units = brain:GetListOfUnits(categories.ALLUNITS - categories.WALL, false)
+                    if units and not table.empty(units) then
+                        for _, unit in units do
+                            if unit.oldowner == selfIndex then -- The unit was built by me
+                                table.insert(given, unit)
+                                unit.oldowner = nil
+                            end
+                        end
+                    end
+                end
+
+                TransferUnitsOwnership(given, selfIndex)
+            end
+
+            -- Sort brains out into mutually exclusive categories
+            for index, brain in ArmyBrains do
+                brain.index = index
+                brain.score = CalculateBrainScore(brain)
+
+                if not brain:IsDefeated() and selfIndex ~= index then
+                    if ArmyIsCivilian(index) then
+                        table.insert(BrainCategories.Civilians, brain)
+                    elseif IsEnemy(selfIndex, brain:GetArmyIndex()) then
+                        table.insert(BrainCategories.Enemies, brain)
+                    else
+                        table.insert(BrainCategories.Allies, brain)
+                    end
+                end
+            end
+
+            local KillSharedUnits = import('/lua/SimUtils.lua').KillSharedUnits
+
+            -- This part determines the share condition
+            if shareOption == 'ShareUntilDeath' then
+                KillSharedUnits(self:GetArmyIndex()) -- Kill things I gave away
+                ReturnBorrowedUnits() -- Give back things I was given by others
+            elseif shareOption == 'FullShare' then
+                TransferUnitsToHighestBrain(BrainCategories.Allies) -- Transfer things to allies, highest score first
+                TransferOwnershipOfBorrowedUnits(BrainCategories.Allies) -- Give stuff away permanently
+            else
+                GetBackUnits(BrainCategories.Allies) -- Get back units I gave away
+                if shareOption == 'CivilianDeserter' then
+                    TransferUnitsToBrain(BrainCategories.Civilians)
+                elseif shareOption == 'TransferToKiller' then
+                    TransferUnitsToKiller()
+                elseif shareOption == 'Defectors' then
+                    TransferUnitsToHighestBrain(BrainCategories.Enemies)
+                else -- Something went wrong in settings. Act like share until death to avoid abuse
+                    WARN('Invalid share condition was used for this game. Defaulting to killing all units')
+                    KillSharedUnits(self:GetArmyIndex()) -- Kill things I gave away
+                    ReturnBorrowedUnits() -- Give back things I was given by other
+                end
+            end
+
+            -- Kill all units left over
+            local tokill = self:GetListOfUnits(categories.ALLUNITS - categories.WALL, false)
+            if tokill and not table.empty(tokill) then
+                for index, unit in tokill do
+                    unit:Kill()
+                end
+            end
+        end
+
+        -- AI
+        if self.BrainType == 'AI' then
+            -- print AI "ilost" text to chat
+            SUtils.AISendChat('enemies', ArmyBrains[self:GetArmyIndex()].Nickname, 'ilost')
+            -- remove PlatoonHandle from all AI units before we kill / transfer the army
+            local units = self:GetListOfUnits(categories.ALLUNITS - categories.WALL, false)
+            if units and not table.empty(units) then
+                for _, unit in units do
+                    if not unit.Dead then
+                        if unit.PlatoonHandle and self:PlatoonExists(unit.PlatoonHandle) then
+                            unit.PlatoonHandle:Stop()
+                            unit.PlatoonHandle:PlatoonDisbandNoAssign()
+                        end
+                        IssueStop({unit})
+                        IssueClearCommands({unit})
+                    end
+                end
+            end
+            -- Stop the AI from executing AI plans
+            self.RepeatExecution = false
+            -- removing AI BrainConditionsMonitor
+            if self.ConditionsMonitor then
+                self.ConditionsMonitor:Destroy()
+            end
+            -- removing AI BuilderManagers
+            if self.BuilderManagers then
+                for k, v in self.BuilderManagers do
+                    if v.EngineerManager then
+                        v.EngineerManager:SetEnabled(false)
+                        v.EngineerManager:Destroy()
+                    end
+                    if k ~= 'FLOATING' then
+                        if v.FactoryManager then
+                            v.FactoryManager:SetEnabled(false)
+                            v.FactoryManager:Destroy()
+                        end
+                        if v.PlatoonFormManager then
+                            v.PlatoonFormManager:SetEnabled(false)
+                            v.PlatoonFormManager:Destroy()
+                        end
+                        if v.StrategyManager then
+                            v.StrategyManager:SetEnabled(false)
+                            v.StrategyManager:Destroy()
+                        end
+                    end
+                    self.BuilderManagers[k].EngineerManager = nil
+                    self.BuilderManagers[k].FactoryManager = nil
+                    self.BuilderManagers[k].PlatoonFormManager = nil
+                    self.BuilderManagers[k].BaseSettings = nil
+                    self.BuilderManagers[k].BuilderHandles = nil
+                    self.BuilderManagers[k].Position = nil
+                end
+            end
+            -- delete the AI pathcache
+            self.PathCache = nil
+        end
+
+        ForkThread(KillArmy)
+
+        if self.Trash then
+            self.Trash:Destroy()
+        end
+    end,
+
     OnSpawnPreBuiltUnits = function(self)
         if not self.RNG then
             return RNGAIBrainClass.OnSpawnPreBuiltUnits(self)
@@ -858,7 +1118,7 @@ AIBrain = Class(RNGAIBrainClass) {
             EcoMultiplier = 1,
             T3ExtractorSpend = false,
             T2ExtractorSpend = false,
-            EcoMassUpgradeTimeout = 280,
+            EcoMassUpgradeTimeout = 180,
             EcoPowerPreemptive = false,
         }
         self.EcoManager.PowerPriorityTable = {
@@ -910,6 +1170,9 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         -- Intel Data
         self.EnemyIntel = {}
+        self.BrainIntel = {}
+        self.TeamsSet = false
+        self.BrainIntel.TeamCount = 0
         self.EnemyIntel.NavalRange = {
             Position = {},
             Range = 0,
@@ -976,7 +1239,6 @@ AIBrain = Class(RNGAIBrainClass) {
             }
         end
 
-        self.BrainIntel = {}
         local selfStartPosX, selfStartPosY = self:GetArmyStartPos()
         self.BrainIntel.StartPos = { selfStartPosX, GetSurfaceHeight(selfStartPosX, selfStartPosY), selfStartPosY }
         self.BrainIntel.MilitaryRange = BaseMilitaryArea
@@ -991,10 +1253,12 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         self.BrainIntel.AllyCount = 0
         self.BrainIntel.AllyStartLocations = {}
+        
         self.BrainIntel.LandPhase = 1
         self.BrainIntel.AirPhase = 1
         self.BrainIntel.NavalPhase = 1
         self.BrainIntel.MassMarker = 0
+        self.BrainIntel.RestrictedMassMarker = 0
         self.BrainIntel.MassSharePerPlayer = 0
         self.BrainIntel.AirAttackMode = false
         self.BrainIntel.SelfThreat = {}
@@ -1198,7 +1462,8 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Current Self Extractor Count :'..self.BrainIntel.SelfThreat.ExtractorCount)
             RNGLOG('Current Ally Extractor Count :'..self.BrainIntel.SelfThreat.AllyExtractorCount)
             RNGLOG('Current Mass Share Per Player Count :'..self.BrainIntel.MassSharePerPlayer)
-            RNGLOG('Current Extractor share per team is '..(self.BrainIntel.SelfThreat.MassMarker / 2))
+            RNGLOG('Team Count '..self.BrainIntel.TeamCount)
+            RNGLOG('Current Extractor share per team is '..(self.BrainIntel.SelfThreat.MassMarker / self.BrainIntel.TeamCount))
             RNGLOG('Current Mass Marker Count :'..self.BrainIntel.SelfThreat.MassMarker)
             RNGLOG('Current mass share per player '..self.BrainIntel.MassSharePerPlayer)
             RNGLOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
@@ -1572,6 +1837,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local MassMarker = {}
         local massMarkerBuildable = 0
         local markerCount = 0
+        local restrictedMarkers = 0
         local graphCheck = false
         local coreMassMarkers = 0
         local massMarkers = GetMarkersRNG()
@@ -1589,9 +1855,14 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     RNGINSERT(self.GraphZones[v.RNGArea].MassMarkers, v)
                     self.GraphZones[v.RNGArea].MassMarkersInZone = self.GraphZones[v.RNGArea].MassMarkersInZone + 1
-                    if VDist2Sq(v.position[1], v.position[3], self.BrainIntel.StartPos[1], self.BrainIntel.StartPos[3]) < 2500 then
+                    local massPointDistance = VDist3Sq(v.position, self.BrainIntel.StartPos)
+                    if massPointDistance < 2500 then
                         coreMassMarkers = coreMassMarkers + 1
                     end
+                    if massPointDistance < BaseRestrictedArea * BaseRestrictedArea then
+                        restrictedMarkers = restrictedMarkers + 1
+                    end
+                    
                 end
                 if CanBuildStructureAt(self, 'ueb1103', v.position) then
                     massMarkerBuildable = massMarkerBuildable + 1
@@ -1611,6 +1882,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if graphCheck then
             self.GraphZones.HasRun = true
             self.EcoManager.CoreMassMarkerCount = coreMassMarkers
+            self.BrainIntel.RestrictedMassMarker = restrictedMarkers
             self.BrainIntel.MassSharePerPlayer = markerCount / (self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount)
         end
         self.BrainIntel.SelfThreat.MassMarker = markerCount
@@ -2138,6 +2410,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local allyCount = 0
         local enemyCount = 0
         local MainPos = self.BuilderManagers.MAIN.Position
+        local teams = {}
         for _, v in ArmyBrains do
             local insertTable = {
                 Enemy = true,
@@ -2167,6 +2440,28 @@ AIBrain = Class(RNGAIBrainClass) {
                 enemyCount = enemyCount + 1
                 insertTable.Team = v.Team
                 RNGINSERT(enemyBrains, v)
+            end
+            if not self.TeamsSet then
+                if not ArmyIsCivilian(v:GetArmyIndex()) then
+                    RNGLOG('Army is not civilian')
+                    local army = ScenarioInfo.ArmySetup['ARMY_' .. v:GetArmyIndex()]
+                    if army.Team ~= 1 then
+                        RNGLOG('Army is team '..army.Team)
+                        teams[army.Team] = true
+                    elseif IsEnemy(selfIndex, v:GetArmyIndex()) then
+                        RNGLOG('Army has no team and is enemy')
+                        if not teams[2] then
+                            RNGLOG('Settings teams index 2 to true')
+                            teams[2] = true
+                        end
+                    elseif IsAlly(selfIndex, v:GetArmyIndex()) then
+                        RNGLOG('Army has no team and is ally')
+                        if not teams[1] then
+                            RNGLOG('Settings teams index 1 to true')
+                            teams[1] = true
+                        end
+                    end
+                end
             end
             local acuPos = {}
             -- Gather economy information of army to guage economy value of the target
@@ -2224,7 +2519,15 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             armyStrengthTable[v:GetArmyIndex()] = insertTable
         end
-        
+        RNGLOG('teams table '..repr(teams))
+        if not self.TeamsSet then
+            for _, v in teams do
+                if v then
+                    self.BrainIntel.TeamCount = self.BrainIntel.TeamCount + 1
+                end
+            end
+            self.TeamsSet = true
+        end
         self.EnemyIntel.EnemyCount = enemyCount
         self.BrainIntel.AllyCount = allyCount
         local allyEnemy = self:GetAllianceEnemyRNG(armyStrengthTable)

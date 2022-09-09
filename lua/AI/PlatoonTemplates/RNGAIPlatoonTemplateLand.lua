@@ -114,7 +114,7 @@ PlatoonTemplate {
     Plan = 'GunshipStrikeAIRNG',    
     GlobalSquads = {
         { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 1, 10, 'attack', 'none' },
-        { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+        { categories.LAND * categories.SCOUT, 0, 1, 'guard', 'none' },
     }
 }
 
@@ -178,7 +178,7 @@ PlatoonTemplate {
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
-          { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+          { categories.LAND * categories.SCOUT, 0, 1, 'guard', 'none' },
           { categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
     },
 }
@@ -193,7 +193,7 @@ PlatoonTemplate {
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
-          { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+          { categories.LAND * categories.SCOUT, 0, 1, 'guard', 'none' },
           { categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
     },
 }
@@ -213,7 +213,7 @@ PlatoonTemplate {
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
-          { categories.LAND * categories.SCOUT, 1, 2, 'Scout', 'none' },
+          { categories.LAND * categories.SCOUT, 1, 2, 'guard', 'none' },
           { categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL, 0, 2, 'Guard', 'none' },
     },
 }
@@ -234,7 +234,7 @@ PlatoonTemplate {
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
           { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
-          { categories.LAND * categories.SCOUT, 0, 1, 'scout', 'none' },
+          { categories.LAND * categories.SCOUT, 0, 1, 'guard', 'none' },
     },
 }
 

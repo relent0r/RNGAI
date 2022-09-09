@@ -39,7 +39,7 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToB
                             if n > 1 then
                                 AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false)
                                 table.remove(bType,n)
-                                return DoHackyLogic(buildingType, builder)
+                                return --DoHackyLogic(buildingType, builder)
                             else
                                 --[[
                                 if n > 1 and not aiBrain:CanBuildStructureAt(whatToBuild, BuildToNormalLocation(position)) then
@@ -56,6 +56,31 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToB
     end 
     RNGLOG('AIBuildBaseTemplateOrderedRNG Unsuccessful build')
     return # unsuccessful build
+end
+
+function TMLStartUpLogic(buildingType, builder)
+    if buildingType == 'T2StrategicMissile' then
+        local unitInstance = false
+
+        builder:ForkThread(function()
+            while true do
+                if not unitInstance then
+                    unitInstance = builder.UnitBeingBuilt
+                end
+                aiBrain = builder:GetAIBrain()
+                if unitInstance then
+                    TriggerFile.CreateUnitStopBeingBuiltTrigger(function(unitBeingBuilt)
+                        local newPlatoon = aiBrain:MakePlatoon('', '')
+                        aiBrain:AssignUnitsToPlatoon(newPlatoon, {unitBeingBuilt}, 'Attack', 'None')
+                        newPlatoon:StopAI()
+                        newPlatoon:ForkAIThread(newPlatoon.TacticalAI)
+                    end, unitInstance)
+                    break
+                end
+                WaitSeconds(1)
+            end
+        end)
+    end
 end
 
 

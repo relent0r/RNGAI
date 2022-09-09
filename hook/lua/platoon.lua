@@ -3966,7 +3966,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                     coroutine.yield(30)
                 end
-                if (closeMarkers > 2 or distantMarkers > 2) and eng.UnitBeingAssist:GetFractionComplete() == 1 then
+                if (closeMarkers + distantMarkers > 2) and eng.UnitBeingAssist:GetFractionComplete() == 1 then
                     if aiBrain.MapSize >=20 then
                         buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 15, true)
                         if buildLocation and whatToBuild then
@@ -8202,7 +8202,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
         end
         if not mergedPlatoon then
-            --RNGLOG('Platoon Merge is creating platoon for '..destinationPlan..' at location '..repr(aiBrain.BuilderManagers[location].Position))
+            RNGLOG('Platoon Merge is creating platoon for '..destinationPlan..' at location '..location..' location position '..repr(aiBrain.BuilderManagers[location].Position))
             mergedPlatoon = aiBrain:MakePlatoon(destinationPlan..'Platoon'..location, destinationPlan)
             mergedPlatoon.PlanName = destinationPlan
             mergedPlatoon.BuilderName = destinationPlan..'Platoon'..location
@@ -8487,8 +8487,7 @@ Platoon = Class(RNGAIPlatoonClass) {
        --('Novax AI starting')
         
         while PlatoonExists(aiBrain, self) do
-            --local merged = self:MergeWithNearbyPlatoonsRNG('SatelliteAIRNG', 80, 50, true, true)
-            self:MergeWithNearbyPlatoonsSorian('SatelliteAIRNG', 50, true)
+            self:MergeNovaxRNG('SatelliteAIRNG', 80)
             local merged = true
             if merged then
                 --RNGLOG('Satellite has merged with new one')
@@ -8523,6 +8522,61 @@ Platoon = Class(RNGAIPlatoonClass) {
             coroutine.yield(100)
             self:Stop()
             --RNGLOG('End of Satellite loop')
+        end
+    end,
+
+    MergeNovaxRNG = function(self, planName, radius)
+        -- check to see we're not near an ally base
+        local aiBrain = self:GetBrain()
+        if not aiBrain then
+            return
+        end
+
+        if self.UsingTransport then
+            return
+        end
+
+        local platPos = self:GetPlatoonPosition()
+        if not platPos then
+            return
+        end
+
+        local radiusSq = radius*radius
+        -- if we're too close to a base, forget it
+        AlliedPlatoons = aiBrain:GetPlatoonsList()
+        local bMergedPlatoons = false
+        for _,aPlat in AlliedPlatoons do
+            if aPlat:GetPlan() != planName then
+                continue
+            end
+            if aPlat == self then
+                continue
+            end
+            local allyPlatPos = aPlat:GetPlatoonPosition()
+            if not allyPlatPos or not aiBrain:PlatoonExists(aPlat) then
+                continue
+            end
+            if VDist2Sq(platPos[1], platPos[3], allyPlatPos[1], allyPlatPos[3]) <= radiusSq then
+                local units = aPlat:GetPlatoonUnits()
+                local validUnits = {}
+                local bValidUnits = false
+                for _,u in units do
+                    if not u.Dead and not u:IsUnitState('Attached') then
+                        table.insert(validUnits, u)
+                        bValidUnits = true
+                    end
+                end
+                if not bValidUnits then
+                    continue
+                end
+                --LOG("*AI DEBUG: Merging platoons " .. self.BuilderName .. ": (" .. platPos[1] .. ", " .. platPos[3] .. ") and " .. aPlat.BuilderName .. ": (" .. allyPlatPos[1] .. ", " .. allyPlatPos[3] .. ")")
+                aiBrain:AssignUnitsToPlatoon(self, validUnits, 'Attack', 'GrowthFormation')
+                bMergedPlatoons = true
+            end
+        end
+        if bMergedPlatoons then
+            self:Stop()
+            self:SetAIPlan(planName)
         end
     end,
 

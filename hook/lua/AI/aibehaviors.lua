@@ -2941,7 +2941,7 @@ CzarBehaviorRNG = function(self)
     local targetUnit, targetBase = FindExperimentalTargetRNG(self)
     local oldTargetUnit = nil
     while not experimental.Dead do
-        if (targetUnit and targetUnit ~= oldTargetUnit) or not self:IsCommandsActive(cmd) then
+        if (targetUnit and not targetUnit.Dead and targetUnit ~= oldTargetUnit) or not self:IsCommandsActive(cmd) then
             if targetUnit and VDist3(targetUnit:GetPosition(), self:GetPlatoonPosition()) > 100 then
                 IssueClearCommands({experimental})
                 coroutine.yield(5)
