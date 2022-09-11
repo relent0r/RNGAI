@@ -1179,6 +1179,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.FrigateRaid = false
         self.EnemyIntel.FrigateRaidMarkers = {}
         self.EnemyIntel.EnemyCount = 0
+        self.EnemyIntel.ClosestEnemyBase = 0
         self.EnemyIntel.ACUEnemyClose = false
         self.EnemyIntel.ACU = {}
         self.EnemyIntel.Phase = 1
@@ -1259,6 +1260,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.MassMarker = 0
         self.BrainIntel.RestrictedMassMarker = 0
         self.BrainIntel.MassSharePerPlayer = 0
+        self.BrainIntel.MassMarkerTeamShare = 0
         self.BrainIntel.AirAttackMode = false
         self.BrainIntel.SelfThreat = {}
         self.BrainIntel.Average = {
@@ -1887,6 +1889,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SelfThreat.MassMarker = markerCount
         self.BrainIntel.SelfThreat.MassMarkerBuildable = massMarkerBuildable
         self.BrainIntel.SelfThreat.MassMarkerBuildableTable = MassMarker
+        if self.BrainIntel.SelfThreat.MassMarker and self.BrainIntel.TeamCount > 0 then
+            self.BrainIntel.SelfThreat.MassMarkerTeamShare = self.BrainIntel.SelfThreat.MassMarker / self.BrainIntel.TeamCount
+        end
         --RNGLOG('self.BrainIntel.SelfThreat.MassMarker '..self.BrainIntel.SelfThreat.MassMarker)
         --RNGLOG('self.BrainIntel.SelfThreat.MassMarkerBuildable '..self.BrainIntel.SelfThreat.MassMarkerBuildable)
     end,
@@ -2187,13 +2192,17 @@ AIBrain = Class(RNGAIBrainClass) {
                             opponentStarts['ARMY_' .. i] = startPos
                             numOpponents = numOpponents + 1
                             -- I would rather use army ndexes for the table keys of the enemyStarts so I can easily reference them in queries. To be pondered.
-                            RNGINSERT(enemyStarts, {Position = startPos, Index = army.ArmyIndex})
+                            local enemyDistance = VDist3Sq(self.BrainIntel.StartPos, startPos)
+                            RNGINSERT(enemyStarts, {Position = startPos, Index = army.ArmyIndex, Distance = enemyDistance })
                             local gridXID, gridYID = im:GetIntelGrid(startPos)
                             if im.MapIntelGrid[gridXID][gridYID].Enabled then
                                 im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 100
                                 --RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
                                 --RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
                                 --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                            end
+                            if self.EnemyIntel.ClosestEnemyBase == 0 or enemyDistance < self.EnemyIntel.ClosestEnemyBase then
+                                self.EnemyIntel.ClosestEnemyBase = enemyDistance
                             end
                         else
                             RNGINSERT(allyTempStarts, {Position = startPos, Index = army.ArmyIndex})
@@ -3304,7 +3313,10 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.EnemyIntel.EnemyCount > 0 then
                 enemyCount = self.EnemyIntel.EnemyCount
             end
-            if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) * 1.3 and (not self.EnemyIntel.ChokeFlag) and self.BrainIntel.SelfThreat.AllyExtractorCount > (self.BrainIntel.SelfThreat.MassMarker / 2) then
+            if enemyCount == 0 then
+                enemyCount = 1
+            end
+            if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) * 1.3 and (not self.EnemyIntel.ChokeFlag) and self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.MassMarkerTeamShare then
                 --RNGLOG('Land Threat Higher, shift ratio to 0.4')
 
                 if not self.RNGEXP then
@@ -3333,7 +3345,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.BrainIntel.SelfThreat.ExtractorCount > self.BrainIntel.MassSharePerPlayer then
                 if self.EconomyUpgradeSpend < 0.35 then
                     --RNGLOG('Increasing EconomyUpgradeSpend to 0.36')
-                    self.EconomyUpgradeSpend = 0.36
+                    self.EconomyUpgradeSpend = 0.40
                 end
             elseif self.EconomyUpgradeSpend > 0.35 then
                 self.EconomyUpgradeSpend = self.EconomyUpgradeSpendDefault
