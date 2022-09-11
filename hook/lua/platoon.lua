@@ -3888,7 +3888,16 @@ Platoon = Class(RNGAIPlatoonClass) {
                     --RNGLOG('CommanderInitializeAIRNG : Build Location '..repr(buildLocation))
                     aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                 else
-                    WARN('No buildLocation or whatToBuild during ACU initialization')
+                    -- This is a backup to avoid a power stall
+                    buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, false, categories.STRUCTURE * categories.FACTORY, 12, true)
+                    if buildLocation and whatToBuild then
+                        --RNGLOG('CommanderInitializeAIRNG : Execute Build Structure with the following data')
+                        --RNGLOG('CommanderInitializeAIRNG : whatToBuild '..whatToBuild)
+                        --RNGLOG('CommanderInitializeAIRNG : Build Location '..repr(buildLocation))
+                        aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                    else
+                        WARN('No buildLocation or whatToBuild during ACU initialization')
+                    end
                 end
             end
         else

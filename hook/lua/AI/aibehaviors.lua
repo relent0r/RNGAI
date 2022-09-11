@@ -92,7 +92,9 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.AirScout = false
     cdr.Scout = false
     cdr.CurrentEnemyThreat = false
+    cdr.CurrentEnemyAirThreat = false
     cdr.CurrentFriendlyThreat = false
+    cdr.CurrentFriendlyAntiAirThreat = false
     cdr.CurrentEnemyInnerCircle = false
     cdr.CurrentFriendlyInnerCircle = false
     cdr.Phase = false
@@ -1260,6 +1262,8 @@ function CDRThreatAssessmentRNG(cdr)
             local friendlyUnits = GetUnitsAroundPoint(aiBrain, UnitCategories, cdr:GetPosition(), 70, 'Ally')
             local enemyUnitThreat = 0
             local enemyUnitThreatInner = 0
+            local enemyAirThreat = 0
+            local friendAntiAirThreat = 0
             local friendlyUnitThreat = 0
             local friendlyUnitThreatInner = 0
             local friendlyThreatConfidenceModifier = 0
@@ -1270,12 +1274,18 @@ function CDRThreatAssessmentRNG(cdr)
                         if EntityCategoryContains(categories.COMMAND, v) then
                             friendlyUnitThreatInner = friendlyUnitThreatInner + v:EnhancementThreatReturn()
                         else
+                            if EntityCategoryContains(categories.ANTIAIR, v) then
+                                friendAntiAirThreat = friendAntiAirThreat + ALLBPS[v.UnitId].Defense.AirThreatLevel
+                            end
                             friendlyUnitThreatInner = friendlyUnitThreatInner + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
                         end
                     else
                         if EntityCategoryContains(categories.COMMAND, v) then
                             friendlyUnitThreat = friendlyUnitThreat + v:EnhancementThreatReturn()
                         else
+                            if EntityCategoryContains(categories.ANTIAIR, v) then
+                                friendAntiAirThreat = friendAntiAirThreat + ALLBPS[v.UnitId].Defense.AirThreatLevel
+                            end
                             friendlyUnitThreat = friendlyUnitThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
                         end
                     end
@@ -1296,6 +1306,9 @@ function CDRThreatAssessmentRNG(cdr)
                             enemyUnitThreatInner = enemyUnitThreatInner + v:EnhancementThreatReturn()
                             enemyACUHealthModifier = enemyACUHealthModifier + (v:GetHealth() / cdr.Health)
                         else
+                            if EntityCategoryContains(categories.AIR, v) then
+                                enemyAirThreat = enemyAirThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                            end
                             enemyUnitThreatInner = enemyUnitThreatInner + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
                         end
                     else
@@ -1308,6 +1321,9 @@ function CDRThreatAssessmentRNG(cdr)
                             enemyACUPresent = true
                             enemyUnitThreat = enemyUnitThreat + v:EnhancementThreatReturn()
                         else
+                            if EntityCategoryContains(categories.AIR, v) then
+                                enemyAirThreat = enemyAirThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                            end
                             enemyUnitThreat = enemyUnitThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
                         end
                     end
@@ -1326,11 +1342,15 @@ function CDRThreatAssessmentRNG(cdr)
             cdr.CurrentFriendlyThreat = friendlyUnitThreat
             cdr.CurrentEnemyInnerCircle = enemyUnitThreatInner
             cdr.CurrentFriendlyInnerCircle = friendlyUnitThreatInner
+            cdr.CurrentEnemyAirThreat = enemyAirThreat
+            cdr.CurrentFriendlyAntiAirThreat = friendAntiAirThreat
            --RNGLOG('Current Enemy Inner Threat '..cdr.CurrentEnemyInnerCircle)
            --RNGLOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
            --RNGLOG('Current Friendly Inner Threat '..cdr.CurrentFriendlyInnerCircle)
            --RNGLOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
            --RNGLOG('Current CDR Confidence '..cdr.Confidence)
+           RNGLOG('Enemy Bomber threat '..cdr.CurrentEnemyAirThreat)
+           RNGLOG('Friendly AA threat '..cdr.CurrentFriendlyAntiAirThreat)
             if enemyACUPresent and not cdr.SuicideMode and enemyUnitThreatInner > 30 and enemyUnitThreatInner > friendlyUnitThreatInner and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
                 --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitInner > friendlyUnitInner')
                 cdr.Caution = true
@@ -1806,6 +1826,12 @@ function CDROverChargeRNG(aiBrain, cdr)
                     cdr.HighThreatUpgradeRequired = true
                 end
                 --RNGLOG('cdr retreating due to low health')
+                return CDRRetreatRNG(aiBrain, cdr)
+            end
+            RNGLOG('in acu combat checking air')
+            RNGLOG('CurrentEnemyAirThreat '..cdr.CurrentEnemyAirThreat..' CurrentFriendlyAntiAirThreat '..cdr.CurrentFriendlyAntiAirThreat..' self brain antiair '..aiBrain.BrainIntel.SelfThreat.AntiAirNow..' EnemyThreatCurrent.AntiAir '..aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir)
+            if cdr.CurrentEnemyAirThreat > 8 and cdr.CurrentEnemyAirThreat > cdr.CurrentFriendlyAntiAirThreat and aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
+                RNGLOG('Enemy has high bomber threat around acu')
                 return CDRRetreatRNG(aiBrain, cdr)
             end
             if (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired)and cdr.Active and not cdr.SuicideMode then

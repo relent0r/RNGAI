@@ -1171,7 +1171,6 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Intel Data
         self.EnemyIntel = {}
         self.BrainIntel = {}
-        self.TeamsSet = false
         self.BrainIntel.TeamCount = 0
         self.EnemyIntel.NavalRange = {
             Position = {},
@@ -2411,122 +2410,141 @@ AIBrain = Class(RNGAIBrainClass) {
         local enemyCount = 0
         local MainPos = self.BuilderManagers.MAIN.Position
         local teams = {}
+        local teamKey = 1
         for _, v in ArmyBrains do
-            local insertTable = {
-                Enemy = true,
-                Strength = 0,
-                Position = false,
-                Distance = false,
-                EconomicThreat = 0,
-                ACUPosition = {},
-                ACULastSpotted = 0,
-                Brain = v,
-                Team = false,
-            }
-            -- Share resources with friends but don't regard their strength
-            if ArmyIsCivilian(v:GetArmyIndex()) then
-                local enemyStructureThreat = self:GetThreatsAroundPosition(MainPos, 16, true, 'Structures', v:GetArmyIndex())
-                --RNGLOG('User Structure threat for index '..v:GetArmyIndex()..' '..repr(enemyStructureThreat))
-                continue
-            elseif IsAlly(selfIndex, v:GetArmyIndex()) then
-                self:SetResourceSharing(true)
-                allyCount = allyCount + 1
-                insertTable.Enemy = false
-                insertTable.Team = v.Team
-            elseif not IsEnemy(selfIndex, v:GetArmyIndex()) then
-                insertTable.Enemy = false
-            end
-            if insertTable.Enemy == true then
-                enemyCount = enemyCount + 1
-                insertTable.Team = v.Team
-                RNGINSERT(enemyBrains, v)
-            end
-            if not self.TeamsSet then
-                if not ArmyIsCivilian(v:GetArmyIndex()) then
+            if v.Status ~= "Defeat" then
+                local insertTable = {
+                    Enemy = true,
+                    Strength = 0,
+                    Position = false,
+                    Distance = false,
+                    EconomicThreat = 0,
+                    ACUPosition = {},
+                    ACULastSpotted = 0,
+                    Brain = v,
+                    Team = false,
+                }
+                local armyIndex = v:GetArmyIndex()
+                -- Share resources with friends but don't regard their strength
+                if ArmyIsCivilian(armyIndex) then
+                    local enemyStructureThreat = self:GetThreatsAroundPosition(MainPos, 16, true, 'Structures', armyIndex)
+                    --RNGLOG('User Structure threat for index '..v:GetArmyIndex()..' '..repr(enemyStructureThreat))
+                    continue
+                elseif IsAlly(selfIndex, armyIndex) then
+                    self:SetResourceSharing(true)
+                    allyCount = allyCount + 1
+                    insertTable.Enemy = false
+                    insertTable.Team = v.Team
+                elseif not IsEnemy(selfIndex, armyIndex) then
+                    insertTable.Enemy = false
+                end
+                if insertTable.Enemy == true then
+                    enemyCount = enemyCount + 1
+                    insertTable.Team = v.Team
+                    RNGINSERT(enemyBrains, v)
+                end
+                if not ArmyIsCivilian(armyIndex) then
                     RNGLOG('Army is not civilian')
-                    local army = ScenarioInfo.ArmySetup['ARMY_' .. v:GetArmyIndex()]
-                    if army.Team ~= 1 then
+                    RNGLOG('ArmySetup '..repr(ScenarioInfo.ArmySetup))
+                    local army
+                    
+                    for c,b in ScenarioInfo.ArmySetup do
+                        if b.ArmyIndex == armyIndex then
+                            army = b
+                        end
+                    end
+                    if army.Team and army.Team ~= 1 then
                         RNGLOG('Army is team '..army.Team)
                         teams[army.Team] = true
-                    elseif IsEnemy(selfIndex, v:GetArmyIndex()) then
+                    elseif IsEnemy(selfIndex, armyIndex) then
                         RNGLOG('Army has no team and is enemy')
-                        if not teams[2] then
+                        if army.Team then
+                            RNGLOG('Team presented is '..army.Team)
+                        end
+                        if not teams[teamKey] then
                             RNGLOG('Settings teams index 2 to true')
-                            teams[2] = true
+                            teams[teamKey] = true
+                            teamKey = teamKey + 1
+                        else
+                            teamKey = teamKey + 1
+                            teams[teamKey] = true
                         end
-                    elseif IsAlly(selfIndex, v:GetArmyIndex()) then
+                    elseif IsAlly(selfIndex, armyIndex) then
                         RNGLOG('Army has no team and is ally')
-                        if not teams[1] then
-                            RNGLOG('Settings teams index 1 to true')
-                            teams[1] = true
+                        if not teams[teamKey] then
+                            RNGLOG('Settings teams index 2 to true')
+                            teams[teamKey] = true
+                            teamKey = teamKey + 1
+                        else
+                            teamKey = teamKey + 1
+                            teams[teamKey] = true
                         end
                     end
                 end
-            end
-            local acuPos = {}
-            -- Gather economy information of army to guage economy value of the target
-            local enemyIndex = v:GetArmyIndex()
-            local startX, startZ = v:GetArmyStartPos()
-            local ecoThreat = 0
 
-            if insertTable.Enemy == false then
-                local ecoStructures = GetUnitsAroundPoint(self, categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSPRODUCTION), {startX, 0 ,startZ}, 120, 'Ally')
-                for _, v in ecoStructures do
-                    local ecoStructThreat = ALLBPS[v.UnitId].Defense.EconomyThreatLevel
-                    --RNGLOG('* AI-RNG: Eco Structure'..ecoStructThreat)
-                    ecoThreat = ecoThreat + ecoStructThreat
-                end
-            else
-                ecoThreat = 1
-            end
-            -- Doesn't exist yet!!. Check if the ACU's last position is known.
-            --RNGLOG('* AI-RNG: Enemy Index is :'..enemyIndex)
-            local acuPos, lastSpotted = RUtils.GetLastACUPosition(self, enemyIndex)
-            --RNGLOG('* AI-RNG: ACU Position is has data'..repr(acuPos))
-            insertTable.ACUPosition = acuPos
-            insertTable.ACULastSpotted = lastSpotted
-            
-            insertTable.EconomicThreat = ecoThreat
-            if insertTable.Enemy then
-                local enemyTotalStrength = 0
-                local highestEnemyThreat = 0
-                local threatPos = {}
-                local enemyStructureThreat = self:GetThreatsAroundPosition(MainPos, 16, true, 'Structures', enemyIndex)
-                for _, threat in enemyStructureThreat do
-                    enemyTotalStrength = enemyTotalStrength + threat[3]
-                    if threat[3] > highestEnemyThreat then
-                        highestEnemyThreat = threat[3]
-                        threatPos = {threat[1],0,threat[2]}
+                local acuPos = {}
+                -- Gather economy information of army to guage economy value of the target
+                local enemyIndex = v:GetArmyIndex()
+                local startX, startZ = v:GetArmyStartPos()
+                local ecoThreat = 0
+
+                if insertTable.Enemy == false then
+                    local ecoStructures = GetUnitsAroundPoint(self, categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSPRODUCTION), {startX, 0 ,startZ}, 120, 'Ally')
+                    for _, v in ecoStructures do
+                        local ecoStructThreat = ALLBPS[v.UnitId].Defense.EconomyThreatLevel
+                        --RNGLOG('* AI-RNG: Eco Structure'..ecoStructThreat)
+                        ecoThreat = ecoThreat + ecoStructThreat
                     end
+                else
+                    ecoThreat = 1
                 end
-                if enemyTotalStrength > 0 then
-                    insertTable.Strength = enemyTotalStrength
-                    insertTable.Position = threatPos
-                end
+                -- Doesn't exist yet!!. Check if the ACU's last position is known.
+                --RNGLOG('* AI-RNG: Enemy Index is :'..enemyIndex)
+                local acuPos, lastSpotted = RUtils.GetLastACUPosition(self, enemyIndex)
+                --RNGLOG('* AI-RNG: ACU Position is has data'..repr(acuPos))
+                insertTable.ACUPosition = acuPos
+                insertTable.ACULastSpotted = lastSpotted
+                
+                insertTable.EconomicThreat = ecoThreat
+                if insertTable.Enemy then
+                    local enemyTotalStrength = 0
+                    local highestEnemyThreat = 0
+                    local threatPos = {}
+                    local enemyStructureThreat = self:GetThreatsAroundPosition(MainPos, 16, true, 'Structures', enemyIndex)
+                    for _, threat in enemyStructureThreat do
+                        enemyTotalStrength = enemyTotalStrength + threat[3]
+                        if threat[3] > highestEnemyThreat then
+                            highestEnemyThreat = threat[3]
+                            threatPos = {threat[1],0,threat[2]}
+                        end
+                    end
+                    if enemyTotalStrength > 0 then
+                        insertTable.Strength = enemyTotalStrength
+                        insertTable.Position = threatPos
+                    end
 
-                --RNGLOG('Enemy Index is '..enemyIndex)
-                --RNGLOG('Enemy name is '..v.Nickname)
-                --RNGLOG('* AI-RNG: First Enemy Pass Strength is :'..insertTable.Strength)
-                --RNGLOG('* AI-RNG: First Enemy Pass Position is :'..repr(insertTable.Position))
-                if insertTable.Strength == 0 then
-                    --RNGLOG('Enemy Strength is zero, using enemy start pos')
+                    --RNGLOG('Enemy Index is '..enemyIndex)
+                    --RNGLOG('Enemy name is '..v.Nickname)
+                    --RNGLOG('* AI-RNG: First Enemy Pass Strength is :'..insertTable.Strength)
+                    --RNGLOG('* AI-RNG: First Enemy Pass Position is :'..repr(insertTable.Position))
+                    if insertTable.Strength == 0 then
+                        --RNGLOG('Enemy Strength is zero, using enemy start pos')
+                        insertTable.Position = {startX, 0 ,startZ}
+                    end
+                else
                     insertTable.Position = {startX, 0 ,startZ}
+                    insertTable.Strength = ecoThreat
+                    --RNGLOG('* AI-RNG: First Ally Pass Strength is : '..insertTable.Strength..' Ally Position :'..repr(insertTable.Position))
                 end
-            else
-                insertTable.Position = {startX, 0 ,startZ}
-                insertTable.Strength = ecoThreat
-                --RNGLOG('* AI-RNG: First Ally Pass Strength is : '..insertTable.Strength..' Ally Position :'..repr(insertTable.Position))
+                armyStrengthTable[v:GetArmyIndex()] = insertTable
             end
-            armyStrengthTable[v:GetArmyIndex()] = insertTable
         end
         RNGLOG('teams table '..repr(teams))
-        if not self.TeamsSet then
-            for _, v in teams do
-                if v then
-                    self.BrainIntel.TeamCount = self.BrainIntel.TeamCount + 1
-                end
+        self.BrainIntel.TeamCount = 0
+        for _, v in teams do
+            if v then
+                self.BrainIntel.TeamCount = self.BrainIntel.TeamCount + 1
             end
-            self.TeamsSet = true
         end
         self.EnemyIntel.EnemyCount = enemyCount
         self.BrainIntel.AllyCount = allyCount
@@ -5272,7 +5290,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
 
 
-        while not self.defeat do
+        while self.Status ~= "Defeat" do
             --RNGLOG('heavy economy loop started')
             self:HeavyEconomyForkRNG()
             coroutine.yield(50)

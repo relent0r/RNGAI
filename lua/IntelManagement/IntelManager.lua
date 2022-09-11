@@ -274,7 +274,7 @@ IntelManager = Class {
         local Zones = {
             'Land',
         }
-        while self.Brain.Result ~= "defeat" do
+        while self.Brain.Status ~= "Defeat" do
             for k, v in Zones do
                 for k1, v1 in self.Brain.Zones[v].zones do
                     local resourcePoints = v1.resourcevalue
@@ -561,7 +561,7 @@ IntelManager = Class {
         }
         self:WaitForZoneInitialization()
         coroutine.yield(Random(5,20))
-        while self.Brain.Result ~= "defeat" do
+        while self.Brain.Status ~= "Defeat" do
             for k, v in Zones do
                 for k1, v1 in self.Brain.Zones[v].zones do
                     if not v1.startpositionclose and v1.control < 1 and v1.enemylandthreat > 0 then
@@ -588,7 +588,7 @@ IntelManager = Class {
         local rawThreat = 0
         self:WaitForZoneInitialization()
         coroutine.yield(Random(5,20))
-        while self.Brain.Result ~= "defeat" do
+        while self.Brain.Status ~= "Defeat" do
             for k, v in Zones do
                 for k1, v1 in self.Brain.Zones[v].zones do
                     self.Brain.Zones.Land.zones[k1].enemylandthreat = GetThreatAtPosition(self.Brain, v1.pos, self.Brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
@@ -607,7 +607,7 @@ IntelManager = Class {
         }
         self:WaitForZoneInitialization()
         coroutine.yield(Random(5,20))
-        while self.Brain.Result ~= "defeat" do
+        while self.Brain.Status ~= "Defeat" do
             local Zones = {
                 'Land',
             }
@@ -785,7 +785,7 @@ IntelManager = Class {
         while not self.MapIntelGrid do
             coroutine.yield(30)
         end
-        while not aiBrain.defeat do
+        while aiBrain.Status ~= "Defeat" do
             coroutine.yield(20)
             local intelCoverage = 0
             local mustScoutPresent = false
@@ -1184,7 +1184,7 @@ ExpansionIntelScanRNG = function(aiBrain)
     end
     local GetClosestPathNodeInRadiusByLayer = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayer
     --RNGLOG('Starting ExpansionIntelScan')
-    while aiBrain.Result ~= "defeat" do
+    while aiBrain.Status ~= "Defeat" do
         for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
             if v.PlatoonAssigned.Dead then
                 v.PlatoonAssigned = false
@@ -1602,7 +1602,7 @@ MapReclaimAnalysis = function(aiBrain)
     -- Loops through map grid squares that roughly match IMAP 
     CreateReclaimGrid(aiBrain)
     coroutine.yield(50)
-    while not aiBrain.defeat do
+    while aiBrain.Status ~= "Defeat" do
         if aiBrain.ReclaimEnabled then
             local currentGameTime = GetGameTimeSeconds()
             for k, square in aiBrain.MapReclaimTable do

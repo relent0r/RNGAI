@@ -2932,7 +2932,7 @@ DisplayBaseMexAllocationRNG = function(aiBrain)
             table.insert(MassMarker, v)
         end
     end
-    while aiBrain.Result ~= "defeat" do
+    while aiBrain.Status ~= "Defeat" do
         for _, v in MassMarker do
             local pos1={0,0,0}
             local pos2={0,0,0}
@@ -3027,7 +3027,7 @@ CountSoonMassSpotsRNG = function(aiBrain)
                 table.insert(massmarkers,v)
             end
         end
-    while aiBrain.Result ~= "defeat" do
+    while aiBrain.Status ~= "Defeat" do
         local markercache=table.copy(massmarkers)
         for _=0,10 do
             local soonmexes={}
@@ -3125,7 +3125,7 @@ LastKnownThread = function(aiBrain)
     --aiBrain:ForkThread(ShowLastKnown)
     aiBrain:ForkThread(TruePlatoonPriorityDirector)
     while not aiBrain.emanager.enemies do coroutine.yield(20) end
-    while aiBrain.Result ~= "defeat" do
+    while aiBrain.Status ~= "Defeat" do
         local time=GetGameTimeSeconds()
         for _=0,10 do
             local enemyMexes = {}
@@ -3224,7 +3224,7 @@ ShowLastKnown = function(aiBrain)
     while not aiBrain.lastknown do
         coroutine.yield(2)
     end
-    while aiBrain.result ~= "defeat" do
+    while aiBrain.Status ~= "Defeat" do
         local time=GetGameTimeSeconds()
         local lastknown=table.copy(aiBrain.lastknown)
         for _,v in lastknown do
@@ -3248,7 +3248,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
     aiBrain.prioritypoints={}
     local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
     while not aiBrain.lastknown do coroutine.yield(20) end
-    while aiBrain.Result ~= "defeat" do
+    while aiBrain.Status ~= "Defeat" do
         --RNGLOG('Check Expansion table in priority directo')
         if aiBrain.BrainIntel.ExpansionWatchTable then
             for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
@@ -3595,7 +3595,7 @@ end
 
 RenderBrainIntelRNG = function(aiBrain)
 
-    while aiBrain.Result ~= "defeat" do
+    while aiBrain.Status ~= "Defeat" do
         for _,expansion in aiBrain.BrainIntel.ExpansionWatchTable do
             if expansion.Position then
                 DrawCircle(expansion.Position,math.min(10,expansion.Commander/8),'FF9999FF')
@@ -3613,13 +3613,13 @@ function MexUpgradeManagerRNG(aiBrain)
     local homepos = {homebasex,GetTerrainHeight(homebasex,homebasey),homebasey}
     local ratio=0.35
     local currentlyUpgrading = 0
-    while not aiBrain.defeat or GetGameTimeSeconds()<250 do
+    while aiBrain.Status ~= "Defeat" or GetGameTimeSeconds()<250 do
         local extractors = aiBrain:GetListOfUnits(categories.MASSEXTRACTION * (categories.TECH1 + categories.TECH2), true)
 
 
         coroutine.yield(40)
     end
-    while not aiBrain.defeat do
+    while aiBrain.Status ~= "Defeat" do
         local mexes1 = aiBrain:GetListOfUnits(categories.MASSEXTRACTION - categories.TECH3, true, false)
         local time=GetGameTimeSeconds()
         --[[if aiBrain.EcoManagerPowerStateCheck(aiBrain) then
@@ -3787,7 +3787,9 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
             end
         end
     else
+        RNGLOG('ACU Trying to build non adjacent')
         local location = aiBrain:FindPlaceToBuild(buildUnit, whatToBuild, baseTemplate, relative, eng, nil, engPos[1], engPos[3])
+        RNGLOG('Location is '..repr(location))
         if location and relative then
             local relativeLoc = {location[1], 0, location[2]}
             return {relativeLoc[1] + engPos[1], relativeLoc[3] + engPos[3], 0}, whatToBuild
