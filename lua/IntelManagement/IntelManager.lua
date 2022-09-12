@@ -952,6 +952,7 @@ IntelManager = Class {
         }
         local threatType
         local minimumExtractorTier
+        local desiredStrikeDamage = 0
         local potentialStrikes = {}
         local minThreatRisk = 0
         if type == 'AirAntiSurface' then
@@ -1025,6 +1026,25 @@ IntelManager = Class {
         RNGLOG('ThreatRisk is '..minThreatRisk)
         local abortZone = true
         if type == 'AirAntiSurface' and minThreatRisk > 0 then
+            for k, v in self.Brain.EnemyIntel.ACU do
+                if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
+                    if minThreatRisk >= 50 and VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase /2) then
+                        local gridX, gridZ = im:GetIntelGrid(v.Position)
+                        local scoutRequired = true
+                        if im.MapIntelGrid[gridX][gridZ].MustScout and im.MapIntelGrid[gridX][gridY].ACUIndexes[k] then
+                            scoutRequired = false
+                        end
+                        if scoutRequired then
+                            im.MapIntelGrid[gridX][gridZ].MustScout = true
+                            im.MapIntelGrid[gridX][gridZ].ACUIndexes[k] = true
+                            --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(im.MapIntelGrid[gridX][gridY]))
+                        end
+                        desiredStrikeDamage = desiredStrikeDamage + 4000
+                        table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = im.MapIntelGrid[gridX][gridY].Position, Type = 'ACU'} )
+                    end
+                end
+            end
+               
             for k, v in Zones do
                 for k1, v1 in self.Brain.Zones[v].zones do
                     if minimumExtractorTier >= 2 then
@@ -1045,7 +1065,8 @@ IntelManager = Class {
                                         if GetThreatBetweenPositions(self.Brain, self.Brain.BrainIntel.StartPos, v1.pos, nil, threatType) < threatMax * 2 then
                                             RNGLOG('Zone air threat between points below max')
                                             RNGLOG('Adding zone as potential strike target')
-                                            table.insert( potentialStrikes, { ZoneID = v1.id, Position = v1.pos} )
+                                            table.insert( potentialStrikes, { ZoneID = v1.id, Position = v1.pos, Type = 'Zone'} )
+                                            desiredStrikeDamage = desiredStrikeDamage + (v1.resourcevalue * 200)
                                         end
                                     end
                                 end

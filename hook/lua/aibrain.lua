@@ -3305,7 +3305,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 --RNGLOG('Run TacticalThreatAnalysisRNG')
                 self:ForkThread(IntelManagerRNG.TacticalThreatAnalysisRNG, self)
-                im:ForkThread(im.CheckStrikePotential, 'AirAntiSurface', 2000, 20)
+                im:ForkThread(im.CheckStrikePotential, 'AirAntiSurface', 20)
                 im:ForkThread(im.CheckStrikePotential, 'DefensiveAntiSurface')
             end
             self:CalculateMassMarkersRNG()
@@ -3738,7 +3738,6 @@ AIBrain = Class(RNGAIBrainClass) {
         local potentialTarget = false
         local targetType = false
         local potentialTargetValue = 0
-
         local enemyACUIndexes = {}
         local im = IntelManagerRNG.GetIntelManager(self)
 
@@ -3759,7 +3758,19 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                 elseif platoonType == 'BOMBER' and strikeDamage then
-                    if strikeDamage > v.HP * 0.80 then
+                    if (self.CDRUnit.Caution and self.CDRUnit.EnemyCDRPresent and VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase /2)) or self.CDRUnit.SuicideMode then
+                        RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position })
+                        local gridX, gridY = im:GetIntelGrid(v.Position)
+                        local scoutRequired = true
+                        if im.MapIntelGrid[gridX][gridY].MustScout and im.MapIntelGrid[gridX][gridY].ACUIndexes[k] then
+                            scoutRequired = false
+                        end
+                        if scoutRequired then
+                            im.MapIntelGrid[gridX][gridY].MustScout = true
+                            im.MapIntelGrid[gridX][gridY].ACUIndexes[k] = true
+                            --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(im.MapIntelGrid[gridX][gridY]))
+                        end
+                    elseif strikeDamage > v.HP * 0.80 then
                         RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position })
                         local gridX, gridY = im:GetIntelGrid(v.Position)
                         local scoutRequired = true

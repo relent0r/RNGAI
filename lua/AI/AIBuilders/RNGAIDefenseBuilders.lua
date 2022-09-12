@@ -329,39 +329,6 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T2TMLEngineer 3rd',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
-        Priority = 625,
-        InstanceCount = 1,
-        BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 720 } },
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 5, categories.TACTICALMISSILEPLATFORM}},
-            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, categories.TACTICALMISSILEPLATFORM } },
-            --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 400, 4000 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.95, 'DEFENSE'}},
-            { UCBC, 'UnitCapCheckLess', { .9 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            Construction = {
-                BuildClose = true,
-                NearDefensivePoints = true,
-                Type = 'STRUCTURE',
-                Tier = 1,
-                AdjacencyPriority = {categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2)},
-                AvoidCategory = categories.STRUCTURE * categories.FACTORY,
-                maxUnits = 1,
-                maxRadius = 5,
-                BuildStructures = {
-                    'T2StrategicMissile',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T3 Base D Engineer AA',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 900,
