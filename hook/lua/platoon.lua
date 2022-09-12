@@ -3711,10 +3711,15 @@ Platoon = Class(RNGAIPlatoonClass) {
             --RNGLOG('CommanderInitializeAIRNG : Hydro Within 65 units of spawn')
             hydroPresent = true
         end
-        if aiBrain.RNGEXP then
-            buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1AirFactory', eng, false, nil, nil, true)
+        local inWater = GetTerrainHeight(engPos[1], engPos[3]) < GetSurfaceHeight(engPos[1], engPos[3]) - 1.4
+        if inWater then
+            buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1SeaFactory', eng, false, nil, nil, true)
         else
-            buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1LandFactory', eng, false, nil, nil, true)
+            if aiBrain.RNGEXP then
+                buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1AirFactory', eng, false, nil, nil, true)
+            else
+                buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1LandFactory', eng, false, nil, nil, true)
+            end
         end
         if buildLocation and whatToBuild then
             aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
