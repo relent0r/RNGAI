@@ -10310,5 +10310,30 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
     end,
 
+    CDRPlatoon = function(self)
+        local aiBrain = self:GetBrain()
+        local platoonUnits = GetPlatoonUnits(self)
+        local cdr
+        for k, v in platoonUnits do
+            if not v.Dead and EntityCategoryContains(categories.COMMAND, v) then
+                IssueClearCommands({v})
+                if not cdr then
+                    eng = v
+                end
+            end
+        end
+        if not cdr then
+            WARN('Non ACU in CDRPlatoon')
+            coroutine.yield(20)
+            return
+        else
+            aiBrain:AssignUnitsToPlatoon(self, {cdr}, 'Attack', 'None')
+        end
+
+        RUtils.CDRWeaponCheckRNG(aiBrain, cdr)
+
+
+    end,
+
 
 }
