@@ -3711,7 +3711,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             --RNGLOG('CommanderInitializeAIRNG : Hydro Within 65 units of spawn')
             hydroPresent = true
         end
-        local inWater = GetTerrainHeight(engPos[1], engPos[3]) < GetSurfaceHeight(engPos[1], engPos[3]) - 1.4
+        local inWater = RUtils.PositionInWater(engPos)
         if inWater then
             buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1SeaFactory', eng, false, nil, nil, true)
         else
