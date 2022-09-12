@@ -3305,8 +3305,6 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 --RNGLOG('Run TacticalThreatAnalysisRNG')
                 self:ForkThread(IntelManagerRNG.TacticalThreatAnalysisRNG, self)
-                im:ForkThread(im.CheckStrikePotential, 'AirAntiSurface', 20)
-                im:ForkThread(im.CheckStrikePotential, 'DefensiveAntiSurface')
             end
             self:CalculateMassMarkersRNG()
             local enemyCount = 0
@@ -3746,6 +3744,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 if platoonType == 'GUNSHIP' and platoonDPS then
                     if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and (GetGameTimeSeconds() - 120) < v.LastSpotted then
                         RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
+                        RNGLOG('ACU Added to target check in director')
                         local gridX, gridY = im:GetIntelGrid(v.Position)
                         local scoutRequired = true
                         if im.MapIntelGrid[gridX][gridY].MustScout and im.MapIntelGrid[gridX][gridY].ACUIndexes[k] then

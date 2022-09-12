@@ -703,13 +703,14 @@ IntelManager = Class {
         end
     end,
 
-    --[[
-            for k, v in self.MapIntelGrid do
-                if VDist3Sq(radarPosition, v.Position) < intelRadius then
-                    v.RadarCoverage = true
-                end
-            end
-    ]]
+    TacticalIntelCheck = function(self)
+        coroutine.yield(300)
+        while self.Brain.Status ~= "Defeat" do
+            coroutine.yield(50)
+            self:ForkThread(self.CheckStrikePotential, 'AirAntiSurface', 20)
+            self:ForkThread(self.CheckStrikePotential, 'DefensiveAntiSurface')
+        end
+    end,
 
     ZoneIntelAssignment = function(self)
         -- Will setup table for scout assignment to zones
@@ -1040,6 +1041,7 @@ IntelManager = Class {
                             --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(im.MapIntelGrid[gridX][gridY]))
                         end
                         desiredStrikeDamage = desiredStrikeDamage + 4000
+                        RNGLOG('Adding ACU to potential strike target')
                         table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = im.MapIntelGrid[gridX][gridY].Position, Type = 'ACU'} )
                     end
                 end
