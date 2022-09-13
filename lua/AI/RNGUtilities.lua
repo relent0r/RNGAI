@@ -5079,3 +5079,40 @@ GetHoldingPosition = function(aiBrain, platoonPos, platoon, threatType)
     end
     return holdingPos
 end
+
+CDRWeaponCheckRNG = function (aiBrain, cdr)
+
+    local factionIndex = aiBrain:GetFactionIndex()
+        -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+    if not cdr.GunUpgradePresent then
+        if factionIndex == 1 then
+            if cdr:HasEnhancement('HeavyAntiMatterCannon') then
+                cdr.GunUpgradePresent = true
+                cdr.WeaponRange = 30 - 3
+                cdr.ThreatLimit = 45
+            end
+        elseif factionIndex == 2 then
+            if cdr:HasEnhancement('HeatSink') then
+                cdr.GunUpgradePresent = true
+                cdr.ThreatLimit = 40
+            end
+            if cdr:HasEnhancement('CrysalisBeam') then
+                cdr.GunUpgradePresent = true
+                cdr.WeaponRange = 35 - 3
+                cdr.ThreatLimit = 45
+            end
+        elseif factionIndex == 3 then
+            if cdr:HasEnhancement('CoolingUpgrade') then
+                cdr.GunUpgradePresent = true
+                cdr.WeaponRange = 30 - 3
+                cdr.ThreatLimit = 45
+            end
+        elseif factionIndex == 4 then
+            if cdr:HasEnhancement('RateOfFire') then
+                cdr.GunUpgradePresent = true
+                cdr.WeaponRange = 30 - 3
+                cdr.ThreatLimit = 45
+            end
+        end
+    end
+end

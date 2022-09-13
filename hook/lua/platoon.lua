@@ -3711,10 +3711,15 @@ Platoon = Class(RNGAIPlatoonClass) {
             --RNGLOG('CommanderInitializeAIRNG : Hydro Within 65 units of spawn')
             hydroPresent = true
         end
-        if aiBrain.RNGEXP then
-            buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1AirFactory', eng, false, nil, nil, true)
+        local inWater = RUtils.PositionInWater(engPos)
+        if inWater then
+            buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1SeaFactory', eng, false, nil, nil, true)
         else
-            buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1LandFactory', eng, false, nil, nil, true)
+            if aiBrain.RNGEXP then
+                buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1AirFactory', eng, false, nil, nil, true)
+            else
+                buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1LandFactory', eng, false, nil, nil, true)
+            end
         end
         if buildLocation and whatToBuild then
             aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
@@ -10303,6 +10308,31 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             self.chpdata.merging=false
         end
+    end,
+
+    CDRPlatoon = function(self)
+        local aiBrain = self:GetBrain()
+        local platoonUnits = GetPlatoonUnits(self)
+        local cdr
+        for k, v in platoonUnits do
+            if not v.Dead and EntityCategoryContains(categories.COMMAND, v) then
+                IssueClearCommands({v})
+                if not cdr then
+                    eng = v
+                end
+            end
+        end
+        if not cdr then
+            WARN('Non ACU in CDRPlatoon')
+            coroutine.yield(20)
+            return
+        else
+            aiBrain:AssignUnitsToPlatoon(self, {cdr}, 'Attack', 'None')
+        end
+
+        RUtils.CDRWeaponCheckRNG(aiBrain, cdr)
+
+
     end,
 
 
