@@ -1946,15 +1946,15 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
     local TargetsInRange, TargetPosition, category, distance, targetRange, baseTargetRange, canAttack
     for _, range in RangeList do
         if not position then
-            WARN('* AI-Uveso: AIFindNearestCategoryTargetInCloseRange: position is empty')
+            WARN('* AI-RNG: AIFindNearestCategoryTargetInCloseRange: position is empty')
             return false
         end
         if not range then
-            WARN('* AI-Uveso: AIFindNearestCategoryTargetInCloseRange: range is empty')
+            WARN('* AI-RNG: AIFindNearestCategoryTargetInCloseRange: range is empty')
             return false
         end
         if not TargetSearchCategory then
-            WARN('* AI-Uveso: AIFindNearestCategoryTargetInCloseRange: TargetSearchCategory is empty')
+            WARN('* AI-RNG: AIFindNearestCategoryTargetInCloseRange: TargetSearchCategory is empty')
             return false
         end
         TargetsInRange = GetUnitsAroundPoint(aiBrain, targetQueryCategory, position, range, 'Enemy')
@@ -2041,15 +2041,15 @@ function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, ta
     local TargetsInRange, EnemyStrength, TargetPosition, category, distance, targetRange, baseTargetRange, canAttack
     for _, range in RangeList do
         if not position then
-            WARN('* AI-Uveso: AIFindNearestCategoryTargetInCloseRange: position is empty')
+            WARN('* AI-RNG: AIFindNearestCategoryTargetInCloseRange: position is empty')
             return false
         end
         if not range then
-            WARN('* AI-Uveso: AIFindNearestCategoryTargetInCloseRange: range is empty')
+            WARN('* AI-RNG: AIFindNearestCategoryTargetInCloseRange: range is empty')
             return false
         end
         if not TargetSearchCategory then
-            WARN('* AI-Uveso: AIFindNearestCategoryTargetInCloseRange: TargetSearchCategory is empty')
+            WARN('* AI-RNG: AIFindNearestCategoryTargetInCloseRange: TargetSearchCategory is empty')
             return false
         end
         TargetsInRange = GetUnitsAroundPoint(aiBrain, targetQueryCategory, position, range, 'Enemy')

@@ -3713,6 +3713,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         local inWater = RUtils.PositionInWater(engPos)
         if inWater then
+            
             buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1SeaFactory', eng, false, nil, nil, true)
         else
             if aiBrain.RNGEXP then
@@ -3721,6 +3722,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1LandFactory', eng, false, nil, nil, true)
             end
         end
+        RNGLOG('RNG ACU wants to build '..whatToBuild)
         if buildLocation and whatToBuild then
             aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
         else
