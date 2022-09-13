@@ -868,7 +868,7 @@ end
 
 function SetMarkerInformation(aiBrain)
     local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
-    RNGLOG('Display Marker Adjacency Running '..aiBrain.Nickname)
+    --RNGLOG('Display Marker Adjacency Running '..aiBrain.Nickname)
     while not aiBrain.ZonesInitialized do
         RNGLOG('Waiting for Zones to Initialize '..aiBrain.Nickname)
         coroutine.yield(20)
@@ -878,7 +878,7 @@ function SetMarkerInformation(aiBrain)
     aiBrain.RNGAreas={}
     aiBrain.armyspots={}
     aiBrain.expandspots={}
-    RNGLOG('Infecting expansions '..aiBrain.Nickname)
+    --RNGLOG('Infecting expansions '..aiBrain.Nickname)
     for k,marker in expansionMarkers do
         local node=false
         local expand=false
@@ -912,7 +912,7 @@ function SetMarkerInformation(aiBrain)
     end
     --WaitSeconds(10)
     --RNGLOG('colortable is'..repr(tablecolors))
-    RNGLOG('Infecting armyspots '..aiBrain.Nickname)
+    --RNGLOG('Infecting armyspots '..aiBrain.Nickname)
     local bases=false
     if bases then
         for _,army in aiBrain.armyspots do
@@ -933,16 +933,16 @@ function SetMarkerInformation(aiBrain)
                 closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(aiBrain.expandspots[1][1].position,25,'Land').name]
             end
             --RNGLOG('closestpath is '..repr(closestpath))
-            RNGLOG('bases is false')
+            --RNGLOG('bases is false')
             aiBrain.renderthreadtracker=ForkThread(DoArmySpotDistanceInfect,aiBrain,closestpath,aiBrain.expandspots[1][2])
         end
     end
-    RNGLOG('loop through armybrains complete '..aiBrain.Nickname)
+    --RNGLOG('loop through armybrains complete '..aiBrain.Nickname)
     local expands=true
     while aiBrain.renderthreadtracker do
         coroutine.yield(2)
     end
-    RNGLOG('loop through expandspots '..aiBrain.Nickname)
+    --RNGLOG('loop through expandspots '..aiBrain.Nickname)
     if expands then
         --tablecolors=GenerateDistinctColorTable(RNGGETN(aiBrain.expandspots))
        --RNGLOG('Running Expansion spot checks for rngarea')
@@ -958,7 +958,7 @@ function SetMarkerInformation(aiBrain)
     end
     local massPointCount = 0
    --RNGLOG('Running mass spot checks for rngarea')
-   RNGLOG('Infecting mass points '..aiBrain.Nickname)
+   --RNGLOG('Infecting mass points '..aiBrain.Nickname)
     for _, mass in AdaptiveResourceMarkerTableRNG do
         if mass.type == 'Mass' then
             massPointCount = massPointCount + 1
@@ -974,7 +974,7 @@ function SetMarkerInformation(aiBrain)
     --for k,v in aiBrain.RNGAreas do
     --  --LOG(repr(k)..' has '..repr(RNGGETN(v))..' nodes')
     --end
-    RNGLOG('Setting GraphZones and MarkersInfectedRNG '..aiBrain.Nickname)
+    --RNGLOG('Setting GraphZones and MarkersInfectedRNG '..aiBrain.Nickname)
     if aiBrain.GraphZones.FirstRun then
         aiBrain.GraphZones.FirstRun = false
     end
