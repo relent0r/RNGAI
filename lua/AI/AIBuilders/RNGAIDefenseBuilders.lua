@@ -314,6 +314,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
+                BaseTemplate = 'DefenseTemplate',
                 BuildClose = true,
                 NearDefensivePoints = true,
                 Type = 'STRUCTURE',

@@ -1954,7 +1954,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
             return false
         end
         if not TargetSearchCategory then
-            WARN('* AI-RNG: AIFindNearestCategoryTargetInCloseRange: TargetSearchCategory is empty')
+            WARN('* AI-RNG: AIFindNearestCategoryTargetInCloseRange: TargetSearchCategory is empty '..repr(platoon.BuilderName)..' '..repr(platoon.PlanName))
             return false
         end
         TargetsInRange = GetUnitsAroundPoint(aiBrain, targetQueryCategory, position, range, 'Enemy')
@@ -2041,15 +2041,15 @@ function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, ta
     local TargetsInRange, EnemyStrength, TargetPosition, category, distance, targetRange, baseTargetRange, canAttack
     for _, range in RangeList do
         if not position then
-            WARN('* AI-RNG: AIFindNearestCategoryTargetInCloseRange: position is empty')
+            WARN('* AI-RNG: AIFindBrainTargetACURNG: position is empty')
             return false
         end
         if not range then
-            WARN('* AI-RNG: AIFindNearestCategoryTargetInCloseRange: range is empty')
+            WARN('* AI-RNG: AIFindBrainTargetACURNG: range is empty')
             return false
         end
         if not TargetSearchCategory then
-            WARN('* AI-RNG: AIFindNearestCategoryTargetInCloseRange: TargetSearchCategory is empty')
+            WARN('* AI-RNG: AIFindBrainTargetACURNG: TargetSearchCategory is empty '..repr(platoon.BuilderName)..' '..repr(platoon.PlanName))
             return false
         end
         TargetsInRange = GetUnitsAroundPoint(aiBrain, targetQueryCategory, position, range, 'Enemy')
@@ -3119,103 +3119,7 @@ GrabRandomDistinctColor = function(num)
     local output=GenerateDistinctColorTable(num)
     return output[math.random(RNGGETN(output))]
 end
-LastKnownThread = function(aiBrain)
-    local ALLBPS = __blueprints
-    aiBrain.lastknown={}
-    --aiBrain:ForkThread(ShowLastKnown)
-    aiBrain:ForkThread(TruePlatoonPriorityDirector)
-    while not aiBrain.emanager.enemies do coroutine.yield(20) end
-    while aiBrain.Status ~= "Defeat" do
-        local time=GetGameTimeSeconds()
-        for _=0,10 do
-            local enemyMexes = {}
-            local mexcount = 0
-            local eunits=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE, {0,0,0}, math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])*1.5, 'Enemy')
-            for _,v in eunits do
-                if not v or v.Dead then continue end
-                if ArmyIsCivilian(v:GetArmy()) then continue end
-                local id=v.Sync.id
-                local unitPosition = table.copy(v:GetPosition())
-                if EntityCategoryContains(categories.MASSEXTRACTION,v) then
-                    if not aiBrain.lastknown[id] or time-aiBrain.lastknown[id].time>10 then
-                        aiBrain.lastknown[id]={}
-                        aiBrain.lastknown[id].object=v
-                        aiBrain.lastknown[id].Position=unitPosition
-                        aiBrain.lastknown[id].time=time
-                        aiBrain.lastknown[id].recent=true
-                        aiBrain.lastknown[id].type='mex'
-                    end
-                    mexcount = mexcount + 1
-                    if not v.zoneid and aiBrain.ZonesInitialized then
-                        if PositionOnWater(unitPosition[1], unitPosition[3]) then
-                            -- tbd define water based zones
-                            v.zoneid = MAP:GetZoneID(unitPosition,aiBrain.Zones.Naval.index)
-                        else
-                            v.zoneid = MAP:GetZoneID(unitPosition,aiBrain.Zones.Land.index)
-                        end
-                    end
-                    if not enemyMexes[v.zoneid] then
-                        enemyMexes[v.zoneid] = {T1 = 0,T2 = 0,T3 = 0,}
-                    end
-                    if EntityCategoryContains(categories.TECH1,v) then
-                        enemyMexes[v.zoneid].T1 = enemyMexes[v.zoneid].T1 + 1
-                    elseif EntityCategoryContains(categories.TECH2,v) then
-                        enemyMexes[v.zoneid].T2 = enemyMexes[v.zoneid].T2 + 1
-                    else
-                        enemyMexes[v.zoneid].T3 = enemyMexes[v.zoneid].T3 + 1
-                    end
-                end
-                if not aiBrain.lastknown[id] or time-aiBrain.lastknown[id].time>10 then
-                    if not aiBrain.lastknown[id] then
-                        aiBrain.lastknown[id]={}
-                        if EntityCategoryContains(categories.MOBILE,v) then
-                            if EntityCategoryContains(categories.ENGINEER-categories.COMMAND,v) then
-                                aiBrain.lastknown[id].type='eng'
-                            elseif EntityCategoryContains(categories.COMMAND,v) then
-                                aiBrain.lastknown[id].type='acu'
-                            elseif EntityCategoryContains(categories.ANTIAIR,v) then
-                                aiBrain.lastknown[id].type='aa'
-                            elseif EntityCategoryContains(categories.DIRECTFIRE,v) then
-                                aiBrain.lastknown[id].type='tank'
-                            elseif EntityCategoryContains(categories.INDIRECTFIRE,v) then
-                                aiBrain.lastknown[id].type='arty'
-                            end
-                        elseif EntityCategoryContains(categories.RADAR,v) then
-                            aiBrain.lastknown[id].type='radar'
-                        elseif EntityCategoryContains(categories.TACTICALMISSILEPLATFORM, v) then
-                            aiBrain.lastknown[id].type='tml'
-                            if not aiBrain.EnemyIntel.TML[id] then
-                                local angle = GetAngleToPosition(aiBrain.BuilderManagers['MAIN'].Position, unitPosition)
-                                aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=ALLBPS[v.UnitId].Weapon[1].MaxRadius }
-                                aiBrain.BasePerimeterMonitor['MAIN'].RecentTMLAngle = angle
-                            end
-                        elseif EntityCategoryContains(CategoriesSMD, v) then
-                            aiBrain.lastknown[id].type='smd'
-                            if not aiBrain.EnemyIntel.SMD[id] then
-                                aiBrain.EnemyIntel.SMD[id] = {object = v, Position=unitPosition, Detected=GetGameTimeSeconds() }
-                            end
-                        end
-                    end
-                    aiBrain.lastknown[id].object=v
-                    aiBrain.lastknown[id].Position=unitPosition
-                    aiBrain.lastknown[id].time=time
-                    aiBrain.lastknown[id].recent=true
-                    
-                end
-            end
-            aiBrain.emanager.mex = enemyMexes
-            coroutine.yield(20)
-            time=GetGameTimeSeconds()
-        end
-        for i,v in aiBrain.lastknown do
-            if (v.object and v.object.Dead) then
-                aiBrain.lastknown[i]=nil
-            elseif time-v.time>120 or (v.object and v.object.Dead) or (time-v.time>15 and GetNumUnitsAroundPoint(aiBrain,categories.MOBILE,v.Position,20,'Ally')>3) then
-                aiBrain.lastknown[i].recent=false
-            end
-        end
-    end
-end
+
 
 ShowLastKnown = function(aiBrain)
     if ScenarioInfo.Options.AIDebugDisplay ~= 'displayOn' then
@@ -3244,115 +3148,7 @@ ShowLastKnown = function(aiBrain)
     end
 end
 
-TruePlatoonPriorityDirector = function(aiBrain)
-    aiBrain.prioritypoints={}
-    local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
-    while not aiBrain.lastknown do coroutine.yield(20) end
-    while aiBrain.Status ~= "Defeat" do
-        --RNGLOG('Check Expansion table in priority directo')
-        if aiBrain.BrainIntel.ExpansionWatchTable then
-            for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
-                if v.Land > 0 or v.Structures > 0 then
-                    local priority=0
-                    local acuPresent = false
-                    if v.Structures > 0 then
-                        -- We divide by 100 because of mexes being 1000 and greater threat. If they ever fix the threat numbers of mexes then this can change
-                        priority = priority + v.Structures
-                        --RNGLOG('Structure Priority is '..priority)
-                    end
-                    if v.Land > 0 then 
-                        priority = priority + 50
-                    end
-                    if v.PlatoonAssigned then
-                        priority = priority - 20
-                    end
-                    if v.MassPoints >= 3 then
-                        priority = priority + 50
-                    elseif v.MassPoints >= 2 then
-                        priority = priority + 30
-                    end
-                    if v.Commander > 0 then
-                        acuPresent = true
-                    end
-                    aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object, ACUPresent=acuPresent}
-                else
-                    local acuPresent = false
-                    local priority=0
-                    if v.MassPoints >= 2 then
-                        priority = priority + 30
-                    end
-                    if v.Commander > 0 then
-                        acuPresent = true
-                    end
-                    aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=0,unit=v.object, ACUPresent=acuPresent}
-                end
-            end
-            coroutine.yield(10)
-        end
-        --RNGLOG('Check lastknown')
-        for k,v in aiBrain.lastknown do
-            if not v.recent or aiBrain.prioritypoints[k] then continue end
-            local priority=0
-            if v.type then
-                if v.type=='eng' then
-                    priority=50
-                elseif v.type=='mex' then
-                    priority=40
-                elseif v.type=='radar' then
-                    priority=100
-                elseif v.type=='arty' then
-                    priority=30
-                elseif v.type=='tank' then
-                    priority=30
-                else
-                    priority=20
-                end
-                if VDist3Sq(aiBrain.BuilderManagers['MAIN'].Position, v.Position) < (BaseRestrictedArea * BaseRestrictedArea * 2) then
-                    priority = priority + 100
-                end
-                aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object}
-            end
-        end
-        if aiBrain.CDRUnit.Active then
-            --[[
-                local minpri=300
-                local dangerpri=500
-                local healthcutoff=5000
-                local dangerfactor = cdr.CurrentEnemyThreat/cdr.CurrentFriendlyThreat
-                Danger factor doesn't quite fit in yet. More work.
-                local healthdanger = minpri + (dangerpri - minpri) * healthcutoff / aiBrain.CDRUnit:GetHealth() * dangerfactor
-            ]]
-            local healthdanger = 2500000 / aiBrain.CDRUnit.Health 
-           --RNGLOG('CDR health is '..aiBrain.CDRUnit.Health)
-           --RNGLOG('Health Danger is '..healthdanger)
-            local enemyThreat
-            local friendlyThreat
-            if aiBrain.CDRUnit.CurrentEnemyThreat > 0 then
-                enemyThreat = aiBrain.CDRUnit.CurrentEnemyThreat
-            else
-                enemyThreat = 1
-            end
 
-
-            if aiBrain.CDRUnit.CurrentFriendlyThreat > 0 then
-                friendlyThreat = aiBrain.CDRUnit.CurrentFriendlyThreat
-            else
-                friendlyThreat = 1
-            end
-           --RNGLOG('prioritypoint friendly threat is '..friendlyThreat)
-           --RNGLOG('prioritypoint enemy threat is '..enemyThreat)
-           --RNGLOG('Priority Based on threat would be '..(healthdanger * (enemyThreat / friendlyThreat)))
-           --RNGLOG('Instead is it '..healthdanger)
-            local acuPriority = healthdanger * (enemyThreat / friendlyThreat)
-            if aiBrain.CDRUnit.Caution then
-                acuPriority = acuPriority + 100
-            end
-            aiBrain.prioritypoints['ACU']={type='raid',Position=aiBrain.CDRUnit.Position,priority=acuPriority,danger=GrabPosDangerRNG(aiBrain,aiBrain.CDRUnit.Position,30).enemy,unit=nil}
-        end
-        coroutine.yield(50)
-        --RNGLOG('Priority Points'..repr(aiBrain.prioritypoints))
-    end
-end
 
 ACUPriorityDirector = function(aiBrain, platoon, platoonPosition, maxRadius)
     -- See if anything in the ACU table looks good to attack

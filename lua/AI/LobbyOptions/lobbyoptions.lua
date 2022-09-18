@@ -17,4 +17,22 @@ AIOpts = {
             },
         },
     },
+    {
+        default = 1,
+        label = "<LOC aisettingsRNG_0204>AI ACU Combat",
+        help = "<LOC aisettingsRNG_0205>Enable/Disable the RNGAI advanced ACU combat",
+        key = 'AICDRCombat',
+        values = {
+            {
+                text = "<LOC aisettingsRNG_0206>On",
+                help = "<LOC aisettingsRNG_0207>ACU Combat Enabled",
+                key = 'cdrcombatOn',
+            },
+            {
+                text = "<LOC aisettingsRNG_0208>Off",
+                help = "<LOC aisettingsRNG_0209>ACU Combat Disabled",
+                key = 'cdrcombatOff',
+            },
+        },
+    },
 }

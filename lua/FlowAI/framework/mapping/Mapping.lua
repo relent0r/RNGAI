@@ -1010,7 +1010,7 @@ function DoArmySpotDistanceInfect(aiBrain,marker,army)
         marker.armydists[army]=0
     end
     local potentialdists={}
-    RNGLOG('doarmyspotdistanceinfect start loop')
+    --RNGLOG('doarmyspotdistanceinfect start loop')
     for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
         if node=='' then continue end
         local adjnode=Scenario.MasterChain._MASTERCHAIN_.Markers[node]
@@ -1042,7 +1042,7 @@ function DoArmySpotDistanceInfect(aiBrain,marker,army)
             ForkThread(DoArmySpotDistanceInfect,aiBrain,adjnode,army)
         end
     end
-    RNGLOG('doarmyspotdistanceinfect end loop')
+    --RNGLOG('doarmyspotdistanceinfect end loop')
     for k,v in marker.armydists do
         if potentialdists[k]<v then
             v=potentialdists[k]

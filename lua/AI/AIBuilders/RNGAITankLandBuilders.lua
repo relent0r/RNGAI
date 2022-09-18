@@ -896,6 +896,23 @@ BuilderGroup {
             UseFormation = 'None',
         },
     },
+    Builder {
+        BuilderName = 'RNGAI Response MobileBomb Area',
+        PlatoonTemplate = 'RNGAI MobileBombAttack',
+        Priority = 1000,
+        InstanceCount = 3,
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.xrl0302 } },
+        },
+        BuilderData = {
+            SearchRadius = BaseEnemyArea,
+            PrioritizedCategories = {
+                categories.COMMAND,
+                categories.LAND * categories.EXPERIMENTAL,
+            },
+        },
+    },
 }
 BuilderGroup {
     BuilderGroupName = 'RNGAI Land FormBuilders',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"

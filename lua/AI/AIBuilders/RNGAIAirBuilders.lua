@@ -252,7 +252,6 @@ BuilderGroup {
         Priority = 750,
         BuilderType = 'Air',
         BuilderConditions = {
-            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'ACUOnField', {false} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},

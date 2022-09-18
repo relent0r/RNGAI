@@ -81,7 +81,12 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     end
                 end
             else
-                --RNGLOG('No Rally Point Found. Setting Random Location')
+                RNGLOG('No Rally Point Found. Setting Random Location')
+                local locationType = self.LocationType
+                local factoryPos = self.Brain.BuilderManagers[locationType].Position
+                local startDistance = VDist3(self.Brain.MapCenterPoint, factoryPos)
+                position = RUtils.lerpy(self.Brain.MapCenterPoint, factoryPos, {startDistance, startDistance - 60})
+                RNGLOG('Position '..repr(position))
                 position = AIUtils.RandomLocation(position[1],position[3])
             end
             rally = position

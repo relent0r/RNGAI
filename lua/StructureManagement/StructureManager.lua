@@ -1412,6 +1412,18 @@ StructureManager = Class {
     end,
 }
 
+DummyManager = Class {
+    Create = function(self)
+        self.FactoryList = {}
+    end,
+    SetEnabled = function(self)
+        return
+    end,
+    Destroy = function(self)
+        return
+    end,
+}
+
 function CreateStructureManager(brain)
     local sm 
     sm = StructureManager()
@@ -1419,6 +1431,12 @@ function CreateStructureManager(brain)
     return sm
 end
 
+function CreateDummyManager(brain)
+    local dm
+    dm = DummyManager()
+    dm:Create()
+    return dm
+end
 
 function GetStructureManager(brain)
     return brain.StructureManager

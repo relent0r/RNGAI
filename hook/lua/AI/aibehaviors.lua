@@ -222,7 +222,7 @@ function CDRBrainThread(cdr)
         for k, v in aiBrain.EnemyIntel.ACU do
             if not v.Ally then
                 local enemyStartPos = {}
-                if v.Position[1] and gameTime - 60 < v.LastSpotted then
+                if v.Position[1] and v.LastSpotted ~= 0 and gameTime - 60 < v.LastSpotted then
                     --LOG('Enemy Start Position '..repr(aiBrain.EnemyIntel.EnemyStartLocations))
                     for c, b in aiBrain.EnemyIntel.EnemyStartLocations do
                         if c == k then
@@ -928,6 +928,9 @@ function PerformACUReclaim(aiBrain, cdr, minimumReclaim)
 end
 
 function CDRExpansionRNG(aiBrain, cdr)
+    if ScenarioInfo.Options.AICDRCombat == 'cdrcombatOff' then
+        return
+    end
     local multiplier
     local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
     if aiBrain.CheatEnabled then
@@ -954,7 +957,7 @@ function CDRExpansionRNG(aiBrain, cdr)
         for _, v in aiBrain.EnemyIntel.ACU do
             if not v.Ally and v.OnField then
                 --RNGLOG('Non Ally and OnField')
-                if (GetGameTimeSeconds() - 30) < v.LastSpotted and VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[3], v.Position[1], v.Position[3]) < 22500 then
+                if v.LastSpotted ~= 0 and (GetGameTimeSeconds() - 30) < v.LastSpotted and VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[3], v.Position[1], v.Position[3]) < 22500 then
                     --RNGLOG('Enemy ACU seen within 30 seconds and is within 150 of our start position')
                     return
                 end
@@ -1399,7 +1402,12 @@ function CDRThreatAssessmentRNG(cdr)
             if aiBrain.RNGEXP then
                 cdr.MaxBaseRange = 60
             else
-                cdr.MaxBaseRange = math.max(120, cdr.DefaultRange * cdr.Confidence)
+                if ScenarioInfo.Options.AICDRCombat == 'cdrcombatOff' then
+                    RNGLOG('cdrcombat is off setting max radius to 60')
+                    cdr.MaxBaseRange = 60
+                else
+                    cdr.MaxBaseRange = math.max(120, cdr.DefaultRange * cdr.Confidence)
+                end
             end
            --RNGLOG('Current CDR Max Base Range '..cdr.MaxBaseRange)
         end
@@ -1453,6 +1461,10 @@ function CDROverChargeRNG(aiBrain, cdr)
        --RNGLOG('No range on cdr.WeaponRange')
     end
     maxRadius = cdr.HealthPercent * 100
+    if ScenarioInfo.Options.AICDRCombat == 'cdrcombatOff' then
+        RNGLOG('cdrcombat is off setting max radius to 60')
+        maxRadius = 60
+    end
     
     if cdr.Health > 5000 and cdr.Phase < 3
         and aiBrain.MapSize <= 10

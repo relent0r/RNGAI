@@ -317,6 +317,186 @@ Platoon = Class(RNGAIPlatoonClass) {
             coroutine.yield(25)
         end
     end,
+
+    AirTorpAIRNG = function(self)
+        self:Stop()
+        --RNGLOG('AirHuntAI Starting')
+        local aiBrain = self:GetBrain()
+        local data = self.PlatoonData
+        local categoryList = {}
+        local atkPri = {}
+        local target
+        local startX, startZ = aiBrain:GetArmyStartPos()
+        local currentPlatPos
+        local distSq
+        local avoidBases = data.AvoidBases or false
+        local platoonLimit = self.PlatoonData.PlatoonLimit or 18
+        local defensive = data.Defensive or false
+        local restrictedZone = BaseRestrictedArea * BaseRestrictedArea
+        self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
+        self.HoldingPosition = aiBrain.BuilderManagers['MAIN'].Position
+        if data.PrioritizedCategories then
+            for k,v in data.PrioritizedCategories do
+                RNGINSERT(atkPri, v)
+                RNGINSERT(categoryList, v)
+            end
+        else
+            RNGINSERT(atkPri, categories.MOBILE * categories.AIR)
+            RNGINSERT(categoryList, categories.MOBILE * categories.AIR)
+        end
+        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
+        local platoonUnits = GetPlatoonUnits(self)
+        for k, v in platoonUnits do
+            if not v.Dead and v:TestToggleCaps('RULEUTC_StealthToggle') then
+                v:SetScriptBit('RULEUTC_StealthToggle', false)
+            end
+            if not v.Dead and v:TestToggleCaps('RULEUTC_CloakToggle') then
+                v:SetScriptBit('RULEUTC_CloakToggle', false)
+            end
+        end
+        self:SetPrioritizedTargetList('Attack', categoryList)
+        local maxRadius = data.SearchRadius or 1000
+        local threatCountLimit = 0
+        local acuCheck = false
+        while PlatoonExists(aiBrain, self) do
+            local currentPlatPos = GetPlatoonPosition(self)
+            if not currentPlatPos then
+                return
+            end
+            platoonUnits = GetPlatoonUnits(self)
+            self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Air', categories.ALLUNITS)
+
+            if self.CurrentPlatoonThreat < 10 and aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
+                maxRadius = BaseRestrictedArea * 1.5
+            elseif aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
+                maxRadius = BaseMilitaryArea
+            else
+                maxRadius = BaseEnemyArea
+            end
+            if maxRadius then
+                self.MaxRadius = maxRadius
+            end
+            if aiBrain.CDRUnit.Active and RUtils.PositionInWater(aiBrain.CDRUnit.Position) then
+                local acuDistance = VDist2(currentPlatPos[1], currentPlatPos[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3])
+                if acuDistance > maxRadius then
+                    --RNGLOG('ACU is active and further than our max distance, lets increase it to cover him better')
+                    acuCheck = true
+                end
+            end
+            if not target or target.Dead then
+                --RNGLOG('Looking for target at radius '..maxRadius)
+                target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self.HoldingPosition, self, 'Attack', maxRadius, atkPri, avoidBases, self.CurrentPlatoonThreat)
+                if (not target or target.Dead) and acuCheck then
+                    --RNGLOG('No target found at max radius, checking around acu as its active')
+                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, aiBrain.CDRUnit.Position, self, 'Attack', 80, atkPri, false)
+                end
+            end
+            if not PlatoonExists(aiBrain, self) then
+                return
+            end
+
+            if target and not target.Dead then
+                --RNGLOG('Target Found')
+                self.Target = target
+                local targetPos = target:GetPosition()
+                local platoonCount = RNGGETN(GetPlatoonUnits(self))
+                --RNGLOG('Air Hunt Enemy Threat at target position is '..GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir'))
+                --RNGLOG('Target Position is '..repr(targetPos))
+                --RNGLOG('Platoon Threat is '..self.CurrentPlatoonThreat)
+                --RNGLOG('threatCountLimit is '..threatCountLimit)
+                if currentPlatPos then
+                    local targetThreat = GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
+                    --RNGLOG('Air threat at target position '..targetThreat)
+                    --RNGLOG('Current Platoon threat '..self.CurrentPlatoonThreat)
+                    if VDist3Sq(currentPlatPos, targetPos) > restrictedZone then
+                        if (threatCountLimit < 6 ) and (VDist2Sq(currentPlatPos[1], currentPlatPos[2], startX, startZ) < 22500) and (targetThreat * 1.3 > self.CurrentPlatoonThreat) and platoonCount < platoonLimit and not aiBrain.CDRUnit.Caution then
+                            --RNGLOG('Target air threat too high')
+                            threatCountLimit = threatCountLimit + 1
+                            self:MoveToLocation(aiBrain.BuilderManagers['MAIN'].Position, false)
+                            coroutine.yield(80)
+                            self:Stop()
+                            self:MergeWithNearbyPlatoonsRNG('AirTorpAIRNG', 60, 20)
+                            continue
+                        end
+                    end
+                    self:Stop()
+                    --RNGLOG('* AI-RNG: Attacking Target')
+                    --RNGLOG('* AI-RNG: AirHunt Target is at :'..repr(target:GetPosition()))
+                    self:AttackTarget(target)
+                else
+                    return
+                end
+                local oldPlatPos = GetPlatoonPosition(self)
+                local stuckCount = 0
+                while PlatoonExists(aiBrain, self) do
+                    coroutine.yield(20)
+                    currentPlatPos = GetPlatoonPosition(self)
+                    --RNGLOG('Is the target pos updating during this loop? '..repr(targetPos))
+                    if (not target) or target.Dead then
+                        --RNGLOG('* AI-RNG: Target Dead or not or Destroyed, breaking loop')
+                        break
+                    end
+                    if currentPlatPos and VDist3Sq(oldPlatPos, currentPlatPos) < 4 then
+                        stuckCount = stuckCount + 1
+                        if stuckCount > 5 then
+                            break
+                        end
+                    end
+                end
+                coroutine.yield(10)
+            else
+               --('No Target found for interceptor platoon')
+            end
+            if not PlatoonExists(aiBrain, self) then
+                return
+            else
+                coroutine.yield(2)
+                currentPlatPos = GetPlatoonPosition(self)
+            end
+            if (not target or target.Dead) and currentPlatPos then
+                --RNGLOG('* AI-RNG: No Target Returning to base')
+                if PlatoonExists(aiBrain, self) then
+                    platoonUnits = GetPlatoonUnits(self)
+                    IssueClearCommands(platoonUnits)
+                    --RNGLOG('Air Unit Return to base provided position :'..repr(bestBase.Position))
+                    if currentPlatPos then
+                        coroutine.yield(20)
+                        target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, false, self, 'Attack', maxRadius, atkPri, avoidBases)
+                        if target and not target.Dead then
+                            self:SetAIPlanRNG('AirTorpAIRNG')
+                        end
+                    else
+                        coroutine.yield(1)
+                        return
+                    end
+                end
+            end
+            if not target or target.Dead then
+                self.HoldingPosition = aiBrain.BuilderManagers['MAIN'].Position
+                self:MoveToLocation(self.HoldingPosition, false)
+                while PlatoonExists(aiBrain, self) do
+                    currentPlatPos = GetPlatoonPosition(self)
+                    --RNGLOG('Air Unit Distance from platoon to bestBase position for Air units is'..VDist2Sq(currentPlatPos[1], currentPlatPos[3], bestBase.Position[1], bestBase.Position[3]))
+                    --RNGLOG('Air Unit Platoon Position is :'..repr(currentPlatPos))
+                    if currentPlatPos then
+                        distSq = VDist3Sq(currentPlatPos, self.HoldingPosition)
+                        if distSq < 6400 then
+                            break
+                        end
+                        coroutine.yield(20)
+                        target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, false, self, 'Attack', maxRadius, atkPri, avoidBases)
+                        if target and not target.Dead then
+                            self:SetAIPlanRNG('AirTorpAIRNG')
+                        end
+                    else
+                        coroutine.yield(1)
+                        return
+                    end
+                end
+            end
+            coroutine.yield(25)
+        end
+    end,
     
     MercyAIRNG = function(self)
         self:Stop()
@@ -3713,7 +3893,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         local inWater = RUtils.PositionInWater(engPos)
         if inWater then
-            
             buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1SeaFactory', eng, false, nil, nil, true)
         else
             if aiBrain.RNGEXP then
@@ -3944,9 +4123,21 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
                 --RNGLOG('CommanderInitializeAIRNG : We should be close to the hydro now')
             end
+            IssueClearCommands({eng})
             local assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
             local assistee = false
             --RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
+            local assistListCount = 0
+            while not next(assistList) do
+                coroutine.yield( 15 )
+                assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
+                assistListCount = assistListCount + 1
+                --RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
+                if assistListCount > 10 then
+                    --RNGLOG('assistListCount is still empty after 7.5 seconds')
+                    break
+                end
+            end
             if next(assistList) then
                 -- only have one unit in the list; assist it
                 local low = false
@@ -6785,7 +6976,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             if  VDist3Sq(platPos, allyPlatPos) <= radiusSq then
                 if not AIAttackUtils.CanGraphToRNG(platPos, allyPlatPos, self.MovementLayer) then continue end
-                --RNGLOG("*AI DEBUG: Scout moving to allied platoon position")
+                RNGLOG("*AI DEBUG: Scout moving to allied platoon position for plan "..aPlat.PlanName)
                 return true, aPlat
             end
         end
@@ -7342,6 +7533,9 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         local atkPri = {}
         local threatType
+        if not self.EnemyRadius then
+            self.EnemyRadius = 40
+        end
         if self.MovementLayer == 'Land' or self.MovementLayer == 'Amphibious' then
             atkPri = { categories.MOBILE * categories.LAND, categories.STRUCTURE }
             threatType = 'Land'
@@ -10310,31 +10504,6 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             self.chpdata.merging=false
         end
-    end,
-
-    CDRPlatoon = function(self)
-        local aiBrain = self:GetBrain()
-        local platoonUnits = GetPlatoonUnits(self)
-        local cdr
-        for k, v in platoonUnits do
-            if not v.Dead and EntityCategoryContains(categories.COMMAND, v) then
-                IssueClearCommands({v})
-                if not cdr then
-                    eng = v
-                end
-            end
-        end
-        if not cdr then
-            WARN('Non ACU in CDRPlatoon')
-            coroutine.yield(20)
-            return
-        else
-            aiBrain:AssignUnitsToPlatoon(self, {cdr}, 'Attack', 'None')
-        end
-
-        RUtils.CDRWeaponCheckRNG(aiBrain, cdr)
-
-
     end,
 
 

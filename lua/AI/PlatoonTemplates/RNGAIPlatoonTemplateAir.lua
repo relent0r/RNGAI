@@ -6,7 +6,7 @@ PlatoonTemplate {
     Name = 'RNGAI AntiAirHunt',
     Plan = 'AirHuntAIRNG',
     GlobalSquads = {
-        { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.GROUNDATTACK - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 1, 100, 'Attack', 'none' },
+        { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.GROUNDATTACK - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.ANTINAVY, 1, 100, 'Attack', 'none' },
         { categories.AIR * categories.SCOUT * (categories.TECH1 + categories.TECH3), 0, 1, 'scout', 'None' },
     }
 }
@@ -84,7 +84,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI TorpBomberAttack',
-    Plan = 'AirHuntAIRNG',
+    Plan = 'AirTorpAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.AIR * categories.ANTINAVY - categories.EXPERIMENTAL, 1, 50, 'Attack', 'GrowthFormation' },
     }
