@@ -1697,7 +1697,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
     local ALLBPS = __blueprints
 
     --RNGLOG("Started analysis for: " .. aiBrain.Nickname)
-    local startedAnalysisAt = GetSystemTimeSecondsOnlyForProfileUse()
+    --local startedAnalysisAt = GetSystemTimeSecondsOnlyForProfileUse()
 
     aiBrain.EnemyIntel.DirectorData = {
         DefenseCluster = {},
@@ -2009,15 +2009,21 @@ TacticalThreatAnalysisRNG = function(aiBrain)
     
 
     --RNGLOG("Finished analysis for: " .. aiBrain.Nickname)
-    local finishedAnalysisAt = GetSystemTimeSecondsOnlyForProfileUse()
+    --local finishedAnalysisAt = GetSystemTimeSecondsOnlyForProfileUse()
     --RNGLOG("Time of analysis: " .. (finishedAnalysisAt - startedAnalysisAt))
 end
 
 LastKnownThread = function(aiBrain)
     local ALLBPS = __blueprints
+    local unitCat
+    local im = GetIntelManager(aiBrain)
     aiBrain.lastknown={}
     --aiBrain:ForkThread(ShowLastKnown)
     aiBrain:ForkThread(TruePlatoonPriorityDirector)
+    while not im.MapIntelGrid do
+        RNGLOG('Waiting for MapIntelGrid to exist...')
+        coroutine.yield(20)
+    end
     while not aiBrain.emanager.enemies do coroutine.yield(20) end
     while aiBrain.Status ~= "Defeat" do
         local time=GetGameTimeSeconds()
@@ -2028,9 +2034,10 @@ LastKnownThread = function(aiBrain)
             for _,v in eunits do
                 if not v or v.Dead then continue end
                 if ArmyIsCivilian(v:GetArmy()) then continue end
+                unitCat = v.Blueprint.CategoriesHash
                 local id=v.Sync.id
                 local unitPosition = table.copy(v:GetPosition())
-                if EntityCategoryContains(categories.MASSEXTRACTION,v) then
+                if unitCat.MASSEXTRACTION then
                     if not aiBrain.lastknown[id] or time-aiBrain.lastknown[id].time>10 then
                         aiBrain.lastknown[id]={}
                         aiBrain.lastknown[id].object=v
@@ -2051,9 +2058,9 @@ LastKnownThread = function(aiBrain)
                     if not enemyMexes[v.zoneid] then
                         enemyMexes[v.zoneid] = {T1 = 0,T2 = 0,T3 = 0,}
                     end
-                    if EntityCategoryContains(categories.TECH1,v) then
+                    if unitCat.categories.TECH1 then
                         enemyMexes[v.zoneid].T1 = enemyMexes[v.zoneid].T1 + 1
-                    elseif EntityCategoryContains(categories.TECH2,v) then
+                    elseif unitCat.categories.TECH2 then
                         enemyMexes[v.zoneid].T2 = enemyMexes[v.zoneid].T2 + 1
                     else
                         enemyMexes[v.zoneid].T3 = enemyMexes[v.zoneid].T3 + 1
@@ -2062,28 +2069,28 @@ LastKnownThread = function(aiBrain)
                 if not aiBrain.lastknown[id] or time-aiBrain.lastknown[id].time>10 then
                     if not aiBrain.lastknown[id] then
                         aiBrain.lastknown[id]={}
-                        if EntityCategoryContains(categories.MOBILE,v) then
-                            if EntityCategoryContains(categories.ENGINEER-categories.COMMAND,v) then
+                        if unitCat.categories.MOBILE then
+                            if unitCat.ENGINEER and not unitCat.COMMAND then
                                 aiBrain.lastknown[id].type='eng'
-                            elseif EntityCategoryContains(categories.COMMAND,v) then
+                            elseif unitCat.categories.COMMAND then
                                 aiBrain.lastknown[id].type='acu'
-                            elseif EntityCategoryContains(categories.ANTIAIR,v) then
+                            elseif unitCat.categories.ANTIAIR then
                                 aiBrain.lastknown[id].type='aa'
-                            elseif EntityCategoryContains(categories.DIRECTFIRE,v) then
+                            elseif unitCat.categories.DIRECTFIRE then
                                 aiBrain.lastknown[id].type='tank'
-                            elseif EntityCategoryContains(categories.INDIRECTFIRE,v) then
+                            elseif unitCat.categories.INDIRECTFIRE then
                                 aiBrain.lastknown[id].type='arty'
                             end
-                        elseif EntityCategoryContains(categories.RADAR,v) then
+                        elseif unitCat.categories.RADAR then
                             aiBrain.lastknown[id].type='radar'
-                        elseif EntityCategoryContains(categories.TACTICALMISSILEPLATFORM, v) then
+                        elseif unitCat.TACTICALMISSILEPLATFORM then
                             aiBrain.lastknown[id].type='tml'
                             if not aiBrain.EnemyIntel.TML[id] then
                                 local angle = RUtils.GetAngleToPosition(aiBrain.BuilderManagers['MAIN'].Position, unitPosition)
                                 aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=ALLBPS[v.UnitId].Weapon[1].MaxRadius }
                                 aiBrain.BasePerimeterMonitor['MAIN'].RecentTMLAngle = angle
                             end
-                        elseif EntityCategoryContains(CategoriesSMD, v) then
+                        elseif unitCat.CategoriesSMD then
                             aiBrain.lastknown[id].type='smd'
                             if not aiBrain.EnemyIntel.SMD[id] then
                                 aiBrain.EnemyIntel.SMD[id] = {object = v, Position=unitPosition, Detected=GetGameTimeSeconds() }
