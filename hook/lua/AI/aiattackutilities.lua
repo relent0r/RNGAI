@@ -696,11 +696,11 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1En
         end
         --DUNCAN - try the land path nodefirst , not the transport marker as this will get units closer(thanks to Sorian).
         if not transportLocation then
-            transportLocation = AIUtils.AIGetClosestMarkerLocation(aiBrain, 'Land Path Node', destination[1], destination[3])
+            transportLocation = AIUtils.AIGetClosestMarkerLocationRNG(aiBrain, 'Land Path Node', destination[1], destination[3])
         end
         -- find an appropriate transport marker if it's on the map
         if not transportLocation then
-            transportLocation = AIUtils.AIGetClosestMarkerLocation(aiBrain, 'Transport Marker', destination[1], destination[3])
+            transportLocation = AIUtils.AIGetClosestMarkerLocationRNG(aiBrain, 'Transport Marker', destination[1], destination[3])
         end
 
         local useGraph = 'Land'

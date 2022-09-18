@@ -756,7 +756,7 @@ function AIGetClosestMarkerLocationRNG(aiBrain, markerType, startX, startZ, extr
         local x = v.Position[1]
         local y = v.Position[2]
         local z = v.Position[3]
-        distance = VDist2(startX, startZ, x, z)
+        distance = VDist2Sq(startX, startZ, x, z)
         if not lowest or distance < lowest then
             loc = v.Position
             name = v.Name
@@ -884,4 +884,58 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
     end
 
     return false
+end
+
+function AIFindNavalAreaNeedsEngineer(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
+    local pos
+    if aiBrain.BuilderManagers[locationType] then
+        pos = aiBrain.BuilderManagers[locationType].FactoryManager:GetLocationCoords()
+    end
+    if not pos then
+        return false
+    end
+    local positions = AIGetMarkersAroundLocation(aiBrain, 'Naval Area', pos, radius, tMin, tMax, tRings, tType)
+
+    local retPos, retName
+    if eng then
+        retPos, retName = AIFindMarkerNeedsEngineer(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, positions)
+    else
+        retPos, retName = AIFindMarkerNeedsEngineer(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
+    end
+
+    return retPos, retName
+end
+
+function AIFindNavalMarkerNeedsEngineer(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
+    local closest = false
+    local retPos, retName
+    local positions = AIFilterAlliedBases(aiBrain, positions)
+    for _, v in aiBrain.GraphZones do
+        for _, c in aiBrain.BrainIntel.EnemyStartLocations do
+            if string.find(v, 'Naval') then
+                local marker = AIGetClosestMarkerLocationRNG(aiBrain, 'Naval', c.Position[1], c.Position[3])
+            end
+        end
+    end
+
+    for _, v in positions do
+        if not aiBrain.BuilderManagers[v.Name] then
+            if not closest or VDist3(pos, v.Position) < closest then
+                closest = VDist3(pos, v.Position)
+                retPos = v.Position
+                retName = v.Name
+            end
+        else
+            local managers = aiBrain.BuilderManagers[v.Name]
+            if managers.EngineerManager:GetNumUnits('Engineers') == 0 and managers.FactoryManager:GetNumFactories() == 0 then
+                if not closest or VDist3(pos, v.Position) < closest then
+                    closest = VDist3(pos, v.Position)
+                    retPos = v.Position
+                    retName = v.Name
+                end
+            end
+        end
+    end
+
+    return retPos, retName
 end

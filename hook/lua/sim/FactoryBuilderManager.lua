@@ -28,11 +28,11 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
 
         if not self.UseCenterPoint then
             -- Find closest marker to averaged location
-            rally = AIUtils.AIGetClosestMarkerLocation(self, rallyType, position[1], position[3])
+            rally = AIUtils.AIGetClosestMarkerLocationRNG(self, rallyType, position[1], position[3])
         elseif self.UseCenterPoint then
             -- use BuilderManager location
-            rally = AIUtils.AIGetClosestMarkerLocation(self, rallyType, position[1], position[3])
-            local expPoint = AIUtils.AIGetClosestMarkerLocation(self, 'Expansion Area', position[1], position[3])
+            rally = AIUtils.AIGetClosestMarkerLocationRNG(self, rallyType, position[1], position[3])
+            local expPoint = AIUtils.AIGetClosestMarkerLocationRNG(self, 'Expansion Area', position[1], position[3])
 
             if expPoint and rally then
                 local rallyPointDistance = VDist2(position[1], position[3], rally[1], rally[3])
