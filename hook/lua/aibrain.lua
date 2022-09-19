@@ -5175,11 +5175,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     if unitCat.COMMAND then
                         coms.acu = coms.acu + 1
                         engspend.com = engspend.com + spendm
-                        engbuildpower.com = engbuildpower.com + ALLBPS[unit.UnitId].Economy.BuildRate
+                        engbuildpower.com = engbuildpower.com + unit.Blueprint.Economy.BuildRate
                     elseif unitCat.SUBCOMMANDER then
                         coms.sacu = coms.sacu + 1
                         engspend.com = engspend.com + spendm
-                        engbuildpower.sacu = engbuildpower.sacu + ALLBPS[unit.UnitId].Economy.BuildRate
+                        engbuildpower.sacu = engbuildpower.sacu + unit.Blueprint.Economy.BuildRate
                     end
                 elseif unitCat.MASSFABRICATION then
                     if unitCat.TECH2 then
@@ -5195,13 +5195,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     if unitCat.TECH1 then
                         engspend.T1=engspend.T1+spendm
-                        engbuildpower.T1 = engbuildpower.T1 + ALLBPS[unit.UnitId].Economy.BuildRate
+                        engbuildpower.T1 = engbuildpower.T1 + unit.Blueprint.Economy.BuildRate
                     elseif unitCat.TECH2 then
                         engspend.T2=engspend.T2+spendm
-                        engbuildpower.T2 = engbuildpower.T2 + ALLBPS[unit.UnitId].Economy.BuildRate
+                        engbuildpower.T2 = engbuildpower.T2 + unit.Blueprint.Economy.BuildRate
                     elseif unitCat.TECH3 then
                         engspend.T3=engspend.T3+spendm
-                        engbuildpower.T3 = engbuildpower.T3 + ALLBPS[unit.UnitId].Economy.BuildRate
+                        engbuildpower.T3 = engbuildpower.T3 + unit.Blueprint.Economy.BuildRate
                     end
                 elseif unitCat.FACTORY then
                     if unitCat.LAND then
@@ -5255,7 +5255,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 elseif unitCat.LAND then
                     if not unitCat.EXPERIMENTAL then
-                        totalLandThreat = totalLandThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
+                        totalLandThreat = totalLandThreat + unit.Blueprint.Defense.SurfaceThreatLevel
                     end
                     if unitCat.TECH1 then
                         armyLandTiers.T1=armyLandTiers.T1+1
@@ -5317,7 +5317,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 elseif unitCat.AIR then
                     if not unitCat.EXPERIMENTAL then
-                        totalAirThreat = totalAirThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
+                        totalAirThreat = totalAirThreat + unit.Blueprint.Defense.AirThreatLevel + unit.Blueprint.Defense.SubThreatLevel + unit.Blueprint.Defense.SurfaceThreatLevel
                     end
                     if unitCat.TECH1 then
                         armyAirTiers.T1=armyAirTiers.T1+1
@@ -5325,7 +5325,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             armyAir.T1.scout=armyAir.T1.scout+1
                             armyAirType.scout=armyAirType.scout+1
                         elseif unitCat.ANTIAIR then
-                            totalAntiAirThreat = totalAntiAirThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
+                            totalAntiAirThreat = totalAntiAirThreat + unit.Blueprint.Defense.AirThreatLevel
                             armyAir.T1.interceptor=armyAir.T1.interceptor+1
                             armyAirType.interceptor=armyAirType.interceptor+1
                         elseif unitCat.BOMBER then
@@ -5344,7 +5344,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             armyAir.T2.bomber=armyAir.T2.bomber+1
                             armyAirType.bomber=armyAirType.bomber+1
                         elseif unitCat.xaa0202 then
-                            totalAntiAirThreat = totalAntiAirThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
+                            totalAntiAirThreat = totalAntiAirThreat + unit.Blueprint.Defense.AirThreatLevel
                             armyAir.T2.fighter=armyAir.T2.fighter+1
                             armyAirType.fighter=armyAirType.fighter+1
                         elseif unitCat.GROUNDATTACK and not unitCat.EXPERIMENTAL then
@@ -5366,7 +5366,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             armyAir.T3.scout=armyAir.T3.scout+1
                             armyAirType.scout=armyAirType.scout+1
                         elseif unitCat.ANTIAIR and not unitCat.BOMBER and not unitCat.GROUNDATTACK then
-                            totalAntiAirThreat = totalAntiAirThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
+                            totalAntiAirThreat = totalAntiAirThreat + unit.Blueprint.Defense.AirThreatLevel
                             armyAir.T3.asf=armyAir.T3.asf+1
                             armyAirType.asf=armyAirType.asf+1
                         elseif unitCat.BOMBER then
@@ -5385,8 +5385,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 elseif unitCat.NAVAL then
                     if not unitCat.EXPERIMENTAL then
-                        totalNavalThreat = totalNavalThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
-                        totalNavalSubThreat = totalNavalSubThreat + ALLBPS[unit.UnitId].Defense.SubThreatLevel
+                        totalNavalThreat = totalNavalThreat + unit.Blueprint.Defense.AirThreatLevel + unit.Blueprint.Defense.SubThreatLevel + unit.Blueprint.Defense.SurfaceThreatLevel
+                        totalNavalSubThreat = totalNavalSubThreat + unit.Blueprint.Defense.SubThreatLevel
                     end
                     if unitCat.TECH1 then
                         armyNavalTiers.T1=armyNavalTiers.T1+1
@@ -5435,7 +5435,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end]]
                     end
                 elseif unitCat.SILO then
-                    if ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
+                    if unitCat.TECH2 then
                         silo.T2=silo.T2+1
                         launcherspend.T2=launcherspend.T2+spendm
                     elseif unitCat.TECH3 then
