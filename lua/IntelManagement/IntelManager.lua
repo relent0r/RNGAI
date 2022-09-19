@@ -1107,13 +1107,36 @@ IntelManager = Class {
         end
         if type == 'AirAntiSurface' and table.getn(potentialStrikes) > 0 then
             local count = math.ceil(desiredStrikeDamage / 1000)
+            local acuSnipe = false
+            local zoneAttack = false
+            for k, v in potentialStrikes do
+                if v.Type == 'ACU' then
+                    acuSnipe = true
+                elseif v.Type == 'Zone' then
+                    zoneAttack = true
+                end
+            end
             RNGLOG('Number of T2 Bombers wanted '..count)
-            self.Brain.amanager.Demand.Air.T2.bomber = count
+            if acuSnipe then
+                self.Brain.amanager.Demand.Air.T2.bomber = count
+                self.Brain.amanager.Demand.Air.T2.mercy = count
+            end
+            if zoneAttack then
+                self.Brain.amanager.Demand.Air.T2.bomber = count
+            end
         elseif type == 'LandAntiSurface' then
             if table.getn(potentialStrikes) > 0 then
                 local count = math.ceil(desiredStrikeDamage / 1000)
+                local acuSnipe = false
+                for k, v in potentialStrikes do
+                    if v.Type == 'ACU' then
+                        acuSnipe = true
+                    end
+                end
                 RNGLOG('Number of T2 Bombs wanted '..count)
-                self.Brain.amanager.Demand.Land.T2.mobilebomb = count
+                if acuSnipe then
+                    self.Brain.amanager.Demand.Land.T2.mobilebomb = count
+                end
             else
                 self.Brain.amanager.Demand.Land.T2.mobilebomb = 0
             end
