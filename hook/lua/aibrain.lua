@@ -1091,17 +1091,7 @@ AIBrain = Class(RNGAIBrainClass) {
             --RNGLOG('* AI-RNG: Map does not have mass markers in water')
             self.MassMarkersInWater = false
         end
-
-        --[[ Below was used prior to Uveso adding the expansion generator to provide expansion in locations with multiple mass markers
-        RUtils.TacticalMassLocations(self)
-        RUtils.MarkTacticalMassLocations(self)
-        local MassGroupMarkers = RUtils.GenerateMassGroupMarkerLocations(self)
-        if MassGroupMarkers then
-            if RNGGETN(MassGroupMarkers) > 0 then
-                RUtils.CreateMarkers('Unmarked Expansion', MassGroupMarkers)
-            end
-        end]]
-        
+       
         self:IMAPConfigurationRNG()
         -- Begin the base monitor process
         self:NoRushCheck()

@@ -65,6 +65,32 @@ Valid Threat Options:
         setfocusarmy -1 = back to observer
 ]]
 
+--[[ Gets tactical mass locations and sets markers on ones with no existing expansion markers
+    'Air Path Node',
+    'Amphibious Path Node',
+    'Blank Marker',
+    'Camera Info',
+    'Combat Zone',
+    'Defensive Point',
+    'Effect',
+    'Expansion Area',
+    'Hydrocarbon',
+    'Island',
+    'Land Path Node',
+    'Large Expansion Area',
+    'Mass',
+    'Naval Area',
+    'Naval Defensive Point',
+    'Naval Exclude',
+    'Naval Link',
+    'Naval Rally Point',
+    'Protected Experimental Construction',
+    'Rally Point',
+    'Transport Marker',
+    'Water Path Node',
+    'Weather Definition',
+    'Weather Generator',]]
+
 local PropBlacklist = {}
 -- This uses a mix of Uveso's reclaim logic and my own
 function ReclaimRNGAIThread(platoon, self, aiBrain)
@@ -1116,120 +1142,6 @@ function ManualBuildStructure(aiBrain, eng, structureType, tech, position)
     end
 end]]
 
-function TacticalMassLocations(aiBrain)
-    -- Scans the map and trys to figure out tactical locations with multiple mass markers
-    -- markerLocations will be returned in the table full of these tables { Name="Mass7", Position={ 189.5, 24.240200042725, 319.5, type="VECTOR3" } }
-
-    --RNGLOG('* AI-RNG: * Starting Tactical Mass Location Function')
-    local markerGroups = {}
-    local markerLocations = AIGetMassMarkerLocations(aiBrain, false, false)
-    if markerLocations then
-        aiBrain.BrainIntel.MassMarker = RNGGETN(markerLocations)
-    end
-    local group = 1
-    local duplicateMarker = {}
-    -- loop thru all the markers --
-    for key_1, marker_1 in markerLocations do
-        -- only process a marker that has not already been used
-            local groupSet = {MarkerGroup=group, Markers={}}
-            -- loop thru all the markers --
-            for key_2, marker_2 in markerLocations do
-                -- bypass any marker that's already been used
-                if VDist2Sq(marker_1.Position[1], marker_1.Position[3], marker_2.Position[1], marker_2.Position[3]) < 1600 then
-                    -- insert marker into group --
-                    table.insert(groupSet['Markers'], marker_2)
-                    markerLocations[key_2] = nil
-                end
-            end
-            markerLocations[key_1] = nil
-            if RNGGETN(groupSet['Markers']) > 2 then
-                table.insert(markerGroups, groupSet)
-                --RNGLOG('Group Set Markers :'..repr(groupSet))
-                group = group + 1
-            end
-    end
-    --RNGLOG('End Marker Groups :'..repr(markerGroups))
-    aiBrain.TacticalMonitor.TacticalMassLocations = markerGroups
-    --RNGLOG('* AI-RNG: * Marker Groups :'..repr(aiBrain.TacticalMonitor.TacticalMassLocations))
-end
-
-function MarkTacticalMassLocations(aiBrain)
---[[ Gets tactical mass locations and sets markers on ones with no existing expansion markers
-    'Air Path Node',
-    'Amphibious Path Node',
-    'Blank Marker',
-    'Camera Info',
-    'Combat Zone',
-    'Defensive Point',
-    'Effect',
-    'Expansion Area',
-    'Hydrocarbon',
-    'Island',
-    'Land Path Node',
-    'Large Expansion Area',
-    'Mass',
-    'Naval Area',
-    'Naval Defensive Point',
-    'Naval Exclude',
-    'Naval Link',
-    'Naval Rally Point',
-    'Protected Experimental Construction',
-    'Rally Point',
-    'Transport Marker',
-    'Water Path Node',
-    'Weather Definition',
-    'Weather Generator',]]
-
-    local massGroups = aiBrain.TacticalMonitor.TacticalMassLocations
-    local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
-    local markerList = {}
-    --RNGLOG('Pre Sorted MassGroups'..repr(massGroups))
-    if massGroups then
-        if expansionMarkers then
-            for k, v in expansionMarkers do
-                if v.type == 'Expansion Area' or v.type == 'Large Expansion Area' then
-                    table.insert(markerList, {Position = v.position})
-                end
-            end
-        end
-        for i = 1, 16 do
-            if Scenario.MasterChain._MASTERCHAIN_.Markers['ARMY_'..i] then
-                table.insert(markerList, {Position = Scenario.MasterChain._MASTERCHAIN_.Markers['ARMY_'..i].position})
-            end
-        end
-        for key, group in massGroups do
-            for key2, marker in markerList do
-                if VDist2Sq(group.Markers[1].Position[1], group.Markers[1].Position[3], marker.Position[1], marker.Position[3]) < 3600 then
-                    --RNGLOG('Location :'..repr(group.Markers[1])..' is less than 3600 from :'..repr(marker))
-                    massGroups[key] = nil
-                else
-                    --RNGLOG('Location :'..repr(group.Markers[1])..' is more than 3600 from :'..repr(marker))
-                    --RNGLOG('Location distance :'..VDist2Sq(group.Markers[1].Position[1], group.Markers[1].Position[3], marker.Position[1], marker.Position[3]))
-                end
-            end
-        end
-        aiBrain:RebuildTable(massGroups)
-    end
-    aiBrain.TacticalMonitor.TacticalUnmarkedMassGroups = massGroups
-    --RNGLOG('* AI-RNG: * Total Expansion, Large expansion markers'..repr(markerList))
-    --RNGLOG('* AI-RNG: * Unmarked Mass Groups'..repr(massGroups))
-end
-
-function GenerateMassGroupMarkerLocations(aiBrain)
-    -- Will generate locations for markers on the center point for each unmarked mass group
-    local markerGroups = aiBrain.TacticalMonitor.TacticalUnmarkedMassGroups
-    local newMarkerLocations = {}
-    if RNGGETN(markerGroups) > 0 then
-        for key, group in markerGroups do
-            local position = MassGroupCenter(group)
-            table.insert(newMarkerLocations, position)
-            --RNGLOG('Position for new marker is :'..repr(position))
-        end
-        --RNGLOG('Completed New marker positions :'..repr(newMarkerLocations))
-        return newMarkerLocations
-    end
-    return false
-end
 
 function CreateMarkers(markerType, newMarkers)
 -- markerType = string e.g "Marker Area"

@@ -812,6 +812,7 @@ GameMap = Class({
 
 local map = GameMap()
 local zoneSets = {}
+local RNGAIMarkerTable = {}
 
 local DEFAULT_BORDER = 4
 function BeginSession()
@@ -846,10 +847,63 @@ function BeginSession()
     else
        --RNGLOG("FlowAI framework: No custom zoning classes found.")
     end
+    GenerateMapMarkers()
+end
+
+function GenerateMapMarkers()
+    local WantedGridCellSize = math.floor( math.max( ScenarioInfo.size[1], ScenarioInfo.size[2] ) / 32)
+    local AIMarkerGenerator = import('/mods/AI-Uveso/lua/AI/AIMarkerGenerator.lua')
+    AIMarkerGenerator.InitMarkerGenerator()
+    AIMarkerGenerator.BuildTerrainPathMap()
+    -- Set grid cell size for air (half the size than normal layers)
+    AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize * 2)
+    AIMarkerGenerator.CreateMarkerGrid("Air")
+    AIMarkerGenerator.ConnectMarkerWithPathing("Air")
+    AIMarkerGenerator.BuildGraphAreas("Air")
+    RNGAImarkerTable["Air"] = AIMarkerGenerator.GetMarkerTable("Air")
+
+    -- Set grid cell size for land
+    AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize)
+    AIMarkerGenerator.CreateMarkerGrid("Land")
+    AIMarkerGenerator.ConnectMarkerWithPathing("Land")
+    AIMarkerGenerator.BuildGraphAreas("Land")
+    RNGAImarkerTable["Land"] = AIMarkerGenerator.GetMarkerTable("Land")
+
+    -- Set grid cell size for water
+    AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize)
+    AIMarkerGenerator.CreateMarkerGrid("Water")
+    AIMarkerGenerator.ConnectMarkerWithPathing("Water")
+    AIMarkerGenerator.BuildGraphAreas("Water")
+    RNGAImarkerTable["Water"] = AIMarkerGenerator.GetMarkerTable("Water")
+
+    -- Set grid cell size for amphibious
+    AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize)
+    AIMarkerGenerator.CreateMarkerGrid("Amphibious")
+    AIMarkerGenerator.ConnectMarkerWithPathing("Amphibious")
+    AIMarkerGenerator.BuildGraphAreas("Amphibious")
+    RNGAImarkerTable["Amphibious"] = AIMarkerGenerator.GetMarkerTable("Amphibious")
+
+    -- Set grid cell size for hover
+    AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize)
+    AIMarkerGenerator.CreateMarkerGrid("Hover")
+    AIMarkerGenerator.ConnectMarkerWithPathing("Hover")
+    AIMarkerGenerator.BuildGraphAreas("Hover")
+    RNGAImarkerTable["Hover"] = AIMarkerGenerator.GetMarkerTable("Hover")
+    
+    --create naval Areas
+    RNGAImarkerTable["NavalExpansions"] = AIMarkerGenerator.CreateNavalExpansions()
+
+    --create land expansions
+    RNGAImarkerTable["LandExpansions"] = AIMarkerGenerator.CreateLandExpansions()
+
 end
 
 function GetMap()
     return map
+end
+
+function GetMapMarkers()
+    return RNGAIMarkerTable
 end
 
 function GetPlayableAreaRNG()
