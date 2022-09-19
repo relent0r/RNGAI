@@ -1223,6 +1223,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 RNGLOG(reprs(self.EnemyIntel.TML))
                 RNGLOG('Recent Angle '..self.BasePerimeterMonitor['MAIN'].RecentTMLAngle)
             end
+            RNGLOG('Perimeter Monitor Stats '..repr(self.BasePerimeterMonitor['MAIN']))
             local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(self)
             RNGLOG('Unit Stats '..repr(im.UnitStats))
             RNGLOG('IntelCoverage Percentage '..repr(im.MapIntelStats.IntelCoverage))
@@ -2164,8 +2165,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     PickEnemyLogicRNG = function(self)
-        local ALLBPS = __blueprints
-        local armyStrengthTable = {}
+        local armyStrengthTable = {} 
         local selfIndex = self:GetArmyIndex()
         local enemyBrains = {}
         local allyCount = 0
@@ -2253,9 +2253,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 if insertTable.Enemy == false then
                     local ecoStructures = GetUnitsAroundPoint(self, categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSPRODUCTION), {startX, 0 ,startZ}, 120, 'Ally')
                     for _, v in ecoStructures do
-                        local ecoStructThreat = ALLBPS[v.UnitId].Defense.EconomyThreatLevel
                         --RNGLOG('* AI-RNG: Eco Structure'..ecoStructThreat)
-                        ecoThreat = ecoThreat + ecoStructThreat
+                        ecoThreat = ecoThreat + v.Blueprint.Defense.EconomyThreatLevel
                     end
                 else
                     ecoThreat = 1
@@ -2580,9 +2579,6 @@ AIBrain = Class(RNGAIBrainClass) {
             },
         ]]
         coroutine.yield(Random(5,20))
-        local ALLBPS = __blueprints
-        local LandCatUnits = categories.LAND + categories.AMPHIBIOUS + categories.COMMAND
-        local AirSurfaceCatUnits = categories.MOBILE * categories.AIR * (categories.GROUNDATTACK + categories.BOMBER)
         local perimeterMonitorRadius = BaseRestrictedArea * 1.2
         self.BasePerimeterMonitor = {}
         if self.RNGDEBUG then
@@ -2601,6 +2597,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 local enemySurfaceAirAngle = false
                 local enemyAirAngle = false
                 local enemyNavalAngle = false
+                local unitCat
                 if v.FactoryManager.LocationActive and self.BuilderManagers[k].FactoryManager and next(self.BuilderManagers[k].FactoryManager.FactoryList) then
                     if not self.BasePerimeterMonitor[k] then
                         self.BasePerimeterMonitor[k] = {}
@@ -2608,34 +2605,35 @@ AIBrain = Class(RNGAIBrainClass) {
                     local enemyUnits = self:GetUnitsAroundPoint(categories.ALLUNITS - categories.SCOUT - categories.INSIGNIFICANTUNIT, self.BuilderManagers[k].FactoryManager.Location, perimeterMonitorRadius , 'Enemy')
                     for _, unit in enemyUnits do
                         if unit and not unit.Dead then
-                            if ALLBPS[unit.UnitId].CategoriesHash.MOBILE then
-                                if EntityCategoryContains(LandCatUnits, unit) then
+                            unitCat = unit.Blueprint.CategoriesHash
+                            if unitCat.MOBILE then
+                                if unitCat.LAND or unitCat.AMPHIBIOUS or unitCat.COMMAND then
                                     landUnits = landUnits + 1
-                                    landThreat = landThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel
+                                    landThreat = landThreat + unit.Blueprint.Defense.SurfaceThreatLevel
                                     if landUnits == 1 then
                                         enemyLandAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unit:GetPosition())
                                     end
                                     continue
                                 end
-                                if EntityCategoryContains(AirSurfaceCatUnits, unit) then
+                                if unitCat.MOBILE and unitCat.AIR and (unitCat.GROUNDATTACK or unitCat.BOMBER) then
                                     antiSurfaceAir = antiSurfaceAir + 1
-                                    airThreat = airThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
+                                    airThreat = airThreat + unit.Blueprint.Defense.AirThreatLevel
                                     if antiSurfaceAir == 1 then
                                         enemySurfaceAirAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unit:GetPosition())
                                     end
                                     continue
                                 end
-                                if ALLBPS[unit.UnitId].CategoriesHash.AIR then
+                                if unitCat.AIR then
                                     airUnits = airUnits + 1
-                                    airThreat = airThreat + ALLBPS[unit.UnitId].Defense.AirThreatLevel
+                                    airThreat = airThreat + unit.Blueprint.Defense.AirThreatLevel
                                     if airUnits == 1 then
                                         enemyAirAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unit:GetPosition())
                                     end
                                     continue
                                 end
-                                if ALLBPS[unit.UnitId].CategoriesHash.NAVAL then
+                                if unitCat.NAVAL then
                                     navalUnits = navalUnits + 1
-                                    navalThreat = navalThreat + ALLBPS[unit.UnitId].Defense.SurfaceThreatLevel + ALLBPS[unit.UnitId].Defense.AirThreatLevel + ALLBPS[unit.UnitId].Defense.SubThreatLevel
+                                    navalThreat = navalThreat + unit.Blueprint.Defense.SurfaceThreatLevel + unit.Blueprint.Defense.AirThreatLevel + unit.Blueprint.Defense.SubThreatLevel
                                     if navalUnits == 1 then
                                         enemyNavalAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unit:GetPosition())
                                     end
@@ -2681,7 +2679,6 @@ AIBrain = Class(RNGAIBrainClass) {
             self.BaseMonitor.ZoneAlertTable[k] = { Threat = 0 }
         end
         --RNGLOG('ZoneAlertTable '..repr(self.BaseMonitor.ZoneAlertTable))
-        local ALLBPS = __blueprints
         local Zones = {
             'Land',
         }
@@ -2712,12 +2709,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             local unitsAtPosition = GetUnitsAroundPoint(self, categories.LAND * categories.MOBILE,  self.Zones.Land.zones[k].pos, 60, 'Ally')
                             for k, v in unitsAtPosition do
                                 if v and not v.Dead then
-                                    --RNGLOG('Unit ID is '..v.UnitId)
-                                    bp = ALLBPS[v.UnitId].Defense
-                                    --RNGLOG(repr(ALLBPS[v.UnitId].Defense))
-                                    if bp.SubThreatLevel ~= nil then
-                                        myThreat = myThreat + bp.SurfaceThreatLevel
-                                    end
+                                    myThreat = myThreat + v.Blueprint.Defense.SurfaceThreatLevel
                                 end
                             end
                         end
@@ -2749,7 +2741,6 @@ AIBrain = Class(RNGAIBrainClass) {
 
     BaseMonitorPlatoonDistressThreadRNG = function(self)
         self.BaseMonitor.PlatoonAlertSounded = true
-        local ALLBPS = __blueprints
         while true do
             local numPlatoons = 0
             for k, v in self.BaseMonitor.PlatoonDistressTable do
@@ -2762,11 +2753,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         local unitsAtPosition = GetUnitsAroundPoint(self, categories.ANTINAVY * categories.MOBILE,  platoonPos, 60, 'Ally')
                         for k, v in unitsAtPosition do
                             if v and not v.Dead then
-                                --RNGLOG('Unit ID is '..v.UnitId)
-                                bp = ALLBPS[v.UnitId].Defense
-                                --RNGLOG(repr(ALLBPS[v.UnitId].Defense))
-                                if bp.SubThreatLevel ~= nil then
-                                    myThreat = myThreat + bp.SubThreatLevel
+                                if v.Blueprint.Defense.SubThreatLevel ~= nil then
+                                    myThreat = myThreat + v.Blueprint.Defense.SubThreatLevel
                                 end
                             end
                         end
@@ -2775,11 +2763,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         local unitsAtPosition = GetUnitsAroundPoint(self, categories.LAND * categories.MOBILE,  platoonPos, 60, 'Ally')
                         for k, v in unitsAtPosition do
                             if v and not v.Dead then
-                                --RNGLOG('Unit ID is '..v.UnitId)
-                                bp = ALLBPS[v.UnitId].Defense
-                                --RNGLOG(repr(ALLBPS[v.UnitId].Defense))
-                                if bp.SubThreatLevel ~= nil then
-                                    myThreat = myThreat + bp.SurfaceThreatLevel
+                                if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                                    myThreat = myThreat + v.Blueprint.Defense.SurfaceThreatLevel
                                 end
                             end
                         end
@@ -3176,43 +3161,32 @@ AIBrain = Class(RNGAIBrainClass) {
                         -- previous method of getting unit ID before the property was added.
                         --local unitbpId = v:GetUnitId()
                         --RNGLOG('Unit blueprint id test only on dev branch:'..v.UnitId)
-                        bp = ALLBPS[v.UnitId].Defense
-            
-                        enemyAirThreat = enemyAirThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
-                        enemyAntiAirThreat = enemyAntiAirThreat + bp.AirThreatLevel
+                        enemyAirThreat = enemyAirThreat + v.Blueprint.Defense.AirThreatLevel + v.Blueprint.Defense.SubThreatLevel + v.Blueprint.Defense.SurfaceThreatLevel
+                        enemyAntiAirThreat = enemyAntiAirThreat + v.Blueprint.Defense.AirThreatLevel
                     end
                     coroutine.yield(1)
                     local enemyExtractors = GetListOfUnits( enemy, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
                     for _,v in enemyExtractors do
-                        bp = ALLBPS[v.UnitId].Defense
-
-                        enemyExtractorthreat = enemyExtractorthreat + bp.EconomyThreatLevel
+                        enemyExtractorthreat = enemyExtractorthreat + v.Blueprint.Defense.EconomyThreatLevel
                         enemyExtractorCount = enemyExtractorCount + 1
                     end
                     coroutine.yield(1)
                     local enemyNaval = GetListOfUnits( enemy, categories.NAVAL * ( categories.MOBILE + categories.DEFENSE ), false, false )
                     for _,v in enemyNaval do
-                        bp = ALLBPS[v.UnitId].Defense
-                        --RNGLOG('NavyThreat unit is '..v.UnitId)
-                        --RNGLOG('NavyThreat is '..bp.SubThreatLevel)
-                        enemyNavalThreat = enemyNavalThreat + bp.AirThreatLevel + bp.SubThreatLevel + bp.SurfaceThreatLevel
-                        enemyNavalSubThreat = enemyNavalSubThreat + bp.SubThreatLevel
+                        enemyNavalThreat = enemyNavalThreat + v.Blueprint.Defense.AirThreatLevel + v.Blueprint.Defense.SubThreatLevel + v.Blueprint.Defense.SurfaceThreatLevel
+                        enemyNavalSubThreat = enemyNavalSubThreat + v.Blueprint.Defense.SubThreatLevel
                     end
                     coroutine.yield(1)
                     local enemyLand = GetListOfUnits( enemy, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.COMMAND - categories.INSIGNIFICANTUNIT , false, false)
                     for _,v in enemyLand do
-                        bp = ALLBPS[v.UnitId].Defense
-                        enemyLandThreat = enemyLandThreat + bp.SurfaceThreatLevel
+                        enemyLandThreat = enemyLandThreat + v.Blueprint.Defense.SurfaceThreatLevel
                     end
                     coroutine.yield(1)
                     local enemyDefense = GetListOfUnits( enemy, categories.STRUCTURE * categories.DEFENSE - categories.SHIELD, false, false )
                     for _,v in enemyDefense do
-                        bp = ALLBPS[v.UnitId].Defense
-                        --RNGLOG('DefenseThreat unit is '..v.UnitId)
-                        --RNGLOG('DefenseThreat is '..bp.SubThreatLevel)
-                        enemyDefenseAir = enemyDefenseAir + bp.AirThreatLevel
-                        enemyDefenseSurface = enemyDefenseSurface + bp.SurfaceThreatLevel
-                        enemyDefenseSub = enemyDefenseSub + bp.SubThreatLevel
+                        enemyDefenseAir = enemyDefenseAir + v.Blueprint.Defense.AirThreatLevel
+                        enemyDefenseSurface = enemyDefenseSurface + v.Blueprint.Defense.SurfaceThreatLevel
+                        enemyDefenseSub = enemyDefenseSub + v.Blueprint.Defense.SubThreatLevel
                     end
                     coroutine.yield(1)
                     if self.EnemyIntel.Phase < 2 then
@@ -3287,7 +3261,6 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Get AI strength
         local selfIndex = self:GetArmyIndex()
         local GetPosition = moho.entity_methods.GetPosition
-        local bp
         coroutine.yield(1)
         local allyBrains = {}
         for index, brain in ArmyBrains do
@@ -3302,48 +3275,52 @@ AIBrain = Class(RNGAIBrainClass) {
         local allyExtractorthreat = 0
         local allyLandThreat = 0
         local allyAirThreat = 0
+        local unitCat
         --RNGLOG('Number of Allies '..RNGGETN(allyBrains))
         coroutine.yield(1)
         if next(allyBrains) then
             for k, ally in allyBrains do
                 local allyExtractorList = GetListOfUnits( ally, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
                 for _,v in allyExtractorList do
-                    if not v.Dead and not v.zoneid and self.ZonesInitialized then
-                        --LOG('unit has no zone')
-                        local mexPos = GetPosition(v)
-                        if RUtils.PositionOnWater(mexPos[1], mexPos[3]) then
-                            -- tbd define water based zones
-                            v.zoneid = 'water'
-                        else
-                            v.zoneid = MAP:GetZoneID(mexPos,self.Zones.Land.index)
-                            --LOG('Unit zone is '..unit.zoneid)
+                    if not v.Dead then
+                        unitCat = v.Blueprint.CategoriesHash
+                        if not v.zoneid and self.ZonesInitialized then
+                            --LOG('unit has no zone')
+                            local mexPos = GetPosition(v)
+                            if RUtils.PositionOnWater(mexPos[1], mexPos[3]) then
+                                -- tbd define water based zones
+                                v.zoneid = 'water'
+                            else
+                                v.zoneid = MAP:GetZoneID(mexPos,self.Zones.Land.index)
+                                --LOG('Unit zone is '..unit.zoneid)
+                            end
                         end
-                    end
-                    if not allyExtractors[v.zoneid] then
-                        --LOG('Trying to add unit to zone')
-                        allyExtractors[v.zoneid] = {T1 = 0,T2 = 0,T3 = 0,}
-                    end
-                    if ALLBPS[v.UnitId].CategoriesHash.TECH1 then
-                        allyExtractors[v.zoneid].T1=allyExtractors[v.zoneid].T1+1
-                    elseif ALLBPS[v.UnitId].CategoriesHash.TECH2 then
-                        allyExtractors[v.zoneid].T2=allyExtractors[v.zoneid].T2+1
-                    elseif ALLBPS[v.UnitId].CategoriesHash.TECH3 then
-                        allyExtractors[v.zoneid].T3=allyExtractors[v.zoneid].T3+1
-                    end
+                        if not allyExtractors[v.zoneid] then
+                            --LOG('Trying to add unit to zone')
+                            allyExtractors[v.zoneid] = {T1 = 0,T2 = 0,T3 = 0,}
+                        end
+                        if unitCat.TECH1 then
+                            allyExtractors[v.zoneid].T1=allyExtractors[v.zoneid].T1+1
+                        elseif unitCat.TECH2 then
+                            allyExtractors[v.zoneid].T2=allyExtractors[v.zoneid].T2+1
+                        elseif unitCat.TECH3 then
+                            allyExtractors[v.zoneid].T3=allyExtractors[v.zoneid].T3+1
+                        end
 
-                    allyExtractorthreat = allyExtractorthreat + ALLBPS[v.UnitId].Defense.EconomyThreatLevel
-                    allyExtractorCount = allyExtractorCount + 1
+                        allyExtractorthreat = allyExtractorthreat + v.Blueprint.Defense.EconomyThreatLevel
+                        allyExtractorCount = allyExtractorCount + 1
+                    end
                 end
                 local allyLandList = GetListOfUnits( ally, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.COMMAND , false, false)
                 
                 for _,v in allyLandList do
-                    allyLandThreat = allyLandThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                    allyLandThreat = allyLandThreat + v.Blueprint.Defense.SurfaceThreatLevel
                 end
 
                 local allyAirList = GetListOfUnits( ally, categories.MOBILE * categories.AIR , false, false)
                 
                 for _,v in allyAirList do
-                    allyAirThreat = allyAirThreat + ALLBPS[v.UnitId].Defense.AirThreatLevel
+                    allyAirThreat = allyAirThreat + v.Blueprint.Defense.AirThreatLevel
                 end
             end
         end
@@ -3510,7 +3487,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                 elseif platoonType == 'BOMBER' and strikeDamage then
-                    if (self.CDRUnit.Caution and self.CDRUnit.EnemyCDRPresent and VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase /2)) or self.CDRUnit.SuicideMode then
+                    if (self.CDRUnit.Caution and self.CDRUnit.EnemyCDRPresent and VDist3Sq(v.Position, self.BrainIntel.StartPos) < (self.EnemyIntel.ClosestEnemyBase /2)) or self.CDRUnit.SuicideMode then
                         RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position })
                         local gridX, gridY = im:GetIntelGrid(v.Position)
                         local scoutRequired = true
@@ -4229,21 +4206,23 @@ AIBrain = Class(RNGAIBrainClass) {
             coroutine.yield(50)
             local buildingTable = GetListOfUnits(self, categories.ENGINEER + categories.STRUCTURE * (categories.FACTORY + categories.RADAR + categories.MASSEXTRACTION), false)
             local potentialPowerConsumption = 0
+            local unitCat
             for k, v in buildingTable do
                 if not v.Dead and not v.BuildCompleted then
-                    if EntityCategoryContains(categories.ENGINEER, v) then
+                    unitCat = v.Blueprint.CategoriesHash
+                    if unitCat.ENGINEER then
                         if v.UnitBeingBuilt then
                             if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.NUKE and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Nuke Launcher being built')
                                 potentialPowerConsumption = potentialPowerConsumption + GetMissileConsumption(ALLBPS, v.UnitBeingBuilt.UnitId, multiplier)
                                 continue
                             end
-                            if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.8 then
+                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.TECH3 and ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.ANTIMISSILE and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Anti Nuke Launcher being built')
                                 potentialPowerConsumption = potentialPowerConsumption + GetMissileConsumption(ALLBPS, v.UnitBeingBuilt.UnitId, multiplier)
                                 continue
                             end
-                            if EntityCategoryContains(categories.TECH3 * categories.MASSFABRICATION, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.8 then
+                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.TECH3 and ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.MASSFABRICATION and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Mass Fabricator being built')
                                 if ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy then
                                     --RNGLOG('Fabricator being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
@@ -4251,7 +4230,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 end
                                 continue
                             end
-                            if EntityCategoryContains(categories.STRUCTURE * categories.SHIELD, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.8 then
+                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.STRUCTURE and ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.SHIELD and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Shield being built')
                                 if ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy then
                                     --RNGLOG('Shield being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
@@ -4259,13 +4238,13 @@ AIBrain = Class(RNGAIBrainClass) {
                                 end
                                 continue
                             end
-                            if EntityCategoryContains(categories.STRUCTURE * categories.FACTORY * categories.AIR, v.UnitBeingBuilt) and v:GetFractionComplete() < 0.8 then
+                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.STRUCTURE and ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.FACTORY and ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.AIR and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Shield being built')
                                 potentialPowerConsumption = potentialPowerConsumption + (150 * multiplier)
                                 continue
                             end
                         end
-                    elseif EntityCategoryContains(categories.TECH3 * categories.AIR, v) then
+                    elseif unitCat.TECH3 and unitCat.AIR then
                             if v:GetFractionComplete() < 0.7 then
                                 --RNGLOG('EcoPowerPreemptive : T3 Air Being Built')
                                 potentialPowerConsumption = potentialPowerConsumption + (1800 * multiplier)
@@ -4273,7 +4252,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             else
                                 v.BuildCompleted = true
                             end
-                    elseif EntityCategoryContains(categories.TECH2 * categories.AIR, v) then
+                    elseif unitCat.TECH2 and unitCat.AIR then
                         if v:GetFractionComplete() < 0.7 then
                             --RNGLOG('EcoPowerPreemptive : T2 Air Being Built')
                             potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
@@ -4281,7 +4260,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         else
                             v.BuildCompleted = true
                         end
-                    elseif ALLBPS[v.UnitId].CategoriesHash.MASSEXTRACTION then
+                    elseif unitCat.MASSEXTRACTION then
                         if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.7 then
                             --RNGLOG('EcoPowerPreemptive : Extractors being upgraded')
                             potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildCostEnergy / ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildTime * (ALLBPS[v.UnitId].Economy.BuildRate * multiplier))
@@ -4289,7 +4268,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         else
                             v.BuildCompleted = true
                         end
-                    elseif EntityCategoryContains(categories.STRUCTURE * (categories.RADAR + categories.SONAR), v) then
+                    elseif unitCat.STRUCTURE and (unitCat.RADAR or unitCat.SONAR) then
                         if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.7 then
                             --RNGLOG('EcoPowerPreemptive : Radar being upgraded next power consumption is '..ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy)
                             potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy
@@ -5295,10 +5274,10 @@ AIBrain = Class(RNGAIBrainClass) {
                         if unitCat.SNIPER then
                             armyLand.T3.sniper=armyLand.T3.sniper+1
                             armyLandType.sniper=armyLandType.sniper+1
-                        elseif unitCat.DIRECTFIRE and (unitCat.xel0305 or unitCat.xrl0305) then
+                        elseif unitCat.DIRECTFIRE and EntityCategoryContains(categories.xel0305 + categories.xrl0305, unit) then
                             armyLand.T3.armoured=armyLand.T3.armoured+1
                             armyLandType.armoured=armyLandType.armoured+1
-                        elseif unitCat.DIRECTFIRE and not unitCat.xel0305 and not unitCat.xrl0305 and not unitCat.ANTIAIR then
+                        elseif unitCat.DIRECTFIRE and not unitCat.ANTIAIR then
                             armyLand.T3.tank=armyLand.T3.tank+1
                             armyLandType.tank=armyLandType.tank+1
                         elseif unitCat.SILO then
@@ -5396,7 +5375,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif unitCat.T1SUBMARINE then
                             armyNaval.T1.sub=armyNaval.T1.sub+1
                             armyNavalType.sub=armyNavalType.sub+1
-                        elseif unitCat.uas0102 then
+                        elseif EntityCategoryContains(categories.uas0102, unit) then
                             armyNaval.T1.shard=armyNaval.T1.shard+1
                             armyNavalType.shard=armyNavalType.shard+1
                         end
@@ -5408,7 +5387,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif unitCat.CRUISER then
                             armyNaval.T2.cruiser=armyNaval.T2.cruiser+1
                             armyNavalType.cruiser=armyNavalType.cruiser+1
-                        elseif unitCat.T2SUBMARINE or unitCat.xes0102 then
+                        elseif unitCat.T2SUBMARINE or EntityCategoryContains(categories.xes0102, unit) then
                             armyNaval.T2.subhunter=armyNaval.T2.subhunter+1
                             armyNavalType.subhunter=armyNavalType.subhunter+1
                         end

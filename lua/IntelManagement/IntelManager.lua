@@ -2090,7 +2090,7 @@ LastKnownThread = function(aiBrain)
                                 aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=ALLBPS[v.UnitId].Weapon[1].MaxRadius }
                                 aiBrain.BasePerimeterMonitor['MAIN'].RecentTMLAngle = angle
                             end
-                        elseif unitCat.CategoriesSMD then
+                        elseif unitCat.TECH3 and unitCat.ANTIMISSILE and unitCat.SILO then
                             aiBrain.lastknown[id].type='smd'
                             if not aiBrain.EnemyIntel.SMD[id] then
                                 aiBrain.EnemyIntel.SMD[id] = {object = v, Position=unitPosition, Detected=GetGameTimeSeconds() }
