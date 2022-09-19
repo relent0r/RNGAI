@@ -1209,3 +1209,43 @@ function DoMassPointInfect(aiBrain,marker,masspoint)
         aiBrain.renderthreadtracker=nil
     end
 end
+
+function SetValidNavalMarkers(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
+    local closest = false
+    local retPos, retName
+    local positions = AIFilterAlliedBases(aiBrain, positions)
+    local graphZones = {}
+    for _, v in aiBrain.GraphZones do
+        for _, c in aiBrain.BrainIntel.EnemyStartLocations do
+            if string.find(v, 'Naval') then
+                local position, marker, distance = AIGetClosestPathExpansionMarkerLocationRNG(aiBrain, 'Naval', c.Position)
+                table.insert({MarkerName = marker, Distance = distance }, graphZones)
+            end
+        end
+    end
+    return graphZones
+end
+-- This will replace the aiutilities version soon. Its not ready yet.
+function AIGetClosestPathExpansionMarkerLocationRNG(aiBrain, markerType, position)
+    local markers = RNGAIMarkerTable
+    local markerList = {}
+    if markers then
+        for k, v in markers do
+            if v.type == markerType then
+                table.insert(markerList, {Position = v.position, Name = k})
+            end
+        end
+    end
+
+    local loc, distance, lowest, name = nil
+    for _, v in markerList do
+        distance = VDist3Sq(position, v.Position)
+        if not lowest or distance < lowest then
+            loc = v.Position
+            name = v.Name
+            lowest = distance
+        end
+    end
+
+    return loc, name, lowest
+end

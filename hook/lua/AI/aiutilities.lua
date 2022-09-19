@@ -906,36 +906,3 @@ function AIFindNavalAreaNeedsEngineer(aiBrain, locationType, radius, tMin, tMax,
     return retPos, retName
 end
 
-function AIFindNavalMarkerNeedsEngineer(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
-    local closest = false
-    local retPos, retName
-    local positions = AIFilterAlliedBases(aiBrain, positions)
-    for _, v in aiBrain.GraphZones do
-        for _, c in aiBrain.BrainIntel.EnemyStartLocations do
-            if string.find(v, 'Naval') then
-                local marker = AIGetClosestMarkerLocationRNG(aiBrain, 'Naval', c.Position[1], c.Position[3])
-            end
-        end
-    end
-
-    for _, v in positions do
-        if not aiBrain.BuilderManagers[v.Name] then
-            if not closest or VDist3(pos, v.Position) < closest then
-                closest = VDist3(pos, v.Position)
-                retPos = v.Position
-                retName = v.Name
-            end
-        else
-            local managers = aiBrain.BuilderManagers[v.Name]
-            if managers.EngineerManager:GetNumUnits('Engineers') == 0 and managers.FactoryManager:GetNumFactories() == 0 then
-                if not closest or VDist3(pos, v.Position) < closest then
-                    closest = VDist3(pos, v.Position)
-                    retPos = v.Position
-                    retName = v.Name
-                end
-            end
-        end
-    end
-
-    return retPos, retName
-end
