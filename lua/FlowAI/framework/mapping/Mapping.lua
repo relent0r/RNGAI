@@ -860,41 +860,42 @@ function GenerateMapMarkers()
     AIMarkerGenerator.CreateMarkerGrid("Air")
     AIMarkerGenerator.ConnectMarkerWithPathing("Air")
     AIMarkerGenerator.BuildGraphAreas("Air")
-    RNGAImarkerTable["Air"] = AIMarkerGenerator.GetMarkerTable("Air")
+    RNGAIMarkerTable["Air"] = AIMarkerGenerator.GetMarkerTable("Air")
 
     -- Set grid cell size for land
     AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize)
     AIMarkerGenerator.CreateMarkerGrid("Land")
     AIMarkerGenerator.ConnectMarkerWithPathing("Land")
     AIMarkerGenerator.BuildGraphAreas("Land")
-    RNGAImarkerTable["Land"] = AIMarkerGenerator.GetMarkerTable("Land")
+    RNGAIMarkerTable["Land"] = AIMarkerGenerator.GetMarkerTable("Land")
 
     -- Set grid cell size for water
     AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize)
     AIMarkerGenerator.CreateMarkerGrid("Water")
     AIMarkerGenerator.ConnectMarkerWithPathing("Water")
     AIMarkerGenerator.BuildGraphAreas("Water")
-    RNGAImarkerTable["Water"] = AIMarkerGenerator.GetMarkerTable("Water")
+    RNGAIMarkerTable["Water"] = AIMarkerGenerator.GetMarkerTable("Water")
 
     -- Set grid cell size for amphibious
     AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize)
     AIMarkerGenerator.CreateMarkerGrid("Amphibious")
     AIMarkerGenerator.ConnectMarkerWithPathing("Amphibious")
     AIMarkerGenerator.BuildGraphAreas("Amphibious")
-    RNGAImarkerTable["Amphibious"] = AIMarkerGenerator.GetMarkerTable("Amphibious")
+    RNGAIMarkerTable["Amphibious"] = AIMarkerGenerator.GetMarkerTable("Amphibious")
 
     -- Set grid cell size for hover
     AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize)
     AIMarkerGenerator.CreateMarkerGrid("Hover")
     AIMarkerGenerator.ConnectMarkerWithPathing("Hover")
     AIMarkerGenerator.BuildGraphAreas("Hover")
-    RNGAImarkerTable["Hover"] = AIMarkerGenerator.GetMarkerTable("Hover")
+    RNGAIMarkerTable["Hover"] = AIMarkerGenerator.GetMarkerTable("Hover")
     
     --create naval Areas
-    RNGAImarkerTable["NavalExpansions"] = AIMarkerGenerator.CreateNavalExpansions()
+    RNGAIMarkerTable["NavalExpansions"] = AIMarkerGenerator.CreateNavalExpansions()
 
     --create land expansions
-    RNGAImarkerTable["LandExpansions"] = AIMarkerGenerator.CreateLandExpansions()
+    RNGAIMarkerTable["LandExpansions"] = AIMarkerGenerator.CreateLandExpansions()
+    LOG('Generated Land Expansions'..repr(RNGAIMarkerTable.LandExpansions))
 
 end
 
