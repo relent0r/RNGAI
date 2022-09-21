@@ -247,18 +247,6 @@ BuilderGroup {
         },
     },]]
     Builder {
-        BuilderName = 'RNGAI T2 Air Mercy',
-        PlatoonTemplate = 'T2AirMissile',
-        Priority = 750,
-        BuilderType = 'Air',
-        BuilderConditions = {
-            { UCBC, 'ACUOnField', {false} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.AIR * categories.TECH2 * categories.daa0206} },
-        },
-    },
-    Builder {
         BuilderName = 'RNGAI T2 Torp Bomber',
         PlatoonTemplate = 'T2AirTorpedoBomber',
         Priority = 875,

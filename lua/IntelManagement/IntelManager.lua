@@ -2081,9 +2081,9 @@ LastKnownThread = function(aiBrain)
                     if not enemyMexes[v.zoneid] then
                         enemyMexes[v.zoneid] = {T1 = 0,T2 = 0,T3 = 0,}
                     end
-                    if unitCat.categories.TECH1 then
+                    if unitCat.TECH1 then
                         enemyMexes[v.zoneid].T1 = enemyMexes[v.zoneid].T1 + 1
-                    elseif unitCat.categories.TECH2 then
+                    elseif unitCat.TECH2 then
                         enemyMexes[v.zoneid].T2 = enemyMexes[v.zoneid].T2 + 1
                     else
                         enemyMexes[v.zoneid].T3 = enemyMexes[v.zoneid].T3 + 1
@@ -2092,19 +2092,19 @@ LastKnownThread = function(aiBrain)
                 if not aiBrain.lastknown[id] or time-aiBrain.lastknown[id].time>10 then
                     if not aiBrain.lastknown[id] then
                         aiBrain.lastknown[id]={}
-                        if unitCat.categories.MOBILE then
+                        if unitCat.MOBILE then
                             if unitCat.ENGINEER and not unitCat.COMMAND then
                                 aiBrain.lastknown[id].type='eng'
-                            elseif unitCat.categories.COMMAND then
+                            elseif unitCat.COMMAND then
                                 aiBrain.lastknown[id].type='acu'
-                            elseif unitCat.categories.ANTIAIR then
+                            elseif unitCat.ANTIAIR then
                                 aiBrain.lastknown[id].type='aa'
-                            elseif unitCat.categories.DIRECTFIRE then
+                            elseif unitCat.DIRECTFIRE then
                                 aiBrain.lastknown[id].type='tank'
-                            elseif unitCat.categories.INDIRECTFIRE then
+                            elseif unitCat.INDIRECTFIRE then
                                 aiBrain.lastknown[id].type='arty'
                             end
-                        elseif unitCat.categories.RADAR then
+                        elseif unitCat.RADAR then
                             aiBrain.lastknown[id].type='radar'
                         elseif unitCat.TACTICALMISSILEPLATFORM then
                             aiBrain.lastknown[id].type='tml'

@@ -77,7 +77,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 FighterBomber',
         PlatoonTemplate = 'T2FighterBomber',
-        Priority = 749,
+        Priority = 891,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'Air', 'T2', 'bomber'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
@@ -86,6 +86,17 @@ BuilderGroup {
         BuilderType = 'Air',
         BuilderData = {
             TechLevel = 2
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Mercy',
+        PlatoonTemplate = 'T2AirMissile',
+        Priority = 891,
+        BuilderType = 'Air',
+        BuilderConditions = {
+            { UCBC, 'UnitBuildDemand', {'Air', 'T2', 'mercy'} },
+            { EBC, 'FactorySpendRatioRNG', {'Air'}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
         },
     },
     --[[
@@ -109,37 +120,6 @@ BuilderGroup {
         Priority = 749,
         BuilderConditions = {
             { UCBC, 'ArmyManagerBuild', { 'Air', 'T2', 'fighter'} },
-            { EBC, 'FactorySpendRatioRNG', {'Air'}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Air',
-        BuilderData = {
-            TechLevel = 2
-        },
-    },
-    --[[Builder {
-        BuilderName = 'RNGAI T2 Torperdo Bomber',
-        PlatoonTemplate = 'T2AirTorpedoBomber',
-        Priority = 747,
-        --PriorityFunction = LandMode,
-        BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Air', 'T2', 'torpedo'} },
-            { EBC, 'FactorySpendRatioRNG', {'Air'}},
-            --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'AIR'}},
-            --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Air',
-        BuilderData = {
-            TechLevel = 2
-        },
-    },]]
-    Builder {
-        BuilderName = 'RNGAI T2 Mercy',
-        PlatoonTemplate = 'T2AirMissile',
-        Priority = 746,
-        BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Air', 'T2', 'mercy'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
