@@ -8511,92 +8511,95 @@ Platoon = Class(RNGAIPlatoonClass) {
                 for _, v in atkPri do
                     for num, unit in targetUnits do
                         if not unit.Dead and EntityCategoryContains(v, unit) and self:CanAttackTarget('attack', unit) then
-                            -- 6000 damage for TML
-                            if EntityCategoryContains(categories.COMMAND, unit) then
-                                local armorHealth = unit:GetHealth()
-                                local shieldHealth
-                                if unit.MyShield then
-                                    shieldHealth = unit.MyShield:GetHealth()
-                                else
-                                    shieldHealth = 0
-                                end
-                                targetHealth = armorHealth + shieldHealth
-                            else
-                                targetHealth = unit:GetHealth()
-                            end
-                            
-                            --RNGLOG('Target Health is '..targetHealth)
-                            local missilesRequired = math.ceil(targetHealth / 6000)
-                            local shieldMissilesRequired = 0
-                            --RNGLOG('Missiles Required = '..missilesRequired)
-                            --RNGLOG('Total Missiles '..totalMissileCount)
-                            if (totalMissileCount >= missilesRequired and not EntityCategoryContains(categories.COMMAND, unit)) or (readyTmlLauncherCount >= missilesRequired) then
-                                target = unit
-                                targetPosition = target:GetPosition()
-                                --enemyTMD = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2, targetPosition, 25, 'Enemy')
-                                enemyTmdCount = AIAttackUtils.AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, self.CenterPosition, targetPosition, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2, 30, 'Enemy')
-                                enemyShield = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.SHIELD, targetPosition, 25, 'Enemy')
-                                if RNGGETN(enemyShield) > 0 then
-                                    local enemyShieldHealth = 0
-                                    --RNGLOG('There are '..RNGGETN(enemyShield)..'shields')
-                                    for k, shield in enemyShield do
-                                        if not shield or shield.Dead or not shield.MyShield then continue end
-                                        enemyShieldHealth = enemyShieldHealth + shield.MyShield:GetHealth()
+                            targetPosition = target:GetPosition()
+                            if not RUtils.PositionInWater(targetPosition) then
+                                -- 6000 damage for TML
+                                if EntityCategoryContains(categories.COMMAND, unit) then
+                                    local armorHealth = unit:GetHealth()
+                                    local shieldHealth
+                                    if unit.MyShield then
+                                        shieldHealth = unit.MyShield:GetHealth()
+                                    else
+                                        shieldHealth = 0
                                     end
-                                    shieldMissilesRequired = math.ceil(enemyShieldHealth / 6000)
-                                end
-
-                                --RNGLOG('Enemy Unit has '..enemyTmdCount.. 'TMD along path')
-                                --RNGLOG('Enemy Unit has '..RNGGETN(enemyShield).. 'Shields around it with a total health of '..enemyShieldHealth)
-                                --RNGLOG('Missiles Required for Shield Penetration '..shieldMissilesRequired)
-
-                                if enemyTmdCount >= readyTmlLauncherCount then
-                                    --RNGLOG('Target is too protected')
-                                    --Set flag for more TML or ping attack position with air/land
-                                    target = false
-                                    continue
+                                    targetHealth = armorHealth + shieldHealth
                                 else
-                                    --RNGLOG('Target does not have enough defense')
-                                    for k, tml in readyTmlLaunchers do
-                                        local missileCount = tml:GetTacticalSiloAmmoCount()
-                                        --RNGLOG('Missile Count in Launcher is '..missileCount)
-                                        local tmlMaxRange = __blueprints[tml.UnitId].Weapon[1].MaxRadius
-                                        --RNGLOG('TML Max Range is '..tmlMaxRange)
-                                        local tmlPosition = tml:GetPosition()
-                                        if missileCount > 0 and VDist2Sq(tmlPosition[1], tmlPosition[3], targetPosition[1], targetPosition[3]) < tmlMaxRange * tmlMaxRange then
-                                            if (missileCount >= missilesRequired) and (enemyTmdCount < 1) and (shieldMissilesRequired < 1) and missilesRequired == 1 then
-                                                --RNGLOG('Only 1 missile required')
-                                                if tml.TargetBlackList then
-                                                    if tml.TargetBlackList[targetPosition[1]][targetPosition[3]] then
-                                                        RNGLOG('TargetPos found in blacklist, skip')
-                                                        continue
+                                    targetHealth = unit:GetHealth()
+                                end
+                                
+                                --RNGLOG('Target Health is '..targetHealth)
+                                local missilesRequired = math.ceil(targetHealth / 6000)
+                                local shieldMissilesRequired = 0
+                                --RNGLOG('Missiles Required = '..missilesRequired)
+                                --RNGLOG('Total Missiles '..totalMissileCount)
+                                if (totalMissileCount >= missilesRequired and not EntityCategoryContains(categories.COMMAND, unit)) or (readyTmlLauncherCount >= missilesRequired) then
+                                    target = unit
+                                    
+                                    --enemyTMD = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2, targetPosition, 25, 'Enemy')
+                                    enemyTmdCount = AIAttackUtils.AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, self.CenterPosition, targetPosition, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2, 30, 'Enemy')
+                                    enemyShield = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.SHIELD, targetPosition, 25, 'Enemy')
+                                    if RNGGETN(enemyShield) > 0 then
+                                        local enemyShieldHealth = 0
+                                        --RNGLOG('There are '..RNGGETN(enemyShield)..'shields')
+                                        for k, shield in enemyShield do
+                                            if not shield or shield.Dead or not shield.MyShield then continue end
+                                            enemyShieldHealth = enemyShieldHealth + shield.MyShield:GetHealth()
+                                        end
+                                        shieldMissilesRequired = math.ceil(enemyShieldHealth / 6000)
+                                    end
+
+                                    --RNGLOG('Enemy Unit has '..enemyTmdCount.. 'TMD along path')
+                                    --RNGLOG('Enemy Unit has '..RNGGETN(enemyShield).. 'Shields around it with a total health of '..enemyShieldHealth)
+                                    --RNGLOG('Missiles Required for Shield Penetration '..shieldMissilesRequired)
+
+                                    if enemyTmdCount >= readyTmlLauncherCount then
+                                        --RNGLOG('Target is too protected')
+                                        --Set flag for more TML or ping attack position with air/land
+                                        target = false
+                                        continue
+                                    else
+                                        --RNGLOG('Target does not have enough defense')
+                                        for k, tml in readyTmlLaunchers do
+                                            local missileCount = tml:GetTacticalSiloAmmoCount()
+                                            --RNGLOG('Missile Count in Launcher is '..missileCount)
+                                            local tmlMaxRange = __blueprints[tml.UnitId].Weapon[1].MaxRadius
+                                            --RNGLOG('TML Max Range is '..tmlMaxRange)
+                                            local tmlPosition = tml:GetPosition()
+                                            if missileCount > 0 and VDist2Sq(tmlPosition[1], tmlPosition[3], targetPosition[1], targetPosition[3]) < tmlMaxRange * tmlMaxRange then
+                                                if (missileCount >= missilesRequired) and (enemyTmdCount < 1) and (shieldMissilesRequired < 1) and missilesRequired == 1 then
+                                                    --RNGLOG('Only 1 missile required')
+                                                    if tml.TargetBlackList then
+                                                        if tml.TargetBlackList[targetPosition[1]][targetPosition[3]] then
+                                                            RNGLOG('TargetPos found in blacklist, skip')
+                                                            continue
+                                                        end
                                                     end
-                                                end
-                                                RNGINSERT(inRangeTmlLaunchers, tml)
-                                                break
-                                            else
-                                                if tml.TargetBlackList then
-                                                    if tml.TargetBlackList[targetPosition[1]][targetPosition[3]] then
-                                                        RNGLOG('TargetPos found in blacklist, skip')
-                                                        continue
-                                                    end
-                                                end
-                                                RNGINSERT(inRangeTmlLaunchers, tml)
-                                                local readyTML = RNGGETN(inRangeTmlLaunchers)
-                                                if (readyTML >= missilesRequired) and (readyTML > enemyTmdCount + shieldMissilesRequired) then
-                                                    --RNGLOG('inRangeTmlLaunchers table number is enough for kill')
+                                                    RNGINSERT(inRangeTmlLaunchers, tml)
                                                     break
+                                                else
+                                                    if tml.TargetBlackList then
+                                                        if tml.TargetBlackList[targetPosition[1]][targetPosition[3]] then
+                                                            RNGLOG('TargetPos found in blacklist, skip')
+                                                            continue
+                                                        end
+                                                    end
+                                                    RNGINSERT(inRangeTmlLaunchers, tml)
+                                                    local readyTML = RNGGETN(inRangeTmlLaunchers)
+                                                    if (readyTML >= missilesRequired) and (readyTML > enemyTmdCount + shieldMissilesRequired) then
+                                                        --RNGLOG('inRangeTmlLaunchers table number is enough for kill')
+                                                        break
+                                                    end
                                                 end
                                             end
                                         end
+                                        --RNGLOG('Have Target and number of in range ready launchers is '..RNGGETN(inRangeTmlLaunchers))
+                                        break
                                     end
-                                    --RNGLOG('Have Target and number of in range ready launchers is '..RNGGETN(inRangeTmlLaunchers))
-                                    break
+                                else
+                                    --RNGLOG('Not Enough Missiles Available')
+                                    target = false
+                                    continue
                                 end
-                            else
-                                --RNGLOG('Not Enough Missiles Available')
-                                target = false
-                                continue
                             end
                             coroutine.yield(1)
                         end
