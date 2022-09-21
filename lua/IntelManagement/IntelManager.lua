@@ -1619,6 +1619,7 @@ CreateIntelGrid = function(aiBrain)
             intelGrid[x][z].AssignedScout = false
             intelGrid[x][z].LastScouted = 0
             intelGrid[x][z].TimeScouted = 0
+            intelGrid[x][z].LastThreatCheck = 0
             intelGrid[x][z].Enabled = false
             intelGrid[x][z].MustScout = false
             intelGrid[x][z].ScoutPriority = 0
@@ -1627,6 +1628,7 @@ CreateIntelGrid = function(aiBrain)
             intelGrid[x][z].LandThreat = 0
             intelGrid[x][z].DefenseThreat = 0
             intelGrid[x][z].AirThreat = 0
+            intelGrid[x][z].AntiSurfaceThreat = 0
             intelGrid[x][z].ACUIndexes = { }
             intelGrid[x][z].ACUThreat = 0
             intelGrid[x][z].AdjacentGrids = {}
@@ -2062,6 +2064,13 @@ LastKnownThread = function(aiBrain)
                 unitCat = v.Blueprint.CategoriesHash
                 local id=v.Sync.id
                 local unitPosition = table.copy(v:GetPosition())
+                -- I'm still not sure about this, I think I could do this somewhere else.
+                --[[local gridXID, gridZID = im:GetIntelGrid(unitPosition)
+                if im.MapIntelGrid[gridXID][gridZID].LastThreatCheck + 30 > time then
+                    im.MapIntelGrid[gridXID][gridZID].AntiSurfaceThreat = GetThreatAtPosition(aiBrain, im.MapIntelGrid[gridXID][gridZID].Position, 0, true, 'AntiSurface')
+                    im.MapIntelGrid[gridXID][gridZID].AirThreat = GetThreatAtPosition(aiBrain, im.MapIntelGrid[gridXID][gridZID].Position, 0, true, 'AntiAir')
+                    im.MapIntelGrid[gridXID][gridZID].LastThreatCheck = time
+                end]]
                 if unitCat.MASSEXTRACTION then
                     if not aiBrain.lastknown[id] or time-aiBrain.lastknown[id].time>10 then
                         aiBrain.lastknown[id]={}
