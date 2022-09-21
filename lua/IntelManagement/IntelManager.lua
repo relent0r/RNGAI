@@ -1056,6 +1056,8 @@ IntelManager = Class {
             for k, v in self.Brain.EnemyIntel.ACU do
                 if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
                     if minThreatRisk >= 50 and VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase /2) then
+                        RNGLOG('ACU ClosestEnemy base distance is '..(self.Brain.EnemyIntel.ClosestEnemyBase /2))
+                        RNGLOG('ACU Distance from start position '..VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos))
                         local gridX, gridZ = self:GetIntelGrid(v.Position)
                         local scoutRequired = true
                         if self.MapIntelGrid[gridX][gridZ].MustScout and self.MapIntelGrid[gridX][gridZ].ACUIndexes[k] then

@@ -586,7 +586,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Bomber Attack Excess',
         PlatoonTemplate = 'RNGAI BomberAttack',
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 700,
         InstanceCount = 20,
         BuilderType = 'Any',        
@@ -920,7 +919,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGEXP Bomber Attack Excess',
         PlatoonTemplate = 'RNGAI BomberAttack',
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 700,
         InstanceCount = 20,
         BuilderType = 'Any',        

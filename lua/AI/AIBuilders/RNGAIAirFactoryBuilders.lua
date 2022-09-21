@@ -114,20 +114,6 @@ BuilderGroup {
             TechLevel = 2
         },
     },]]
-    Builder {
-        BuilderName = 'RNGAI T2 Fighter',
-        PlatoonTemplate = 'T2FighterBomber',
-        Priority = 749,
-        BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Air', 'T2', 'fighter'} },
-            { EBC, 'FactorySpendRatioRNG', {'Air'}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Air',
-        BuilderData = {
-            TechLevel = 2
-        },
-    },
 }
 
 BuilderGroup {

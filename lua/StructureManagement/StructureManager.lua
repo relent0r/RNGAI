@@ -925,6 +925,7 @@ StructureManager = Class {
 
     UpgradeFactoryRNG = function(self, unit, hq)
         --RNGLOG('UpgradeFactory Fork started')
+        local ALLBPS = __blueprints
         local unitCat = unit.Blueprint.CategoriesHash
         local supportUpgradeID
         local followupUpgradeID = false
