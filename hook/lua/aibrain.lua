@@ -2196,8 +2196,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     RNGINSERT(enemyBrains, v)
                 end
                 if not ArmyIsCivilian(armyIndex) then
-                    RNGLOG('Army is not civilian')
-                    RNGLOG('ArmySetup '..repr(ScenarioInfo.ArmySetup))
+                    --RNGLOG('Army is not civilian')
+                    --RNGLOG('ArmySetup '..repr(ScenarioInfo.ArmySetup))
                     local army
                     
                     for c,b in ScenarioInfo.ArmySetup do
@@ -2206,15 +2206,15 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                     if army.Team and army.Team ~= 1 then
-                        RNGLOG('Army is team '..army.Team)
+                        --RNGLOG('Army is team '..army.Team)
                         teams[army.Team] = true
                     elseif IsEnemy(selfIndex, armyIndex) then
-                        RNGLOG('Army has no team and is enemy')
+                        --RNGLOG('Army has no team and is enemy')
                         if army.Team then
-                            RNGLOG('Team presented is '..army.Team)
+                            --RNGLOG('Team presented is '..army.Team)
                         end
                         if not teams[teamKey] then
-                            RNGLOG('Settings teams index 2 to true')
+                            --RNGLOG('Settings teams index 2 to true')
                             teams[teamKey] = true
                             teamKey = teamKey + 1
                         else
@@ -2222,9 +2222,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             teams[teamKey] = true
                         end
                     elseif IsAlly(selfIndex, armyIndex) then
-                        RNGLOG('Army has no team and is ally')
+                        --RNGLOG('Army has no team and is ally')
                         if not teams[teamKey] then
-                            RNGLOG('Settings teams index 2 to true')
+                            --RNGLOG('Settings teams index 2 to true')
                             teams[teamKey] = true
                             teamKey = teamKey + 1
                         else
@@ -2290,7 +2290,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 armyStrengthTable[v:GetArmyIndex()] = insertTable
             end
         end
-        RNGLOG('teams table '..repr(teams))
+        --RNGLOG('teams table '..repr(teams))
         self.BrainIntel.TeamCount = 0
         for _, v in teams do
             if v then
@@ -3722,7 +3722,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             if closestMex then
-                RNGLOG('We have a mex to target from the director')
+                --RNGLOG('We have a mex to target from the director')
                 potentialTarget = closestMex
             else
                 if self.RNGDEBUG then

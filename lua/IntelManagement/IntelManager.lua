@@ -1717,9 +1717,6 @@ MapReclaimAnalysis = function(aiBrain)
     end
 end
 
-local LookupAirThreat = { }
-local LookupLandThreat = { }
-
 TacticalThreatAnalysisRNG = function(aiBrain)
     local ALLBPS = __blueprints
 

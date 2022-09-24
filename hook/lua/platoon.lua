@@ -3901,7 +3901,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                 buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1LandFactory', eng, false, nil, nil, true)
             end
         end
-        RNGLOG('RNG ACU wants to build '..whatToBuild)
+        if aiBrain.RNGDEBUG then
+            RNGLOG('RNG ACU wants to build '..whatToBuild)
+        end
         if buildLocation and whatToBuild then
             aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
         else
@@ -6976,7 +6978,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             if  VDist3Sq(platPos, allyPlatPos) <= radiusSq then
                 if not AIAttackUtils.CanGraphToRNG(platPos, allyPlatPos, self.MovementLayer) then continue end
-                RNGLOG("*AI DEBUG: Scout moving to allied platoon position for plan "..aPlat.PlanName)
+                if aiBrain.RNGDEBUG then
+                    RNGLOG("*AI DEBUG: Scout moving to allied platoon position for plan "..aPlat.PlanName)
+                end
                 return true, aPlat
             end
         end
@@ -7591,7 +7595,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             -- Continue to position until the distress call wanes
                            --RNGLOG('Start platoon response--LOGic')
                             repeat
-                               RNGLOG('Start platoon response loop')
+                               --RNGLOG('Start platoon response loop')
                                 moveLocation = distressLocation
                                 self:Stop()
                                 self:SetPlatoonFormationOverride('NoFormation')
