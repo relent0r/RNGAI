@@ -504,18 +504,32 @@ Platoon = Class(RNGAIPlatoonClass) {
         local armyIndex = aiBrain:GetArmyIndex()
         local target
         local blip
-        local startX = nil
-        local StartZ = nil
-        startX, startZ = aiBrain:GetArmyStartPos()
+        local holdPosition = aiBrain.BrainIntel.StartPos
+        self:ConfigurePlatoon()
         while PlatoonExists(aiBrain, self) do
-            target = self:FindClosestUnit('Attack', 'Enemy', true, categories.COMMAND )
+            local platoonUnits = GetPlatoonUnits(self)
+            for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
+                if v.LAND and v.LAND.GameTime then
+                    for _, b in v.LAND do
+                    if b.GameTime + 500 < gameTime then
+                        if RUtils.HaveUnitVisual(aiBrain, self.EnemyIntel.ACU[k].Unit, true) then
+                            target = self.EnemyIntel.ACU[k].Unit
+                            break
+                        end
+                    end
+                end
+            end
+            if not target then
+                RNGLOG('No ACU found in TacticalMission loop, look for closest')
+                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.COMMAND )
+            end
             if target then
                 blip = target:GetBlip(armyIndex)
                 self:Stop()
                 self:AttackTarget(target)
             end
             coroutine.yield(170)
-            self:MoveToLocation({startX, 0, startZ}, false)
+            self:MoveToLocation(holdPosition, false)
         end
     end,
 
@@ -7722,6 +7736,7 @@ Platoon = Class(RNGAIPlatoonClass) {
 
     BaseManagersDistressAIRNG = function(self)
         local aiBrain = self:GetBrain()
+        local defenseUnits = categories.MOBILE - categories.NAVAL - categories.ENGINEER - categories.TRANSPORTFOCUS - categories.SONAR - categories.EXPERIMENTAL - categories.daa0206 - categories.xrl0302
         while PlatoonExists(aiBrain, self) do
             local distressRange = aiBrain.BaseMonitor.PoolDistressRange
             local reactionTime = aiBrain.BaseMonitor.PoolReactionTime
@@ -7740,7 +7755,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         --RNGLOG('*AI DEBUG: ARMY '.. aiBrain:GetArmyIndex() ..': --- POOL DISTRESS RESPONSE ---')
 
                         -- Grab the units at the location
-                        local group = self:GetPlatoonUnitsAroundPoint(categories.MOBILE - categories.NAVAL - categories.ENGINEER - categories.TRANSPORTFOCUS - categories.SONAR - categories.EXPERIMENTAL, position, radius)
+                        local group = self:GetPlatoonUnitsAroundPoint(defenseUnits , position, radius)
 
                         -- Move the group to the distress location and then back to the location of the base
                         IssueClearCommands(group)

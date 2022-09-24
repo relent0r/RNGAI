@@ -903,9 +903,11 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.xrl0302 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.xrl0302 } },
         },
         BuilderData = {
+            PlatoonPlan = 'MercyAIRNG',
+            Location = 'LocationType',
             SearchRadius = BaseEnemyArea,
             PrioritizedCategories = {
                 categories.COMMAND,

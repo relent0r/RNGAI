@@ -950,6 +950,31 @@ function CheckCustomPlatoons(aiBrain)
     end
 end
 
+function HaveUnitVisual(aiBrain, unit, checkBlipOnly)
+    --returns true if aiBrain can see oUnit
+    --bTrueIfOnlySeeBlip - returns true if can see a blip
+    if checkBlipOnly == nil then checkBlipOnly = false end
+    local iUnitBrain = oUnit:GetAIBrain()
+    if iUnitBrain == aiBrain then return true
+    else
+        local bCanSeeUnit = false
+        local iArmyIndex = aiBrain:GetArmyIndex()
+        if not(unit.Dead) then
+            if not(unit.GetBlip) then
+                ErrorHandler('oUnit with UnitID='..(unit.UnitId or 'nil')..' has no blip, will assume can see it')
+                return true
+            else
+                local blip = unit:GetBlip(iArmyIndex)
+                if blip then
+                    if checkBlipOnly then return true
+                    elseif blip:IsSeenEver(iArmyIndex) then return true end
+                end
+            end
+        end
+    end
+    return false
+end
+
 function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxRange, atkPri)
     if not position then
         position = platoon:GetPlatoonPosition()

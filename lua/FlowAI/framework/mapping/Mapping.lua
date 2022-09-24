@@ -847,7 +847,7 @@ function BeginSession()
     else
        --RNGLOG("FlowAI framework: No custom zoning classes found.")
     end
-    GenerateMapMarkers()
+    --GenerateMapMarkers()
 end
 
 function GenerateMapMarkers()

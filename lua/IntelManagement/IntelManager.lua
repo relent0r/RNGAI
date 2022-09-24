@@ -1040,11 +1040,11 @@ IntelManager = Class {
                     RNGLOG('Current Distance '..VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos))
                 end
                 RNGLOG('Cutoff distance '..(self.Brain.EnemyIntel.ClosestEnemyBase / 3))
-                if not v.Ally and v.LastSpotted ~= 0 and gameTime - v.LastSpotted < 120 then
+                if not v.Ally and v.Position[1] and gameTime - v.LastSpotted < 120 then
                     if VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase / 3) then
                         local gridX, gridZ = self:GetIntelGrid(v.Position)
                         desiredStrikeDamage = desiredStrikeDamage + 4000
-                        table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'ACU'} )
+                        table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'ACU', Index = k} )
                     end
                 end
             end
@@ -1054,7 +1054,7 @@ IntelManager = Class {
         local abortZone = true
         if type == 'AirAntiSurface' and minThreatRisk > 0 then
             for k, v in self.Brain.EnemyIntel.ACU do
-                if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
+                if not v.Ally and v.HP ~= 0 and v.Position[1] then
                     if minThreatRisk >= 50 and VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase /2) then
                         RNGLOG('ACU ClosestEnemy base distance is '..(self.Brain.EnemyIntel.ClosestEnemyBase /2))
                         RNGLOG('ACU Distance from start position '..VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos))
@@ -1070,7 +1070,7 @@ IntelManager = Class {
                         end
                         desiredStrikeDamage = desiredStrikeDamage + 4000
                         RNGLOG('Adding ACU to potential strike target')
-                        table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'ACU'} )
+                        table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'ACU', Index = k} )
                     end
                 end
             end
@@ -1110,16 +1110,19 @@ IntelManager = Class {
         if type == 'AirAntiSurface' and table.getn(potentialStrikes) > 0 then
             local count = math.ceil(desiredStrikeDamage / 1000)
             local acuSnipe = false
+            local acuIndex = false
             local zoneAttack = false
             for k, v in potentialStrikes do
                 if v.Type == 'ACU' then
                     acuSnipe = true
+                    acuIndex = v.Index
                 elseif v.Type == 'Zone' then
                     zoneAttack = true
                 end
             end
             RNGLOG('Number of T2 Bombers wanted '..count)
             if acuSnipe then
+                self.Brain.TacticalMonitor.TacticalMissions.ACUSnipe[acuIndex]['AIR'] = { GameTime = gameTime, CountRequired = count }
                 self.Brain.amanager.Demand.Air.T2.bomber = count
                 self.Brain.amanager.Demand.Air.T2.mercy = count
             end
@@ -1127,20 +1130,35 @@ IntelManager = Class {
                 self.Brain.amanager.Demand.Air.T2.bomber = count
             end
         elseif type == 'LandAntiSurface' then
+            local acuSnipe = false
             if table.getn(potentialStrikes) > 0 then
                 local count = math.ceil(desiredStrikeDamage / 1000)
-                local acuSnipe = false
+                local acuIndex = false
                 for k, v in potentialStrikes do
                     if v.Type == 'ACU' then
                         acuSnipe = true
+                        acuIndex = v.Index
                     end
                 end
                 RNGLOG('Number of T2 Bombs wanted '..count)
                 if acuSnipe then
+                    RNGLOG('Setting acuSnipe mission for land units')
+                    self.Brain.TacticalMonitor.TacticalMissions.ACUSnipe[acuIndex]['LAND'] = { GameTime = gameTime, CountRequired = count }
                     self.Brain.amanager.Demand.Land.T2.mobilebomb = count
                 end
             else
-                self.Brain.amanager.Demand.Land.T2.mobilebomb = 0
+                local disableBomb = true
+                for k, v in self.Brain.TacticalMonitor.TacticalMissions.ACUSnipe do
+                    if v.LAND then
+                        if v.LAND.GameTime and v.LAND.GameTime + 300 < gameTime then
+                            disableBomb = false
+                        end
+                    end
+                end
+                if disableBomb and self.Brain.amanager.Demand.Land.T2.mobilebomb > 0 then
+                    RNGLOG('No mobile bomb missions, disable demand')
+                    self.Brain.amanager.Demand.Land.T2.mobilebomb = 0
+                end
             end
         end
     end,

@@ -911,6 +911,10 @@ AIBrain = Class(RNGAIBrainClass) {
             TacticalMassLocations = {},
             TacticalUnmarkedMassGroups = {},
             TacticalSACUMode = false,
+            TacticalMissions = {
+                ACUSnipe = {},
+                MassStrike = {}
+            }
         }
         -- Intel Data
         self.EnemyIntel = {}
@@ -963,7 +967,12 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         local selfIndex = self:GetArmyIndex()
         for _, v in ArmyBrains do
-            self.EnemyIntel.ACU[v:GetArmyIndex()] = {
+            local armyIndex = v:GetArmyIndex()
+            self.TacticalMonitor.TacticalMissions.ACUSnipe[armyIndex] = {
+                LAND = {},
+                AIR = {}
+            }
+            self.EnemyIntel.ACU[armyIndex] = {
                 Position = {},
                 DistanceToBase = 0,
                 LastSpotted = 0,
@@ -971,10 +980,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 Hp = 0,
                 OnField = false,
                 CloseCombat = false,
+                Unit = {},
                 Gun = false,
-                Ally = IsAlly(selfIndex, v:GetArmyIndex()),
+                Ally = IsAlly(selfIndex, armyIndex),
             }
-            self.EnemyIntel.DirectorData[v:GetArmyIndex()] = {
+            self.EnemyIntel.DirectorData[armyIndex] = {
                 Strategic = {},
                 Energy = {},
                 Mass = {},
@@ -1217,6 +1227,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(self)
             RNGLOG('Unit Stats '..repr(im.UnitStats))
             RNGLOG('IntelCoverage Percentage '..repr(im.MapIntelStats.IntelCoverage))
+            RNGLOG('Tactical Missions '..repr(self.TacticalMonitor.TacticalMissions))
             coroutine.yield(100)
         end
     end,
@@ -2983,6 +2994,7 @@ AIBrain = Class(RNGAIBrainClass) {
                        --RNGLOG('* AI-RNG: Threat at ACU location is :'..acuThreat)
                         c.Threat = acuThreat
                         c.LastSpotted = currentGameTime
+                        c.Unit = unit
                         --LOG('Enemy ACU Position is set')
                     end
                 end
