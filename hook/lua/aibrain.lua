@@ -3471,61 +3471,76 @@ AIBrain = Class(RNGAIBrainClass) {
         local enemyACUIndexes = {}
         local im = IntelManagerRNG.GetIntelManager(self)
 
-        for k, v in self.EnemyIntel.ACU do
-            if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
-                if platoonType == 'GUNSHIP' and platoonDPS then
-                    if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and (GetGameTimeSeconds() - 120) < v.LastSpotted then
-                        RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
-                        RNGLOG('ACU Added to target check in director')
-                        local gridX, gridY = im:GetIntelGrid(v.Position)
-                        local scoutRequired = true
-                        if im.MapIntelGrid[gridX][gridY].MustScout and im.MapIntelGrid[gridX][gridY].ACUIndexes[k] then
-                            scoutRequired = false
-                        end
-                        if scoutRequired then
-                            im.MapIntelGrid[gridX][gridY].MustScout = true
-                            im.MapIntelGrid[gridX][gridY].ACUIndexes[k] = true
-                            --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(im.MapIntelGrid[gridX][gridY]))
-                        end
-                    end
-                elseif platoonType == 'BOMBER' and strikeDamage then
-                    if (self.CDRUnit.Caution and self.CDRUnit.EnemyCDRPresent and VDist3Sq(v.Position, self.BrainIntel.StartPos) < (self.EnemyIntel.ClosestEnemyBase /2)) or self.CDRUnit.SuicideMode then
-                        RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position })
-                        local gridX, gridY = im:GetIntelGrid(v.Position)
-                        local scoutRequired = true
-                        if im.MapIntelGrid[gridX][gridY].MustScout and im.MapIntelGrid[gridX][gridY].ACUIndexes[k] then
-                            scoutRequired = false
-                        end
-                        if scoutRequired then
-                            im.MapIntelGrid[gridX][gridY].MustScout = true
-                            im.MapIntelGrid[gridX][gridY].ACUIndexes[k] = true
-                            --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(im.MapIntelGrid[gridX][gridY]))
-                        end
-                    elseif strikeDamage > v.HP * 0.80 then
-                        RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position })
-                        local gridX, gridY = im:GetIntelGrid(v.Position)
-                        local scoutRequired = true
-                        if im.MapIntelGrid[gridX][gridY].MustScout and im.MapIntelGrid[gridX][gridY].ACUIndexes[k] then
-                            scoutRequired = false
-                        end
-                        if scoutRequired then
-                            im.MapIntelGrid[gridX][gridY].MustScout = true
-                            im.MapIntelGrid[gridX][gridY].ACUIndexes[k] = true
-                            --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(im.MapIntelGrid[gridX][gridY]))
+        if platoonType == 'GUNSHIP' or platoonType == 'BOMBER' then
+            for k, v in self.TacticalMonitor.TacticalMissions.ACUSnipe do
+                if v.AIR and v.AIR.GameTime then
+                    if v.AIR.GameTime + 500 > GetGameTimeSeconds() then
+                        if RUtils.HaveUnitVisual(self, self.EnemyIntel.ACU[k].Unit, true) then
+                            potentialTarget = self.EnemyIntel.ACU[k].Unit
+                            requiredCount = v.AIR.CountRequired
+                            break
                         end
                     end
                 end
             end
         end
+        if not potentialTarget then
+            for k, v in self.EnemyIntel.ACU do
+                if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
+                    if platoonType == 'GUNSHIP' and platoonDPS then
+                        if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and (GetGameTimeSeconds() - 120) < v.LastSpotted then
+                            RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
+                            RNGLOG('ACU Added to target check in director')
+                            local gridX, gridY = im:GetIntelGrid(v.Position)
+                            local scoutRequired = true
+                            if im.MapIntelGrid[gridX][gridY].MustScout and im.MapIntelGrid[gridX][gridY].ACUIndexes[k] then
+                                scoutRequired = false
+                            end
+                            if scoutRequired then
+                                im.MapIntelGrid[gridX][gridY].MustScout = true
+                                im.MapIntelGrid[gridX][gridY].ACUIndexes[k] = true
+                                --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(im.MapIntelGrid[gridX][gridY]))
+                            end
+                        end
+                    elseif platoonType == 'BOMBER' and strikeDamage then
+                        if (self.CDRUnit.Caution and self.CDRUnit.EnemyCDRPresent and VDist3Sq(v.Position, self.BrainIntel.StartPos) < (self.EnemyIntel.ClosestEnemyBase /2)) or self.CDRUnit.SuicideMode then
+                            RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position })
+                            local gridX, gridY = im:GetIntelGrid(v.Position)
+                            local scoutRequired = true
+                            if im.MapIntelGrid[gridX][gridY].MustScout and im.MapIntelGrid[gridX][gridY].ACUIndexes[k] then
+                                scoutRequired = false
+                            end
+                            if scoutRequired then
+                                im.MapIntelGrid[gridX][gridY].MustScout = true
+                                im.MapIntelGrid[gridX][gridY].ACUIndexes[k] = true
+                                --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(im.MapIntelGrid[gridX][gridY]))
+                            end
+                        elseif strikeDamage > v.HP * 0.80 then
+                            RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position })
+                            local gridX, gridY = im:GetIntelGrid(v.Position)
+                            local scoutRequired = true
+                            if im.MapIntelGrid[gridX][gridY].MustScout and im.MapIntelGrid[gridX][gridY].ACUIndexes[k] then
+                                scoutRequired = false
+                            end
+                            if scoutRequired then
+                                im.MapIntelGrid[gridX][gridY].MustScout = true
+                                im.MapIntelGrid[gridX][gridY].ACUIndexes[k] = true
+                                --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(im.MapIntelGrid[gridX][gridY]))
+                            end
+                        end
+                    end
+                end
+            end
 
-        if next(enemyACUIndexes) then
-            for k, v in enemyACUIndexes do
-                local acuUnits = GetUnitsAroundPoint(self, categories.COMMAND, v.Position, 120, 'Enemy')
-                for c, b in acuUnits do
-                    if not b.Dead and b:GetAIBrain():GetArmyIndex() == v.Index then
-                        potentialTarget = b
-                        potentialTargetValue = 10000
-                        --RNGLOG('Enemy ACU returned as potential target for Director')
+            if next(enemyACUIndexes) then
+                for k, v in enemyACUIndexes do
+                    local acuUnits = GetUnitsAroundPoint(self, categories.COMMAND, v.Position, 120, 'Enemy')
+                    for c, b in acuUnits do
+                        if not b.Dead and b:GetAIBrain():GetArmyIndex() == v.Index then
+                            potentialTarget = b
+                            potentialTargetValue = 10000
+                            --RNGLOG('Enemy ACU returned as potential target for Director')
+                        end
                     end
                 end
             end
@@ -4903,7 +4918,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local massStorage = GetEconomyStored( self, 'MASS')
             local energyStorage = GetEconomyStored( self, 'ENERGY')
             local CoreMassNumberAchieved = false
-            if self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 or self.EngineerAssistManagerFocusPower then
+            if self.EcoManager.EcoPowerPreemptive or self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 or self.EngineerAssistManagerFocusPower then
                 state = 'Energy'
                 self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION
                 self.EngineerAssistManagerPriorityTable = {
@@ -5258,6 +5273,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         if unitCat.DIRECTFIRE and not unitCat.BOT and not unitCat.ANTIAIR then
                             armyLand.T2.tank=armyLand.T2.tank+1
                             armyLandType.tank=armyLandType.tank+1
+                        elseif unitCat.DIRECTFIRE and unitCat.BOT and unitCat.BOMB then
+                            armyLand.T2.mobilebomb=armyLand.T2.mobilebomb+1
+                            armyLandType.tank=armyLandType.tank+1
                         elseif unitCat.DIRECTFIRE and unitCat.BOT and not unitCat.ANTIAIR then
                             armyLand.T2.bot=armyLand.T2.bot+1
                             armyLandType.bot=armyLandType.bot+1
@@ -5321,10 +5339,10 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     elseif unitCat.TECH2 then
                         armyAirTiers.T2=armyAirTiers.T2+1
-                        if unitCat.BOMBER and not unitCat.daa0206 then
+                        if unitCat.BOMBER and not EntityCategoryContains(categories.daa0206, unit) then
                             armyAir.T2.bomber=armyAir.T2.bomber+1
                             armyAirType.bomber=armyAirType.bomber+1
-                        elseif unitCat.xaa0202 then
+                        elseif EntityCategoryContains(categories.xaa0202, unit)then
                             totalAntiAirThreat = totalAntiAirThreat + unit.Blueprint.Defense.AirThreatLevel
                             armyAir.T2.fighter=armyAir.T2.fighter+1
                             armyAirType.fighter=armyAirType.fighter+1
@@ -5334,7 +5352,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif unitCat.ANTINAVY and not unitCat.EXPERIMENTAL then
                             armyAir.T2.torpedo=armyAir.T2.torpedo+1
                             armyAirType.torpedo=armyAirType.torpedo+1
-                        elseif unitCat.daa0206 then
+                        elseif EntityCategoryContains(categories.daa0206, unit) then
                             armyAir.T2.mercy=armyAir.T2.mercy+1
                             armyAirType.mercy=armyAirType.mercy+1
                         elseif unitCat.TRANSPORTFOCUS then

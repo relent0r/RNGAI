@@ -508,27 +508,57 @@ Platoon = Class(RNGAIPlatoonClass) {
         self:ConfigurePlatoon()
         while PlatoonExists(aiBrain, self) do
             local platoonUnits = GetPlatoonUnits(self)
+            local requiredCount = 0
+            RNGLOG('Mercy strike : loop ACU Snipe table '..repr(aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe))
             for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
-                if v.LAND and v.LAND.GameTime then
-                    for _, b in v.LAND do
-                    if b.GameTime + 500 < gameTime then
-                        if RUtils.HaveUnitVisual(aiBrain, self.EnemyIntel.ACU[k].Unit, true) then
-                            target = self.EnemyIntel.ACU[k].Unit
-                            break
+                if self.MovementLayer == 'Air' then
+                    if v.AIR and v.AIR.GameTime then
+                        if v.AIR.GameTime + 500 > GetGameTimeSeconds() then
+                            RNGLOG('ACU Table for index '..k..' table '..repr(aiBrain.EnemyIntel.ACU))
+                            if RUtils.HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
+                                target = aiBrain.EnemyIntel.ACU[k].Unit
+                                requiredCount = v.AIR.CountRequired
+                                RNGLOG('Mercy strike : ACU Target mission found and target set')
+                                break
+                            else
+                                RNGLOG('Mercy strike : ACU Target mission found but target not visible')
+                            end
+                        end
+                    end
+                else
+                    if v.LAND and v.LAND.GameTime then
+                        if v.LAND.GameTime + 500 > GetGameTimeSeconds() then
+                            RNGLOG('ACU Table for index '..k..' table '..repr(aiBrain.EnemyIntel.ACU))
+                            if RUtils.HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
+                                target = aiBrain.EnemyIntel.ACU[k].Unit
+                                requiredCount = v.LAND.CountRequired
+                                RNGLOG('Mercy strike : ACU Target mission found and target set')
+                                break
+                            else
+                                RNGLOG('Mercy strike : ACU Target mission found but target not visible')
+                            end
                         end
                     end
                 end
             end
             if not target then
-                RNGLOG('No ACU found in TacticalMission loop, look for closest')
-                target = self:FindClosestUnit('Attack', 'Enemy', true, categories.COMMAND )
+                RNGLOG('Mercy strike : No ACU target')
+                if requiredCount < 1 then
+                    requiredCount = 2
+                end
+                if RNGGETN(platoonUnits) >= requiredCount then
+                    RNGLOG('Mercy strike : No ACU found in TacticalMission loop, look for closest')
+                    target = self:FindClosestUnit('Attack', 'Enemy', true, categories.COMMAND )
+                end
             end
-            if target then
+            if target and RNGGETN(platoonUnits) >= requiredCount then
+                RNGLOG('Mercy strike : required count available')
                 blip = target:GetBlip(armyIndex)
                 self:Stop()
                 self:AttackTarget(target)
+                coroutine.yield(170)
             end
-            coroutine.yield(170)
+            coroutine.yield(50)
             self:MoveToLocation(holdPosition, false)
         end
     end,

@@ -317,6 +317,8 @@ BuilderGroup {
         InstanceCount = 4,
         BuilderType = 'Any',
         BuilderData = {
+            PlatoonPlan = 'MercyAIRNG',
+            Location = 'LocationType',
             SearchRadius = BaseEnemyArea,
             PrioritizedCategories = {
                 categories.COMMAND,
@@ -324,8 +326,7 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'ACUOnField', {false} },
-            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 3, categories.daa0206 } },
+            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.daa0206 } },
         },
     },
     Builder {

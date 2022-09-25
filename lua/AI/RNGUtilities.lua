@@ -954,7 +954,7 @@ function HaveUnitVisual(aiBrain, unit, checkBlipOnly)
     --returns true if aiBrain can see oUnit
     --bTrueIfOnlySeeBlip - returns true if can see a blip
     if checkBlipOnly == nil then checkBlipOnly = false end
-    local iUnitBrain = oUnit:GetAIBrain()
+    local iUnitBrain = unit:GetAIBrain()
     if iUnitBrain == aiBrain then return true
     else
         local bCanSeeUnit = false

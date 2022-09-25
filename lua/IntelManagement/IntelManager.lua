@@ -1040,7 +1040,7 @@ IntelManager = Class {
                     RNGLOG('Current Distance '..VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos))
                 end
                 RNGLOG('Cutoff distance '..(self.Brain.EnemyIntel.ClosestEnemyBase / 3))
-                if not v.Ally and v.Position[1] and gameTime - v.LastSpotted < 120 then
+                if not v.Ally and v.Position[1] and v.LastSpotted + 120 > gameTime then
                     if VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase / 3) then
                         local gridX, gridZ = self:GetIntelGrid(v.Position)
                         desiredStrikeDamage = desiredStrikeDamage + 4000
@@ -1150,7 +1150,7 @@ IntelManager = Class {
                 local disableBomb = true
                 for k, v in self.Brain.TacticalMonitor.TacticalMissions.ACUSnipe do
                     if v.LAND then
-                        if v.LAND.GameTime and v.LAND.GameTime + 300 < gameTime then
+                        if v.LAND.GameTime and v.LAND.GameTime + 300 > gameTime then
                             disableBomb = false
                         end
                     end

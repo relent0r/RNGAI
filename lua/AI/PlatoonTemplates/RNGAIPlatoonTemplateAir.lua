@@ -76,7 +76,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI MercyAttack',
-    Plan = 'MercyAIRNG',
+    Plan = 'PlatoonMergeRNG',
     GlobalSquads = {
         { categories.daa0206 , 2, 3, 'Attack', 'none' },
     }
