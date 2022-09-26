@@ -951,11 +951,14 @@ function CheckCustomPlatoons(aiBrain)
 end
 
 function HaveUnitVisual(aiBrain, unit, checkBlipOnly)
-    --returns true if aiBrain can see oUnit
-    --bTrueIfOnlySeeBlip - returns true if can see a blip
+    -- This was from Maudlin. He figured how to leverage blips better.
+    --returns true if aiBrain can see a unit
+    --checkBlipOnly - returns true if can see a blip
+    RNGLOG('HaveUnitVisual : Check if available')
     if checkBlipOnly == nil then checkBlipOnly = false end
     local iUnitBrain = unit:GetAIBrain()
-    if iUnitBrain == aiBrain then return true
+    if iUnitBrain == aiBrain then 
+        return true
     else
         local bCanSeeUnit = false
         local iArmyIndex = aiBrain:GetArmyIndex()
@@ -966,13 +969,68 @@ function HaveUnitVisual(aiBrain, unit, checkBlipOnly)
             else
                 local blip = unit:GetBlip(iArmyIndex)
                 if blip then
-                    if checkBlipOnly then return true
-                    elseif blip:IsSeenEver(iArmyIndex) then return true end
+                    if checkBlipOnly then 
+                        RNGLOG('HaveUnitVisual : blip seen')
+                        return true
+                    elseif blip:IsSeenEver(iArmyIndex) then 
+                        RNGLOG('HaveUnitVisual : blip IsSeenEver')
+                        return true 
+                    end
                 end
             end
         end
     end
+    RNGLOG('HaveUnitVisual : No Visual on unit')
     return false
+end
+
+function MoveInDirection(tStart, iAngle, iDistance, bKeepInMapBounds, bTravelUnderwater)
+    --iAngle: 0 = north, 90 = east, etc.; use GetAngleFromAToB if need angle from 2 positions
+    --tStart = {x,y,z} (y isnt used)
+    --if bKeepInMapBounds is true then will limit to map bounds
+    --bTravelUnderwater - if true then will get the terrain height instead of the surface height
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+    local function ConvertAngleToRadians(iAngle)
+        return iAngle * math.pi / 180
+    end
+    local iTheta = ConvertAngleToRadians(iAngle)
+    --if bDebugMessages == true then LOG(sFunctionRef..': iAngle='..(iAngle or 'nil')..'; iTheta='..(iTheta or 'nil')..'; iDistance='..(iDistance or 'nil')) end
+    local iXAdj = math.sin(iTheta) * iDistance
+    local iZAdj = -(math.cos(iTheta) * iDistance)
+    --local iXAdj = math.cos(iTheta) * iDistance * iFactor[1]
+    --local iZAdj = math.sin(iTheta) * iDistance * iFactor[2]
+
+
+    if not(bKeepInMapBounds) then
+        --if bDebugMessages == true then LOG(sFunctionRef..': Are within map bounds, iXAdj='..iXAdj..'; iZAdj='..iZAdj..'; iTheta='..iTheta..'; position='..repru({tStart[1] + iXAdj, GetSurfaceHeight(tStart[1] + iXAdj, tStart[3] + iZAdj), tStart[3] + iZAdj})) end
+        if bTravelUnderwater then
+            return {tStart[1] + iXAdj, GetTerrainHeight(tStart[1] + iXAdj, tStart[3] + iZAdj), tStart[3] + iZAdj}
+        else
+            return {tStart[1] + iXAdj, GetSurfaceHeight(tStart[1] + iXAdj, tStart[3] + iZAdj), tStart[3] + iZAdj}
+        end
+    else
+        local tTargetPosition
+        if bTravelUnderwater then
+            tTargetPosition = {tStart[1] + iXAdj, GetTerrainHeight(tStart[1] + iXAdj, tStart[3] + iZAdj), tStart[3] + iZAdj}
+        else
+            tTargetPosition = {tStart[1] + iXAdj, GetSurfaceHeight(tStart[1] + iXAdj, tStart[3] + iZAdj), tStart[3] + iZAdj}
+        end
+        --Get actual distance required to keep within map bounds
+        --local iMaxDistanceFlat = 0
+        local iNewDistWanted = 10000
+        --rMapPlayableArea = 2 --{x1,z1, x2,z2} - Set at start of the game, use instead of the scenarioinfo method
+        if tTargetPosition[1] < playableArea[1] then iNewDistWanted = iDistance * (tStart[1] - playableArea[1]) / (tStart[1] - tTargetPosition[1]) end
+        if tTargetPosition[3] < playableArea[2] then iNewDistWanted = math.min(iNewDistWanted, iDistance * (tStart[3] - playableArea[2]) / (tStart[3] - tTargetPosition[3])) end
+        if tTargetPosition[1] > playableArea[3] then iNewDistWanted = math.min(iNewDistWanted, iDistance * (playableArea[3] - tStart[1]) / (tTargetPosition[1] - tStart[1])) end
+        if tTargetPosition[3] > playableArea[4] then iNewDistWanted = math.min(iNewDistWanted, iDistance * (playableArea[4] - tStart[3]) / (tTargetPosition[3] - tStart[3])) end
+
+        if iNewDistWanted == 10000 then
+            return tTargetPosition
+        else
+            --Are out of playable area, so adjust the position; Can use the ratio of the amount we have moved left/right or top/down vs the long line length to work out the long line length if we reduce the left/right so its within playable area
+            return MoveInDirection(tStart, iAngle, iNewDistWanted - 0.1, false)
+        end
+    end
 end
 
 function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxRange, atkPri)
@@ -1532,7 +1590,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
     return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition
 end
 
-function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian)
+function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted)
     if not position then
         position = platoon:GetPlatoonPosition()
     end
@@ -1591,62 +1649,69 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
             local distance = false
             local targetShields = 9999
             for num, unit in targetUnits do
-                if index then
-                    for k, v in index do
-                        if unit:GetAIBrain():GetArmyIndex() == v then
-                            if not unit.Dead and not unit.CaptureInProgress and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
-                                local unitPos = unit:GetPosition()
-                                if not retUnit or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
-                                    retUnit = unit
-                                    distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
-                                end
-                                if platoon.MovementLayer == 'Air' and platoonThreat then
-                                    enemyThreat = GetThreatAtPosition( aiBrain, unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
-                                    --RNGLOG('Enemy Threat is '..enemyThreat..' and my threat is '..platoonThreat)
-                                    if enemyThreat > platoonThreat then
-                                        continue
-                                    end
-                                end
-                                local numShields = aiBrain:GetNumUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
-                                if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
-                                    retUnit = unit
-                                    distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
-                                    targetShields = numShields
-                                end
-                            end
+                if not unit.Dead then
+                    if ignoreNotCompleted then
+                        if unit:GetFractionComplete() ~= 1 then
+                            continue
                         end
                     end
-                else
-                    if not unit.Dead and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
-                        if ignoreCivilian then
-                            if ArmyIsCivilian(unit:GetArmy()) then
-                                --RNGLOG('Unit is civilian')
-                                continue
-                            end
-                        end
-                        local unitPos = unit:GetPosition()
-                        if avoidbases then
-                            for _, w in ArmyBrains do
-                                if IsEnemy(w:GetArmyIndex(), aiBrain:GetArmyIndex()) or (aiBrain:GetArmyIndex() == w:GetArmyIndex()) then
-                                    local estartX, estartZ = w:GetArmyStartPos()
-                                    if VDist2Sq(estartX, estartZ, unitPos[1], unitPos[3]) < 22500 then
-                                        continue
+                    if index then
+                        for k, v in index do
+                            if unit:GetAIBrain():GetArmyIndex() == v then
+                                if not unit.CaptureInProgress and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
+                                    local unitPos = unit:GetPosition()
+                                    if not retUnit or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
+                                        retUnit = unit
+                                        distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
+                                    end
+                                    if platoon.MovementLayer == 'Air' and platoonThreat then
+                                        enemyThreat = GetThreatAtPosition( aiBrain, unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
+                                        --RNGLOG('Enemy Threat is '..enemyThreat..' and my threat is '..platoonThreat)
+                                        if enemyThreat > platoonThreat then
+                                            continue
+                                        end
+                                    end
+                                    local numShields = aiBrain:GetNumUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
+                                    if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
+                                        retUnit = unit
+                                        distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
+                                        targetShields = numShields
                                     end
                                 end
                             end
                         end
-                        if platoon.MovementLayer == 'Air' and platoonThreat then
-                            enemyThreat = GetThreatAtPosition( aiBrain, unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
-                            --RNGLOG('Enemy Threat is '..enemyThreat..' and my threat is '..platoonThreat)
-                            if enemyThreat > platoonThreat then
-                                continue
+                    else
+                        if not unit.Dead and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
+                            if ignoreCivilian then
+                                if ArmyIsCivilian(unit:GetArmy()) then
+                                    --RNGLOG('Unit is civilian')
+                                    continue
+                                end
                             end
-                        end
-                        local numShields = aiBrain:GetNumUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
-                        if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
-                            retUnit = unit
-                            distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
-                            targetShields = numShields
+                            local unitPos = unit:GetPosition()
+                            if avoidbases then
+                                for _, w in ArmyBrains do
+                                    if IsEnemy(w:GetArmyIndex(), aiBrain:GetArmyIndex()) or (aiBrain:GetArmyIndex() == w:GetArmyIndex()) then
+                                        local estartX, estartZ = w:GetArmyStartPos()
+                                        if VDist2Sq(estartX, estartZ, unitPos[1], unitPos[3]) < 22500 then
+                                            continue
+                                        end
+                                    end
+                                end
+                            end
+                            if platoon.MovementLayer == 'Air' and platoonThreat then
+                                enemyThreat = GetThreatAtPosition( aiBrain, unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
+                                --RNGLOG('Enemy Threat is '..enemyThreat..' and my threat is '..platoonThreat)
+                                if enemyThreat > platoonThreat then
+                                    continue
+                                end
+                            end
+                            local numShields = aiBrain:GetNumUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
+                            if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
+                                retUnit = unit
+                                distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
+                                targetShields = numShields
+                            end
                         end
                     end
                 end

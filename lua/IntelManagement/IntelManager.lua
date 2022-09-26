@@ -934,7 +934,8 @@ IntelManager = Class {
 
     GetIntelGrid = function(self, Position)
         --Base level segment numbers
-        if Position then
+        if Position[1] then
+            RNGLOG('GetIntelGrid Position is '..repr(Position))
             local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
             --LOG('Temp log for GetPathingSegmentFromPosition: tPosition='..repru((tPosition or {'nil'}))..'; rPlayableArea='..repru((rPlayableArea or {'nil'})))
             --LOG('iBaseSegmentSize='..(iBaseSegmentSize or 'nil'))
@@ -1107,27 +1108,51 @@ IntelManager = Class {
                 end
             end
         end
-        if type == 'AirAntiSurface' and table.getn(potentialStrikes) > 0 then
-            local count = math.ceil(desiredStrikeDamage / 1000)
-            local acuSnipe = false
-            local acuIndex = false
-            local zoneAttack = false
-            for k, v in potentialStrikes do
-                if v.Type == 'ACU' then
-                    acuSnipe = true
-                    acuIndex = v.Index
-                elseif v.Type == 'Zone' then
-                    zoneAttack = true
+        if type == 'AirAntiSurface' then
+            if table.getn(potentialStrikes) > 0 then
+                local count = math.ceil(desiredStrikeDamage / 1000)
+                local acuSnipe = false
+                local acuIndex = false
+                local zoneAttack = false
+                for k, v in potentialStrikes do
+                    if v.Type == 'ACU' then
+                        acuSnipe = true
+                        acuIndex = v.Index
+                    elseif v.Type == 'Zone' then
+                        zoneAttack = true
+                    end
                 end
-            end
-            RNGLOG('Number of T2 Bombers wanted '..count)
-            if acuSnipe then
-                self.Brain.TacticalMonitor.TacticalMissions.ACUSnipe[acuIndex]['AIR'] = { GameTime = gameTime, CountRequired = count }
-                self.Brain.amanager.Demand.Air.T2.bomber = count
-                self.Brain.amanager.Demand.Air.T2.mercy = count
-            end
-            if zoneAttack then
-                self.Brain.amanager.Demand.Air.T2.bomber = count
+                RNGLOG('Number of T2 Bombers wanted '..count)
+                if acuSnipe then
+                    RNGLOG('Setting acuSnipe mission for air units')
+                    RNGLOG('Set game time '..gameTime)
+                    self.Brain.TacticalMonitor.TacticalMissions.ACUSnipe[acuIndex]['AIR'] = { GameTime = gameTime, CountRequired = count }
+                    self.Brain.amanager.Demand.Air.T2.bomber = count
+                    self.Brain.amanager.Demand.Air.T2.mercy = count
+                    self.Brain.EngineerAssistManagerFocusSnipe = true
+                end
+                if zoneAttack then
+                    self.Brain.amanager.Demand.Air.T2.bomber = count
+                end
+            else
+                local disableBomb = true
+                for k, v in self.Brain.TacticalMonitor.TacticalMissions.ACUSnipe do
+                    if v.AIR then
+                        if v.AIR.GameTime and v.AIR.GameTime + 300 > gameTime then
+                            disableBomb = false
+                        end
+                    end
+                end
+                if disableBomb and self.Brain.amanager.Demand.Air.T2.mercy > 0 then
+                    RNGLOG('No mercy snipe missions, disable demand')
+                    self.Brain.amanager.Demand.Air.T2.mercy = 0
+                    self.Brain.EngineerAssistManagerFocusSnipe = false
+                end
+                if disableBomb and self.Brain.amanager.Demand.Air.T2.bomber > 0 then
+                    RNGLOG('No t2 bomber missions, disable demand')
+                    self.Brain.amanager.Demand.Air.T2.bomber = 0
+                    self.Brain.EngineerAssistManagerFocusSnipe = false
+                end
             end
         elseif type == 'LandAntiSurface' then
             local acuSnipe = false
@@ -1143,8 +1168,10 @@ IntelManager = Class {
                 RNGLOG('Number of T2 Bombs wanted '..count)
                 if acuSnipe then
                     RNGLOG('Setting acuSnipe mission for land units')
+                    RNGLOG('Set game time '..gameTime)
                     self.Brain.TacticalMonitor.TacticalMissions.ACUSnipe[acuIndex]['LAND'] = { GameTime = gameTime, CountRequired = count }
                     self.Brain.amanager.Demand.Land.T2.mobilebomb = count
+                    self.Brain.EngineerAssistManagerFocusSnipe = true
                 end
             else
                 local disableBomb = true
@@ -1158,6 +1185,7 @@ IntelManager = Class {
                 if disableBomb and self.Brain.amanager.Demand.Land.T2.mobilebomb > 0 then
                     RNGLOG('No mobile bomb missions, disable demand')
                     self.Brain.amanager.Demand.Land.T2.mobilebomb = 0
+                    self.Brain.EngineerAssistManagerFocusSnipe = false
                 end
             end
         end

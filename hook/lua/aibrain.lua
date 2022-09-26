@@ -2441,9 +2441,9 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             for k, v in self.EnemyIntel.ACU do
                 local dupe = false
-                if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
+                if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 and v.Position[1] then
                     --RNGLOG('ACU last spotted '..(GetGameTimeSeconds() - v.LastSpotted)..' seconds ago')
-                    if (GetGameTimeSeconds() - 45) > v.LastSpotted then
+                    if v.LastSpotted + 60 > GetGameTimeSeconds() then
                         local gridXID, gridYID = im:GetIntelGrid(v.Position)
                         if not im.MapIntelGrid[gridXID][gridYID].MustScout then
                             im.MapIntelGrid[gridXID][gridYID].MustScout = true
@@ -3488,7 +3488,7 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.EnemyIntel.ACU do
                 if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
                     if platoonType == 'GUNSHIP' and platoonDPS then
-                        if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and (GetGameTimeSeconds() - 120) < v.LastSpotted then
+                        if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and v.LastSpotted + 120 > GetGameTimeSeconds() then
                             RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
                             RNGLOG('ACU Added to target check in director')
                             local gridX, gridY = im:GetIntelGrid(v.Position)
@@ -4930,9 +4930,22 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
                 }
+            elseif self.EngineerAssistManagerFocusSnipe then
+                state = 'Snipe'
+                self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.FACTORY
+                self.EngineerAssistManagerPriorityTable = {
+                    {cat = categories.daa0206, type = 'Completion'},
+                    {cat = categories.xrl0302, type = 'Completion'},
+                    {cat = categories.AIR * (categories.BOMBER + categories.GROUNDATTACK), type = 'Completion'},
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'},
+                    {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
+                    {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
+                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
+                }
             elseif self.EngineerAssistManagerFocusExperimental then
                 state = 'Experimental'
-                self.EngineerAssistManagerFocusCategory = categories.MOBILE * categories.EXPERIMENTAL
+                self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.FACTORY
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
                     {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 

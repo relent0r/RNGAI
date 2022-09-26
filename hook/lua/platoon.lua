@@ -139,7 +139,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             if not target or target.Dead then
                 --RNGLOG('Looking for target at radius '..maxRadius)
-                target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self.HoldingPosition, self, 'Attack', maxRadius, atkPri, avoidBases, self.CurrentPlatoonThreat)
+                -- Params aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted
+                target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self.HoldingPosition, self, 'Attack', maxRadius, atkPri, avoidBases, self.CurrentPlatoonThreat, false, false, true)
                 if (not target or target.Dead) and acuCheck then
                     --RNGLOG('No target found at max radius, checking around acu as its active')
                     target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, aiBrain.CDRUnit.Position, self, 'Attack', 80, atkPri, false)
@@ -290,7 +291,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                 end
             end
-            if (not target or target.Dead) and GetGameTimeSeconds() - 60 > holdPosTimer then
+            if (not target or target.Dead) and holdPosTimer + 60 > GetGameTimeSeconds() then
                 holdPosTimerExpired = true
                 self.HoldingPosition = aiBrain.BuilderManagers['MAIN'].Position
                 self:MoveToLocation(self.HoldingPosition, false)
@@ -504,7 +505,13 @@ Platoon = Class(RNGAIPlatoonClass) {
         local armyIndex = aiBrain:GetArmyIndex()
         local target
         local blip
-        local holdPosition = aiBrain.BrainIntel.StartPos
+        local holdPosition
+        local behindAngle = RUtils.GetAngleToPosition(aiBrain.BrainIntel.StartPos, aiBrain.MapCenterPoint)
+        holdPosition = RUtils.MoveInDirection(aiBrain.BrainIntel.StartPos, behindAngle + 180, 30, true, false)
+        if not holdPosition then
+            holdPosition = aiBrain.BrainIntel.StartPos
+        end
+        RNGLOG('Hold Position is '..repr(holdPosition))
         self:ConfigurePlatoon()
         while PlatoonExists(aiBrain, self) do
             local platoonUnits = GetPlatoonUnits(self)
@@ -513,7 +520,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
                 if self.MovementLayer == 'Air' then
                     if v.AIR and v.AIR.GameTime then
-                        if v.AIR.GameTime + 500 > GetGameTimeSeconds() then
+                        if v.AIR.GameTime + 650 > GetGameTimeSeconds() then
                             RNGLOG('ACU Table for index '..k..' table '..repr(aiBrain.EnemyIntel.ACU))
                             if RUtils.HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
                                 target = aiBrain.EnemyIntel.ACU[k].Unit
@@ -527,7 +534,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                 else
                     if v.LAND and v.LAND.GameTime then
-                        if v.LAND.GameTime + 500 > GetGameTimeSeconds() then
+                        if v.LAND.GameTime + 650 > GetGameTimeSeconds() then
                             RNGLOG('ACU Table for index '..k..' table '..repr(aiBrain.EnemyIntel.ACU))
                             if RUtils.HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
                                 target = aiBrain.EnemyIntel.ACU[k].Unit
@@ -558,8 +565,19 @@ Platoon = Class(RNGAIPlatoonClass) {
                 self:AttackTarget(target)
                 coroutine.yield(170)
             end
+            platoonUnits = GetPlatoonUnits(self)
+            for k, v in platoonUnits do
+                if not v.Dead then
+                    local unitPos = v:GetPosition()
+                    if VDist2Sq(unitPos[1], unitPos[3], holdPosition[1], holdPosition[3]) > 144 then
+                        RNGLOG('Not in hold position distance is '..VDist2Sq(unitPos[1], unitPos[3], holdPosition[1], holdPosition[3]))
+                        RNGLOG('Hold position is '..repr(holdPosition))
+                        RNGLOG('Current Position '..repr(v:GetPosition()))
+                        IssueMove({v}, {holdPosition[1] + Random(-5, 5), holdPosition[2], holdPosition[3] + Random(-5, 5) } )
+                    end
+                end
+            end
             coroutine.yield(50)
-            self:MoveToLocation(holdPosition, false)
         end
     end,
 
@@ -5579,7 +5597,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, false)
                 end
                 if not usedTransports then
-                    self:PlatoonMoveWithMicro(aiBrain, path, self.PlatoonData.Avoid)
+                    self:PlatoonMoveWithMicro(aiBrain, path, self.PlatoonData.Avoid, false, true)
                     --RNGLOG('Exited PlatoonMoveWithMicro so we should be at a destination')
                 end
             elseif (not path and reason == 'NoPath') then
@@ -6130,14 +6148,14 @@ Platoon = Class(RNGAIPlatoonClass) {
         --RNGLOG('Scout should be at destination')
     end,
 
-    PlatoonMoveWithMicro = function(self, aiBrain, path, avoid, ignoreUnits)
+    PlatoonMoveWithMicro = function(self, aiBrain, path, avoid, ignoreUnits, maxDistance)
         -- I've tried to split out the platoon movement function as its getting too messy and hard to maintain
         if not path then
             WARN('No path passed to PlatoonMoveWithMicro')
             return false
         end
 
-        local function VariableKite(platoon,unit,target)
+        local function VariableKite(platoon,unit,target, maxDistance)
             local function KiteDist(pos1,pos2,distance)
                 local vec={}
                 local dist=VDist3(pos1,pos2)
@@ -6166,6 +6184,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             local mod=3
             if CheckRetreat(pos,tpos,target) then
                 mod=8
+            end
+            if maxDistance then
+                mod = 0
             end
             if unit.MaxWeaponRange then
                 dest=KiteDist(pos,tpos,unit.MaxWeaponRange-math.random(1,3)-mod)
@@ -6381,7 +6402,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                         continue
                                     end
                                     IssueClearCommands({unit})
-                                    retreatTrigger = VariableKite(self,unit,target)
+                                    retreatTrigger = VariableKite(self,unit,target, maxDistance)
                                 end
                             else
                                 self:MoveToLocation(path[i], false)

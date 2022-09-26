@@ -91,7 +91,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Mercy',
         PlatoonTemplate = 'T2AirMissile',
-        Priority = 891,
+        Priority = 895,
         BuilderType = 'Air',
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'Air', 'T2', 'mercy'} },
