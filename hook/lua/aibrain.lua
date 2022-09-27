@@ -983,6 +983,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 Unit = {},
                 Gun = false,
                 Ally = IsAlly(selfIndex, armyIndex),
+                IntelGrid = {}
             }
             self.EnemyIntel.DirectorData[armyIndex] = {
                 Strategic = {},

@@ -3127,23 +3127,31 @@ ShowLastKnown = function(aiBrain)
     if ScenarioInfo.Options.AIDebugDisplay ~= 'displayOn' then
         return
     end
-    while not aiBrain.lastknown do
-        coroutine.yield(2)
+    coroutine.yield(50)
+    local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(self)
+    while not im.MapIntelGrid do
+        coroutine.yield(30)
     end
     while aiBrain.Status ~= "Defeat" do
         local time=GetGameTimeSeconds()
         local lastknown=table.copy(aiBrain.lastknown)
-        for _,v in lastknown do
-            if v.recent then
-                local ratio=(1-(time-v.time)/120)*(1-(time-v.time)/120)
-                local ratio2=(1-(time-v.time)/120)
-                local color=ToColorRNG(10,255,ratio2)
-                local color1=ToColorRNG(10,255,ratio)
-                local color2=ToColorRNG(10,100,math.random())
-                local color3=ToColorRNG(10,100,math.random())
-                DrawCircle(v.Position,3,color..color1..color2..color3)
-            else
-                DrawCircle(v.Position,2,ToColorRNG(120,200,math.random())..ToColorRNG(50,255,math.random())..ToColorRNG(50,255,math.random())..ToColorRNG(50,255,math.random()))
+        for i=self.MapIntelGridXMin, self.MapIntelGridXMax do
+            for k=self.MapIntelGridZMin, self.MapIntelGridZMax do
+                if im.MapIntelGrid[i][k].EnemyUnits then
+                    for c, b in im.MapIntelGrid[i][k].EnemyUnits do
+                        if b.recent then
+                            local ratio=(1-(time-b.time)/120)*(1-(time-b.time)/120)
+                            local ratio2=(1-(time-b.time)/120)
+                            local color=ToColorRNG(10,255,ratio2)
+                            local color1=ToColorRNG(10,255,ratio)
+                            local color2=ToColorRNG(10,100,math.random())
+                            local color3=ToColorRNG(10,100,math.random())
+                            DrawCircle(b.Position,3,color..color1..color2..color3)
+                        else
+                            DrawCircle(b.Position,2,ToColorRNG(120,200,math.random())..ToColorRNG(50,255,math.random())..ToColorRNG(50,255,math.random())..ToColorRNG(50,255,math.random()))
+                        end
+                    end
+                end
             end
         end
         coroutine.yield(2)
