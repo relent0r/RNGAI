@@ -2309,7 +2309,10 @@ end
 TruePlatoonPriorityDirector = function(aiBrain)
     aiBrain.prioritypoints={}
     local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
-    while not aiBrain.lastknown do coroutine.yield(20) end
+    local im = GetIntelManager(aiBrain)
+    while not im.MapIntelGrid do
+        coroutine.yield(30)
+    end
     while aiBrain.Status ~= "Defeat" do
         --RNGLOG('Check Expansion table in priority directo')
         if aiBrain.BrainIntel.ExpansionWatchTable then
@@ -2352,27 +2355,34 @@ TruePlatoonPriorityDirector = function(aiBrain)
             coroutine.yield(10)
         end
         --RNGLOG('Check lastknown')
-        for k,v in aiBrain.lastknown do
-            if not v.recent or aiBrain.prioritypoints[k] then continue end
-            local priority=0
-            if v.type then
-                if v.type=='eng' then
-                    priority=50
-                elseif v.type=='mex' then
-                    priority=40
-                elseif v.type=='radar' then
-                    priority=100
-                elseif v.type=='arty' then
-                    priority=30
-                elseif v.type=='tank' then
-                    priority=30
-                else
-                    priority=20
+        for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
+            for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
+                if next(im.MapIntelGrid[i][k].EnemyUnits) then
+                    for k, v in im.MapIntelGrid[i][k].EnemyUnits do
+                        if not v.recent or aiBrain.prioritypoints[k] then continue end
+                            local priority=0
+                            if v.type then
+                                if v.type=='eng' then
+                                    priority=50
+                                elseif v.type=='mex' then
+                                    priority=40
+                                elseif v.type=='radar' then
+                                    priority=100
+                                elseif v.type=='arty' then
+                                    priority=30
+                                elseif v.type=='tank' then
+                                    priority=30
+                                else
+                                    priority=20
+                                end
+                                if VDist3Sq(aiBrain.BuilderManagers['MAIN'].Position, v.Position) < (BaseRestrictedArea * BaseRestrictedArea * 2) then
+                                    priority = priority + 100
+                                end
+                                aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=RUtils.GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object}
+                            end
+                        end
+                    end
                 end
-                if VDist3Sq(aiBrain.BuilderManagers['MAIN'].Position, v.Position) < (BaseRestrictedArea * BaseRestrictedArea * 2) then
-                    priority = priority + 100
-                end
-                aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=RUtils.GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object}
             end
         end
         if aiBrain.CDRUnit.Active then

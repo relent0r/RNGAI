@@ -3134,7 +3134,6 @@ ShowLastKnown = function(aiBrain)
     end
     while aiBrain.Status ~= "Defeat" do
         local time=GetGameTimeSeconds()
-        local lastknown=table.copy(aiBrain.lastknown)
         for i=self.MapIntelGridXMin, self.MapIntelGridXMax do
             for k=self.MapIntelGridZMin, self.MapIntelGridZMax do
                 if im.MapIntelGrid[i][k].EnemyUnits then

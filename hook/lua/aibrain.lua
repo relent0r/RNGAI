@@ -3724,25 +3724,31 @@ AIBrain = Class(RNGAIBrainClass) {
         if not potentialTarget then
             local closestMex = false
             local airThreat = false
-            for _, v in self.lastknown do
-                if v.type == 'mex' and not v.object.Dead then
-                    if EntityCategoryContains(categories.TECH2 + categories.TECH3, v.object) then
-                        if platoonType == 'BOMBER' and strikeDamage and strikeDamage > 0 and v.object:GetHealth() / 3 < strikeDamage then
-                            local positionThreat = GetThreatAtPosition(self, v.Position, self.BrainIntel.IMAPConfig.Rings, true, threatType)
-                            if not airThreat or positionThreat < airThreat then
-                                airThreat = positionThreat
-                                closestMex = v.object
-                                if airThreat == 0 then
-                                    break
-                                end
-                            end
-                        elseif platoonType == 'GUNSHIP' and platoonDPS and (v.object:GetHealth() / platoonDPS) <= 15 then
-                            local positionThreat = GetThreatAtPosition(self, v.Position, self.BrainIntel.IMAPConfig.Rings, true, threatType)
-                            if not airThreat or positionThreat < airThreat then
-                                airThreat = positionThreat
-                                closestMex = v.object
-                                if airThreat == 0 then
-                                    break
+            for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
+                for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
+                    if next(im.MapIntelGrid[i][k].EnemyUnits) then
+                        for k, v in im.MapIntelGrid[i][k].EnemyUnits do
+                            if v.type == 'mex' and not v.object.Dead then
+                                if EntityCategoryContains(categories.TECH2 + categories.TECH3, v.object) then
+                                    if platoonType == 'BOMBER' and strikeDamage and strikeDamage > 0 and v.object:GetHealth() / 3 < strikeDamage then
+                                        local positionThreat = GetThreatAtPosition(self, v.Position, self.BrainIntel.IMAPConfig.Rings, true, threatType)
+                                        if not airThreat or positionThreat < airThreat then
+                                            airThreat = positionThreat
+                                            closestMex = v.object
+                                            if airThreat == 0 then
+                                                break
+                                            end
+                                        end
+                                    elseif platoonType == 'GUNSHIP' and platoonDPS and (v.object:GetHealth() / platoonDPS) <= 15 then
+                                        local positionThreat = GetThreatAtPosition(self, v.Position, self.BrainIntel.IMAPConfig.Rings, true, threatType)
+                                        if not airThreat or positionThreat < airThreat then
+                                            airThreat = positionThreat
+                                            closestMex = v.object
+                                            if airThreat == 0 then
+                                                break
+                                            end
+                                        end
+                                    end
                                 end
                             end
                         end
