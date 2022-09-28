@@ -813,11 +813,11 @@ IntelManager = Class {
                         perimeterExpired = true
                     end
                     if next(self.MapIntelGrid[i][k].EnemyUnits) then
-                        for i,v in self.MapIntelGrid[i][k].EnemyUnits do
-                            if (v.object and v.object.Dead) then
-                                self.MapIntelGrid[i][k].EnemyUnits[i]=nil
-                            elseif time-v.time>120 or (v.object and v.object.Dead) or (time-v.time>15 and GetNumUnitsAroundPoint(aiBrain,categories.MOBILE,v.Position,20,'Ally')>3) then
-                                self.MapIntelGrid[i][k].EnemyUnits[i].recent=false
+                        for c,b in self.MapIntelGrid[i][k].EnemyUnits do
+                            if (b.object and b.object.Dead) then
+                                self.MapIntelGrid[i][k].EnemyUnits[c]=nil
+                            elseif time-b.time>120 or (b.object and b.object.Dead) or (time-b.time>15 and GetNumUnitsAroundPoint(aiBrain,categories.MOBILE,b.Position,20,'Ally')>3) then
+                                self.MapIntelGrid[i][k].EnemyUnits[c].recent=false
                             end
                         end
                     end
@@ -880,6 +880,7 @@ IntelManager = Class {
         local gridsSet = 0
         --RNGLOG('Infecting Grid Positions, grid size is '..gridSize)
         if type == 'Radar' then
+            self.MapIntelGrid[gridX][gridZ].Radars[unit.Sync.id] = {}
             self.MapIntelGrid[gridX][gridZ].Radars[unit.Sync.id] = unit
             self.MapIntelGrid[gridX][gridZ].IntelCoverage = true
             --self.Brain:ForkThread(self.DrawInfection, self.MapIntelGrid[gridX][gridZ].Position)
@@ -889,6 +890,7 @@ IntelManager = Class {
             for z = math.max(self.MapIntelGridZMin, gridZ - gridSize), math.min(self.MapIntelGridZMax, gridZ + gridSize), 1 do
                 self.MapIntelGrid[x][z][property] = value
                 if type == 'Radar' then
+                    self.MapIntelGrid[x][z].Radars[unit.Sync.id] = {}
                     self.MapIntelGrid[x][z].Radars[unit.Sync.id] = unit
                 end
                 --self.Brain:ForkThread(self.DrawInfection, self.MapIntelGrid[x][z].Position)
@@ -944,7 +946,7 @@ IntelManager = Class {
     GetIntelGrid = function(self, Position)
         --Base level segment numbers
         if Position[1] then
-            RNGLOG('GetIntelGrid Position is '..repr(Position))
+            --RNGLOG('GetIntelGrid Position is '..repr(Position))
             local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
             --LOG('Temp log for GetPathingSegmentFromPosition: tPosition='..repru((tPosition or {'nil'}))..'; rPlayableArea='..repru((rPlayableArea or {'nil'})))
             --LOG('iBaseSegmentSize='..(iBaseSegmentSize or 'nil'))
@@ -1041,14 +1043,11 @@ IntelManager = Class {
             RNGLOG('Directordata current mml production count '..self.Brain.amanager.Demand.Land.T2.mml)
             
         elseif type == 'LandAntiSurface' then
-            RNGLOG('Current EnemyIntel ACU '..repr(self.Brain.EnemyIntel.ACU))
             for k, v in self.Brain.EnemyIntel.ACU do
-                RNGLOG('Last Spotted '..v.LastSpotted)
-                RNGLOG('Current GameTime '..gameTime)
-                RNGLOG('Last known position '..repr(v.Position))
                 if v.Position[1] then
                     RNGLOG('Current Distance '..VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos))
                 end
+                RNGLOG('Closest enemy base '..self.Brain.EnemyIntel.ClosestEnemyBase)
                 RNGLOG('Cutoff distance '..(self.Brain.EnemyIntel.ClosestEnemyBase / 3))
                 if not v.Ally and v.Position[1] and v.LastSpotted + 120 > gameTime then
                     if VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase / 3) then
@@ -2219,7 +2218,7 @@ LastKnownThread = function(aiBrain)
     local im = GetIntelManager(aiBrain)
     aiBrain.lastknown={}
     aiBrain:ForkThread(RUtils.ShowLastKnown)
-    --aiBrain:ForkThread(TruePlatoonPriorityDirector)
+    aiBrain:ForkThread(TruePlatoonPriorityDirector)
     while not im.MapIntelGrid do
         RNGLOG('Waiting for MapIntelGrid to exist...')
         coroutine.yield(20)
@@ -2322,6 +2321,7 @@ LastKnownThread = function(aiBrain)
 end
 
 TruePlatoonPriorityDirector = function(aiBrain)
+    RNGLOG('Starting TruePlatoonPriorityDirector')
     aiBrain.prioritypoints={}
     local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
     local im = GetIntelManager(aiBrain)
@@ -2329,6 +2329,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
         coroutine.yield(30)
     end
     while aiBrain.Status ~= "Defeat" do
+        local unitAddedCount = 0
         --RNGLOG('Check Expansion table in priority directo')
         if aiBrain.BrainIntel.ExpansionWatchTable then
             for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
@@ -2354,6 +2355,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     if v.Commander > 0 then
                         acuPresent = true
                     end
+                    unitAddedCount = unitAddedCount + 1
                     aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=RUtils.GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object, ACUPresent=acuPresent}
                 else
                     local acuPresent = false
@@ -2364,38 +2366,41 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     if v.Commander > 0 then
                         acuPresent = true
                     end
+                    unitAddedCount = unitAddedCount + 1
                     aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=0,unit=v.object, ACUPresent=acuPresent}
                 end
             end
             coroutine.yield(10)
         end
-        --RNGLOG('Check lastknown')
+        RNGLOG('Check lastknown')
+        
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
             for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
                 if next(im.MapIntelGrid[i][k].EnemyUnits) then
-                    for k, v in im.MapIntelGrid[i][k].EnemyUnits do
-                        if not v.recent or aiBrain.prioritypoints[k] then continue end
-                            local priority=0
-                            if v.type then
-                                if v.type=='eng' then
-                                    priority=50
-                                elseif v.type=='mex' then
-                                    priority=40
-                                elseif v.type=='radar' then
-                                    priority=100
-                                elseif v.type=='arty' then
-                                    priority=30
-                                elseif v.type=='tank' then
-                                    priority=30
-                                else
-                                    priority=20
-                                end
-                                if VDist3Sq(aiBrain.BuilderManagers['MAIN'].Position, v.Position) < (BaseRestrictedArea * BaseRestrictedArea * 2) then
-                                    priority = priority + 100
-                                end
-                                aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=RUtils.GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object}
+                    for c, b in im.MapIntelGrid[i][k].EnemyUnits do
+                        if not b.recent or aiBrain.prioritypoints[c] or b.object.Dead then continue end
+                        local priority=0
+                        if b.type then
+                            if b.type=='eng' then
+                                priority=50
+                            elseif b.type=='mex' then
+                                priority=40
+                            elseif b.type=='radar' then
+                                priority=100
+                            elseif b.type=='arty' then
+                                priority=30
+                            elseif b.type=='tank' then
+                                priority=30
+                            else
+                                priority=20
                             end
                         end
+                        if VDist3Sq(aiBrain.BuilderManagers['MAIN'].Position, b.Position) < (BaseRestrictedArea * BaseRestrictedArea * 2) then
+                            priority = priority + 100
+                        end
+                        unitAddedCount = unitAddedCount + 1
+                        aiBrain.prioritypoints[c]={type='raid',Position=b.Position,priority=priority,danger=RUtils.GrabPosDangerRNG(aiBrain,b.Position,30).enemy,unit=b.object}
+                        RNGLOG('Added prioritypoints entry of '..repr(aiBrain.prioritypoints[c]))
                     end
                 end
             end
@@ -2434,10 +2439,16 @@ TruePlatoonPriorityDirector = function(aiBrain)
             if aiBrain.CDRUnit.Caution then
                 acuPriority = acuPriority + 100
             end
+            unitAddedCount = unitAddedCount + 1
             aiBrain.prioritypoints['ACU']={type='raid',Position=aiBrain.CDRUnit.Position,priority=acuPriority,danger=RUtils.GrabPosDangerRNG(aiBrain,aiBrain.CDRUnit.Position,30).enemy,unit=nil}
         end
+        for k, v in aiBrain.prioritypoints do
+            if v.unit.Dead then
+                aiBrain.prioritypoints[k] = nil
+            end
+        end
         coroutine.yield(50)
-        --RNGLOG('Priority Points'..repr(aiBrain.prioritypoints))
+        RNGLOG('We should have added this many points this loop '..unitAddedCount)
     end
 end
 

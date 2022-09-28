@@ -8581,7 +8581,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 for _, v in atkPri do
                     for num, unit in targetUnits do
                         if not unit.Dead and EntityCategoryContains(v, unit) and self:CanAttackTarget('attack', unit) then
-                            targetPosition = target:GetPosition()
+                            targetPosition = unit:GetPosition()
                             if not RUtils.PositionInWater(targetPosition) then
                                 -- 6000 damage for TML
                                 if EntityCategoryContains(categories.COMMAND, unit) then

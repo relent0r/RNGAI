@@ -507,7 +507,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Engineer Unfinished Structures',
         PlatoonTemplate = 'T123EngineerFinishRNG',
-        Priority = 990,
+        Priority = 1005,
         DelayEqualBuildPlattons = {'EngineerAssistUnfinished', 1},
         InstanceCount = 3,
         BuilderConditions = {
