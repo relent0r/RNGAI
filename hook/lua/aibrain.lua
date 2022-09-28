@@ -1915,12 +1915,12 @@ AIBrain = Class(RNGAIBrainClass) {
                 for _, v in self.BrainIntel.ExpansionWatchTable do
                     -- Add any expansion table locations to the must scout table
                     --RNGLOG('Expansion of type '..v.Type..' found, seeting scout location')
-                    local gridXID, gridYID = im:GetIntelGrid(v.Position)
-                    if im.MapIntelGrid[gridXID][gridYID].Enabled then
-                        im.MapIntelGrid[gridXID][gridYID].MustScout = true
-                        --RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
-                        --RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
-                        --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                    local gridXID, gridZID = im:GetIntelGrid(v.Position)
+                    if im.MapIntelGrid[gridXID][gridZID].Enabled then
+                        im.MapIntelGrid[gridXID][gridZID].MustScout = true
+                        --RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridZID)
+                        --RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridZID]))
+                        --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
                     end
                 end
             end
@@ -1942,12 +1942,12 @@ AIBrain = Class(RNGAIBrainClass) {
                             -- I would rather use army ndexes for the table keys of the enemyStarts so I can easily reference them in queries. To be pondered.
                             local enemyDistance = VDist3Sq(self.BrainIntel.StartPos, startPos)
                             RNGINSERT(enemyStarts, {Position = startPos, Index = army.ArmyIndex, Distance = enemyDistance })
-                            local gridXID, gridYID = im:GetIntelGrid(startPos)
-                            if im.MapIntelGrid[gridXID][gridYID].Enabled then
-                                im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 100
-                                --RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
-                                --RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
-                                --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                            local gridXID, gridZID = im:GetIntelGrid(startPos)
+                            if im.MapIntelGrid[gridXID][gridZID].Enabled then
+                                im.MapIntelGrid[gridXID][gridZID].ScoutPriority = 100
+                                --RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridZID)
+                                --RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridZID]))
+                                --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
                             end
                             if self.EnemyIntel.ClosestEnemyBase == 0 or enemyDistance < self.EnemyIntel.ClosestEnemyBase then
                                 self.EnemyIntel.ClosestEnemyBase = enemyDistance
@@ -1989,12 +1989,12 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
 
                         if closeToEnemy then
-                            local gridXID, gridYID = im:GetIntelGrid(loc.Position)
-                            if im.MapIntelGrid[gridXID][gridYID].Enabled then
-                                im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
-                                --RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
-                                --RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
-                                --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                            local gridXID, gridZID = im:GetIntelGrid(loc.Position)
+                            if im.MapIntelGrid[gridXID][gridZID].Enabled then
+                                im.MapIntelGrid[gridXID][gridZID].ScoutPriority = 50
+                                --RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridZID)
+                                --RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridZID]))
+                                --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
                             end
                         end
                     end
@@ -2030,10 +2030,10 @@ AIBrain = Class(RNGAIBrainClass) {
                 for _, loc in starts do
                     -- If vacant
                     if not allyStarts[loc.Name] then
-                        local gridXID, gridYID = im:GetIntelGrid(loc.Position)
-                        if im.MapIntelGrid[gridXID][gridYID].Enabled then
-                            im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
-                            --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                        local gridXID, gridZID = im:GetIntelGrid(loc.Position)
+                        if im.MapIntelGrid[gridXID][gridZID].Enabled then
+                            im.MapIntelGrid[gridXID][gridZID].ScoutPriority = 50
+                            --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
                         end
                     end
                 end
@@ -2055,32 +2055,32 @@ AIBrain = Class(RNGAIBrainClass) {
                         continue
                     end
                     if i == 1 then
-                        local gridXID, gridYID = im:GetIntelGrid(v)
-                        if im.MapIntelGrid[gridXID][gridYID].Enabled then
-                            if im.MapIntelGrid[gridXID][gridYID].ScoutPriority < 50 then
-                                im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                        local gridXID, gridZID = im:GetIntelGrid(v)
+                        if im.MapIntelGrid[gridXID][gridZID].Enabled then
+                            if im.MapIntelGrid[gridXID][gridZID].ScoutPriority < 50 then
+                                im.MapIntelGrid[gridXID][gridZID].ScoutPriority = 50
                             end
-                            im.MapIntelGrid[gridXID][gridYID].Perimeter = 'Restricted'
-                            if not im.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked then
-                                im:IntelGridSetGraph('MAIN', gridXID, gridYID, self.BrainIntel.StartPos, v)
+                            im.MapIntelGrid[gridXID][gridZID].Perimeter = 'Restricted'
+                            if not im.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked then
+                                im:IntelGridSetGraph('MAIN', gridXID, gridZID, self.BrainIntel.StartPos, v)
                             end
-                            --RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
-                            --RNGLOG('Perimeter Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
-                            --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                            --RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridZID)
+                            --RNGLOG('Perimeter Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridZID]))
+                            --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
                         end
                     elseif i == 2 then
-                        local gridXID, gridYID = im:GetIntelGrid(v)
-                        if im.MapIntelGrid[gridXID][gridYID].Enabled then
-                            if im.MapIntelGrid[gridXID][gridYID].ScoutPriority < 50 then
-                                im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                        local gridXID, gridZID = im:GetIntelGrid(v)
+                        if im.MapIntelGrid[gridXID][gridZID].Enabled then
+                            if im.MapIntelGrid[gridXID][gridZID].ScoutPriority < 50 then
+                                im.MapIntelGrid[gridXID][gridZID].ScoutPriority = 50
                             end
-                            im.MapIntelGrid[gridXID][gridYID].Perimeter = 'Military'
-                            if not im.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked then
-                                im:IntelGridSetGraph('MAIN', gridXID, gridYID, self.BrainIntel.StartPos, v)
+                            im.MapIntelGrid[gridXID][gridZID].Perimeter = 'Military'
+                            if not im.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked then
+                                im:IntelGridSetGraph('MAIN', gridXID, gridZID, self.BrainIntel.StartPos, v)
                             end
-                            --RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridYID)
-                            --RNGLOG('Perimeter Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
-                            --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                            --RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridZID)
+                            --RNGLOG('Perimeter Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridZID]))
+                            --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
                         end
                     end
                 end
@@ -2108,10 +2108,10 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             for k, zone in self.Zones.Naval.zones do
                 --RNGLOG('* AI-RNG: Inserting Mass Marker Position : '..repr(massMarker.Position))
-                    local gridXID, gridYID = im:GetIntelGrid(zone.pos)
-                    if im.MapIntelGrid[gridXID][gridYID].Enabled then
-                        im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
-                        --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                    local gridXID, gridZID = im:GetIntelGrid(zone.pos)
+                    if im.MapIntelGrid[gridXID][gridZID].Enabled then
+                        im.MapIntelGrid[gridXID][gridZID].ScoutPriority = 50
+                        --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
                     end
             end
             if self.RNGDEBUG then
@@ -2120,10 +2120,10 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, zone in self.Zones.Land.zones do
                 if VDist3Sq(self.BrainIntel.StartPos , zone.pos) > 900 then
                     --RNGLOG('* AI-RNG: Inserting Mass Marker Position : '..repr(massMarker.Position))
-                    local gridXID, gridYID = im:GetIntelGrid(zone.pos)
-                    if im.MapIntelGrid[gridXID][gridYID].Enabled then
-                        im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
-                        --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                    local gridXID, gridZID = im:GetIntelGrid(zone.pos)
+                    if im.MapIntelGrid[gridXID][gridZID].Enabled then
+                        im.MapIntelGrid[gridXID][gridZID].ScoutPriority = 50
+                        --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
                     end
                 end
             end
@@ -2434,10 +2434,10 @@ AIBrain = Class(RNGAIBrainClass) {
             local gameTime = GetGameTimeSeconds()
             for _, struct in structures do
                 local newPos = {struct[1], 0, struct[2]}
-                local gridXID, gridYID = im:GetIntelGrid(newPos)
-                if im.MapIntelGrid[gridXID][gridYID].ScoutPriority == 0 then
-                    im.MapIntelGrid[gridXID][gridYID].MustScout = true
-                    im.MapIntelGrid[gridXID][gridYID].ScoutPriority = 50
+                local gridXID, gridZID = im:GetIntelGrid(newPos)
+                if im.MapIntelGrid[gridXID][gridZID].ScoutPriority == 0 then
+                    im.MapIntelGrid[gridXID][gridZID].MustScout = true
+                    im.MapIntelGrid[gridXID][gridZID].ScoutPriority = 50
                 end
             end
             for k, v in self.EnemyIntel.ACU do
@@ -2445,13 +2445,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 and v.Position[1] then
                     --RNGLOG('ACU last spotted '..(GetGameTimeSeconds() - v.LastSpotted)..' seconds ago')
                     if v.LastSpotted + 60 > GetGameTimeSeconds() then
-                        local gridXID, gridYID = im:GetIntelGrid(v.Position)
-                        if not im.MapIntelGrid[gridXID][gridYID].MustScout then
-                            im.MapIntelGrid[gridXID][gridYID].MustScout = true
+                        local gridXID, gridZID = im:GetIntelGrid(v.Position)
+                        if not im.MapIntelGrid[gridXID][gridZID].MustScout then
+                            im.MapIntelGrid[gridXID][gridZID].MustScout = true
                         end
-                        --RNGLOG('ACU Spotted at : X'..gridXID..' Y: '..gridYID)
-                        --RNGLOG('ACU Location Details '..repr(im.MapIntelGrid[gridXID][gridYID]))
-                        --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridYID].Position)
+                        --RNGLOG('ACU Spotted at : X'..gridXID..' Y: '..gridZID)
+                        --RNGLOG('ACU Location Details '..repr(im.MapIntelGrid[gridXID][gridZID]))
+                        --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
                     end
                 end
             end

@@ -1398,11 +1398,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                             scoutPos = scout:GetPosition()
                             if VDist2Sq(scoutPos[1],scoutPos[3], targetData.Position[1],targetData.Position[3]) < 225 then
                                 IssueStop({scout})
-                                local gridXID, gridYID = im:GetIntelGrid(targetData.Position)
-                                --RNGLOG('Setting GRID '..gridXID..' '..gridYID..' Last scouted on arrival')
-                                im.MapIntelGrid[gridXID][gridYID].LastScouted = GetGameTimeSeconds()
-                                if im.MapIntelGrid[gridXID][gridYID].MustScout then
-                                    im.MapIntelGrid[gridXID][gridYID].MustScout = false
+                                local gridXID, gridZID = im:GetIntelGrid(targetData.Position)
+                                --RNGLOG('Setting GRID '..gridXID..' '..gridZID..' Last scouted on arrival')
+                                im.MapIntelGrid[gridXID][gridZID].LastScouted = GetGameTimeSeconds()
+                                if im.MapIntelGrid[gridXID][gridZID].MustScout then
+                                    im.MapIntelGrid[gridXID][gridZID].MustScout = false
                                 end
                                 --RNGLOG('Scout has arrived at expansion, scanning for engineers')
                                 local radarCoverage = false
@@ -6111,12 +6111,12 @@ Platoon = Class(RNGAIPlatoonClass) {
                 self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                 dist = VDist2Sq(path[i][1], path[i][3], PlatoonPosition[1], PlatoonPosition[3])
                 if dist < 400 then
-                    local gridXID, gridYID = im:GetIntelGrid(PlatoonPosition)
-                    --RNGLOG('Setting GRID '..gridXID..' '..gridYID..' on scout movement end')
-                    --self:ForkThread(self.DrawTargetRadius, im.MapIntelGrid[gridXID][gridYID].Position, 10)
-                    im.MapIntelGrid[gridXID][gridYID].LastScouted = GetGameTimeSeconds()
-                    if im.MapIntelGrid[gridXID][gridYID].MustScout then
-                        im.MapIntelGrid[gridXID][gridYID].MustScout = false
+                    local gridXID, gridZID = im:GetIntelGrid(PlatoonPosition)
+                    --RNGLOG('Setting GRID '..gridXID..' '..gridZID..' on scout movement end')
+                    --self:ForkThread(self.DrawTargetRadius, im.MapIntelGrid[gridXID][gridZID].Position, 10)
+                    im.MapIntelGrid[gridXID][gridZID].LastScouted = GetGameTimeSeconds()
+                    if im.MapIntelGrid[gridXID][gridZID].MustScout then
+                        im.MapIntelGrid[gridXID][gridZID].MustScout = false
                     end
                     IssueClearCommands(GetPlatoonUnits(self))
                     break

@@ -997,21 +997,21 @@ IntelManager = Class {
                         RNGLOG('Land threat at position '..self.Brain:GetThreatAtPosition(v.IMAP, 0, true, 'Land'))
                         RNGLOG('AntiSurface threat at position '..self.Brain:GetThreatAtPosition(v.IMAP, 0, true, 'AntiSurface'))
                         if v.AntiSurface > 0 then
-                            local gridXID, gridYID = self:GetIntelGrid(v.IMAP)
-                            self.MapIntelGrid[gridXID][gridYID].DefenseThreat = self.MapIntelGrid[gridXID][gridYID].DefenseThreat + v.AntiSurface
-                            if not self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked then
-                                if AIAttackUtils.CanGraphToRNG(self.Brain.BuilderManagers['MAIN'].Position, self.MapIntelGrid[gridXID][gridYID].Position, 'Land') then
-                                    self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked = true
-                                    self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.Land = true
-                                elseif AIAttackUtils.CanGraphToRNG(self.Brain.BuilderManagers['MAIN'].Position, self.MapIntelGrid[gridXID][gridYID].Position, 'Amphibious') then
-                                    self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked = true
-                                    self.MapIntelGrid[gridXID][gridYID].Graphs.Graphs.MAIN.Amphibious = true
+                            local gridXID, gridZID = self:GetIntelGrid(v.IMAP)
+                            self.MapIntelGrid[gridXID][gridZID].DefenseThreat = self.MapIntelGrid[gridXID][gridZID].DefenseThreat + v.AntiSurface
+                            if not self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked then
+                                if AIAttackUtils.CanGraphToRNG(self.Brain.BuilderManagers['MAIN'].Position, self.MapIntelGrid[gridXID][gridZID].Position, 'Land') then
+                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked = true
+                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.Land = true
+                                elseif AIAttackUtils.CanGraphToRNG(self.Brain.BuilderManagers['MAIN'].Position, self.MapIntelGrid[gridXID][gridZID].Position, 'Amphibious') then
+                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked = true
+                                    self.MapIntelGrid[gridXID][gridZID].Graphs.Graphs.MAIN.Amphibious = true
                                 else
-                                    self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked = true
-                                    self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.NoGraph = true
+                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked = true
+                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.NoGraph = true
                                 end
                             end
-                            if self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.GraphChecked and self.MapIntelGrid[gridXID][gridYID].Graphs.MAIN.Land then
+                            if self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked and self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.Land then
                                 defensiveUnitsFound = true
                                 defensiveUnitThreat = defensiveUnitThreat + v.AntiSurface
                             end
@@ -1222,31 +1222,45 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit, aiBrain)
         targetcat = false,
         sourcecat = false
     }
+    local targetCat = targetUnit.Blueprint.CategoriesHash
+    local sourceCat = sourceUnit.Blueprint.CategoriesHash
 
 
-    if ALLBPS[targetUnit.UnitId].CategoriesHash.EXPERIMENTAL then
+    if targetCat.EXPERIMENTAL then
         data.targetcat = 'Experimental'
-    elseif ALLBPS[targetUnit.UnitId].CategoriesHash.AIR then
+    elseif targetCat.AIR then
+        if targetCat.SCOUT then
+            RecordUnitDeath(targetUnit, 'SCOUT')
+        end
         data.targetcat = 'Air'
-    elseif ALLBPS[targetUnit.UnitId].CategoriesHash.LAND then
+    elseif targetCat.LAND then
         data.targetcat = 'Land'
-    elseif ALLBPS[targetUnit.UnitId].CategoriesHash.STRUCTURE then
+    elseif targetCat.STRUCTURE then
         data.targetcat = 'Structure'
     end
       
-    if ALLBPS[sourceUnit.UnitId].CategoriesHash.EXPERIMENTAL then
+    if sourceCat.EXPERIMENTAL then
         data.sourcecat = 'Experimental'
-    elseif ALLBPS[sourceUnit.UnitId].CategoriesHash.AIR then
+    elseif sourceCat.AIR then
         data.sourcecat = 'Air'
-    elseif ALLBPS[sourceUnit.UnitId].CategoriesHash.LAND then
+    elseif sourceCat.LAND then
         data.sourcecat = 'Land'
-    elseif ALLBPS[sourceUnit.UnitId].CategoriesHash.STRUCTURE then
+    elseif sourceCat.STRUCTURE then
         data.sourcecat = 'Structure'
     end
 
     if data.targetcat and data.sourcecat then
         aiBrain.IntelManager.UnitStats[data.targetcat].Deaths.Total[data.sourcecat] = aiBrain.IntelManager.UnitStats[data.targetcat].Deaths.Total[data.sourcecat] + 1
     end
+end
+
+function RecordUnitDeath(targetUnit, type)
+    local im = GetIntelManager(targetUnit:GetAIBrain())
+    if type == 'SCOUT' then
+        local gridXID, gridZID = im:GetIntelGrid(targetUnit:GetPosition())
+        im.MapIntelGrid[gridXID][gridZID].RecentScoutDeaths = im.MapIntelGrid[gridXID][gridZID].RecentScoutDeaths + 1
+    end
+
 end
 
 function AIConfigureExpansionWatchTableRNG(aiBrain)
@@ -1673,6 +1687,7 @@ CreateIntelGrid = function(aiBrain)
             intelGrid[x][z].DistanceToMain = 0
             intelGrid[x][z].AssignedScout = false
             intelGrid[x][z].LastScouted = 0
+            intelGrid[x][z].RecentScoutDeaths = 0
             intelGrid[x][z].TimeScouted = 0
             intelGrid[x][z].LastThreatCheck = 0
             intelGrid[x][z].Enabled = false
@@ -2222,18 +2237,18 @@ LastKnownThread = function(aiBrain)
                 unitCat = v.Blueprint.CategoriesHash
                 local id=v.Sync.id
                 local unitPosition = table.copy(v:GetPosition())
-                local gridXID, gridYID = im:GetIntelGrid(unitPosition)
-                if not im.MapIntelGrid[gridXID][gridYID].EnemyUnits then
-                    im.MapIntelGrid[gridXID][gridYID].EnemyUnits = {}
+                local gridXID, gridZID = im:GetIntelGrid(unitPosition)
+                if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits then
+                    im.MapIntelGrid[gridXID][gridZID].EnemyUnits = {}
                 end
                 if unitCat.MASSEXTRACTION then
-                    if not im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id] or im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].time > 10 then
-                        im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id]={}
-                        im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].object=v
-                        im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].Position=unitPosition
-                        im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].time=time
-                        im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].recent=true
-                        im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].type='mex'
+                    if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id] or im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].time > 10 then
+                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id]={}
+                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].object=v
+                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].Position=unitPosition
+                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].time=time
+                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].recent=true
+                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='mex'
                     end
                     mexcount = mexcount + 1
                     if not v.zoneid and aiBrain.ZonesInitialized then
@@ -2255,12 +2270,12 @@ LastKnownThread = function(aiBrain)
                         enemyMexes[v.zoneid].T3 = enemyMexes[v.zoneid].T3 + 1
                     end
                 end
-                if not im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id] or im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].time > 10 then
-                    if not im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id] then
-                        im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id]={}
+                if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id] or im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].time > 10 then
+                    if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id] then
+                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id]={}
                         if unitCat.MOBILE then
                             if unitCat.ENGINEER and not unitCat.COMMAND then
-                                im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].type='eng'
+                                im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='eng'
                             elseif unitCat.COMMAND then
                                 local acuIndex = v:GetAIBrain():GetArmyIndex()
                                 if aiBrain.EnemyIntel.ACU[acuIndex].LastSpotted + 10 > time then
@@ -2269,34 +2284,34 @@ LastKnownThread = function(aiBrain)
                                     aiBrain.EnemyIntel.ACU[acuIndex].LastSpotted = time
                                     aiBrain.EnemyIntel.ACU[acuIndex].Unit = v
                                 end
-                                im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].type='acu'
+                                im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='acu'
                             elseif unitCat.ANTIAIR then
-                                im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].type='aa'
+                                im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='aa'
                             elseif unitCat.DIRECTFIRE then
-                                im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].type='tank'
+                                im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='tank'
                             elseif unitCat.INDIRECTFIRE then
-                                im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].type='arty'
+                                im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='arty'
                             end
                         elseif unitCat.RADAR then
-                            im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].type='radar'
+                            im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='radar'
                         elseif unitCat.TACTICALMISSILEPLATFORM then
-                            im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].type='tml'
+                            im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='tml'
                             if not aiBrain.EnemyIntel.TML[id] then
                                 local angle = RUtils.GetAngleToPosition(aiBrain.BuilderManagers['MAIN'].Position, unitPosition)
                                 aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=ALLBPS[v.UnitId].Weapon[1].MaxRadius }
                                 aiBrain.BasePerimeterMonitor['MAIN'].RecentTMLAngle = angle
                             end
                         elseif unitCat.TECH3 and unitCat.ANTIMISSILE and unitCat.SILO then
-                            im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].type='smd'
+                            im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='smd'
                             if not aiBrain.EnemyIntel.SMD[id] then
                                 aiBrain.EnemyIntel.SMD[id] = {object = v, Position=unitPosition, Detected=GetGameTimeSeconds() }
                             end
                         end
                     end
-                    im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].object=v
-                    im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].Position=unitPosition
-                    im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].time=time
-                    im.MapIntelGrid[gridXID][gridYID].EnemyUnits[id].recent=true
+                    im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].object=v
+                    im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].Position=unitPosition
+                    im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].time=time
+                    im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].recent=true
                 end
             end
             aiBrain.emanager.mex = enemyMexes
