@@ -2425,6 +2425,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     ParseIntelThreadRNG = function(self)
         local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(self)
+        local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
         if not im.MapIntelStats.ScoutLocationsBuilt then
             error('Scouting areas must be initialized before calling AIBrain:ParseIntelThread.', 2)
         end
