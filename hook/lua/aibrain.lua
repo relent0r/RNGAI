@@ -427,8 +427,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=20,
-                            interceptor=60,
+                            scout=0,
+                            interceptor=80,
                             bomber=20,
                             total=0
                         },
@@ -439,8 +439,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T3 = {
-                            scout=11,
-                            asf=55,
+                            scout=0,
+                            asf=70,
                             bomber=15,
                             gunship=10,
                             transport=5,
@@ -491,8 +491,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=20,
-                            interceptor=60,
+                            scout=0,
+                            interceptor=80,
                             bomber=20,
                             total=0
                         },
@@ -503,8 +503,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T3 = {
-                            scout=11,
-                            asf=60,
+                            scout=0,
+                            asf=75,
                             bomber=15,
                             gunship=10,
                             torpedo=0,
@@ -558,8 +558,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=15,
-                            interceptor=55,
+                            scout=0,
+                            interceptor=70,
                             bomber=20,
                             gunship=10,
                             total=0
@@ -571,8 +571,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T3 = {
-                            scout=11,
-                            asf=60,
+                            scout=0,
+                            asf=75,
                             bomber=15,
                             gunship=10,
                             total=0
@@ -622,8 +622,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=20,
-                            interceptor=60,
+                            scout=0,
+                            interceptor=80,
                             bomber=20,
                             total=0
                         },
@@ -634,8 +634,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T3 = {
-                            scout=11,
-                            asf=65,
+                            scout=0,
+                            asf=85,
                             bomber=15,
                             torpedo=0,
                             total=0
@@ -687,8 +687,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=15,
-                            interceptor=60,
+                            scout=0,
+                            interceptor=75,
                             bomber=25,
                             total=0
                         },
@@ -699,8 +699,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T3 = {
-                            scout=11,
-                            asf=55,
+                            scout=0,
+                            asf=75,
                             bomber=15,
                             gunship=10,
                             total=0
@@ -1902,8 +1902,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local startLocations = {}
         local startPosMarkers = {}
         local allyStarts = {}
-        
-
+     
         if not im.MapIntelStats.ScoutLocationsBuilt then
             self.IntelData.HiPriScouts = 0
             self.IntelData.LowPriScouts = 0
@@ -2430,6 +2429,17 @@ AIBrain = Class(RNGAIBrainClass) {
             error('Scouting areas must be initialized before calling AIBrain:ParseIntelThread.', 2)
         end
         while true do
+            local realMapSizeX = playableArea[3] - playableArea[1]
+            local realMapSizeZ = playableArea[4] - playableArea[2]
+            local recommendedAirScouts = math.floor((realMapSizeX + realMapSizeZ) / 250)
+            if self.amanager.Demand.Air.T1.scout ~= recommendedAirScouts then
+                self.amanager.Demand.Air.T1.scout = recommendedAirScouts
+            end
+
+            if self.amanager.Demand.Air.T3.scout ~= recommendedAirScouts then
+                self.amanager.Demand.Air.T3.scout = recommendedAirScouts
+            end
+
             local structures = GetThreatsAroundPosition(self, self.BuilderManagers.MAIN.Position, 16, true, 'StructuresNotMex')
             local gameTime = GetGameTimeSeconds()
             for _, struct in structures do

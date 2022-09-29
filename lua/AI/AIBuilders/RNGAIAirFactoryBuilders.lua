@@ -22,7 +22,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirScout',
         Priority = 750, -- After second engie group
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Air', 'T1', 'scout'} },
+            { UCBC, 'UnitBuildDemand', { 'Air', 'T1', 'scout'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
         },
         BuilderType = 'Air',
@@ -124,7 +124,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3AirScout',
         Priority = 755,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Air', 'T3', 'scout'} },
+            { UCBC, 'UnitBuildDemand', { 'Air', 'T3', 'scout'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

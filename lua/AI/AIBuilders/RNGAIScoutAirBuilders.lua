@@ -25,23 +25,12 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'RNGAI Factory AirScout T1 Excess',
-        PlatoonTemplate = 'T1AirScout',
-        Priority = 760,
-        BuilderConditions = {
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
-            { UCBC, 'PoolLessAtLocation', { 'LocationType', 2, categories.AIR * categories.SCOUT } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
-            { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 10}},
-        },
-        BuilderType = 'Air',
-    },
-    Builder {
         BuilderName = 'RNGAI Factory AirScout T1 Burst',
         PlatoonTemplate = 'RNGAIT1AirScoutBurst',
         Priority = 895,
         BuilderConditions = {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
+            { UCBC, 'UnitBuildDemand', { 'Air', 'T1', 'scout'} },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
             { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
             { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 20}},
@@ -61,22 +50,11 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'RNGAI Factory AirScout T3 Excess',
-        PlatoonTemplate = 'T3AirScout',
-        Priority = 761,
-        BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
-            { UCBC, 'PoolLessAtLocation', { 'LocationType', 2, categories.AIR * categories.SCOUT } },
-            { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 30}},
-            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
-        },
-        BuilderType = 'Air',
-    },
-    Builder {
         BuilderName = 'RNGAI Factory AirScout T3 Burst',
         PlatoonTemplate = 'T3AirScout',
         Priority = 897,
         BuilderConditions = {
+            { UCBC, 'UnitBuildDemand', { 'Air', 'T3', 'scout'} },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
             { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
             { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 120}},
