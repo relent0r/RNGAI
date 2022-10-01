@@ -956,8 +956,11 @@ function HaveUnitVisual(aiBrain, unit, checkBlipOnly)
     --checkBlipOnly - returns true if can see a blip
     RNGLOG('HaveUnitVisual : Check if available')
     if checkBlipOnly == nil then checkBlipOnly = false end
-    local iUnitBrain = unit:GetAIBrain()
-    if iUnitBrain == aiBrain then 
+    local unitBrain
+    if not unit.Dead then
+        unitBrain = unit:GetAIBrain()
+    end
+    if unitBrain == aiBrain then 
         return true
     else
         local bCanSeeUnit = false
@@ -985,6 +988,7 @@ function HaveUnitVisual(aiBrain, unit, checkBlipOnly)
 end
 
 function MoveInDirection(tStart, iAngle, iDistance, bKeepInMapBounds, bTravelUnderwater)
+    -- This is Maudlins code 
     --iAngle: 0 = north, 90 = east, etc.; use GetAngleFromAToB if need angle from 2 positions
     --tStart = {x,y,z} (y isnt used)
     --if bKeepInMapBounds is true then will limit to map bounds
@@ -3890,33 +3894,33 @@ end
 
 function ValidateMainBase(platoon, squad, aiBrain)
     local target = false
-    local TargetSearchPriorities = {
-        categories.EXPERIMENTAL * categories.LAND,
-        categories.MASSEXTRACTION,
-        categories.ENERGYPRODUCTION,
-        categories.ENERGYSTORAGE,
-        categories.MASSFABRICATION,
-        categories.STRUCTURE,
-        categories.ALLUNITS,
-    }
-    if platoon.Zone and platoon.PlatoonData.LocationType then
-        if platoon.Zone == aiBrain.BuilderManagers[platoon.PlatoonData.LocationType].Zone then
-            if aiBrain.Brain.Zones.Land.zones[platoon.Zone].enemylandthreat > 0 then
-                target = AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, platoon:GetPlatoonPosition(), 'Attack', 120, categories.LAND, TargetSearchPriorities)
-            end
-            if not target then
-                for _, v in aiBrain.Zones.Land.zones[platoon.Zone].edges do
-                    if v.zone.enemylandthreat > 0 then
-                        target = AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, platoon:GetPlatoonPosition(), 'Attack', 120, categories.LAND, TargetSearchPriorities)
-                    end
-                    if target then
-                        break
-                    end
+    local VDist2Sq = VDist2Sq
+    local RNGMAX = math.max
+    if (not aiBrain.prioritypointshighvalue) or RNGGETN(aiBrain.prioritypointshighvalue)==0 then
+        return false
+    end
+    local pointHighest = 0
+    local point = false
+    local platPos = GetPlatoonPosition(platoon)
+    for _, v in aiBrain.prioritypointshighvalue do
+        if v.unit and not v.unit.Dead then
+            local pointDistance = VDist3Sq(platPos,v.Position)
+            if pointDistance < 40000 then
+                local tempPoint = v.priority/(RNGMAX(pointDistance,30*30)+(v.danger or 0))
+                if tempPoint > pointHighest then
+                    pointHighest = tempPoint
+                    point = v
                 end
             end
         end
     end
-    return target
+    if point then
+        if AIAttackUtils.CanGraphToRNG(point.Position, platPos, platoon.MovementLayer) then 
+            RNGLOG('ValidateMainBase has returned a unit we must attack')
+            return target
+        end
+    end
+    return false
 end
 
 -- Borrowed this from Balth I think.
@@ -3957,10 +3961,9 @@ function PerformEngReclaim(aiBrain, eng, minimumReclaim)
     local engPos = eng:GetPosition()
     local rectDef = Rect(engPos[1] - 10, engPos[3] - 10, engPos[1] + 10, engPos[3] + 10)
     local reclaimRect = GetReclaimablesInRect(rectDef)
-    local reclaiming = false
     local maxReclaimCount = 0
+    local reclaimed = false
     if reclaimRect then
-        local reclaimed = false
         local closeReclaim = {}
         for c, b in reclaimRect do
             if not IsProp(b) then continue end
@@ -3975,25 +3978,15 @@ function PerformEngReclaim(aiBrain, eng, minimumReclaim)
             end
         end
         if RNGGETN(closeReclaim) > 0 then
-            reclaiming = true
+            RNGLOG('Close Reclaim, attempting to clear and reclaim')
             IssueClearCommands({eng})
             for _, rec in closeReclaim do
                 IssueReclaim({eng}, rec)
             end
             reclaimed = true
         end
-        if reclaiming then
-            coroutine.yield(3)
-            local counter = 0
-            while reclaiming and counter < 10 do
-                coroutine.yield(10)
-                if eng:IsIdleState() then
-                    reclaiming = false
-                end
-                counter = counter + 1
-            end
-        end
     end
+    return reclaimed
 end
 
 function GetNumberUnitsBuilding(aiBrain, category)
@@ -4296,7 +4289,7 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
                     end
                 end
             else
-                for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[1] do
+                for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[2] do
                     local distance = VDist3(v.Position, unitPos)
                     if not closestPoint or closestDistance > distance then
                         closestPoint = k
@@ -4495,7 +4488,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
                         if im.MapIntelGrid[i][k].TimeScouted == 0 then
                             im.MapIntelGrid[i][k].TimeScouted = 1
                         end
-                        currentGrid = {x = i, z = k, Priority = im.MapIntelGrid[i][k].ScoutPriority * (im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].TimeScouted) / im.MapIntelGrid[i][k].DistanceToMain }
+                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].TimeScouted ) / im.MapIntelGrid[i][k].DistanceToMain }
                         --RNGLOG('CurrentGrid Priority is '..currentGrid.Priority)
                         --RNGLOG('TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
                         if currentGrid.Priority > highestGrid.Priority then
@@ -4533,7 +4526,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
                         if im.MapIntelGrid[i][k].DistanceToMain == 0 then
                             im.MapIntelGrid[i][k].DistanceToMain = 1
                         end
-                        currentGrid = {x = i, z = k, Priority = im.MapIntelGrid[i][k].ScoutPriority * (im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].TimeScouted) / im.MapIntelGrid[i][k].DistanceToMain }
+                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].TimeScouted ) / im.MapIntelGrid[i][k].DistanceToMain }
                         --RNGLOG('CurrentGrid Priority is '..currentGrid.Priority)
                         --RNGLOG(im.MapIntelGrid[i][k].ScoutPriority..','..im.MapIntelGrid[i][k].LastScouted..','..im.MapIntelGrid[i][k].DistanceToMain..','..im.MapIntelGrid[i][k].TimeScouted..','..currentGrid.Priority)
                         --RNGLOG('TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
@@ -4609,7 +4602,13 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
                         if im.MapIntelGrid[i][k].TimeScouted == 0 then
                             im.MapIntelGrid[i][k].TimeScouted = 1
                         end
-                        currentGrid = {x = i, z = k, Priority = im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].TimeScouted / im.MapIntelGrid[i][k].DistanceToMain }
+                        local mustScoutPriority
+                        if im.MapIntelGrid[i][k].ScoutPriority == 0 then
+                            mustScoutPriority = 100
+                        else
+                            mustScoutPriority = im.MapIntelGrid[i][k].ScoutPriority
+                        end
+                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].TimeScouted * mustScoutPriority) / im.MapIntelGrid[i][k].DistanceToMain }
                         if currentGrid.Priority > highestGrid.Priority then
                             highestGrid = currentGrid
                         end
@@ -4624,9 +4623,11 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
             end
         end
         if not mustScoutArea then
+            --RNGLOG('AirScout MustScoutArea is being set to false')
             im.MapIntelStats.MustScoutArea = false
         end
         if highestGrid.Priority > 0 then
+            --RNGLOG('AirScout MustScoutArea is greater than 0 and being set')
             scoutingData = im.MapIntelGrid[highestGrid.x][highestGrid.z]
             scoutingData.ScoutAssigned = scout
             scoutingData.LastScouted = currentGameTime
@@ -4655,7 +4656,7 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
                         if im.MapIntelGrid[i][k].TimeScouted == 0 then
                             im.MapIntelGrid[i][k].TimeScouted = 1
                         end
-                        currentGrid = {x = i, z = k, Priority = im.MapIntelGrid[i][k].ScoutPriority * (im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].TimeScouted) / im.MapIntelGrid[i][k].DistanceToMain }
+                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].TimeScouted ) / im.MapIntelGrid[i][k].DistanceToMain }
                         --RNGLOG('AirScouting CurrentGrid Priority is '..currentGrid.Priority)
                         --RNGLOG('AirScouting TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
                         if currentGrid.Priority > highestGrid.Priority then

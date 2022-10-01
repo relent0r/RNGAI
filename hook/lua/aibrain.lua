@@ -417,10 +417,10 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T3 = {
-                            tank=30,
-                            armoured=40,
-                            mml=5,
-                            arty=15,
+                            tank=40,
+                            armoured=50,
+                            mml=0,
+                            arty=0,
                             aa=10,
                             total=0
                         }
@@ -482,10 +482,10 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T3 = {
-                            tank=45,
-                            arty=15,
+                            tank=50,
+                            arty=0,
                             aa=10,
-                            sniper=30,
+                            sniper=40,
                             total=0
                         }
                     },
@@ -549,9 +549,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T3 = {
-                            tank=30,
-                            armoured=40,
-                            arty=15,
+                            tank=40,
+                            armoured=45,
+                            arty=0,
                             aa=10,
                             total=0
                         }
@@ -613,9 +613,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         },
                         T3 = {
                             tank=45,
-                            arty=10,
+                            arty=0,
                             aa=10,
-                            sniper=30,
+                            sniper=40,
                             shield=5,
                             total=0
                         }
@@ -677,10 +677,10 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T3 = {
-                            tank=30,
-                            armoured=40,
-                            mml=5,
-                            arty=15,
+                            tank=40,
+                            armoured=45,
+                            mml=0,
+                            arty=0,
                             aa=10,
                             total=0
                         }
@@ -996,6 +996,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         local selfStartPosX, selfStartPosY = self:GetArmyStartPos()
         self.BrainIntel.StartPos = { selfStartPosX, GetSurfaceHeight(selfStartPosX, selfStartPosY), selfStartPosY }
+        self.BrainIntel.CurrentIntelAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, self.MapCenterPoint)
         self.BrainIntel.MilitaryRange = BaseMilitaryArea
         self.BrainIntel.ExpansionWatchTable = {}
         self.BrainIntel.DynamicExpansionPositions = {}
@@ -1902,7 +1903,18 @@ AIBrain = Class(RNGAIBrainClass) {
         local startLocations = {}
         local startPosMarkers = {}
         local allyStarts = {}
-     
+        local realMapSizeX = playableArea[3] - playableArea[1]
+        local realMapSizeZ = playableArea[4] - playableArea[2]
+        local recommendedAirScouts = math.floor((realMapSizeX + realMapSizeZ) / 250)
+        if self.amanager.Demand.Air.T1.scout then
+            self.amanager.Demand.Air.T1.scout = recommendedAirScouts
+        end
+        if self.amanager.Demand.Air.T3.scout then
+            self.amanager.Demand.Air.T3.scout = recommendedAirScouts
+        end
+        RNGLOG('T1 Scout requirements set to '..self.amanager.Demand.Air.T1.scout)
+        RNGLOG('T3 Scout requirements set to '..self.amanager.Demand.Air.T3.scout)
+
         if not im.MapIntelStats.ScoutLocationsBuilt then
             self.IntelData.HiPriScouts = 0
             self.IntelData.LowPriScouts = 0
@@ -1943,7 +1955,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             RNGINSERT(enemyStarts, {Position = startPos, Index = army.ArmyIndex, Distance = enemyDistance })
                             local gridXID, gridZID = im:GetIntelGrid(startPos)
                             if im.MapIntelGrid[gridXID][gridZID].Enabled then
-                                im.MapIntelGrid[gridXID][gridZID].ScoutPriority = 100
+                                im.MapIntelGrid[gridXID][gridZID].ScoutPriority = 150
+                                im.MapIntelGrid[gridXID][gridZID].MustScout = true
                                 --RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridZID)
                                 --RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridZID]))
                                 --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
@@ -2032,6 +2045,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         local gridXID, gridZID = im:GetIntelGrid(loc.Position)
                         if im.MapIntelGrid[gridXID][gridZID].Enabled then
                             im.MapIntelGrid[gridXID][gridZID].ScoutPriority = 50
+                            im.MapIntelGrid[gridXID][gridZID].MustScout = true
                             --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
                         end
                     end
@@ -2425,22 +2439,19 @@ AIBrain = Class(RNGAIBrainClass) {
 
     ParseIntelThreadRNG = function(self)
         local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(self)
-        local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+        
         if not im.MapIntelStats.ScoutLocationsBuilt then
             error('Scouting areas must be initialized before calling AIBrain:ParseIntelThread.', 2)
         end
         while true do
-            local realMapSizeX = playableArea[3] - playableArea[1]
-            local realMapSizeZ = playableArea[4] - playableArea[2]
-            local recommendedAirScouts = math.floor((realMapSizeX + realMapSizeZ) / 250)
-            if self.amanager.Demand.Air.T1.scout ~= recommendedAirScouts then
-                self.amanager.Demand.Air.T1.scout = recommendedAirScouts
+            if self:GetCurrentEnemy() then
+                local enemyX, enemyZ = self:GetCurrentEnemy():GetArmyStartPos()
+                local CenterPointAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, self.MapCenterPoint)
+                local EnemyAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, {enemyX, GetSurfaceHeight(enemyX, enemyZ), enemyZ})
+                RNGLOG('CenterPointAngle '..CenterPointAngle..' EnemyAngle '..EnemyAngle)
+                RNGLOG('Average should be '..((CenterPointAngle + EnemyAngle) / 2))
+                self.BrainIntel.CurrentIntelAngle = (CenterPointAngle + EnemyAngle) / 2
             end
-
-            if self.amanager.Demand.Air.T3.scout ~= recommendedAirScouts then
-                self.amanager.Demand.Air.T3.scout = recommendedAirScouts
-            end
-
             local structures = GetThreatsAroundPosition(self, self.BuilderManagers.MAIN.Position, 16, true, 'StructuresNotMex')
             local gameTime = GetGameTimeSeconds()
             for _, struct in structures do
@@ -2485,7 +2496,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('EnemyStrength Tables :'..repr(v))
                 --LOG('Start pos '..repr(self.BrainIntel.StartPos))
                 if v.ACUPosition[1] then
-                    if VDist2Sq(v.ACUPosition[1], v.ACUPosition[3], self.BrainIntel.StartPos[1], self.BrainIntel.StartPos[3]) < 19600 then
+                    if VDist3Sq(v.ACUPosition, self.BrainIntel.StartPos) < 19600 then
                        --RNGLOG('* AI-RNG: Enemy ACU is close switching Enemies to :'..v.Brain.Nickname)
                         returnEnemy = v.Brain
                         return returnEnemy
@@ -4938,6 +4949,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local CoreMassNumberAchieved = false
             if self.EcoManager.EcoPowerPreemptive or self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 or self.EngineerAssistManagerFocusPower then
                 state = 'Energy'
+                RNGLOG('Assist Focus is Energy')
                 self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
@@ -4950,6 +4962,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             elseif self.EngineerAssistManagerFocusSnipe then
                 state = 'Snipe'
+                RNGLOG('Assist Focus is Snipe')
                 self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.FACTORY
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.daa0206, type = 'Completion'},
@@ -4963,9 +4976,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             elseif self.EngineerAssistManagerFocusExperimental then
                 state = 'Experimental'
-                self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.FACTORY
+                RNGLOG('Assist Focus is Experimental')
+                self.EngineerAssistManagerFocusCategory = categories.EXPERIMENTAL
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
+                    {cat = categories.STRUCTURE * categories.EXPERIMENTAL, type = 'Completion'},
                     {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
@@ -4974,6 +4989,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             elseif self.EngineerAssistManagerFocusAirUpgrade then
                 state = 'Air'
+                RNGLOG('Assist Focus is Air Upgrade')
                 self.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
@@ -4985,6 +5001,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             elseif self.EngineerAssistManagerFocusLandUpgrade then
                 state = 'Land'
+                RNGLOG('Assist Focus is Land Upgrade')
                 self.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
@@ -4996,6 +5013,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             else
                 state = 'Mass'
+                RNGLOG('Assist Focus is Mass')
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 

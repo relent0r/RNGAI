@@ -261,6 +261,12 @@ Platoon = Class(RNGAIPlatoonClass) {
             else
                 coroutine.yield(2)
                 currentPlatPos = GetPlatoonPosition(self)
+                if target.Dead then
+                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, false, self, 'Attack', 60, atkPri, avoidBases)
+                    if target then
+                        continue
+                    end
+                end
             end
             if (not target or target.Dead) and currentPlatPos and VDist3Sq(currentPlatPos, self.HoldingPosition) > 6400 then
                 --RNGLOG('* AI-RNG: No Target Returning to base')
@@ -4151,7 +4157,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
         else
-           --RNGLOG('Hydro is present we shouldnt need any more pgens during initialization')
+           RNGLOG('Hydro is present we shouldnt need any more pgens during initialization')
         end
         if not hydroPresent and closeMarkers > 3 then
             --RNGLOG('CommanderInitializeAIRNG : not hydro and close markers greater than 3, Try to build land factory')
@@ -4173,7 +4179,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         --RNGLOG('CommanderInitializeAIRNG : CDR Initialize almost done, should have just finished final t1 land')
         if hydroPresent and (closeMarkers > 0 or distantMarkers > 0) then
             engPos = eng:GetPosition()
-            --RNGLOG('CommanderInitializeAIRNG : Hydro Distance is '..VDist3Sq(engPos,closestHydro.Position))
+            RNGLOG('CommanderInitializeAIRNG : Hydro Distance is '..VDist3Sq(engPos,closestHydro.Position))
             if VDist3Sq(engPos,closestHydro.Position) > 144 then
                 IssueMove({eng}, closestHydro.Position )
                 while VDist3Sq(engPos,closestHydro.Position) > 100 do
@@ -4182,23 +4188,23 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if eng:IsIdleState() and VDist3Sq(engPos,closestHydro.Position) > 100 then
                         break
                     end
-                    --RNGLOG('CommanderInitializeAIRNG : Still inside movement loop')
-                    --RNGLOG('Distance is '..VDist3Sq(engPos,closestHydro.Position))
+                    RNGLOG('CommanderInitializeAIRNG : Still inside movement loop')
+                    RNGLOG('Distance is '..VDist3Sq(engPos,closestHydro.Position))
                 end
-                --RNGLOG('CommanderInitializeAIRNG : We should be close to the hydro now')
+                RNGLOG('CommanderInitializeAIRNG : We should be close to the hydro now')
             end
             IssueClearCommands({eng})
             local assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
             local assistee = false
-            --RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
+            RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
             local assistListCount = 0
             while not next(assistList) do
                 coroutine.yield( 15 )
                 assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
                 assistListCount = assistListCount + 1
-                --RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
+                RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
                 if assistListCount > 10 then
-                    --RNGLOG('assistListCount is still empty after 7.5 seconds')
+                    RNGLOG('assistListCount is still empty after 7.5 seconds')
                     break
                 end
             end
@@ -4212,9 +4218,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                     local UnitAssist = v.UnitBeingBuilt or v.UnitBeingAssist or v
                     local NumAssist = RNGGETN(UnitAssist:GetGuards())
                     local dist = VDist2Sq(engPos[1], engPos[3], unitPos[1], unitPos[3])
-                    --RNGLOG('CommanderInitializeAIRNG : Assist distance for commander assist is '..dist)
+                    RNGLOG('CommanderInitializeAIRNG : Assist distance for commander assist is '..dist)
                     -- Find the closest unit to assist
-                    if (not low or dist < low) and NumAssist < 20 and dist < 100 then
+                    if (not low or dist < low) and NumAssist < 20 and dist < 225 then
                         low = dist
                         bestUnit = v
                     end
@@ -4224,7 +4230,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             if assistee  then
                 IssueClearCommands({eng})
                 eng.UnitBeingAssist = assistee.UnitBeingBuilt or assistee.UnitBeingAssist or assistee
-               --RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
+                RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
                 IssueGuard({eng}, eng.UnitBeingAssist)
                 while eng and not eng.Dead and not eng:IsIdleState() do
                     if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
@@ -4884,6 +4890,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             -- we're there... lets look for bad guys
             local zoneCounter = 0
             if self.ZoneType == 'control' then
+                local zoneRangeCheck = 80
                 while (aiBrain.Zones.Land.zones[self.TargetZone].enemylandthreat > 0.5 or aiBrain.Zones.Land.zones[self.TargetZone].control > 0) and PlatoonExists(aiBrain, self) do
                     --RNGLOG('At Zone location')
                     --RNGLOG('We are at the zone')
@@ -4894,10 +4901,15 @@ Platoon = Class(RNGAIPlatoonClass) {
                     --RNGLOG('Current Zone Position is '..repr(aiBrain.Zones.Land.zones[self.TargetZone].pos))
                     platLoc = GetPlatoonPosition(self)
                     self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
-                    local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, aiBrain.Zones.Land.zones[self.TargetZone].pos, 'Attack', 60, (categories.LAND + categories.NAVAL + categories.STRUCTURE), self.atkPri, false)
+                    if VDist3Sq(platLoc, aiBrain.BrainIntel.StartPos) < 10000 then
+                        zoneRangeCheck = 120
+                    else
+                        zoneRangeCheck = 80
+                    end
+                    local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, aiBrain.Zones.Land.zones[self.TargetZone].pos, 'Attack', zoneRangeCheck, (categories.LAND + categories.NAVAL + categories.STRUCTURE), self.atkPri, false)
                     local attackSquad = self:GetSquadUnits('Attack')
                     --RNGLOG('Zone Control at position platoonThreat is '..self.CurrentPlatoonThreat..' Enemy threat is '..totalThreat)
-                    if self.CurrentPlatoonThreat * 1.2 < totalThreat and (target and not target.Dead or acuUnit) then
+                    if zoneRangeCheck < 120 and self.CurrentPlatoonThreat * 1.2 < totalThreat and (target and not target.Dead or acuUnit) then
                         local alternatePos = false
                         local mergePlatoon = false
                         local targetPos
@@ -9271,6 +9283,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
             if aiBrain.EngineerAssistManagerFocusCategory and not EntityCategoryContains(aiBrain.EngineerAssistManagerFocusCategory, eng.UnitBeingAssist) then
+                RNGLOG('Assist Platoon Focus Category has changed, aborting current assist')
                 eng.UnitBeingAssist = nil
                 break
             end
@@ -9991,26 +10004,61 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
         end
         local function MainBaseCheck(self, aiBrain)
-            if not self.LocationType or not self.Zone then
-                WARN('No LocationType or Zone for trueplatoon')
-                if self.LocationType then
-                    --RNGLOG('Location type is '..self.LocationType)
-                end
-                if self.Zone then
-                    --RNGLOG('Zone is '..self.Zone)
-                end
+            local VDist2Sq = VDist2Sq
+            local RNGMAX = math.max
+            if (not aiBrain.prioritypointshighvalue) or RNGGETN(aiBrain.prioritypointshighvalue)==0 then
                 return false
             end
-            local target = RUtils.ValidateMainBase(self, self:GetSquadUnits('Attack'), aiBrain)
-            if target and not target.Dead then
-                --RNGLOG('Target Returned for MainbaseCheck')
-                local position = target:GetPosition()
-                self.dest = position
-                self.rdest = position
-                self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
-                self.navigating=true
-                self.raid=true
-                return true
+            local pointHighest = 0
+            local point = false
+            for _, v in aiBrain.prioritypointshighvalue do
+                local tempPoint = v.priority/(RNGMAX(VDist2Sq(self.Pos[1],self.Pos[3],v.Position[1],v.Position[3]),30*30)+(v.danger or 0))
+                if tempPoint > pointHighest then
+                    pointHighest = tempPoint
+                    point = v
+                end
+            end
+            if point then
+               --RNGLOG('point pos '..repr(point.Position)..' with a priority of '..point.priority)
+            else
+                --RNGLOG('No priority found')
+                return false
+            end
+            if VDist2Sq(point.Position[1],point.Position[3],self.Pos[1],self.Pos[3])<(self.MaxWeaponRange+20)*(self.MaxWeaponRange+20) then return false end
+            if not self.combat and not self.retreat then
+                if point.type then
+                    --RNGLOG('switching to state '..point.type)
+                end
+                if point.type=='push' then
+                    --SwitchState(platoon,'push')
+                    self.dest=point.Position
+                elseif point.type=='raid' then
+                    if self.raid then
+                        if self.path and VDist3Sq(self.path[RNGGETN(self.path)],point.Position)>400 then
+                            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                            --RNGLOG('platoon.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(self.path[RNGGETN(self.path)],point.Position))
+                            return true
+                        end
+                    end
+                    self.rdest=point.Position
+                    self.raidunit=point.unit
+                    self.dest=point.Position
+                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                    self.navigating=true
+                    self.raid=true
+                    --SwitchState(self,'raid')
+                    --RNGLOG('Simple Priority is moving to '..repr(self.dest))
+                    return true
+                elseif point.type=='garrison' then
+                    --SwitchState(platoon,'garrison')
+                    self.dest=point.Position
+                elseif point.type=='guard' then
+                    --SwitchState(platoon,'guard')
+                    self.guard=point.unit
+                elseif point.type=='acuhelp' then
+                    --SwitchState(platoon,'acuhelp')
+                    self.guard=point.unit
+                end
             end
         end
         local function SimplePriority(self,aiBrain)--use the aibrain priority table to do things
@@ -10057,15 +10105,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                     self.navigating=true
                     self.raid=true
                     --SwitchState(self,'raid')
-                    
-                    for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
-                        --RNGLOG('expansionwatchtable position '..repr(v.Position)..' vs platoon dest '..repr(platoon.dest))
-                        if self.dest == v.Position and (not aiBrain.BrainIntel.ExpansionWatchTable[k].PlatoonAssigned) then
-                            --RNGLOG('Set platoon at expansionwatchtable at position '..repr(self.dest))
-                            aiBrain.BrainIntel.ExpansionWatchTable[k].PlatoonAssigned = self
-                            break
-                        end
-                    end
                     --RNGLOG('Simple Priority is moving to '..repr(self.dest))
                     return true
                 elseif point.type=='garrison' then

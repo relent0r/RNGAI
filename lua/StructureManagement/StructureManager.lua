@@ -1051,9 +1051,11 @@ StructureManager = Class {
 
             if aiBrain.EcoManager.CoreExtractorT3Count < 3 and aiBrain.EcoManager.TotalCoreExtractors > 2 and aiBrain.cmanager.income.r.m > (140 * aiBrain.EcoManager.EcoMultiplier) and (aiBrain.smanager.fact.Land.T3 > 0 or aiBrain.smanager.fact.Air.T3 > 0) and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
                 aiBrain.EcoManager.CoreMassPush = true
+                RNGLOG('Assist Focus is Mass extraction')
                 aiBrain.EngineerAssistManagerFocusCategory = categories.MASSEXTRACTION
-            else
+            elseif aiBrain.EcoManager.CoreMassPush then
                 aiBrain.EcoManager.CoreMassPush = false
+                RNGLOG('Assist Focus is set to false from Extractor upgrade manager')
                 aiBrain.EngineerAssistManagerFocusCategory = false
             end
             --RNGLOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)

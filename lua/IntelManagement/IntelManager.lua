@@ -1703,6 +1703,7 @@ CreateIntelGrid = function(aiBrain)
             intelGrid[x][z].AdjacentGrids = {}
             intelGrid[x][z].Graphs = { }
             intelGrid[x][z].EnemyUnits = { }
+            intelGrid[x][z].EnemyUnitsDanger = 0
             intelGrid[x][z].Graphs.MAIN = { GraphChecked = false, Land = false, Amphibious = false, NoGraph = false }
             local cx = fx * (x - 0.5)
             local cz = fz * (z - 0.5)
@@ -1714,7 +1715,7 @@ CreateIntelGrid = function(aiBrain)
             endingGridx = math.max(x, endingGridx)
             endingGridz = math.max(z, endingGridz)
             intelGrid[x][z].Position = {cx, GetTerrainHeight(cx, cz), cz}
-            intelGrid[x][z].DistanceToMain = VDist3Sq(intelGrid[x][z].Position, aiBrain.BrainIntel.StartPos) 
+            intelGrid[x][z].DistanceToMain = VDist3(intelGrid[x][z].Position, aiBrain.BrainIntel.StartPos) 
             intelGrid[x][z].Water = GetTerrainHeight(cx, cz) < GetSurfaceHeight(cx, cz)
             intelGrid[x][z].Size = { sx = fx, sz = fz}
             intelGrid[x][z].Enabled = true
@@ -2239,6 +2240,7 @@ LastKnownThread = function(aiBrain)
                 local gridXID, gridZID = im:GetIntelGrid(unitPosition)
                 if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits then
                     im.MapIntelGrid[gridXID][gridZID].EnemyUnits = {}
+                    im.MapIntelGrid[gridXID][gridZID].EnemyUnitsDanger = 0
                 end
                 if unitCat.MASSEXTRACTION then
                     if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id] or im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].time > 10 then
@@ -2323,6 +2325,7 @@ end
 TruePlatoonPriorityDirector = function(aiBrain)
     RNGLOG('Starting TruePlatoonPriorityDirector')
     aiBrain.prioritypoints={}
+    aiBrain.prioritypointshighvalue={}
     local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
     local im = GetIntelManager(aiBrain)
     while not im.MapIntelGrid do
@@ -2377,30 +2380,38 @@ TruePlatoonPriorityDirector = function(aiBrain)
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
             for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
                 if next(im.MapIntelGrid[i][k].EnemyUnits) then
+                    local gridPointAngle = RUtils.GetAngleToPosition(aiBrain.BrainIntel.StartPos, im.MapIntelGrid[i][k].Position)
+                    local angleOfEnemyUnits = math.abs(gridPointAngle - aiBrain.BrainIntel.CurrentIntelAngle)
+                    local anglePriority = math.ceil((angleOfEnemyUnits * 1000) / im.MapIntelGrid[i][k].DistanceToMain)
+                    --RNGLOG('Priority of angle and distance '..anglePriority)
+                    im.MapIntelGrid[i][k].EnemyUnitDanger = RUtils.GrabPosDangerRNG(aiBrain,im.MapIntelGrid[i][k].Position,30).enemy
                     for c, b in im.MapIntelGrid[i][k].EnemyUnits do
+                        local priority = 0
                         if not b.recent or aiBrain.prioritypoints[c] or b.object.Dead then continue end
-                        local priority=0
                         if b.type then
                             if b.type=='eng' then
-                                priority=50
+                                priority=anglePriority + 50
                             elseif b.type=='mex' then
-                                priority=40
+                                priority=anglePriority + 40
                             elseif b.type=='radar' then
-                                priority=100
+                                priority=anglePriority + 100
                             elseif b.type=='arty' then
-                                priority=30
+                                priority=anglePriority + 30
                             elseif b.type=='tank' then
-                                priority=30
+                                priority=anglePriority + 30
                             else
-                                priority=20
+                                priority=anglePriority + 20
                             end
                         end
-                        if VDist3Sq(aiBrain.BuilderManagers['MAIN'].Position, b.Position) < (BaseRestrictedArea * BaseRestrictedArea * 2) then
-                            priority = priority + 100
-                        end
                         unitAddedCount = unitAddedCount + 1
-                        aiBrain.prioritypoints[c]={type='raid',Position=b.Position,priority=priority,danger=RUtils.GrabPosDangerRNG(aiBrain,b.Position,30).enemy,unit=b.object}
+                        aiBrain.prioritypoints[c]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object}
+                        if priority > 250 then
+                            aiBrain.prioritypointshighvalue[c]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object}
+                        end
                         RNGLOG('Added prioritypoints entry of '..repr(aiBrain.prioritypoints[c]))
+                        RNGLOG('Angle Priority was '..anglePriority)
+                        RNGLOG('Distance to main was '..im.MapIntelGrid[i][k].DistanceToMain)
+                        RNGLOG('EnemyUnitGrid Danger is '..im.MapIntelGrid[i][k].EnemyUnitDanger)
                     end
                 end
             end
@@ -2447,8 +2458,15 @@ TruePlatoonPriorityDirector = function(aiBrain)
                 aiBrain.prioritypoints[k] = nil
             end
         end
+        for k, v in aiBrain.prioritypointshighvalue do
+            if v.unit.Dead then
+                aiBrain.prioritypointshighvalue[k] = nil
+            end
+        end
         coroutine.yield(50)
-        RNGLOG('We should have added this many points this loop '..unitAddedCount)
+        if next(aiBrain.prioritypointshighvalue) then
+            RNGLOG('PriorityPoints high value '..repr(aiBrain.prioritypointshighvalue))
+        end
     end
 end
 
