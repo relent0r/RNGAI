@@ -1637,7 +1637,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                                 SetAcuSnipeMode(cdr, true)
                                 cdr.SnipeMode = true
                             end
-                        elseif enemyACUHealth < 7000 and cdr.Health - enemyACUHealth > 3000 and not RUtils.PositionInWater(targetPos) then
+                        elseif enemyACUHealth < 7000 and cdr.Health - enemyACUHealth > 3250 and not RUtils.PositionInWater(targetPos) then
                             --RNGLOG('Enemy ACU could be killed or drawn, should we try?')
                             SetAcuSnipeMode(cdr, true)
                             cdr:SetAutoOvercharge(true)

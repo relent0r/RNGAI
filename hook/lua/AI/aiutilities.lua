@@ -233,6 +233,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
                     else
                         aiBrain:BuildStructure(unit, unit.EngineerBuildQueue[1][1], {unit.EngineerBuildQueue[1][2][1], unit.EngineerBuildQueue[1][2][2], 0}, unit.EngineerBuildQueue[1][3])
                     end
+                    brokenPathMovement = false
                 end
                 pos = unit:GetPosition()
                 if currentPathNode <= pathLength then
