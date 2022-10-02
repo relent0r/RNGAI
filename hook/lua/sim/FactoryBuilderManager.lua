@@ -284,7 +284,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                         table.insert(queue, 'T1LandScout')
                     end
                     if self.Brain.BrainIntel.RestrictedMassMarker > 6 then
-                        for i=1, 2 do
+                        for i=1, 4 do
                             table.insert(queue, 'T1BuildEngineer')
                         end
                     end
@@ -329,7 +329,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                         table.insert(queue, 'T1LandScout')
                     end
                     if self.Brain.BrainIntel.RestrictedMassMarker > 6 then
-                        for i=1, 2 do
+                        for i=1, 4 do
                             table.insert(queue, 'T1BuildEngineer')
                         end
                     end
@@ -375,12 +375,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                         table.insert(queue, 'T1LandScout')
                     end
                     if self.Brain.BrainIntel.RestrictedMassMarker > 6 then
-                        for i=1, 2 do
-                            table.insert(queue, 'T1BuildEngineer')
-                        end
-                    end
-                    if self.Brain.BrainIntel.RestrictedMassMarker > 6 then
-                        for i=1, 2 do
+                        for i=1, 4 do
                             table.insert(queue, 'T1BuildEngineer')
                         end
                     end
@@ -389,6 +384,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1LandArtillery')
                     table.insert(queue, 'T1LandAA')
                 else
@@ -398,6 +394,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     table.insert(queue, 'T1LandScout')
                     table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1LandArtillery')
                     table.insert(queue, 'T1LandAA')
                 end
@@ -436,6 +433,12 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1BuildEngineer')
+                    if self.Brain.BrainIntel.RestrictedMassMarker > 8 then
+                        for i=1, 2 do
+                            table.insert(queue, 'T1BuildEngineer')
+                        end
+                    end
                     table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandArtillery')
                     table.insert(queue, 'T1LandAA')
@@ -450,6 +453,12 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1LandArtillery')
                     table.insert(queue, 'T1LandAA')
+                    table.insert(queue, 'T1BuildEngineer')
+                    if self.Brain.BrainIntel.RestrictedMassMarker > 8 then
+                        for i=1, 2 do
+                            table.insert(queue, 'T1BuildEngineer')
+                        end
+                    end
                     table.insert(queue, 'T1LandAA')
                 end
                 table.insert(queue, 'T1LandScout')
@@ -481,6 +490,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1LandArtillery')
                     table.insert(queue, 'T1LandAA')
                     table.insert(queue, 'T1LandScout')
@@ -494,6 +504,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1LandArtillery')
                     table.insert(queue, 'T1LandAA')
+                    table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1LandAA')
                 end
                 table.insert(queue, 'T1LandScout')

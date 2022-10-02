@@ -4045,9 +4045,9 @@ GenerateDefensivePointTable = function (range, position)
             continue
         end
         if GetTerrainHeight(v[1], v[3]) >= GetSurfaceHeight(v[1], v[3]) then
-            RNGINSERT(defensivePointTable[1], {Position = v, Radius = 10, Enabled = true, Shields = {}, DirectFire = {}, AntiAir = {}, Indirectfire = {}, TMD = {}, TML = {}})
+            RNGINSERT(defensivePointTable[1], {Position = v, Radius = 15, Enabled = true, Shields = {}, DirectFire = {}, AntiAir = {}, Indirectfire = {}, TMD = {}, TML = {}})
         else
-            RNGINSERT(defensivePointTable[1], {Position = v, Radius = 10, Enabled = false, Shields = {}, DirectFire = {}, AntiAir = {}, Indirectfire = {}, TMD = {}, TML = {}})
+            RNGINSERT(defensivePointTable[1], {Position = v, Radius = 15, Enabled = false, Shields = {}, DirectFire = {}, AntiAir = {}, Indirectfire = {}, TMD = {}, TML = {}})
         end
     end
     local defensivePointsT2 = DrawCirclePoints(8, range/2, position)
@@ -4290,8 +4290,8 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
                 end
             else
                 for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[2] do
-                    local distance = VDist3(v.Position, unitPos)
-                    if not closestPoint or closestDistance > distance then
+                    local distance = VDist3Sq(v.Position, unitPos)
+                    if not closestPoint or distance < closestDistance then
                         closestPoint = k
                         closestDistance = distance
                     end
@@ -4405,7 +4405,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         aiBrain:BuildScoutLocationsRNG()
     end
 
-    if platoon.PlatoonData.ExcessScout and aiBrain.CDRUnit.Active then
+    if aiBrain.CDRUnit.Active then
         if not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead then
             --RNGLOG('Scout Has active ACU without Scout')
             if AIAttackUtils.CanGraphToRNG(scoutPos, aiBrain.CDRUnit.Position, platoon.MovementLayer) then
@@ -4416,20 +4416,20 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             end
         end
     end
-    if platoon.PlatoonData.ExcessScout and (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
+    if (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
         --RNGLOG('Look for platoon that needs a scout')
         coroutine.yield(10)
         platoonNeedScout, supportPlatoon = platoon:ScoutFindNearbyPlatoonsRNG(250)
         platoon.FindPlatoonCounter = platoon.FindPlatoonCounter + 1
     end
-    if platoon.PlatoonData.ExcessScout and platoonNeedScout then
+    if platoonNeedScout then
         if supportPlatoon and PlatoonExists(aiBrain, supportPlatoon) then
             scoutType = 'AssistPlatoon'
             --RNGLOG('ScoutDest is assist platoon')
             return supportPlatoon, scoutType
         end
     end
-    if platoon.PlatoonData.ExcessScout and (not platoonNeedScout) and (not platoon.ZonesValidated) then
+    if (not platoonNeedScout) and (not platoon.ZonesValidated) then
         --RNGLOG('Excess scout looking for expansion')
         scoutPos = scout:GetPosition()
         local scoutMarker

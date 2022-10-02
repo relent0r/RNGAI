@@ -69,6 +69,34 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Factory Builder Land',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'EngineerBuilder',
     Builder {
+        BuilderName = 'RNG Factory Builder Land T1 Primary',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 800,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.75 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH1 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    'T1LandFactory',
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNG Factory Builder Land T1 MainBase',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 1010,
@@ -240,6 +268,34 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Factory Builder Land Large',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'EngineerBuilder',
     Builder {
+        BuilderName = 'RNG Factory Builder Land T1 Primary Large',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 800,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH1 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    'T1LandFactory',
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNG Factory Builder Land T1 MainBase Large',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 1000,
@@ -323,6 +379,34 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI Factory Builder Air',
     BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNG Factory Builder Air T1 Primary',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 800,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.75 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
+            { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH1 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    'T1AirFactory',
+                },
+            }
+        }
+    },
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 High Pri',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
@@ -465,6 +549,34 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Factory Builder Air Large',
     BuildersType = 'EngineerBuilder',
     Builder {
+        BuilderName = 'RNG Factory Builder Air T1 Primary Large',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 800,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.75 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
+            { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH1 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    'T1AirFactory',
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNG Factory Builder Air T1 High Pri Large',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 1000,
@@ -582,6 +694,34 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Factory Builder Sea',
     BuildersType = 'EngineerBuilder',
     Builder {
+        BuilderName = 'RNG Factory Builder Sea T1 Primary',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 800,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.85 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * categories.TECH1 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    'T1SeaFactory',
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNG Factory Builder Sea T1 High Pri',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 1000,
@@ -663,6 +803,34 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI Factory Builder Sea Large',
     BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNG Factory Builder Sea T1 Primary Large',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 800,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.85 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * categories.TECH1 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    'T1SeaFactory',
+                },
+            }
+        }
+    },
     Builder {
         BuilderName = 'RNG Factory Builder Sea T1 High Pri Large',
         PlatoonTemplate = 'EngineerBuilderT123RNG',

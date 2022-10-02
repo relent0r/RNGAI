@@ -1358,6 +1358,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     return self:SetAIPlanRNG('LandScoutingAIRNG')
                 elseif scoutType == 'AssistPlatoon' then
                     if PlatoonExists(aiBrain, targetData) then
+                        self.PlatoonAttached = true
                         while not scout.Dead and PlatoonExists(aiBrain, targetData) do
                             --RNGLOG('Move to support platoon position')
                             self:Stop()
@@ -6112,7 +6113,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local dist
             local Stuck = 0
             while PlatoonExists(aiBrain, self) do
-                if self.PlatoonData.ExcessScout and aiBrain.CDRUnit.Active then
+                if not self.PlatoonAttached and aiBrain.CDRUnit.Active then
                     if not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead then
                         --RNGLOG('ACU is active, this scout is going to help him')
                         return
