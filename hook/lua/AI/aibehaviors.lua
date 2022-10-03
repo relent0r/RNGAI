@@ -3088,34 +3088,68 @@ FindExperimentalTargetRNG = function(self)
     -- For each priority in SurfacePriorities list, check against each enemy base we're aware of (through scouting/intel),
     -- The base with the most number of the highest-priority targets gets selected. If there's a tie, pick closer
     -- This must be changed!! to no longer use interest list.
+    for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
+        if v.LAND.GameTime + 650 > GetGameTimeSeconds() then
+            RNGLOG('ACU Table for index '..k..' table '..repr(aiBrain.EnemyIntel.ACU))
+            if RUtils.HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
+                if not RUtils.PositionInWater(aiBrain.EnemyIntel.ACU[k].Position) then
+                    bestUnit = aiBrain.EnemyIntel.ACU[k].Unit
+                    RNGLOG('Experimental strike : ACU Target mission found and target set')
+                end
+                break
+            else
+                RNGLOG('Experimental strike : ACU Target mission found but target not visible')
+            end
+        end
+    end
+    if bestUnit then
+        return bestUnit, nil
+    end
+
     local enemyBases = aiBrain.EnemyIntel.EnemyThreatLocations
     for _, priority in SurfacePrioritiesRNG do
         local bestBase = false
         local mostUnits = 0
+        local highestMassValue = 0
         local bestUnit = false
         for _, base in enemyBases do
             if base.ThreatType == 'StructuresNotMex' then
                 --RNGLOG('Base Position with '..base.Threat..' threat')
                 local unitsAtBase = aiBrain:GetUnitsAroundPoint(priority, base.Position, 100, 'Enemy')
-                local numUnitsAtBase = 0
+                local massValue = 0
+                local highestValueUnit = 0
                 local notDeadUnit = false
 
                 for _, unit in unitsAtBase do
                     if not unit.Dead then
-                        notDeadUnit = unit
-                        numUnitsAtBase = numUnitsAtBase + 1
+                        if unit.Blueprint.Economy.BuildCostMass then
+                            if unit.Blueprint.CategoriesHash.DEFENSE then
+                                massValue = massValue + (unit.Blueprint.Economy.BuildCostMass * 1.5)
+                            elseif unit.Blueprint.CategoriesHash.TECH3 and unit.Blueprint.CategoriesHash.ANTIMISSILE and unit.Blueprint.CategoriesHash.SILO then
+                                massValue = massValue + (unit.Blueprint.Economy.BuildCostMass * 2)
+                            else
+                                massValue = massValue + unit.Blueprint.Economy.BuildCostMass
+                            end
+                        end
+                        if massValue > highestValueUnit then
+                            highestValueUnit = massValue
+                            notDeadUnit = unit
+                        end
+                        if not notDeadUnit then
+                            notDeadUnit = unit
+                        end
                     end
                 end
 
-                if numUnitsAtBase > 0 then
-                    if numUnitsAtBase > mostUnits then
+                if massValue > 0 then
+                    if massValue > highestMassValue then
                         bestBase = base
-                        mostUnits = numUnitsAtBase
+                        highestMassValue = massValue
                         bestUnit = notDeadUnit
-                    elseif numUnitsAtBase == mostUnits then
+                    elseif massValue == highestMassValue then
                         local myPos = GetPlatoonPosition(self)
-                        local dist1 = VDist2(myPos[1], myPos[3], base.Position[1], base.Position[3])
-                        local dist2 = VDist2(myPos[1], myPos[3], bestBase.Position[1], bestBase.Position[3])
+                        local dist1 = VDist2Sq(myPos[1], myPos[3], base.Position[1], base.Position[3])
+                        local dist2 = VDist2Sq(myPos[1], myPos[3], bestBase.Position[1], bestBase.Position[3])
 
                         if dist1 < dist2 then
                             bestBase = base
@@ -3128,6 +3162,12 @@ FindExperimentalTargetRNG = function(self)
         if bestBase and bestUnit then
             --RNGLOG('Best base '..bestBase.Threat..' threat '..' at '..repr(bestBase.Position))
             return bestUnit, bestBase
+        end
+    end
+    if not bestUnit then
+        bestUnit = RUtils.ValidateMainBase(self, self:GetSquadUnits('Attack'), aiBrain)
+        if bestUnit then
+            return bestUnit, nil
         end
     end
 
