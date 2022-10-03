@@ -921,6 +921,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                             if microCap <= 0 then break end
                             if unit.Dead then continue end
                             if not unit.MaxWeaponRange then
+                                coroutine.yield(3)
+                                WARN('Warning : Experimental has no max weapon range')
                                 continue
                             end
                             unitPos = unit:GetPosition()
@@ -1819,6 +1821,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if microCap <= 0 then break end
                                 if unit.Dead then continue end
                                 if not unit.MaxWeaponRange then
+                                    coroutine.yield(3)
+                                    WARN('Warning : Experimental has no max weapon range')
                                     continue
                                 end
                                 IssueClearCommands({unit})
@@ -1838,6 +1842,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if microCap <= 0 then break end
                                 if unit.Dead then continue end
                                 if not unit.MaxWeaponRange then
+                                    coroutine.yield(3)
+                                    WARN('Warning : Experimental has no max weapon range')
                                     continue
                                 end
                                 IssueClearCommands({unit})
@@ -2247,6 +2253,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                                                 if microCap <= 0 then break end
                                                 if unit.Dead then continue end
                                                 if not unit.MaxWeaponRange then
+                                                    coroutine.yield(3)
+                                                    WARN('Warning : Experimental has no max weapon range')
                                                     continue
                                                 end
                                                 unitPos = unit:GetPosition()
@@ -2368,6 +2376,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                                         if microCap <= 0 then break end
                                         if unit.Dead then continue end
                                         if not unit.MaxWeaponRange then
+                                            coroutine.yield(3)
+                                            WARN('Warning : Experimental has no max weapon range')
                                             continue
                                         end
                                         unitPos = unit:GetPosition()
@@ -2664,6 +2674,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                                                 if microCap <= 0 then break end
                                                 if unit.Dead then continue end
                                                 if not unit.MaxWeaponRange then
+                                                    coroutine.yield(3)
+                                                    WARN('Warning : Experimental has no max weapon range')
                                                     continue
                                                 end
                                                 unitPos = unit:GetPosition()
@@ -4637,23 +4649,33 @@ Platoon = Class(RNGAIPlatoonClass) {
                         self.ScoutPresent = true
                         self.ScoutUnit = v
                     end
+                    local primaryWeaponDamage = 0
                     for _, weapon in ALLBPS[v.UnitId].Weapon or {} do
                         -- unit can have MaxWeaponRange entry from the last platoon
-                        if not v.MaxWeaponRange or weapon.MaxRadius > v.MaxWeaponRange then
-                            -- save the weaponrange 
-                            v.MaxWeaponRange = weapon.MaxRadius * 0.9 -- maxrange minus 10%
-                            -- save the weapon balistic arc, we need this later to check if terrain is blocking the weapon line of sight
-                            if weapon.BallisticArc == 'RULEUBA_LowArc' then
-                                v.WeaponArc = 'low'
-                            elseif weapon.BallisticArc == 'RULEUBA_HighArc' then
-                                v.WeaponArc = 'high'
-                            else
-                                v.WeaponArc = 'none'
+                        if weapon.Damage and weapon.Damage > primaryWeaponDamage then
+                            primaryWeaponDamage = weapon.Damage
+                            if not v.MaxWeaponRange or weapon.MaxRadius > v.MaxWeaponRange then
+                                -- save the weaponrange 
+                                v.MaxWeaponRange = weapon.MaxRadius * 0.9 -- maxrange minus 10%
+                                -- save the weapon balistic arc, we need this later to check if terrain is blocking the weapon line of sight
+                                if weapon.BallisticArc == 'RULEUBA_LowArc' then
+                                    v.WeaponArc = 'low'
+                                elseif weapon.BallisticArc == 'RULEUBA_HighArc' then
+                                    v.WeaponArc = 'high'
+                                else
+                                    v.WeaponArc = 'none'
+                                end
                             end
                         end
                         if not self.MaxPlatoonWeaponRange or self.MaxPlatoonWeaponRange < v.MaxWeaponRange then
                             self.MaxPlatoonWeaponRange = v.MaxWeaponRange
                         end
+                    end
+                    if not v.MaxWeaponRange then
+                        RNGLOG('Unit has no MaxWeaponRange '..v.UnitId)
+                    end
+                    if not v.WeaponArc then
+                        RNGLOG('Unit has no WeaponArc '..v.UnitId)
                     end
                     if v:TestToggleCaps('RULEUTC_StealthToggle') then
                         v:SetScriptBit('RULEUTC_StealthToggle', false)
@@ -5012,6 +5034,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if microCap <= 0 then break end
                                 if unit.Dead then continue end
                                 if not unit.MaxWeaponRange then
+                                    coroutine.yield(3)
+                                    WARN('Warning : Experimental has no max weapon range')
                                     continue
                                 end
                                 IssueClearCommands({unit})
@@ -5188,6 +5212,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if microCap <= 0 then break end
                                 if unit.Dead then continue end
                                 if not unit.MaxWeaponRange then
+                                    coroutine.yield(3)
+                                    WARN('Warning : Experimental has no max weapon range')
                                     continue
                                 end
                                 IssueClearCommands({unit})
@@ -5766,6 +5792,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                             if microCap <= 0 then break end
                             if unit.Dead then continue end
                             if not unit.MaxWeaponRange then
+                                coroutine.yield(3)
+                                WARN('Warning : Experimental has no max weapon range')
                                 continue
                             end
                             IssueClearCommands({unit})
@@ -6412,6 +6440,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     if microCap <= 0 then break end
                                     if unit.Dead then continue end
                                     if not unit.MaxWeaponRange then
+                                        coroutine.yield(3)
+                                        WARN('Warning : Experimental has no max weapon range')
                                         continue
                                     end
                                     IssueClearCommands({unit})
@@ -6751,6 +6781,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if microCap <= 0 then break end
                                 if unit.Dead then continue end
                                 if not unit.MaxWeaponRange then
+                                    coroutine.yield(3)
+                                    WARN('Warning : Experimental has no max weapon range')
                                     continue
                                 end
                                 if closestTurret and not closestTurret.Dead and ALLBPS[unit.UnitId].CategoriesHash.INDIRECTFIRE then
@@ -6958,6 +6990,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if microCap <= 0 then break end
                                 if unit.Dead then continue end
                                 if not unit.MaxWeaponRange then
+                                    coroutine.yield(3)
+                                    WARN('Warning : Experimental has no max weapon range')
                                     continue
                                 end
                                 unitPos = unit:GetPosition()
@@ -7705,6 +7739,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                                                 if microCap <= 0 then break end
                                                 if unit.Dead then continue end
                                                 if not unit.MaxWeaponRange then
+                                                    coroutine.yield(3)
+                                                    WARN('Warning : Experimental has no max weapon range')
                                                     continue
                                                 end
                                                 IssueClearCommands({unit})

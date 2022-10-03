@@ -2799,6 +2799,8 @@ function FatBoyBehaviorRNG(self)
                                     targetPosition = target:GetPosition()
                                     if unit.Dead then continue end
                                     if not unit.MaxWeaponRange then
+                                        coroutine.yield(3)
+                                        WARN('Warning : Experimental has no max weapon range')
                                         continue
                                     end
                                     unitPos = unit:GetPosition()
@@ -3072,6 +3074,7 @@ WreckBaseRNG = function(self, base)
             return notDeadUnit, base
         end
     end
+    return false, false
 end
 
 FindExperimentalTargetRNG = function(self)
@@ -3150,25 +3153,49 @@ function BehemothBehaviorRNG(self, id)
         self:SetPrioritizedTargetList('Attack', categoryList)
     end
     AIAttackUtils.GetMostRestrictiveLayerRNG(self)
+    self:ConfigurePlatoon()
     local airUnit = EntityCategoryContains(categories.AIR, experimental)
     -- Don't forget we have the unit ID for specialized behaviors.
     -- Find target loop
     while experimental and not experimental.Dead do
         if lastBase then
             targetUnit, lastBase = WreckBaseRNG(self, lastBase)
+            if lastBase then
+                RNGLOG('Exp unit has lastBase in WreckBaseRNG')
+                if targetUnit then
+                    RNGLOG('Exp unit has targetUnit in WreckBaseRNG')
+                end
+            else
+                RNGLOG('No lastBase after FindExperimentalTargetRNG')
+            end
         elseif not lastBase then
             targetUnit, lastBase = FindExperimentalTargetRNG(self)
+            if targetUnit then
+                RNGLOG('Exp unit has FindExperimentalTargetRNG')
+                if lastBase then
+                    RNGLOG('Exp unit has lastBase FindExperimentalTargetRNG')
+                end
+            else
+                RNGLOG('No lastBase after FindExperimentalTargetRNG')
+            end
         end
 
         if targetUnit and not targetUnit.Dead then
             IssueClearCommands({experimental})
-            ExpMoveToPosition(aiBrain, self, targetUnit:GetPosition(), unit, false)
+            local targetPos = targetUnit:GetPosition()
+            if VDist3Sq(experimental:GetPosition(), targetPos) < 6400 then
+                IssueMove({experimental}, targetPos)
+            else
+                ExpMoveToPosition(aiBrain, self, targetUnit, experimental, false)
+            end
+            RNGLOG('Exp unit has pathed to location using micro')
         end
 
         -- Walk to and kill target loop
         while not experimental.Dead and not experimental:IsIdleState() do
             local nearCommander = CommanderOverrideCheck(self)
             if nearCommander and nearCommander ~= targetUnit then
+                RNGLOG('Exp unit ACU spotted, trying to attack')
                 IssueClearCommands({experimental})
                 IssueAttack({experimental}, nearCommander)
                 targetUnit = nearCommander
@@ -3179,7 +3206,7 @@ function BehemothBehaviorRNG(self, id)
             local targetPos = targetUnit:GetPosition()
             if VDist2Sq(unitPos[1], unitPos[3], targetPos[1], targetPos[3]) < 6400 then
                 if targetUnit and not targetUnit.Dead and aiBrain:CheckBlockingTerrain(unitPos, targetPos, 'none') then
-                    --RNGLOG('Experimental WEAPON BLOCKED, moving to better position')
+                    RNGLOG('Exp unit WEAPON BLOCKED, moving to better position')
                     IssueClearCommands({experimental})
                     IssueMove({experimental}, targetPos )
                     coroutine.yield(50)
@@ -3197,7 +3224,12 @@ function BehemothBehaviorRNG(self, id)
             while closestBlockingShield and not closestBlockingShield.Dead do
                 IssueClearCommands({experimental})
                 local shieldPosition = closestBlockingShield:GetPosition()
-                ExpMoveToPosition(aiBrain, self, shieldPosition, unit, true)
+                RNGLOG('Exp unit found closest blocking shield moving to attack')
+                if VDist3Sq(experimental:GetPosition(), shieldPosition) < 6400 then
+                    IssueMove({experimental}, shieldPosition)
+                else
+                    ExpMoveToPosition(aiBrain, self, closestBlockingShield, experimental, true)
+                end
                 coroutine.yield(10)
                 if closestBlockingShield and not closestBlockingShield.Dead then
                     IssueAttack({experimental}, closestBlockingShield)
@@ -3209,6 +3241,7 @@ function BehemothBehaviorRNG(self, id)
                     unitPos = GetPlatoonPosition(self)
                     shieldPosition = closestBlockingShield:GetPosition()
                     if VDist2Sq(unitPos[1], unitPos[3], shieldPosition[1], shieldPosition[3]) < 6400 then
+                        RNGLOG('Exp unit moving to shield position')
                         IssueClearCommands({experimental})
                         IssueMove({experimental}, shieldPosition)
                         if closestBlockingShield and not closestBlockingShield.Dead then
@@ -3225,18 +3258,79 @@ function BehemothBehaviorRNG(self, id)
                 end
                 closestBlockingShield = closestBlockingShield or GetClosestShieldProtectingTarget(experimental, targetUnit)
                 coroutine.yield(1)
+                if not targetUnit or targetUnit.Dead then break end
             end
             coroutine.yield(10)
         end
         coroutine.yield(10)
+        RNGLOG('Exp unit restarting full exp loop')
     end
 end
 
-function ExpMoveToPosition(aiBrain, platoon, destination, unit, ignoreUnits)
-
-    local path, reason = AIAttackUtils.PlatoonGenerateSafePathTo(aiBrain, platoon.MovementLayer, platoon:GetPlatoonPosition(), destination, nil, nil, 62500)
-
-    while experimental and not experimental.Dead do
+function ExpMoveToPosition(aiBrain, platoon, target, unit, ignoreUnits)
+    local targetPos
+    local LandRadiusScanCategory = categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL - categories.INSIGNIFICANTUNIT
+    local LandRadiusDetectionCategory = (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * categories.LAND - categories.SCOUT)
+    local TargetSearchPriorities = {
+        categories.EXPERIMENTAL * categories.LAND,
+        categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE,
+        categories.STRUCTURE * categories.DEFENSE * categories.INDIRECTFIRE,
+        categories.MOBILE * categories.LAND * categories.TECH3,
+        categories.MOBILE * categories.LAND,
+        categories.STRUCTURE,
+    }
+    local function VariableKite(platoon,unit,target, maxDistance)
+        local function KiteDist(pos1,pos2,distance)
+            local vec={}
+            local dist=VDist3(pos1,pos2)
+            for i,k in pos2 do
+                if type(k)~='number' then continue end
+                vec[i]=k+distance/dist*(pos1[i]-k)
+            end
+            return vec
+        end
+        local function CheckRetreat(pos1,pos2,target)
+            local vel = {}
+            vel[1], vel[2], vel[3]=target:GetVelocity()
+            local dotp=0
+            for i,k in pos2 do
+                if type(k)~='number' then continue end
+                dotp=dotp+(pos1[i]-k)*vel[i]
+            end
+            return dotp<0
+        end
+        if target.Dead then return end
+        if unit.Dead then return end
+            
+        local pos=unit:GetPosition()
+        local tpos=target:GetPosition()
+        local dest
+        local mod=6
+        if CheckRetreat(pos,tpos,target) then
+            mod=8
+        end
+        if maxDistance then
+            mod = 0
+        end
+        if unit.MaxWeaponRange then
+            dest=KiteDist(pos,tpos,unit.MaxWeaponRange-math.random(1,5)-mod)
+        else
+            dest=KiteDist(pos,tpos,platoon.MaxWeaponRange+5-math.random(1,3)-mod)
+        end
+        if VDist3Sq(pos,dest)>6 then
+            IssueMove({unit},dest)
+            coroutine.yield(2)
+            return mod
+        else
+            coroutine.yield(2)
+            return mod
+        end
+    end
+    if target and not target.Dead then
+        destination = target:GetPosition()
+    end
+    local path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, platoon.MovementLayer, platoon:GetPlatoonPosition(), destination, 62500)
+    if path then
         local pathLength = RNGGETN(path)
         for i=1, pathLength do
             IssueMove({unit}, path[i])
@@ -3244,7 +3338,7 @@ function ExpMoveToPosition(aiBrain, platoon, destination, unit, ignoreUnits)
             local lastDist
             local dist
             local stuck = 0
-            while experimental and not experimental.Dead do
+            while unit and not unit.Dead do
                 unitPosition = unit:GetPosition()
                 if not unitPosition then return end
                 dist = VDist3Sq(path[i], unitPosition)
@@ -3257,156 +3351,64 @@ function ExpMoveToPosition(aiBrain, platoon, destination, unit, ignoreUnits)
                     lastDist = dist
                 else
                     stuck = stuck + 1
-                    if Stuck > 15 then
+                    if stuck > 15 then
                         IssueClearCommands({unit})
                         break
                     end
                 end
-                --[[
                 if not ignoreUnits then
                     local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, LandRadiusDetectionCategory, unitPosition, 70, 'Enemy')
                     if enemyUnitCount > 0 then
-                        local attackSquad = self:GetSquadUnits('Attack')
-                        local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, unitPosition, 'Attack', 70, LandRadiusScanCategory, self.atkPri, false)
+                        local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, unitPosition, 'Attack', 70, LandRadiusScanCategory, TargetSearchPriorities, false)
                         if acuInRange then
+                            target = acuUnit
                         end
-                        local retreatTrigger = 0
-                        local retreatTimeout = 0
-                        while PlatoonExists(aiBrain, self) do
-                            if target and not target.Dead then
-                                local targetPosition = target:GetPosition()
-                                attackSquad = self:GetSquadUnits('Attack')
-                                local microCap = 50
-                                for _, unit in attackSquad do
-                                    microCap = microCap - 1
-                                    if microCap <= 0 then break end
+                        if totalThreat > 20 then
+                            local retreatTrigger = 0
+                            local retreatTimeout = 0
+                            while unit and not unit.Dead do
+                                if target and not target.Dead then
                                     if unit.Dead then continue end
                                     if not unit.MaxWeaponRange then
+                                        coroutine.yield(3)
+                                        WARN('Warning : Experimental has no max weapon range')
                                         continue
                                     end
                                     IssueClearCommands({unit})
-                                    retreatTrigger = VariableKite(self,unit,target, maxDistance)
+                                    retreatTrigger = VariableKite(platoon,unit,target, false)
+                                else
+                                    IssueClearCommands({unit})
+                                    IssueMove({unit},path[i])
+                                    break
                                 end
-                            else
-                                self:MoveToLocation(path[i], false)
-                                break
-                            end
-                            if retreatTrigger > 5 then
-                                retreatTimeout = retreatTimeout + 1
-                            end
-                            coroutine.yield(15)
-                            if retreatTimeout > 3 then
-                                --RNGLOG('platoon stopped chasing unit')
-                                break
+                                if retreatTrigger > 5 then
+                                    retreatTimeout = retreatTimeout + 1
+                                end
+                                coroutine.yield(20)
+                                if target and not target.Dead then
+                                    IssueClearCommands({unit})
+                                    IssueMove({unit},target:GetPosition())
+                                    coroutine.yield(40)
+                                end
+                                if retreatTimeout > 3 then
+                                    --RNGLOG('platoon stopped chasing unit')
+                                    break
+                                end
                             end
                         end
                     end
-                end]]
+                end
                 coroutine.yield(20)
             end
-        end
-        coroutine.yield(15)
-    end
-end
-
-function BehemothBehaviorRNGnew(self, id)
-    AssignExperimentalPrioritiesRNG(self)
-
-    local aiBrain = self:GetBrain()
-    local experimental = GetExperimentalUnit(self)
-    local data = self.PlatoonData
-    local targetUnit = false
-    local lastBase = false
-    local cmd
-    local categoryList = {}
-
-    if data.PrioritizedCategories then
-        for k,v in data.PrioritizedCategories do
-            RNGINSERT(categoryList, ParseEntityCategory(v))
-        end
-        RNGINSERT(categoryList, categories.ALLUNITS)
-        self:SetPrioritizedTargetList('Attack', categoryList)
-    end
-    
-    local airUnit = EntityCategoryContains(categories.AIR, experimental)
-    -- Don't forget we have the unit ID for specialized behaviors.
-    -- Find target loop
-    while experimental and not experimental.Dead do
-        if lastBase then
-            targetUnit, lastBase = WreckBaseRNG(self, lastBase)
-        elseif not lastBase then
-            targetUnit, lastBase = FindExperimentalTargetRNG(self)
-        end
-
-        if targetUnit and not targetUnit.Dead then
-            IssueClearCommands({experimental})
-            cmd = ExpPathToLocation(aiBrain, self, 'Amphibious', targetUnit:GetPosition(), false)
-        end
-
-        -- Walk to and kill target loop
-        while not experimental.Dead and not experimental:IsIdleState() do
-            local nearCommander = CommanderOverrideCheck(self)
-            if nearCommander and nearCommander ~= targetUnit then
-                IssueClearCommands({experimental})
-                IssueAttack({experimental}, nearCommander)
-                targetUnit = nearCommander
+            if target.Dead then
+                break
             end
-            -- If no target jump out
-            if not targetUnit or targetUnit.Dead then break end
-            local unitPos = GetPlatoonPosition(self)
-            local targetPos = targetUnit:GetPosition()
-            if VDist2Sq(unitPos[1], unitPos[3], targetPos[1], targetPos[3]) < 6400 then
-                if targetUnit and not targetUnit.Dead and aiBrain:CheckBlockingTerrain(unitPos, targetPos, 'none') then
-                    --RNGLOG('Experimental WEAPON BLOCKED, moving to better position')
-                    IssueClearCommands({experimental})
-                    IssueMove({experimental}, targetPos )
-                    coroutine.yield(50)
-                end
-            end
-
-            -- Check if we or the target are under a shield
-            local closestBlockingShield = false
-            if not airUnit then
-                closestBlockingShield = GetClosestShieldProtectingTarget(experimental, experimental)
-            end
-            closestBlockingShield = closestBlockingShield or GetClosestShieldProtectingTarget(experimental, targetUnit)
-
-            -- Kill shields loop
-            while closestBlockingShield and not closestBlockingShield.Dead do
-                IssueClearCommands({experimental})
-                local shieldPosition = closestBlockingShield:GetPosition()
-                cmd = ExpPathToLocation(aiBrain, self, 'Amphibious', shieldPosition, false)
-                coroutine.yield(30)
-                if closestBlockingShield and not closestBlockingShield.Dead then
-                    IssueAttack({experimental}, closestBlockingShield)
-                end
-
-                -- Wait for shield to die loop
-                while not closestBlockingShield.Dead and not experimental.Dead do
-                    coroutine.yield(20)
-                    unitPos = GetPlatoonPosition(self)
-                    shieldPosition = closestBlockingShield:GetPosition()
-                    if VDist2Sq(unitPos[1], unitPos[3], shieldPosition[1], shieldPosition[3]) < 6400 then
-                        IssueClearCommands({experimental})
-                        IssueMove({experimental}, shieldPosition)
-                        if closestBlockingShield and not closestBlockingShield.Dead then
-                            IssueAttack({experimental}, closestBlockingShield)
-                        end
-                    end
-                    coroutine.yield(30)
-                    
-                end
-
-                closestBlockingShield = false
-                if not airUnit then
-                    closestBlockingShield = GetClosestShieldProtectingTarget(experimental, experimental)
-                end
-                closestBlockingShield = closestBlockingShield or GetClosestShieldProtectingTarget(experimental, targetUnit)
-                coroutine.yield(1)
-            end
-            coroutine.yield(10)
         end
-        coroutine.yield(10)
+        if not target.Dead then
+            IssueMove({unit}, destination)
+        end
+    else
+        RNGLOG('Exp unit has no path to target')
     end
 end
 
