@@ -3149,7 +3149,7 @@ function BehemothBehaviorRNG(self, id)
         RNGINSERT(categoryList, categories.ALLUNITS)
         self:SetPrioritizedTargetList('Attack', categoryList)
     end
-    
+    AIAttackUtils.GetMostRestrictiveLayerRNG(self)
     local airUnit = EntityCategoryContains(categories.AIR, experimental)
     -- Don't forget we have the unit ID for specialized behaviors.
     -- Find target loop
@@ -3162,7 +3162,7 @@ function BehemothBehaviorRNG(self, id)
 
         if targetUnit and not targetUnit.Dead then
             IssueClearCommands({experimental})
-            cmd = ExpPathToLocation(aiBrain, self, 'Amphibious', targetUnit:GetPosition(), false)
+            ExpMoveToPosition(aiBrain, self, targetUnit:GetPosition(), unit, false)
         end
 
         -- Walk to and kill target loop
@@ -3197,8 +3197,8 @@ function BehemothBehaviorRNG(self, id)
             while closestBlockingShield and not closestBlockingShield.Dead do
                 IssueClearCommands({experimental})
                 local shieldPosition = closestBlockingShield:GetPosition()
-                cmd = ExpPathToLocation(aiBrain, self, 'Amphibious', shieldPosition, false)
-                coroutine.yield(30)
+                ExpMoveToPosition(aiBrain, self, shieldPosition, unit, true)
+                coroutine.yield(10)
                 if closestBlockingShield and not closestBlockingShield.Dead then
                     IssueAttack({experimental}, closestBlockingShield)
                 end
