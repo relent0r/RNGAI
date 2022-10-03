@@ -3025,30 +3025,21 @@ local SurfacePrioritiesRNG = {
     categories.TECH2 * categories.ENERGYPRODUCTION * categories.STRUCTURE,
     categories.TECH3 * categories.MASSEXTRACTION * categories.STRUCTURE,
     categories.TECH3 * categories.INTELLIGENCE * categories.STRUCTURE,
-    categories.TECH2 * categories.INTELLIGENCE * categories.STRUCTURE,
     categories.EXPERIMENTAL * categories.LAND,
+    categories.INTELLIGENCE * categories.STRUCTURE,
     categories.TECH3 * categories.DEFENSE * categories.STRUCTURE,
-    categories.TECH2 * categories.DEFENSE * categories.STRUCTURE,
-    categories.TECH1 * categories.INTELLIGENCE * categories.STRUCTURE,
-    categories.TECH3 * categories.SHIELD * categories.STRUCTURE,
-    categories.TECH2 * categories.SHIELD * categories.STRUCTURE,
+    categories.DEFENSE * categories.STRUCTURE,
+    categories.SHIELD * categories.STRUCTURE,
     categories.TECH2 * categories.MASSEXTRACTION * categories.STRUCTURE,
-    categories.TECH3 * categories.FACTORY * categories.LAND * categories.STRUCTURE,
-    categories.TECH3 * categories.FACTORY * categories.AIR * categories.STRUCTURE,
-    categories.TECH2 * categories.FACTORY * categories.LAND * categories.STRUCTURE,
-    categories.TECH2 * categories.FACTORY * categories.AIR * categories.STRUCTURE,
-    categories.TECH1 * categories.FACTORY * categories.LAND * categories.STRUCTURE,
-    categories.TECH1 * categories.FACTORY * categories.AIR * categories.STRUCTURE,
+    categories.TECH3 * categories.FACTORY * categories.STRUCTURE,
+    categories.FACTORY * categories.STRUCTURE,
     categories.TECH1 * categories.MASSEXTRACTION * categories.STRUCTURE,
     categories.TECH3 * categories.STRUCTURE,
-    categories.TECH2 * categories.STRUCTURE,
-    categories.TECH1 * categories.STRUCTURE,
+    categories.STRUCTURE,
     categories.TECH3 * categories.MOBILE * categories.LAND,
-    categories.TECH2 * categories.MOBILE * categories.LAND,
-    categories.TECH1 * categories.MOBILE * categories.LAND,
+    categories.MOBILE * categories.LAND,
     categories.TECH3 * categories.MOBILE * categories.NAVAL,
-    categories.TECH2 * categories.MOBILE * categories.NAVAL,
-    categories.TECH1 *categories.MOBILE * categories.NAVAL,
+    categories.MOBILE * categories.NAVAL,
 }
 
 AssignExperimentalPrioritiesRNG = function(platoon)
@@ -3107,62 +3098,60 @@ FindExperimentalTargetRNG = function(self)
     end
 
     local enemyBases = aiBrain.EnemyIntel.EnemyThreatLocations
-    for _, priority in SurfacePrioritiesRNG do
-        local bestBase = false
-        local mostUnits = 0
-        local highestMassValue = 0
-        local bestUnit = false
-        for _, base in enemyBases do
-            if base.ThreatType == 'StructuresNotMex' then
-                --RNGLOG('Base Position with '..base.Threat..' threat')
-                local unitsAtBase = aiBrain:GetUnitsAroundPoint(priority, base.Position, 100, 'Enemy')
-                local massValue = 0
-                local highestValueUnit = 0
-                local notDeadUnit = false
+    local bestBase = false
+    local mostUnits = 0
+    local highestMassValue = 0
+    local bestUnit = false
+    for _, base in enemyBases do
+        if base.ThreatType == 'StructuresNotMex' then
+            --RNGLOG('Base Position with '..base.Threat..' threat')
+            local unitsAtBase = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, base.Position, 100, 'Enemy')
+            local massValue = 0
+            local highestValueUnit = 0
+            local notDeadUnit = false
 
-                for _, unit in unitsAtBase do
-                    if not unit.Dead then
-                        if unit.Blueprint.Economy.BuildCostMass then
-                            if unit.Blueprint.CategoriesHash.DEFENSE then
-                                massValue = massValue + (unit.Blueprint.Economy.BuildCostMass * 1.5)
-                            elseif unit.Blueprint.CategoriesHash.TECH3 and unit.Blueprint.CategoriesHash.ANTIMISSILE and unit.Blueprint.CategoriesHash.SILO then
-                                massValue = massValue + (unit.Blueprint.Economy.BuildCostMass * 2)
-                            else
-                                massValue = massValue + unit.Blueprint.Economy.BuildCostMass
-                            end
-                        end
-                        if massValue > highestValueUnit then
-                            highestValueUnit = massValue
-                            notDeadUnit = unit
-                        end
-                        if not notDeadUnit then
-                            notDeadUnit = unit
+            for _, unit in unitsAtBase do
+                if not unit.Dead then
+                    if unit.Blueprint.Economy.BuildCostMass then
+                        if unit.Blueprint.CategoriesHash.DEFENSE then
+                            massValue = massValue + (unit.Blueprint.Economy.BuildCostMass * 1.5)
+                        elseif unit.Blueprint.CategoriesHash.TECH3 and unit.Blueprint.CategoriesHash.ANTIMISSILE and unit.Blueprint.CategoriesHash.SILO then
+                            massValue = massValue + (unit.Blueprint.Economy.BuildCostMass * 2)
+                        else
+                            massValue = massValue + unit.Blueprint.Economy.BuildCostMass
                         end
                     end
+                    if massValue > highestValueUnit then
+                        highestValueUnit = massValue
+                        notDeadUnit = unit
+                    end
+                    if not notDeadUnit then
+                        notDeadUnit = unit
+                    end
                 end
+            end
 
-                if massValue > 0 then
-                    if massValue > highestMassValue then
+            if massValue > 0 then
+                if massValue > highestMassValue then
+                    bestBase = base
+                    highestMassValue = massValue
+                    bestUnit = notDeadUnit
+                elseif massValue == highestMassValue then
+                    local myPos = GetPlatoonPosition(self)
+                    local dist1 = VDist2Sq(myPos[1], myPos[3], base.Position[1], base.Position[3])
+                    local dist2 = VDist2Sq(myPos[1], myPos[3], bestBase.Position[1], bestBase.Position[3])
+
+                    if dist1 < dist2 then
                         bestBase = base
-                        highestMassValue = massValue
                         bestUnit = notDeadUnit
-                    elseif massValue == highestMassValue then
-                        local myPos = GetPlatoonPosition(self)
-                        local dist1 = VDist2Sq(myPos[1], myPos[3], base.Position[1], base.Position[3])
-                        local dist2 = VDist2Sq(myPos[1], myPos[3], bestBase.Position[1], bestBase.Position[3])
-
-                        if dist1 < dist2 then
-                            bestBase = base
-                            bestUnit = notDeadUnit
-                        end
                     end
                 end
             end
         end
-        if bestBase and bestUnit then
-            --RNGLOG('Best base '..bestBase.Threat..' threat '..' at '..repr(bestBase.Position))
-            return bestUnit, bestBase
-        end
+    end
+    if bestBase and bestUnit then
+        --RNGLOG('Best base '..bestBase.Threat..' threat '..' at '..repr(bestBase.Position))
+        return bestUnit, bestBase
     end
     if not bestUnit then
         bestUnit = RUtils.ValidateMainBase(self, self:GetSquadUnits('Attack'), aiBrain)
