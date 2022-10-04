@@ -2384,6 +2384,10 @@ function CDREnhancementsRNG(aiBrain, cdr)
             if RNGGETN(base.FactoryManager.FactoryList) > 0 then
                 if VDist2Sq(cdrPos[1], cdrPos[3], base.Position[1], base.Position[3]) < distSqAway then
                     inRange = true
+                    if baseName == 'MAIN' and cdr.CurrentEnemyThreat > 20 then
+                        coroutine.yield(5)
+                        return
+                    end
                     break
                 end
             end
@@ -2572,11 +2576,23 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
         IssueScript({cdr}, order)
     end
     local enhancementPaused = false
+    local lastTick
+    local lastProgress
     while not cdr.Dead and not cdr:HasEnhancement(enhancement) do
+        local eta = -1
+        local tick = GameTick()
+        local seconds = GetGameTimeSeconds()
+        local progress = unit.WorkProgress
+        if lastTick then
+            local eta = -1
+            if progress > lastProgress then
+                eta = seconds + ((tick - lastTick) / 10) * ((1-progress)/(progress-lastProgress))
+            end
+        end
         if cdr.Upgrading then
             --RNGLOG('cdr.Upgrading is set to true')
         end
-        if cdr.HealthPercent < 0.40 then
+        if cdr.HealthPercent < 0.40 and eta > 3 then
             --RNGLOG('* RNGAI: * BuildEnhancementRNG: '..aiBrain:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
             IssueStop({cdr})
             IssueClearCommands({cdr})
@@ -2593,6 +2609,7 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
         elseif enhancementPaused then
             cdr:SetPaused(false)
         end
+        lastProgress = progress
         coroutine.yield(10)
     end
     --RNGLOG('* RNGAI: * BuildEnhancementRNG: '..aiBrain:GetBrain().Nickname..' Upgrade finished '..enhancement)
