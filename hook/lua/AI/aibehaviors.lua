@@ -2385,6 +2385,7 @@ function CDREnhancementsRNG(aiBrain, cdr)
                 if VDist2Sq(cdrPos[1], cdrPos[3], base.Position[1], base.Position[3]) < distSqAway then
                     inRange = true
                     if baseName == 'MAIN' and cdr.CurrentEnemyThreat > 20 then
+                        RNGLOG('Aborting upgrade due to main base threat')
                         coroutine.yield(5)
                         return
                     end
@@ -2580,11 +2581,10 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
     local lastProgress
     while not cdr.Dead and not cdr:HasEnhancement(enhancement) do
         local eta = -1
-        local tick = GameTick()
+        local tick = GetGameTick()
         local seconds = GetGameTimeSeconds()
-        local progress = unit.WorkProgress
+        local progress = cdr.WorkProgress
         if lastTick then
-            local eta = -1
             if progress > lastProgress then
                 eta = seconds + ((tick - lastTick) / 10) * ((1-progress)/(progress-lastProgress))
             end
@@ -2610,6 +2610,8 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
             cdr:SetPaused(false)
         end
         lastProgress = progress
+        lastTick = tick
+        RNGLOG('eta on enhancement is '..eta)
         coroutine.yield(10)
     end
     --RNGLOG('* RNGAI: * BuildEnhancementRNG: '..aiBrain:GetBrain().Nickname..' Upgrade finished '..enhancement)
