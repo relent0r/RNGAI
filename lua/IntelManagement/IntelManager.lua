@@ -975,6 +975,7 @@ IntelManager = Class {
         local desiredStrikeDamage = 0
         local potentialStrikes = {}
         local minThreatRisk = 0
+        local abortZone = true
         if type == 'AirAntiSurface' then
             threatType = 'AntiAir'
             minimumExtractorTier = 2
@@ -1153,10 +1154,11 @@ IntelManager = Class {
                         end
                     end
                 end
+            end
         end
         RNGLOG('CheckStrikPotential')
         RNGLOG('ThreatRisk is '..minThreatRisk)
-        local abortZone = true
+        
         if type == 'AirAntiSurface' then
             if table.getn(potentialStrikes) > 0 then
                 local count = math.ceil(desiredStrikeDamage / 1000)
@@ -1279,7 +1281,6 @@ IntelManager = Class {
             end
         end
     end,
-
 }
 
 function CreateIntelManager(brain)

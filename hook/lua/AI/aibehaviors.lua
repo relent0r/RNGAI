@@ -3095,11 +3095,23 @@ FindExperimentalTargetRNG = function(self)
         return
     end
 
-    -- For each priority in SurfacePriorities list, check against each enemy base we're aware of (through scouting/intel),
-    -- The base with the most number of the highest-priority targets gets selected. If there's a tie, pick closer
-    -- This must be changed!! to no longer use interest list.
+    local bestUnit = false
+    -- If we haven't found a target check the main bases radius for any units, 
+    -- Check if there are any high priority units from the main base position. But only if we came online around that position.
+    local platPos = self:GetPlatoonPosition()
+    if platPos and VDist3Sq(platPos, aiBrain.BuilderManagers['MAIN'].Position) < 22500 then
+        if not bestUnit then
+            bestUnit = RUtils.ValidateMainBase(self, self:GetSquadUnits('Attack'), aiBrain)
+            if bestUnit then
+                return bestUnit, nil
+            end
+        end
+    end
+
+    -- First we look for an acu snipe mission.
+    -- Needs more logic for ACU's that are in bases or firebases.
     for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
-        if v.LAND.GameTime + 650 > GetGameTimeSeconds() then
+        if v.LAND.GameTime and v.LAND.GameTime + 650 > GetGameTimeSeconds() then
             RNGLOG('ACU Table for index '..k..' table '..repr(aiBrain.EnemyIntel.ACU))
             if RUtils.HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
                 if not RUtils.PositionInWater(aiBrain.EnemyIntel.ACU[k].Position) then
@@ -3120,7 +3132,7 @@ FindExperimentalTargetRNG = function(self)
     local bestBase = false
     local mostUnits = 0
     local highestMassValue = 0
-    local bestUnit = false
+    -- Now we look at bases of any sort and find the highest mass worth then selecting the most valuable unit in that base.
     for _, base in enemyBases do
         if base.ThreatType == 'StructuresNotMex' then
             --RNGLOG('Base Position with '..base.Threat..' threat')
@@ -3171,12 +3183,6 @@ FindExperimentalTargetRNG = function(self)
     if bestBase and bestUnit then
         --RNGLOG('Best base '..bestBase.Threat..' threat '..' at '..repr(bestBase.Position))
         return bestUnit, bestBase
-    end
-    if not bestUnit then
-        bestUnit = RUtils.ValidateMainBase(self, self:GetSquadUnits('Attack'), aiBrain)
-        if bestUnit then
-            return bestUnit, nil
-        end
     end
 
     return false, false
