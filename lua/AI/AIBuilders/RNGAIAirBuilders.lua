@@ -336,13 +336,14 @@ BuilderGroup {
         InstanceCount = 4,
         BuilderType = 'Any',
         BuilderData = {
-            SearchRadius = BaseMilitaryArea,
+            SearchRadius = BaseEnemyArea,
             UnitType = 'TORPEDO',
             PrioritizedCategories = {
                 categories.COMMAND,
                 categories.EXPERIMENTAL,
                 categories.NAVAL * categories.TECH3 * (categories.MOBILE + categories.STRUCTURE ),
                 categories.NAVAL * categories.TECH2 * (categories.MOBILE + categories.STRUCTURE ),
+                categories.DEFENSE * categories.ANTIAIR,
                 categories.NAVAL * categories.TECH1 * (categories.MOBILE + categories.STRUCTURE ),
                 categories.STRUCTURE * categories.SONAR,
                 categories.AMPHIBIOUS - categories.HOVER,

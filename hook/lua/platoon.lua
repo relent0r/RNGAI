@@ -9151,9 +9151,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
                                     if not eng.UnitBeingAssist and (not bestUnit:BeenDestroyed()) then
                                         eng.UnitBeingAssist = bestUnit
-                                        if aiBrain.RNGDEBUG then
-                                            RNGLOG('Unit being asked to assist is '..eng.UnitBeingAssist.UnitId..' at position '..repr(eng.UnitBeingAssist:GetPosition()))
-                                        end
+                                        --if aiBrain.RNGDEBUG then
+                                        --    RNGLOG('Unit being asked to assist is '..eng.UnitBeingAssist.UnitId..' at position '..repr(eng.UnitBeingAssist:GetPosition()))
+                                        --end
                                         IssueClearCommands({eng})
                                         IssueGuard({eng}, eng.UnitBeingAssist)
                                         coroutine.yield(1)

@@ -2981,7 +2981,7 @@ AIBrain = Class(RNGAIBrainClass) {
     SetupIntelTriggersRNG = function(self)
         coroutine.yield(10)
         --RNGLOG('Try to create intel trigger for enemy')
-        self:SetupArmyIntelTrigger({
+        self: ({
             CallbackFunction = self.ACUDetectionRNG, 
             Type = 'LOSNow', 
             Category = categories.COMMAND,
@@ -2989,6 +2989,27 @@ AIBrain = Class(RNGAIBrainClass) {
             Value = true,
             OnceOnly = false, 
         })
+    end,
+
+    OnIntelChange = function(self, blip, reconType, val)
+        if not self.RNG then
+            return RNGAIBrainClass.OnIntelChange(self, blip, reconType, val)
+        end
+        if val then
+            if reconType == 'LOSNow' then
+                if self.IntelTriggerList then
+                    for k, v in self.IntelTriggerList do
+                        if EntityCategoryContains(v.Category, blip:GetBlueprint().BlueprintId)
+                            and (not v.Blip or v.Blip == blip:GetSource()) then
+                            v.CallbackFunction(self, blip)
+                            if v.OnceOnly then
+                                self.IntelTriggerList[k] = nil
+                            end
+                        end
+                    end
+                end
+            end
+        end
     end,
 
     ACUDetectionRNG = function(self, blip)
@@ -3019,27 +3040,6 @@ AIBrain = Class(RNGAIBrainClass) {
                         c.LastSpotted = currentGameTime
                         c.Unit = unit
                         --LOG('Enemy ACU Position is set')
-                    end
-                end
-            end
-        end
-    end,
-
-    OnIntelChange = function(self, blip, reconType, val)
-        if not self.RNG then
-            return RNGAIBrainClass.OnIntelChange(self, blip, reconType, val)
-        end
-        if val then
-            if reconType == 'LOSNow' then
-                if self.IntelTriggerList then
-                    for k, v in self.IntelTriggerList do
-                        if EntityCategoryContains(v.Category, blip:GetBlueprint().BlueprintId)
-                            and (not v.Blip or v.Blip == blip:GetSource()) then
-                            v.CallbackFunction(self, blip)
-                            if v.OnceOnly then
-                                self.IntelTriggerList[k] = nil
-                            end
-                        end
                     end
                 end
             end

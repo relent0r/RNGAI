@@ -488,7 +488,7 @@ BuilderGroup {
         InstanceCount = 1,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND - categories.ENGINEER } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER } },
         },
         BuilderData = {
             Avoid        = true,
@@ -534,8 +534,7 @@ BuilderGroup {
         InstanceCount = 30,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -546,6 +545,8 @@ BuilderGroup {
             PlatoonLimit = 18,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL,
+                categories.DEFENSE,
+                categories.FACTORY,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,

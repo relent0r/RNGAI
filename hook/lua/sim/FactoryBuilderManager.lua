@@ -246,7 +246,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                 end
             end
         end
-        RNGLOG('Generated Template is '..repr(template))
+        --RNGLOG('Generated Template is '..repr(template))
         return template
     end,
 

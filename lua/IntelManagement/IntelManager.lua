@@ -710,10 +710,10 @@ IntelManager = Class {
         coroutine.yield(300)
         while self.Brain.Status ~= "Defeat" do
             coroutine.yield(50)
-            self:ForkThread(self.CheckStrikePotential, 'AirAntiSurface', 20)
+            self:ForkThread(self.CheckStrikePotential, 'AirAntiSurface',false, 20)
             self:ForkThread(self.CheckStrikePotential, 'DefensiveAntiSurface')
             self:ForkThread(self.CheckStrikePotential, 'LandAntiSurface')
-            self:ForkThread(self.CheckStrikePotential, 'AirAntiNaval', 20)
+            self:ForkThread(self.CheckStrikePotential, 'AirAntiNaval',false,  20)
         end
     end,
 

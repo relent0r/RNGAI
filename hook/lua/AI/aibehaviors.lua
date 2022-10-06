@@ -1645,8 +1645,12 @@ function CDROverChargeRNG(aiBrain, cdr)
                             cdr.SuicideMode = true
                             snipeAttempt = true
                             local gameTime = GetGameTimeSeconds()
-                            aiBrain.Brain.TacticalMonitor.TacticalMissions.ACUSnipe[acuIndex]['AIR'] = { GameTime = GetGameTimeSeconds(), CountRequired = 4 }
-                            aiBrain.Brain.TacticalMonitor.TacticalMissions.ACUSnipe[acuIndex]['LAND'] = { GameTime = GetGameTimeSeconds(), CountRequired = 4 }
+                            local index = target:GetAIBrain():GetArmyIndex()
+                            if not aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe[index] then
+                                aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe[index] = {}
+                            end
+                            aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe[index]['AIR'] = { GameTime = GetGameTimeSeconds(), CountRequired = 4 }
+                            aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe[index]['LAND'] = { GameTime = GetGameTimeSeconds(), CountRequired = 4 }
                         elseif cdr.SnipeMode then
                             --RNGLOG('Target is not acu, setting default target priorities')
                             SetAcuSnipeMode(cdr, false)
@@ -2586,7 +2590,8 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
         local eta = -1
         local tick = GetGameTick()
         local seconds = GetGameTimeSeconds()
-        local progress = cdr.WorkProgress
+        local progress = cdr:GetWorkProgress()
+        RNGLOG('progress '..repr(progress))
         if lastTick then
             if progress > lastProgress then
                 eta = seconds + ((tick - lastTick) / 10) * ((1-progress)/(progress-lastProgress))
