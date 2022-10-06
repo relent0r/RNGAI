@@ -1462,8 +1462,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
     end,
 
-
-
     ACUSupportRNG = function(self)
         -- Very unfinished. Basic support.
         -- remove those unneeded vars
@@ -1958,7 +1956,10 @@ Platoon = Class(RNGAIPlatoonClass) {
         RNGINSERT(self.atkPri, categories.ALLUNITS)
         RNGINSERT(categoryList, categories.ALLUNITS)
         self:SetPrioritizedTargetList('Attack', categoryList)
-        target = RUtils.ValidateMainBase(self, self:GetSquadUnits('Attack'), aiBrain)
+        target = RUtils.CheckACUSnipe(aiBrain, 'LAND')
+        if not target then
+            target = RUtils.ValidateMainBase(self, self:GetSquadUnits('Attack'), aiBrain)
+        end
         if target then
             --RNGLOG('hunt ai path enemy found within base zones')
         end
@@ -2854,21 +2855,19 @@ Platoon = Class(RNGAIPlatoonClass) {
             platoonUnits = GetPlatoonUnits(self)
             if not target or target.Dead then
                 platoonPosition = GetPlatoonPosition(self)
-                if aiBrain.CDRUnit.EnemyCDRPresent then
-                    --RNGLOG('ACU Fighting CDR, lets help '..self.PlanName)
-                    target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, self, aiBrain.CDRUnit.Position, 'Attack', maxRadius, self.CurrentPlatoonThreat)
-                else
-                    for k, v in aiBrain.EnemyIntel.ACU do
-                        if k ~= aiBrain:GetArmyIndex() then
-                            if v.Ally then
-                                if ArmyBrains[k].RNG and ArmyBrains[k].CDRUnit.EnemyCDRPresent then
-                                    --RNGLOG('Ally RNG ACU fighting CDR and we are not, lets help')
-                                    target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, self, ArmyBrains[k].CDRUnit.Position, 'Attack', maxRadius, self.CurrentPlatoonThreat)
-                                end
+                target = RUtils.CheckACUSnipe(aiBrain, 'LAND')
+                --[[
+                -- This is still useful but I need to find another way to implement it.    
+                for k, v in aiBrain.EnemyIntel.ACU do
+                    if k ~= aiBrain:GetArmyIndex() then
+                        if v.Ally then
+                            if ArmyBrains[k].RNG and ArmyBrains[k].CDRUnit.EnemyCDRPresent then
+                                --RNGLOG('Ally RNG ACU fighting CDR and we are not, lets help')
+                                target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, self, ArmyBrains[k].CDRUnit.Position, 'Attack', maxRadius, self.CurrentPlatoonThreat)
                             end
                         end
                     end
-                end
+                end]]
 
                 if not data.Defensive and (not target or target.Dead) then
                     --RNGLOG('Checking for possible acu snipe')
@@ -3205,21 +3204,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             platoonUnits = GetPlatoonUnits(self)
             if not target or target.Dead then
                 platoonPosition = GetPlatoonPosition(self)
-                if aiBrain.CDRUnit.EnemyCDRPresent then
-                   --RNGLOG('ACU Fighting CDR, lets help')
-                    target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, self, aiBrain.CDRUnit.Position, 'Attack', maxRadius, self.CurrentPlatoonThreat)
-                else
-                    for k, v in aiBrain.EnemyIntel.ACU do
-                        if k ~= aiBrain:GetArmyIndex() then
-                            if v.Ally then
-                                if ArmyBrains[k].RNG and ArmyBrains[k].CDRUnit.EnemyCDRPresent then
-                                   --RNGLOG('Ally RNG ACU fighting CDR and we are not, lets help')
-                                    target = RUtils.AIFindACUTargetInRangeRNG(aiBrain, self, ArmyBrains[k].CDRUnit.Position, 'Attack', maxRadius, self.CurrentPlatoonThreat)
-                                end
-                            end
-                        end
-                    end
-                end
+                target = RUtils.CheckACUSnipe(aiBrain, 'LAND')
                 
                 if not target or target.Dead then
                     --RNGLOG('Standard Target search for strikeforce platoon ')
@@ -10101,6 +10086,21 @@ Platoon = Class(RNGAIPlatoonClass) {
         local function SimplePriority(self,aiBrain)--use the aibrain priority table to do things
             local VDist2Sq = VDist2Sq
             local RNGMAX = math.max
+            local acuSnipeUnit = RUtils.CheckACUSnipe(aiBrain, 'LAND')
+            if acuSnipeUnit then
+                if not acuSnipeUnit.Dead then
+                    local acuTargetPosition = acuSnipeUnit:GetPosition()
+                    self.rdest=acuTargetPosition
+                    self.raidunit=acuSnipeUnit
+                    self.dest=acuTargetPosition
+                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                    self.navigating=true
+                    self.raid=true
+                    --SwitchState(self,'raid')
+                    --RNGLOG('Simple Priority is moving to '..repr(self.dest))
+                    return true
+                end
+            end
             if (not aiBrain.prioritypoints) or RNGGETN(aiBrain.prioritypoints)==0 then
                 return false
             end

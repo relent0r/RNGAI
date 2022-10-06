@@ -1644,6 +1644,9 @@ function CDROverChargeRNG(aiBrain, cdr)
                             cdr.SnipeMode = true
                             cdr.SuicideMode = true
                             snipeAttempt = true
+                            local gameTime = GetGameTimeSeconds()
+                            aiBrain.Brain.TacticalMonitor.TacticalMissions.ACUSnipe[acuIndex]['AIR'] = { GameTime = GetGameTimeSeconds(), CountRequired = 4 }
+                            aiBrain.Brain.TacticalMonitor.TacticalMissions.ACUSnipe[acuIndex]['LAND'] = { GameTime = GetGameTimeSeconds(), CountRequired = 4 }
                         elseif cdr.SnipeMode then
                             --RNGLOG('Target is not acu, setting default target priorities')
                             SetAcuSnipeMode(cdr, false)

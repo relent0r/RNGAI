@@ -4922,3 +4922,42 @@ CDRWeaponCheckRNG = function (aiBrain, cdr)
         end
     end
 end
+
+CheckACUSnipe = function(aiBrain, layerType)
+    local potentialTarget = false
+    local requiredCount = 0
+    for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
+        if layerType == 'LAND' then
+            if v.LAND and v.LAND.GameTime then
+                if v.LAND.GameTime + 500 > GetGameTimeSeconds() then
+                    if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
+                        potentialTarget = aiBrain.EnemyIntel.ACU[k].Unit
+                        requiredCount = v.LAND.CountRequired
+                        break
+                    end
+                end
+            end
+        elseif layerType == 'AIR' then
+            if v.AIR and v.AIR.GameTime then
+                if v.AIR.GameTime + 500 > GetGameTimeSeconds() then
+                    if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
+                        potentialTarget = aiBrain.EnemyIntel.ACU[k].Unit
+                        requiredCount = v.AIR.CountRequired
+                        break
+                    end
+                end
+            end
+        elseif layerType == 'AIRANTINAVY' then
+            if v.AIR and v.AIR.GameTime then
+                if v.AIR.GameTime + 500 > GetGameTimeSeconds() then
+                    if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
+                        potentialTarget = aiBrain.EnemyIntel.ACU[k].Unit
+                        requiredCount = v.AIR.CountRequired
+                        break
+                    end
+                end
+            end
+        end
+    end
+    return potentialTarget
+end
