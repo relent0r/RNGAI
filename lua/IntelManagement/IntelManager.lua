@@ -996,7 +996,7 @@ IntelManager = Class {
             end
             if minThreatRisk > 0 then
                 for k, v in self.Brain.EnemyIntel.ACU do
-                    if not v.Ally and v.HP ~= 0 and v.Position[1] then
+                    if not v.Ally and v.HP ~= 0 and v.Position[1] and v.LastSpotted + 120 > gameTime then
                         if minThreatRisk >= 50 and VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase /2) then
                             RNGLOG('ACU ClosestEnemy base distance is '..(self.Brain.EnemyIntel.ClosestEnemyBase /2))
                             RNGLOG('ACU Distance from start position '..VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos))
@@ -1010,7 +1010,11 @@ IntelManager = Class {
                                 self.MapIntelGrid[gridX][gridZ].ACUIndexes[k] = true
                                 --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(self.MapIntelGrid[gridX][gridY]))
                             end
-                            desiredStrikeDamage = desiredStrikeDamage + 4000
+                            if v.HP < 5000 then
+                                desiredStrikeDamage = desiredStrikeDamage + v.HP
+                            else
+                                desiredStrikeDamage = desiredStrikeDamage + 4000
+                            end
                             RNGLOG('Adding ACU to potential strike target')
                             table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'ACU', Index = k} )
                         end
@@ -1110,9 +1114,14 @@ IntelManager = Class {
                 end
                 RNGLOG('Closest enemy base '..self.Brain.EnemyIntel.ClosestEnemyBase)
                 RNGLOG('Cutoff distance '..(self.Brain.EnemyIntel.ClosestEnemyBase / 3))
-                if not v.Ally and v.Position[1] and v.LastSpotted + 120 > gameTime then
+                if not v.Ally and v.Position[1] and v.HP ~= 0 and v.LastSpotted + 120 > gameTime then
                     if VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase / 3) then
                         local gridX, gridZ = self:GetIntelGrid(v.Position)
+                        if v.HP < 4000 then
+                            desiredStrikeDamage = desiredStrikeDamage + v.HP
+                        else
+                            desiredStrikeDamage = desiredStrikeDamage + 4000
+                        end
                         desiredStrikeDamage = desiredStrikeDamage + 4000
                         table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'ACU', Index = k} )
                     end
@@ -1146,7 +1155,11 @@ IntelManager = Class {
                                         self.MapIntelGrid[gridX][gridZ].ACUIndexes[k] = true
                                         --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(self.MapIntelGrid[gridX][gridY]))
                                     end
-                                    desiredStrikeDamage = desiredStrikeDamage + 4000
+                                    if v.HP < 4000 then
+                                        desiredStrikeDamage = desiredStrikeDamage + v.HP
+                                    else
+                                        desiredStrikeDamage = desiredStrikeDamage + 4000
+                                    end
                                     RNGLOG('Adding ACU to potential strike target')
                                     table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'ACU', Index = k} )
                                 end
