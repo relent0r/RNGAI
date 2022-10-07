@@ -6,7 +6,7 @@ PlatoonTemplate {
     Name = 'RNGAI AntiAirHunt',
     Plan = 'AirHuntAIRNG',
     GlobalSquads = {
-        { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.GROUNDATTACK - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 1, 100, 'Attack', 'none' },
+        { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.GROUNDATTACK - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.ANTINAVY, 1, 100, 'Attack', 'none' },
         { categories.AIR * categories.SCOUT * (categories.TECH1 + categories.TECH3), 0, 1, 'scout', 'None' },
     }
 }
@@ -76,7 +76,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI MercyAttack',
-    Plan = 'MercyAIRNG',
+    Plan = 'PlatoonMergeRNG',
     GlobalSquads = {
         { categories.daa0206 , 2, 3, 'Attack', 'none' },
     }
@@ -84,7 +84,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI TorpBomberAttack',
-    Plan = 'AirHuntAIRNG',
+    Plan = 'AirTorpAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.AIR * categories.ANTINAVY - categories.EXPERIMENTAL, 1, 50, 'Attack', 'GrowthFormation' },
     }
@@ -325,32 +325,24 @@ PlatoonTemplate {
         UEF = {
             { 'uea0304', 1, 1, 'Artillery', 'none' },      -- Strategic Bomber
             { 'uea0302', 1, 1, 'Attack', 'none' },      -- Scout
-            { 'uea0303', 1, 1, 'Attack', 'none' },      -- Air Superiority Fighter
-            { 'uea0302', 1, 2, 'Attack', 'none' },      -- Scout
             { 'uea0303', 1, 1, 'Attack', 'none' },   -- Air Superiority Fighter
             { 'uea0305', 1, 1, 'Guard', 'none' },   -- Gunship
          },
         Aeon = {
             { 'uaa0304', 1, 1, 'Artillery', 'none' },      -- Strategic Bomber
             { 'uaa0302', 1, 1, 'Attack', 'none' },      -- Scout
-            { 'uaa0303', 1, 1, 'Attack', 'none' },      -- Air Superiority Fighter
-            { 'uaa0302', 1, 2, 'Attack', 'none' },      -- Scout
             { 'uaa0303', 1, 1, 'Attack', 'none' },   -- Air Superiority Fighter
             { 'xaa0305', 1, 1, 'Guard', 'none' },   -- Gunship
         },
         Cybran = {
             { 'ura0304', 1, 1, 'Artillery', 'none' },      -- Strategic Bomber
             { 'ura0302', 1, 1, 'Attack', 'none' },      -- Scout
-            { 'ura0303', 1, 1, 'Attack', 'none' },      -- Air Superiority Fighter
-            { 'ura0302', 1, 2, 'Attack', 'none' },      -- Scout
             { 'ura0303', 1, 1, 'Attack', 'none' },   -- Air Superiority Fighter
             { 'xra0305', 1, 1, 'Guard', 'none' },   -- Gunship
         },
         Seraphim = {
             { 'xsa0304', 1, 1, 'Artillery', 'none' },       -- Strategic Bomber
             { 'xsa0302', 1, 1, 'Attack', 'none' },      -- Scout
-            { 'xsa0303', 1, 1, 'Attack', 'none' },      -- Air Superiority Fighter
-            { 'xsa0302', 1, 2, 'Attack', 'none' },      -- Scout
             { 'xsa0303', 1, 1, 'Attack', 'none' },   -- Air Superiority Fighter
         },
     }

@@ -812,6 +812,7 @@ GameMap = Class({
 
 local map = GameMap()
 local zoneSets = {}
+local RNGAIMarkerTable = {}
 
 local DEFAULT_BORDER = 4
 function BeginSession()
@@ -846,10 +847,64 @@ function BeginSession()
     else
        --RNGLOG("FlowAI framework: No custom zoning classes found.")
     end
+    --GenerateMapMarkers()
+end
+
+function GenerateMapMarkers()
+    local WantedGridCellSize = math.floor( math.max( ScenarioInfo.size[1], ScenarioInfo.size[2] ) / 32)
+    local AIMarkerGenerator = import('/mods/AI-Uveso/lua/AI/AIMarkerGenerator.lua')
+    AIMarkerGenerator.InitMarkerGenerator()
+    AIMarkerGenerator.BuildTerrainPathMap()
+    -- Set grid cell size for air (half the size than normal layers)
+    AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize * 2)
+    AIMarkerGenerator.CreateMarkerGrid("Air")
+    AIMarkerGenerator.ConnectMarkerWithPathing("Air")
+    AIMarkerGenerator.BuildGraphAreas("Air")
+    RNGAIMarkerTable["Air"] = AIMarkerGenerator.GetMarkerTable("Air")
+
+    -- Set grid cell size for land
+    AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize)
+    AIMarkerGenerator.CreateMarkerGrid("Land")
+    AIMarkerGenerator.ConnectMarkerWithPathing("Land")
+    AIMarkerGenerator.BuildGraphAreas("Land")
+    RNGAIMarkerTable["Land"] = AIMarkerGenerator.GetMarkerTable("Land")
+
+    -- Set grid cell size for water
+    AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize)
+    AIMarkerGenerator.CreateMarkerGrid("Water")
+    AIMarkerGenerator.ConnectMarkerWithPathing("Water")
+    AIMarkerGenerator.BuildGraphAreas("Water")
+    RNGAIMarkerTable["Water"] = AIMarkerGenerator.GetMarkerTable("Water")
+
+    -- Set grid cell size for amphibious
+    AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize)
+    AIMarkerGenerator.CreateMarkerGrid("Amphibious")
+    AIMarkerGenerator.ConnectMarkerWithPathing("Amphibious")
+    AIMarkerGenerator.BuildGraphAreas("Amphibious")
+    RNGAIMarkerTable["Amphibious"] = AIMarkerGenerator.GetMarkerTable("Amphibious")
+
+    -- Set grid cell size for hover
+    AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize)
+    AIMarkerGenerator.CreateMarkerGrid("Hover")
+    AIMarkerGenerator.ConnectMarkerWithPathing("Hover")
+    AIMarkerGenerator.BuildGraphAreas("Hover")
+    RNGAIMarkerTable["Hover"] = AIMarkerGenerator.GetMarkerTable("Hover")
+    
+    --create naval Areas
+    RNGAIMarkerTable["NavalExpansions"] = AIMarkerGenerator.CreateNavalExpansions()
+
+    --create land expansions
+    RNGAIMarkerTable["LandExpansions"] = AIMarkerGenerator.CreateLandExpansions()
+    LOG('Generated Land Expansions'..repr(RNGAIMarkerTable.LandExpansions))
+
 end
 
 function GetMap()
     return map
+end
+
+function GetMapMarkers()
+    return RNGAIMarkerTable
 end
 
 function GetPlayableAreaRNG()
@@ -867,9 +922,10 @@ function GetMarkersRNG()
 end
 
 function SetMarkerInformation(aiBrain)
-    --RNGLOG('Display Marker Adjacency Running')
+    local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+    --RNGLOG('Display Marker Adjacency Running '..aiBrain.Nickname)
     while not aiBrain.ZonesInitialized do
-        --RNGLOG('Waiting for Zones to Initialize')
+        RNGLOG('Waiting for Zones to Initialize '..aiBrain.Nickname)
         coroutine.yield(20)
     end
     local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
@@ -877,6 +933,7 @@ function SetMarkerInformation(aiBrain)
     aiBrain.RNGAreas={}
     aiBrain.armyspots={}
     aiBrain.expandspots={}
+    --RNGLOG('Infecting expansions '..aiBrain.Nickname)
     for k,marker in expansionMarkers do
         local node=false
         local expand=false
@@ -910,6 +967,7 @@ function SetMarkerInformation(aiBrain)
     end
     --WaitSeconds(10)
     --RNGLOG('colortable is'..repr(tablecolors))
+    --RNGLOG('Infecting armyspots '..aiBrain.Nickname)
     local bases=false
     if bases then
         for _,army in aiBrain.armyspots do
@@ -923,15 +981,23 @@ function SetMarkerInformation(aiBrain)
             local astartX, astartZ = v:GetArmyStartPos()
             local army = {position={astartX, GetTerrainHeight(astartX, astartZ), astartZ},army=i,brain=v}
             table.sort(aiBrain.expandspots,function(a,b) return VDist3Sq(a[1].position,army.position)<VDist3Sq(b[1].position,army.position) end)
-            local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(aiBrain.expandspots[1][1].position,25,'Land').name]
+            local closestpath
+            if RUtils.PositionInWater(aiBrain.expandspots[1][1].position) then
+                closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(aiBrain.expandspots[1][1].position,25,'Water').name]
+            else
+                closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(aiBrain.expandspots[1][1].position,25,'Land').name]
+            end
             --RNGLOG('closestpath is '..repr(closestpath))
+            --RNGLOG('bases is false')
             aiBrain.renderthreadtracker=ForkThread(DoArmySpotDistanceInfect,aiBrain,closestpath,aiBrain.expandspots[1][2])
         end
     end
+    --RNGLOG('loop through armybrains complete '..aiBrain.Nickname)
     local expands=true
     while aiBrain.renderthreadtracker do
         coroutine.yield(2)
     end
+    --RNGLOG('loop through expandspots '..aiBrain.Nickname)
     if expands then
         --tablecolors=GenerateDistinctColorTable(RNGGETN(aiBrain.expandspots))
        --RNGLOG('Running Expansion spot checks for rngarea')
@@ -947,6 +1013,7 @@ function SetMarkerInformation(aiBrain)
     end
     local massPointCount = 0
    --RNGLOG('Running mass spot checks for rngarea')
+   --RNGLOG('Infecting mass points '..aiBrain.Nickname)
     for _, mass in AdaptiveResourceMarkerTableRNG do
         if mass.type == 'Mass' then
             massPointCount = massPointCount + 1
@@ -962,6 +1029,7 @@ function SetMarkerInformation(aiBrain)
     --for k,v in aiBrain.RNGAreas do
     --  --LOG(repr(k)..' has '..repr(RNGGETN(v))..' nodes')
     --end
+    --RNGLOG('Setting GraphZones and MarkersInfectedRNG '..aiBrain.Nickname)
     if aiBrain.GraphZones.FirstRun then
         aiBrain.GraphZones.FirstRun = false
     end
@@ -986,7 +1054,10 @@ function DoArmySpotDistanceInfect(aiBrain,marker,army)
     aiBrain.renderthreadtracker=CurrentThread()
     coroutine.yield(1)
     --DrawCircle(marker.position,5,'FF'..aiBrain.analysistablecolors[army])
-    if not marker then return end
+    if not marker then 
+        WARN('No marker sent to DoArmySpotDistanceInfect, is there a marker available in that movement layer?')
+        return 
+    end
     if not marker.armydists then
         marker.armydists={}
     end
@@ -994,6 +1065,7 @@ function DoArmySpotDistanceInfect(aiBrain,marker,army)
         marker.armydists[army]=0
     end
     local potentialdists={}
+    --RNGLOG('doarmyspotdistanceinfect start loop')
     for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
         if node=='' then continue end
         local adjnode=Scenario.MasterChain._MASTERCHAIN_.Markers[node]
@@ -1025,6 +1097,7 @@ function DoArmySpotDistanceInfect(aiBrain,marker,army)
             ForkThread(DoArmySpotDistanceInfect,aiBrain,adjnode,army)
         end
     end
+    --RNGLOG('doarmyspotdistanceinfect end loop')
     for k,v in marker.armydists do
         if potentialdists[k]<v then
             v=potentialdists[k]
@@ -1136,4 +1209,44 @@ function DoMassPointInfect(aiBrain,marker,masspoint)
     if aiBrain.renderthreadtracker==CurrentThread() then
         aiBrain.renderthreadtracker=nil
     end
+end
+
+function SetValidNavalMarkers(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
+    local closest = false
+    local retPos, retName
+    local positions = AIFilterAlliedBases(aiBrain, positions)
+    local graphZones = {}
+    for _, v in aiBrain.GraphZones do
+        for _, c in aiBrain.BrainIntel.EnemyStartLocations do
+            if string.find(v, 'Naval') then
+                local position, marker, distance = AIGetClosestPathExpansionMarkerLocationRNG(aiBrain, 'Naval', c.Position)
+                table.insert({MarkerName = marker, Distance = distance }, graphZones)
+            end
+        end
+    end
+    return graphZones
+end
+-- This will replace the aiutilities version soon. Its not ready yet.
+function AIGetClosestPathExpansionMarkerLocationRNG(aiBrain, markerType, position)
+    local markers = RNGAIMarkerTable
+    local markerList = {}
+    if markers then
+        for k, v in markers do
+            if v.type == markerType then
+                table.insert(markerList, {Position = v.position, Name = k})
+            end
+        end
+    end
+
+    local loc, distance, lowest, name = nil
+    for _, v in markerList do
+        distance = VDist3Sq(position, v.Position)
+        if not lowest or distance < lowest then
+            loc = v.Position
+            name = v.Name
+            lowest = distance
+        end
+    end
+
+    return loc, name, lowest
 end

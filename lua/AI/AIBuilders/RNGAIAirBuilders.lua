@@ -113,6 +113,9 @@ local BomberResponse = function(self, aiBrain, builderManager, builderData)
         --RNGLOG('Bomber Response for Perimeter Monitor is true')
         return 920
     end
+    if aiBrain.CDRUnit.SuicideMode then
+        return 920
+    end
     return 0
 end
 
@@ -176,6 +179,7 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T2',
     BuildersType = 'FactoryBuilder',
+    --[[
     Builder {
         BuilderName = 'RNGAI Air Attack Queue T2',
         PlatoonTemplate = 'RNGAIT2AirQueue',
@@ -190,7 +194,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 2
         },
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI Factory Intie Enemy Threat T2',
         PlatoonTemplate = 'RNGAIT2FighterAeon',
@@ -242,19 +246,6 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.AIR * categories.TECH3 }},
         },
     },]]
-    Builder {
-        BuilderName = 'RNGAI T2 Air Mercy',
-        PlatoonTemplate = 'T2AirMissile',
-        Priority = 750,
-        BuilderType = 'Air',
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'ACUOnField', {false} },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.AIR * categories.TECH2 * categories.daa0206} },
-        },
-    },
     Builder {
         BuilderName = 'RNGAI T2 Torp Bomber',
         PlatoonTemplate = 'T2AirTorpedoBomber',
@@ -326,6 +317,8 @@ BuilderGroup {
         InstanceCount = 4,
         BuilderType = 'Any',
         BuilderData = {
+            PlatoonPlan = 'MercyAIRNG',
+            Location = 'LocationType',
             SearchRadius = BaseEnemyArea,
             PrioritizedCategories = {
                 categories.COMMAND,
@@ -333,8 +326,7 @@ BuilderGroup {
             },
         },
         BuilderConditions = {
-            { UCBC, 'ACUOnField', {false} },
-            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 3, categories.daa0206 } },
+            { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.daa0206 } },
         },
     },
     Builder {
@@ -344,13 +336,14 @@ BuilderGroup {
         InstanceCount = 4,
         BuilderType = 'Any',
         BuilderData = {
-            SearchRadius = BaseMilitaryArea,
+            SearchRadius = BaseEnemyArea,
             UnitType = 'TORPEDO',
             PrioritizedCategories = {
                 categories.COMMAND,
                 categories.EXPERIMENTAL,
                 categories.NAVAL * categories.TECH3 * (categories.MOBILE + categories.STRUCTURE ),
                 categories.NAVAL * categories.TECH2 * (categories.MOBILE + categories.STRUCTURE ),
+                categories.DEFENSE * categories.ANTIAIR,
                 categories.NAVAL * categories.TECH1 * (categories.MOBILE + categories.STRUCTURE ),
                 categories.STRUCTURE * categories.SONAR,
                 categories.AMPHIBIOUS - categories.HOVER,
@@ -595,7 +588,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Bomber Attack Excess',
         PlatoonTemplate = 'RNGAI BomberAttack',
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 700,
         InstanceCount = 20,
         BuilderType = 'Any',        
@@ -929,7 +921,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGEXP Bomber Attack Excess',
         PlatoonTemplate = 'RNGAI BomberAttack',
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 700,
         InstanceCount = 20,
         BuilderType = 'Any',        

@@ -28,11 +28,11 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
 
         if not self.UseCenterPoint then
             -- Find closest marker to averaged location
-            rally = AIUtils.AIGetClosestMarkerLocation(self, rallyType, position[1], position[3])
+            rally = AIUtils.AIGetClosestMarkerLocationRNG(self, rallyType, position[1], position[3])
         elseif self.UseCenterPoint then
             -- use BuilderManager location
-            rally = AIUtils.AIGetClosestMarkerLocation(self, rallyType, position[1], position[3])
-            local expPoint = AIUtils.AIGetClosestMarkerLocation(self, 'Expansion Area', position[1], position[3])
+            rally = AIUtils.AIGetClosestMarkerLocationRNG(self, rallyType, position[1], position[3])
+            local expPoint = AIUtils.AIGetClosestMarkerLocationRNG(self, 'Expansion Area', position[1], position[3])
 
             if expPoint and rally then
                 local rallyPointDistance = VDist2(position[1], position[3], rally[1], rally[3])
@@ -82,6 +82,11 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                 end
             else
                 --RNGLOG('No Rally Point Found. Setting Random Location')
+                local locationType = self.LocationType
+                local factoryPos = self.Brain.BuilderManagers[locationType].Position
+                local startDistance = VDist3(self.Brain.MapCenterPoint, factoryPos)
+                position = RUtils.lerpy(self.Brain.MapCenterPoint, factoryPos, {startDistance, startDistance - 60})
+                --RNGLOG('Position '..repr(position))
                 position = AIUtils.RandomLocation(position[1],position[3])
             end
             rally = position
@@ -110,6 +115,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         if factory.DelayThread then
             return
         end
+        --self:GenerateInitialQueue('InitialBuildQueueRNG', factory)
         factory.DelayThread = true
         coroutine.yield(math.random(10,30))
         factory.DelayThread = false
@@ -201,6 +207,403 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         end
         self.LocationActive = false
         --self.Brain:RemoveConsumption(self.LocationType, factory)
+    end,
+
+    GenerateInitialBuildQueue = function(self, templateName, factory)
+        --RNGLOG('Generating Intial Queue for build')
+        local faction = self:GetFactoryFaction(factory)
+        --RNGLOG('Faction is '..faction)
+        local backupqueue = {
+            'T1BuildEngineer',
+            'T1LandScout',
+            'T1LandDFTank',
+            'T1LandArtillery',
+            'T1LandAA',
+        }
+        local queue = self:GenerateInitialBO(factory)
+        if not queue then
+            queue = backupqueue
+        end
+        if self.Brain.RNGDEBUG then
+            RNGLOG('Queue in GenerateInitialBuildOrder is '..repr(queue))
+        end
+        local template = {
+            'InitialBuildQueueRNG',
+            '',
+        }
+        for k, v in queue do
+            local templateData = PlatoonTemplates[v]
+            local customData = self.Brain.CustomUnits[v]
+            for c, b in templateData.FactionSquads[faction] do
+                if customData and customData[faction] then
+                    -- LOG('*AI DEBUG: Replacement unit found!')
+                    local replacement = self:GetCustomReplacement(b, v, faction)
+                    if replacement then
+                        table.insert(template, replacement)
+                    else
+                        table.insert(template, b)
+                    end
+                else
+                    table.insert(template, b)
+                end
+            end
+        end
+        --RNGLOG('Generated Template is '..repr(template))
+        return template
+    end,
+
+    GenerateInitialBO = function(self, factory)
+        --RNGLOG('GenerateInitialBO')
+        local faction = self:GetFactoryFaction(factory)
+        local queue = {
+            'T1BuildEngineer',
+            'T1BuildEngineer',
+        }
+        if faction then
+            local mapSizeX, mapSizeZ = GetMapSize()
+            --RNGLOG('Map Size is X '..mapSizeX..' Z '..mapSizeZ)
+            local OwnIndex = ArmyBrains[self.Brain:GetArmyIndex()].Nickname
+            local EnemyIndex = ArmyBrains[self.Brain:GetCurrentEnemy():GetArmyIndex()].Nickname
+            if mapSizeX >= 4000 and mapSizeZ >= 4000 then
+                --RNGLOG('20 KM Map Check true')
+                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                    for i=1, 4 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    if faction == 'SERAPHIM' then
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    else
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    end
+                    if self.Brain.BrainIntel.RestrictedMassMarker > 6 then
+                        for i=1, 4 do
+                            table.insert(queue, 'T1BuildEngineer')
+                        end
+                    end
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
+                else
+                    for i=1, 6 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    table.insert(queue, 'T1LandScout')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
+                end
+                table.insert(queue, 'T1LandScout')
+                table.insert(queue, 'T1LandScout')
+            elseif mapSizeX >= 2000 and mapSizeZ >= 2000 then
+                --RNGLOG('20 KM Map Check true')
+                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                    for i=1, 4 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    if faction == 'SERAPHIM' then
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    else
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    end
+                    if self.Brain.BrainIntel.RestrictedMassMarker > 6 then
+                        for i=1, 4 do
+                            table.insert(queue, 'T1BuildEngineer')
+                        end
+                    end
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
+                else
+                    for i=1, 6 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    table.insert(queue, 'T1LandScout')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
+                    table.insert(queue, 'T1LandAA')
+                end
+                table.insert(queue, 'T1LandScout')
+                table.insert(queue, 'T1LandScout')
+            elseif mapSizeX >= 1000 and mapSizeZ >= 1000 then
+                --RNGLOG('20 KM Map Check true')
+                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                    for i=1, 2 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    if faction == 'SERAPHIM' then
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    else
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    end
+                    if self.Brain.BrainIntel.RestrictedMassMarker > 6 then
+                        for i=1, 4 do
+                            table.insert(queue, 'T1BuildEngineer')
+                        end
+                    end
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
+                else
+                    for i=1, 4 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    table.insert(queue, 'T1LandScout')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
+                end
+                table.insert(queue, 'T1LandScout')
+                table.insert(queue, 'T1LandScout')
+            elseif mapSizeX >= 500 and mapSizeZ >= 500 then
+                --RNGLOG('10 KM Map Check true')
+                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                    for i=1, 1 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    if faction == 'SERAPHIM' then
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    else
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    end
+                    if self.Brain.BrainIntel.RestrictedMassMarker > 6 then
+                        for i=1, 2 do
+                            table.insert(queue, 'T1BuildEngineer')
+                        end
+                    end
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1BuildEngineer')
+                    if self.Brain.BrainIntel.RestrictedMassMarker > 8 then
+                        for i=1, 2 do
+                            table.insert(queue, 'T1BuildEngineer')
+                        end
+                    end
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
+                    table.insert(queue, 'T1LandScout')
+                else
+                    for i=1, 3 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    table.insert(queue, 'T1LandScout')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
+                    table.insert(queue, 'T1BuildEngineer')
+                    if self.Brain.BrainIntel.RestrictedMassMarker > 8 then
+                        for i=1, 2 do
+                            table.insert(queue, 'T1BuildEngineer')
+                        end
+                    end
+                    table.insert(queue, 'T1LandAA')
+                end
+                table.insert(queue, 'T1LandScout')
+                table.insert(queue, 'T1LandScout')
+            elseif mapSizeX >= 200 and mapSizeZ >= 200 then
+                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                    for i=1, 1 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    if faction == 'SERAPHIM' then
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    else
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFBot')
+                        table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandScout')
+                    end
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
+                    table.insert(queue, 'T1LandScout')
+                else
+                    for i=1, 3 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    table.insert(queue, 'T1LandScout')
+                    table.insert(queue, 'T1LandDFTank')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandArtillery')
+                    table.insert(queue, 'T1LandAA')
+                    table.insert(queue, 'T1BuildEngineer')
+                    table.insert(queue, 'T1LandAA')
+                end
+                table.insert(queue, 'T1LandScout')
+                table.insert(queue, 'T1LandScout')
+            else
+                queue = {
+                    'T1BuildEngineer',
+                    'T1BuildEngineer',
+                    'T1BuildEngineer',
+                    'T1LandDFTank',
+                    'T1LandScout',
+                    'T1LandDFTank',
+                    'T1LandDFTank',
+                    'T1LandScout',
+                    'T1LandDFTank',
+                    'T1BuildEngineer',
+                    'T1BuildEngineer',
+                    'T1LandDFTank',
+                    'T1LandDFTank',
+                    'T1LandDFTank',
+                    'T1LandArtillery',
+                    'T1LandAA',
+                    'T1LandScout',
+                    'T1LandScout',
+                    'T1LandScout',
+                }
+            end
+            return queue
+        end
+        return false
+    end,
+
+    GetFactoryTemplate = function(self, templateName, factory)
+        if not self.Brain.RNG then
+            return RNGFactoryBuilderManager.GetFactoryTemplate(self, templateName, factory)
+        end
+        local template
+        if templateName == 'InitialBuildQueueRNG' then
+            template = self:GenerateInitialBuildQueue(templateName, factory)
+
+        else
+            local templateData = PlatoonTemplates[templateName]
+            if not templateData then
+                SPEW('*AI WARNING: No templateData found for template '..templateName..'. ')
+                return false
+            end
+            if not templateData.FactionSquads then
+                SPEW('*AI ERROR: PlatoonTemplate named: ' .. templateName .. ' does not have a FactionSquads')
+                return false
+            end
+            template = {
+                templateData.Name,
+                '',
+            }
+
+            local faction = self:GetFactoryFaction(factory)
+            local customData = self.Brain.CustomUnits[templateName]
+            if faction and templateData.FactionSquads[faction] then
+                for k,v in templateData.FactionSquads[faction] do
+                    if customData and customData[faction] then
+                        -- LOG('*AI DEBUG: Replacement unit found!')
+                        local replacement = self:GetCustomReplacement(v, templateName, faction)
+                        if replacement then
+                            table.insert(template, replacement)
+                        else
+                            table.insert(template, v)
+                        end
+                    else
+                        table.insert(template, v)
+                    end
+                end
+            elseif faction and customData and customData[faction] then
+                --LOG('*AI DEBUG: New unit found for '..templateName..'!')
+                local Squad = nil
+                if templateData.FactionSquads then
+                    -- get the first squad from the template
+                    for k,v in templateData.FactionSquads do
+                        -- use this squad as base template for the replacement
+                        Squad = table.copy(v[1])
+                        -- flag this template as dummy
+                        Squad[1] = "NoOriginalUnit"
+                        break
+                    end
+                end
+                -- if we don't have a template use a dummy.
+                if not Squad then
+                    -- this will only happen if we have a empty template. Warn the programmer!
+                    SPEW('*AI WARNING: No faction squad found for '..templateName..'. using Dummy! '..repr(templateData.FactionSquads) )
+                    Squad = { "NoOriginalUnit", 1, 1, "attack", "none" }
+                end
+                local replacement = self:GetCustomReplacement(Squad, templateName, faction)
+                if replacement then
+                    table.insert(template, replacement)
+                end
+            end
+        end
+        return template
     end,
 
 }

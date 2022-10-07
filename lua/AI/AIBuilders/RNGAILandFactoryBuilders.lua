@@ -70,6 +70,20 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI LandBuilder T2',
     BuildersType = 'FactoryBuilder',
     Builder {
+        BuilderName = 'RNGAI T2 MobileBomb',
+        PlatoonTemplate = 'T2MobileBombs',
+        Priority = 891,
+        BuilderConditions = {
+            { UCBC, 'UnitBuildDemand', {'Land', 'T2', 'mobilebomb'} },
+            { EBC, 'FactorySpendRatioRNG', {'Land'}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 2
+        },
+    },
+    Builder {
         BuilderName = 'RNGAI T2 Tank',
         PlatoonTemplate = 'T2LandDFTank',
         Priority = 750,
@@ -132,11 +146,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 MML',
         PlatoonTemplate = 'T2LandArtillery',
-        Priority = 748,
+        Priority = 750,
         BuilderConditions = {
+            { UCBC, 'UnitBuildDemand', {'Land', 'T2', 'mml'} },
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'mml'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',

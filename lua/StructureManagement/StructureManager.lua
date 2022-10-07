@@ -182,7 +182,6 @@ StructureManager = Class {
         -- So I might need to manage that somewhere else
         -- Or maybe we should just use getlistofunits instead but then we won't know which base they are in.. tbd
         coroutine.yield(Random(5,20))
-        local ALLBPS = __blueprints
         while true do
             -- Create a table rather than a million locals
             local FactoryData = {
@@ -250,73 +249,74 @@ StructureManager = Class {
             for k, manager in self.Brain.BuilderManagers do
                 if manager.FactoryManager.FactoryList and RNGGETN(manager.FactoryManager.FactoryList) > 0 then
                     for c, unit in manager.FactoryManager.FactoryList do
+                        local unitCat = unit.Blueprint.CategoriesHash
                         if not unit.Dead and not unit:BeenDestroyed() then
-                            if ALLBPS[unit.UnitId].CategoriesHash.LAND then
-                                if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
+                            if unitCat.LAND then
+                                if unitCat.TECH1 then
                                     RNGINSERT(FactoryData.T1LAND, unit)
                                     if unit:IsUnitState('Upgrading') then
                                         FactoryData.T1LANDUpgrading = FactoryData.T1LANDUpgrading + 1
                                     end
                                     FactoryData.TotalT1LAND = FactoryData.TotalT1LAND + 1
-                                elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
+                                elseif unitCat.TECH2 then
                                     RNGINSERT(FactoryData.T2LAND, unit)
-                                    if not ALLBPS[unit.UnitId].CategoriesHash.SUPPORTFACTORY then
+                                    if not unitCat.SUPPORTFACTORY then
                                         FactoryData.T2LANDHQCount[unit.UnitId] = FactoryData.T2LANDHQCount[unit.UnitId] + 1
                                     end
                                     if unit:IsUnitState('Upgrading') then
                                         FactoryData.T2LANDUpgrading = FactoryData.T2LANDUpgrading + 1
                                     end
                                     FactoryData.TotalT2LAND = FactoryData.TotalT2LAND + 1
-                                elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
+                                elseif unitCat.TECH3 then
                                     RNGINSERT(FactoryData.T3LAND, unit)
-                                    if not ALLBPS[unit.UnitId].CategoriesHash.SUPPORTFACTORY then
+                                    if not unitCat.SUPPORTFACTORY then
                                         FactoryData.T3LANDHQCount[unit.UnitId] = FactoryData.T3LANDHQCount[unit.UnitId] + 1
                                     end
                                     FactoryData.TotalT3LAND = FactoryData.TotalT3LAND + 1
                                 end
-                            elseif ALLBPS[unit.UnitId].CategoriesHash.AIR then
-                                if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
+                            elseif unitCat.AIR then
+                                if unitCat.TECH1 then
                                     RNGINSERT(FactoryData.T1AIR, unit)
                                     if unit:IsUnitState('Upgrading') then
                                         FactoryData.T1AIRUpgrading = FactoryData.T1AIRUpgrading + 1
                                     end
                                     FactoryData.TotalT1AIR = FactoryData.TotalT1AIR + 1
-                                elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
+                                elseif unitCat.TECH2 then
                                     RNGINSERT(FactoryData.T2AIR, unit)
-                                    if not ALLBPS[unit.UnitId].CategoriesHash.SUPPORTFACTORY then
+                                    if not unitCat.SUPPORTFACTORY then
                                         FactoryData.T2AIRHQCount[unit.UnitId] = FactoryData.T2AIRHQCount[unit.UnitId] + 1
                                     end
                                     if unit:IsUnitState('Upgrading') then
                                         FactoryData.T2AIRUpgrading = FactoryData.T2AIRUpgrading + 1
                                     end
                                     FactoryData.TotalT2AIR = FactoryData.TotalT2AIR + 1
-                                elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
+                                elseif unitCat.TECH3 then
                                     RNGINSERT(FactoryData.T3AIR, unit)
-                                    if not ALLBPS[unit.UnitId].CategoriesHash.SUPPORTFACTORY then
+                                    if not unitCat.SUPPORTFACTORY then
                                         FactoryData.T3AIRHQCount[unit.UnitId] = FactoryData.T3AIRHQCount[unit.UnitId] + 1
                                     end
                                     FactoryData.TotalT3AIR = FactoryData.TotalT3AIR + 1
                                 end
 
-                            elseif ALLBPS[unit.UnitId].CategoriesHash.NAVAL then
-                                if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
+                            elseif unitCat.NAVAL then
+                                if unitCat.TECH1 then
                                     RNGINSERT(FactoryData.T1NAVAL, 1, unit)
                                     if unit:IsUnitState('Upgrading') then
                                         FactoryData.T1NAVALUpgrading = FactoryData.T1NAVALUpgrading + 1
                                     end
                                     FactoryData.TotalT1NAVAL = FactoryData.TotalT1NAVAL + 1
-                                elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
+                                elseif unitCat.TECH2 then
                                     RNGINSERT(FactoryData.T2NAVAL, unit)
-                                    if not ALLBPS[unit.UnitId].CategoriesHash.SUPPORTFACTORY then
+                                    if not unitCat.SUPPORTFACTORY then
                                         FactoryData.T2NAVALHQCount[unit.UnitId] = FactoryData.T2NAVALHQCount[unit.UnitId] + 1
                                     end
                                     if unit:IsUnitState('Upgrading') then
                                         FactoryData.T2NAVALUpgrading = FactoryData.T2NAVALUpgrading + 1
                                     end
                                     FactoryData.TotalT1NAVAL = FactoryData.TotalT1NAVAL + 1
-                                elseif ALLBPS[unit.UnitId].CategoriesHash.TECH3 then
+                                elseif unitCat.TECH3 then
                                     RNGINSERT(FactoryData.T3NAVAL, unit)
-                                    if not ALLBPS[unit.UnitId].CategoriesHash.SUPPORTFACTORY then
+                                    if not unitCat.SUPPORTFACTORY then
                                         FactoryData.T3NAVALHQCount[unit.UnitId] = FactoryData.T3NAVALHQCount[unit.UnitId] + 1
                                     end
                                     FactoryData.TotalT1NAVAL = FactoryData.TotalT1NAVAL + 1
@@ -539,11 +539,11 @@ StructureManager = Class {
         end
         if (self.Brain.RNGEXP or (factionIndex == 2 and actualMexIncome > (25 * self.Brain.EcoManager.EcoMultiplier))) and totalAirT2HQCount < 1 and totalAirT3HQCount < 1 and self.Factories.AIR[1].UpgradingCount < 1 then
             --RNGLOG('Factory T1 Air RNGEXP Upgrade HQ Check passed')
-            if self.Brain.EconomyOverTimeCurrent.EnergyIncome > 32.0 and self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 0.9 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.9 then
+            if self.Brain.EconomyOverTimeCurrent.EnergyIncome > 32.0 and self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 0.9 and (self.Brain.RNGEXP and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.9 or self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05) then
                 --RNGLOG('RNGEXP Factory Upgrade efficiency over time check passed')
                 local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                 local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
-                if MassEfficiency >= 0.9 and EnergyEfficiency >= 0.9 then
+                if MassEfficiency >= 0.9 and (self.Brain.RNGEXP and EnergyEfficiency >= 0.9 or EnergyEfficiency >= 1.05)  then
                     --RNGLOG('RNGEXP Factory Upgrade efficiency check passed, get closest factory')
                     local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH1')
                     if factoryToUpgrade and not factoryToUpgrade.Dead then
@@ -926,6 +926,7 @@ StructureManager = Class {
     UpgradeFactoryRNG = function(self, unit, hq)
         --RNGLOG('UpgradeFactory Fork started')
         local ALLBPS = __blueprints
+        local unitCat = unit.Blueprint.CategoriesHash
         local supportUpgradeID
         local followupUpgradeID = false
         --RNGLOG('Factory to upgrade unit id is '..unit.UnitId)
@@ -945,38 +946,38 @@ StructureManager = Class {
         --RNGLOG('Upgrade Factory has triggered ')
         --RNGLOG('Default upgrade bp is '..upgradeID..' checking for support upgrade replacement')
         if upgradeID then
-            if ALLBPS[unit.UnitId].CategoriesHash.LAND then
-                if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
+            if unitCat.LAND then
+                if unitCat.TECH1 then
                     if self.Factories.LAND[2].HQCount[upgradeID] > 0 then
                         supportUpgradeID = self.SupportUpgradeTable.LAND.T2[unit.UnitId]
                     elseif followupUpgradeID and self.Factories.LAND[3].HQCount[followupUpgradeID] > 0 then
                         supportUpgradeID = self.SupportUpgradeTable.LAND.T2[unit.UnitId]
                     end
-                elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
+                elseif unitCat.TECH2 then
                     if self.Factories.LAND[3].HQCount[upgradeID] > 0 then
                         supportUpgradeID = self.SupportUpgradeTable.LAND.T3[unit.UnitId]
                     end
                 end
-            elseif ALLBPS[unit.UnitId].CategoriesHash.AIR then
-                if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
+            elseif unitCat.AIR then
+                if unitCat.TECH1 then
                     if self.Factories.AIR[2].HQCount[upgradeID] > 0 then
                         supportUpgradeID = self.SupportUpgradeTable.AIR.T2[unit.UnitId]
                     elseif followupUpgradeID and self.Factories.AIR[3].HQCount[followupUpgradeID] > 0 then
                         supportUpgradeID = self.SupportUpgradeTable.AIR.T2[unit.UnitId]
                     end
-                elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
+                elseif unitCat.TECH2 then
                     if self.Factories.AIR[3].HQCount[upgradeID] > 0 then
                         supportUpgradeID = self.SupportUpgradeTable.AIR.T3[unit.UnitId]
                     end
                 end
-            elseif ALLBPS[unit.UnitId].CategoriesHash.NAVAL then
-                if ALLBPS[unit.UnitId].CategoriesHash.TECH1 then
+            elseif unitCat.NAVAL then
+                if unitCat.TECH1 then
                     if self.Factories.NAVAL[2].HQCount[upgradeID] > 0 then
                         supportUpgradeID = self.SupportUpgradeTable.NAVAL.T2[unit.UnitId]
                     elseif followupUpgradeID and self.Factories.NAVAL[3].HQCount[followupUpgradeID] > 0 then
                         supportUpgradeID = self.SupportUpgradeTable.NAVAL.T2[unit.UnitId]
                     end
-                elseif ALLBPS[unit.UnitId].CategoriesHash.TECH2 then
+                elseif unitCat.TECH2 then
                     if self.Factories.NAVAL[3].HQCount[upgradeID] > 0 then
                         supportUpgradeID = self.SupportUpgradeTable.NAVAL.T3[unit.UnitId]
                     end
@@ -1050,9 +1051,11 @@ StructureManager = Class {
 
             if aiBrain.EcoManager.CoreExtractorT3Count < 3 and aiBrain.EcoManager.TotalCoreExtractors > 2 and aiBrain.cmanager.income.r.m > (140 * aiBrain.EcoManager.EcoMultiplier) and (aiBrain.smanager.fact.Land.T3 > 0 or aiBrain.smanager.fact.Air.T3 > 0) and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
                 aiBrain.EcoManager.CoreMassPush = true
+                --RNGLOG('Assist Focus is Mass extraction')
                 aiBrain.EngineerAssistManagerFocusCategory = categories.MASSEXTRACTION
-            else
+            elseif aiBrain.EcoManager.CoreMassPush then
                 aiBrain.EcoManager.CoreMassPush = false
+                --RNGLOG('Assist Focus is set to false from Extractor upgrade manager')
                 aiBrain.EngineerAssistManagerFocusCategory = false
             end
             --RNGLOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
@@ -1412,6 +1415,18 @@ StructureManager = Class {
     end,
 }
 
+DummyManager = Class {
+    Create = function(self)
+        self.FactoryList = {}
+    end,
+    SetEnabled = function(self)
+        return
+    end,
+    Destroy = function(self)
+        return
+    end,
+}
+
 function CreateStructureManager(brain)
     local sm 
     sm = StructureManager()
@@ -1419,6 +1434,12 @@ function CreateStructureManager(brain)
     return sm
 end
 
+function CreateDummyManager(brain)
+    local dm
+    dm = DummyManager()
+    dm:Create()
+    return dm
+end
 
 function GetStructureManager(brain)
     return brain.StructureManager

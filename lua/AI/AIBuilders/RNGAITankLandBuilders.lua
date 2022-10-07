@@ -72,6 +72,17 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Small',
     BuildersType = 'FactoryBuilder',
     Builder {
+        BuilderName = 'RNGAI Initial Queue Small',
+        PlatoonTemplate = 'InitialBuildQueueRNG',
+        Priority = 820, -- After Second Engie Group
+        BuilderConditions = {
+            { UCBC, 'LessThanGameTimeSecondsRNG', { 120 } }, -- don't build after 6 minutes
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    --[[
+    Builder {
         BuilderName = 'RNGAI Factory Initial Queue 10km Small',
         PlatoonTemplate = 'RNGAIT1InitialAttackBuild10k',
         Priority = 820, -- After Second Engie Group
@@ -92,7 +103,7 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Small',
         PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
@@ -126,6 +137,17 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Large',
     BuildersType = 'FactoryBuilder',
     Builder {
+        BuilderName = 'RNGAI Initial Queue Large',
+        PlatoonTemplate = 'InitialBuildQueueRNG',
+        Priority = 820, -- After Second Engie Group
+        BuilderConditions = {
+            { UCBC, 'LessThanGameTimeSecondsRNG', { 120 } }, -- don't build after 6 minutes
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    --[[]
+    Builder {
         BuilderName = 'RNGAI Factory Initial Queue 20km',
         PlatoonTemplate = 'RNGAIT1InitialAttackBuild20k',
         Priority = 820, -- After Second Engie Group
@@ -146,7 +168,7 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Large',
         PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
@@ -466,7 +488,7 @@ BuilderGroup {
         InstanceCount = 1,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND - categories.ENGINEER } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER } },
         },
         BuilderData = {
             Avoid        = true,
@@ -512,8 +534,7 @@ BuilderGroup {
         InstanceCount = 30,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -524,6 +545,8 @@ BuilderGroup {
             PlatoonLimit = 18,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL,
+                categories.DEFENSE,
+                categories.FACTORY,
                 categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
@@ -874,6 +897,25 @@ BuilderGroup {
             UseFormation = 'None',
         },
     },
+    Builder {
+        BuilderName = 'RNGAI Response MobileBomb Area',
+        PlatoonTemplate = 'RNGAI MobileBombAttack',
+        Priority = 1000,
+        InstanceCount = 3,
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.xrl0302 } },
+        },
+        BuilderData = {
+            PlatoonPlan = 'MercyAIRNG',
+            Location = 'LocationType',
+            SearchRadius = BaseEnemyArea,
+            PrioritizedCategories = {
+                categories.COMMAND,
+                categories.LAND * categories.EXPERIMENTAL,
+            },
+        },
+    },
 }
 BuilderGroup {
     BuilderGroupName = 'RNGAI Land FormBuilders',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
@@ -1120,6 +1162,7 @@ BuilderGroup {
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
             LocationType = 'LocationType',
             TargetSearchPriorities = {
+                categories.STRUCTURE * categories.DEFENSE,
                 categories.EXPERIMENTAL * categories.LAND,
                 categories.STRUCTURE,
                 categories.MOBILE * categories.LAND

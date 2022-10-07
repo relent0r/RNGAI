@@ -38,20 +38,6 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI T1LandScoutForm',
         PlatoonAddBehaviors = { 'ZoneUpdate' },
         Priority = 1000,
-        InstanceCount = 1,
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.LAND * categories.SCOUT } },
-        },
-        BuilderData = {
-            LocationType = 'LocationType',
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI Former Scout Excess',
-        PlatoonTemplate = 'RNGAI T1LandScoutForm',
-        PlatoonAddBehaviors = { 'ZoneUpdate' },
-        Priority = 100,
         InstanceCount = 30,
         BuilderType = 'Any',
         BuilderConditions = {
@@ -59,7 +45,6 @@ BuilderGroup {
         },
         BuilderData = {
             LocationType = 'LocationType',
-            ExcessScout = true,
         },
     },
 }

@@ -696,11 +696,11 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1En
         end
         --DUNCAN - try the land path nodefirst , not the transport marker as this will get units closer(thanks to Sorian).
         if not transportLocation then
-            transportLocation = AIUtils.AIGetClosestMarkerLocation(aiBrain, 'Land Path Node', destination[1], destination[3])
+            transportLocation = AIUtils.AIGetClosestMarkerLocationRNG(aiBrain, 'Land Path Node', destination[1], destination[3])
         end
         -- find an appropriate transport marker if it's on the map
         if not transportLocation then
-            transportLocation = AIUtils.AIGetClosestMarkerLocation(aiBrain, 'Transport Marker', destination[1], destination[3])
+            transportLocation = AIUtils.AIGetClosestMarkerLocationRNG(aiBrain, 'Transport Marker', destination[1], destination[3])
         end
 
         local useGraph = 'Land'
@@ -715,7 +715,7 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1En
             local minThreat = aiBrain:GetThreatAtPosition(transportLocation, 0, true)
             --RNGLOG('Transport Location minThreat is '..minThreat)
             if (minThreat > 0) or safeZone then
-                if platoon.MovementLayer == 'Amphibious' or platoon.MovementLayer == 'Land' then
+                if platoon.MovementLayer == 'Amphibious' then
                     --RNGLOG('Find Safe Drop Amphib')
                     transportLocation = FindSafeDropZoneWithPathRNG(aiBrain, platoon, {'Amphibious Path Node','Land Path Node','Transport Marker'}, markerRange, destination, maxThreat, airthreatMax, 'AntiSurface', platoon.MovementLayer, safeZone)
                 else
@@ -734,14 +734,15 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1En
         -- path from transport drop off to end location
         local path, reason = PlatoonGenerateSafePathToRNG(aiBrain, useGraph, transportLocation, destination, 200)
         -- use the transport!
-        for _, v in platoon:GetSquadUnits('Scout') do
+        local transportSquad = platoon:GetSquadUnits('Scout')
+        for _, v in transportSquad do
             if not v.Dead and not EntityCategoryContains(categories.TRANSPORTFOCUS, v) then
                 IssueStop({v})
                 aiBrain:AssignUnitsToPlatoon('ArmyPool', {v}, 'Unassigned', 'NoFormation')
                 --RNGLOG('Non transport in transport squad, assignined to armypool')
             end
         end
-        AIUtils.UseTransportsRNG(units, platoon:GetSquadUnits('Scout'), transportLocation, platoon)
+        AIUtils.UseTransportsRNG(units, transportSquad, transportLocation, platoon)
 
         -- just in case we're still landing...
         for _,v in units do

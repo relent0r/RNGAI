@@ -27,6 +27,7 @@ end
 function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
     local factionIndex = aiBrain:GetFactionIndex()
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
+    --RNGLOG('AIBuildBaseTemplateOrderedRNG building '..whatToBuild)
     if whatToBuild then
         if IsResource(buildingType) then
             return AIExecuteBuildStructureRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference)
@@ -38,7 +39,7 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToB
                             if n > 1 then
                                 AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false)
                                 table.remove(bType,n)
-                                return DoHackyLogic(buildingType, builder)
+                                return --DoHackyLogic(buildingType, builder)
                             else
                                 --[[
                                 if n > 1 and not aiBrain:CanBuildStructureAt(whatToBuild, BuildToNormalLocation(position)) then
@@ -53,7 +54,33 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToB
             end 
         end 
     end 
+    --RNGLOG('AIBuildBaseTemplateOrderedRNG Unsuccessful build')
     return # unsuccessful build
+end
+
+function TMLStartUpLogic(buildingType, builder)
+    if buildingType == 'T2StrategicMissile' then
+        local unitInstance = false
+
+        builder:ForkThread(function()
+            while true do
+                if not unitInstance then
+                    unitInstance = builder.UnitBeingBuilt
+                end
+                aiBrain = builder:GetAIBrain()
+                if unitInstance then
+                    TriggerFile.CreateUnitStopBeingBuiltTrigger(function(unitBeingBuilt)
+                        local newPlatoon = aiBrain:MakePlatoon('', '')
+                        aiBrain:AssignUnitsToPlatoon(newPlatoon, {unitBeingBuilt}, 'Attack', 'None')
+                        newPlatoon:StopAI()
+                        newPlatoon:ForkAIThread(newPlatoon.TacticalAI)
+                    end, unitInstance)
+                    break
+                end
+                WaitSeconds(1)
+            end
+        end)
+    end
 end
 
 

@@ -83,7 +83,7 @@ function EnemyInT3ArtilleryRangeRNG(aiBrain, locationtype, inrange)
     local start = engineerManager:GetLocationCoords()
     local radius = 825
     for k,v in ArmyBrains do
-        if v.Result ~= "defeat" and not ArmyIsCivilian(v:GetArmyIndex()) and IsEnemy(v:GetArmyIndex(), aiBrain:GetArmyIndex()) then
+        if v.Status ~= "Defeat" and not ArmyIsCivilian(v:GetArmyIndex()) and IsEnemy(v:GetArmyIndex(), aiBrain:GetArmyIndex()) then
             local estartX, estartZ = v:GetArmyStartPos()
             if (VDist2Sq(start[1], start[3], estartX, estartZ) <= radius * radius) and inrange then
                 return true

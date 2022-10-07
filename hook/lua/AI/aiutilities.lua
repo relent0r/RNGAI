@@ -1,8 +1,14 @@
+WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset aiutilities.lua' )
+
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
+local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
+local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
+local RNGGETN = table.getn
+
 function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
     local markerList = {}
     --RNGLOG('* AI-RNG: Marker Type for AIGetMarkerLocationsNotFriendly is '..markerType)
@@ -37,7 +43,7 @@ function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
     return markerList
 end
 
-function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath)
+function EngineerMoveWithSafePathRNGOld(aiBrain, unit, destination, alwaysCheckPath)
     if not destination then
         return false
     end
@@ -123,6 +129,185 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
         return true
     end
     return false
+end
+
+function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath)
+    local ALLBPS = __blueprints
+    if not destination then
+        return false
+    end
+    local pos = unit:GetPosition()
+    local T1EngOnly = false
+    if EntityCategoryContains(categories.ENGINEER * categories.TECH1, unit) then
+        T1EngOnly = true
+    end
+    -- don't check a path if we are in build range
+    if not alwaysCheckPath and VDist2(pos[1], pos[3], destination[1], destination[3]) < 12 then
+        return true
+    end
+
+    -- first try to find a path with markers. 
+    local result, bestPos
+    local path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination)
+    if unit.PlatoonHandle.BuilderName then
+        --RNGLOG('EngineerGenerateSafePathToRNG for '..unit.PlatoonHandle.BuilderName..' reason '..reason)
+    end
+    --RNGLOG('EngineerGenerateSafePathToRNG reason is'..reason)
+    -- only use CanPathTo for distance closer then 200 and if we can't path with markers
+    if reason ~= 'PathOK' then
+        -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
+        if reason == 'NoGraph' then
+            result = true
+        elseif VDist2(pos[1], pos[3], destination[1], destination[3]) < 200 then
+            SPEW('* AI-RNG: EngineerMoveWithSafePath(): executing CanPathTo(). LUA GenerateSafePathTo returned: ('..repr(reason)..') '..VDist2(pos[1], pos[3], destination[1], destination[3]))
+            -- be really sure we don't try a pathing with a destoryed c-object
+            if unit.Dead or unit:BeenDestroyed() or IsDestroyed(unit) then
+                SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
+                return false
+            end
+            result, bestPos = unit:CanPathTo(destination)
+        end 
+    end
+    if result then
+        --RNGLOG('result is true, reason is '..reason)
+    else
+        --RNGLOG('result is false, reason is '..reason)
+    end
+    local bUsedTransports = false
+    -- Increase check to 300 for transports
+    if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 250 * 250
+    and unit.PlatoonHandle and not EntityCategoryContains(categories.COMMAND, unit) then
+        -- If we can't path to our destination, we need, rather than want, transports
+        local needTransports = not result and reason ~= 'PathOK'
+        if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 250 * 250 then
+            needTransports = true
+        end
+
+        -- Skip the last move... we want to return and do a build
+        --RNGLOG('run SendPlatoonWithTransportsNoCheck')
+        unit.WaitingForTransport = true
+        bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, unit.PlatoonHandle, destination, T1EngOnly, needTransports, true, false)
+        unit.WaitingForTransport = false
+        --RNGLOG('finish SendPlatoonWithTransportsNoCheck')
+
+        if bUsedTransports then
+            return true
+        elseif VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 512 * 512 then
+            -- If over 512 and no transports dont try and walk!
+            return false
+        end
+    end
+
+    -- If we're here, we haven't used transports and we can path to the destination
+    if result or reason == 'PathOK' then
+        --RNGLOG('* AI-RNG: EngineerMoveWithSafePath(): result or reason == PathOK ')
+        if reason ~= 'PathOK' then
+            path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination)
+        end
+        if path then
+            local pathLength = RNGGETN(path)
+            local brokenPathMovement = false
+            local currentPathNode = 1
+            for i=currentPathNode, pathLength do
+                IssueMove({unit}, path[i])
+            end
+            IssueMove({unit}, destination)
+            if unit.EngineerBuildQueue and RNGGETN(unit.EngineerBuildQueue) > 0 then
+                if unit.EngineerBuildQueue[1][4] then
+                    --RNGLOG('BorderWarning build')
+                    IssueBuildMobile({unit}, {unit.EngineerBuildQueue[1][2][1], 0, unit.EngineerBuildQueue[1][2][2]}, unit.EngineerBuildQueue[1][1], {})
+                else
+                    aiBrain:BuildStructure(unit, unit.EngineerBuildQueue[1][1], {unit.EngineerBuildQueue[1][2][1], unit.EngineerBuildQueue[1][2][2], 0}, unit.EngineerBuildQueue[1][3])
+                end
+            end
+            local dist
+            while not unit.Dead do
+                if brokenPathMovement and unit.EngineerBuildQueue and RNGGETN(unit.EngineerBuildQueue) > 0 then
+                    for i=currentPathNode, pathLength do
+                        IssueMove({unit}, path[i])
+                    end
+                    IssueMove({unit}, destination)
+                    if unit.EngineerBuildQueue[1][4] then
+                        --RNGLOG('BorderWarning build')
+                        IssueBuildMobile({unit}, {unit.EngineerBuildQueue[1][2][1], 0, unit.EngineerBuildQueue[1][2][2]}, unit.EngineerBuildQueue[1][1], {})
+                    else
+                        aiBrain:BuildStructure(unit, unit.EngineerBuildQueue[1][1], {unit.EngineerBuildQueue[1][2][1], unit.EngineerBuildQueue[1][2][2], 0}, unit.EngineerBuildQueue[1][3])
+                    end
+                    brokenPathMovement = false
+                end
+                pos = unit:GetPosition()
+                if currentPathNode <= pathLength then
+                    dist = VDist3Sq(path[currentPathNode], pos)
+                    if dist < 100 then
+                        currentPathNode = currentPathNode + 1
+                    end
+                end
+                if VDist3Sq(destination, pos) < 100 then
+                    break
+                end
+                if unit.Upgrading or unit.Combat or unit.Active then
+                    break
+                end
+                coroutine.yield(15)
+                if unit.Dead then
+                    return
+                end
+                if unit.EngineerBuildQueue then
+                    if ALLBPS[unit.EngineerBuildQueue[1][1]].CategoriesHash.MASSEXTRACTION and ALLBPS[unit.EngineerBuildQueue[1][1]].CategoriesHash.TECH1 then
+                        --RNGLOG('Attempt reclaim on eng movement')
+                        brokenPathMovement = RUtils.PerformEngReclaim(aiBrain, unit, 5)
+                    end
+                end
+                if unit:IsUnitState("Moving") then
+                    if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, pos, 45, 'Enemy') > 0 then
+                        local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, pos, 45, 'Enemy')
+                        for _, eunit in enemyUnits do
+                            enemyUnitPos = eunit:GetPosition()
+                            if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, unit) then
+                                if VDist3Sq(enemyUnitPos, pos) < 144 then
+                                    --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
+                                    if eunit and not eunit.Dead and unit:GetFractionComplete() == 1 then
+                                        if VDist3Sq(pos, enemyUnitPos) < 100 then
+                                            IssueClearCommands({unit})
+                                            IssueReclaim({unit}, eunit)
+                                            brokenPathMovement = true
+                                            break
+                                        end
+                                    end
+                                end
+                            elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, eunit) then
+                                --RNGLOG('MexBuild found enemy unit, try avoid it')
+                                if VDist3Sq(enemyUnitPos, pos) < 81 then
+                                    --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
+                                    if eunit and not eunit.Dead and unit:GetFractionComplete() == 1 then
+                                        if VDist3Sq(pos, enemyUnitPos) < 100 then
+                                            IssueClearCommands({unit})
+                                            IssueReclaim({unit}, eunit)
+                                            brokenPathMovement = true
+                                            break
+                                        end
+                                    end
+                                else
+                                    IssueClearCommands({unit})
+                                    IssueMove({unit}, RUtils.AvoidLocation(enemyUnitPos, pos, 50))
+                                    brokenPathMovement = true
+                                    coroutine.yield(60)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        else
+            IssueMove({unit}, destination)
+        end
+        return true
+    end
+    return false
+end
+
+function UnitIDContainsCategory(unitId, category)
+
 end
 
 function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
@@ -756,7 +941,7 @@ function AIGetClosestMarkerLocationRNG(aiBrain, markerType, startX, startZ, extr
         local x = v.Position[1]
         local y = v.Position[2]
         local z = v.Position[3]
-        distance = VDist2(startX, startZ, x, z)
+        distance = VDist2Sq(startX, startZ, x, z)
         if not lowest or distance < lowest then
             loc = v.Position
             name = v.Name
@@ -885,3 +1070,24 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
 
     return false
 end
+
+function AIFindNavalAreaNeedsEngineer(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
+    local pos
+    if aiBrain.BuilderManagers[locationType] then
+        pos = aiBrain.BuilderManagers[locationType].FactoryManager:GetLocationCoords()
+    end
+    if not pos then
+        return false
+    end
+    local positions = AIGetMarkersAroundLocation(aiBrain, 'Naval Area', pos, radius, tMin, tMax, tRings, tType)
+
+    local retPos, retName
+    if eng then
+        retPos, retName = AIFindMarkerNeedsEngineer(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, positions)
+    else
+        retPos, retName = AIFindMarkerNeedsEngineer(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
+    end
+
+    return retPos, retName
+end
+

@@ -72,6 +72,8 @@ BuilderGroup {
                 BuildClose = false,
                 OrderedTemplate = true,
                 NearDefensivePoints = true,
+                Type = 'Land',
+                Tier = 2,
                 LocationType = 'LocationType',
                 BuildStructures = {
                     'T2ShieldDefense',

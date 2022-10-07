@@ -32,3 +32,15 @@ function OnStopBeingCaptured(self, captor)
         self:Kill()
     end
 end
+
+function MissileCallbackRNG(unit, targetPos, impactPos)
+    if unit and not unit.Dead and targetPos then
+        if not unit.TargetBlackList then
+            unit.TargetBlackList = {}
+        end
+        unit.TargetBlackList[targetPos[1]] = {}
+        unit.TargetBlackList[targetPos[1]][targetPos[3]] = true
+        return true, "target position added to tml blacklist"
+    end
+    return false, "something something error?"
+end

@@ -22,7 +22,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirScout',
         Priority = 750, -- After second engie group
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Air', 'T1', 'scout'} },
+            { UCBC, 'UnitBuildDemand', { 'Air', 'T1', 'scout'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
         },
         BuilderType = 'Air',
@@ -77,9 +77,9 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 FighterBomber',
         PlatoonTemplate = 'T2FighterBomber',
-        Priority = 749,
+        Priority = 891,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Air', 'T2', 'bomber'} },
+            { UCBC, 'UnitBuildDemand', {'Air', 'T2', 'bomber'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -88,6 +88,18 @@ BuilderGroup {
             TechLevel = 2
         },
     },
+    Builder {
+        BuilderName = 'RNGAI T2 Mercy',
+        PlatoonTemplate = 'T2AirMissile',
+        Priority = 895,
+        BuilderType = 'Air',
+        BuilderConditions = {
+            { UCBC, 'UnitBuildDemand', {'Air', 'T2', 'mercy'} },
+            { EBC, 'FactorySpendRatioRNG', {'Air'}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+    },
+    --[[
     Builder {
         BuilderName = 'RNGAI T2 Gunship',
         PlatoonTemplate = 'T2AirGunship',
@@ -101,52 +113,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 2
         },
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Fighter',
-        PlatoonTemplate = 'T2FighterBomber',
-        Priority = 749,
-        BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Air', 'T2', 'fighter'} },
-            { EBC, 'FactorySpendRatioRNG', {'Air'}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Air',
-        BuilderData = {
-            TechLevel = 2
-        },
-    },
-    --[[Builder {
-        BuilderName = 'RNGAI T2 Torperdo Bomber',
-        PlatoonTemplate = 'T2AirTorpedoBomber',
-        Priority = 747,
-        --PriorityFunction = LandMode,
-        BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Air', 'T2', 'torpedo'} },
-            { EBC, 'FactorySpendRatioRNG', {'Air'}},
-            --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'AIR'}},
-            --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Air',
-        BuilderData = {
-            TechLevel = 2
-        },
     },]]
-    Builder {
-        BuilderName = 'RNGAI T2 Mercy',
-        PlatoonTemplate = 'T2AirMissile',
-        Priority = 746,
-        BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Air', 'T2', 'mercy'} },
-            { EBC, 'FactorySpendRatioRNG', {'Air'}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Air',
-        BuilderData = {
-            TechLevel = 2
-        },
-    },
 }
 
 BuilderGroup {
@@ -157,7 +124,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3AirScout',
         Priority = 755,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Air', 'T3', 'scout'} },
+            { UCBC, 'UnitBuildDemand', { 'Air', 'T3', 'scout'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
