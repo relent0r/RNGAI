@@ -105,7 +105,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { UCBC, 'ForcePathLimit', {'LocationType', categories.FACTORY * categories.LAND, 'LAND', 2}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.75 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.80 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
@@ -134,7 +134,7 @@ BuilderGroup {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'GreaterThanEconStorageCurrentRNG', { 240, 1050 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.70, 0.60 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.70, 0.80 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
@@ -216,7 +216,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.7 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.80 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
@@ -387,7 +387,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.75 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.80 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
@@ -415,7 +415,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
             --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 105, 1200 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.75 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.80 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.FACTORY * categories.LAND}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR }},
@@ -556,7 +556,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.75 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.80 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },

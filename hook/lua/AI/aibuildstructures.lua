@@ -27,7 +27,7 @@ end
 function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
     local factionIndex = aiBrain:GetFactionIndex()
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
-    RNGLOG('AIBuildBaseTemplateOrderedRNG building '..whatToBuild)
+    --RNGLOG('AIBuildBaseTemplateOrderedRNG building '..whatToBuild)
     if whatToBuild then
         if IsResource(buildingType) then
             return AIExecuteBuildStructureRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference)
@@ -54,7 +54,7 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToB
             end 
         end 
     end 
-    RNGLOG('AIBuildBaseTemplateOrderedRNG Unsuccessful build')
+    --RNGLOG('AIBuildBaseTemplateOrderedRNG Unsuccessful build')
     return # unsuccessful build
 end
 

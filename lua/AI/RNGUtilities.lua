@@ -954,7 +954,7 @@ function HaveUnitVisual(aiBrain, unit, checkBlipOnly)
     -- This was from Maudlin. He figured how to leverage blips better.
     --returns true if aiBrain can see a unit
     --checkBlipOnly - returns true if can see a blip
-    RNGLOG('HaveUnitVisual : Check if available')
+    --RNGLOG('HaveUnitVisual : Check if available')
     if checkBlipOnly == nil then checkBlipOnly = false end
     local unitBrain
     if not unit.Dead then
@@ -967,23 +967,22 @@ function HaveUnitVisual(aiBrain, unit, checkBlipOnly)
         local iArmyIndex = aiBrain:GetArmyIndex()
         if not(unit.Dead) then
             if not(unit.GetBlip) then
-                ErrorHandler('oUnit with UnitID='..(unit.UnitId or 'nil')..' has no blip, will assume can see it')
                 return true
             else
                 local blip = unit:GetBlip(iArmyIndex)
                 if blip then
                     if checkBlipOnly then 
-                        RNGLOG('HaveUnitVisual : blip seen')
+                        --RNGLOG('HaveUnitVisual : blip seen')
                         return true
                     elseif blip:IsSeenEver(iArmyIndex) then 
-                        RNGLOG('HaveUnitVisual : blip IsSeenEver')
+                        --RNGLOG('HaveUnitVisual : blip IsSeenEver')
                         return true 
                     end
                 end
             end
         end
     end
-    RNGLOG('HaveUnitVisual : No Visual on unit')
+    --RNGLOG('HaveUnitVisual : No Visual on unit')
     return false
 end
 
@@ -3596,9 +3595,9 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
             end
         end
     else
-        RNGLOG('ACU Trying to build non adjacent')
+        --RNGLOG('ACU Trying to build non adjacent')
         local location = aiBrain:FindPlaceToBuild(buildUnit, whatToBuild, baseTemplate, relative, eng, nil, engPos[1], engPos[3])
-        RNGLOG('Location is '..repr(location))
+        --RNGLOG('Location is '..repr(location))
         if location and relative then
             local relativeLoc = {location[1], 0, location[2]}
             return {relativeLoc[1] + engPos[1], relativeLoc[3] + engPos[3], 0}, whatToBuild
@@ -3916,7 +3915,7 @@ function ValidateMainBase(platoon, squad, aiBrain)
     end
     if point then
         if AIAttackUtils.CanGraphToRNG(point.Position, platPos, platoon.MovementLayer) then 
-            RNGLOG('ValidateMainBase has returned a unit we must attack')
+            --RNGLOG('ValidateMainBase has returned a unit we must attack')
             return target
         end
     end
@@ -3978,7 +3977,7 @@ function PerformEngReclaim(aiBrain, eng, minimumReclaim)
             end
         end
         if RNGGETN(closeReclaim) > 0 then
-            RNGLOG('Close Reclaim, attempting to clear and reclaim')
+            --RNGLOG('Close Reclaim, attempting to clear and reclaim')
             IssueClearCommands({eng})
             for _, rec in closeReclaim do
                 IssueReclaim({eng}, rec)
@@ -4320,27 +4319,17 @@ AIWarningChecks = function(aiBrain)
     --Pregame warning check
     coroutine.yield( 70 )
     local uveso_enabled = false
-    local marker_generator_enabled = false
     local SUtils = import('/lua/AI/sorianutilities.lua')
     for _, mod in __active_mods do
         if mod.enabled and string.find( mod.name,'Uveso') then
             --RNGLOG(repr(mod))
             --RNGLOG('Uveso is enabled')
             uveso_enabled = true
-            if ScenarioInfo.Options.AIMapMarker == 'all' then
-                --RNGLOG('Path markers are being generated')
-                marker_generator_enabled = true
-            end
         end
     end
     if not uveso_enabled then
         SUtils.AISendChat('all', aiBrain.Nickname, 'Uveso AI mod is not enabled, it is required for correct AI pathing when using RNGAI')
         coroutine.yield( 30 )
-    end
-    if uveso_enabled then
-        if not marker_generator_enabled then
-            SUtils.AISendChat('all', aiBrain.Nickname, 'Path marker generator is not enabled, this is required for correct AI pathing when using RNGAI')
-        end
     end
 end
 

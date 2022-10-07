@@ -517,55 +517,55 @@ Platoon = Class(RNGAIPlatoonClass) {
         if not holdPosition then
             holdPosition = aiBrain.BrainIntel.StartPos
         end
-        RNGLOG('Hold Position is '..repr(holdPosition))
+        --RNGLOG('Hold Position is '..repr(holdPosition))
         self:ConfigurePlatoon()
         while PlatoonExists(aiBrain, self) do
             local platoonUnits = GetPlatoonUnits(self)
             local requiredCount = 0
-            RNGLOG('Mercy strike : loop ACU Snipe table '..repr(aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe))
+            --RNGLOG('Mercy strike : loop ACU Snipe table '..repr(aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe))
             for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
                 if self.MovementLayer == 'Air' then
                     if v.AIR and v.AIR.GameTime then
                         if v.AIR.GameTime + 650 > GetGameTimeSeconds() then
-                            RNGLOG('ACU Table for index '..k..' table '..repr(aiBrain.EnemyIntel.ACU))
+                            --RNGLOG('ACU Table for index '..k..' table '..repr(aiBrain.EnemyIntel.ACU))
                             if RUtils.HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
                                 target = aiBrain.EnemyIntel.ACU[k].Unit
                                 requiredCount = v.AIR.CountRequired
-                                RNGLOG('Mercy strike : ACU Target mission found and target set')
+                                --RNGLOG('Mercy strike : ACU Target mission found and target set')
                                 break
                             else
-                                RNGLOG('Mercy strike : ACU Target mission found but target not visible')
+                                --RNGLOG('Mercy strike : ACU Target mission found but target not visible')
                             end
                         end
                     end
                 else
                     if v.LAND and v.LAND.GameTime then
                         if v.LAND.GameTime + 650 > GetGameTimeSeconds() then
-                            RNGLOG('ACU Table for index '..k..' table '..repr(aiBrain.EnemyIntel.ACU))
+                            --RNGLOG('ACU Table for index '..k..' table '..repr(aiBrain.EnemyIntel.ACU))
                             if RUtils.HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
                                 target = aiBrain.EnemyIntel.ACU[k].Unit
                                 requiredCount = v.LAND.CountRequired
-                                RNGLOG('Mercy strike : ACU Target mission found and target set')
+                                --RNGLOG('Mercy strike : ACU Target mission found and target set')
                                 break
                             else
-                                RNGLOG('Mercy strike : ACU Target mission found but target not visible')
+                                --RNGLOG('Mercy strike : ACU Target mission found but target not visible')
                             end
                         end
                     end
                 end
             end
             if not target then
-                RNGLOG('Mercy strike : No ACU target')
+                --RNGLOG('Mercy strike : No ACU target')
                 if requiredCount < 1 then
                     requiredCount = 2
                 end
                 if RNGGETN(platoonUnits) >= requiredCount then
-                    RNGLOG('Mercy strike : No ACU found in TacticalMission loop, look for closest')
+                    --RNGLOG('Mercy strike : No ACU found in TacticalMission loop, look for closest')
                     target = self:FindClosestUnit('Attack', 'Enemy', true, categories.COMMAND )
                 end
             end
             if target and RNGGETN(platoonUnits) >= requiredCount then
-                RNGLOG('Mercy strike : required count available')
+                --RNGLOG('Mercy strike : required count available')
                 blip = target:GetBlip(armyIndex)
                 self:Stop()
                 self:AttackTarget(target)
@@ -576,9 +576,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                 if not v.Dead then
                     local unitPos = v:GetPosition()
                     if VDist2Sq(unitPos[1], unitPos[3], holdPosition[1], holdPosition[3]) > 144 then
-                        RNGLOG('Not in hold position distance is '..VDist2Sq(unitPos[1], unitPos[3], holdPosition[1], holdPosition[3]))
-                        RNGLOG('Hold position is '..repr(holdPosition))
-                        RNGLOG('Current Position '..repr(v:GetPosition()))
+                        --RNGLOG('Not in hold position distance is '..VDist2Sq(unitPos[1], unitPos[3], holdPosition[1], holdPosition[3]))
+                        --RNGLOG('Hold position is '..repr(holdPosition))
+                        --RNGLOG('Current Position '..repr(v:GetPosition()))
                         IssueMove({v}, {holdPosition[1] + Random(-5, 5), holdPosition[2], holdPosition[3] + Random(-5, 5) } )
                     end
                 end
@@ -921,8 +921,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             if microCap <= 0 then break end
                             if unit.Dead then continue end
                             if not unit.MaxWeaponRange then
-                                coroutine.yield(3)
-                                WARN('Warning : Experimental has no max weapon range')
+                                coroutine.yield(1)
                                 continue
                             end
                             unitPos = unit:GetPosition()
@@ -1819,8 +1818,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if microCap <= 0 then break end
                                 if unit.Dead then continue end
                                 if not unit.MaxWeaponRange then
-                                    coroutine.yield(3)
-                                    WARN('Warning : Experimental has no max weapon range')
+                                    coroutine.yield(1)
                                     continue
                                 end
                                 IssueClearCommands({unit})
@@ -1840,8 +1838,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if microCap <= 0 then break end
                                 if unit.Dead then continue end
                                 if not unit.MaxWeaponRange then
-                                    coroutine.yield(3)
-                                    WARN('Warning : Experimental has no max weapon range')
+                                    coroutine.yield(1)
                                     continue
                                 end
                                 IssueClearCommands({unit})
@@ -2254,8 +2251,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                                 if microCap <= 0 then break end
                                                 if unit.Dead then continue end
                                                 if not unit.MaxWeaponRange then
-                                                    coroutine.yield(3)
-                                                    WARN('Warning : Experimental has no max weapon range')
+                                                    coroutine.yield(1)
                                                     continue
                                                 end
                                                 unitPos = unit:GetPosition()
@@ -2377,8 +2373,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                         if microCap <= 0 then break end
                                         if unit.Dead then continue end
                                         if not unit.MaxWeaponRange then
-                                            coroutine.yield(3)
-                                            WARN('Warning : Experimental has no max weapon range')
+                                            coroutine.yield(1)
                                             continue
                                         end
                                         unitPos = unit:GetPosition()
@@ -2675,8 +2670,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                                 if microCap <= 0 then break end
                                                 if unit.Dead then continue end
                                                 if not unit.MaxWeaponRange then
-                                                    coroutine.yield(3)
-                                                    WARN('Warning : Experimental has no max weapon range')
+                                                    coroutine.yield(1)
                                                     continue
                                                 end
                                                 unitPos = unit:GetPosition()
@@ -3472,7 +3466,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         elseif cons.NearDefensivePoints then
             relative = false
             reference = RUtils.GetDefensivePointRNG(aiBrain, cons.Location or 'MAIN', cons.Tier or 2, cons.Type)
-            RNGLOG('reference for defensivepoint is '..repr(reference))
+            --RNGLOG('reference for defensivepoint is '..repr(reference))
             --baseTmpl = baseTmplFile[cons.BaseTemplate][factionIndex]
             -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
@@ -4155,7 +4149,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
         else
-           RNGLOG('Hydro is present we shouldnt need any more pgens during initialization')
+           --RNGLOG('Hydro is present we shouldnt need any more pgens during initialization')
         end
         if not hydroPresent and closeMarkers > 3 then
             --RNGLOG('CommanderInitializeAIRNG : not hydro and close markers greater than 3, Try to build land factory')
@@ -4177,7 +4171,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         --RNGLOG('CommanderInitializeAIRNG : CDR Initialize almost done, should have just finished final t1 land')
         if hydroPresent and (closeMarkers > 0 or distantMarkers > 0) then
             engPos = eng:GetPosition()
-            RNGLOG('CommanderInitializeAIRNG : Hydro Distance is '..VDist3Sq(engPos,closestHydro.Position))
+            --RNGLOG('CommanderInitializeAIRNG : Hydro Distance is '..VDist3Sq(engPos,closestHydro.Position))
             if VDist3Sq(engPos,closestHydro.Position) > 144 then
                 IssueMove({eng}, closestHydro.Position )
                 while VDist3Sq(engPos,closestHydro.Position) > 100 do
@@ -4186,23 +4180,23 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if eng:IsIdleState() and VDist3Sq(engPos,closestHydro.Position) > 100 then
                         break
                     end
-                    RNGLOG('CommanderInitializeAIRNG : Still inside movement loop')
-                    RNGLOG('Distance is '..VDist3Sq(engPos,closestHydro.Position))
+                    --RNGLOG('CommanderInitializeAIRNG : Still inside movement loop')
+                    --RNGLOG('Distance is '..VDist3Sq(engPos,closestHydro.Position))
                 end
-                RNGLOG('CommanderInitializeAIRNG : We should be close to the hydro now')
+                --RNGLOG('CommanderInitializeAIRNG : We should be close to the hydro now')
             end
             IssueClearCommands({eng})
             local assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
             local assistee = false
-            RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
+            --RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
             local assistListCount = 0
             while not next(assistList) do
                 coroutine.yield( 15 )
                 assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
                 assistListCount = assistListCount + 1
-                RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
+                --RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
                 if assistListCount > 10 then
-                    RNGLOG('assistListCount is still empty after 7.5 seconds')
+                    --RNGLOG('assistListCount is still empty after 7.5 seconds')
                     break
                 end
             end
@@ -4216,7 +4210,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     local UnitAssist = v.UnitBeingBuilt or v.UnitBeingAssist or v
                     local NumAssist = RNGGETN(UnitAssist:GetGuards())
                     local dist = VDist2Sq(engPos[1], engPos[3], unitPos[1], unitPos[3])
-                    RNGLOG('CommanderInitializeAIRNG : Assist distance for commander assist is '..dist)
+                    --RNGLOG('CommanderInitializeAIRNG : Assist distance for commander assist is '..dist)
                     -- Find the closest unit to assist
                     if (not low or dist < low) and NumAssist < 20 and dist < 225 then
                         low = dist
@@ -4228,7 +4222,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             if assistee  then
                 IssueClearCommands({eng})
                 eng.UnitBeingAssist = assistee.UnitBeingBuilt or assistee.UnitBeingAssist or assistee
-                RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
+                --RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
                 IssueGuard({eng}, eng.UnitBeingAssist)
                 while eng and not eng.Dead and not eng:IsIdleState() do
                     if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
@@ -4656,12 +4650,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                             self.MaxPlatoonWeaponRange = v.MaxWeaponRange
                         end
                     end
-                    if not v.MaxWeaponRange then
-                        RNGLOG('Unit has no MaxWeaponRange '..v.UnitId)
-                    end
-                    if not v.WeaponArc then
-                        RNGLOG('Unit has no WeaponArc '..v.UnitId)
-                    end
                     if v:TestToggleCaps('RULEUTC_StealthToggle') then
                         v:SetScriptBit('RULEUTC_StealthToggle', false)
                     end
@@ -5019,8 +5007,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if microCap <= 0 then break end
                                 if unit.Dead then continue end
                                 if not unit.MaxWeaponRange then
-                                    coroutine.yield(3)
-                                    WARN('Warning : Experimental has no max weapon range')
+                                    coroutine.yield(1)
                                     continue
                                 end
                                 IssueClearCommands({unit})
@@ -5197,8 +5184,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if microCap <= 0 then break end
                                 if unit.Dead then continue end
                                 if not unit.MaxWeaponRange then
-                                    coroutine.yield(3)
-                                    WARN('Warning : Experimental has no max weapon range')
+                                    coroutine.yield(1)
                                     continue
                                 end
                                 IssueClearCommands({unit})
@@ -5777,8 +5763,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             if microCap <= 0 then break end
                             if unit.Dead then continue end
                             if not unit.MaxWeaponRange then
-                                coroutine.yield(3)
-                                WARN('Warning : Experimental has no max weapon range')
+                                coroutine.yield(1)
                                 continue
                             end
                             IssueClearCommands({unit})
@@ -6425,8 +6410,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     if microCap <= 0 then break end
                                     if unit.Dead then continue end
                                     if not unit.MaxWeaponRange then
-                                        coroutine.yield(3)
-                                        WARN('Warning : Experimental has no max weapon range')
+                                        coroutine.yield(1)
                                         continue
                                     end
                                     IssueClearCommands({unit})
@@ -6766,8 +6750,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if microCap <= 0 then break end
                                 if unit.Dead then continue end
                                 if not unit.MaxWeaponRange then
-                                    coroutine.yield(3)
-                                    WARN('Warning : Experimental has no max weapon range')
+                                    coroutine.yield(1)
                                     continue
                                 end
                                 if closestTurret and not closestTurret.Dead and ALLBPS[unit.UnitId].CategoriesHash.INDIRECTFIRE then
@@ -6975,8 +6958,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if microCap <= 0 then break end
                                 if unit.Dead then continue end
                                 if not unit.MaxWeaponRange then
-                                    coroutine.yield(3)
-                                    WARN('Warning : Experimental has no max weapon range')
+                                    coroutine.yield(1)
                                     continue
                                 end
                                 unitPos = unit:GetPosition()
@@ -7724,8 +7706,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                                 if microCap <= 0 then break end
                                                 if unit.Dead then continue end
                                                 if not unit.MaxWeaponRange then
-                                                    coroutine.yield(3)
-                                                    WARN('Warning : Experimental has no max weapon range')
+                                                    coroutine.yield(1)
                                                     continue
                                                 end
                                                 IssueClearCommands({unit})
@@ -8516,7 +8497,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
         end
         if not mergedPlatoon then
-            RNGLOG('Platoon Merge is creating platoon for '..destinationPlan..' at location '..location..' location position '..repr(aiBrain.BuilderManagers[location].Position))
+            --RNGLOG('Platoon Merge is creating platoon for '..destinationPlan..' at location '..location..' location position '..repr(aiBrain.BuilderManagers[location].Position))
             mergedPlatoon = aiBrain:MakePlatoon(destinationPlan..'Platoon'..location, destinationPlan)
             mergedPlatoon.PlanName = destinationPlan
             mergedPlatoon.BuilderName = destinationPlan..'Platoon'..location
@@ -8530,7 +8511,8 @@ Platoon = Class(RNGAIPlatoonClass) {
 
     TMLAIRNG = function(self)
         local aiBrain = self:GetBrain()
-        local missileTerrainCallbackRNG = import('/mods/RNGAI/lua/AI/RNGEventCallbacks.lua').MissileCallbackRNG
+        -- This is for the next faf update
+        --local missileTerrainCallbackRNG = import('/mods/RNGAI/lua/AI/RNGEventCallbacks.lua').MissileCallbackRNG
         local platoonUnits
         local enemyShield = 0
         local targetHealth
@@ -8562,10 +8544,12 @@ Platoon = Class(RNGAIPlatoonClass) {
                     self:PlatoonDisbandNoAssign()
                     return
                 end
+                --[[
+                -- This is for the next faf update
                 if not tml.terraincallbackset then
                     tml:AddMissileImpactTerrainCallback(missileTerrainCallbackRNG)
                     tml.terraincallbackset = true
-                end
+                end]]
                 tml:SetAutoMode(true)
                 IssueClearCommands({tml})
             end
@@ -8674,7 +8658,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                                     --RNGLOG('Only 1 missile required')
                                                     if tml.TargetBlackList then
                                                         if tml.TargetBlackList[targetPosition[1]][targetPosition[3]] then
-                                                            RNGLOG('TargetPos found in blacklist, skip')
+                                                            --RNGLOG('TargetPos found in blacklist, skip')
                                                             continue
                                                         end
                                                     end
@@ -8683,7 +8667,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                                 else
                                                     if tml.TargetBlackList then
                                                         if tml.TargetBlackList[targetPosition[1]][targetPosition[3]] then
-                                                            RNGLOG('TargetPos found in blacklist, skip')
+                                                            --RNGLOG('TargetPos found in blacklist, skip')
                                                             continue
                                                         end
                                                     end
@@ -9305,7 +9289,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
             if aiBrain.EngineerAssistManagerFocusCategory and not EntityCategoryContains(aiBrain.EngineerAssistManagerFocusCategory, eng.UnitBeingAssist) then
-                RNGLOG('Assist Platoon Focus Category has changed, aborting current assist')
+                --RNGLOG('Assist Platoon Focus Category has changed, aborting current assist')
                 eng.UnitBeingAssist = nil
                 break
             end

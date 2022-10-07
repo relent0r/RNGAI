@@ -81,12 +81,12 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     end
                 end
             else
-                RNGLOG('No Rally Point Found. Setting Random Location')
+                --RNGLOG('No Rally Point Found. Setting Random Location')
                 local locationType = self.LocationType
                 local factoryPos = self.Brain.BuilderManagers[locationType].Position
                 local startDistance = VDist3(self.Brain.MapCenterPoint, factoryPos)
                 position = RUtils.lerpy(self.Brain.MapCenterPoint, factoryPos, {startDistance, startDistance - 60})
-                RNGLOG('Position '..repr(position))
+                --RNGLOG('Position '..repr(position))
                 position = AIUtils.RandomLocation(position[1],position[3])
             end
             rally = position
@@ -210,9 +210,9 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
     end,
 
     GenerateInitialBuildQueue = function(self, templateName, factory)
-        RNGLOG('Generating Intial Queue for build')
+        --RNGLOG('Generating Intial Queue for build')
         local faction = self:GetFactoryFaction(factory)
-        RNGLOG('Faction is '..faction)
+        --RNGLOG('Faction is '..faction)
         local backupqueue = {
             'T1BuildEngineer',
             'T1LandScout',
@@ -224,7 +224,9 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         if not queue then
             queue = backupqueue
         end
-        RNGLOG('Queue in GenerateInitialBuildOrder is '..repr(queue))
+        if self.Brain.RNGDEBUG then
+            RNGLOG('Queue in GenerateInitialBuildOrder is '..repr(queue))
+        end
         local template = {
             'InitialBuildQueueRNG',
             '',
@@ -251,7 +253,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
     end,
 
     GenerateInitialBO = function(self, factory)
-        RNGLOG('GenerateInitialBO')
+        --RNGLOG('GenerateInitialBO')
         local faction = self:GetFactoryFaction(factory)
         local queue = {
             'T1BuildEngineer',
@@ -259,7 +261,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         }
         if faction then
             local mapSizeX, mapSizeZ = GetMapSize()
-            RNGLOG('Map Size is X '..mapSizeX..' Z '..mapSizeZ)
+            --RNGLOG('Map Size is X '..mapSizeX..' Z '..mapSizeZ)
             local OwnIndex = ArmyBrains[self.Brain:GetArmyIndex()].Nickname
             local EnemyIndex = ArmyBrains[self.Brain:GetCurrentEnemy():GetArmyIndex()].Nickname
             if mapSizeX >= 4000 and mapSizeZ >= 4000 then

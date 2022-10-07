@@ -1352,8 +1352,8 @@ function CDRThreatAssessmentRNG(cdr)
            --RNGLOG('Current Friendly Inner Threat '..cdr.CurrentFriendlyInnerCircle)
            --RNGLOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
            --RNGLOG('Current CDR Confidence '..cdr.Confidence)
-           RNGLOG('Enemy Bomber threat '..cdr.CurrentEnemyAirThreat)
-           RNGLOG('Friendly AA threat '..cdr.CurrentFriendlyAntiAirThreat)
+           --RNGLOG('Enemy Bomber threat '..cdr.CurrentEnemyAirThreat)
+           --RNGLOG('Friendly AA threat '..cdr.CurrentFriendlyAntiAirThreat)
             if enemyACUPresent and not cdr.SuicideMode and enemyUnitThreatInner > 30 and enemyUnitThreatInner > friendlyUnitThreatInner and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
                 --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitInner > friendlyUnitInner')
                 cdr.Caution = true
@@ -1403,8 +1403,8 @@ function CDRThreatAssessmentRNG(cdr)
                 cdr.MaxBaseRange = 60
             else
                 if ScenarioInfo.Options.AICDRCombat == 'cdrcombatOff' then
-                    RNGLOG('cdrcombat is off setting max radius to 60')
-                    cdr.MaxBaseRange = 60
+                    --RNGLOG('cdrcombat is off setting max radius to 60')
+                    cdr.MaxBaseRange = 80
                 else
                     cdr.MaxBaseRange = math.max(120, cdr.DefaultRange * cdr.Confidence)
                 end
@@ -1462,8 +1462,8 @@ function CDROverChargeRNG(aiBrain, cdr)
     end
     maxRadius = cdr.HealthPercent * 100
     if ScenarioInfo.Options.AICDRCombat == 'cdrcombatOff' then
-        RNGLOG('cdrcombat is off setting max radius to 60')
-        maxRadius = 60
+        --RNGLOG('cdrcombat is off setting max radius to 60')
+        maxRadius = 80
     end
     
     if cdr.Health > 5000 and cdr.Phase < 3
@@ -1768,7 +1768,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         end
                         if cdr.Phase < 3 and not cdr.HighThreatUpgradePresent and closestThreatUnit and closestUnitPosition then
                             if not closestThreatUnit.Dead then
-                                if GetThreatAtPosition(aiBrain, closestUnitPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > cdr.ThreatLimit then
+                                if GetThreatAtPosition(aiBrain, closestUnitPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > cdr.ThreatLimit * 1.3 then
                                     --RNGLOG('HighThreatUpgrade is now required')
                                     cdr.HighThreatUpgradeRequired = true
                                 end
@@ -1847,10 +1847,10 @@ function CDROverChargeRNG(aiBrain, cdr)
                 --RNGLOG('cdr retreating due to low health')
                 return CDRRetreatRNG(aiBrain, cdr)
             end
-            RNGLOG('in acu combat checking air')
-            RNGLOG('CurrentEnemyAirThreat '..cdr.CurrentEnemyAirThreat..' CurrentFriendlyAntiAirThreat '..cdr.CurrentFriendlyAntiAirThreat..' self brain antiair '..aiBrain.BrainIntel.SelfThreat.AntiAirNow..' EnemyThreatCurrent.AntiAir '..aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir)
+            --RNGLOG('in acu combat checking air')
+            --RNGLOG('CurrentEnemyAirThreat '..cdr.CurrentEnemyAirThreat..' CurrentFriendlyAntiAirThreat '..cdr.CurrentFriendlyAntiAirThreat..' self brain antiair '..aiBrain.BrainIntel.SelfThreat.AntiAirNow..' EnemyThreatCurrent.AntiAir '..aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir)
             if cdr.CurrentEnemyAirThreat > 8 and cdr.CurrentEnemyAirThreat > cdr.CurrentFriendlyAntiAirThreat and aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
-                RNGLOG('Enemy has high bomber threat around acu')
+                --RNGLOG('Enemy has high bomber threat around acu')
                 return CDRRetreatRNG(aiBrain, cdr)
             end
             if (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired)and cdr.Active and not cdr.SuicideMode then
@@ -2392,7 +2392,7 @@ function CDREnhancementsRNG(aiBrain, cdr)
                 if VDist2Sq(cdrPos[1], cdrPos[3], base.Position[1], base.Position[3]) < distSqAway then
                     inRange = true
                     if baseName == 'MAIN' and cdr.CurrentEnemyThreat > 20 then
-                        RNGLOG('Aborting upgrade due to main base threat')
+                        --RNGLOG('Aborting upgrade due to main base threat')
                         coroutine.yield(5)
                         return
                     end
@@ -2591,7 +2591,7 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
         local tick = GetGameTick()
         local seconds = GetGameTimeSeconds()
         local progress = cdr:GetWorkProgress()
-        RNGLOG('progress '..repr(progress))
+        --RNGLOG('progress '..repr(progress))
         if lastTick then
             if progress > lastProgress then
                 eta = seconds + ((tick - lastTick) / 10) * ((1-progress)/(progress-lastProgress))
@@ -2619,7 +2619,7 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
         end
         lastProgress = progress
         lastTick = tick
-        RNGLOG('eta on enhancement is '..eta)
+        --RNGLOG('eta on enhancement is '..eta)
         coroutine.yield(10)
     end
     --RNGLOG('* RNGAI: * BuildEnhancementRNG: '..aiBrain:GetBrain().Nickname..' Upgrade finished '..enhancement)
@@ -3120,15 +3120,15 @@ FindExperimentalTargetRNG = function(self)
     -- Needs more logic for ACU's that are in bases or firebases.
     for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
         if v.LAND.GameTime and v.LAND.GameTime + 650 > GetGameTimeSeconds() then
-            RNGLOG('ACU Table for index '..k..' table '..repr(aiBrain.EnemyIntel.ACU))
+            --RNGLOG('ACU Table for index '..k..' table '..repr(aiBrain.EnemyIntel.ACU))
             if RUtils.HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
                 if not RUtils.PositionInWater(aiBrain.EnemyIntel.ACU[k].Position) then
                     bestUnit = aiBrain.EnemyIntel.ACU[k].Unit
-                    RNGLOG('Experimental strike : ACU Target mission found and target set')
+                    --RNGLOG('Experimental strike : ACU Target mission found and target set')
                 end
                 break
             else
-                RNGLOG('Experimental strike : ACU Target mission found but target not visible')
+                --RNGLOG('Experimental strike : ACU Target mission found but target not visible')
             end
         end
     end
@@ -3222,24 +3222,8 @@ function BehemothBehaviorRNG(self, id)
     while experimental and not experimental.Dead do
         if lastBase then
             targetUnit, lastBase = WreckBaseRNG(self, lastBase)
-            if lastBase then
-                RNGLOG('Exp unit has lastBase in WreckBaseRNG')
-                if targetUnit then
-                    RNGLOG('Exp unit has targetUnit in WreckBaseRNG')
-                end
-            else
-                RNGLOG('No lastBase after FindExperimentalTargetRNG')
-            end
         elseif not lastBase then
             targetUnit, lastBase = FindExperimentalTargetRNG(self)
-            if targetUnit then
-                RNGLOG('Exp unit has FindExperimentalTargetRNG')
-                if lastBase then
-                    RNGLOG('Exp unit has lastBase FindExperimentalTargetRNG')
-                end
-            else
-                RNGLOG('No lastBase after FindExperimentalTargetRNG')
-            end
         end
 
         if targetUnit and not targetUnit.Dead then
@@ -3250,14 +3234,14 @@ function BehemothBehaviorRNG(self, id)
             else
                 ExpMoveToPosition(aiBrain, self, targetUnit, experimental, false)
             end
-            RNGLOG('Exp unit has pathed to location using micro')
+            --RNGLOG('Exp unit has pathed to location using micro')
         end
 
         -- Walk to and kill target loop
         while not experimental.Dead and not experimental:IsIdleState() do
             local nearCommander = CommanderOverrideCheck(self)
             if nearCommander and nearCommander ~= targetUnit then
-                RNGLOG('Exp unit ACU spotted, trying to attack')
+                --RNGLOG('Exp unit ACU spotted, trying to attack')
                 IssueClearCommands({experimental})
                 IssueAttack({experimental}, nearCommander)
                 targetUnit = nearCommander
@@ -3268,7 +3252,7 @@ function BehemothBehaviorRNG(self, id)
             local targetPos = targetUnit:GetPosition()
             if VDist2Sq(unitPos[1], unitPos[3], targetPos[1], targetPos[3]) < 6400 then
                 if targetUnit and not targetUnit.Dead and aiBrain:CheckBlockingTerrain(unitPos, targetPos, 'none') then
-                    RNGLOG('Exp unit WEAPON BLOCKED, moving to better position')
+                    --RNGLOG('Exp unit WEAPON BLOCKED, moving to better position')
                     IssueClearCommands({experimental})
                     IssueMove({experimental}, targetPos )
                     coroutine.yield(50)
@@ -3286,7 +3270,7 @@ function BehemothBehaviorRNG(self, id)
             while closestBlockingShield and not closestBlockingShield.Dead do
                 IssueClearCommands({experimental})
                 local shieldPosition = closestBlockingShield:GetPosition()
-                RNGLOG('Exp unit found closest blocking shield moving to attack')
+                --RNGLOG('Exp unit found closest blocking shield moving to attack')
                 if VDist3Sq(experimental:GetPosition(), shieldPosition) < 6400 then
                     IssueMove({experimental}, shieldPosition)
                 else
@@ -3303,7 +3287,7 @@ function BehemothBehaviorRNG(self, id)
                     unitPos = GetPlatoonPosition(self)
                     shieldPosition = closestBlockingShield:GetPosition()
                     if VDist2Sq(unitPos[1], unitPos[3], shieldPosition[1], shieldPosition[3]) < 6400 then
-                        RNGLOG('Exp unit moving to shield position')
+                        --RNGLOG('Exp unit moving to shield position')
                         IssueClearCommands({experimental})
                         IssueMove({experimental}, shieldPosition)
                         if closestBlockingShield and not closestBlockingShield.Dead then
@@ -3325,7 +3309,7 @@ function BehemothBehaviorRNG(self, id)
             coroutine.yield(10)
         end
         coroutine.yield(10)
-        RNGLOG('Exp unit restarting full exp loop')
+        --RNGLOG('Exp unit restarting full exp loop')
     end
 end
 
@@ -3470,7 +3454,7 @@ function ExpMoveToPosition(aiBrain, platoon, target, unit, ignoreUnits)
             IssueMove({unit}, destination)
         end
     else
-        RNGLOG('Exp unit has no path to target')
+        --RNGLOG('Exp unit has no path to target')
     end
 end
 
