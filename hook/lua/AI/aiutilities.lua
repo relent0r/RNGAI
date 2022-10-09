@@ -7,6 +7,7 @@ local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
+local RNGINSERT = table.insert
 local RNGGETN = table.getn
 
 function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
@@ -263,7 +264,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
                         local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, pos, 45, 'Enemy')
                         for _, eunit in enemyUnits do
                             enemyUnitPos = eunit:GetPosition()
-                            if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, unit) then
+                            if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, eunit) then
                                 if VDist3Sq(enemyUnitPos, pos) < 144 then
                                     --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
                                     if eunit and not eunit.Dead and unit:GetFractionComplete() == 1 then
@@ -279,7 +280,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
                                 --RNGLOG('MexBuild found enemy unit, try avoid it')
                                 if VDist3Sq(enemyUnitPos, pos) < 81 then
                                     --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
-                                    if eunit and not eunit.Dead and unit:GetFractionComplete() == 1 then
+                                    if eunit and not eunit.Dead and eunit:GetFractionComplete() == 1 then
                                         if VDist3Sq(pos, enemyUnitPos) < 100 then
                                             IssueClearCommands({unit})
                                             IssueReclaim({unit}, eunit)
@@ -314,6 +315,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
     if not destination then
         return false
     end
+    local ALLBPS = __blueprints
     local pos = eng:GetPosition()
     local T1EngOnly = false
     if EntityCategoryContains(categories.ENGINEER * categories.TECH1, eng) then
@@ -392,37 +394,159 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                 whatToBuildM = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
             end
             --RNGLOG('* AI-RNG: EngineerMoveWithSafePath(): path 0 true')
-            local pathSize = table.getn(path)
             -- Move to way points (but not to destination... leave that for the final command)
             --RNGLOG('We are issuing move commands for the path')
-            for widx, waypointPath in path do
-                if widx>=3 then
-                    local bool,markers=MABC.CanBuildOnMassMexPlatoon(aiBrain, waypointPath, 25)
+            local dist
+            local pathLength = RNGGETN(path)
+            local brokenPathMovement = false
+            local currentPathNode = 1
+            local pos
+            IssueClearCommands({eng})
+            for i=currentPathNode, pathLength do
+                if i>=3 then
+                    local bool,markers=MABC.CanBuildOnMassMexPlatoon(aiBrain, path[i], 25)
                     if bool then
                         --RNGLOG('We can build on a mass marker within 30')
                         --local massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, waypointPath)
                         --RNGLOG('Mass Marker'..repr(massMarker))
                         --RNGLOG('Attempting second mass marker')
+                        local buildQueueReset = eng.EnginerBuildQueue
+                        eng.EnginerBuildQueue = {}
                         for _,massMarker in markers do
                             RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
                             EngineerTryRepair(aiBrain, eng, whatToBuildM, massMarker.Position)
                             if massMarker.BorderWarning then
                                --RNGLOG('Border Warning on mass point marker')
-                                IssueBuildMobile({eng}, massMarker.Position, whatToBuildM, {})
+                                IssueBuildMobile({eng}, {massMarker.Position[1], massMarker.Position[3], 0}, whatToBuildM, {})
+                                local newEntry = {whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false,Position=massMarker.Position, true, PathPoint=i}
+                                RNGINSERT(eng.EngineerBuildQueue, newEntry)
                             else
                                 aiBrain:BuildStructure(eng, whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false)
+                                local newEntry = {whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false,Position=massMarker.Position, true, PathPoint=i}
+                                RNGINSERT(eng.EngineerBuildQueue, newEntry)
+                            end
+                        end
+                        if buildQueueReset then
+                            for k, v in buildQueueReset do
+                                RNGINSERT(eng.EngineerBuildQueue, v)
                             end
                         end
                     end
                 end
-                if (widx - math.floor(widx/2)*2)==0 or VDist3Sq(destination,waypointPath)<40*40 then continue end
-                IssueMove({eng}, waypointPath)
+                if (i - math.floor(i/2)*2)==0 or VDist3Sq(destination,path[i])<40*40 then continue end
+                IssueMove({eng}, path[i])
             end
-            IssueMove({eng}, destination)
+            --IssueMove({eng}, destination)
+            for k, v in eng.EngineerBuildQueue do
+                if eng.EngineerBuildQueue[k].PathPoint then
+                    continue
+                end
+                if eng.EngineerBuildQueue[k][5] then
+                    IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
+                else
+                    aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                end
+            end
+            while not eng.Dead do
+                if brokenPathMovement and eng.EngineerBuildQueue and RNGGETN(eng.EngineerBuildQueue) > 0 then
+                    local queuePointTaken = {}
+                    local skipPath = false
+                    for i=currentPathNode, pathLength do
+                        for k, v in eng.EngineerBuildQueue do
+                            if v.PathPoint == i then
+                                if eng.EngineerBuildQueue[k][5] then
+                                    --RNGLOG('BorderWarning build')
+                                    IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
+                                else
+                                    aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                                end
+                                queuePointTaken[i] = true
+                                skipPath = true
+                            end
+                        end
+                        if not skipPath then
+                            IssueMove({eng}, path[i])
+                        end
+                    end
+                    --IssueMove({eng}, destination)
+                    for k, v in eng.EngineerBuildQueue do
+                        if queuePointTaken[k] and eng.EngineerBuildQueue[k]  then
+                            continue
+                        end
+                        if eng.EngineerBuildQueue[k][5] then
+                            --RNGLOG('BorderWarning build')
+                            IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
+                        else
+                            aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                        end
+                    end
+                    brokenPathMovement = false
+                end
+                pos = eng:GetPosition()
+                if currentPathNode <= pathLength then
+                    dist = VDist3Sq(path[currentPathNode], pos)
+                    if dist < 100 then
+                        currentPathNode = currentPathNode + 1
+                    end
+                end
+                if VDist3Sq(destination, pos) < 100 then
+                    break
+                end
+                coroutine.yield(15)
+                if eng.Dead or eng:IsIdleState() then
+                    return
+                end
+                if eng.EngineerBuildQueue then
+                    if ALLBPS[eng.EngineerBuildQueue[1][1]].CategoriesHash.MASSEXTRACTION and ALLBPS[eng.EngineerBuildQueue[1][1]].CategoriesHash.TECH1 then
+                        brokenPathMovement = RUtils.PerformEngReclaim(aiBrain, eng, 5)
+                    end
+                end
+                if eng:IsUnitState("Moving") then
+                    if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, pos, 45, 'Enemy') > 0 then
+                        local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, pos, 45, 'Enemy')
+                        for _, eunit in enemyUnits do
+                            enemyUnitPos = eunit:GetPosition()
+                            if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, eunit) then
+                                if VDist3Sq(enemyUnitPos, pos) < 144 then
+                                    --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
+                                    if eunit and not eunit.Dead and eunit:GetFractionComplete() == 1 then
+                                        if VDist3Sq(pos, enemyUnitPos) < 100 then
+                                            IssueClearCommands({eng})
+                                            IssueReclaim({eng}, eunit)
+                                            brokenPathMovement = true
+                                            break
+                                        end
+                                    end
+                                end
+                            elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, eunit) then
+                                --RNGLOG('MexBuild found enemy unit, try avoid it')
+                                if VDist3Sq(enemyUnitPos, pos) < 81 then
+                                    --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
+                                    if eunit and not eunit.Dead and eunit:GetFractionComplete() == 1 then
+                                        if VDist3Sq(pos, enemyUnitPos) < 100 then
+                                            IssueClearCommands({eng})
+                                            IssueReclaim({eng}, eunit)
+                                            brokenPathMovement = true
+                                            coroutine.yield(60)
+                                            break
+                                        end
+                                    end
+                                else
+                                    IssueClearCommands({eng})
+                                    IssueMove({eng}, RUtils.AvoidLocation(enemyUnitPos, pos, 50))
+                                    brokenPathMovement = true
+                                    coroutine.yield(60)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
         else
             IssueMove({eng}, destination)
         end
-        return true
+        eng.EngineerBuildQueue = {}
+        return true, path
     end
     return false
 end

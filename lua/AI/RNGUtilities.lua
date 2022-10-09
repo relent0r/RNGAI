@@ -1741,7 +1741,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
     return false
 end
 
-function AIFindBrainTargetInACURangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, platoonThreat, ignoreCivilian)
+function AIFindBrainTargetInACURangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, platoonThreat, ignoreCivilian, ignoreNotCompleted)
     if not position then
         position = platoon:GetPlatoonPosition()
     end
@@ -1804,6 +1804,11 @@ function AIFindBrainTargetInACURangeRNG(aiBrain, position, platoon, squad, maxRa
                     if ignoreCivilian then
                         if ArmyIsCivilian(unit:GetArmy()) then
                             --RNGLOG('Unit is civilian')
+                            continue
+                        end
+                    end
+                    if ignoreNotCompleted then
+                        if unit:GetFractionComplete() ~= 1 then
                             continue
                         end
                     end
@@ -1926,7 +1931,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, 
     return false
 end
 
-function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, maxRange, targetQueryCategory, TargetSearchCategory, enemyBrain)
+function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, maxRange, targetQueryCategory, TargetSearchCategory, enemyBrain, ignoreNotCompleted)
     local ALLBPS = ALLBPS
     if type(TargetSearchCategory) == 'string' then
         TargetSearchCategory = ParseEntityCategory(TargetSearchCategory)
@@ -1974,6 +1979,11 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
             for num, Target in TargetsInRange do
                 if Target.Dead or Target:BeenDestroyed() then
                     continue
+                end
+                if ignoreNotCompleted then
+                    if Target:GetFractionComplete() ~= 1 then
+                        continue
+                    end
                 end
                 if Target.Sync.id and not unitThreatTable[Target.Sync.id] then
                     if platoon.MovementLayer == 'Water' then
@@ -4949,4 +4959,18 @@ CheckACUSnipe = function(aiBrain, layerType)
         end
     end
     return potentialTarget
+end
+
+CheckHighPriorityTarget = function(aiBrain, im, platoon)
+    local platPos = platoon:GetPosition()
+    if aiBrain.EnemyIntel.HighPriorityTargetAvailable then
+        for k, v in aiBrain.EnemyIntel.prioritypointshighvalue do
+            if not v.unit.Dead then
+                if VDist3Sq(v.position, platPos) < 150 then
+                    return v.unit
+                end
+            end
+        end
+    end
+    return false
 end

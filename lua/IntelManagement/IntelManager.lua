@@ -2555,10 +2555,18 @@ TruePlatoonPriorityDirector = function(aiBrain)
                 aiBrain.prioritypoints[k] = nil
             end
         end
+        local highPriorityCount = 0
         for k, v in aiBrain.prioritypointshighvalue do
             if v.unit.Dead then
                 aiBrain.prioritypointshighvalue[k] = nil
+            else
+                highPriorityCount = highPriorityCount + 1
             end
+        end
+        if highPriorityCount > 0 then
+            aiBrain.EnemyIntel.HighPriorityTargetAvailable = true
+        else
+            aiBrain.EnemyIntel.HighPriorityTargetAvailable = false
         end
         coroutine.yield(50)
     end

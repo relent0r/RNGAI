@@ -5027,7 +5027,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                     else
                         local hold, targetZone, targetPosition = self:AdjacentZoneControlCheck(aiBrain)
-                        if hold and targetZone and targetPosition then
+                        if zoneCounter < 5 and hold and targetZone and targetPosition then
                             --RNGLOG('Zone Control Platoon is holding position')
                             local direction = RUtils.GetDirectionInDegrees( platLoc, targetPosition )
                             --RNGLOG('Direction is '..direction)
@@ -5253,11 +5253,11 @@ Platoon = Class(RNGAIPlatoonClass) {
         local selectedPosition = false
         local selectedZone = false
         local highestThreat = 0
-        local currentZoneDistanceToHome = VDist2Sq(aiBrain.Zones.Land.zones[self.TargetZone].pos[1],aiBrain.Zones.Land.zones[self.TargetZone].pos[3],aiBrain.BuilderManagers['MAIN'].Position[1], aiBrain.BuilderManagers['MAIN'].Position[3])
+        local currentZoneDistanceToHome = VDist3Sq(aiBrain.Zones.Land.zones[self.TargetZone].pos,aiBrain.BuilderManagers['MAIN'].Position)
        --RNGLOG('Performing defensive adjacent zone check')
         for k, v in aiBrain.Zones.Land.zones[self.TargetZone].edges do
             if v.zone.enemylandthreat > 0 then
-                local currentEdgeDistanceToHome = VDist2Sq(v.zone.pos[1],v.zone.pos[3],aiBrain.BuilderManagers['MAIN'].Position[1], aiBrain.BuilderManagers['MAIN'].Position[3])
+                local currentEdgeDistanceToHome = VDist3Sq(v.zone.pos,aiBrain.BuilderManagers['MAIN'].Position)
                 if currentEdgeDistanceToHome < currentZoneDistanceToHome and v.zone.enemylandthreat > highestThreat then
                     highestThreat = v.zone.enemylandthreat
                     currentZoneDistanceToHome = currentEdgeDistanceToHome
@@ -6256,7 +6256,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, LandRadiusDetectionCategory, PlatoonPosition, self.EnemyRadius, 'Enemy')
                     if enemyUnitCount > 0 then
                         local attackSquad = self:GetSquadUnits('Attack')
-                        local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, PlatoonPosition, 'Attack', self.EnemyRadius, LandRadiusScanCategory, self.atkPri, false)
+                        local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, PlatoonPosition, 'Attack', self.EnemyRadius, LandRadiusScanCategory, self.atkPri, false, true)
                         if acuInRange then
                             target = false
                             if self.CurrentPlatoonThreat < 25 then
@@ -9473,6 +9473,8 @@ Platoon = Class(RNGAIPlatoonClass) {
         if eng.Dead then self:PlatoonDisband() end
         while PlatoonExists(aiBrain, self) and eng and not eng.Dead do
             local platoonPos=GetPlatoonPosition(self)
+            local success
+            eng.EngineerBuildQueue = {}
             table.sort(markerTable,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],platoonPos[1],platoonPos[3])/VDist2Sq(aiBrain.emanager.enemy.Position[1],aiBrain.emanager.enemy.Position[3],a.Position[1],a.Position[3])/a.priority/a.priority<VDist2Sq(b.Position[1],b.Position[3],platoonPos[1],platoonPos[3])/VDist2Sq(aiBrain.emanager.enemy.Position[1],aiBrain.emanager.enemy.Position[3],b.Position[1],b.Position[3])/b.priority/b.priority end)
             local currentmexpos=nil
             local curindex=nil
@@ -9497,48 +9499,53 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --RNGLOG('No path to currentmexpos')
                 coroutine.yield(1)
                 continue
-            elseif not AIUtils.EngineerMoveWithSafePathCHP(aiBrain, eng, currentmexpos, whatToBuild) then
-                table.remove(markerTable,curindex) 
-                --RNGLOG('No path to currentmexpos')
-                coroutine.yield(1)
-                continue 
+            else
+                eng.EngineerBuildQueue = {}
+                for _=0,3,1 do
+                    if not currentmexpos then break end
+                    local bool,markers=MABC.CanBuildOnMassMexPlatoon(aiBrain, currentmexpos, 25)
+                    --LOG('Markers that can be built on for mex build')
+                    if bool then
+                        --RNGLOG('We can build on a mass marker within 30')
+                        --local massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, waypointPath)
+                        --RNGLOG('Mass Marker'..repr(markers))
+                        --RNGLOG('Attempting second mass marker')
+                        for _,massMarker in markers do
+                            RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
+                            AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, massMarker.Position)
+                            --eng:SetCustomName('MexBuild Platoon attempting to build in for loop')
+                            if massMarker.BorderWarning then
+                                --RNGLOG('Border Warning on mass point marker')
+                                IssueBuildMobile({eng}, massMarker.Position, whatToBuild, {})
+                            else
+                                aiBrain:BuildStructure(eng, whatToBuild, {massMarker.Position[1], massMarker.Position[3], 0}, false)
+                            end
+                            local newEntry = {whatToBuild, {massMarker.Position[1], massMarker.Position[3], 0}, false,Position=massMarker.Position}
+                            RNGINSERT(eng.EngineerBuildQueue, newEntry)
+                            currentmexpos=massMarker.Position
+                        end
+                    else
+                        --LOG('No markers reported')
+                        break
+                    end
+                end
+                success = AIUtils.EngineerMoveWithSafePathCHP(aiBrain, eng, currentmexpos, whatToBuild)
+                RNGLOG('Exited movewithsafepathchploop')
+                if not success then
+                    table.remove(markerTable,curindex) 
+                    --RNGLOG('No path to currentmexpos')
+                    coroutine.yield(1)
+                    continue 
+                end
             end
-            local firstmex=currentmexpos
-            local initialized=nil
-            --RNGLOG('Firstmex '..repr(firstmex))
             if eng.Dead then
                 return
             end
             --LOG('Mex build run')
-            for _=0,3,1 do
-                if not currentmexpos then break end
-                local bool,markers=MABC.CanBuildOnMassMexPlatoon(aiBrain, currentmexpos, 25)
-                --LOG('Markers that can be built on for mex build')
-                if bool then
-                    --RNGLOG('We can build on a mass marker within 30')
-                    --local massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, waypointPath)
-                    --RNGLOG('Mass Marker'..repr(markers))
-                    --RNGLOG('Attempting second mass marker')
-                    for _,massMarker in markers do
-                        RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
-                        AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, massMarker.Position)
-                        --eng:SetCustomName('MexBuild Platoon attempting to build in for loop')
-                        if massMarker.BorderWarning then
-                            --RNGLOG('Border Warning on mass point marker')
-                            IssueBuildMobile({eng}, massMarker.Position, whatToBuild, {})
-                        else
-                            aiBrain:BuildStructure(eng, whatToBuild, {massMarker.Position[1], massMarker.Position[3], 0}, false)
-                        end
-                        --local newEntry = {whatToBuild, {massMarker.Position[1], massMarker.Position[3], 0}, false,Position=massMarker.Position}
-                        --RNGINSERT(eng.EngineerBuildQueue, newEntry)
-                        currentmexpos=massMarker.Position
-                    end
-                else
-                    --LOG('No markers reported')
-                    break
-                end
-            end
+            
             while not eng.Dead and 0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving") do
+                RNGLOG('EngineerStuckinloop')
+                RNGLOG('Command Queue Length is '..RNGGETN(eng:GetCommandQueue()))
                 local platPos = GetPlatoonPosition(self)
                 if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                     if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, platPos, 30, 'Enemy') > 0 then

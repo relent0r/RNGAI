@@ -363,7 +363,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI AntiAirHunt',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 800,
-        InstanceCount = 8,
+        InstanceCount = 4,
         BuilderType = 'Any',
         BuilderData = {
             AvoidBases = true,
@@ -388,7 +388,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI AntiAirLockdown',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 750,
-        InstanceCount = 3,
+        InstanceCount = 1,
         BuilderType = 'Any',
         BuilderData = {
             NeverGuardEngineers = true,

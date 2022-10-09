@@ -929,6 +929,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyCount = 0
         self.EnemyIntel.ClosestEnemyBase = 0
         self.EnemyIntel.ACUEnemyClose = false
+        self.EnemyIntel.HighPriorityTargetAvailable = false
         self.EnemyIntel.ACU = {}
         self.EnemyIntel.Phase = 1
         self.EnemyIntel.TML = {}
