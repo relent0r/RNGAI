@@ -3842,6 +3842,25 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
     end,
 
+    SetupMexBuildAICallbacksRNG = function(eng)
+        if eng and not eng.Dead and not eng.BuildDoneCallbackSet and eng.PlatoonHandle and PlatoonExists(eng:GetAIBrain(), eng.PlatoonHandle) then
+            import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(eng.PlatoonHandle.MexBuildAIDoneRNG, eng, categories.ALLUNITS)
+            eng.BuildDoneCallbackSet = true
+        end
+    end,
+
+    MexBuildAIDoneRNG = function(unit, params)
+        if unit.Active then return end
+        if not unit.PlatoonHandle then return end
+        if not unit.PlatoonHandle.PlanName == 'MexBuildAIRNG' then return end
+        RNGLOG("*AI DEBUG: MexBuildAIRNG removing queue item")
+        RNGLOG('Queue Size is '..RNGGETN(eng.EngineerBuildQueue))
+        if eng.EngineerBuildQueue and RNGGETN(eng.EngineerBuildQueue) > 0 then
+            table.remove(eng.EngineerBuildQueue, 1)
+        end
+        RNGLOG('Queue size after remove '..RNGGETN(eng.EngineerBuildQueue))
+    end,
+
     EngineerBuildDoneRNG = function(unit, params)
         if unit.Active then return end
         if not unit.PlatoonHandle then return end
@@ -9455,7 +9474,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         buildingTmpl = buildingTmplFile[(cons.BuildingTemplate or 'BuildingTemplates')][factionIndex]
 
         --RNGLOG("*AI DEBUG: Setting up Callbacks for " .. eng.Sync.id)
-        --self.SetupEngineerCallbacksRNG(eng)
+        self.SetupMexBuildAICallbacksRNG(eng)
         local whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
         -- wait in case we're still on a base
         if not eng.Dead then
@@ -9530,7 +9549,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                 end
                 success = AIUtils.EngineerMoveWithSafePathCHP(aiBrain, eng, currentmexpos, whatToBuild)
-                RNGLOG('Exited movewithsafepathchploop')
                 if not success then
                     table.remove(markerTable,curindex) 
                     --RNGLOG('No path to currentmexpos')
@@ -9544,8 +9562,6 @@ Platoon = Class(RNGAIPlatoonClass) {
             --LOG('Mex build run')
             
             while not eng.Dead and 0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving") do
-                RNGLOG('EngineerStuckinloop')
-                RNGLOG('Command Queue Length is '..RNGGETN(eng:GetCommandQueue()))
                 local platPos = GetPlatoonPosition(self)
                 if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                     if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, platPos, 30, 'Enemy') > 0 then

@@ -1008,7 +1008,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         PriorityFunction = StartingReclaimPresent,
         Priority = 950,
-        InstanceCount = 3,
+        InstanceCount = 2,
         BuilderConditions = {
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 --{ EBC, 'GreaterThanEnergyStorageRatioRNG', { 0.40 } },
@@ -1116,7 +1116,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Engineer Reclaim T1 Floating',
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         Priority = 900,
-        InstanceCount = 16,
+        InstanceCount = 14,
         BuilderConditions = {
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},

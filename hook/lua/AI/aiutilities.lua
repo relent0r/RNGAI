@@ -3,6 +3,7 @@ WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'.
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
+local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
@@ -42,94 +43,6 @@ function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
         end
     end
     return markerList
-end
-
-function EngineerMoveWithSafePathRNGOld(aiBrain, unit, destination, alwaysCheckPath)
-    if not destination then
-        return false
-    end
-    local pos = unit:GetPosition()
-    local T1EngOnly = false
-    if EntityCategoryContains(categories.ENGINEER * categories.TECH1, unit) then
-        T1EngOnly = true
-    end
-    -- don't check a path if we are in build range
-    if not alwaysCheckPath and VDist2(pos[1], pos[3], destination[1], destination[3]) < 12 then
-        return true
-    end
-
-    -- first try to find a path with markers. 
-    local result, bestPos
-    local path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination)
-    if unit.PlatoonHandle.BuilderName then
-        --RNGLOG('EngineerGenerateSafePathToRNG for '..unit.PlatoonHandle.BuilderName..' reason '..reason)
-    end
-    --RNGLOG('EngineerGenerateSafePathToRNG reason is'..reason)
-    -- only use CanPathTo for distance closer then 200 and if we can't path with markers
-    if reason ~= 'PathOK' then
-        -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
-        if reason == 'NoGraph' then
-            result = true
-        elseif VDist2(pos[1], pos[3], destination[1], destination[3]) < 200 then
-            SPEW('* AI-RNG: EngineerMoveWithSafePath(): executing CanPathTo(). LUA GenerateSafePathTo returned: ('..repr(reason)..') '..VDist2(pos[1], pos[3], destination[1], destination[3]))
-            -- be really sure we don't try a pathing with a destoryed c-object
-            if unit.Dead or unit:BeenDestroyed() or IsDestroyed(unit) then
-                SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
-                return false
-            end
-            result, bestPos = unit:CanPathTo(destination)
-        end 
-    end
-    if result then
-        --RNGLOG('result is true, reason is '..reason)
-    else
-        --RNGLOG('result is false, reason is '..reason)
-    end
-    local bUsedTransports = false
-    -- Increase check to 300 for transports
-    if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 250 * 250
-    and unit.PlatoonHandle and not EntityCategoryContains(categories.COMMAND, unit) then
-        -- If we can't path to our destination, we need, rather than want, transports
-        local needTransports = not result and reason ~= 'PathOK'
-        if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 250 * 250 then
-            needTransports = true
-        end
-
-        -- Skip the last move... we want to return and do a build
-        --RNGLOG('run SendPlatoonWithTransportsNoCheck')
-        unit.WaitingForTransport = true
-        bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, unit.PlatoonHandle, destination, T1EngOnly, needTransports, true, false)
-        unit.WaitingForTransport = false
-        --RNGLOG('finish SendPlatoonWithTransportsNoCheck')
-
-        if bUsedTransports then
-            return true
-        elseif VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 512 * 512 then
-            -- If over 512 and no transports dont try and walk!
-            return false
-        end
-    end
-
-    -- If we're here, we haven't used transports and we can path to the destination
-    if result or reason == 'PathOK' then
-        --RNGLOG('* AI-RNG: EngineerMoveWithSafePath(): result or reason == PathOK ')
-        if reason ~= 'PathOK' then
-            path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination)
-        end
-        if path then
-            --RNGLOG('* AI-RNG: EngineerMoveWithSafePath(): path 0 true')
-            local pathSize = table.getn(path)
-            -- Move to way points (but not to destination... leave that for the final command)
-            for widx, waypointPath in path do
-                IssueMove({unit}, waypointPath)
-            end
-            IssueMove({unit}, destination)
-        else
-            IssueMove({unit}, destination)
-        end
-        return true
-    end
-    return false
 end
 
 function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath)
@@ -474,7 +387,6 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                             continue
                         end
                         if eng.EngineerBuildQueue[k][5] then
-                            --RNGLOG('BorderWarning build')
                             IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
                         else
                             aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])

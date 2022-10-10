@@ -68,10 +68,10 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Mass 120',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 992,
-        InstanceCount = 4,
+        InstanceCount = 3,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 120, nil, nil, 0, 'AntiSurface', 1}},
-            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
+            --{ UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -288,6 +288,30 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 910,
         InstanceCount = 2,
+        BuilderConditions = {
+                { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 100, 2000, -500, 2, 0, 'AntiSurface', 1}},
+            },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'Mass',
+            NeedGuard = false,
+            DesiresAssist = false,
+            Construction = {
+                MaxDistance = 2000,
+                ThreatMin = -500,
+                ThreatMax = 30,
+                ThreatType = 'AntiSurface',
+                BuildStructures = {
+                    'T1Resource',
+                }
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T1ResourceEngineer 2000 Floating',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 890,
+        InstanceCount = 10,
         BuilderConditions = {
                 { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 100, 2000, -500, 2, 0, 'AntiSurface', 1}},
             },
