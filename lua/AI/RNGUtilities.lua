@@ -4966,17 +4966,21 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon)
     local closestTarget
     local closestDistance
     if aiBrain.EnemyIntel.HighPriorityTargetAvailable then
-        for k, v in aiBrain.EnemyIntel.prioritypointshighvalue do
-            if not v.unit.Dead then
-                local targetDistance = VDist3Sq(v.position, platPos)
-                if not closestDistance or targetDistance < closestDistance then
-                    closestDistance = targetDistance
-                    closestTarget = v.unit
+        if VDist3Sq(platPos, aiBrain.BrainIntel.StartPos) < (aiBrain.EnemyIntel.ClosestEnemyBase / 2) then
+            for k, v in aiBrain.EnemyIntel.prioritypointshighvalue do
+                if not v.unit.Dead then
+                    local targetDistance = VDist3Sq(v.position, platPos)
+                    if not closestDistance or targetDistance < closestDistance then
+                        if AIAttackUtils.CanGraphToRNG(platPos, v.position, platoon.MovementLayer) then
+                            closestDistance = targetDistance
+                            closestTarget = v.unit
+                        end
+                    end
                 end
             end
-        end
-        if closestTarget then
-            return closestTarget
+            if closestTarget then
+                return closestTarget
+            end
         end
     end
     return false
