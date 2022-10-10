@@ -391,6 +391,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
             if not target or target.Dead then
+                target = RUtils.CheckACUSnipe(aiBrain, 'AIRANTINAVY')
+            end
+            if not target or target.Dead then
                 --RNGLOG('Looking for target at radius '..maxRadius)
                 target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self.HoldingPosition, self, 'Attack', maxRadius, atkPri, avoidBases, self.CurrentPlatoonThreat)
                 if (not target or target.Dead) and acuCheck then
@@ -524,35 +527,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local requiredCount = 0
             --RNGLOG('Mercy strike : loop ACU Snipe table '..repr(aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe))
             for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
-                if self.MovementLayer == 'Air' then
-                    if v.AIR and v.AIR.GameTime then
-                        if v.AIR.GameTime + 650 > GetGameTimeSeconds() then
-                            --RNGLOG('ACU Table for index '..k..' table '..repr(aiBrain.EnemyIntel.ACU))
-                            if RUtils.HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
-                                target = aiBrain.EnemyIntel.ACU[k].Unit
-                                requiredCount = v.AIR.CountRequired
-                                --RNGLOG('Mercy strike : ACU Target mission found and target set')
-                                break
-                            else
-                                --RNGLOG('Mercy strike : ACU Target mission found but target not visible')
-                            end
-                        end
-                    end
-                else
-                    if v.LAND and v.LAND.GameTime then
-                        if v.LAND.GameTime + 650 > GetGameTimeSeconds() then
-                            --RNGLOG('ACU Table for index '..k..' table '..repr(aiBrain.EnemyIntel.ACU))
-                            if RUtils.HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
-                                target = aiBrain.EnemyIntel.ACU[k].Unit
-                                requiredCount = v.LAND.CountRequired
-                                --RNGLOG('Mercy strike : ACU Target mission found and target set')
-                                break
-                            else
-                                --RNGLOG('Mercy strike : ACU Target mission found but target not visible')
-                            end
-                        end
-                    end
-                end
+                target, requiredCount = CheckACUSnipe(aiBrain, self.MovementLayer)
             end
             if not target then
                 --RNGLOG('Mercy strike : No ACU target')
@@ -1953,9 +1928,9 @@ Platoon = Class(RNGAIPlatoonClass) {
         RNGINSERT(self.atkPri, categories.ALLUNITS)
         RNGINSERT(categoryList, categories.ALLUNITS)
         self:SetPrioritizedTargetList('Attack', categoryList)
-        target = RUtils.CheckACUSnipe(aiBrain, 'LAND')
+        target = RUtils.CheckACUSnipe(aiBrain, 'Land')
         if not target then
-            target = RUtils.ValidateMainBase(self, self:GetSquadUnits('Attack'), aiBrain)
+            target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
         end
         if target then
             --RNGLOG('hunt ai path enemy found within base zones')
@@ -2849,7 +2824,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             platoonUnits = GetPlatoonUnits(self)
             if not target or target.Dead then
                 platoonPosition = GetPlatoonPosition(self)
-                target = RUtils.CheckACUSnipe(aiBrain, 'LAND')
+                target = RUtils.CheckACUSnipe(aiBrain, 'Land')
                 --[[
                 -- This is still useful but I need to find another way to implement it.    
                 for k, v in aiBrain.EnemyIntel.ACU do
@@ -3198,7 +3173,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             platoonUnits = GetPlatoonUnits(self)
             if not target or target.Dead then
                 platoonPosition = GetPlatoonPosition(self)
-                target = RUtils.CheckACUSnipe(aiBrain, 'LAND')
+                target = RUtils.CheckACUSnipe(aiBrain, 'Land')
                 
                 if not target or target.Dead then
                     --RNGLOG('Standard Target search for strikeforce platoon ')
@@ -10093,7 +10068,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local function SimplePriority(self,aiBrain)--use the aibrain priority table to do things
             local VDist2Sq = VDist2Sq
             local RNGMAX = math.max
-            local acuSnipeUnit = RUtils.CheckACUSnipe(aiBrain, 'LAND')
+            local acuSnipeUnit = RUtils.CheckACUSnipe(aiBrain, 'Land')
             if acuSnipeUnit then
                 if not acuSnipeUnit.Dead then
                     local acuTargetPosition = acuSnipeUnit:GetPosition()

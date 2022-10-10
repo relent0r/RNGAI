@@ -23,6 +23,7 @@ local ALLBPS = __blueprints
 -- TEMPORARY LOUD LOCALS
 local RNGPOW = math.pow
 local RNGSQRT = math.sqrt
+local RNGMAX = math.max
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
 local RNGREMOVE = table.remove
@@ -3900,38 +3901,6 @@ function GetClosestShieldProtectingTargetRNG(attackingUnit, targetUnit, attackin
     return closest, shieldHealth
 end
 
-
-function ValidateMainBase(platoon, squad, aiBrain)
-    local target = false
-    local VDist2Sq = VDist2Sq
-    local RNGMAX = math.max
-    if (not aiBrain.prioritypointshighvalue) or RNGGETN(aiBrain.prioritypointshighvalue)==0 then
-        return false
-    end
-    local pointHighest = 0
-    local point = false
-    local platPos = GetPlatoonPosition(platoon)
-    for _, v in aiBrain.prioritypointshighvalue do
-        if v.unit and not v.unit.Dead then
-            local pointDistance = VDist3Sq(platPos,v.Position)
-            if pointDistance < 40000 then
-                local tempPoint = v.priority/(RNGMAX(pointDistance,30*30)+(v.danger or 0))
-                if tempPoint > pointHighest then
-                    pointHighest = tempPoint
-                    point = v
-                end
-            end
-        end
-    end
-    if point then
-        if AIAttackUtils.CanGraphToRNG(point.Position, platPos, platoon.MovementLayer) then 
-            --RNGLOG('ValidateMainBase has returned a unit we must attack')
-            return target
-        end
-    end
-    return false
-end
-
 -- Borrowed this from Balth I think.
 function CalculatedDPSRNG(weapon)
     -- Base values
@@ -4926,7 +4895,7 @@ CheckACUSnipe = function(aiBrain, layerType)
     local potentialTarget = false
     local requiredCount = 0
     for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
-        if layerType == 'LAND' then
+        if layerType == 'Land' then
             if v.LAND and v.LAND.GameTime then
                 if v.LAND.GameTime + 500 > GetGameTimeSeconds() then
                     if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
@@ -4936,7 +4905,7 @@ CheckACUSnipe = function(aiBrain, layerType)
                     end
                 end
             end
-        elseif layerType == 'AIR' then
+        elseif layerType == 'Air' then
             if v.AIR and v.AIR.GameTime then
                 if v.AIR.GameTime + 500 > GetGameTimeSeconds() then
                     if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
@@ -4949,7 +4918,7 @@ CheckACUSnipe = function(aiBrain, layerType)
         elseif layerType == 'AIRANTINAVY' then
             if v.AIR and v.AIR.GameTime then
                 if v.AIR.GameTime + 500 > GetGameTimeSeconds() then
-                    if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
+                    if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) and PositionInWater(aiBrain.EnemyIntel.ACU[k].Position) then
                         potentialTarget = aiBrain.EnemyIntel.ACU[k].Unit
                         requiredCount = v.AIR.CountRequired
                         break
@@ -4958,21 +4927,22 @@ CheckACUSnipe = function(aiBrain, layerType)
             end
         end
     end
-    return potentialTarget
+    return potentialTarget, requiredCount
 end
 
 CheckHighPriorityTarget = function(aiBrain, im, platoon)
     local platPos = platoon:GetPosition()
     local closestTarget
-    local closestDistance
+    local highestPriority = 0
     if aiBrain.EnemyIntel.HighPriorityTargetAvailable then
         if VDist3Sq(platPos, aiBrain.BrainIntel.StartPos) < (aiBrain.EnemyIntel.ClosestEnemyBase / 2) then
             for k, v in aiBrain.EnemyIntel.prioritypointshighvalue do
                 if not v.unit.Dead then
                     local targetDistance = VDist3Sq(v.position, platPos)
-                    if not closestDistance or targetDistance < closestDistance then
+                    local tempPoint = v.priority/(RNGMAX(targetDistance,30*30)+(v.danger or 0))
+                    if tempPoint > highestPriority then
                         if AIAttackUtils.CanGraphToRNG(platPos, v.position, platoon.MovementLayer) then
-                            closestDistance = targetDistance
+                            highestPriority = targetDistance
                             closestTarget = v.unit
                         end
                     end

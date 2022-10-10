@@ -3109,7 +3109,7 @@ FindExperimentalTargetRNG = function(self)
     local platPos = self:GetPlatoonPosition()
     if platPos and VDist3Sq(platPos, aiBrain.BuilderManagers['MAIN'].Position) < 22500 then
         if not bestUnit then
-            bestUnit = RUtils.ValidateMainBase(self, self:GetSquadUnits('Attack'), aiBrain)
+            bestUnit = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
             if bestUnit then
                 return bestUnit, nil
             end
