@@ -4963,13 +4963,20 @@ end
 
 CheckHighPriorityTarget = function(aiBrain, im, platoon)
     local platPos = platoon:GetPosition()
+    local closestTarget
+    local closestDistance
     if aiBrain.EnemyIntel.HighPriorityTargetAvailable then
         for k, v in aiBrain.EnemyIntel.prioritypointshighvalue do
             if not v.unit.Dead then
-                if VDist3Sq(v.position, platPos) < 150 then
-                    return v.unit
+                local targetDistance = VDist3Sq(v.position, platPos)
+                if not closestDistance or targetDistance < closestDistance then
+                    closestDistance = targetDistance
+                    closestTarget = v.unit
                 end
             end
+        end
+        if closestTarget then
+            return closestTarget
         end
     end
     return false
