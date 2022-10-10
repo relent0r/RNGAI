@@ -3559,13 +3559,10 @@ AIBrain = Class(RNGAIBrainClass) {
 
             if next(enemyACUIndexes) then
                 for k, v in enemyACUIndexes do
-                    local acuUnits = GetUnitsAroundPoint(self, categories.COMMAND, v.Position, 120, 'Enemy')
-                    for c, b in acuUnits do
-                        if not b.Dead and b:GetAIBrain():GetArmyIndex() == v.Index then
-                            potentialTarget = b
-                            potentialTargetValue = 10000
-                            --RNGLOG('Enemy ACU returned as potential target for Director')
-                        end
+                    if RUtils.HaveUnitVisual(self, self.EnemyIntel.ACU[v.Index].Unit, true) then
+                        potentialTarget = b
+                        potentialTargetValue = 10000
+                        --RNGLOG('Enemy ACU returned as potential target for Director')
                     end
                 end
             end
