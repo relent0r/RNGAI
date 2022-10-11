@@ -9,6 +9,7 @@ local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local ToString = import('/lua/sim/CategoryUtils.lua').ToString
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
+local GetPosition = moho.entity_methods.GetPosition
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
@@ -4931,11 +4932,14 @@ CheckACUSnipe = function(aiBrain, layerType)
 end
 
 CheckHighPriorityTarget = function(aiBrain, im, platoon)
-    local platPos = platoon:GetPosition()
+    local platPos
     local closestTarget
     local highestPriority = 0
     if aiBrain.EnemyIntel.HighPriorityTargetAvailable then
-        if VDist3Sq(platPos, aiBrain.BrainIntel.StartPos) < (aiBrain.EnemyIntel.ClosestEnemyBase / 2) then
+        if platoon then
+            platPos = platoon:GetPosition()
+        end
+        if platPos and VDist3Sq(platPos, aiBrain.BrainIntel.StartPos) < (aiBrain.EnemyIntel.ClosestEnemyBase / 2) then
             for k, v in aiBrain.EnemyIntel.prioritypointshighvalue do
                 if not v.unit.Dead then
                     local targetDistance = VDist3Sq(v.position, platPos)
@@ -4949,6 +4953,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon)
                 end
             end
             if closestTarget then
+                RNGLOG('CheckHighPriorityTarget has found unit')
                 return closestTarget
             end
         end

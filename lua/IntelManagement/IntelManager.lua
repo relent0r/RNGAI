@@ -2502,11 +2502,12 @@ TruePlatoonPriorityDirector = function(aiBrain)
                         end
                         unitAddedCount = unitAddedCount + 1
                         aiBrain.prioritypoints[c]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object}
-                        if priority > 250 then
+                        if priority > 200 then
                             aiBrain.prioritypointshighvalue[c]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object}
+                            RNGLOG('HighPriority target added '..repr(aiBrain.prioritypointshighvalue[c]))
                         end
-                        --RNGLOG('Added prioritypoints entry of '..repr(aiBrain.prioritypoints[c]))
-                        --RNGLOG('Angle Priority was '..anglePriority)
+                        RNGLOG('Added prioritypoints entry of '..repr(aiBrain.prioritypoints[c]))
+                        RNGLOG('Angle Priority was '..anglePriority)
                         --RNGLOG('Distance to main was '..im.MapIntelGrid[i][k].DistanceToMain)
                         --RNGLOG('EnemyUnitGrid Danger is '..im.MapIntelGrid[i][k].EnemyUnitDanger)
                     end
@@ -2564,6 +2565,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
             end
         end
         if highPriorityCount > 0 then
+            RNGLOG('HighPriorityTarget is available')
             aiBrain.EnemyIntel.HighPriorityTargetAvailable = true
         else
             aiBrain.EnemyIntel.HighPriorityTargetAvailable = false

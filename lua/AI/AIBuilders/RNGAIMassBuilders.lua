@@ -308,7 +308,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1ResourceEngineer 2000 Floating',
+        BuilderName = 'RNGAI T1ResourceEngineer 2000 Floating Excess',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 890,
         InstanceCount = 10,

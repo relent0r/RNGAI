@@ -3829,11 +3829,11 @@ Platoon = Class(RNGAIPlatoonClass) {
         if not unit.PlatoonHandle then return end
         if not unit.PlatoonHandle.PlanName == 'MexBuildAIRNG' then return end
         RNGLOG("*AI DEBUG: MexBuildAIRNG removing queue item")
-        RNGLOG('Queue Size is '..RNGGETN(eng.EngineerBuildQueue))
-        if eng.EngineerBuildQueue and RNGGETN(eng.EngineerBuildQueue) > 0 then
-            table.remove(eng.EngineerBuildQueue, 1)
+        RNGLOG('Queue Size is '..RNGGETN(unit.EngineerBuildQueue))
+        if unit.EngineerBuildQueue and RNGGETN(unit.EngineerBuildQueue) > 0 then
+            table.remove(unit.EngineerBuildQueue, 1)
         end
-        RNGLOG('Queue size after remove '..RNGGETN(eng.EngineerBuildQueue))
+        RNGLOG('Queue size after remove '..RNGGETN(unit.EngineerBuildQueue))
     end,
 
     EngineerBuildDoneRNG = function(unit, params)
@@ -6219,6 +6219,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local Lastdist
             local dist
             local Stuck = 0
+            local targetCheck
             while PlatoonExists(aiBrain, self) do
                 PlatoonPosition = GetPlatoonPosition(self)
                 if not PlatoonPosition then return end
@@ -6248,9 +6249,12 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
                 if not ignoreUnits then
                     local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, LandRadiusDetectionCategory, PlatoonPosition, self.EnemyRadius, 'Enemy')
-                    if enemyUnitCount > 0 then
+                    if (targetCheck and not targetCheck.Dead) or enemyUnitCount > 0 then
                         local attackSquad = self:GetSquadUnits('Attack')
-                        local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, PlatoonPosition, 'Attack', self.EnemyRadius, LandRadiusScanCategory, self.atkPri, false, true)
+                        local target, acuInRange, acuUnit, totalThreat
+                        if not (targetCheck and not targetCheck.Dead) then
+                            target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, PlatoonPosition, 'Attack', self.EnemyRadius, LandRadiusScanCategory, self.atkPri, false, true)
+                        end
                         if acuInRange then
                             target = false
                             if self.CurrentPlatoonThreat < 25 then
@@ -6312,6 +6316,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     end
                                 end
                             end
+                        end
+                        if targetCheck then
+                            RNGLOG('TargetCheck Found, setting to highpriority target')
+                            target = targetCheck
                         end
                         --LOG('MoveWithMicro - platoon threat '..self.CurrentPlatoonThreat.. ' Enemy Threat '..totalThreat * 1.5)
                         if avoid and totalThreat * 1.5 >= self.CurrentPlatoonThreat then
@@ -6455,7 +6463,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                             end
                         end
                     end
+
                 end
+                targetCheck = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
                 coroutine.yield(15)
             end
         end
