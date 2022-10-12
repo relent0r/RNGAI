@@ -9,7 +9,6 @@ local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local ToString = import('/lua/sim/CategoryUtils.lua').ToString
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
-local GetPosition = moho.entity_methods.GetPosition
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
@@ -4386,7 +4385,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         end
     end
     if (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
-        --RNGLOG('Look for platoon that needs a scout')
+        RNGLOG('Look for platoon that needs a scout')
         coroutine.yield(10)
         platoonNeedScout, supportPlatoon = platoon:ScoutFindNearbyPlatoonsRNG(250)
         platoon.FindPlatoonCounter = platoon.FindPlatoonCounter + 1
@@ -4394,7 +4393,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     if platoonNeedScout then
         if supportPlatoon and PlatoonExists(aiBrain, supportPlatoon) then
             scoutType = 'AssistPlatoon'
-            --RNGLOG('ScoutDest is assist platoon')
+            RNGLOG('ScoutDest is assist platoon')
             return supportPlatoon, scoutType
         end
     end
@@ -4937,15 +4936,15 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon)
     local highestPriority = 0
     if aiBrain.EnemyIntel.HighPriorityTargetAvailable then
         if platoon then
-            platPos = platoon:GetPosition()
+            platPos = platoon:GetPlatoonPosition()
         end
         if platPos and VDist3Sq(platPos, aiBrain.BrainIntel.StartPos) < (aiBrain.EnemyIntel.ClosestEnemyBase / 2) then
-            for k, v in aiBrain.EnemyIntel.prioritypointshighvalue do
+            for k, v in aiBrain.prioritypointshighvalue do
                 if not v.unit.Dead then
-                    local targetDistance = VDist3Sq(v.position, platPos)
+                    local targetDistance = VDist3Sq(v.Position, platPos)
                     local tempPoint = v.priority/(RNGMAX(targetDistance,30*30)+(v.danger or 0))
                     if tempPoint > highestPriority then
-                        if AIAttackUtils.CanGraphToRNG(platPos, v.position, platoon.MovementLayer) then
+                        if AIAttackUtils.CanGraphToRNG(platPos, v.Position, platoon.MovementLayer) then
                             highestPriority = targetDistance
                             closestTarget = v.unit
                         end

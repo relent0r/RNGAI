@@ -6322,7 +6322,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             target = targetCheck
                         end
                         --LOG('MoveWithMicro - platoon threat '..self.CurrentPlatoonThreat.. ' Enemy Threat '..totalThreat * 1.5)
-                        if avoid and totalThreat * 1.5 >= self.CurrentPlatoonThreat then
+                        if totalThreat and avoid and totalThreat * 1.5 >= self.CurrentPlatoonThreat then
                             --LOG('MoveWithMicro - Threat too high are we are in avoid mode')
                             local alternatePos = false
                             local mergePlatoon = false
@@ -10233,15 +10233,14 @@ Platoon = Class(RNGAIPlatoonClass) {
         self:ForkThread(self.OptimalTargetingRNG)
         self:ForkThread(self.PathNavigationRNG)
         self.chpdata = {name = 'CHPTruePlatoon',id=platoonUnits[1].Sync.id}
-        local platoon=self
         local LocationType = self.PlatoonData.LocationType or 'MAIN'
         local homepos = aiBrain.BuilderManagers[LocationType].Position
-        platoon.home=homepos
-        platoon.base=homepos
-        platoon.evaluationpoints = {}
-        platoon.friendlyThreats = {}
-        platoon.enemyThreats = {}
-        platoon.threats = {}
+        self.home=homepos
+        self.base=homepos
+        self.evaluationpoints = {}
+        self.friendlyThreats = {}
+        self.enemyThreats = {}
+        self.threats = {}
         local pathTimeout = 0
         if not self.Zone then
             --RNGLOG('Starting zone update thread in trueplatoon')
@@ -10259,30 +10258,30 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             platoonUnits = GetPlatoonUnits(self)
             local platoonNum=RNGGETN(platoonUnits)
-            if platoonNum < 20 and VDist2Sq(platoon.Pos[1], platoon.Pos[3], platoon.base[1], platoon.base[3]) > 3600 then
+            if platoonNum < 20 and VDist2Sq(self.Pos[1], self.Pos[3], self.base[1], self.base[3]) > 3600 then
                 if self:CHPMergePlatoon(30) then
                     UnitInitialize(self)
                 end
             end
-            if platoon.navigating then 
-                while platoon.navigating do 
+            if self.navigating then 
+                while self.navigating do 
                     if aiBrain.RNGDEBUG then
-                        DrawCircle(GetPlatoonPosition(platoon),5,'FFbb00FF')
+                        DrawCircle(GetPlatoonPosition(self),5,'FFbb00FF')
                     end
                     coroutine.yield(2) 
                 end 
             end
             local spread=0
             local snum=0
-            platoon.clumpmode=false
-            if platoon.clumpmode then--this is for clumping- it works well sometimes, bad other times. formation substitute. doesn't work that great recently- need to fix sometime
+            self.clumpmode=false
+            if self.clumpmode then--this is for clumping- it works well sometimes, bad other times. formation substitute. doesn't work that great recently- need to fix sometime
                 for _,v in platoonUnits do
                     if not v or v.Dead then continue end
                     local unitPos = v:GetPosition()
-                    if VDist3Sq(unitPos,platoon.Pos)>v.MaxWeaponRange/5*v.MaxWeaponRange/5+platoonNum*platoonNum then
+                    if VDist3Sq(unitPos,self.Pos)>v.MaxWeaponRange/5*v.MaxWeaponRange/5+platoonNum*platoonNum then
                         IssueClearCommands({v})
-                        IssueMove({v},RUtils.LerpyRotate(unitPos,platoon.Pos,{VDist3(unitPos,platoon.Pos),v.MaxWeaponRange/6}))
-                        spread=spread+VDist3Sq(unitPos,platoon.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
+                        IssueMove({v},RUtils.LerpyRotate(unitPos,self.Pos,{VDist3(unitPos,self.Pos),v.MaxWeaponRange/6}))
+                        spread=spread+VDist3Sq(unitPos,self.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
                         snum=snum+1
                     end
                 end
@@ -10293,13 +10292,13 @@ Platoon = Class(RNGAIPlatoonClass) {
             --RNGLOG('trueplatoon distance from base is '..VDist2Sq(platoon.Pos[1], platoon.Pos[3], platoon.base[1], platoon.base[3]))
             if SimpleRetreat(self,aiBrain) then--retreat if we feel like it
                 SimpleDoRetreat(self,aiBrain)
-            elseif VDist2Sq(platoon.Pos[1], platoon.Pos[3], aiBrain.BuilderManagers[platoon.LocationType].Position[1], aiBrain.BuilderManagers[platoon.LocationType].Position[3]) < 3600 and MainBaseCheck(self,aiBrain) then
+            elseif VDist3Sq(self.Pos, aiBrain.BuilderManagers[self.LocationType].Position) < 3600 and MainBaseCheck(self,aiBrain) then
             elseif SimpleTarget(self,aiBrain) then--do combat stuff
                 --RNGLOG('SimpleTarget being used')
                 SimpleCombat(self,aiBrain)
                 coroutine.yield(10)
                 --RNGLOG('SimplePriority being used')
-            elseif VDist2Sq(platoon.Pos[1], platoon.Pos[3], platoon.base[1], platoon.base[3]) > 10000 and SimplePriority(self,aiBrain) then--do priority stuff next
+            elseif VDist3Sq(self.Pos, self.base) > 10000 and SimplePriority(self,aiBrain) then--do priority stuff next
             elseif SimpleEarlyPatrol(self,aiBrain) then--do raid stuff
             else
                 --RNGLOG('Nothing to target, setting path timeout')
