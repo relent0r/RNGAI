@@ -1335,6 +1335,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 elseif scoutType == 'AssistPlatoon' then
                     if PlatoonExists(aiBrain, targetData) then
                         self.PlatoonAttached = true
+                        targetData.ScoutPresent = true
                         while not scout.Dead and PlatoonExists(aiBrain, targetData) do
                             --RNGLOG('Move to support platoon position')
                             self:Stop()
@@ -5700,7 +5701,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         self:MoveToLocation(alternatePos, false)
                     else
                        --RNGLOG('No close masspoint try to find platoon to merge with')
-                        mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('MassRaidRNG')
+                        mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('MassRaidRNG', 3600)
                         if alternatePos then
                             self:MoveToLocation(alternatePos, false)
                         end
@@ -7044,34 +7045,34 @@ Platoon = Class(RNGAIPlatoonClass) {
         local platRequiresScout = false
         for _,aPlat in AlliedPlatoons do
             if aPlat == self then continue end
-            if aPlat.PlanName ~= 'MassRaidRNG' or aPlat.PlanName ~= 'ZoneControlRNG' or aPlat.PlanName ~= 'HuntAIPATHRNG' or aPlat.PlanName ~= 'TruePlatoonRNG' or aPlat.PlanName ~= 'GuardMarkerRNG' then continue end
-            if aPlat.UsingTransport then continue end
-            if aPlat.ScoutPresent then continue end
-            allyPlatPos = GetPlatoonPosition(aPlat)
-            if not allyPlatPos or not PlatoonExists(aiBrain, aPlat) then
-                allyPlatPos = false
-                continue
-            end
-            if not aPlat.MovementLayer then
-                AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
-            end
-            -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
-            if self.MovementLayer ~= 'Amphibious' and self.MovementLayer ~= aPlat.MovementLayer then
-                continue
-            end
-            if  VDist3Sq(platPos, allyPlatPos) <= radiusSq then
-                if not AIAttackUtils.CanGraphToRNG(platPos, allyPlatPos, self.MovementLayer) then continue end
-                if aiBrain.RNGDEBUG then
-                    RNGLOG("*AI DEBUG: Scout moving to allied platoon position for plan "..aPlat.PlanName)
+            if aPlat.PlanName == 'MassRaidRNG' or aPlat.PlanName == 'ZoneControlRNG' or aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' or aPlat.PlanName == 'GuardMarkerRNG' then
+                if aPlat.UsingTransport then continue end
+                if aPlat.ScoutPresent then continue end
+                allyPlatPos = GetPlatoonPosition(aPlat)
+                if not allyPlatPos or not PlatoonExists(aiBrain, aPlat) then
+                    allyPlatPos = false
+                    continue
                 end
-                return true, aPlat
+                if not aPlat.MovementLayer then
+                    AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
+                end
+                -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
+                if self.MovementLayer ~= 'Amphibious' and self.MovementLayer ~= aPlat.MovementLayer then
+                    continue
+                end
+                if  VDist3Sq(platPos, allyPlatPos) <= radiusSq then
+                    if not AIAttackUtils.CanGraphToRNG(platPos, allyPlatPos, self.MovementLayer) then continue end
+                    if aiBrain.RNGDEBUG then
+                        RNGLOG("*AI DEBUG: Scout moving to allied platoon position for plan "..aPlat.PlanName)
+                    end
+                    return true, aPlat
+                end
             end
         end
-        --RNGLOG('no platoons found that need scout')
         return false
     end,
 
-    GetClosestPlatoonRNG = function(self, planName)
+    GetClosestPlatoonRNG = function(self, planName, distanceLimit)
         local aiBrain = self:GetBrain()
         if not aiBrain then
             return
@@ -7086,6 +7087,9 @@ Platoon = Class(RNGAIPlatoonClass) {
         local closestPlatoon = false
         local closestDistance = 62500
         local closestAPlatPos = false
+        if distanceLimit then
+            closestDistance = distanceLimit
+        end
         --RNGLOG('Getting list of allied platoons close by')
         AlliedPlatoons = aiBrain:GetPlatoonsList()
         for _,aPlat in AlliedPlatoons do

@@ -284,6 +284,48 @@ BuilderGroup {
 }
 
 BuilderGroup {
+    BuilderGroupName = 'RNGAI Reaction Tanks Expansion',
+    BuildersType = 'FactoryBuilder',
+    Builder {
+        BuilderName = 'RNGAI T1 Tank Enemy Nearby Expansion',
+        PlatoonTemplate = 'T1LandDFTank',
+        Priority = 880,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 3, categories.LAND * categories.MOBILE * categories.DIRECTFIRE } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Tank Enemy Nearby Expansion',
+        PlatoonTemplate = 'T2LandDFTank',
+        Priority = 890,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 3, categories.LAND * categories.MOBILE * categories.DIRECTFIRE } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Tank Enemy Nearby Expansion',
+        PlatoonTemplate = 'RNGAIT3LandResponse',
+        Priority = 900,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 3, categories.LAND * categories.MOBILE * categories.DIRECTFIRE } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+}
+
+BuilderGroup {
     BuilderGroupName = 'RNGAI Land AA 2',
     BuildersType = 'FactoryBuilder',
     Builder {

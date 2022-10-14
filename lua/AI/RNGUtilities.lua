@@ -18,6 +18,7 @@ local GetConsumptionPerSecondEnergy = moho.unit_methods.GetConsumptionPerSecondE
 local GetProductionPerSecondMass = moho.unit_methods.GetProductionPerSecondMass
 local GetProductionPerSecondEnergy = moho.unit_methods.GetProductionPerSecondEnergy
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
+local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local ALLBPS = __blueprints
 
 -- TEMPORARY LOUD LOCALS
