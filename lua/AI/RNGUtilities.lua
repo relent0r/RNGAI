@@ -4771,7 +4771,7 @@ CanPathToCurrentEnemyRNG = function(aiBrain) -- Uveso's function modified to run
             -- path wit AI markers from our base to the enemy base
             --RNGLOG('Validation GenerateSafePath inputs locPos :'..repr(locPos)..'Enemy Pos: '..repr({enemyX,0,enemyZ}))
             local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Land', locPos, {enemyX,0,enemyZ}, 10000)
+            local path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, 'Land', locPos, {enemyX,0,enemyZ}, 10000)
             -- if we have a path generated with AI path markers then....
             if path then
                 --RNGLOG('* RNG CanPathToCurrentEnemyRNG: Land path to the enemy found! LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..k)
@@ -4782,7 +4782,7 @@ CanPathToCurrentEnemyRNG = function(aiBrain) -- Uveso's function modified to run
                 -- "NoPath" means we have AI markers but can't find a path to the enemy - There is no path!
                 if reason == 'NoPath' then
                     --RNGLOG('* RNG CanPathToCurrentEnemyRNG: No land path to the enemy found! Testing Amphib map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..k)
-                    local amphibPath, amphibReason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Amphibious', locPos, {enemyX,0,enemyZ}, 10000)
+                    local amphibPath, amphibReason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, 'Amphibious', locPos, {enemyX,0,enemyZ}, 10000)
                     --RNGLOG('amphibReason '..amphibReason)
                     if amphibPath then
                         --RNGLOG('Amphib path detected ')
