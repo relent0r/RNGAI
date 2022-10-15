@@ -1364,6 +1364,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     EconomyMonitorRNG = function(self)
         -- This over time thread is based on Sprouto's LOUD AI.
+        LOG('RNG EconomyMonitor Starting')
         self.EconomyData = { ['EnergyIncome'] = {}, ['EnergyRequested'] = {}, ['EnergyStorage'] = {}, ['EnergyTrend'] = {}, ['MassIncome'] = {}, ['MassRequested'] = {}, ['MassStorage'] = {}, ['MassTrend'] = {}, ['Period'] = 300 }
         -- number of sample points
         -- local point

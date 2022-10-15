@@ -457,7 +457,6 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
         else
             IssueMove({eng}, destination)
         end
-        eng.EngineerBuildQueue = {}
         return true, path
     end
     return false

@@ -4386,7 +4386,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         end
     end
     if (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
-        RNGLOG('Look for platoon that needs a scout')
+        --RNGLOG('Look for platoon that needs a scout')
         coroutine.yield(10)
         platoonNeedScout, supportPlatoon = platoon:ScoutFindNearbyPlatoonsRNG(250)
         platoon.FindPlatoonCounter = platoon.FindPlatoonCounter + 1
@@ -4394,7 +4394,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     if platoonNeedScout then
         if supportPlatoon and PlatoonExists(aiBrain, supportPlatoon) then
             scoutType = 'AssistPlatoon'
-            RNGLOG('ScoutDest is assist platoon')
+            --RNGLOG('ScoutDest is assist platoon')
             return supportPlatoon, scoutType
         end
     end
@@ -4953,7 +4953,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon)
                 end
             end
             if closestTarget then
-                RNGLOG('CheckHighPriorityTarget has found unit')
+                --RNGLOG('CheckHighPriorityTarget has found unit')
                 return closestTarget
             end
         end

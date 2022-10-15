@@ -997,26 +997,28 @@ IntelManager = Class {
             if minThreatRisk > 0 then
                 for k, v in self.Brain.EnemyIntel.ACU do
                     if not v.Ally and v.HP ~= 0 and v.Position[1] and v.LastSpotted + 120 > gameTime then
-                        if minThreatRisk >= 50 and VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase /2) then
-                            --RNGLOG('ACU ClosestEnemy base distance is '..(self.Brain.EnemyIntel.ClosestEnemyBase /2))
-                            --RNGLOG('ACU Distance from start position '..VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos))
-                            local gridX, gridZ = self:GetIntelGrid(v.Position)
-                            local scoutRequired = true
-                            if self.MapIntelGrid[gridX][gridZ].MustScout and self.MapIntelGrid[gridX][gridZ].ACUIndexes[k] then
-                                scoutRequired = false
+                        if v.HP < 12000 and minThreatRisk >= 50 and VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase / 2.2) then
+                            if GetThreatBetweenPositions(self.Brain, self.Brain.BrainIntel.StartPos, v.Position, nil, threatType) < 5 then
+                                --RNGLOG('ACU ClosestEnemy base distance is '..(self.Brain.EnemyIntel.ClosestEnemyBase /2))
+                                --RNGLOG('ACU Distance from start position '..VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos))
+                                local gridX, gridZ = self:GetIntelGrid(v.Position)
+                                local scoutRequired = true
+                                if self.MapIntelGrid[gridX][gridZ].MustScout and self.MapIntelGrid[gridX][gridZ].ACUIndexes[k] then
+                                    scoutRequired = false
+                                end
+                                if scoutRequired then
+                                    self.MapIntelGrid[gridX][gridZ].MustScout = true
+                                    self.MapIntelGrid[gridX][gridZ].ACUIndexes[k] = true
+                                    --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(self.MapIntelGrid[gridX][gridY]))
+                                end
+                                if v.HP < 6000 then
+                                    desiredStrikeDamage = desiredStrikeDamage + v.HP + 1000
+                                else
+                                    desiredStrikeDamage = desiredStrikeDamage + 6000
+                                end
+                                --RNGLOG('Adding ACU to potential strike target')
+                                table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'ACU', Index = k} )
                             end
-                            if scoutRequired then
-                                self.MapIntelGrid[gridX][gridZ].MustScout = true
-                                self.MapIntelGrid[gridX][gridZ].ACUIndexes[k] = true
-                                --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(self.MapIntelGrid[gridX][gridY]))
-                            end
-                            if v.HP < 5000 then
-                                desiredStrikeDamage = desiredStrikeDamage + v.HP
-                            else
-                                desiredStrikeDamage = desiredStrikeDamage + 4000
-                            end
-                            --RNGLOG('Adding ACU to potential strike target')
-                            table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'ACU', Index = k} )
                         end
                     end
                 end
@@ -1142,7 +1144,7 @@ IntelManager = Class {
             if minThreatRisk > 0 then
                 for k, v in self.Brain.EnemyIntel.ACU do
                     if not v.Ally and v.HP ~= 0 and v.Position[1] then
-                        if minThreatRisk >= 50 and VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase /2) then
+                        if minThreatRisk >= 50 and VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase / 2) then
                             if RUtils.PositionInWater(v.Position) then
                                 if GetThreatBetweenPositions(self.Brain, self.Brain.BrainIntel.StartPos, v.Position, nil, threatType) < threatMax * 2 then
                                     --RNGLOG('ACU ClosestEnemy base distance is '..(self.Brain.EnemyIntel.ClosestEnemyBase /2))
@@ -2420,7 +2422,7 @@ LastKnownThread = function(aiBrain)
 end
 
 TruePlatoonPriorityDirector = function(aiBrain)
-    RNGLOG('Starting TruePlatoonPriorityDirector')
+    --RNGLOG('Starting TruePlatoonPriorityDirector')
     aiBrain.prioritypoints={}
     aiBrain.prioritypointshighvalue={}
     local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
@@ -2504,10 +2506,10 @@ TruePlatoonPriorityDirector = function(aiBrain)
                         aiBrain.prioritypoints[c]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object}
                         if priority > 200 then
                             aiBrain.prioritypointshighvalue[c]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object}
-                            RNGLOG('HighPriority target added '..repr(aiBrain.prioritypointshighvalue[c]))
+                            --RNGLOG('HighPriority target added '..repr(aiBrain.prioritypointshighvalue[c]))
                         end
-                        RNGLOG('Added prioritypoints entry of '..repr(aiBrain.prioritypoints[c]))
-                        RNGLOG('Angle Priority was '..anglePriority)
+                        --RNGLOG('Added prioritypoints entry of '..repr(aiBrain.prioritypoints[c]))
+                        --RNGLOG('Angle Priority was '..anglePriority)
                         --RNGLOG('Distance to main was '..im.MapIntelGrid[i][k].DistanceToMain)
                         --RNGLOG('EnemyUnitGrid Danger is '..im.MapIntelGrid[i][k].EnemyUnitDanger)
                     end
@@ -2565,7 +2567,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
             end
         end
         if highPriorityCount > 0 then
-            RNGLOG('HighPriorityTarget is available')
+            --RNGLOG('HighPriorityTarget is available')
             aiBrain.EnemyIntel.HighPriorityTargetAvailable = true
         else
             aiBrain.EnemyIntel.HighPriorityTargetAvailable = false

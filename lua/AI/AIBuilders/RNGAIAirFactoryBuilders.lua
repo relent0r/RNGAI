@@ -94,6 +94,7 @@ BuilderGroup {
         Priority = 895,
         BuilderType = 'Air',
         BuilderConditions = {
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'UnitBuildDemand', {'Air', 'T2', 'mercy'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },

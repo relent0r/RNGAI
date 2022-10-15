@@ -527,7 +527,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local requiredCount = 0
             --RNGLOG('Mercy strike : loop ACU Snipe table '..repr(aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe))
             for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
-                target, requiredCount = CheckACUSnipe(aiBrain, self.MovementLayer)
+                target, requiredCount = RUtils.CheckACUSnipe(aiBrain, self.MovementLayer)
             end
             if not target then
                 --RNGLOG('Mercy strike : No ACU target')
@@ -3829,12 +3829,12 @@ Platoon = Class(RNGAIPlatoonClass) {
         if unit.Active then return end
         if not unit.PlatoonHandle then return end
         if not unit.PlatoonHandle.PlanName == 'MexBuildAIRNG' then return end
-        RNGLOG("*AI DEBUG: MexBuildAIRNG removing queue item")
-        RNGLOG('Queue Size is '..RNGGETN(unit.EngineerBuildQueue))
+        --RNGLOG("*AI DEBUG: MexBuildAIRNG removing queue item")
+        --RNGLOG('Queue Size is '..RNGGETN(unit.EngineerBuildQueue))
         if unit.EngineerBuildQueue and RNGGETN(unit.EngineerBuildQueue) > 0 then
             table.remove(unit.EngineerBuildQueue, 1)
         end
-        RNGLOG('Queue size after remove '..RNGGETN(unit.EngineerBuildQueue))
+        --RNGLOG('Queue size after remove '..RNGGETN(unit.EngineerBuildQueue))
     end,
 
     EngineerBuildDoneRNG = function(unit, params)
@@ -4808,7 +4808,11 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
         end
         self:SetPrioritizedTargetList('Attack', categoryList)
-        self.TargetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType)
+
+        local highPriorityTarget = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
+        if not highPriorityTarget then
+            self.TargetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType)
+        end
         local zonePosition = false
         if self.TargetZone then
             --RNGLOG('Target Zone Selected is '..self.TargetZone..' at '..repr(aiBrain.Zones.Land.zones[self.TargetZone].pos))
@@ -4823,6 +4827,102 @@ Platoon = Class(RNGAIPlatoonClass) {
             coroutine.yield(50)
         end
         local usedTransports = false
+        if highPriorityTarget then
+            if RUtils.HaveUnitVisual(aiBrain, highPriorityTarget, true) then
+                local targetPosition = highPriorityTarget:GetPosition()
+                if AIAttackUtils.CanGraphToRNG(platLoc, targetPosition, self.MovementLayer) then
+                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), targetPosition, 10 , maxPathDistance)
+                    if path then
+                        platLoc = GetPlatoonPosition(self)
+                        if VDist3Sq(platLoc, targetPosition) > 262144 then
+                            usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true, false, true)
+                        elseif VDist3Sq(platLoc, targetPosition) > 65536 and (not self.PlatoonData.EarlyRaid) then
+                            usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, false, false, true)
+                        end
+                        if not usedTransports then
+                            local retreated = self:PlatoonMoveWithZoneMicro(aiBrain, path, self.PlatoonData.Avoid)
+                            if retreated then
+                                coroutine.yield(20)
+                                return self:SetAIPlanRNG('ZoneControlRNG')
+                            end
+                            --RNGLOG('Exited PlatoonMoveWithMicro so we should be at a destination')
+                        end
+                    elseif (not path and reason == 'NoPath') then
+                        --RNGLOG('MassRaid requesting transports')
+                        usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true, false, true)
+                        --DUNCAN - if we need a transport and we cant get one the disband
+                        if not usedTransports then
+                            coroutine.yield( 50 )
+                            --RNGLOG('No Transport available for zoneraid')
+                            return self:SetAIPlanRNG('ReturnToBaseAIRNG')
+                        end
+                        --RNGLOG('Guardmarker found transports')
+                    else
+                        --RNGLOG('Path error in MASSRAID')
+                        coroutine.yield(2)
+                        return self:SetAIPlanRNG('ReturnToBaseAIRNG')
+                    end
+                    if (not path) and (not usedTransports) then
+                        --RNGLOG('not path or not success or not usedTransports MASSRAID')
+                        coroutine.yield(2)
+                        return self:SetAIPlanRNG('ReturnToBaseAIRNG')
+                    end
+                    platLoc = GetPlatoonPosition(self)
+                    if not platLoc then
+                        return
+                    end
+                    if aiBrain:CheckBlockingTerrain(platLoc, targetPosition, 'none') then
+                        self:MoveToLocation(targetPosition, false)
+                        coroutine.yield(10)
+                    else
+                        self:AggressiveMoveToLocation(targetPosition)
+                        if self.ScoutUnit and (not self.ScoutUnit.Dead) then
+                            IssueClearCommands({self.ScoutUnit})
+                        end
+                        coroutine.yield(15)
+                    end
+                    local target, acuInRange, acuUnit, totalThreat
+                    if RUtils.HaveUnitVisual(aiBrain, highPriorityTarget, true) then
+                        target = highPriorityTarget
+                    else
+                        target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platLoc, 'Attack', 80, (categories.LAND + categories.NAVAL + categories.STRUCTURE), self.atkPri, false)
+                    end
+                    if target and not target.Dead then
+                        IssueClearCommands(self:GetPlatoonUnits())
+                        local retreatTrigger = 0
+                        local retreatTimeout = 0
+                        while PlatoonExists(aiBrain, self) do
+                            --RNGLOG('At position and waiting for target death')
+                            targetPosition = target:GetPosition()
+                            local attackSquad = self:GetSquadUnits('Attack')
+                            local microCap = 50
+                            for _, unit in attackSquad do
+                                microCap = microCap - 1
+                                if microCap <= 0 then break end
+                                if unit.Dead then continue end
+                                if not unit.MaxWeaponRange then
+                                    coroutine.yield(1)
+                                    continue
+                                end
+                                IssueClearCommands({unit})
+                                retreatTrigger = VariableKite(self,unit,target)
+                            end
+                            if target.Dead then
+                                break
+                            end
+                            if retreatTrigger > 5 then
+                                retreatTimeout = retreatTimeout + 1
+                            end
+                            coroutine.yield(15)
+                            if retreatTimeout > 3 then
+                                --RNGLOG('platoon stopped chasing unit')
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+        end
         if zonePosition then
             local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), zonePosition, 10 , maxPathDistance)
             local success = AIAttackUtils.CanGraphToRNG(platLoc, zonePosition, self.MovementLayer)
@@ -6319,7 +6419,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             end
                         end
                         if targetCheck then
-                            RNGLOG('TargetCheck Found, setting to highpriority target')
+                            --RNGLOG('TargetCheck Found, setting to highpriority target')
                             target = targetCheck
                         end
                         --LOG('MoveWithMicro - platoon threat '..self.CurrentPlatoonThreat.. ' Enemy Threat '..totalThreat * 1.5)
@@ -9551,6 +9651,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             --LOG('Mex build run')
             
             while not eng.Dead and 0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving") do
+                --RNGLOG('MexBuildAI waiting for mex build completion')
+                --RNGLOG('Engineer build queue length is '..table.getn(eng.EngineerBuildQueue))
                 local platPos = GetPlatoonPosition(self)
                 if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                     if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, platPos, 30, 'Enemy') > 0 then
@@ -9592,7 +9694,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
                 coroutine.yield(20)
             end
+            --RNGLOG('MexBuildAI assuming build is complete')
+            --RNGLOG('Engineer build queue length is '..table.getn(eng.EngineerBuildQueue))
             IssueClearCommands({eng})
+            eng.EngineerBuildQueue = {}
             eng.Active = false
             coroutine.yield(20)
         end

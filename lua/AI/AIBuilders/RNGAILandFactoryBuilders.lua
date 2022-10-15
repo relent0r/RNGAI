@@ -74,6 +74,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2MobileBombs',
         Priority = 891,
         BuilderConditions = {
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'UnitBuildDemand', {'Land', 'T2', 'mobilebomb'} },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },

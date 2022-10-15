@@ -466,7 +466,7 @@ BuilderGroup {
         },
     },
 }
-
+--[[
 BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Small Expansions',
     BuildersType = 'FactoryBuilder',
@@ -496,7 +496,7 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
     },
-}
+}]]
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Islands',
