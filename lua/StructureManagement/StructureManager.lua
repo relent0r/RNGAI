@@ -1267,7 +1267,7 @@ StructureManager = Class {
                     --LOG('This is a new closest extractor upgrading at '..distanceToBase)
                 end
                 if not bypassEcoManager and fractionComplete < 0.65 then
-                    if (GetEconomyTrend(aiBrain, 'MASS') <= 0.0 and (GetEconomyStored(aiBrain, 'MASS') <= 150) or GetEconomyStored( aiBrain, 'ENERGY') < 100) then
+                    if (GetEconomyTrend(aiBrain, 'MASS') <= 0.0 and GetEconomyStored(aiBrain, 'MASS') <= 150) or GetEconomyStored( aiBrain, 'ENERGY') < 200 then
                         if not extractorUnit:IsPaused() then
                             extractorUnit:SetPaused(true)
                             coroutine.yield(10)

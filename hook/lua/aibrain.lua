@@ -862,7 +862,7 @@ AIBrain = Class(RNGAIBrainClass) {
             EcoMultiplier = 1,
             T3ExtractorSpend = false,
             T2ExtractorSpend = false,
-            EcoMassUpgradeTimeout = 180,
+            EcoMassUpgradeTimeout = 120,
             EcoPowerPreemptive = false,
         }
         self.EcoManager.PowerPriorityTable = {
