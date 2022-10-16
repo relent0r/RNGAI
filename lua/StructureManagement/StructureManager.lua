@@ -1249,11 +1249,14 @@ StructureManager = Class {
             upgradeBp = ALLBPS[upgradeID]
             IssueUpgrade({extractorUnit}, upgradeID)
             coroutine.yield(2)
+            local fractionComplete
             local upgradeTimeStamp = GetGameTimeSeconds()
             local bypassEcoManager = false
             local extractorUpgradeTimeoutReached = false
             local upgradedExtractor = extractorUnit.UnitBeingBuilt
-            local fractionComplete = upgradedExtractor:GetFractionComplete()
+            if not upgradedExtractor.Dead then
+                fractionComplete = upgradedExtractor:GetFractionComplete()
+            end
             while extractorUnit and not extractorUnit.Dead and fractionComplete < 1 do
                 --LOG('Upgrading Extractor Loop')
                 --LOG('Unit is '..fractionComplete..' fraction complete')

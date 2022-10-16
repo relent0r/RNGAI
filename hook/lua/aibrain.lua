@@ -3561,7 +3561,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if next(enemyACUIndexes) then
                 for k, v in enemyACUIndexes do
                     if RUtils.HaveUnitVisual(self, self.EnemyIntel.ACU[v.Index].Unit, true) then
-                        potentialTarget = b
+                        potentialTarget = self.EnemyIntel.ACU[v.Index].Unit
                         potentialTargetValue = 10000
                         --RNGLOG('Enemy ACU returned as potential target for Director')
                     end

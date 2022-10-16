@@ -22,7 +22,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 150.0 } }, -- If our energy is trending into negatives
-            { EBC, 'GreaterThanMassStorageOrEfficiency', { 100, 0.60 }},
+            { EBC, 'GreaterThanMassStorageOrEfficiency', { 150, 0.85 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
@@ -43,6 +43,7 @@ BuilderGroup {
                     categories.SHIELD * categories.STRUCTURE,
                     categories.ENERGYPRODUCTION * categories.STRUCTURE,
                 },
+                Scale = true,
                 AvoidCategory = categories.ENERGYPRODUCTION,
                 AdjacencyDistance = 50,
                 maxUnits = 1,

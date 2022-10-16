@@ -4,6 +4,8 @@ local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local GetClosestPathNodeInRadiusByLayerRNG = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayerRNG
+-- This is due for merge in the default codebase soon..YAY
+--local navutils = import('/lua/sim/NavUtils.lua')
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetThreatBetweenPositions = moho.aibrain_methods.GetThreatBetweenPositions
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
@@ -852,6 +854,15 @@ IntelManager = Class {
             self.MapIntelGrid[x][z].Graphs[locationType] = { GraphChecked = false, Land = false, Amphibious = false, NoGraph = false}
         end
         if not self.MapIntelGrid[x][z].Graphs[locationType].GraphChecked then
+            --[[
+            local success, reason = navutils.CanPathTo('land', startPos, endPos)
+            if success then
+                RNGLOG('NavUtils CanPathTo returned true '..repr(endPos))
+            else
+                RNGLOG('NavUtils CanPathTo returned false '..repr(endPos))
+                RNGLOG('Reason is '..reason)
+            end]]
+
             if AIAttackUtils.CanGraphToRNG(startPos, endPos, 'Land') then
                 self.MapIntelGrid[x][z].Graphs[locationType].Land = true
                 self.MapIntelGrid[x][z].Graphs[locationType].Amphibious = true
@@ -1074,7 +1085,7 @@ IntelManager = Class {
                                     self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.Land = true
                                 elseif AIAttackUtils.CanGraphToRNG(self.Brain.BuilderManagers['MAIN'].Position, self.MapIntelGrid[gridXID][gridZID].Position, 'Amphibious') then
                                     self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked = true
-                                    self.MapIntelGrid[gridXID][gridZID].Graphs.Graphs.MAIN.Amphibious = true
+                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.Amphibious = true
                                 else
                                     self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked = true
                                     self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.NoGraph = true

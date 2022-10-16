@@ -339,6 +339,7 @@ end
 function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, cons)
     --RNGLOG('beginning adjacencypriority')
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
+    local scaleCount = 1
     local VDist3Sq = VDist3Sq
     local Centered=cons.Centered
     local AdjacencyBias=cons.AdjacencyBias
@@ -373,127 +374,195 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
         table.insert(template, {})
         table.insert(template[1], { buildingType })
         --RNGLOG('reference contains '..repr(table.getn(reference))..' items')
-        for _,x in reference do
-            for k,v in x do
-                if not Centered then
-                    if not v.Dead then
-                        local targetSize = v:GetBlueprint().Physics
-                        local targetPos = v:GetPosition()
-                        local differenceX=math.abs(targetSize.SkirtSizeX-unitSize.SkirtSizeX)
-                        local offsetX=math.floor(differenceX/2)
-                        local differenceZ=math.abs(targetSize.SkirtSizeZ-unitSize.SkirtSizeZ)
-                        local offsetZ=math.floor(differenceZ/2)
-                        local offsetfactory=0
-                        if EntityCategoryContains(categories.FACTORY, v) and (buildingType=='T1LandFactory' or buildingType=='T2SupportLandFactory' or buildingType=='T3SupportLandFactory') then
-                            offsetfactory=2
-                        end
-                        -- Top/bottom of unit
-                        for i=-offsetX,offsetX do
-                            local testPos = { targetPos[1] + (i * 1), targetPos[3]-targetSize.SkirtSizeZ/2-(unitSize.SkirtSizeZ/2)-offsetfactory, 0 }
-                            local testPos2 = { targetPos[1] + (i * 1), targetPos[3]+targetSize.SkirtSizeZ/2+(unitSize.SkirtSizeZ/2)+offsetfactory, 0 }
-                            -- check if the buildplace is to close to the border or inside buildable area
-                            if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
-                                --ForkThread(RNGtemporaryrenderbuildsquare,testPos,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
-                                --table.insert(template[1], testPos)
-                                if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
-                                    if cons.AvoidCategory and GetNumUnitsAroundPoint(aiBrain, cons.AvoidCategory, normalposition(testPos), cons.maxRadius, 'Ally')<cons.maxUnits then
-                                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
-                                        return true
-                                    elseif not cons.AvoidCategory then
-                                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
-                                        return true
-                                    end
-                                end
-                            end
-                            if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
-                                --ForkThread(RNGtemporaryrenderbuildsquare,testPos2,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
-                                --table.insert(template[1], testPos2)
-                                if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) then
-                                    if cons.AvoidCategory and GetNumUnitsAroundPoint(aiBrain, cons.AvoidCategory, normalposition(testPos2), cons.maxRadius, 'Ally')<cons.maxUnits then
-                                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
-                                        return true
-                                    elseif not cons.AvoidCategory then
-                                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
-                                        return true
-                                    end
-                                end
-                            end
-                        end
-                        -- Sides of unit
-                        for i=-offsetZ,offsetZ do
-                            local testPos = { targetPos[1]-targetSize.SkirtSizeX/2-(unitSize.SkirtSizeX/2)-offsetfactory, targetPos[3] + (i * 1), 0 }
-                            local testPos2 = { targetPos[1]+targetSize.SkirtSizeX/2+(unitSize.SkirtSizeX/2)+offsetfactory, targetPos[3] + (i * 1), 0 }
-                            if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
-                                --ForkThread(RNGtemporaryrenderbuildsquare,testPos,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
-                                --table.insert(template[1], testPos)
-                                if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
-                                    if cons.AvoidCategory and GetNumUnitsAroundPoint(aiBrain, cons.AvoidCategory, normalposition(testPos), cons.maxRadius, 'Ally')<cons.maxUnits then
-                                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
-                                        return true
-                                    elseif not cons.AvoidCategory then
-                                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
-                                        return true
-                                    end
-                                end
-                            end
-                            if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
-                                --ForkThread(RNGtemporaryrenderbuildsquare,testPos2,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
-                                --table.insert(template[1], testPos2)
-                                if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) then
-                                    if cons.AvoidCategory and GetNumUnitsAroundPoint(aiBrain, cons.AvoidCategory, normalposition(testPos2), cons.maxRadius, 'Ally')<cons.maxUnits then
-                                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
-                                        return true
-                                    elseif not cons.AvoidCategory then
-                                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
-                                        return true
-                                    end
-                                end
-                            end
-                        end
-                    end
-                else
-                    if not v.Dead then
-                        local targetSize = v:GetBlueprint().Physics
-                        local targetPos = v:GetPosition()
-                        targetPos[1] = targetPos[1]-- - (targetSize.SkirtSizeX/2)
-                        targetPos[3] = targetPos[3]-- - (targetSize.SkirtSizeZ/2)
-                        -- Top/bottom of unit
-                        local testPos = { targetPos[1], targetPos[3]-targetSize.SkirtSizeZ/2-(unitSize.SkirtSizeZ/2), 0 }
-                        local testPos2 = { targetPos[1], targetPos[3]+targetSize.SkirtSizeZ/2+(unitSize.SkirtSizeZ/2), 0 }
-                        -- check if the buildplace is to close to the border or inside buildable area
-                        if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
-                            table.insert(template[1], testPos)
-                        end
-                        if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
-                            table.insert(template[1], testPos2)
-                        end
-                        -- Sides of unit
-                        local testPos = { targetPos[1]+targetSize.SkirtSizeX/2 + (unitSize.SkirtSizeX/2), targetPos[3], 0 }
-                        local testPos2 = { targetPos[1]-targetSize.SkirtSizeX/2-(unitSize.SkirtSizeX/2), targetPos[3], 0 }
-                        if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
-                            table.insert(template[1], testPos)
-                        end
-                        if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
-                            table.insert(template[1], testPos2)
-                        end
-                    end
-                end
-            end
-            -- build near the base the engineer is part of, rather than the engineer location
-            local baseLocation = {nil, nil, nil}
-            if builder.BuildManagerData and builder.BuildManagerData.EngineerManager then
-                baseLocation = builder.BuildManagerdata.EngineerManager.Location
-            end
-            --ForkThread(RNGrenderReference,template[1],unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
-            local location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, template, false, builder, baseLocation[1], baseLocation[3])
-            if location then
-                if location[1] > 8 and location[1] < ScenarioInfo.size[1] - 8 and location[2] > 8 and location[2] < ScenarioInfo.size[2] - 8 then
-                    --RNGLOG('Build '..repr(buildingType)..' at adjacency: '..repr(location) )
-                    AddToBuildQueueRNG(aiBrain, builder, whatToBuild, location, false)
-                    return true
+        if cons.Scale then
+            --RNGLOG('Scale construction option is true')
+            if buildingType == 'T1EnergyProduction' then
+                --RNGLOG('buildingType is T1EnergyProduction')
+                if aiBrain.EconomyMonitorThread then
+                    local currentEnergyTrend = aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime
+                    --RNGLOG('EnergyTrend when going to build T1 power '..currentEnergyTrend)
+                    --RNGLOG('Amount of power needed is '..(60 - currentEnergyTrend))
+                    local energyNumber = 60 - currentEnergyTrend
+                    scaleCount = math.ceil(energyNumber/20)
                 end
             end
         end
+        local scalenumber = 0
+        local itemQueued = false
+        for i=1, scaleCount do
+            scalenumber = scalenumber + 1
+            for _,x in reference do
+                for k,v in x do
+                    if not Centered then
+                        if not v.Dead then
+                            local targetSize = v:GetBlueprint().Physics
+                            local targetPos = v:GetPosition()
+                            local differenceX=math.abs(targetSize.SkirtSizeX-unitSize.SkirtSizeX)
+                            local offsetX=math.floor(differenceX/2)
+                            local differenceZ=math.abs(targetSize.SkirtSizeZ-unitSize.SkirtSizeZ)
+                            local offsetZ=math.floor(differenceZ/2)
+                            local offsetfactory=0
+                            if EntityCategoryContains(categories.FACTORY, v) and (buildingType=='T1LandFactory' or buildingType=='T2SupportLandFactory' or buildingType=='T3SupportLandFactory') then
+                                offsetfactory=2
+                            end
+                            -- Top/bottom of unit
+                            for i=-offsetX,offsetX do
+                                local testPos = { targetPos[1] + (i * 1), targetPos[3]-targetSize.SkirtSizeZ/2-(unitSize.SkirtSizeZ/2)-offsetfactory, 0 }
+                                local testPos2 = { targetPos[1] + (i * 1), targetPos[3]+targetSize.SkirtSizeZ/2+(unitSize.SkirtSizeZ/2)+offsetfactory, 0 }
+                                -- check if the buildplace is to close to the border or inside buildable area
+                                if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                                    --table.insert(template[1], testPos)
+                                    if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
+                                        if cons.AvoidCategory and GetNumUnitsAroundPoint(aiBrain, cons.AvoidCategory, normalposition(testPos), cons.maxRadius, 'Ally')<cons.maxUnits then
+                                            AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
+                                            if cons.Scale then
+                                                itemQueued = true
+                                                break
+                                            end
+                                            return true
+                                        elseif not cons.AvoidCategory then
+                                            AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
+                                            if cons.Scale then
+                                                itemQueued = true
+                                                break
+                                            end
+                                            return true
+                                        end
+                                    end
+                                end
+                                if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos2,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                                    --table.insert(template[1], testPos2)
+                                    if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) then
+                                        if cons.AvoidCategory and GetNumUnitsAroundPoint(aiBrain, cons.AvoidCategory, normalposition(testPos2), cons.maxRadius, 'Ally')<cons.maxUnits then
+                                            AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
+                                            if cons.Scale then
+                                                itemQueued = true
+                                                break
+                                            end
+                                            return true
+                                        elseif not cons.AvoidCategory then
+                                            AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
+                                            if cons.Scale then
+                                                itemQueued = true
+                                                break
+                                            end
+                                            return true
+                                        end
+                                    end
+                                end
+                            end
+                            -- Sides of unit
+                            for i=-offsetZ,offsetZ do
+                                local testPos = { targetPos[1]-targetSize.SkirtSizeX/2-(unitSize.SkirtSizeX/2)-offsetfactory, targetPos[3] + (i * 1), 0 }
+                                local testPos2 = { targetPos[1]+targetSize.SkirtSizeX/2+(unitSize.SkirtSizeX/2)+offsetfactory, targetPos[3] + (i * 1), 0 }
+                                if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                                    --table.insert(template[1], testPos)
+                                    if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) then
+                                        if cons.AvoidCategory and GetNumUnitsAroundPoint(aiBrain, cons.AvoidCategory, normalposition(testPos), cons.maxRadius, 'Ally')<cons.maxUnits then
+                                            AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
+                                            if cons.Scale then
+                                                itemQueued = true
+                                                break
+                                            end
+                                            return true
+                                        elseif not cons.AvoidCategory then
+                                            AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
+                                            if cons.Scale then
+                                                itemQueued = true
+                                                break
+                                            end
+                                            return true
+                                        end
+                                    end
+                                end
+                                if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos2,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                                    --table.insert(template[1], testPos2)
+                                    if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) then
+                                        if cons.AvoidCategory and GetNumUnitsAroundPoint(aiBrain, cons.AvoidCategory, normalposition(testPos2), cons.maxRadius, 'Ally')<cons.maxUnits then
+                                            AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
+                                            if cons.Scale then
+                                                itemQueued = true
+                                                break
+                                            end
+                                            return true
+                                        elseif not cons.AvoidCategory then
+                                            AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
+                                            if cons.Scale then
+                                                itemQueued = true
+                                                break
+                                            end
+                                            return true
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    else
+                        if not v.Dead then
+                            local targetSize = v:GetBlueprint().Physics
+                            local targetPos = v:GetPosition()
+                            targetPos[1] = targetPos[1]-- - (targetSize.SkirtSizeX/2)
+                            targetPos[3] = targetPos[3]-- - (targetSize.SkirtSizeZ/2)
+                            -- Top/bottom of unit
+                            local testPos = { targetPos[1], targetPos[3]-targetSize.SkirtSizeZ/2-(unitSize.SkirtSizeZ/2), 0 }
+                            local testPos2 = { targetPos[1], targetPos[3]+targetSize.SkirtSizeZ/2+(unitSize.SkirtSizeZ/2), 0 }
+                            -- check if the buildplace is to close to the border or inside buildable area
+                            if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                                table.insert(template[1], testPos)
+                            end
+                            if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                                table.insert(template[1], testPos2)
+                            end
+                            -- Sides of unit
+                            local testPos = { targetPos[1]+targetSize.SkirtSizeX/2 + (unitSize.SkirtSizeX/2), targetPos[3], 0 }
+                            local testPos2 = { targetPos[1]-targetSize.SkirtSizeX/2-(unitSize.SkirtSizeX/2), targetPos[3], 0 }
+                            if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                                table.insert(template[1], testPos)
+                            end
+                            if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                                table.insert(template[1], testPos2)
+                            end
+                        end
+                    end
+                    if itemQueued then
+                        break
+                    end
+                end
+                if itemQueued then
+                    break
+                end
+                -- build near the base the engineer is part of, rather than the engineer location
+                local baseLocation = {nil, nil, nil}
+                if builder.BuildManagerData and builder.BuildManagerData.EngineerManager then
+                    baseLocation = builder.BuildManagerdata.EngineerManager.Location
+                end
+                --ForkThread(RNGrenderReference,template[1],unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                local location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, template, false, builder, baseLocation[1], baseLocation[3])
+                if location then
+                    if location[1] > 8 and location[1] < ScenarioInfo.size[1] - 8 and location[2] > 8 and location[2] < ScenarioInfo.size[2] - 8 then
+                        --RNGLOG('Build '..repr(buildingType)..' at adjacency: '..repr(location) )
+                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, location, false)
+                        if cons.Scale then
+                            itemQueued = true
+                            break
+                        end
+                        return true
+                    end
+                end
+                if itemQueued then
+                    break
+                end
+            end
+        end
+        if itemQueued then
+            --RNGLOG('scaleNumber '..scalenumber)
+            return true
+        end
+        
         -- Build in a regular spot if adjacency not found
         if cons.AdjRequired then
             return false

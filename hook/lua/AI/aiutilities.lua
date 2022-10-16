@@ -323,6 +323,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                         --local massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, waypointPath)
                         --RNGLOG('Mass Marker'..repr(massMarker))
                         --RNGLOG('Attempting second mass marker')
+                        
                         local buildQueueReset = eng.EnginerBuildQueue
                         eng.EnginerBuildQueue = {}
                         for _,massMarker in markers do
@@ -369,11 +370,13 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                             if v.PathPoint == i then
                                 if eng.EngineerBuildQueue[k][5] then
                                     --RNGLOG('BorderWarning build')
+                                    --RNGLOG('Found build command at point '..repr(eng.EngineerBuildQueue[k][2]))
                                     IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
                                 else
+                                    --RNGLOG('Found build command at point '..repr(eng.EngineerBuildQueue[k][2]))
                                     aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
                                 end
-                                queuePointTaken[i] = true
+                                queuePointTaken[k] = true
                                 skipPath = true
                             end
                         end
@@ -381,14 +384,18 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                             IssueMove({eng}, path[i])
                         end
                     end
+                    --RNGLOG('queuePointTaken list '..repr(queuePointTaken))
                     --IssueMove({eng}, destination)
                     for k, v in eng.EngineerBuildQueue do
                         if queuePointTaken[k] and eng.EngineerBuildQueue[k]  then
+                            --RNGLOG('QueuePoint already taken, skipping for position '..repr(eng.EngineerBuildQueue[k][2]))
                             continue
                         end
                         if eng.EngineerBuildQueue[k][5] then
+                            --RNGLOG('Found end build command at point '..repr(eng.EngineerBuildQueue[k][2]))
                             IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
                         else
+                            --RNGLOG('Found end build command at point '..repr(eng.EngineerBuildQueue[k][2]))
                             aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
                         end
                     end
