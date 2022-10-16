@@ -169,7 +169,9 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
                 if unit.EngineerBuildQueue then
                     if ALLBPS[unit.EngineerBuildQueue[1][1]].CategoriesHash.MASSEXTRACTION and ALLBPS[unit.EngineerBuildQueue[1][1]].CategoriesHash.TECH1 then
                         --RNGLOG('Attempt reclaim on eng movement')
-                        brokenPathMovement = RUtils.PerformEngReclaim(aiBrain, unit, 5)
+                        if not unit:IsUnitState('Reclaiming') then
+                            brokenPathMovement = RUtils.PerformEngReclaim(aiBrain, unit, 5)
+                        end
                     end
                 end
                 if unit:IsUnitState("Moving") then
@@ -417,7 +419,9 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                 end
                 if eng.EngineerBuildQueue then
                     if ALLBPS[eng.EngineerBuildQueue[1][1]].CategoriesHash.MASSEXTRACTION and ALLBPS[eng.EngineerBuildQueue[1][1]].CategoriesHash.TECH1 then
-                        brokenPathMovement = RUtils.PerformEngReclaim(aiBrain, eng, 5)
+                        if not eng:IsUnitState('Reclaiming') then
+                            brokenPathMovement = RUtils.PerformEngReclaim(aiBrain, eng, 5)
+                        end
                     end
                 end
                 if eng:IsUnitState("Moving") then
