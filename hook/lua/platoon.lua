@@ -3808,10 +3808,10 @@ Platoon = Class(RNGAIPlatoonClass) {
             import('/lua/ScenarioTriggers.lua').CreateUnitStopCaptureTrigger(eng.PlatoonHandle.EngineerCaptureDoneRNG, eng)
             eng.CaptureDoneCallbackSet = true
         end
-        if eng and not eng.Dead and not eng.ReclaimPlatoon and not eng.ReclaimDoneCallbackSet and eng.PlatoonHandle and PlatoonExists(eng:GetAIBrain(), eng.PlatoonHandle) then
-            import('/lua/ScenarioTriggers.lua').CreateUnitStopReclaimTrigger(eng.PlatoonHandle.EngineerReclaimDoneRNG, eng)
-            eng.ReclaimDoneCallbackSet = true
-        end
+        --if eng and not eng.Dead and not eng.ReclaimPlatoon and not eng.ReclaimDoneCallbackSet and eng.PlatoonHandle and PlatoonExists(eng:GetAIBrain(), eng.PlatoonHandle) then
+        --    import('/lua/ScenarioTriggers.lua').CreateUnitStopReclaimTrigger(eng.PlatoonHandle.EngineerReclaimDoneRNG, eng)
+        --    eng.ReclaimDoneCallbackSet = true
+        --end
         if eng and not eng.Dead and not eng.FailedToBuildCallbackSet and eng.PlatoonHandle and PlatoonExists(eng:GetAIBrain(), eng.PlatoonHandle) then
             import('/lua/ScenarioTriggers.lua').CreateOnFailedToBuildTrigger(eng.PlatoonHandle.EngineerFailedToBuildRNG, eng)
             eng.FailedToBuildCallbackSet = true
