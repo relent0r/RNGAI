@@ -20,7 +20,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Tank',
         PlatoonTemplate = 'T1LandDFTank',
-        Priority = 748,
+        Priority = 745,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             --{ EBC, 'FactorySpendRatioRNG', {'Land', true}},
@@ -36,7 +36,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Artillery',
         PlatoonTemplate = 'T1LandArtillery',
-        Priority = 747,
+        Priority = 744,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             --{ EBC, 'FactorySpendRatioRNG', {'Land', true}},

@@ -4358,7 +4358,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local engStuckCount = 0
                 local Lastdist
                 local dist
-                while not eng.Dead do
+                while not eng.Dead and RNGGETN(eng.EngineerBuildQueue) > 0 do
                     PlatoonPos = eng:GetPosition()
                     dist = VDist2(PlatoonPos[1] or 0, PlatoonPos[3] or 0, buildLocation[1] or 0, buildLocation[3] or 0)
                     if dist < 12 then
