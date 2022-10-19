@@ -384,7 +384,7 @@ function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, 
                     -- this brings the dist value from 0 to 100% of the maximum length with can travel on a map
                     dist = 100 * dist / ( mapSizeX + mapSizeZ )
                     -- get threat from current node to adjacent node
-                    if (platoonLayer == 'Air' or acuPath) and ScenarioInfo.Options.AIMapMarker == 'all' then
+                    if platoonLayer == 'Air' or acuPath then
                         threat = GetThreatAtPosition(aiBrain, newNode.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, threatType)
                     else
                         threat = GetThreatBetweenPositions(aiBrain, newNode.position, lastNode.position, nil, threatType)
