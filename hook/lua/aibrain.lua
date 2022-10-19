@@ -978,7 +978,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 DistanceToBase = 0,
                 LastSpotted = 0,
                 Threat = 0,
-                Hp = 0,
+                HP = 0,
                 OnField = false,
                 CloseCombat = false,
                 Unit = {},
@@ -3016,6 +3016,73 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     ACUDetectionRNG = function(self, blip)
+        LOG('ACUDetection Callback has fired')
+        if blip then
+            local unit = blip:GetSource()
+            if not unit.Dead then
+                local enemyIndex = unit:GetAIBrain():GetArmyIndex()
+                if not self.EnemyIntel.ACU[enemyIndex].VisualThread then
+                    self.EnemyIntel.ACU[enemyIndex].VisualThread = self:ForkThread(self.ACUVisualThread, enemyIndex, unit)
+                end
+            end
+        end
+    end,
+
+    ACUVisualThread = function(self, index, unit)
+        local function CDRGunCheck(aiBrain, cdr)
+            local factionIndex = aiBrain:GetFactionIndex()
+            if factionIndex == 1 then
+                if not cdr:HasEnhancement('HeavyAntiMatterCannon') then
+                    return true
+                end
+            elseif factionIndex == 2 then
+                if not cdr:HasEnhancement('CrysalisBeam') or not cdr:HasEnhancement('HeatSink') then
+                    return true
+                end
+            elseif factionIndex == 3 then
+                if not cdr:HasEnhancement('CoolingUpgrade') then
+                    return true
+                end
+            elseif factionIndex == 4 then
+                if not cdr:HasEnhancement('RateOfFire') then
+                    return true
+                end
+            end
+            return false
+        end
+        if not unit.Dead then
+            local timeOut = 0
+            if not self.EnemyIntel.ACU[index].Unit then
+                self.EnemyIntel.ACU[index].Unit = unit
+            end
+            while timeOut < 3 do
+                local currentGameTime = GetGameTimeSeconds()
+                if RUtils.HaveUnitVisual(self, unit, true) then
+                    self.EnemyIntel.ACU[index].Position = unit:GetPosition()
+                    self.EnemyIntel.ACU[index].HP = unit:GetHealth()
+                    if not self.EnemyIntel.ACU[index].Range or self.EnemyIntel.ACU[index].LastSpotted + 30 > currentGameTime then
+                        if CDRGunCheck(self, unit) then
+                            self.EnemyIntel.ACU[index].Range = unit.Blueprint.Weapon[1].MaxRadius + 8
+                        else
+                            self.EnemyIntel.ACU[index].Range = unit.Blueprint.Weapon[1].MaxRadius
+                        end
+                    end
+                else
+                    timeOut = timeOut + 1
+                end
+                self.EnemyIntel.ACU[index].LastSpotted = currentGameTime
+                RNGLOG('Maintaining ACU Visual')
+                RNGLOG(repr(self.EnemyIntel.ACU[index]))
+                coroutine.yield(10)
+            end
+            self.EnemyIntel.ACU[index].VisualThread = false
+            return
+        end
+    end,
+
+    
+
+    ACUDetectionRNGOld = function(self, blip)
         --LOG('ACUDetection Callback has fired')
         local currentGameTime = GetGameTimeSeconds()
         if blip then
