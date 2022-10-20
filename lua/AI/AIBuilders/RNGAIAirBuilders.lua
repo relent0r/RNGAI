@@ -384,6 +384,29 @@ BuilderGroup {
          },
     },
     Builder {
+        BuilderName = 'RNGAI Air Feeder',
+        PlatoonTemplate = 'RNGAI AntiAirFeeder',
+        Priority = 750,
+        InstanceCount = 4,
+        BuilderType = 'Any',
+        BuilderData = {
+            AvoidBases = true,
+            SearchRadius = BaseEnemyArea,
+            LocationType = 'LocationType',
+            NeverGuardEngineers = true,
+            PlatoonLimit = 18,
+            PrioritizedCategories = {
+                categories.EXPERIMENTAL * categories.AIR,
+                categories.GROUNDATTACK * categories.AIR,
+                categories.BOMBER * categories.AIR,
+                categories.ANTIAIR * categories.AIR,
+            },
+        },
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, AntiAirUnits } },
+         },
+    },
+    Builder {
         BuilderName = 'RNGAI Air Lockdown',
         PlatoonTemplate = 'RNGAI AntiAirLockdown',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },

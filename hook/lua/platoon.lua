@@ -7264,6 +7264,50 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
     end,
 
+    FeederPlatoon = function(self)
+
+        local platoonType = self.PlatoonData.PlatoonType
+        local aiBrain = self:GetBrain()
+        while PlatoonExists(aiBrain, self) do
+            if platoonType == 'fighter' then
+                local targetPlatoon = GetClosestPlatoonRNG(self, 'AirHuntAIRNG', 250)
+                if not targetPlatoon then
+                    --RNGLOG('Venting to new trueplatoon platoon')
+                    local platoonUnits = GetPlatoonUnits(self)
+                    local ventPlatoon = aiBrain:MakePlatoon('', 'AirHuntAIRNG')
+                    ventPlatoon.PlanName = 'RNGAI Air Intercept'
+                    for _, unit in platoonUnits do
+                        if unit and not unit.Dead and not unit:BeenDestroyed() then
+                            --RNGLOG('Added unit to new platoon')
+                            aiBrain:AssignUnitsToPlatoon(ventPlatoon, {unit}, 'Attack', 'None')
+                            return
+                        end
+                    end
+                else
+                    if not targetPlatoon.Dead then
+                        if VDist3Sq(GetPlatoonPosition(self), GetPlatoonPosition(targetPlatoon)) < 900 then
+                            aiBrain:AssignUnitsToPlatoon(targetPlatoon, GetPlatoonUnits(self), 'Attack', 'None')
+                        else
+                            while PlatoonExists(aiBrain, self) do
+                                local targetPlatPos = GetPlatoonPosition(targetPlatoon)
+                                if targetPlatPos then
+                                    IssueClearCommands(GetPlatoonUnits(self))
+                                    self:AggressiveMoveToLocation(targetPlatPos, false)
+                                end
+                                if VDist3Sq(GetPlatoonPosition(self), GetPlatoonPosition(targetPlatoon)) < 900 then
+                                    aiBrain:AssignUnitsToPlatoon(targetPlatoon, GetPlatoonUnits(self), 'Attack', 'None')
+                                    return
+                                end
+                                coroutine.yield(20)
+                            end
+                        end
+                    end
+                end
+            end
+            coroutine.yield(30)
+        end
+    end,
+
     MergeWithNearbyPlatoonsRNG = function(self, planName, radius, maxMergeNumber, ignoreBase, restart)
         -- check to see we're not near an ally base
         -- ignoreBase is not worded well, if false then ignore if too close to base
