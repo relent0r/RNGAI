@@ -2170,51 +2170,6 @@ function CDRGetUnitClump(aiBrain, cdrPos, radius)
     return false
 end
 
-function ACUDetection(platoon)
-    
-    local aiBrain = platoon:GetBrain()
-    local ACUTable = aiBrain.EnemyIntel.ACU
-    local scanWait = platoon.PlatoonData.ScanWait
-    local unit = platoon:GetPlatoonUnits()[1]
-
-    --RNGLOG('* AI-RNG: ACU Detection Behavior Running')
-    if ACUTable then 
-        while not unit.Dead do
-            local currentGameTime = GetGameTimeSeconds()
-            local acuUnits = GetUnitsAroundPoint(aiBrain, categories.COMMAND, unit:GetPosition(), 40, 'Enemy')
-            if acuUnits[1] then
-                --RNGLOG('* AI-RNG: ACU Detected')
-                for _, v in acuUnits do
-                    --unitDesc = GetBlueprint(v).Description
-                    --RNGLOG('* AI-RNG: Units is'..unitDesc)
-                    enemyIndex = v:GetAIBrain():GetArmyIndex()
-                    --RNGLOG('* AI-RNG: EnemyIndex :'..enemyIndex)
-                    --RNGLOG('* AI-RNG: Curent Game Time : '..currentGameTime)
-                    --RNGLOG('* AI-RNG: Iterating ACUTable')
-                    for k, c in ACUTable do
-                        --RNGLOG('* AI-RNG: Table Index is : '..k)
-                        --RNGLOG('* AI-RNG:'..c.LastSpotted)
-                        --RNGLOG('* AI-RNG:'..repr(c.Position))
-                        if currentGameTime - 5 > c.LastSpotted and k == enemyIndex then
-                            --RNGLOG('* AI-RNG: CurrentGameTime IF is true updating tables')
-                            c.Position = v:GetPosition()
-                            c.HP = v:GetHealth()
-                            --RNGLOG('AIRSCOUTACUDETECTION Enemy ACU of index '..enemyIndex..'has '..c.HP..' health')
-                            acuThreat = GetThreatAtPosition(aiBrain, c.Position, 0, true, 'AntiAir')
-                            --RNGLOG('* AI-RNG: Threat at ACU location is :'..acuThreat)
-                            c.Threat = acuThreat
-                            c.LastSpotted = currentGameTime
-                        end
-                    end
-                end
-            end
-            coroutine.yield(scanWait)
-        end
-    else
-            WARN('No EnemyIntel ACU Table found, is the game still initializing?')
-    end
-end
-
 function SetAcuSnipeMode(unit, bool)
     local targetPriorities = {}
     --RNGLOG('Set ACU weapon priorities.')
