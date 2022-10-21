@@ -7267,32 +7267,46 @@ Platoon = Class(RNGAIPlatoonClass) {
     FeederPlatoon = function(self)
 
         local platoonType = self.PlatoonData.PlatoonType
+        local platoonSearchRange = self.PlatoonData.PlatoonSearchRange * self.PlatoonData.PlatoonSearchRange
         local aiBrain = self:GetBrain()
+        local feederTimeout = 0
         while PlatoonExists(aiBrain, self) do
+            --RNGLOG('Feeder starting loop')
             if platoonType == 'fighter' then
-                local targetPlatoon = GetClosestPlatoonRNG(self, 'AirHuntAIRNG', 250)
+                local targetPlatoon = self:GetClosestPlatoonRNG('AirHuntAIRNG', 62500)
                 if not targetPlatoon then
-                    --RNGLOG('Venting to new trueplatoon platoon')
-                    local platoonUnits = GetPlatoonUnits(self)
-                    local ventPlatoon = aiBrain:MakePlatoon('', 'AirHuntAIRNG')
-                    ventPlatoon.PlanName = 'RNGAI Air Intercept'
-                    for _, unit in platoonUnits do
-                        if unit and not unit.Dead and not unit:BeenDestroyed() then
-                            --RNGLOG('Added unit to new platoon')
-                            aiBrain:AssignUnitsToPlatoon(ventPlatoon, {unit}, 'Attack', 'None')
-                            return
+                    feederTimeout = feederTimeout + 1
+                    if feederTimeout > 5 then
+                        --RNGLOG('Feeder no target platoon found, starting new airhuntai')
+                        --RNGLOG('Venting to new trueplatoon platoon')
+                        local platoonUnits = GetPlatoonUnits(self)
+                        local ventPlatoon = aiBrain:MakePlatoon('', 'AirHuntAIRNG')
+                        ventPlatoon.PlanName = 'RNGAI Air Intercept'
+                        ventPlatoon.PlatoonData.AvoidBases =  self.PlatoonData.AvoidBases
+                        ventPlatoon.PlatoonData.SearchRadius =  self.PlatoonData.SearchRadius
+                        ventPlatoon.PlatoonData.LocationType = self.PlatoonData.LocationType
+                        ventPlatoon.PlatoonData.PlatoonLimit = self.PlatoonData.PlatoonLimit
+                        ventPlatoon.PlatoonData.PrioritizedCategories = self.PlatoonData.PrioritizedCategories
+                        for _, unit in platoonUnits do
+                            if unit and not unit.Dead and not unit:BeenDestroyed() then
+                                --RNGLOG('Added unit to new platoon')
+                                aiBrain:AssignUnitsToPlatoon(ventPlatoon, {unit}, 'Attack', 'None')
+                                return
+                            end
                         end
                     end
                 else
+                    --RNGLOG('Feeder target platoon found, trying to join')
                     if not targetPlatoon.Dead then
                         if VDist3Sq(GetPlatoonPosition(self), GetPlatoonPosition(targetPlatoon)) < 900 then
                             aiBrain:AssignUnitsToPlatoon(targetPlatoon, GetPlatoonUnits(self), 'Attack', 'None')
                         else
                             while PlatoonExists(aiBrain, self) do
+                                --RNGLOG('Feeder target moving to found platoon')
                                 local targetPlatPos = GetPlatoonPosition(targetPlatoon)
                                 if targetPlatPos then
                                     IssueClearCommands(GetPlatoonUnits(self))
-                                    self:AggressiveMoveToLocation(targetPlatPos, false)
+                                    self:AggressiveMoveToLocation(targetPlatPos)
                                 end
                                 if VDist3Sq(GetPlatoonPosition(self), GetPlatoonPosition(targetPlatoon)) < 900 then
                                     aiBrain:AssignUnitsToPlatoon(targetPlatoon, GetPlatoonUnits(self), 'Attack', 'None')

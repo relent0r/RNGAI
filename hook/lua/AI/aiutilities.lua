@@ -222,10 +222,6 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
     return false
 end
 
-function UnitIDContainsCategory(unitId, category)
-
-end
-
 function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
     if not destination then
         return false

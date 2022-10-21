@@ -999,6 +999,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.StartPos = { selfStartPosX, GetSurfaceHeight(selfStartPosX, selfStartPosY), selfStartPosY }
         self.BrainIntel.CurrentIntelAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, self.MapCenterPoint)
         self.BrainIntel.MilitaryRange = BaseMilitaryArea
+        self.BrainIntel.DMZRange = BaseDMZArea
         self.BrainIntel.ExpansionWatchTable = {}
         self.BrainIntel.DynamicExpansionPositions = {}
         self.BrainIntel.IMAPConfig = {
@@ -3058,19 +3059,33 @@ AIBrain = Class(RNGAIBrainClass) {
             while timeOut < 3 do
                 local currentGameTime = GetGameTimeSeconds()
                 if RUtils.HaveUnitVisual(self, unit, true) then
-                    self.EnemyIntel.ACU[index].Position = unit:GetPosition()
+                    local acuPos = unit:GetPosition()
+                    self.EnemyIntel.ACU[index].Position = acuPos
+                    self.EnemyIntel.ACU[index].DistanceToBase = VDist3Sq(acuPos, self.BrainIntel.StartPos)
                     self.EnemyIntel.ACU[index].HP = unit:GetHealth()
-                    if not self.EnemyIntel.ACU[index].Range or self.EnemyIntel.ACU[index].LastSpotted + 30 > currentGameTime then
+                    if not self.EnemyIntel.ACU[index].Range or self.EnemyIntel.ACU[index].LastSpotted + 30 < currentGameTime then
                         if CDRGunCheck(self, unit) then
                             self.EnemyIntel.ACU[index].Range = unit.Blueprint.Weapon[1].MaxRadius + 8
+                            self.EnemyIntel.ACU[index].Gun = true
                         else
                             self.EnemyIntel.ACU[index].Range = unit.Blueprint.Weapon[1].MaxRadius
+                            self.EnemyIntel.ACU[index].Gun = false
                         end
                     end
+                    if self.EnemyIntel.ACU[index].DistanceToBase < (self.BrainIntel.DMZRange * self.BrainIntel.DMZRange) then
+                        self.EnemyIntel.ACU[index].OnField = true
+                    else
+                        self.EnemyIntel.ACU[index].OnField = false
+                    end
+                    if self.EnemyIntel.ACU[index].DistanceToBase < 19600 then
+                        self.EnemyIntel.ACUEnemyClose = true
+                    else
+                        self.EnemyIntel.ACUEnemyClose = false
+                    end
+                    self.EnemyIntel.ACU[index].LastSpotted = currentGameTime
                 else
                     timeOut = timeOut + 1
                 end
-                self.EnemyIntel.ACU[index].LastSpotted = currentGameTime
                 RNGLOG('Maintaining ACU Visual')
                 RNGLOG(repr(self.EnemyIntel.ACU[index]))
                 coroutine.yield(10)

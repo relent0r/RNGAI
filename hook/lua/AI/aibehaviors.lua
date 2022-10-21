@@ -223,25 +223,6 @@ function CDRBrainThread(cdr)
             if not v.Ally then
                 local enemyStartPos = {}
                 if v.Position[1] and v.LastSpotted ~= 0 and gameTime - 60 < v.LastSpotted then
-                    --LOG('Enemy Start Position '..repr(aiBrain.EnemyIntel.EnemyStartLocations))
-                    for c, b in aiBrain.EnemyIntel.EnemyStartLocations do
-                        if c == k then
-                            --LOG('Enemy ACU distance from start position is '..VDist2Sq(v.Position[1], v.Position[3], aiBrain.EnemyIntel.EnemyStartLocations[c].Position[1], aiBrain.EnemyIntel.EnemyStartLocations[c].Position[3]))
-                            enemyStartPos = aiBrain.EnemyIntel.EnemyStartLocations[c].Position
-                        end
-                    end
-                    local enemyAcuDistance = VDist2Sq(v.Position[1], v.Position[3], aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[3])
-                    v.DistanceToBase = enemyAcuDistance
-                    if enemyAcuDistance < (aiBrain.BrainIntel.MilitaryRange * aiBrain.BrainIntel.MilitaryRange) then
-                        v.OnField = true
-                    else
-                        v.OnField = false
-                    end
-                    if enemyAcuDistance < 19600 then
-                        aiBrain.EnemyIntel.ACUEnemyClose = true
-                    else
-                        aiBrain.EnemyIntel.ACUEnemyClose = false
-                    end
                     if VDist2Sq(v.Position[1], v.Position[3], cdr.Position[1], cdr.Position[2]) < 6400 then
                         v.CloseCombat = true
                     else
@@ -957,7 +938,7 @@ function CDRExpansionRNG(aiBrain, cdr)
         for _, v in aiBrain.EnemyIntel.ACU do
             if not v.Ally and v.OnField then
                 --RNGLOG('Non Ally and OnField')
-                if v.LastSpotted ~= 0 and (GetGameTimeSeconds() - 30) < v.LastSpotted and VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[3], v.Position[1], v.Position[3]) < 22500 then
+                if v.LastSpotted ~= 0 and (GetGameTimeSeconds() - 30) < v.LastSpotted and v.DistanceToBase < 22500 then
                     --RNGLOG('Enemy ACU seen within 30 seconds and is within 150 of our start position')
                     return
                 end
