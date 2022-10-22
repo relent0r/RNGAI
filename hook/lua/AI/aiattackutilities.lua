@@ -735,6 +735,9 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1En
         local path, reason = PlatoonGenerateSafePathToRNG(aiBrain, useGraph, transportLocation, destination, 200)
         -- use the transport!
         local transportSquad = platoon:GetSquadUnits('Scout')
+        if not transportSquad then
+            return false
+        end
         for _, v in transportSquad do
             if not v.Dead and not EntityCategoryContains(categories.TRANSPORTFOCUS, v) then
                 IssueStop({v})

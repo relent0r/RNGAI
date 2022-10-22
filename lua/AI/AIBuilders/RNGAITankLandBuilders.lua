@@ -25,33 +25,6 @@ local DefensivePosture = function(self, aiBrain, builderManager, builderData)
     return builderData.Priority
 end
 
-local AmphibSiegeMode = function(self, aiBrain, builderManager)
-    local locationType = builderManager.LocationType
-    --RNGLOG('Builder Mananger location type is '..locationType)
-    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
-    local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
-    local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.INDIRECTFIRE, engineerManager:GetLocationCoords(), engineerManager.Radius)
-    if numUnits <= 3 then
-        --RNGLOG('Setting Amphib Siege Mode')
-        return 550
-    else
-        return 0
-    end
-end
-
-local AmphibNoSiegeMode = function(self, aiBrain, builderManager)
-    local locationType = builderManager.LocationType
-    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
-    local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
-    local numUnits = poolPlatoon:GetNumCategoryUnits(categories.MOBILE * categories.LAND * categories.INDIRECTFIRE, engineerManager:GetLocationCoords(), engineerManager.Radius)
-    if numUnits >= 3 then
-        --RNGLOG('Setting Amphib Non Siege Mode')
-        return 550
-    else
-        return 0
-    end
-end
-
 local ACUClosePriority = function(self, aiBrain)
     if aiBrain.EnemyIntel.ACUEnemyClose then
         return 800
@@ -146,56 +119,15 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
-    --[[]
-    Builder {
-        BuilderName = 'RNGAI Factory Initial Queue 20km',
-        PlatoonTemplate = 'RNGAIT1InitialAttackBuild20k',
-        Priority = 820, -- After Second Engie Group
-        BuilderConditions = {
-            { MIBC, 'MapSizeLessThan', { 2000 } },
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 120 } }, 
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory Initial Queue 40km',
-        PlatoonTemplate = 'RNGAIT1InitialAttackBuild20k',
-        Priority = 820, -- After Second Engie Group
-        BuilderConditions = {
-            { MIBC, 'MapSizeLessThan', { 4000 } },
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 120 } }, 
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },]]
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Large',
         PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
-        Priority = 0,
-        PriorityFunction = AmphibNoSiegeMode,
+        Priority = 550,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50, 'LAND'}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 5, categories.FACTORY * categories.LAND * categories.TECH3 }}, -- stop building after we decent reach tech2 capability
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 2
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory Amphib Attack Large Siege',
-        PlatoonTemplate = 'RNGAIT2AmphibAttackQueueSiege',
-        Priority = 0,
-        PriorityFunction = AmphibSiegeMode,
-        BuilderConditions = {
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50, 'LAND'}},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 5, categories.FACTORY * categories.LAND * categories.TECH3 }}, -- stop building after we decent reach tech2 capability
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -206,29 +138,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory T3 Amphib Attack Large',
         PlatoonTemplate = 'RNGAIT3AmphibAttackQueue',
-        Priority = 0,
-        PriorityFunction = AmphibNoSiegeMode,
+        Priority = 555,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
-            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 3
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory T3 Amphib Attack Large Siege',
-        PlatoonTemplate = 'RNGAIT3AmphibAttackQueueSiege',
-        Priority = 0,
-        PriorityFunction = AmphibSiegeMode,
-        BuilderConditions = {
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
-            { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 0.8 }},

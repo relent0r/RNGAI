@@ -1108,7 +1108,7 @@ IntelManager = Class {
                 end
             end
             if defensiveUnitsFound and defensiveUnitThreat > 0 then
-                local numberRequired = math.ceil(defensiveUnitThreat / 6)
+                local numberRequired = math.ceil(defensiveUnitThreat / 8)
                 if self.Brain.amanager.Demand.Land.T2.mml < numberRequired then
                     self.Brain.amanager.Demand.Land.T2.mml = numberRequired
                     --RNGLOG('Directordata Increasing mml production count by '..numberRequired)

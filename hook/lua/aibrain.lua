@@ -3017,7 +3017,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     ACUDetectionRNG = function(self, blip)
-        LOG('ACUDetection Callback has fired')
+        --LOG('ACUDetection Callback has fired')
         if blip then
             local unit = blip:GetSource()
             if not unit.Dead then
@@ -3086,8 +3086,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 else
                     timeOut = timeOut + 1
                 end
-                RNGLOG('Maintaining ACU Visual')
-                RNGLOG(repr(self.EnemyIntel.ACU[index]))
+                --RNGLOG('Maintaining ACU Visual')
+                --RNGLOG(repr(self.EnemyIntel.ACU[index]))
                 coroutine.yield(10)
             end
             self.EnemyIntel.ACU[index].VisualThread = false

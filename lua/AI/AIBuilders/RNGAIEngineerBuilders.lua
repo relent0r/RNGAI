@@ -82,7 +82,7 @@ BuilderGroup {
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH1 - categories.COMMAND }},
             { UCBC, 'UnitToThreatRatio', { 0.3, categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.INSIGNIFICANTUNIT, 'Land', '<'}},
         },
-        BuilderType = 'All',
+        BuilderType = 'Land',
     },
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Reclaim',

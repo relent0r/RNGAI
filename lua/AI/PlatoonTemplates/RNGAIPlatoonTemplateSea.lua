@@ -53,30 +53,6 @@ PlatoonTemplate {
     },
 }
 
-
-PlatoonTemplate {
-    Name = 'RNGAIT1SeaAttackQueue',
-    FactionSquads = {
-        UEF = {
-            { 'ues0203', 1, 1, 'attack', 'none' },
-            { 'ues0103', 1, 2, 'attack', 'none' }
-        },
-        Aeon = {
-            { 'uas0203', 1, 1, 'attack', 'none' },
-            { 'uas0103', 1, 2, 'attack', 'none' },
-            { 'uas0102', 1, 1, 'attack', 'none' }
-        },
-        Cybran = {
-            { 'urs0203', 1, 1, 'attack', 'none' },
-            { 'urs0103', 1, 2, 'attack', 'none' }
-        },
-        Seraphim = {
-            { 'xss0203', 1, 1, 'attack', 'none' },
-            { 'xss0103', 1, 2, 'attack', 'none' }
-        },
-    }
-}
-
 PlatoonTemplate {
     Name = 'RNGAIT1SeaSubQueue',
     FactionSquads = {
@@ -116,34 +92,6 @@ PlatoonTemplate {
         },
         Seraphim = {
             { 'xss0201', 1, 2, 'attack', 'none' },
-        },
-    }
-}
-
-PlatoonTemplate { 
-    Name = 'RNGAIT2SeaAttackQueue',
-    FactionSquads = {
-        UEF = {
-            { 'ues0201', 1, 2, 'Attack', 'none' },       -- Sea Destroyer
-            { 'ues0202', 1, 1, 'Artillery', 'None' },     -- Sea Cruiser
-            { 'ues0201', 1, 2, 'Attack', 'none' },       -- Sea Destroyer
-         },
-        Aeon = {
-            { 'uas0201', 1, 2, 'Attack', 'none' },       -- Sea Destroyer
-            { 'uas0202', 1, 1, 'Artillery', 'None' },     -- Sea Cruiser
-            { 'xas0204', 1, 1, 'Attack', 'none' },       -- Sub Killer
-            { 'uas0201', 1, 1, 'Attack', 'none' },       -- Sea Destroyer
-        },
-        Cybran = {
-            { 'urs0201', 1, 2, 'Attack', 'none' },       -- Sea Destroyer
-            { 'urs0202', 1, 1, 'Artillery', 'None' },     -- Sea Cruiser
-            { 'xrs0204', 1, 1, 'Attack', 'none' },       -- Sub Killer
-            { 'urs0201', 1, 1, 'Attack', 'none' },       -- Sea Destroyer
-        },
-        Seraphim = {
-            { 'xss0201', 1, 2, 'Attack', 'none' },       -- Sea Destroyer
-            { 'xss0202', 1, 1, 'Artillery', 'None' },     -- Sea Cruiser
-            { 'xss0201', 1, 2, 'Attack', 'none' },       -- Sea Destroyer
         },
     }
 }

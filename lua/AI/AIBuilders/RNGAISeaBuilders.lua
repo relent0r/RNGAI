@@ -74,21 +74,9 @@ BuilderGroup {
     },
 
     Builder {
-        BuilderName = 'RNGAI Sea Attack Queue',
-        PlatoonTemplate = 'RNGAIT1SeaAttackQueue',
-        Priority = 400,
-        BuilderConditions = {
-            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }}, -- LocationType, categoryUnits
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 1.0 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.70 } },
-            { UCBC, 'UnitsGreaterAtEnemyRNG', { 0 , categories.NAVAL * categories.FACTORY } },
-        },
-        BuilderType = 'Sea',
-    },
-    Builder {
         BuilderName = 'RNGAI T1 Frigate',
         PlatoonTemplate = 'T1SeaFrigate',
-        Priority = 749,
+        Priority = 747,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL, true }},
             { EBC, 'FactorySpendRatioRNG', {'Naval', true}},
@@ -168,29 +156,35 @@ BuilderGroup {
             TechLevel = 2
         },
     },
-    Builder { 
-        BuilderName = 'RNGAI Cruiser Initial',
-        PlatoonTemplate = 'T2SeaCruiser',
-        Priority = 500,
+    Builder {
+        BuilderName = 'RNGAI T2 Cruiser',
+        PlatoonTemplate = 'T2SeaDestroyer',
+        Priority = 749,
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH2 * categories.CRUISER } }, -- Build engies until we have 3 of them.
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
-            { UCBC, 'UnitCapCheckLess', { 0.95 } },
+            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { EBC, 'FactorySpendRatioRNG', {'Naval', true}},
+            { UCBC, 'ArmyManagerBuild', { 'Naval', 'T2', 'cruiser'} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Sea',
+        BuilderData = {
+            TechLevel = 2
+        },
     },
-    Builder { 
-        BuilderName = 'RNGAI SubKiller Initial',
-        PlatoonTemplate = 'T2SubKiller',
-        Priority = 500,
+    Builder {
+        BuilderName = 'RNGAI T2 Subhunter',
+        PlatoonTemplate = 'T2SeaDestroyer',
+        Priority = 748,
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH2 * categories.T2SUBMARINE } }, -- Build engies until we have 3 of them.
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
-            { UCBC, 'UnitCapCheckLess', { 0.95 } },
+            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { EBC, 'FactorySpendRatioRNG', {'Naval', true}},
+            { UCBC, 'ArmyManagerBuild', { 'Naval', 'T2', 'subhunter'} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Sea',
+        BuilderData = {
+            TechLevel = 2
+        },
     },
     Builder { 
         BuilderName = 'RNGAI ShieldBoat Initial',
@@ -226,18 +220,6 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.6}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Sea',
-    },
-    Builder { 
-        BuilderName = 'RNGAI Sea T2 Queue',
-        PlatoonTemplate = 'RNGAIT2SeaAttackQueue',
-        Priority = 500,
-        BuilderConditions = {
-            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
-            { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
         BuilderType = 'Sea',
     },
