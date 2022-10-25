@@ -2,6 +2,7 @@ WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'.
 
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local NavUtils = import('/lua/sim/NavUtils.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
@@ -763,7 +764,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             self.LastMarker[1] = bestMarker.Position
             --RNGLOG('* AI-RNG: GuardMarker: Attacking '' .. bestMarker.Name)
             local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), bestMarker.Position, 10, maxPathDistance)
-            local success = AIAttackUtils.CanGraphToRNG(platoonPosition, bestMarker.Position, self.MovementLayer)
+            local success = NavUtils.CanPathTo(self.MovementLayer, platoonPosition, bestMarker.Position)
             IssueClearCommands(GetPlatoonUnits(self))
             if path then
                 platoonPosition = GetPlatoonPosition(self)
@@ -1361,7 +1362,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     scoutPos = scout:GetPosition()
                     if aiBrain.CDRUnit.Active then
                         if not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead then
-                            if AIAttackUtils.CanGraphToRNG(scoutPos, aiBrain.CDRUnit.Position, self.MovementLayer) then
+                            if NavUtils.CanPathTo(self.MovementLayer, scoutPos, aiBrain.CDRUnit.Position) then
                                 aiBrain.CDRUnit.Scout = scout
                                 while not scout.Dead and aiBrain.CDRUnit.Active do
                                     --RNGLOG('Move to support platoon position')
@@ -1674,10 +1675,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             local ACUDistance = VDist2Sq(platoonPos[1], platoonPos[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3])
             --RNGLOG('Looking to move to ACU, current distance is '..ACUDistance)
 
-            if AIAttackUtils.CanGraphToRNG(platoonPos, aiBrain.CDRUnit.Position, self.MovementLayer) then
+            if NavUtils.CanPathTo(self.MovementLayer, platoonPos, aiBrain.CDRUnit.Position) then
                 if ACUDistance > 14400 then
                     path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, self.MovementLayer, platoonPos, aiBrain.CDRUnit.Position, 10 , BaseEnemyArea)
-
                 end
             else
                 usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, aiBrain.CDRUnit.Position, false, true)
@@ -1743,7 +1743,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local targetPosition = target:GetPosition()
                 
                 platoonPos = GetPlatoonPosition(self)
-                if not AIAttackUtils.CanGraphToRNG(platoonPos, targetPosition, self.MovementLayer) then 
+                if not NavUtils.CanPathTo(self.MovementLayer, platoonPos, targetPosition) then 
                     coroutine.yield(5)
                     --return self:SetAIPlanRNG('HuntAIPATHRNG') 
                     VentToPlatoon(self, aiBrain, 'HuntAIPATHRNG')
@@ -2008,7 +2008,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --RNGLOG('* AI-RNG: * HuntAIPATH: Performing Path Check')
                 --RNGLOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' Target Position :'..repr(targetPosition))
                 local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), targetPosition, 10 , maxPathDistance)
-                local success = AIAttackUtils.CanGraphToRNG(platoonPos, targetPosition, self.MovementLayer)
+                local success = NavUtils.CanPathTo(self.MovementLayer, platoonPos, targetPosition)
                 IssueClearCommands(GetPlatoonUnits(self))
                 local usedTransports = false
                 if path then
@@ -2183,7 +2183,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     platoonPos = GetPlatoonPosition(self)
                     --RNGLOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' rangedPosition Position :'..repr(rangedPosition))
                     local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoonPos, rangedPosition, 10 , 1000)
-                    local success = AIAttackUtils.CanGraphToRNG(platoonPos, rangedPosition, self.MovementLayer)
+                    local success = NavUtils.CanPathTo(self.MovementLayer, platoonPos, rangedPosition)
                     IssueClearCommands(GetPlatoonUnits(self))
                     if path then
                         local threatAroundplatoon = 0
@@ -2536,7 +2536,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 if attackPositionDistance > 6400 then
                     --RNGLOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' rangedPosition Position :'..repr(rangedPosition))
                     local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), attackPosition, 10 , 1000)
-                    local success = AIAttackUtils.CanGraphToRNG(platoonPos, attackPosition, self.MovementLayer)
+                    local success = NavUtils.CanPathTo(self.MovementLayer, platoonPos, attackPosition)
                     IssueClearCommands(GetPlatoonUnits(self))
                     if path then
                         local threatAroundplatoon = 0
@@ -4114,12 +4114,12 @@ Platoon = Class(RNGAIPlatoonClass) {
             if closeMarkers > 0 then
                 if closeMarkers < 4 then
                     if closeMarkers < 4 and distantMarkers > 1 then
-                        energyCount = 4
-                    else
                         energyCount = 3
+                    else
+                        energyCount = 2
                     end
                 else
-                    energyCount = 4
+                    energyCount = 3
                 end
                 
             end
@@ -4830,7 +4830,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         if highPriorityTarget then
             if RUtils.HaveUnitVisual(aiBrain, highPriorityTarget, true) then
                 local targetPosition = highPriorityTarget:GetPosition()
-                if AIAttackUtils.CanGraphToRNG(platLoc, targetPosition, self.MovementLayer) then
+                if NavUtils.CanPathTo(self.MovementLayer, platLoc, targetPosition) then
                     local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), targetPosition, 10 , maxPathDistance)
                     if path then
                         platLoc = GetPlatoonPosition(self)
@@ -4925,7 +4925,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         if zonePosition then
             local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), zonePosition, 10 , maxPathDistance)
-            local success = AIAttackUtils.CanGraphToRNG(platLoc, zonePosition, self.MovementLayer)
+            local success = NavUtils.CanPathTo(self.MovementLayer, platLoc, zonePosition)
             IssueClearCommands(GetPlatoonUnits(self))
             if path then
                 platLoc = GetPlatoonPosition(self)
@@ -5612,7 +5612,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             if RNGGETN(aiBrain.BrainIntel.ExpansionWatchTable) > 0  and (not self.EarlyRaidSet) then
                 for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
                     local distSq = VDist2Sq(v.Position[1], v.Position[3], platLoc[1], platLoc[3])
-                    if distSq > (avoidClosestRadius * avoidClosestRadius) and AIAttackUtils.CanGraphToRNG(platLoc, v.Position, self.MovementLayer) then
+                    if distSq > (avoidClosestRadius * avoidClosestRadius) and NavUtils.CanPathTo(self.MovementLayer, platLoc, v.Position) then
                         if GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > self.CurrentPlatoonThreat then
                             continue
                         end
@@ -5692,7 +5692,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             self.LastMarker[1] = bestMarker.Position
             --RNGLOG("MassRaid: Attacking " .. bestMarker.Name)
             local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), bestMarker.Position, 10 , maxPathDistance)
-            local success = AIAttackUtils.CanGraphToRNG(platLoc, bestMarker.Position, self.MovementLayer)
+            local success = NavUtils.CanPathTo(self.MovementLayer, platLoc, bestMarker.Position)
             IssueClearCommands(GetPlatoonUnits(self))
             if path then
                 platLoc = GetPlatoonPosition(self)
@@ -5702,7 +5702,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, false)
                 end
                 if not usedTransports then
-                    self:PlatoonMoveWithMicro(aiBrain, path, self.PlatoonData.Avoid, false, true)
+                    self:PlatoonMoveWithMicro(aiBrain, path, self.PlatoonData.Avoid, false, true, 60)
                     --RNGLOG('Exited PlatoonMoveWithMicro so we should be at a destination')
                 end
             elseif (not path and reason == 'NoPath') then
@@ -6254,7 +6254,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         --RNGLOG('Scout should be at destination')
     end,
 
-    PlatoonMoveWithMicro = function(self, aiBrain, path, avoid, ignoreUnits, maxDistance)
+    PlatoonMoveWithMicro = function(self, aiBrain, path, avoid, ignoreUnits, maxDistance, maxMergeDistance)
         -- I've tried to split out the platoon movement function as its getting too messy and hard to maintain
         if not path then
             WARN('No path passed to PlatoonMoveWithMicro')
@@ -6308,7 +6308,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                 return mod
             end
         end
-
+        if maxMergeDistance then
+            maxMergeDistance = maxMergeDistance * maxMergeDistance
+        else
+            maxMergeDistance = 40000
+        end
         local pathLength = RNGGETN(path)
         for i=1, pathLength do
             if self.PlatoonData.AggressiveMove then
@@ -6454,9 +6458,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 end
                                 if not alternatePos then
                                     --LOG('MoveWithMicro - No masspoint, look for closest platoon of massraidrng to run to')
-                                    mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('MassRaidRNG')
+                                    mergePlatoon, alternatePos = self:GetClosestPlatoonRNG(self.PlanName)
                                 end
-                                if alternatePos then
+                                if alternatePos and VDist3Sq(PlatoonPosition, alternatePos) < maxMergeDistance then
                                     self:Stop()
                                     --LOG('MoveWithMicro - We found either an extractor or platoon')
                                     self:MoveToLocation(alternatePos, false)
@@ -6475,7 +6479,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                         if dist < 225 then
                                             self:Stop()
                                             if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
-                                                self:MergeWithNearbyPlatoonsRNG('MassRaidRNG', 60, 30)
+                                                self:MergeWithNearbyPlatoonsRNG(self.PlanName, 60, 30)
                                             end
                                             --RNGLOG('Arrived at either masspoint or friendly massraid')
                                             break
@@ -6566,7 +6570,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
 
                 end
-                targetCheck = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
+                targetCheck = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, avoid)
                 coroutine.yield(15)
             end
         end
@@ -7161,7 +7165,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     continue
                 end
                 if  VDist3Sq(platPos, allyPlatPos) <= radiusSq then
-                    if not AIAttackUtils.CanGraphToRNG(platPos, allyPlatPos, self.MovementLayer) then continue end
+                    if not NavUtils.CanPathTo(self.MovementLayer, platPos, allyPlatPos) then continue end
                     if aiBrain.RNGDEBUG then
                         RNGLOG("*AI DEBUG: Scout moving to allied platoon position for plan "..aPlat.PlanName)
                     end
@@ -7228,7 +7232,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
         end
         if closestPlatoon then
-            if AIAttackUtils.CanGraphToRNG(platPos,closestAPlatPos,self.MovementLayer) then
+            if NavUtils.CanPathTo(self.MovementLayer, platPos,closestAPlatPos) then
                 return closestPlatoon, closestAPlatPos
             end
         end
@@ -7531,7 +7535,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
 
             if VDist2Sq(platPos[1], platPos[3], allyPlatPos[1], allyPlatPos[3]) <= radiusSq then
-                if not AIAttackUtils.CanGraphToRNG(platPos,allyPlatPos,self.MovementLayer) then
+                if not NavUtils.CanPathTo(self.MovementLayer, platPos,allyPlatPos) then
                     continue
                 end
                 local units = GetPlatoonUnits(aPlat)
@@ -7655,7 +7659,9 @@ Platoon = Class(RNGAIPlatoonClass) {
         local bestBaseName = ""
         local bestDistSq = 999999999
         local platPos = GetPlatoonPosition(self)
-        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
+        if not self.MovementLayer then
+            AIAttackUtils.GetMostRestrictiveLayerRNG(self)
+        end
 
         if not mainBase then
             for baseName, base in aiBrain.BuilderManagers do
@@ -7824,7 +7830,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         local moveLocation
 
                         -- We found a location within our range! Activate!
-                        if distressLocation and AIAttackUtils.CanGraphToRNG(platoonPos, distressLocation, self.MovementLayer) then
+                        if distressLocation and NavUtils.CanPathTo(self.MovementLayer, platoonPos, distressLocation) then
                             --RNGLOG('*AI DEBUG: ARMY '.. aiBrain:GetArmyIndex() ..': --- DISTRESS RESPONSE AI ACTIVATION ---')
                            --RNGLOG('Distress response activated for platoon at '..repr(GetPlatoonPosition(self)))
                            --RNGLOG('Distress location is '..repr(distressLocation))
@@ -8172,7 +8178,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     --RNGLOG('* AI-RNG: * SACUAIPATH: Performing Path Check')
                     --RNGLOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' Target Position :'..repr(targetPosition))
                     local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), targetPosition, 10 , maxPathDistance)
-                    local success = AIAttackUtils.CanGraphToRNG(position, targetPosition, self.MovementLayer)
+                    local success = NavUtils.CanPathTo(self.MovementLayer, position, targetPosition)
                     IssueClearCommands(GetPlatoonUnits(self))
                     if path then
                         --RNGLOG('* AI-RNG: * HuntAIPATH: Path found')
@@ -9934,7 +9940,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local function ViableTargetCheck(unit)
                 if unit.Dead or not unit then return false end
                 if self.MovementLayer=='Amphibious' then
-                    if AIAttackUtils.CanGraphToRNG(self.Pos,unit:GetPosition(),self.MovementLayer) then
+                    if NavUtils.CanPathTo(self.MovementLayer, self.Pos,unit:GetPosition()) then
                         return true
                     end
                 else
@@ -9942,7 +9948,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if GetTerrainHeight(targetpos[1],targetpos[3])<GetSurfaceHeight(targetpos[1],targetpos[3]) then
                         return false
                     else
-                        if AIAttackUtils.CanGraphToRNG(self.Pos,targetpos,self.MovementLayer) then
+                        if NavUtils.CanPathTo(self.MovementLayer, self.Pos,targetpos) then
                             return true
                         end
                     end
@@ -10002,7 +10008,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 if VDist2Sq(v.Position[1],v.Position[3],platoon.Pos[1],platoon.Pos[3])<150*150 then
                     continue
                 end
-                if not AIAttackUtils.CanGraphToRNG(self.Pos,v.Position,self.MovementLayer) then
+                if not NavUtils.CanPathTo(self.MovementLayer, self.Pos,v.Position) then
                     continue
                 end
                 if RUtils.GrabPosEconRNG(aiBrain,v.Position,50).ally>0 then
@@ -10055,7 +10061,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 if retreatUnits then
                     for _, unit in retreatUnits do
                         local unitPos = unit:GetPosition()
-                        if AIAttackUtils.CanGraphToRNG(self.Pos,unitPos,self.MovementLayer) then
+                        if NavUtils.CanPathTo(self.MovementLayer, self.Pos,unitPos) then
                             location = unitPos
                             --RNGLOG('Retreat Position found for mex or engineer')
                             break
@@ -10073,7 +10079,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         for _, unit in targetUnits do
                             local unitPos = unit:GetPosition()
                             if target and not target.Dead and RUtils.GetAngleRNG(self.Pos[1], self.Pos[3], unitPos[1], unitPos[3], targetPos[1], targetPos[3]) > 0.6 then
-                                if AIAttackUtils.CanGraphToRNG(self.Pos,unitPos,self.MovementLayer) then
+                                if NavUtils.CanPathTo(self.MovementLayer, self.Pos,unitPos) then
                                     --RNGLOG('Trueplatoon is going to try retreat towards an enemy unit')
                                     location = unitPos
                                     --RNGLOG('Retreat Position found for mex or engineer')
@@ -10328,7 +10334,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local function AggressivelyCircle(self,unit,location,radius)--circle around something
             local dist=VDist3(unit:GetPosition(),location)
             local dest=crossp(unit:GetPosition(),location,radius/dist)
-            if AIAttackUtils.CanGraphToRNG(unit:GetPosition(),dest,self.MovementLayer) then
+            if NavUtils.CanPathTo(self.MovementLayer, unit:GetPosition(), dest) then
                 IssueClearCommands({unit})
                 IssueMove({unit},dest)
             else
@@ -10516,7 +10522,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             self.navgood = false
                             return true
                         end
-                        if enemy and not enemy.Dead and AIAttackUtils.CanGraphToRNG(self.Pos,enemy:GetPosition(),self.MovementLayer) then
+                        if enemy and not enemy.Dead and NavUtils.CanPathTo(self.MovementLayer, self.Pos, enemy:GetPosition()) then
                             local dist=VDist3Sq(enemy:GetPosition(),self.Pos)
                             if self.raid or self.guard then
                                 if dist<1225 then
@@ -10619,13 +10625,13 @@ Platoon = Class(RNGAIPlatoonClass) {
                 lastfinaldist=VDist3Sq(platoon.path[nodenum],platoon.path[nodenum-1])
             end
             if platoon.path[nodenum-1] and VDist3Sq(platoon.path[nodenum],platoon.path[nodenum-1])>lastfinaldist*3 then
-                if AIAttackUtils.CanGraphToRNG(self.Pos,platoon.path[nodenum],self.MovementLayer) then
+                if NavUtils.CanPathTo(self.MovementLayer, self.Pos,platoon.path[nodenum]) then
                     platoon.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoon.Pos, platoon.path[nodenum], 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
                     coroutine.yield(10)
                     continue
                 end
             end
-            if (platoon.dest and not AIAttackUtils.CanGraphToRNG(self.Pos,platoon.dest,self.MovementLayer)) or (platoon.path and GetTerrainHeight(platoon.path[nodenum][1],platoon.path[nodenum][3])<GetSurfaceHeight(platoon.path[nodenum][1],platoon.path[nodenum][3])) then
+            if (platoon.dest and not NavUtils.CanPathTo(self.MovementLayer, self.Pos,platoon.dest)) or (platoon.path and GetTerrainHeight(platoon.path[nodenum][1],platoon.path[nodenum][3])<GetSurfaceHeight(platoon.path[nodenum][1],platoon.path[nodenum][3])) then
                 platoon.navigating=false
                 platoon.path=nil
                 coroutine.yield(20)

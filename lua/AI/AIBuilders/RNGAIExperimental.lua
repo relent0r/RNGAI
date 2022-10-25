@@ -17,8 +17,8 @@ local ExperimentalDelayWaterMap = function(self, aiBrain, builderManager)
         end
 
         -- Get the armyindex from the enemy
-        local EnemyIndex = ArmyBrains[aiBrain:GetCurrentEnemy():GetArmyIndex()].Nickname
-        local OwnIndex = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
+        local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
+        local OwnIndex = aiBrain:GetArmyIndex()
         if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] ~= 'LAND' then
             --RNGLOG('Map ratio is '..aiBrain.MapWaterRatio..' and we cant path to the enemy via land')
             return 0

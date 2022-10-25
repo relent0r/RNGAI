@@ -262,8 +262,8 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         if faction then
             local mapSizeX, mapSizeZ = GetMapSize()
             --RNGLOG('Map Size is X '..mapSizeX..' Z '..mapSizeZ)
-            local OwnIndex = ArmyBrains[self.Brain:GetArmyIndex()].Nickname
-            local EnemyIndex = ArmyBrains[self.Brain:GetCurrentEnemy():GetArmyIndex()].Nickname
+            local OwnIndex = self.Brain:GetArmyIndex()
+            local EnemyIndex = self.Brain:GetCurrentEnemy():GetArmyIndex()
             if mapSizeX >= 4000 and mapSizeZ >= 4000 then
                 --RNGLOG('20 KM Map Check true')
                 if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
@@ -491,6 +491,9 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandDFTank')
+                    for i=1, 2 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
                     table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1LandArtillery')
@@ -502,8 +505,9 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     end
                     table.insert(queue, 'T1LandScout')
                     table.insert(queue, 'T1LandDFTank')
-                    table.insert(queue, 'T1BuildEngineer')
-                    table.insert(queue, 'T1BuildEngineer')
+                    for i=1, 3 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
                     table.insert(queue, 'T1LandArtillery')
                     table.insert(queue, 'T1LandAA')
                     table.insert(queue, 'T1BuildEngineer')

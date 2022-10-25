@@ -6,6 +6,7 @@ local UnitRatioCheckRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').UnitRati
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local NavUtils = import('/lua/sim/NavUtils.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local lerpy = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').lerpy
 local SetArcPoints = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').SetArcPoints
@@ -293,7 +294,7 @@ function CDRCallPlatoon(cdr, threatRequired)
     if RNGGETN(platoonTable) > 0 then
         for _, plat in platoonTable do
             if PlatoonExists(aiBrain, plat.Platoon) then
-                if AIAttackUtils.CanGraphToRNG(cdr.Position, plat.Position, cdr.MovementLayer) then
+                if NavUtils.CanPathTo(cdr.MovementLayer, cdr.Position, plat.Position) then
                     local units = GetPlatoonUnits(plat.Platoon)
                     for _,u in units do
                         if not u.Dead and not u:IsUnitState('Attached') then
@@ -1012,7 +1013,7 @@ function CDRCheckForCloseMassPoints(aiBrain, cdr)
             --RNGLOG('Number of masspoints in closeMassPoints table '..table.getn(closeMassPoints))
             local massPoint = false
             for k, v in closeMassPoints do
-                if GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 10 and AIAttackUtils.CanGraphToRNG(cdr.Position,v.Position,'Amphibious') then
+                if GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 10 and NavUtils.CanPathTo('Amphibious', cdr.Position,v.Position) then
                     massPoint = v
                     --RNGLOG('CDR has masspoint with low threat')
                     break
@@ -1456,7 +1457,7 @@ function CDROverChargeRNG(aiBrain, cdr)
     elseif cdr.Health > 5000 and GetGameTimeSeconds() > 260 and cdr.Initialized then
         maxRadius = 160 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
         if maxRadius < 80 then 
-            maxRadius = 80 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
+            maxRadius = 100 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
         end
         aiBrain.ACUSupport.ACUMaxSearchRadius = maxRadius
     end
@@ -2003,7 +2004,7 @@ function CDRRetreatRNG(aiBrain, cdr, base)
     if closestBase and closestPlatoon then
         if closestBaseDistance < closestPlatoonDistance then
             --RNGLOG('Closest base is '..closestBase)
-            if AIAttackUtils.CanGraphToRNG(cdr.Position, aiBrain.BuilderManagers[closestBase].Position, 'Amphibious') then
+            if NavUtils.CanPathTo('Amphibious', cdr.Position, aiBrain.BuilderManagers[closestBase].Position) then
                 --RNGLOG('Retreating to base')
                 cdr.Retreat = false
                 cdr.BaseLocation = true
@@ -2012,7 +2013,7 @@ function CDRRetreatRNG(aiBrain, cdr, base)
             end
         else
             --RNGLOG('Found platoon checking if can graph')
-            if closestAPlatPos and AIAttackUtils.CanGraphToRNG(cdr.Position,closestAPlatPos,'Amphibious') then
+            if closestAPlatPos and NavUtils.CanPathTo('Amphibious', cdr.Position,closestAPlatPos) then
                 --RNGLOG('Retreating to platoon')
                 if closestBaseDistance then
                     --RNGLOG('Platoon distance from us is '..closestBaseDistance)
@@ -2024,7 +2025,7 @@ function CDRRetreatRNG(aiBrain, cdr, base)
         end
     elseif closestBase then
         --RNGLOG('Closest base is '..closestBase)
-        if AIAttackUtils.CanGraphToRNG(cdr.Position, aiBrain.BuilderManagers[closestBase].Position, 'Amphibious') then
+        if NavUtils.CanPathTo('Amphibious', cdr.Position, aiBrain.BuilderManagers[closestBase].Position) then
             --RNGLOG('Retreating to base')
             cdr.Retreat = false
             cdr.BaseLocation = true
@@ -2032,7 +2033,7 @@ function CDRRetreatRNG(aiBrain, cdr, base)
         end
     elseif closestPlatoon then
         --RNGLOG('Found platoon checking if can graph')
-        if closestAPlatPos and AIAttackUtils.CanGraphToRNG(cdr.Position,closestAPlatPos,'Amphibious') then
+        if closestAPlatPos and NavUtils.CanPathTo('Amphibious', cdr.Position,closestAPlatPos) then
             --RNGLOG('Retreating to platoon')
             if closestPlatoonDistance then
                 --RNGLOG('Platoon distance from us is '..closestPlatoonDistance)

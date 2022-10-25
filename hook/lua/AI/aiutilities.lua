@@ -5,6 +5,7 @@ local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local NavUtils = import('/lua/sim/NavUtils.lua')
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
@@ -236,7 +237,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
     if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) < 144 then
         return true
     end
-    if not AIAttackUtils.CanGraphToRNG(pos, destination, 'Amphibious') then
+    if not NavUtils.CanPathTo('Amphibious', pos, destination) then
         return false
     end
 
@@ -361,6 +362,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
             end
             while not eng.Dead do
                 if brokenPathMovement and eng.EngineerBuildQueue and RNGGETN(eng.EngineerBuildQueue) > 0 then
+                    pos = eng:GetPosition()
                     local queuePointTaken = {}
                     local skipPath = false
                     for i=currentPathNode, pathLength do

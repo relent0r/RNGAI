@@ -5,6 +5,7 @@ local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMa
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local Utils = import('/lua/utilities.lua')
+local NavUtils = import('/lua/sim/NavUtils.lua')
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local ToString = import('/lua/sim/CategoryUtils.lua').ToString
@@ -287,7 +288,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         break
                     end
                     if (aiBrain.MapReclaimTable[v.Key].LastAssignment < currentGameTime - 5) and GetThreatAtPosition( aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 2 then
-                        if AIAttackUtils.CanGraphToRNG(engPos, v.Position, 'Amphibious') then
+                        if NavUtils.CanPathTo('Amphibious', engPos, v.Position) then
                            --RNGLOG('Lets go to reclaim at '..repr(v))
                             validLocation = v.Position
                             aiBrain.MapReclaimTable[v.Key].LastAssignment = currentGameTime
@@ -396,7 +397,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             local reclaimCount = 0
                             for k, square in reclaimGrid do
                                 local squarePos = {square[1], GetSurfaceHeight(square[1], square[3]), square[3]}
-                                if AIAttackUtils.CanGraphToRNG(engPos, squarePos, 'Amphibious') then
+                                if NavUtils.CanPathTo('Amphibious', engPos, squarePos) then
                                     if square[1] - 8 <= 3 or square[1] + 8 >= ScenarioInfo.size[1] - 3 or square[3] - 8 <= 3 or square[3] + 8 >= ScenarioInfo.size[1] - 3 then
                                         --LOG('Grid square position outside of map border')
                                         continue
@@ -1424,7 +1425,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                     local targetLayer = v.unit:GetCurrentLayer()
                     if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
                        not (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
-                        if AIAttackUtils.CanGraphToRNG(v.position, cdrPos, 'Amphibious') then
+                        if NavUtils.CanPathTo('Amphibious', v.position, cdrPos) then
                             --RNGLOG('ACUTARGETTING : returnTarget set in for loop for enemyACUTargets')
                             returnTarget = v.unit
                             returnAcu = true
@@ -1437,7 +1438,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                     local targetLayer = v.unit:GetCurrentLayer()
                     if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
                        not (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
-                        if AIAttackUtils.CanGraphToRNG(v.position, cdrPos, 'Amphibious') then
+                        if NavUtils.CanPathTo('Amphibious', v.position, cdrPos) then
                             --RNGLOG('ACUTARGETTING : returnTarget set in for loop for enemyACUTargets')
                             returnTarget = v.unit
                             returnAcu = true
@@ -1463,7 +1464,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                         local targetLayer = v.unit:GetCurrentLayer()
                         if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
                         not (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
-                            if AIAttackUtils.CanGraphToRNG(v.position, cdrPos, 'Amphibious') then
+                            if NavUtils.CanPathTo('Amphibious', v.position, cdrPos) then
                                 --RNGLOG('ACUTARGETTING : returnTarget set in for loop for enemyACUTargets')
                                 returnTarget = v.unit
                                 returnAcu = true
@@ -1491,7 +1492,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                             local targetLayer = v.unit:GetCurrentLayer()
                             if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
                             not (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
-                                if AIAttackUtils.CanGraphToRNG(v.position, cdrPos, 'Amphibious') then
+                                if NavUtils.CanPathTo('Amphibious', v.position, cdrPos) then
                                     --RNGLOG('ACUTARGETTING : returnTarget set in for loop for mobileTargets')
                                     returnTarget = v.unit
                                     break
@@ -1515,7 +1516,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                                 local targetLayer = v.unit:GetCurrentLayer()
                                 if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
                                 not (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
-                                    if AIAttackUtils.CanGraphToRNG(v.position, cdrPos, 'Amphibious') then
+                                    if NavUtils.CanPathTo('Amphibious', v.position, cdrPos) then
                                         --RNGLOG('ACUTARGETTING : returnTarget set in for loop for enemyACUTargets')
                                         returnTarget = v.unit
                                         break
@@ -1543,7 +1544,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                         local targetLayer = v.unit:GetCurrentLayer()
                         if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
                         not (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
-                            if AIAttackUtils.CanGraphToRNG(v.position, cdrPos, 'Amphibious') then
+                            if NavUtils.CanPathTo('Amphibious', v.position, cdrPos) then
                                 --RNGLOG('ACUTARGETTING : returnTarget set in for loop for mobileTargets')
                                 returnTarget = v.unit
                                 break
@@ -1567,7 +1568,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                             local targetLayer = v.unit:GetCurrentLayer()
                             if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
                             not (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
-                                if AIAttackUtils.CanGraphToRNG(v.position, cdrPos, 'Amphibious') then
+                                if NavUtils.CanPathTo('Amphibious', v.position, cdrPos) then
                                     --RNGLOG('ACUTARGETTING : returnTarget set in for loop for enemyACUTargets')
                                     returnTarget = v.unit
                                     break
@@ -2166,7 +2167,7 @@ function ExpansionSpamBaseLocationCheck(aiBrain, location)
         if  locationDistance > 25600 and locationDistance < 250000 then
             --RNGLOG('*AI RNG: SpamBase distance is within bounds, position is'..repr(location))
             --RNGLOG('*AI RNG: Enemy Start Position is '..repr(startloc))
-            if AIAttackUtils.CanGraphToRNG(startloc.Position, location, 'Land') then
+            if NavUtils.CanPathTo('Land', startloc.Position, location) then
                 --RNGLOG('Can graph to enemy location for spam base')
                 --RNGLOG('*AI RNG: expansion position is within range and pathable to an enemy base for ExpansionSpamBase')
                 validLocation = true
@@ -2779,7 +2780,7 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
         local waterNodePos, waterNodeName, waterNodeDist = AIUtils.AIGetClosestMarkerLocationRNG(aiBrain, 'Water Path Node', v.Position[1], v.Position[3])
         if waterNodeDist and waterNodeDist < (MaxPlatoonWeaponRange * MaxPlatoonWeaponRange + 900) then
             --RNGLOG('Start position is '..waterNodeDist..' from water node, weapon range on platoon is '..MaxPlatoonWeaponRange..' we are going to attack from this position')
-            if AIAttackUtils.CanGraphToRNG(platoonPosition, waterNodePos, platoon.MovementLayer) then
+            if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition, waterNodePos) then
                 attackPosition = waterNodePos
                 targetStartPosition = v.Position
                 break
@@ -4377,7 +4378,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     if aiBrain.CDRUnit.Active then
         if not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead then
             --RNGLOG('Scout Has active ACU without Scout')
-            if AIAttackUtils.CanGraphToRNG(scoutPos, aiBrain.CDRUnit.Position, platoon.MovementLayer) then
+            if NavUtils.CanPathTo(platoon.MovementLayer, scoutPos, aiBrain.CDRUnit.Position) then
                 aiBrain.CDRUnit.Scout = scout
                 scoutType = 'AssistUnit'
                 --RNGLOG('ScoutDest is acu support')
@@ -4407,7 +4408,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             for k, v in im.ZoneIntel.Assignment do
                 if (not v.RadarCoverage) and (not v.ScoutUnit or v.ScoutUnit.Dead) and (not v.StartPosition) then
                     --RNGLOG('Scout ZoneIntel Assignment has found a zone with no radar and no scout')
-                    if AIAttackUtils.CanGraphToRNG(scoutPos, v.Position, platoon.MovementLayer) then
+                    if NavUtils.CanPathTo(platoon.MovementLayer, scoutPos, v.Position) then
                         --RNGLOG('Scout ZoneIntel Assignment scout is assigning itself to the zone')
                         scoutMarker = v
                         im.ZoneIntel.Assignment[k].ScoutUnit = scout
@@ -4752,8 +4753,8 @@ CanPathToCurrentEnemyRNG = function(aiBrain) -- Uveso's function modified to run
             end
 
             -- Get the armyindex from the enemy
-            local EnemyIndex = ArmyBrains[aiBrain:GetCurrentEnemy():GetArmyIndex()].Nickname
-            local OwnIndex = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
+            local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
+            local OwnIndex = aiBrain:GetArmyIndex()
             -- create a table for the enemy index in case it's nil
             aiBrain.CanPathToEnemyRNG[OwnIndex] = aiBrain.CanPathToEnemyRNG[OwnIndex] or {}
             aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex] = aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex] or {}
@@ -4931,7 +4932,7 @@ CheckACUSnipe = function(aiBrain, layerType)
     return potentialTarget, requiredCount
 end
 
-CheckHighPriorityTarget = function(aiBrain, im, platoon)
+CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid)
     local platPos
     local closestTarget
     local highestPriority = 0
@@ -4939,13 +4940,17 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon)
         if platoon then
             platPos = platoon:GetPlatoonPosition()
         end
-        if platPos and VDist3Sq(platPos, aiBrain.BrainIntel.StartPos) < (aiBrain.EnemyIntel.ClosestEnemyBase / 2) then
+        local rangeCheck = 2
+        if avoid then
+            rangeCheck = 3
+        end
+        if platPos and VDist3Sq(platPos, aiBrain.BrainIntel.StartPos) < (aiBrain.EnemyIntel.ClosestEnemyBase / rangeCheck) then
             for k, v in aiBrain.prioritypointshighvalue do
                 if not v.unit.Dead then
                     local targetDistance = VDist3Sq(v.Position, platPos)
                     local tempPoint = v.priority/(RNGMAX(targetDistance,30*30)+(v.danger or 0))
                     if tempPoint > highestPriority then
-                        if AIAttackUtils.CanGraphToRNG(platPos, v.Position, platoon.MovementLayer) then
+                        if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
                             highestPriority = targetDistance
                             closestTarget = v.unit
                         end

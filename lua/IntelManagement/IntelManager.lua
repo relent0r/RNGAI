@@ -1,6 +1,7 @@
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local NavUtils = import('/lua/sim/NavUtils.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local GetClosestPathNodeInRadiusByLayerRNG = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayerRNG
@@ -863,11 +864,11 @@ IntelManager = Class {
                 RNGLOG('Reason is '..reason)
             end]]
 
-            if AIAttackUtils.CanGraphToRNG(startPos, endPos, 'Land') then
+            if NavUtils.CanPathTo('Land', startPos, endPos) then
                 self.MapIntelGrid[x][z].Graphs[locationType].Land = true
                 self.MapIntelGrid[x][z].Graphs[locationType].Amphibious = true
                 self.MapIntelGrid[x][z].Graphs[locationType].GraphChecked = true
-            elseif AIAttackUtils.CanGraphToRNG(startPos, endPos, 'Amphibious') then
+            elseif NavUtils.CanPathTo('Amphibious', startPos, endPos) then
                 self.MapIntelGrid[x][z].Graphs[locationType].Amphibious = true
                 self.MapIntelGrid[x][z].Graphs[locationType].GraphChecked = true
             else
@@ -1080,10 +1081,10 @@ IntelManager = Class {
                             local gridXID, gridZID = self:GetIntelGrid(v.IMAP)
                             self.MapIntelGrid[gridXID][gridZID].DefenseThreat = self.MapIntelGrid[gridXID][gridZID].DefenseThreat + v.AntiSurface
                             if not self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked then
-                                if AIAttackUtils.CanGraphToRNG(self.Brain.BuilderManagers['MAIN'].Position, self.MapIntelGrid[gridXID][gridZID].Position, 'Land') then
+                                if NavUtils.CanPathTo('Land', self.Brain.BuilderManagers['MAIN'].Position, self.MapIntelGrid[gridXID][gridZID].Position) then
                                     self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked = true
                                     self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.Land = true
-                                elseif AIAttackUtils.CanGraphToRNG(self.Brain.BuilderManagers['MAIN'].Position, self.MapIntelGrid[gridXID][gridZID].Position, 'Amphibious') then
+                                elseif NavUtils.CanPathTo('Amphibious', self.Brain.BuilderManagers['MAIN'].Position, self.MapIntelGrid[gridXID][gridZID].Position) then
                                     self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked = true
                                     self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.Amphibious = true
                                 else
@@ -1096,6 +1097,9 @@ IntelManager = Class {
                                 defensiveUnitThreat = defensiveUnitThreat + v.AntiSurface
                             end
                         end
+                    end
+                    if defensiveUnitThreat > 80 then
+                        break
                     end
                 end
             end

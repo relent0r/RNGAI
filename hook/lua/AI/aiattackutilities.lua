@@ -7,6 +7,7 @@ local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetThreatBetweenPositions = moho.aibrain_methods.GetThreatBetweenPositions
 local AIUtils = import('/lua/ai/AIUtilities.lua')
+local NavUtils = import('/lua/sim/NavUtils.lua')
 local RNGPOW = math.pow
 local RNGSQRT = math.sqrt
 local RNGGETN = table.getn
@@ -1003,7 +1004,7 @@ function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange,
             --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." Position "..repr(v.Position).." says Surface threat is "..stest.." vs "..threatMax.." and Air threat is "..atest.." vs "..airthreatMax )
             --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." drop distance is "..repr( VDist3(destination, v.Position) ) )
             -- can the platoon path safely from this marker to the final destination 
-            if CanGraphToRNG(v.Position, destination, layer) then
+            if NavUtils.CanPathTo(layer, v.Position, destination) then
                 return v.Position, v.Name
             end
         end
@@ -1501,7 +1502,7 @@ function CheckNavalPathingRNG(aiBrain, platoon, location, maxRange, selectedWeap
     --if this threat is in the water, see if we can get to it
     if inWater then
         --RNGLOG('Naval Location is in water')
-        if CanGraphToRNG(platoonPosition, location, platoon.MovementLayer) then
+        if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition, location) then
             bestGoalPos = location
             success = true
         end
@@ -1535,7 +1536,7 @@ function CheckNavalPathingRNG(aiBrain, platoon, location, maxRange, selectedWeap
         for _,vec in vectors do
             inWater = GetTerrainHeight(vec[1], vec[3]) < GetSurfaceHeight(vec[1], vec[3]) - 2
             if inWater then
-                if CanGraphToRNG(platoonPosition, vec, platoon.MovementLayer) then
+                if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition, vec) then
                     bestGoalPos = vec
                     success = true
                 end

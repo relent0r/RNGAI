@@ -1,5 +1,6 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
-local CanGraphToRNG = import('/lua/AI/aiattackutilities.lua').CanGraphToRNG
+
+local NavUtils = import('/lua/sim/NavUtils.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local BASEPOSTITIONS = {}
 local mapSizeX, mapSizeZ = GetMapSize()
@@ -642,7 +643,7 @@ function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory, 
             --RNGLOG('checking enemy factories '..repr(EnemyUnit:GetPosition()))
             --path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', baseposition, EnemyUnit:GetPosition(), 1)
             --RNGLOG('reason'..repr(reason))
-            if CanGraphToRNG(baseposition, EnemyUnit:GetPosition(), 'Water') then
+            if NavUtils.CanPathTo('Water', baseposition, EnemyUnit:GetPosition()) then
                 --RNGLOG('Found a water path from base ['..locationType..'] to enemy position '..repr(EnemyUnit:GetPosition()))
                 return true
             end
@@ -904,11 +905,11 @@ function FactoryGreaterAtLocationRNG(aiBrain, locationType, unitCount, unitCateg
     return FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, '>')
 end
 
-function ForcePathLimit(aiBrain, locationType, unitCategory, pathType, unitCount)
-    local EnemyIndex = ArmyBrains[aiBrain:GetCurrentEnemy():GetArmyIndex()].Nickname
-    local OwnIndex = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
+function ForcePathLimitRNG(aiBrain, locationType, unitCategory, pathType, unitCount)
+    local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
+    local OwnIndex = aiBrain:GetArmyIndex()
     if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] ~= pathType and FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, '>') then
-        --RNGLOG('ForcePathLimit has no path and more than 3 land factories')
+        --RNGLOG('ForcePathLimitRNG has no path and more than 3 land factories')
         return false
     end
     return true

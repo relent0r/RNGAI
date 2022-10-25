@@ -39,8 +39,8 @@ function PathCheckToCurrentEnemyRNG(aiBrain, locationType, pathType, notCheck)
     end
 
     -- Get the armyindex from the enemy
-    local EnemyIndex = ArmyBrains[aiBrain:GetCurrentEnemy():GetArmyIndex()].Nickname
-    local OwnIndex = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
+    local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
+    local OwnIndex = aiBrain:GetArmyIndex()
 
     -- Check if we have already done a path search to the current enemy
     if notCheck then
