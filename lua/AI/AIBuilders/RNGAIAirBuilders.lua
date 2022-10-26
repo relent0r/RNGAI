@@ -246,19 +246,6 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.AIR * categories.TECH3 }},
         },
     },]]
-    Builder {
-        BuilderName = 'RNGAI T2 Torp Bomber',
-        PlatoonTemplate = 'T2AirTorpedoBomber',
-        Priority = 875,
-        BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 11, categories.MOBILE * categories.AIR * categories.ANTINAVY }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
-            { UCBC, 'UnitsGreaterAtEnemyRNG', { 0 , categories.NAVAL * categories.FACTORY } },
-            { UCBC, 'HaveUnitRatioRNG', { 0.5, categories.MOBILE * categories.AIR * categories.ANTINAVY, '<',categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.GROUNDATTACK - categories.BOMBER } },
-        },
-        BuilderType = 'Air',
-    },
 }
 
 BuilderGroup {

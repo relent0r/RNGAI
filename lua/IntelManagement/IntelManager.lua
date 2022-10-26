@@ -1186,6 +1186,16 @@ IntelManager = Class {
                         end
                     end
                 end
+                for k, v in aiBrain.BasePerimeterMonitor do
+                    if v.NavalUnits > 0 then
+                        local gridX, gridZ = self:GetIntelGrid(aiBrain.BuilderManagers[k].FactoryManager.Location)
+                        desiredStrikeDamage = desiredStrikeDamage + (v.NavalThreat * 150)
+                        table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'AntiNavy'} )
+                    end
+                end
+                        
+
+                end
             end
         end
         --RNGLOG('CheckStrikPotential')
@@ -1276,14 +1286,15 @@ IntelManager = Class {
                 local count = math.ceil(desiredStrikeDamage / 1000)
                 local acuSnipe = false
                 local acuIndex = false
-                local zoneAttack = false
+                local navalAttack = false
                 for k, v in potentialStrikes do
                     if v.Type == 'ACU' then
                         acuSnipe = true
                         acuIndex = v.Index
-                    elseif v.Type == 'Zone' then
-                        zoneAttack = true
+                    elseif v.Type == 'Zone' or v.Type == 'AntiNaval' then
+                        navalAttack = true
                     end
+
                 end
                 --RNGLOG('Number of T2 pos wanted '..count)
                 if acuSnipe then
@@ -1293,7 +1304,7 @@ IntelManager = Class {
                     self.Brain.amanager.Demand.Air.T2.torpedo = count
                     self.Brain.EngineerAssistManagerFocusSnipe = true
                 end
-                if zoneAttack then
+                if navalAttack then
                     self.Brain.amanager.Demand.Air.T2.torpedo = count
                 end
             else

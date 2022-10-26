@@ -100,6 +100,17 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
     },
+    Builder {
+        BuilderName = 'RNGAI T2 Torp Bomber',
+        PlatoonTemplate = 'T2AirTorpedoBomber',
+        Priority = 890,
+        BuilderConditions = {
+            { UCBC, 'UnitBuildDemand', { 'Air', 'T2', 'torpedo'} },
+            { EBC, 'FactorySpendRatioRNG', {'Air'}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Air',
+    },
     --[[
     Builder {
         BuilderName = 'RNGAI T2 Gunship',
@@ -176,23 +187,20 @@ BuilderGroup {
             TechLevel = 3
         },
     },
-    --[[Builder {
+    Builder {
         BuilderName = 'RNGAI T3 Torp Bomber',
         PlatoonTemplate = 'T3TorpedoBomber',
-        Priority = 751,
-        --PriorityFunction = LandMode,
+        Priority = 891,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Air', 'T3', 'torpedo'} },
+            { UCBC, 'UnitBuildDemand', { 'Air', 'T2', 'torpedo'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
-            --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.1, 'AIR'}},
-            --{ EBC, 'GreaterThanEconEfficiencyRNG', { 0.75, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Air',
         BuilderData = {
             TechLevel = 3
         },
-    },]]
+    },
     Builder {
         BuilderName = 'RNGAI T3 Transport',
         PlatoonTemplate = 'T3AirTransport',
