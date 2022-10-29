@@ -1182,7 +1182,7 @@ StructureManager = Class {
                         if c.InitialDelayCompleted then
                             UnitPos = c:GetPosition()
                             DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                            if DistanceToBase < 2500 then
+                            if DistanceToBase < 6400 then
                                 c.MAINBASE = true
                             end
                             if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
@@ -1199,7 +1199,7 @@ StructureManager = Class {
                         if c.InitialDelayCompleted then
                             UnitPos = c:GetPosition()
                             DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                            if DistanceToBase < 2500 then
+                            if DistanceToBase < 6400 then
                                 c.MAINBASE = true
                             end
                             if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
@@ -1215,7 +1215,7 @@ StructureManager = Class {
                         if c.InitialDelayCompleted then
                             UnitPos = c:GetPosition()
                             DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                            if DistanceToBase < 2500 then
+                            if DistanceToBase < 6400 then
                                 c.MAINBASE = true
                             end
                             if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
@@ -1313,7 +1313,7 @@ StructureManager = Class {
                 end
             end
             if upgradedExtractor and not upgradedExtractor.Dead then
-                if VDist3Sq(upgradedExtractor:GetPosition(), aiBrain.BuilderManagers['MAIN'].Position) < 2500 then
+                if VDist3Sq(upgradedExtractor:GetPosition(), aiBrain.BuilderManagers['MAIN'].Position) < 6400 then
                     upgradedExtractor.MAINBASE = true
                 end
             end

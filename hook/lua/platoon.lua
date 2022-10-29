@@ -447,6 +447,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                         --RNGLOG('* AI-RNG: Target Dead or not or Destroyed, breaking loop')
                         break
                     end
+                    if not self:CanAttackTarget('Attack', target) then
+                        RNGLOG('Torp platoon cant attack target')
+                    end
                     if currentPlatPos and VDist3Sq(oldPlatPos, currentPlatPos) < 4 then
                         stuckCount = stuckCount + 1
                         if stuckCount > 5 then
@@ -5920,7 +5923,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                --RNGLOG('Zone is currently false')
             end
             self:Stop()
-            self:MergeWithNearbyPlatoonsRNG('MassRaidRNG', 80, 25)
+            self:MergeWithNearbyPlatoonsRNG('MassRaidRNG', 30, 25)
             self:SetPlatoonFormationOverride('NoFormation')
             --RNGLOG('MassRaid Merge attempted, restarting raid')
             if not self.RestartCount then
@@ -7669,10 +7672,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if base.Layer ~= 'Water' then
                         continue
                     end
-                    
                 end
                 local distSq = VDist2Sq(platPos[1], platPos[3], base.Position[1], base.Position[3])
-
                 if distSq < bestDistSq then
                     bestBase = base
                     bestBaseName = baseName
@@ -7686,6 +7687,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         
         if bestBase then
             local movePosition
+            local usedTransports
             if bestBase.FactoryManager and bestBase.FactoryManager.RallyPoint then
                 movePosition = bestBase.FactoryManager.RallyPoint
             else
@@ -7696,44 +7698,74 @@ Platoon = Class(RNGAIPlatoonClass) {
                 self:MoveToLocation(movePosition, false)
                 --RNGLOG('Air Unit Return to base provided position :'..repr(bestBase.Position))
                 while PlatoonExists(aiBrain, self) do
-                    local currentPlatPos = self:GetPlatoonPosition()
-                    --RNGLOG('Air Unit Distance from platoon to bestBase position for Air units is'..VDist2Sq(currentPlatPos[1], currentPlatPos[3], bestBase.Position[1], bestBase.Position[3]))
-                    --RNGLOG('Air Unit Platoon Position is :'..repr(currentPlatPos))
-                    local distSq = VDist2Sq(currentPlatPos[1], currentPlatPos[3], movePosition[1], movePosition[3])
+                    platPos = self:GetPlatoonPosition()
+                    --RNGLOG('Air Unit Distance from platoon to bestBase position for Air units is'..VDist2Sq(platPos[1], platPos[3], bestBase.Position[1], bestBase.Position[3]))
+                    --RNGLOG('Air Unit Platoon Position is :'..repr(platPos))
+                    local distSq = VDist2Sq(platPos[1], platPos[3], movePosition[1], movePosition[3])
                     if distSq < 3600 then
                         break
                     end
                     coroutine.yield(15)
                 end
             else
-                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), movePosition, 10)
-                IssueClearCommands(self)
-                if path then
-                    local pathLength = RNGGETN(path)
-                    for i=1, pathLength do
-                        self:MoveToLocation(path[i], false)
-                        local oldDistSq = 0
-                        while PlatoonExists(aiBrain, self) do
-                            platPos = GetPlatoonPosition(self)
-                            local distSq = VDist2Sq(platPos[1], platPos[3], path[i][1], path[i][3])
-                            if distSq < 400 then
-                                IssueClearCommands(GetPlatoonUnits(self))
-                                break
+                -- A small note on the unitPathing flag. There are situations where a platoon will have return to base triggered and the platoon itself
+                -- will be spread out, in this scenario the platoon position could be in an unpathable area and a transport is not available.
+                -- This will result in the platoon disbanding in the middle of no where. So we double check if one of the units can path before we
+                -- go down that route.
+                local path, reason
+                local unitPathing = false
+                if not NavUtils.CanPathTo(self.MovementLayer, GetPlatoonPosition(self), movePosition) then
+                    if not NavUtils.CanPathTo(self.MovementLayer, GetPlatoonUnits(self)[1]:GetPosition(), movePosition) then
+                        usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, movePosition, false, true)
+                    else 
+                        unitPathing = true
+                    end
+                end
+                if not usedTransports then
+                    if unitPathing then
+                        path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonUnits(self)[1]:GetPosition(), movePosition, 10)
+                    else
+                        path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), movePosition, 10)
+                    end
+                    IssueClearCommands(self)
+                    if path then
+                        local pathLength = RNGGETN(path)
+                        for i=1, pathLength do
+                            self:MoveToLocation(path[i], false)
+                            local Lastdist
+                            local dist
+                            local Stuck = 0
+                            while PlatoonExists(aiBrain, self) do
+                                platPos = GetPlatoonPosition(self)
+                                local dist = VDist3Sq(platPos, path[i])
+                                if dist < 400 then
+                                    RNGLOG('returntobase platoon closer than 400 '..dist)
+                                    IssueClearCommands(GetPlatoonUnits(self))
+                                    break
+                                end
+                                if Lastdist ~= dist then
+                                    Stuck = 0
+                                    Lastdist = dist
+                                else
+                                    Stuck = Stuck + 1
+                                    if Stuck > 15 then
+                                        self:Stop()
+                                        break
+                                    end
+                                end
+                                Lastdist = dist
+                                coroutine.yield(20)
                             end
-                            -- if we haven't moved in 10 seconds... go back to attacking
-                            if (distSq - oldDistSq) < 25 then
-                                break
-                            end
-                            oldDistSq = distSq
-                            coroutine.yield(20)
                         end
                     end
                 end
-                self:MoveToLocation(movePosition, false)
+                if VDist3Sq(platPos, movePosition) > 400 then
+                    self:MoveToLocation(movePosition, false)
+                    coroutine.yield(80)
+                end
             end
         end
         coroutine.yield(20)
-        -- return 
         self:PlatoonDisband()
     end,
     

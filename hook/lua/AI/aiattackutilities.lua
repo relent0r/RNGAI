@@ -424,6 +424,7 @@ function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, 
     end
     -- At this point we have not found any path to the destination.
     -- The path is to dangerous at the moment (or there is no path at all). We will check this again in 30 seconds.
+    RNGLOG('GeneratePath, no path found')
     return false
 end
 

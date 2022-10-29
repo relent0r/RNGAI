@@ -596,7 +596,7 @@ BuilderGroup {
 
 
 -- Defenses surrounding the base in patrol points
-
+--[[
 BuilderGroup {
     BuilderGroupName = 'RNGAI Perimeter Defenses Small',
     BuildersType = 'EngineerBuilder',
@@ -868,7 +868,7 @@ BuilderGroup {
         }
     },
 }
-
+]]
 BuilderGroup {
     BuilderGroupName = 'RNGAI Perimeter Defenses Expansions',
     BuildersType = 'EngineerBuilder',

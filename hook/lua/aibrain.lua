@@ -8,6 +8,7 @@ local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMa
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local DebugArrayRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').DebugArrayRNG
 local AIUtils = import('/lua/ai/AIUtilities.lua')
+local NavUtils = import('/lua/sim/NavUtils.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local PlatoonGenerateSafePathToRNG = import('/lua/AI/aiattackutilities.lua').PlatoonGenerateSafePathToRNG
 local GetClosestPathNodeInRadiusByLayerRNG = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayerRNG
@@ -947,7 +948,6 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('Director Energy Table '..repr(self.EnemyIntel.DirectorData.Energy))
         self.EnemyIntel.EnemyStartLocations = {}
         self.EnemyIntel.EnemyThreatLocations = {}
-        self.EnemyIntel.EnemyThreatRaw = {}
         self.EnemyIntel.ChokeFlag = false
         self.EnemyIntel.EnemyFireBaseDetected = false
         self.EnemyIntel.EnemyAirFireBaseDetected = false
@@ -3521,51 +3521,47 @@ AIBrain = Class(RNGAIBrainClass) {
             'AntiSurface'
         }
         -- Get threats for each threat type listed on the threatTypes table. Full map scan.
+        local currentGameTime = GetGameTimeSeconds()
+
         for _, t in threatTypes do
             rawThreats = GetThreatsAroundPosition(self, self.BuilderManagers.MAIN.Position, 16, true, t)
             for _, raw in rawThreats do
-                local threatRow = {posX=raw[1], posZ=raw[2], rThreat=raw[3], rThreatType=t}
-                RNGINSERT(potentialThreats, threatRow)
+                potentialThreats[raw[1]] = potentialThreats[raw[1]] or { }
+                potentialThreats[raw[1]][raw[2]] = potentialThreats[raw[1]][raw[2]] or { }
+                potentialThreats[raw[1]][raw[2]][t] = raw[3]
+                potentialThreats[raw[1]][raw[2]].Position = potentialThreats[raw[1]][raw[2]].Position or {raw[1], GetSurfaceHeight(raw[1], raw[2]),raw[2]}
+                potentialThreats[raw[1]][raw[2]].UpdateTime = potentialThreats[raw[1]][raw[2]].UpdateTime or currentGameTime
+                --local threatRow = {posX=raw[1], posZ=raw[2], rThreat=raw[3], rThreatType=t}
+                --RNGINSERT(potentialThreats, threatRow)
             end
         end
+        --RNGLOG('Threat Table')
+        --RNGLOG(repr(potentialThreats))
         --RNGLOG('Potential Threats :'..repr(potentialThreats))
         coroutine.yield(2)
         local phaseTwoThreats = {}
         local threatLimit = 20
-        -- Set a raw threat table that is replaced on each loop so we can get a snapshot of current enemy strength across the map.
-        self.EnemyIntel.EnemyThreatRaw = potentialThreats
 
         -- Remove threats that are too close to the enemy base so we are focused on whats happening in the battlefield.
         -- Also set if the threat is on water or not
         -- Set the time the threat was identified so we can flush out old entries
-        -- If you want the full map thats what EnemyThreatRaw is for.
         if next(potentialThreats) then
             local threatLocation = {}
-            for _, threat in potentialThreats do
-                --RNGLOG('* AI-RNG: Threat is'..repr(threat))
-                if threat.rThreat > threatLimit then
-                    --RNGLOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
-                    if RUtils.PositionOnWater(threat.posX, threat.posZ) then
-                        onWater = true
-                    else
-                        onWater = false
-                    end
-                    threatLocation = {Position = {threat.posX, GetSurfaceHeight(threat.posX, threat.posZ), threat.posZ}, EnemyBaseRadius = false, Threat=threat.rThreat, ThreatType=threat.rThreatType, PositionOnWater=onWater }
-                    RNGINSERT(phaseTwoThreats, threatLocation)
-                end
-            end
-            --RNGLOG('* AI-RNG: Pre Sorted Potential Valid Threat Locations :'..repr(phaseTwoThreats))
-            local currentGameTime = GetGameTimeSeconds()
-            for _, threat in phaseTwoThreats do
-                for q, pos in enemyStarts do
-                    --RNGLOG('* AI-RNG: Distance Between Threat and Start Position :'..VDist2Sq(threat.posX, threat.posZ, pos[1], pos[3]))
-                    if VDist3Sq(threat.Position, pos.Position) < 10000 then
-                        threat.EnemyBaseRadius = true
+            for _, x in potentialThreats do
+                for _, z in x do
+                    --RNGLOG('* AI-RNG: Threat is'..repr(threat))
+                    if not z.PositionOnWater then
+                        --RNGLOG('* AI-RNG: Tactical Potential Interest Location Found at :'..repr(threat))
+                        if RUtils.PositionOnWater(z.Position) then
+                            z.PositionOnWater = true
+                        else
+                            z.PositionOnWater = false
+                        end
                     end
                 end
-                threat.InsertTime = currentGameTime
-                RNGINSERT(self.EnemyIntel.EnemyThreatLocations, threat)
             end
+            RNGLOG(repr(potentialThreats))
+            self.EnemyIntel.EnemyThreatLocations = potentialThreats
             --RNGLOG('* AI-RNG: second table pass :'..repr(potentialThreats))
             --RNGLOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
@@ -5215,7 +5211,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local armyLand={T1={scout=0,tank=0,arty=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0,bot=0,stealth=0,mobilebomb=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0,armoured=0}}
         local armyLandType={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0,bot=0,armoured=0}
         local armyLandTiers={T1=0,T2=0,T3=0}
-        local armyAir={T1={scout=0,interceptor=0,bomber=0,gunship=0,transport=0},T2={fighter=0,bomber=0,gunship=0,mercy=0,transport=0},T3={scout=0,asf=0,bomber=0,gunship=0,torpedo=0,transport=0}}
+        local armyAir={T1={scout=0,interceptor=0,bomber=0,gunship=0,transport=0},T2={fighter=0,bomber=0,gunship=0,mercy=0,transport=0,torpedo=0},T3={scout=0,asf=0,bomber=0,gunship=0,torpedo=0,transport=0}}
         local armyAirType={scout=0,interceptor=0,bomber=0,asf=0,gunship=0,fighter=0,torpedo=0,transport=0,mercy=0}
         local armyAirTiers={T1=0,T2=0,T3=0}
         local armyNaval={T1={frigate=0,sub=0,shard=0},T2={destroyer=0,cruiser=0,subhunter=0,transport=0},T3={battleship=0}}
@@ -5470,7 +5466,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     elseif unitCat.TECH2 then
                         armyAirTiers.T2=armyAirTiers.T2+1
-                        if unitCat.BOMBER and not EntityCategoryContains(categories.daa0206, unit) then
+                        if unitCat.BOMBER and not unitCat.ANTINAVY and not EntityCategoryContains(categories.daa0206, unit) then
                             armyAir.T2.bomber=armyAir.T2.bomber+1
                             armyAirType.bomber=armyAirType.bomber+1
                         elseif EntityCategoryContains(categories.xaa0202, unit)then

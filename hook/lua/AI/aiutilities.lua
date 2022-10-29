@@ -76,7 +76,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
         elseif VDist2(pos[1], pos[3], destination[1], destination[3]) < 200 then
             SPEW('* AI-RNG: EngineerMoveWithSafePath(): executing CanPathTo(). LUA GenerateSafePathTo returned: ('..repr(reason)..') '..VDist2(pos[1], pos[3], destination[1], destination[3]))
             -- be really sure we don't try a pathing with a destoryed c-object
-            if unit.Dead or unit:BeenDestroyed() or IsDestroyed(unit) then
+            if IsDestroyed(unit) then
                 SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
                 return false
             end
@@ -253,7 +253,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
         elseif VDist2Sq(pos[1], pos[3], destination[1], destination[3]) < 300*300 then
             SPEW('* AI-RNG: EngineerMoveWithSafePath(): executing CanPathTo(). LUA GenerateSafePathTo returned: ('..repr(reason)..') '..VDist2Sq(pos[1], pos[3], destination[1], destination[3]))
             -- be really sure we don't try a pathing with a destoryed c-object
-            if eng.Dead or eng:BeenDestroyed() or IsDestroyed(eng) then
+            if IsDestroyed(eng) then
                 SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
                 return false
             end

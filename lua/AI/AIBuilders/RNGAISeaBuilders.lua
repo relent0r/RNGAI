@@ -158,7 +158,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Cruiser',
-        PlatoonTemplate = 'T2SeaDestroyer',
+        PlatoonTemplate = 'T2SeaCruiser',
         Priority = 749,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},

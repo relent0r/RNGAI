@@ -522,7 +522,6 @@ BuilderGroup {
             },
             DistressRange = 120,
             DistressReactionTime = 6,
-            ThreatSupport = 0,
         },
     },
     Builder {
@@ -567,7 +566,6 @@ BuilderGroup {
             },
             DistressRange = 120,
             DistressReactionTime = 6,
-            ThreatSupport = 0,
         },
     },
     Builder {
@@ -610,7 +608,6 @@ BuilderGroup {
             },
             DistressRange = 120,
             DistressReactionTime = 6,
-            ThreatSupport = 0,
         },
     },
 }
@@ -1184,7 +1181,6 @@ BuilderGroup {
             },
             DistressRange = 120,
             DistressReactionTime = 6,
-            ThreatSupport = 0,
         },    
     },
     Builder {
@@ -1305,7 +1301,6 @@ BuilderGroup {
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
             AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            LocationType = 'LocationType',
             TargetSearchPriorities = {
                 categories.STRUCTURE,
                 categories.MOBILE * categories.LAND,
@@ -1404,7 +1399,6 @@ BuilderGroup {
             },
             DistressRange = 120,
             DistressReactionTime = 6,
-            ThreatSupport = 0,
         },
     },
     Builder {

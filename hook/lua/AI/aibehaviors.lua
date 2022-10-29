@@ -2282,7 +2282,7 @@ function ExtractorClosest(aiBrain, unit, unitBp)
         -- Check for the nearest distance from mainbase
         UnitPos = v:GetPosition()
         DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-        if DistanceToBase < 2500 then
+        if DistanceToBase < 6400 then
             --RNGLOG('Mainbase extractor set true')
             v.MAINBASE = true
         end
@@ -3078,48 +3078,51 @@ FindExperimentalTargetRNG = function(self)
     local mostUnits = 0
     local highestMassValue = 0
     -- Now we look at bases of any sort and find the highest mass worth then selecting the most valuable unit in that base.
-    for _, base in enemyBases do
-        if base.ThreatType == 'StructuresNotMex' then
-            --RNGLOG('Base Position with '..base.Threat..' threat')
-            local unitsAtBase = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, base.Position, 100, 'Enemy')
-            local massValue = 0
-            local highestValueUnit = 0
-            local notDeadUnit = false
+        
+    for _, x in enemyBases do
+        for _, z in x do
+            if z.StructuresNotMex then
+                --RNGLOG('Base Position with '..base.Threat..' threat')
+                local unitsAtBase = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, z.Position, 100, 'Enemy')
+                local massValue = 0
+                local highestValueUnit = 0
+                local notDeadUnit = false
 
-            for _, unit in unitsAtBase do
-                if not unit.Dead then
-                    if unit.Blueprint.Economy.BuildCostMass then
-                        if unit.Blueprint.CategoriesHash.DEFENSE then
-                            massValue = massValue + (unit.Blueprint.Economy.BuildCostMass * 1.5)
-                        elseif unit.Blueprint.CategoriesHash.TECH3 and unit.Blueprint.CategoriesHash.ANTIMISSILE and unit.Blueprint.CategoriesHash.SILO then
-                            massValue = massValue + (unit.Blueprint.Economy.BuildCostMass * 2)
-                        else
-                            massValue = massValue + unit.Blueprint.Economy.BuildCostMass
+                for _, unit in unitsAtBase do
+                    if not unit.Dead then
+                        if unit.Blueprint.Economy.BuildCostMass then
+                            if unit.Blueprint.CategoriesHash.DEFENSE then
+                                massValue = massValue + (unit.Blueprint.Economy.BuildCostMass * 1.5)
+                            elseif unit.Blueprint.CategoriesHash.TECH3 and unit.Blueprint.CategoriesHash.ANTIMISSILE and unit.Blueprint.CategoriesHash.SILO then
+                                massValue = massValue + (unit.Blueprint.Economy.BuildCostMass * 2)
+                            else
+                                massValue = massValue + unit.Blueprint.Economy.BuildCostMass
+                            end
+                        end
+                        if massValue > highestValueUnit then
+                            highestValueUnit = massValue
+                            notDeadUnit = unit
+                        end
+                        if not notDeadUnit then
+                            notDeadUnit = unit
                         end
                     end
-                    if massValue > highestValueUnit then
-                        highestValueUnit = massValue
-                        notDeadUnit = unit
-                    end
-                    if not notDeadUnit then
-                        notDeadUnit = unit
-                    end
                 end
-            end
 
-            if massValue > 0 then
-                if massValue > highestMassValue then
-                    bestBase = base
-                    highestMassValue = massValue
-                    bestUnit = notDeadUnit
-                elseif massValue == highestMassValue then
-                    local myPos = GetPlatoonPosition(self)
-                    local dist1 = VDist2Sq(myPos[1], myPos[3], base.Position[1], base.Position[3])
-                    local dist2 = VDist2Sq(myPos[1], myPos[3], bestBase.Position[1], bestBase.Position[3])
-
-                    if dist1 < dist2 then
-                        bestBase = base
+                if massValue > 0 then
+                    if massValue > highestMassValue then
+                        bestBase = z
+                        highestMassValue = massValue
                         bestUnit = notDeadUnit
+                    elseif massValue == highestMassValue then
+                        local myPos = GetPlatoonPosition(self)
+                        local dist1 = VDist2Sq(myPos[1], myPos[3], z.Position[1], z.Position[3])
+                        local dist2 = VDist2Sq(myPos[1], myPos[3], bestBase.Position[1], bestBase.Position[3])
+
+                        if dist1 < dist2 then
+                            bestBase = base
+                            bestUnit = notDeadUnit
+                        end
                     end
                 end
             end
@@ -3312,10 +3315,20 @@ function ExpMoveToPosition(aiBrain, platoon, target, unit, ignoreUnits)
     if target and not target.Dead then
         destination = target:GetPosition()
     end
-    local path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, platoon.MovementLayer, platoon:GetPlatoonPosition(), destination, 62500)
+    local path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, platoon.MovementLayer, unit:GetPosition(), destination, 62500)
     if path then
         local pathLength = RNGGETN(path)
+        local pathCheckRequired = false
         for i=1, pathLength do
+            if pathCheckRequired then
+                if VDist3Sq(unit:GetPosition(), path[pathLength]) < VDist3Sq(path[i], path[pathLength]) then
+                    RNGLOG('Experimental is closer to end of path than the current path iteration, skipping forward')
+                    continue
+                else
+                    RNGLOG('Experimental is further to end of path than the current path iteration, pathCheckRequired being set to false')
+                    pathCheckRequired = false
+                end
+            end
             IssueMove({unit}, path[i])
             local unitPosition
             local lastDist
@@ -3339,9 +3352,10 @@ function ExpMoveToPosition(aiBrain, platoon, target, unit, ignoreUnits)
                         break
                     end
                 end
-                if not ignoreUnits then
+                if not ignoreUnits and not RUtils.PositionInWater(unit:GetPosition()) then
                     local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, LandRadiusDetectionCategory, unitPosition, 70, 'Enemy')
                     if enemyUnitCount > 0 then
+                        pathCheckRequired = true
                         local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, unitPosition, 'Attack', 70, LandRadiusScanCategory, TargetSearchPriorities, false)
                         if acuInRange then
                             target = acuUnit

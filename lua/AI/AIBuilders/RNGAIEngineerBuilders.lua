@@ -988,7 +988,6 @@ BuilderGroup {
             JobType = 'Assist',
             Assist = {
                 AssistLocation = 'LocationType',
-                AssistUntilFinished = true,
                 AssistFactoryUnit = true,
                 AssisteeType = categories.FACTORY,
                 AssistClosestUnit = false,                                       

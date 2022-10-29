@@ -4840,15 +4840,16 @@ GetHoldingPosition = function(aiBrain, platoonPos, platoon, threatType)
 
     if next(threatLocations) then
         for k, v in threatLocations do
-            if not bestThreat or v[3] < bestThreat then
+            if not bestThreat or VDist3Sq(aiBrain.BuilderManagers['MAIN'].Position, {v[1],0,v[2]}) < bestThreatDist then
                 bestThreat = v[3]
                 bestThreatPos = {v[1],0,v[2]}
+                bestThreatDist = VDist3Sq(aiBrain.BuilderManagers['MAIN'].Position, {v[1],0,v[2]})
             end
         end
     end
     if bestThreatPos and platoonPos then
-        local distance = VDist3(platoonPos, bestThreatPos)
-        holdingPos = lerpy(platoonPos, bestThreatPos, {distance, (distance / 2)})
+        local distance = VDist3(aiBrain.BuilderManagers['MAIN'].Position, bestThreatPos)
+        holdingPos = lerpy(aiBrain.BuilderManagers['MAIN'].Position, bestThreatPos, {distance, (distance / 2)})
         if aiBrain.RNGDEBUG then
             RNGLOG('Holding Position is set to '..repr(holdingPos))
         end
