@@ -9,7 +9,7 @@
     Sorry for the inlining of functions, the repetitive code blocks, and the constant localling of variables :)
   ]]
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
-
+local NavUtils = import('/lua/sim/NavUtils.lua')
 local CreatePriorityQueue = import('/mods/RNGAI/lua/FlowAI/framework/utils/PriorityQueue.lua').CreatePriorityQueue
 local DEFAULT_BORDER = 4
 local PLAYABLE_AREA = nil
@@ -928,6 +928,10 @@ function SetMarkerInformation(aiBrain)
         RNGLOG('Waiting for Zones to Initialize '..aiBrain.Nickname)
         coroutine.yield(20)
     end
+    while not NavUtils.IsGenerated() do
+        RNGLOG('Waiting for NavMesh to Initialize '..aiBrain.Nickname)
+        coroutine.yield(20)
+    end
     local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
     local VDist3Sq = VDist3Sq
     aiBrain.RNGAreas={}
@@ -1017,8 +1021,7 @@ function SetMarkerInformation(aiBrain)
     for _, mass in AdaptiveResourceMarkerTableRNG do
         if mass.type == 'Mass' then
             massPointCount = massPointCount + 1
-            local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(mass.position,25,'Land').name]
-            aiBrain.renderthreadtracker=ForkThread(DoMassPointInfect,aiBrain,closestpath,mass.name)
+            aiBrain.renderthreadtracker=ForkThread(DoMassPointInfect,aiBrain,mass.name)
         end
     end
     aiBrain.BrainIntel.MassMarker = massPointCount
@@ -1176,17 +1179,32 @@ function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
     end
 end
 
-function DoMassPointInfect(aiBrain,marker,masspoint)
+function DoMassPointInfect(aiBrain,masspoint)
     aiBrain.renderthreadtracker=CurrentThread()
     coroutine.yield(1)
     --DrawCircle(marker.position,4,'FF'..aiBrain.analysistablecolors[expand])
-    if not marker then aiBrain.renderthreadtracker=nil return end
     if not AdaptiveResourceMarkerTableRNG[masspoint].RNGArea then
-        AdaptiveResourceMarkerTableRNG[masspoint].RNGArea = marker.RNGArea
-        --RNGLOG('MassMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[masspoint]))
+        --RNGLOG('Marker data '..repr(AdaptiveResourceMarkerTableRNG[masspoint]))
+        if AdaptiveResourceMarkerTableRNG[masspoint].Water then
+            local label, reason = NavUtils.GetLabel('Water', AdaptiveResourceMarkerTableRNG[masspoint].position)
+            if not label then
+                WARN('No water label returned reason '..reason)
+                WARN('Water label failure position was '..repr(AdaptiveResourceMarkerTableRNG[masspoint].position))
+            else
+                AdaptiveResourceMarkerTableRNG[masspoint].RNGArea = label
+            end
+        else
+            local label, reason = NavUtils.GetLabel('Land', AdaptiveResourceMarkerTableRNG[masspoint].position)
+            if not label then
+                WARN('No Land label returned reason '..reason)
+                WARN('Land label failure position was '..repr(AdaptiveResourceMarkerTableRNG[masspoint].position))
+            else
+                AdaptiveResourceMarkerTableRNG[masspoint].RNGArea = label
+            end
+        end
     end
     if not AdaptiveResourceMarkerTableRNG[masspoint].zoneid then
-        if GetTerrainHeight(marker.position[1], marker.position[3]) < GetSurfaceHeight(marker.position[1], marker.position[3]) then
+        if AdaptiveResourceMarkerTableRNG[masspoint].Water then
             local zone = map:GetZoneID(AdaptiveResourceMarkerTableRNG[masspoint].position,aiBrain.Zones.Naval.index)
             if zone then
                 --LOG('Zone found, adding zone to naval mass marker '..zone)

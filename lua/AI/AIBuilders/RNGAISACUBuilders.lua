@@ -19,7 +19,7 @@ BuilderGroup {
         BuilderType = 'Gate',
     },
     Builder {
-        BuilderName = 'RNGAI SACU Engineer',
+        BuilderName = 'RNGAI SACU',
         PlatoonTemplate = 'T3LandSubCommander',
         Priority = 400,
         BuilderConditions = {
@@ -60,7 +60,7 @@ BuilderGroup {
         BuilderType = 'Gate',
     },
     Builder {
-        BuilderName = 'RNGEXP SACU Engineer',
+        BuilderName = 'RNGEXP SACU',
         PlatoonTemplate = 'T3LandSubCommander',
         Priority = 400,
         BuilderConditions = {

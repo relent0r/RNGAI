@@ -44,7 +44,7 @@ local FrigateRaid = function(self, aiBrain, builderManager)
     -- Will return the rush naval build if it can raid mexes
     if aiBrain.EnemyIntel.FrigateRaid then
         --RNGLOG('Frigate Raid priority function is 995')
-        return 995
+        return 1000
     end
     --RNGLOG('Frigate Raid priority function is 0')
     return 0

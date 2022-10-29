@@ -3120,7 +3120,7 @@ FindExperimentalTargetRNG = function(self)
                         local dist2 = VDist2Sq(myPos[1], myPos[3], bestBase.Position[1], bestBase.Position[3])
 
                         if dist1 < dist2 then
-                            bestBase = base
+                            bestBase = z
                             bestUnit = notDeadUnit
                         end
                     end
@@ -3460,13 +3460,15 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     local enemyBases = aiBrain.EnemyIntel.EnemyThreatLocations
     local bestBaseThreat = nil
     local maxBaseThreat = 0
-    for _, base in enemyBases do
-        if base.ThreatType == 'StructuresNotMex' then
-            local threatTable = aiBrain:GetThreatsAroundPosition(base.Position, 1, true, 'Economy')
-            if RNGGETN(threatTable) ~= 0 then
-                if threatTable[1][3] > maxBaseThreat then
-                    maxBaseThreat = threatTable[1][3]
-                    bestBaseThreat = threatTable
+    for _, x in enemyBases do
+        for _, z in x do
+            if z.StructuresNotMex then
+                local threatTable = aiBrain:GetThreatsAroundPosition(z.Position, 1, true, 'Economy')
+                if RNGGETN(threatTable) ~= 0 then
+                    if threatTable[1][3] > maxBaseThreat then
+                        maxBaseThreat = threatTable[1][3]
+                        bestBaseThreat = threatTable
+                    end
                 end
             end
         end

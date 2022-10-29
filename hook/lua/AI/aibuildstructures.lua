@@ -55,7 +55,7 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToB
         end 
     end 
     --RNGLOG('AIBuildBaseTemplateOrderedRNG Unsuccessful build')
-    return # unsuccessful build
+    return
 end
 
 function TMLStartUpLogic(buildingType, builder)

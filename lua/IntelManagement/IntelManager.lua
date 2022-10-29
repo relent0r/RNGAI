@@ -1942,7 +1942,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
     local maxmapdimension = RNGMAX(ScenarioInfo.size[1],ScenarioInfo.size[2])
     aiBrain.EnemyIntel.EnemyFireBaseDetected = false
     aiBrain.EnemyIntel.EnemyAirFireBaseDetected = false
-    aiBrain.EnemyIntel.EnemyFireBaseTable = {}
+    --aiBrain.EnemyIntel.EnemyFireBaseTable = {}
 
     if maxmapdimension == 256 then
         scanRadius = 11.5
@@ -2067,6 +2067,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                     if aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount + aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount > 5 then
                         aiBrain.EnemyIntel.EnemyFireBaseDetected = true
                     end
+                    --[[
                     if aiBrain.EnemyIntel.EnemyFireBaseDetected then
                         if not aiBrain.EnemyIntel.EnemyFireBaseTable[q] then
                             aiBrain.EnemyIntel.EnemyFireBaseTable[q] = {}
@@ -2078,7 +2079,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 Land = GetThreatAtPosition(aiBrain, unit.IMAP, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
                                 }
                         end
-                    end
+                    end]]
                 end
                 --LOG('Enemy Threat Location '..q..' Have Land Defensive Structure Count of '..aiBrain.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount)
                 --LOG('Enemy Threat Location '..q..' Have Air Defensive Structure Count of '..aiBrain.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount)

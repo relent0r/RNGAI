@@ -1539,18 +1539,18 @@ AIBrain = Class(RNGAIBrainClass) {
             local graphArea
             if baseLayer then
                 if baseLayer == 'Water' then
-                    graphArea = GetClosestPathNodeInRadiusByLayerRNG(position, 30, 'Water')
+                    graphArea = NavUtils.GetLabel('Water', position)
                 else
-                    graphArea = GetClosestPathNodeInRadiusByLayerRNG(position, 30, 'Land')
+                    graphArea = NavUtils.GetLabel('Land', position)
                 end
             end
-            if not graphArea.RNGArea then
+            if not graphArea then
                 WARN('Missing RNGArea for builder manager land node or no path markers')
             end
-            if graphArea.RNGArea then
-                --RNGLOG('Graph Area for buildermanager is '..graphArea.RNGArea)
+            if graphArea then
+                RNGLOG('Graph Area for buildermanager is '..graphArea)
                 graphAreaSet = true
-                self.BuilderManagers[baseName].GraphArea = graphArea.RNGArea
+                self.BuilderManagers[baseName].GraphArea = graphArea
             end
             if not graphAreaSet then
                 --RNGLOG('Graph Area not set yet')
@@ -3560,7 +3560,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            RNGLOG(repr(potentialThreats))
+            --RNGLOG(repr(potentialThreats))
             self.EnemyIntel.EnemyThreatLocations = potentialThreats
             --RNGLOG('* AI-RNG: second table pass :'..repr(potentialThreats))
             --RNGLOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
