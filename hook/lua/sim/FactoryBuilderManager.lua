@@ -306,6 +306,9 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandArtillery')
                     table.insert(queue, 'T1LandAA')
+                    for i=1, 4 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
                 end
                 table.insert(queue, 'T1LandScout')
                 table.insert(queue, 'T1LandScout')
@@ -352,6 +355,9 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     table.insert(queue, 'T1LandArtillery')
                     table.insert(queue, 'T1LandAA')
                     table.insert(queue, 'T1LandAA')
+                    for i=1, 4 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
                 end
                 table.insert(queue, 'T1LandScout')
                 table.insert(queue, 'T1LandScout')
@@ -399,6 +405,9 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1LandArtillery')
                     table.insert(queue, 'T1LandAA')
+                    for i=1, 4 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
                 end
                 table.insert(queue, 'T1LandScout')
                 table.insert(queue, 'T1LandScout')

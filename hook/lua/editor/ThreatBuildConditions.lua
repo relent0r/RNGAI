@@ -113,17 +113,18 @@ function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
         --RNGLOG('Initial expansionMarker list is '..repr(expansionMarkers))
         for k, v in expansionMarkers do
             if v.type == 'Expansion Area' or v.type == 'Large Expansion Area' or v.type == 'Blank Marker' then
+                RNGLOG('Expansion Area is '..repr(v))
                 if v.RNGArea then
-                    --RNGLOG('Expansion Graph Area is '..v.RNGArea)
+                    RNGLOG('Expansion Graph Area is '..v.RNGArea)
                     if v.RNGArea == graphArea then
                         local threat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, tType)
                         if threat > 2 then
                             -- I had to do this because neutral civilians show up as structure threat
                             if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE - categories.WALL, v.position, 60, 'Enemy') > 0 then
-                                --RNGLOG('Number of enemy structure '..aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE - categories.WALL, v.position, 60, 'Enemy'))
-                                --RNGLOG('StructuresNotMex threat present for base '..locationtype)
-                                --RNGLOG('Expansion position detected is '..repr(v.position))
-                                --RNGLOG('There is '..threat..' enemy structure threat on the graph area expansion markers')
+                                RNGLOG('Number of enemy structure '..aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE - categories.WALL, v.position, 60, 'Enemy'))
+                                RNGLOG('StructuresNotMex threat present for base '..locationtype)
+                                RNGLOG('Expansion position detected is '..repr(v.position))
+                                RNGLOG('There is '..threat..' enemy structure threat on the graph area expansion markers')
                                 return true
                             end
                         end

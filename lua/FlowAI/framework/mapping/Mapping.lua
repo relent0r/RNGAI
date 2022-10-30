@@ -10,6 +10,7 @@
   ]]
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
+local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local CreatePriorityQueue = import('/mods/RNGAI/lua/FlowAI/framework/utils/PriorityQueue.lua').CreatePriorityQueue
 local DEFAULT_BORDER = 4
 local PLAYABLE_AREA = nil
@@ -934,12 +935,10 @@ function SetMarkerInformation(aiBrain)
     end
     local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
     local VDist3Sq = VDist3Sq
-    aiBrain.RNGAreas={}
     aiBrain.armyspots={}
     aiBrain.expandspots={}
     --RNGLOG('Infecting expansions '..aiBrain.Nickname)
     for k,marker in expansionMarkers do
-        local node=false
         local expand=false
         local mass=false
         --RNGLOG(repr(k)..' marker type is '..repr(marker.type))
@@ -953,14 +952,13 @@ function SetMarkerInformation(aiBrain)
                 break
             end
         end
-        if node and not marker.RNGArea then
-            aiBrain.RNGAreas[k]={}
-            InfectMarkersRNG(aiBrain,marker,k)
+        if not node and not marker.RNGArea then
+            InfectMarkersRNG(aiBrain,marker, k)
         end
         if expand then
             table.insert(aiBrain.expandspots,{marker,k})
         end
-        if not node and not expand and not mass then
+        if not expand and not mass then
             for _,v in STR_GetTokens(k,'_') do
                 if v=='ARMY' then
                     table.insert(aiBrain.armyspots,{marker,k})
@@ -977,6 +975,7 @@ function SetMarkerInformation(aiBrain)
         for _,army in aiBrain.armyspots do
             local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(army[1].position,25,'Land').name]
             --RNGLOG('closestpath is '..repr(closestpath))
+            RNGLOG('log army in first part'..repr(army))
             aiBrain.renderthreadtracker=ForkThread(DoArmySpotDistanceInfect,aiBrain,closestpath,army[2])
         end
     else
@@ -993,6 +992,7 @@ function SetMarkerInformation(aiBrain)
             end
             --RNGLOG('closestpath is '..repr(closestpath))
             --RNGLOG('bases is false')
+            RNGLOG('log army in second part'..repr(aiBrain.expandspots[1]))
             aiBrain.renderthreadtracker=ForkThread(DoArmySpotDistanceInfect,aiBrain,closestpath,aiBrain.expandspots[1][2])
         end
     end
@@ -1028,10 +1028,6 @@ function SetMarkerInformation(aiBrain)
     while aiBrain.renderthreadtracker do
         coroutine.yield(2)
     end
-    --RNGLOG('RNGAreas:')
-    --for k,v in aiBrain.RNGAreas do
-    --  --LOG(repr(k)..' has '..repr(RNGGETN(v))..' nodes')
-    --end
     --RNGLOG('Setting GraphZones and MarkersInfectedRNG '..aiBrain.Nickname)
     if aiBrain.GraphZones.FirstRun then
         aiBrain.GraphZones.FirstRun = false
@@ -1040,13 +1036,27 @@ function SetMarkerInformation(aiBrain)
     --RNGLOG('Dump Resource MarkerChain '..repr(AdaptiveResourceMarkerTableRNG))
     ScenarioInfo.MarkersInfectedRNG = true
 end
-function InfectMarkersRNG(aiBrain,marker,graphname)
+function InfectMarkersRNG(aiBrain,marker,nodekey)
     if marker then
-        marker.RNGArea=graphname
-        table.insert(aiBrain.RNGAreas[graphname],marker)
-        for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
-            if not Scenario.MasterChain._MASTERCHAIN_.Markers[node].RNGArea then
-                InfectMarkersRNG(aiBrain,Scenario.MasterChain._MASTERCHAIN_.Markers[node],graphname)
+        if RUtils.PositionInWater(marker.position) then
+            local label, reason = NavUtils.GetLabel('Land', marker.position)
+            if not label then
+                WARN('No water label returned reason '..reason)
+                WARN('Water label failure position was '..repr(marker.position))
+            else
+                Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].RNGArea = label
+                Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].RNGLayer = 'Water'
+                RNGLOG('Marker has had label added '..repr(marker))
+            end
+        else
+            local label, reason = NavUtils.GetLabel('Land', marker.position)
+            if not label then
+                WARN('No water label returned reason '..reason)
+                WARN('Water label failure position was '..repr(marker.position))
+            else
+                Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].RNGArea = label
+                Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].RNGLayer = 'Land'
+                RNGLOG('Marker has had label added '..repr(marker))
             end
         end
     else

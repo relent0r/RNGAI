@@ -1499,12 +1499,14 @@ ExpansionIntelScanRNG = function(aiBrain)
                     info:   type="Land Path Node"
                     info: }
                 ]]
-                local expansionNode = Scenario.MasterChain._MASTERCHAIN_.Markers[GetClosestPathNodeInRadiusByLayer(v.Position, 60, 'Land').name]
-                --RNGLOG('Check for position '..repr(expansionNode))
-                if expansionNode then
-                    aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = expansionNode.RNGArea
+                local label, reason = NavUtils.GetLabel('Land', v.Position)
+                if not label then
+                    WARN('No expansion label returned reason '..reason)
+                    WARN('Water label failure position was '..repr(v.Position))
                 else
-                    aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = false
+                    aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
+                    aiBrain.BrainIntel.ExpansionWatchTable[k].RNGLayer = label
+                    RNGLOG('Expansion Marker has had label added '..repr(v))
                 end
             end
             if v.MassPoints > 2 then
@@ -1636,16 +1638,20 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
     if VDist2Sq(location[1], location[3], MainPos[1], MainPos[3]) > 3600 then
         return false
     end
-    local positionNode = Scenario.MasterChain._MASTERCHAIN_.Markers[GetClosestPathNodeInRadiusByLayerRNG(location, radius, movementLayer).name]
+    local label, reason = NavUtils.GetLabel('Land', location)
+    if not label then
+        WARN('No water label returned reason '..reason)
+        WARN('Water label failure position was '..repr(location))
+    end
     local centerPoint = aiBrain.MapCenterPoint
     local mainBaseToCenter = VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3])
     local bestExpansions = {}
     local options = {}
     local currentGameTime = GetGameTimeSeconds()
     -- Note, the expansions zones are land only. Need to fix this to include amphib zone.
-    if positionNode.RNGArea then
+    if label then
         for k, expansion in aiBrain.BrainIntel.ExpansionWatchTable do
-            if expansion.Zone == positionNode.RNGArea then
+            if expansion.Zone == label then
                 local expansionDistance = VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3])
                 --RNGLOG('Distance to expansion '..expansionDistance)
                 --RNGLOG('Expansion position is '..repr(expansion.Position))
