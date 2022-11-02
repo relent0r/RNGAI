@@ -3588,6 +3588,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
+            
         if not potentialTarget then
             for k, v in self.EnemyIntel.ACU do
                 if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
@@ -3630,6 +3631,22 @@ AIBrain = Class(RNGAIBrainClass) {
                                 im.MapIntelGrid[gridX][gridY].MustScout = true
                                 im.MapIntelGrid[gridX][gridY].ACUIndexes[k] = true
                                 --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(im.MapIntelGrid[gridX][gridY]))
+                            end
+                        end
+                    elseif platoonType == 'SATELLITE' and platoonDPS then
+                        if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and v.LastSpotted + 120 > GetGameTimeSeconds() then
+                            if RUtils.HaveUnitVisual(self, v.Unit, true) and not RUtils.ShieldProtectingTargetRNG(aiBrain, v.Unit, nil) then
+                                RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
+                                local gridX, gridY = im:GetIntelGrid(v.Position)
+                                local scoutRequired = true
+                                if im.MapIntelGrid[gridX][gridY].MustScout and im.MapIntelGrid[gridX][gridY].ACUIndexes[k] then
+                                    scoutRequired = false
+                                end
+                                if scoutRequired then
+                                    im.MapIntelGrid[gridX][gridY].MustScout = true
+                                    im.MapIntelGrid[gridX][gridY].ACUIndexes[k] = true
+                                    --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(im.MapIntelGrid[gridX][gridY]))
+                                end
                             end
                         end
                     end
@@ -3679,8 +3696,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                         --RNGLOG('Not enough dps to kill in under 10 seconds '..v.HP..' '..platoonDPS)
                                         continue
                                     end
-                                else
-                                    --RNGLOG('This Air platoon had no gunship or bomber value set wtf')
+                                    --RNGLOG('This air platoon had no platoonDPS value')
                                 end
                             elseif threatType == 'Land' then
                                 if v.Land > platoonThreat then

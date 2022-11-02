@@ -8999,7 +8999,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                 self.MaxPlatoonDPS = GetPlatoonDPS(self)
                 RNGLOG('Max platoon dps is '..self.MaxPlatoonDPS)
             end
-            target = AIUtils.AIFindUndefendedBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri)
+            target = aiBrain:CheckDirectorTargetAvailable('Strategic', nil, 'SATELLITE', nil, self.MaxPlatoonDPS, platoonPosition)
+            if not target then
+                target = AIUtils.AIFindUndefendedBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri)
+            end
             local targetRotation = 0
             if target and target ~= oldTarget and not target.Dead then
                 -- Pondering over if getting the target position would be useful for calling in air strike on target if shielded.
@@ -9031,27 +9034,21 @@ Platoon = Class(RNGAIPlatoonClass) {
     end,
 
     MergeNovaxRNG = function(self, planName, radius)
-        -- check to see we're not near an ally base
         local aiBrain = self:GetBrain()
         if not aiBrain then
-            return
-        end
-
-        if self.UsingTransport then
-            return
+            return false
         end
 
         local platPos = self:GetPlatoonPosition()
         if not platPos then
-            return
+            return false
         end
 
         local radiusSq = radius*radius
-        -- if we're too close to a base, forget it
         AlliedPlatoons = aiBrain:GetPlatoonsList()
         local bMergedPlatoons = false
         for _,aPlat in AlliedPlatoons do
-            if aPlat:GetPlan() != planName then
+            if aPlat:GetPlan() ~= planName then
                 continue
             end
             if aPlat == self then
@@ -9061,6 +9058,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             if not allyPlatPos or not aiBrain:PlatoonExists(aPlat) then
                 continue
             end
+            -- Radius for platoon. I need to look further at this one. 
+            -- I'd rather the Novax platoons acts independantly until they need to kill something that requires multiple.
+            -- With this current logic they will work indepedantly until they get targets that place them with 80 units of each other.
             if VDist2Sq(platPos[1], platPos[3], allyPlatPos[1], allyPlatPos[3]) <= radiusSq then
                 local units = aPlat:GetPlatoonUnits()
                 local validUnits = {}
@@ -9083,6 +9083,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             self:Stop()
             self:SetAIPlan(planName)
         end
+        return bMergedPlatoons
     end,
 
     TransferAIRNG = function(self)
