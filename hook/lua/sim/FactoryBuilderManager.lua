@@ -402,7 +402,9 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     table.insert(queue, 'T1LandScout')
                     table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandDFTank')
-                    table.insert(queue, 'T1BuildEngineer')
+                    for i=1, 3 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
                     table.insert(queue, 'T1LandArtillery')
                     table.insert(queue, 'T1LandAA')
                     for i=1, 4 do

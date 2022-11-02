@@ -1069,25 +1069,32 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
             if not unit.Dead and EntityCategoryContains(v, unit) and platoon:CanAttackTarget(squad, unit) then
                 local unitPos = unit:GetPosition()
                 local numShields = aiBrain:GetNumUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
-                if numShields > 0 and (not retUnit) and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
+                RNGLOG('Satellite Distance of unit to platoon '..VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]))
+                if numShields > 0 and (not retUnit) and (not distance or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                     local shieldUnits = aiBrain:GetUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
                     local totalShieldHealth = 0
                     for _, sUnit in shieldUnits do
                         if not sUnit.Dead and sUnit.MyShield then
-                            totalShieldHealth = totalShieldHealth + sUnit.MyShield:GetHealth()
+                            if sUnit.bp.Defense.ShieldSize and VDist3Sq(unitPos, sUnit:GetPosition()) < sUnit.bp.Defense.ShieldSize then
+                                totalShieldHealth = totalShieldHealth + sUnit.MyShield:GetHealth()
+                            end
                         end
                     end
+                    RNGLOG('Satellite looking for target found shield')
+                    RNGLOG('Satellite max dps '..platoon.MaxPlatoonDPS..' total shield health '..totalShieldHealth)
+                    RNGLOG('Satellite max dps divided by shield health should be less than 15 '..(platoon.MaxPlatoonDPS/totalShieldHealth))
                     if totalShieldHealth > 0 then
-                        if (platoon.MaxPlatoonDPS / totalShieldHealth) < 15 then
+                        if (platoon.MaxPlatoonDPS / totalShieldHealth) < 12 then
                             retUnit = unit
                             distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                             targetShields = numShields
                         end
                     end
                 elseif (not retUnit) or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
+                    RNGLOG('Satellite, no shield found blocking target')
                     retUnit = unit
                     distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
-                    targetShields = numShields
+                    targetShields = 0
                 end
             end
         end

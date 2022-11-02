@@ -8997,7 +8997,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             if merged then
                 --RNGLOG('Satellite has merged with new one')
                 self.MaxPlatoonDPS = GetPlatoonDPS(self)
-                --RNGLOG('Max platoon dps is '..self.MaxPlatoonDPS)
+                RNGLOG('Max platoon dps is '..self.MaxPlatoonDPS)
             end
             target = AIUtils.AIFindUndefendedBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri)
             local targetRotation = 0

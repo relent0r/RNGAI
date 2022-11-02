@@ -1505,7 +1505,7 @@ ExpansionIntelScanRNG = function(aiBrain)
                     WARN('Water label failure position was '..repr(v.Position))
                 else
                     aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
-                    aiBrain.BrainIntel.ExpansionWatchTable[k].RNGLayer = label
+                    aiBrain.BrainIntel.ExpansionWatchTable[k].RNGLayer = 'Land'
                     RNGLOG('Expansion Marker has had label added '..repr(v))
                 end
             end

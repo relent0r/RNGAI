@@ -935,8 +935,8 @@ function SetMarkerInformation(aiBrain)
     end
     local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
     local VDist3Sq = VDist3Sq
-    aiBrain.armyspots={}
-    aiBrain.expandspots={}
+    --aiBrain.armyspots={}
+    --aiBrain.expandspots={}
     --RNGLOG('Infecting expansions '..aiBrain.Nickname)
     for k,marker in expansionMarkers do
         local expand=false
@@ -956,13 +956,15 @@ function SetMarkerInformation(aiBrain)
             InfectMarkersRNG(aiBrain,marker, k)
         end
         if expand then
-            table.insert(aiBrain.expandspots,{marker,k})
+            InfectMarkersRNG(aiBrain,marker, k)
+            --table.insert(aiBrain.expandspots,{marker,k})
         end
         if not expand and not mass then
             for _,v in STR_GetTokens(k,'_') do
                 if v=='ARMY' then
-                    table.insert(aiBrain.armyspots,{marker,k})
-                    table.insert(aiBrain.expandspots,{marker,k})
+                    InfectMarkersRNG(aiBrain,marker, k)
+                    --table.insert(aiBrain.armyspots,{marker,k})
+                    --table.insert(aiBrain.expandspots,{marker,k})
                 end
             end
         end
@@ -970,6 +972,7 @@ function SetMarkerInformation(aiBrain)
     --WaitSeconds(10)
     --RNGLOG('colortable is'..repr(tablecolors))
     --RNGLOG('Infecting armyspots '..aiBrain.Nickname)
+    --[[
     local bases=false
     if bases then
         for _,army in aiBrain.armyspots do
@@ -997,11 +1000,9 @@ function SetMarkerInformation(aiBrain)
         end
     end
     --RNGLOG('loop through armybrains complete '..aiBrain.Nickname)
-    local expands=true
-    while aiBrain.renderthreadtracker do
-        coroutine.yield(2)
-    end
+    local expands=true]]
     --RNGLOG('loop through expandspots '..aiBrain.Nickname)
+    --[[
     if expands then
         --tablecolors=GenerateDistinctColorTable(RNGGETN(aiBrain.expandspots))
        --RNGLOG('Running Expansion spot checks for rngarea')
@@ -1010,7 +1011,7 @@ function SetMarkerInformation(aiBrain)
             --RNGLOG('closestpath is '..repr(closestpath))
             aiBrain.renderthreadtracker=ForkThread(DoExpandSpotDistanceInfect,aiBrain,closestpath,expand[2])
         end
-    end
+    end]]
    --RNGLOG('renderthreadtracker for expansions')
     while aiBrain.renderthreadtracker do
         coroutine.yield(2)
@@ -1037,6 +1038,7 @@ function SetMarkerInformation(aiBrain)
     ScenarioInfo.MarkersInfectedRNG = true
 end
 function InfectMarkersRNG(aiBrain,marker,nodekey)
+    RNGLOG('InfectMarkersRNG triggered')
     if marker then
         if RUtils.PositionInWater(marker.position) then
             local label, reason = NavUtils.GetLabel('Land', marker.position)
@@ -1046,17 +1048,17 @@ function InfectMarkersRNG(aiBrain,marker,nodekey)
             else
                 Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].RNGArea = label
                 Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].RNGLayer = 'Water'
-                RNGLOG('Marker has had label added '..repr(marker))
+                RNGLOG('Infect Marker has had label added '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey]))
             end
         else
             local label, reason = NavUtils.GetLabel('Land', marker.position)
             if not label then
-                WARN('No water label returned reason '..reason)
+                WARN('No land label returned reason '..reason)
                 WARN('Water label failure position was '..repr(marker.position))
             else
                 Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].RNGArea = label
                 Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].RNGLayer = 'Land'
-                RNGLOG('Marker has had label added '..repr(marker))
+                RNGLOG('Infect Marker has had label added '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey]))
             end
         end
     else

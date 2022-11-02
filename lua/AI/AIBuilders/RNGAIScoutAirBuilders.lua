@@ -19,7 +19,7 @@ BuilderGroup {
         Priority = 900,
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.60}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.SCOUT * categories.AIR}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.SCOUT * categories.AIR}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
         },
         BuilderType = 'Air',
@@ -44,7 +44,7 @@ BuilderGroup {
         Priority = 900,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.7 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.SCOUT * categories.AIR}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.SCOUT * categories.AIR}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
         },
         BuilderType = 'Air',

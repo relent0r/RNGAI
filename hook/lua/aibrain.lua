@@ -5024,19 +5024,22 @@ AIBrain = Class(RNGAIBrainClass) {
         while true do
             local massStorage = GetEconomyStored( self, 'MASS')
             local energyStorage = GetEconomyStored( self, 'ENERGY')
+            local gameTime = GetGameTimeSeconds()
             local CoreMassNumberAchieved = false
-            if self.EcoManager.EcoPowerPreemptive or self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 or self.EngineerAssistManagerFocusPower then
+            if (gameTime < 300 and self.EconomyOverTimeCurrent.MassIncome < 2.5) then
+                state = 'Energy'
+                RNGLOG('Assist Focus is Factory and Energy Completion')
+                self.EngineerAssistManagerPriorityTable = {
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
+                    {cat = categories.STRUCTURE * categories.DEFENSE, type = 'Completion' }, 
+                }
+            elseif self.EcoManager.EcoPowerPreemptive or self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 or self.EngineerAssistManagerFocusPower then
                 state = 'Energy'
                 --RNGLOG('Assist Focus is Energy')
                 self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
-                    {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
-                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade' }, 
-                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
-                    {cat = categories.FACTORY * categories.AIR, type = 'AssistFactory'}, 
-                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
-                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
                 }
             elseif self.EngineerAssistManagerFocusSnipe then
                 state = 'Snipe'
