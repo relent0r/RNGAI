@@ -3422,18 +3422,16 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     -- minimumValue : I want to make sure that whatever we shoot at it either an ACU or is worth more than the missile we just built.
     local minimumValue = 0
     local targetPositions = {}
-    local acuThreatTable = aiBrain:GetThreatsAroundPosition(platoonPosition, 16, true, 'Commander')
     local validPosition = false
-    for _, threat in acuThreatTable do
-        if threat[3] > 0 then
-            local unitsAtLocation = GetUnitsAroundPoint(aiBrain, categories.COMMAND, {threat[1], 0, threat[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
-            for _, unit in unitsAtLocation do
-                if not unit.Dead then
-                    RNGINSERT(targetPositions, {unit:GetPosition(), type = 'COMMAND'})
-                end
+
+    for k, v in aiBrain.EnemyIntel.ACU do
+        if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
+            if RUtils.HaveUnitVisual(aiBrain, v.Unit, true) then
+                RNGINSERT(targetPositions, {v.Position, type = 'COMMAND'})
             end
         end
     end
+
     --RNGLOG(' ACUs detected are '..table.getn(targetPositions))
 
     if RNGGETN(targetPositions) > 0 then
@@ -3463,7 +3461,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     for _, x in enemyBases do
         for _, z in x do
             if z.StructuresNotMex then
-                local threatTable = aiBrain:GetThreatsAroundPosition(z.Position, 1, true, 'Economy')
+                local threatTable = aiBrain:GetThreatsAroundPosition(z.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Economy')
                 if RNGGETN(threatTable) ~= 0 then
                     if threatTable[1][3] > maxBaseThreat then
                         maxBaseThreat = threatTable[1][3]
@@ -3494,13 +3492,11 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
                 if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE * categories.SILO, v) then
                     --RNGLOG('Found SMD')
                     if not aiBrain.EnemyIntel.SMD[v.Sync.id] then
-                        aiBrain.EnemyIntel.SMD[v.Sync.id] = {object = v, Position=unitPos }
+                        aiBrain.EnemyIntel.SMD[v.Sync.id] = {object = v, Position=unitPos , Detected=GetGameTimeSeconds()}
                     end
                     if v:GetFractionComplete() == 1 then
-                        for _, weapon in ALLBPS[v.UnitId].Weapon do
-                            if weapon.MaxRadius then
-                                RNGINSERT(SMDPositions, { Position = unitPos, Radius = weapon.MaxRadius})
-                            end
+                        if aiBrain.EnemyIntel.SMD[v.Sync.id].Detected + 240 < GetGameTimeSeconds() then
+                            RNGINSERT(SMDPositions, { Position = unitPos, Radius = ALLBPS[v.UnitId].Weapon[1].MaxRadius})
                         end
                         --RNGLOG('AntiNuke present at location')
                     end
@@ -3522,16 +3518,31 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
 
     if bestBaseThreat[bestThreat] then
         local bestPos = {0, 0, 0}
-        local maxUnits = 0
+        local maxValue = 0
         local lookAroundTable = {-2, -1, 0, 1, 2}
         local squareRadius = (ScenarioInfo.size[1] / 16) / RNGGETN(lookAroundTable)
         for ix, offsetX in lookAroundTable do
             for iz, offsetZ in lookAroundTable do
-                local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, {bestBaseThreat[bestThreat][1] + offsetX*squareRadius, 0, bestBaseThreat[bestThreat][2]+offsetZ*squareRadius}, squareRadius, 'Enemy')
-                local numUnits = RNGGETN(unitsAtLocation)
-                if numUnits > maxUnits then
-                    maxUnits = numUnits
-                    bestPos = table.copy(unitsAtLocation[1]:GetPosition())
+                local searchPos = {bestBaseThreat[bestThreat][1] + offsetX*squareRadius, 0, bestBaseThreat[bestThreat][2]+offsetZ*squareRadius}
+                local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, searchPos, squareRadius, 'Enemy')
+                local currentValue = 0
+                for _, v in unitsAtLocation do
+                    if ALLBPS[v.UnitId].Economy.BuildCostMass then
+                        currentValue = currentValue + ALLBPS[v.UnitId].Economy.BuildCostMass
+                    end
+                end
+                local smdCovered = false
+                if currentValue > maxValue then
+                    maxValue = currentValue
+                    for _, v in SMDPositions do
+                        if VDist3Sq(searchPos, v.Position) < v.Radius then
+                            smdCovered = true
+                            break
+                        end
+                    end
+                    if not smdCovered then
+                       bestPos = table.copy(unitsAtLocation[1]:GetPosition())
+                    end
                 end
             end
         end
