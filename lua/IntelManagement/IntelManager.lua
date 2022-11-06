@@ -1933,6 +1933,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
         Intel = {},
         Defense = {},
         Factory = {},
+        Experimental = {},
         Mass = {},
         Combat = {},
     }

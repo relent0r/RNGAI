@@ -147,6 +147,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, aiBrain.CDRUnit.Position, self, 'Attack', 80, atkPri, false)
                 end
             end
+
             if not PlatoonExists(aiBrain, self) then
                 return
             end
@@ -7280,6 +7281,12 @@ Platoon = Class(RNGAIPlatoonClass) {
         while PlatoonExists(aiBrain, self) do
             --RNGLOG('Feeder starting loop')
             if platoonType == 'fighter' then
+                for _, v in GetPlatoonUnits(self) do
+                    if v.Loading then
+                        RNGLOG('Fighter unit should be refueling')
+                        coroutine.yield( 60 )
+                    end
+                end
                 local targetPlatoon = self:GetClosestPlatoonRNG('AirHuntAIRNG', 62500)
                 if not targetPlatoon then
                     feederTimeout = feederTimeout + 1
@@ -8999,7 +9006,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 self.MaxPlatoonDPS = GetPlatoonDPS(self)
                 RNGLOG('Max platoon dps is '..self.MaxPlatoonDPS)
             end
-            target = aiBrain:CheckDirectorTargetAvailable('Strategic', nil, 'SATELLITE', nil, self.MaxPlatoonDPS, platoonPosition)
+            target = aiBrain:CheckDirectorTargetAvailable('Strategic', nil, 'SATELLITE', nil, self.MaxPlatoonDPS)
             if not target then
                 target = AIUtils.AIFindUndefendedBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri)
             end

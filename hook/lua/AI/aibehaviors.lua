@@ -3432,7 +3432,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
         end
     end
 
-    --RNGLOG(' ACUs detected are '..table.getn(targetPositions))
+    RNGLOG(' ACUs detected are '..table.getn(targetPositions))
 
     if RNGGETN(targetPositions) > 0 then
         for _, pos in targetPositions do
@@ -3471,6 +3471,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
             end
         end
     end
+    RNGLOG('Bestbase threat '..repr(bestBaseThreat))
 
     if not bestBaseThreat then
         -- No threat
@@ -3490,7 +3491,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
                 numunits = numunits + 1
                 local unitPos = v:GetPosition()
                 if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE * categories.SILO, v) then
-                    --RNGLOG('Found SMD')
+                    RNGLOG('Found SMD')
                     if not aiBrain.EnemyIntel.SMD[v.Sync.id] then
                         aiBrain.EnemyIntel.SMD[v.Sync.id] = {object = v, Position=unitPos , Detected=GetGameTimeSeconds()}
                     end
@@ -3498,7 +3499,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
                         if aiBrain.EnemyIntel.SMD[v.Sync.id].Detected + 240 < GetGameTimeSeconds() then
                             RNGINSERT(SMDPositions, { Position = unitPos, Radius = ALLBPS[v.UnitId].Weapon[1].MaxRadius})
                         end
-                        --RNGLOG('AntiNuke present at location')
+                        RNGLOG('AntiNuke present at location')
                     end
                     if 3 > platoon.ReadySMLCount then
                         break
@@ -3547,6 +3548,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
             end
         end
         if bestPos[1] ~= 0 and bestPos[3] ~= 0 then
+            RNGLOG('Best pos found with a mass value of '..maxValue)
             return bestPos
         end
     end
@@ -3654,7 +3656,9 @@ function AirStagingThreadRNG(unit)
         local refueledUnits = {}
         for _, v in unit.Refueling do
             if not v.Dead and v:GetFuelRatio() > 0.9 and v:GetHealthPercent() > 0.9 then
-                --RNGLOG('Unit not dead and fuel + health is above 0.9 '..v.Sync.id)
+                RNGLOG('Unit not dead and fuel + health is above 0.9 '..v.Sync.id)
+                RNGLOG('Fueld Ratio is '..v:GetFuelRatio())
+                RNGLOG('Health Percent is '..v:GetHealthPercent())
                 numUnits = numUnits + 1
                 RNGINSERT(refueledUnits, v)
             end

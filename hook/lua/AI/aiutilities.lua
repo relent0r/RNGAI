@@ -1075,15 +1075,15 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
                     local totalShieldHealth = 0
                     for _, sUnit in shieldUnits do
                         if not sUnit.Dead and sUnit.MyShield then
-                            if sUnit.bp.Defense.ShieldSize and VDist3Sq(unitPos, sUnit:GetPosition()) < sUnit.bp.Defense.ShieldSize then
+                            if sUnit.bp.Defense.ShieldSize and VDist3Sq(unitPos, sUnit:GetPosition()) < sUnit.bp.Defense.ShieldSize and sUnit.MyShield.GetHealth then
                                 totalShieldHealth = totalShieldHealth + sUnit.MyShield:GetHealth()
                             end
                         end
                     end
                     RNGLOG('Satellite looking for target found shield')
                     RNGLOG('Satellite max dps '..platoon.MaxPlatoonDPS..' total shield health '..totalShieldHealth)
-                    RNGLOG('Satellite max dps divided by shield health should be less than 15 '..(platoon.MaxPlatoonDPS/totalShieldHealth))
                     if totalShieldHealth > 0 then
+                        RNGLOG('Satellite max dps divided by shield health should be less than 12 '..(platoon.MaxPlatoonDPS/totalShieldHealth))
                         if (platoon.MaxPlatoonDPS / totalShieldHealth) < 12 then
                             retUnit = unit
                             distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])

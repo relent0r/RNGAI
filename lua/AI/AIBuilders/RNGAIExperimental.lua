@@ -528,6 +528,7 @@ BuilderGroup {
             SearchRadius = 6000,
             UnitType = 'SATELLITE',
             PrioritizedCategories = { 
+                categories.STRUCTURE * categories.ANTIMISSILE * categories.TECH3, 
                 categories.MASSEXTRACTION * categories.STRUCTURE * categories.TECH3,
                 categories.MASSEXTRACTION * categories.STRUCTURE * categories.TECH2, 
                 categories.MASSEXTRACTION * categories.STRUCTURE, 
@@ -537,7 +538,6 @@ BuilderGroup {
                 categories.STRUCTURE * categories.NUKE * categories.TECH3, 
                 categories.EXPERIMENTAL * categories.ORBITALSYSTEM, 
                 categories.EXPERIMENTAL * categories.ENERGYPRODUCTION * categories.STRUCTURE, 
-                categories.STRUCTURE * categories.ANTIMISSILE * categories.TECH3, 
                 categories.TECH3 * categories.MASSFABRICATION, 
                 categories.TECH3 * categories.ENERGYPRODUCTION, 
                 categories.STRUCTURE * categories.STRATEGIC, 

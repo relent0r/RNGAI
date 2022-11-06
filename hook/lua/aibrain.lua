@@ -3518,6 +3518,7 @@ AIBrain = Class(RNGAIBrainClass) {
             'AntiAir',
             'Naval',
             'StructuresNotMex',
+            'Experimental',
             'AntiSurface'
         }
         -- Get threats for each threat type listed on the threatTypes table. Full map scan.
