@@ -287,7 +287,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1ResourceEngineer 2000 Floating',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 910,
-        InstanceCount = 2,
+        InstanceCount = 5,
         BuilderConditions = {
                 { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 100, 2000, -500, 2, 0, 'AntiSurface', 1}},
             },

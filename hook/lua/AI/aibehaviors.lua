@@ -3576,9 +3576,11 @@ function AirUnitRefitThreadRNG(unit, plan, data)
         local health = unit:GetHealthPercent()
         if not unit.Loading and (fuel < 0.2 or health < 0.4) then
             -- Find air stage
+            RNGLOG('AirStaging behavior triggered ')
             if aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) > 0 then
                 local unitPos = unit:GetPosition()
                 local plats = AIUtils.GetOwnUnitsAroundPoint(aiBrain, categories.AIRSTAGINGPLATFORM, unitPos, 400)
+                RNGLOG('AirStaging Units found '..table.getn(plats))
                 if RNGGETN(plats) > 0 then
                     local closest, distance
                     for _, v in plats do
@@ -3589,7 +3591,7 @@ function AirUnitRefitThreadRNG(unit, plan, data)
                             end
                             if roomAvailable then
                                 local platPos = v:GetPosition()
-                                local tempDist = VDist2(unitPos[1], unitPos[3], platPos[1], platPos[3])
+                                local tempDist = VDist2Sq(unitPos[1], unitPos[3], platPos[1], platPos[3])
                                 if not closest or tempDist < distance then
                                     closest = v
                                     distance = tempDist
@@ -3600,11 +3602,13 @@ function AirUnitRefitThreadRNG(unit, plan, data)
                     if closest then
                         local plat = aiBrain:MakePlatoon('', '')
                         aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
+                        coroutine.yield(5)
                         IssueStop({unit})
                         IssueClearCommands({unit})
                         IssueTransportLoad({unit}, closest)
+                        RNGLOG('Transport load issued')
                         if EntityCategoryContains(categories.AIRSTAGINGPLATFORM, closest) and not closest.AirStaging then
-                            --RNGLOG('Air Refuel Forking AirStaging Thread for fighter')
+                            RNGLOG('Air Refuel Forking AirStaging Thread for fighter')
                             closest.AirStaging = closest:ForkThread(AirStagingThreadRNG)
                             closest.Refueling = {}
                         elseif EntityCategoryContains(categories.CARRIER, closest) and not closest.CarrierStaging then
@@ -3614,7 +3618,11 @@ function AirUnitRefitThreadRNG(unit, plan, data)
                         RNGINSERT(closest.Refueling, unit)
                         unit.Loading = true
                     end
+                else
+                    RNGLOG('No AirStaging Units found in range')
                 end
+            else
+                RNGLOG('No AirStaging Units found')
             end
         end
         coroutine.yield(15)
@@ -3656,9 +3664,9 @@ function AirStagingThreadRNG(unit)
         local refueledUnits = {}
         for _, v in unit.Refueling do
             if not v.Dead and v:GetFuelRatio() > 0.9 and v:GetHealthPercent() > 0.9 then
-                RNGLOG('Unit not dead and fuel + health is above 0.9 '..v.Sync.id)
-                RNGLOG('Fueld Ratio is '..v:GetFuelRatio())
-                RNGLOG('Health Percent is '..v:GetHealthPercent())
+                --RNGLOG('Unit not dead and fuel + health is above 0.9 '..v.Sync.id)
+                --RNGLOG('Fueld Ratio is '..v:GetFuelRatio())
+                --RNGLOG('Health Percent is '..v:GetHealthPercent())
                 numUnits = numUnits + 1
                 RNGINSERT(refueledUnits, v)
             end
@@ -3667,49 +3675,48 @@ function AirStagingThreadRNG(unit)
         if numUnits > 0 then
             --RNGLOG('platform has refueled units but ready was set to false, attempting to depart them anyway')
             --RNGLOG('Number of units in refueldedUnits '..table.getn(refueledUnits))
-            if next(refueledUnits) then
-                local tableRebuild = false
-                for k, v in refueledUnits do
-                    if not v.Dead then
-                        local pos = unit:GetPosition()
-                        if v:IsIdleState() and not v:IsUnitState('Attached') then
-                            --RNGLOG('Attempting to add to AirHuntAI Platoon')
-                            v.Loading = false
-                            local plat
-                            if not v.PlanName then
-                                --RNGLOG('Air Refuel unit has no plan, assigning AirHuntAIRNG ')
-                                plat = aiBrain:MakePlatoon('', 'AirHuntAIRNG')
-                            else
-                            --RNGLOG('Air Refuel unit has plan name of '..v.PlanName)
-                                plat = aiBrain:MakePlatoon('', v.PlanName)
-                            end
-                            if v.PlatoonData then
-                            --RNGLOG('Air Refuel unit has platoon data, reassigning ')
-                                plat.PlatoonData = {}
-                                plat.PlatoonData = v.PlatoonData
-                            end
-                            aiBrain:AssignUnitsToPlatoon(plat, {v}, 'Attack', 'GrowthFormation')
-                        elseif v:IsUnitState('Attached') then
-                            IssueClearCommands({unit})
-                            IssueTransportUnload({unit}, {pos[1] + 5, pos[2], pos[3] + 5})
-                            coroutine.yield(20)
-                            --RNGLOG('Attempting to add to AirHuntAI Platoon')
-                            v.Loading = false
-                            local plat
-                            if not v.PlanName then
-                                --RNGLOG('Air Refuel unit has no plan, assigning AirHuntAIRNG ')
-                                plat = aiBrain:MakePlatoon('', 'AirHuntAIRNG')
-                            else
-                            --RNGLOG('Air Refuel unit has plan name of '..v.PlanName)
-                                plat = aiBrain:MakePlatoon('', v.PlanName)
-                            end
-                            if v.PlatoonData then
-                            --RNGLOG('Air Refuel unit has platoon data, reassigning ')
-                                plat.PlatoonData = {}
-                                plat.PlatoonData = v.PlatoonData
-                            end
-                            aiBrain:AssignUnitsToPlatoon(plat, {v}, 'Attack', 'GrowthFormation')
+            local tableRebuild = false
+            for k, v in refueledUnits do
+                if not v.Dead then
+                    local pos = unit:GetPosition()
+                    if v:IsIdleState() and not v:IsUnitState('Attached') then
+                        --RNGLOG('Attempting to add to AirHuntAI Platoon')
+                        v.Loading = false
+                        local plat
+                        if not v.PlanName then
+                            --RNGLOG('Air Refuel unit has no plan, assigning AirHuntAIRNG ')
+                            plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
+                        else
+                        --RNGLOG('Air Refuel unit has plan name of '..v.PlanName)
+                            plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
                         end
+                        if v.PlatoonData then
+                        --RNGLOG('Air Refuel unit has platoon data, reassigning ')
+                            plat.PlatoonData = {}
+                            plat.PlatoonData = v.PlatoonData
+                        end
+                        aiBrain:AssignUnitsToPlatoon(plat, {v}, 'Attack', 'GrowthFormation')
+                    elseif v:IsUnitState('Attached') then
+                        --RNGLOG('Air Unit Still attached, force unload')
+                        IssueClearCommands({unit})
+                        IssueTransportUnload({unit}, {pos[1] + 5, pos[2], pos[3] + 5})
+                        coroutine.yield(20)
+                        --RNGLOG('Attempting to add to AirHuntAI Platoon')
+                        v.Loading = false
+                        local plat
+                        if not v.PlanName then
+                            --RNGLOG('Force Unload Air Refuel unit has no plan, assigning AirHuntAIRNG ')
+                            plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
+                        else
+                        --RNGLOG('Force Unload Air Refuel unit has plan name of '..v.PlanName)
+                            plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
+                        end
+                        if v.PlatoonData then
+                        --RNGLOG('Air Refuel unit has platoon data, reassigning ')
+                            plat.PlatoonData = {}
+                            plat.PlatoonData = v.PlatoonData
+                        end
+                        aiBrain:AssignUnitsToPlatoon(plat, {v}, 'Attack', 'GrowthFormation')
                     end
                 end
             end

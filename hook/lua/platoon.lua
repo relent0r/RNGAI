@@ -7275,18 +7275,12 @@ Platoon = Class(RNGAIPlatoonClass) {
     FeederPlatoon = function(self)
 
         local platoonType = self.PlatoonData.PlatoonType
-        local platoonSearchRange = self.PlatoonData.PlatoonSearchRange * self.PlatoonData.PlatoonSearchRange
+        --local platoonSearchRange = self.PlatoonData.PlatoonSearchRange * self.PlatoonData.PlatoonSearchRange or 250000
         local aiBrain = self:GetBrain()
         local feederTimeout = 0
         while PlatoonExists(aiBrain, self) do
             --RNGLOG('Feeder starting loop')
             if platoonType == 'fighter' then
-                for _, v in GetPlatoonUnits(self) do
-                    if v.Loading then
-                        RNGLOG('Fighter unit should be refueling')
-                        coroutine.yield( 60 )
-                    end
-                end
                 local targetPlatoon = self:GetClosestPlatoonRNG('AirHuntAIRNG', 62500)
                 if not targetPlatoon then
                     feederTimeout = feederTimeout + 1
@@ -7324,6 +7318,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 end
                                 if VDist3Sq(GetPlatoonPosition(self), GetPlatoonPosition(targetPlatoon)) < 900 then
                                     aiBrain:AssignUnitsToPlatoon(targetPlatoon, GetPlatoonUnits(self), 'Attack', 'None')
+                                    coroutine.yield(5)
                                     return
                                 end
                                 coroutine.yield(20)
@@ -7331,6 +7326,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                     end
                 end
+            else
+                return self:SetAIPlanRNG('ReturnToBaseAIRNG', true)
             end
             coroutine.yield(30)
         end
@@ -8755,12 +8752,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                     self:PlatoonDisbandNoAssign()
                     return
                 end
-                --[[
-                -- This is for the next faf update
+                -- Add the terrain hit callback
                 if not tml.terraincallbackset then
                     tml:AddMissileImpactTerrainCallback(missileTerrainCallbackRNG)
                     tml.terraincallbackset = true
-                end]]
+                end
                 tml:SetAutoMode(true)
                 IssueClearCommands({tml})
             end
