@@ -193,6 +193,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 while PlatoonExists(aiBrain, self) do
                     coroutine.yield(20)
                     currentPlatPos = GetPlatoonPosition(self)
+                    platoonUnits = GetPlatoonUnits(self)
                     if aggressiveMovement then
                         IssueClearCommands(platoonUnits)
                         self:AggressiveMoveToLocation(targetPos)
