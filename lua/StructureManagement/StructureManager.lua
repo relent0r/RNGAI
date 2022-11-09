@@ -250,7 +250,7 @@ StructureManager = Class {
                 if manager.FactoryManager.FactoryList and RNGGETN(manager.FactoryManager.FactoryList) > 0 then
                     for c, unit in manager.FactoryManager.FactoryList do
                         local unitCat = unit.Blueprint.CategoriesHash
-                        if not unit.Dead and not unit:BeenDestroyed() then
+                        if not IsDestroyed(unit) then
                             if unitCat.LAND then
                                 if unitCat.TECH1 then
                                     RNGINSERT(FactoryData.T1LAND, unit)
@@ -995,7 +995,7 @@ StructureManager = Class {
             IssueUpgrade({unit}, upgradeID)
             
             coroutine.yield(2)
-            if not unit.Dead and not unit:BeenDestroyed() then
+            if not IsDestroyed(unit) then
                 local upgradedFactory = unit.UnitBeingBuilt
                 local fractionComplete = upgradedFactory:GetFractionComplete()
                 unit.Upgrading = true
@@ -1006,7 +1006,7 @@ StructureManager = Class {
                     self.Brain.EngineerAssistManagerFocusAirUpgrade = true
                     
                 end
-                while upgradedFactory and not upgradedFactory.Dead and not upgradedFactory:BeenDestroyed() and fractionComplete < 1 do
+                while upgradedFactory and not IsDestroyed(upgradedFactory) and fractionComplete < 1 do
                     fractionComplete = upgradedFactory:GetFractionComplete()
                     coroutine.yield(20)
                 end
@@ -1374,7 +1374,7 @@ StructureManager = Class {
         local armyIndex = aiBrain:GetArmyIndex()
         -- loop over all units and search for upgrading units
         for _, extractor in extractors do
-            if not extractor.Dead and not extractor:BeenDestroyed() and extractor:GetAIBrain():GetArmyIndex() == armyIndex and extractor:GetFractionComplete() == 1 then
+            if not IsDestroyed(extractor) and extractor:GetAIBrain():GetArmyIndex() == armyIndex and extractor:GetFractionComplete() == 1 then
                 if not extractor.InitialDelayStarted then
                     self:ForkThread(self.ExtractorInitialDelay, aiBrain, extractor)
                 end
