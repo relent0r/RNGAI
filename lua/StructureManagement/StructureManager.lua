@@ -1068,12 +1068,12 @@ StructureManager = Class {
             end
             if aiBrain.EcoManager.CoreMassPush and extractorsDetail.TECH2Upgrading < 1 and aiBrain.cmanager.income.r.m > (140 * aiBrain.EcoManager.EcoMultiplier) then
                 --LOG('Trigger all tiers true')
-                self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
+                self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                 coroutine.yield(60)
                 continue
             end
             if massStorage > 2500 and energyStorage > 8000 and extractorsDetail.TECH2Upgrading < 1 then
-                self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
+                self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                 coroutine.yield(60)
                 continue
             end
@@ -1087,13 +1087,13 @@ StructureManager = Class {
                         --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
                         if (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.2) and upgradeSpend - totalSpend > aiBrain.EcoManager.T3ExtractorSpend then
                             --RNGLOG('Extractor Ratio of T1 to T2 is >= 1.1 and and upgradeSpend - totalSpend > aiBrain.EcoManager.T3ExtractorSpend')
-                            self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
+                            self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         elseif (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7) or upgradeSpend < 15 then
                             --RNGLOG('Extractor Ratio of T1 to T2 is >= 1.5 or upgrade spend under 15')
-                            self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, false)
+                            self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                         else
                             --RNGLOG('Else all tiers upgrade')
-                            self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
+                            self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         end
                         coroutine.yield(30)
                     --end
@@ -1103,7 +1103,7 @@ StructureManager = Class {
             elseif extractorsDetail.TECH1Upgrading < 5 and massStorage > 150 and upgradeTrigger then
                 if totalSpend < upgradeSpend and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                     --RNGLOG('We Could upgrade a non t2 extractor now with over time')
-                    self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, false)
+                    self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                     coroutine.yield(60)
                 end
             elseif massStorage > 500 and energyStorage > 3000 and extractorsDetail.TECH2Upgrading < 2 then
@@ -1119,10 +1119,10 @@ StructureManager = Class {
                         --RNGLOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
                         if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.5 or upgradeSpend < 15 then
                             --LOG('Trigger all tiers false')
-                            self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, false)
+                            self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                         else
                             --LOG('Trigger all tiers true')
-                            self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
+                            self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         end
                         coroutine.yield(30)
                     end
@@ -1140,7 +1140,7 @@ StructureManager = Class {
                     if energyEfficiency >= 0.8 and massEfficiency >= 0.8 then
                         --RNGLOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
                         --RNGLOG('Trigger all tiers true')
-                        self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
+                        self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         coroutine.yield(30)
                     end
                     coroutine.yield(30)
@@ -1166,7 +1166,7 @@ StructureManager = Class {
         return defended
     end,
     
-    ValidateExtractorUpgradeRNG = function(self, aiBrain, ALLBPS, extractorTable, allTiers)
+    ValidateExtractorUpgradeRNG = function(self, aiBrain, extractorTable, allTiers)
         --LOG('ValidateExtractorUpgrade Stuff')
         local UnitPos
         local DistanceToBase
@@ -1234,7 +1234,7 @@ StructureManager = Class {
                     aiBrain.CentralBrainExtractorUnitUpgradeClosest = lowestUnit
                 end
                 --RNGLOG('Closest Extractor')
-                self:ForkThread(self.UpgradeExtractorRNG, aiBrain, ALLBPS, lowestUnit, LowestDistanceToBase)
+                self:ForkThread(self.UpgradeExtractorRNG, aiBrain, lowestUnit, LowestDistanceToBase)
             else
                 --RNGLOG('There is no lowestUnit')
             end
