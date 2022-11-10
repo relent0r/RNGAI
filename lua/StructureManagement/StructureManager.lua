@@ -381,8 +381,8 @@ StructureManager = Class {
                     if not closestBase or baseDistance < closestBase then
                         local factoryList = v.FactoryManager.FactoryList
                         if factoryList then
-                            for c, b in factoryList do
-                                if ALLBPS[b.UnitId].CategoriesHash[type] and ALLBPS[b.UnitId].CategoriesHash[tech] then
+                            for _, b in factoryList do
+                                if b.Blueprint.CategoriesHash[type] and b.Blueprint.CategoriesHash[tech] then
                                     --RNGLOG('Found correct tech factory manager')
                                     --RNGLOG('This should upgrade now')
                                     closestBase = v
@@ -406,9 +406,9 @@ StructureManager = Class {
         local lowestUnit
         if factoryList then
             for _, fact in factoryList do
-                if fact and not fact.Dead and ALLBPS[fact.UnitId].CategoriesHash[type] and ALLBPS[fact.UnitId].CategoriesHash[tech] then
+                if fact and not fact.Dead and fact.Blueprint.CategoriesHash[type] and fact.Blueprint.CategoriesHash[tech] then
                     if hqFlag then
-                        if not ALLBPS[fact.UnitId].CategoriesHash.SUPPORTFACTORY then
+                        if not fact.Blueprint.CategoriesHash.SUPPORTFACTORY then
                             if not fact:IsUnitState('Upgrading') then
                                 unitPos = fact:GetPosition()
                                 DistanceToBase = VDist2Sq(basePosition[1] or 0, basePosition[3] or 0, unitPos[1] or 0, unitPos[3] or 0)
@@ -1376,37 +1376,37 @@ StructureManager = Class {
                 if not extractor.InitialDelayStarted then
                     self:ForkThread(self.ExtractorInitialDelay, aiBrain, extractor)
                 end
-                if ALLBPS[extractor.UnitId].CategoriesHash.TECH1 then
+                if extractor.Blueprint.CategoriesHash.TECH1 then
                     tech1Total = tech1Total + 1
                     if not aiBrain.EcoManager.T2ExtractorSpend then
                         local upgradeId = extractor.Blueprint.General.UpgradesTo
-                        aiBrain.EcoManager.T2ExtractorSpend = (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (ALLBPS[extractor.UnitId].Economy.BuildRate * multiplier))
+                        aiBrain.EcoManager.T2ExtractorSpend = (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (extractor.Blueprint.Economy.BuildRate * multiplier))
                     end
                     if extractor:IsUnitState('Upgrading') then
                         local upgradeId = extractor.Blueprint.General.UpgradesTo
-                        totalSpend = totalSpend +  (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (ALLBPS[extractor.UnitId].Economy.BuildRate * multiplier))
+                        totalSpend = totalSpend +  (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (extractor.Blueprint.Economy.BuildRate * multiplier))
                         extractor.Upgrading = true
                         tech1ExtNumBuilding = tech1ExtNumBuilding + 1
                     else
                         extractor.Upgrading = false
                         RNGINSERT(extractorTable.TECH1, extractor)
                     end
-                elseif ALLBPS[extractor.UnitId].CategoriesHash.TECH2 then
+                elseif extractor.Blueprint.CategoriesHash.TECH2 then
                     tech2Total = tech2Total + 1
                     if not aiBrain.EcoManager.T3ExtractorSpend then
                         local upgradeId = extractor.Blueprint.General.UpgradesTo
-                        aiBrain.EcoManager.T3ExtractorSpend = (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (ALLBPS[extractor.UnitId].Economy.BuildRate * multiplier))
+                        aiBrain.EcoManager.T3ExtractorSpend = (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (extractor.Blueprint.Economy.BuildRate * multiplier))
                     end
                     if extractor:IsUnitState('Upgrading') then
                         local upgradeId = extractor.Blueprint.General.UpgradesTo
-                        totalSpend = totalSpend + (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (ALLBPS[extractor.UnitId].Economy.BuildRate * multiplier))
+                        totalSpend = totalSpend + (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (extractor.Blueprint.Economy.BuildRate * multiplier))
                         extractor.Upgrading = true
                         tech2ExtNumBuilding = tech2ExtNumBuilding + 1
                     else
                         extractor.Upgrading = false
                         RNGINSERT(extractorTable.TECH2, extractor)
                     end
-                elseif ALLBPS[extractor.UnitId].CategoriesHash.TECH3 then
+                elseif extractor.Blueprint.CategoriesHash.TECH3 then
                     tech3Total = tech3Total + 1
                 end
             end
