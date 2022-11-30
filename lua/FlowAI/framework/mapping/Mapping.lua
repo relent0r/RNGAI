@@ -941,6 +941,7 @@ function SetMarkerInformation(aiBrain)
     for k,marker in expansionMarkers do
         local expand=false
         local mass=false
+        local node=false
         --RNGLOG(repr(k)..' marker type is '..repr(marker.type))
         for i, v in STR_GetTokens(marker.type,' ') do
             if v=='Node' then
@@ -1038,7 +1039,7 @@ function SetMarkerInformation(aiBrain)
     ScenarioInfo.MarkersInfectedRNG = true
 end
 function InfectMarkersRNG(aiBrain,marker,nodekey)
-    RNGLOG('InfectMarkersRNG triggered')
+    --RNGLOG('InfectMarkersRNG triggered')
     if marker then
         if RUtils.PositionInWater(marker.position) then
             local label, reason = NavUtils.GetLabel('Land', marker.position)
@@ -1048,7 +1049,7 @@ function InfectMarkersRNG(aiBrain,marker,nodekey)
             else
                 Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].RNGArea = label
                 Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].RNGLayer = 'Water'
-                RNGLOG('Infect Marker has had label added '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey]))
+                --RNGLOG('Infect Marker has had label added '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey]))
             end
         else
             local label, reason = NavUtils.GetLabel('Land', marker.position)
@@ -1058,7 +1059,7 @@ function InfectMarkersRNG(aiBrain,marker,nodekey)
             else
                 Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].RNGArea = label
                 Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].RNGLayer = 'Land'
-                RNGLOG('Infect Marker has had label added '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey]))
+                --RNGLOG('Infect Marker has had label added '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey]))
             end
         end
     else

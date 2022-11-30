@@ -4966,3 +4966,31 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid)
     end
     return false
 end
+
+GetPlatUnitEnemyBias = function(aiBrain, platoon)
+
+    local enemy = aiBrain:GetCurrentEnemy()
+    local closestUnit
+    if enemy then
+        local enemyX, enemyZ = enemy:GetArmyStartPos()
+        local closestDistance
+        for _, v in GetPlatoonUnits(platoon) do
+            if not v.Dead then
+                local unitPos = v:GetPosition()
+                local distance = VDist2Sq(unitPos[1], unitPos[3], enemyX, enemyZ)
+                if not closestUnit or VDist2Sq(unitPos[1], unitPos[3], enemyX, enemyZ) < closestDistance then
+                    closestUnit = v
+                    closestDistance = distance
+                end
+            end
+        end
+    else
+        for _, v in GetPlatoonUnits(platoon) do
+            if not v.Dead then
+                closestUnit = v
+                break
+            end
+        end
+    end
+    return closestUnit
+end

@@ -1011,8 +1011,8 @@ IntelManager = Class {
                     if not v.Ally and v.HP ~= 0 and v.Position[1] and v.LastSpotted + 120 > gameTime then
                         if v.HP < 12000 and minThreatRisk >= 50 and VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase / 2.2) then
                             if GetThreatBetweenPositions(self.Brain, self.Brain.BrainIntel.StartPos, v.Position, nil, threatType) < 5 then
-                                RNGLOG('ACU ClosestEnemy base distance is '..(self.Brain.EnemyIntel.ClosestEnemyBase /2))
-                                RNGLOG('ACU Distance from start position '..VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos))
+                                --RNGLOG('ACU ClosestEnemy base distance is '..(self.Brain.EnemyIntel.ClosestEnemyBase /2))
+                                --RNGLOG('ACU Distance from start position '..VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos))
                                 local gridX, gridZ = self:GetIntelGrid(v.Position)
                                 local scoutRequired = true
                                 if self.MapIntelGrid[gridX][gridZ].MustScout and self.MapIntelGrid[gridX][gridZ].ACUIndexes[k] then
@@ -1190,7 +1190,7 @@ IntelManager = Class {
                     if v.NavalUnits > 0 then
                         local gridX, gridZ = self:GetIntelGrid(self.Brain.BuilderManagers[k].FactoryManager.Location)
                         desiredStrikeDamage = desiredStrikeDamage + (v.NavalThreat * 150)
-                        RNGLOG('Naval Threat detected at base, requesting torps for '..desiredStrikeDamage..' strike damage')
+                        --RNGLOG('Naval Threat detected at base, requesting torps for '..desiredStrikeDamage..' strike damage')
                         table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'AntiNavy'} )
                     end
                 end
@@ -1281,7 +1281,7 @@ IntelManager = Class {
             end
         elseif type == 'AirAntiNaval' then
             if table.getn(potentialStrikes) > 0 then
-                RNGLOG('potentialStrikes for navy '..repr(potentialStrikes))
+                --RNGLOG('potentialStrikes for navy '..repr(potentialStrikes))
                 local count = math.ceil(desiredStrikeDamage / 1000)
                 local acuSnipe = false
                 local acuIndex = false
@@ -1304,7 +1304,7 @@ IntelManager = Class {
                     self.Brain.EngineerAssistManagerFocusSnipe = true
                 end
                 if navalAttack then
-                    RNGLOG('numer of navalAttack torps required '..count)
+                    --RNGLOG('numer of navalAttack torps required '..count)
                     self.Brain.amanager.Demand.Air.T2.torpedo = count
                 end
             else
@@ -1322,7 +1322,7 @@ IntelManager = Class {
                     self.Brain.EngineerAssistManagerFocusSnipe = false
                 end
             end
-            RNGLOG('Current T2 torpcount is '..self.Brain.amanager.Demand.Air.T2.torpedo)
+            --RNGLOG('Current T2 torpcount is '..self.Brain.amanager.Demand.Air.T2.torpedo)
         end
     end,
 }
@@ -1506,7 +1506,7 @@ ExpansionIntelScanRNG = function(aiBrain)
                 else
                     aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
                     aiBrain.BrainIntel.ExpansionWatchTable[k].RNGLayer = 'Land'
-                    RNGLOG('Expansion Marker has had label added '..repr(v))
+                    --RNGLOG('Expansion Marker has had label added '..repr(v))
                 end
             end
             if v.MassPoints > 2 then
@@ -1974,7 +1974,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
         for _, x in aiBrain.EnemyIntel.EnemyThreatLocations do
             for _, z in x do
                 if z['StructuresNotMex'] and (gameTime - z.UpdateTime) < 25 then
-                    RNGLOG('Enemy Threat Locations has a StructuresNotMex table')
+                    --RNGLOG('Enemy Threat Locations has a StructuresNotMex table')
                     -- position format as used by the engine
                     v = z.Position
                     -- retrieve units and shields that are in or overlap with the iMAP cell

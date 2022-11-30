@@ -398,7 +398,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             if not target or target.Dead then
                 --RNGLOG('Looking for target at radius '..maxRadius)
-                target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self.HoldingPosition, self, 'Attack', maxRadius, atkPri, avoidBases, self.CurrentPlatoonThreat)
+                target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, currentPlatPos, self, 'Attack', maxRadius, atkPri, avoidBases, self.CurrentPlatoonThreat)
                 if (not target or target.Dead) and acuCheck then
                     --RNGLOG('No target found at max radius, checking around acu as its active')
                     target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, aiBrain.CDRUnit.Position, self, 'Attack', 80, atkPri, false)
@@ -6331,7 +6331,12 @@ Platoon = Class(RNGAIPlatoonClass) {
             local Stuck = 0
             local targetCheck
             while PlatoonExists(aiBrain, self) do
-                PlatoonPosition = GetPlatoonPosition(self)
+                local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, self)
+                if platBiasUnit and not platBiasUnit.Dead then
+                    PlatoonPosition=platBiasUnit:GetPosition()
+                else
+                    PlatoonPosition=GetPlatoonPosition(self)
+                end
                 if not PlatoonPosition then return end
                 self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                 if self.ScoutUnit and (not self.ScoutUnit.Dead) then
@@ -6970,7 +6975,13 @@ Platoon = Class(RNGAIPlatoonClass) {
                 if aiBrain.RNGDEBUG then
                     RNGLOG('HUNTAIPATH movement loop')
                 end
-                local SquadPosition = self:GetSquadPosition('Attack') or nil
+                local SquadPosition
+                local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, self)
+                if platBiasUnit and not platBiasUnit.Dead then
+                    SquadPosition=platBiasUnit:GetPosition()
+                else
+                    SquadPosition=GetPlatoonPosition(self)
+                end
                 if not SquadPosition then break end
                 if self.ScoutUnit and (not self.ScoutUnit.Dead) then
                     IssueClearCommands({self.ScoutUnit})
@@ -7744,7 +7755,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 platPos = GetPlatoonPosition(self)
                                 local dist = VDist3Sq(platPos, path[i])
                                 if dist < 400 then
-                                    RNGLOG('returntobase platoon closer than 400 '..dist)
+                                    --RNGLOG('returntobase platoon closer than 400 '..dist)
                                     IssueClearCommands(GetPlatoonUnits(self))
                                     break
                                 end
@@ -8721,7 +8732,7 @@ Platoon = Class(RNGAIPlatoonClass) {
     TMLAIRNG = function(self)
         local aiBrain = self:GetBrain()
         -- This is for the next faf update
-        --local missileTerrainCallbackRNG = import('/mods/RNGAI/lua/AI/RNGEventCallbacks.lua').MissileCallbackRNG
+        local missileTerrainCallbackRNG = import('/mods/RNGAI/lua/AI/RNGEventCallbacks.lua').MissileCallbackRNG
         local platoonUnits
         local enemyShield = 0
         local targetHealth
@@ -9001,7 +9012,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             if merged then
                 --RNGLOG('Satellite has merged with new one')
                 self.MaxPlatoonDPS = GetPlatoonDPS(self)
-                RNGLOG('Max platoon dps is '..self.MaxPlatoonDPS)
+                --RNGLOG('Max platoon dps is '..self.MaxPlatoonDPS)
             end
             target = aiBrain:CheckDirectorTargetAvailable('Strategic', nil, 'SATELLITE', nil, self.MaxPlatoonDPS)
             if not target then
@@ -10541,6 +10552,7 @@ Platoon = Class(RNGAIPlatoonClass) {
     end,
 
     PathNavigationRNG = function(self)
+
         local function ExitConditions(self,aiBrain)
             if not self.path then
                 return true
@@ -10641,7 +10653,12 @@ Platoon = Class(RNGAIPlatoonClass) {
         local lastfinaldist=0
         local ALLBPS = __blueprints
         while not platoon.Dead and PlatoonExists(aiBrain, self) do
-            platoon.Pos=GetPlatoonPosition(platoon)
+            local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, self)
+            if platBiasUnit and not platBiasUnit.Dead then
+                platoon.Pos=platBiasUnit:GetPosition()
+            else
+                platoon.Pos=GetPlatoonPosition(platoon)
+            end
             if ExitConditions(self,aiBrain) then
                 platoon.navigating=false
                 platoon.path=false

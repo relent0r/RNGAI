@@ -5045,7 +5045,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local CoreMassNumberAchieved = false
             if (gameTime < 300 and self.EconomyOverTimeCurrent.MassIncome < 2.5) then
                 state = 'Energy'
-                RNGLOG('Assist Focus is Factory and Energy Completion')
+                --RNGLOG('Assist Focus is Factory and Energy Completion')
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 

@@ -3041,14 +3041,17 @@ FindExperimentalTargetRNG = function(self)
     end
 
     local bestUnit = false
+    local bestBase = false
     -- If we haven't found a target check the main bases radius for any units, 
     -- Check if there are any high priority units from the main base position. But only if we came online around that position.
     local platPos = self:GetPlatoonPosition()
     if platPos and VDist3Sq(platPos, aiBrain.BuilderManagers['MAIN'].Position) < 22500 then
         if not bestUnit then
             bestUnit = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
-            if bestUnit then
-                return bestUnit, nil
+            if bestUnit and not bestUnit.Dead then
+                bestBase = {}
+                bestBase.Position = bestUnit:GetPosition()
+                return bestUnit, bestBase
             end
         end
     end
@@ -3069,12 +3072,14 @@ FindExperimentalTargetRNG = function(self)
             end
         end
     end
-    if bestUnit then
-        return bestUnit, nil
+    if bestUnit and not bestUnit.Dead then
+        bestBase = {}
+        bestBase.Position = bestUnit:GetPosition()
+        return bestUnit, bestBase
     end
 
     local enemyBases = aiBrain.EnemyIntel.EnemyThreatLocations
-    local bestBase = false
+    
     local mostUnits = 0
     local highestMassValue = 0
     -- Now we look at bases of any sort and find the highest mass worth then selecting the most valuable unit in that base.
@@ -3322,10 +3327,10 @@ function ExpMoveToPosition(aiBrain, platoon, target, unit, ignoreUnits)
         for i=1, pathLength do
             if pathCheckRequired then
                 if VDist3Sq(unit:GetPosition(), path[pathLength]) < VDist3Sq(path[i], path[pathLength]) then
-                    RNGLOG('Experimental is closer to end of path than the current path iteration, skipping forward')
+                    --RNGLOG('Experimental is closer to end of path than the current path iteration, skipping forward')
                     continue
                 else
-                    RNGLOG('Experimental is further to end of path than the current path iteration, pathCheckRequired being set to false')
+                    --RNGLOG('Experimental is further to end of path than the current path iteration, pathCheckRequired being set to false')
                     pathCheckRequired = false
                 end
             end
@@ -3432,7 +3437,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
         end
     end
 
-    RNGLOG(' ACUs detected are '..table.getn(targetPositions))
+    --RNGLOG(' ACUs detected are '..table.getn(targetPositions))
 
     if RNGGETN(targetPositions) > 0 then
         for _, pos in targetPositions do
@@ -3471,7 +3476,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
             end
         end
     end
-    RNGLOG('Bestbase threat '..repr(bestBaseThreat))
+    --RNGLOG('Bestbase threat '..repr(bestBaseThreat))
 
     if not bestBaseThreat then
         -- No threat
@@ -3491,7 +3496,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
                 numunits = numunits + 1
                 local unitPos = v:GetPosition()
                 if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE * categories.SILO, v) then
-                    RNGLOG('Found SMD')
+                    --RNGLOG('Found SMD')
                     if not aiBrain.EnemyIntel.SMD[v.Sync.id] then
                         aiBrain.EnemyIntel.SMD[v.Sync.id] = {object = v, Position=unitPos , Detected=GetGameTimeSeconds()}
                     end
@@ -3499,7 +3504,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
                         if aiBrain.EnemyIntel.SMD[v.Sync.id].Detected + 240 < GetGameTimeSeconds() then
                             RNGINSERT(SMDPositions, { Position = unitPos, Radius = ALLBPS[v.UnitId].Weapon[1].MaxRadius})
                         end
-                        RNGLOG('AntiNuke present at location')
+                        --RNGLOG('AntiNuke present at location')
                     end
                     if 3 > platoon.ReadySMLCount then
                         break
@@ -3548,7 +3553,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
             end
         end
         if bestPos[1] ~= 0 and bestPos[3] ~= 0 then
-            RNGLOG('Best pos found with a mass value of '..maxValue)
+            --RNGLOG('Best pos found with a mass value of '..maxValue)
             return bestPos
         end
     end
@@ -3576,11 +3581,11 @@ function AirUnitRefitThreadRNG(unit, plan, data)
         local health = unit:GetHealthPercent()
         if not unit.Loading and (fuel < 0.2 or health < 0.4) then
             -- Find air stage
-            RNGLOG('AirStaging behavior triggered ')
+            --RNGLOG('AirStaging behavior triggered ')
             if aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) > 0 then
                 local unitPos = unit:GetPosition()
                 local plats = AIUtils.GetOwnUnitsAroundPoint(aiBrain, categories.AIRSTAGINGPLATFORM, unitPos, 400)
-                RNGLOG('AirStaging Units found '..table.getn(plats))
+                --RNGLOG('AirStaging Units found '..table.getn(plats))
                 if RNGGETN(plats) > 0 then
                     local closest, distance
                     for _, v in plats do
@@ -3603,12 +3608,11 @@ function AirUnitRefitThreadRNG(unit, plan, data)
                         local plat = aiBrain:MakePlatoon('', '')
                         aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
                         coroutine.yield(5)
-                        IssueStop({unit})
                         IssueClearCommands({unit})
                         IssueTransportLoad({unit}, closest)
-                        RNGLOG('Transport load issued')
+                        --RNGLOG('Transport load issued')
                         if EntityCategoryContains(categories.AIRSTAGINGPLATFORM, closest) and not closest.AirStaging then
-                            RNGLOG('Air Refuel Forking AirStaging Thread for fighter')
+                            --RNGLOG('Air Refuel Forking AirStaging Thread for fighter')
                             closest.AirStaging = closest:ForkThread(AirStagingThreadRNG)
                             closest.Refueling = {}
                         elseif EntityCategoryContains(categories.CARRIER, closest) and not closest.CarrierStaging then
@@ -3619,10 +3623,10 @@ function AirUnitRefitThreadRNG(unit, plan, data)
                         unit.Loading = true
                     end
                 else
-                    RNGLOG('No AirStaging Units found in range')
+                    --RNGLOG('No AirStaging Units found in range')
                 end
             else
-                RNGLOG('No AirStaging Units found')
+                --RNGLOG('No AirStaging Units found')
             end
         end
         coroutine.yield(15)
