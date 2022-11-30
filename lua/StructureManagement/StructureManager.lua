@@ -250,7 +250,7 @@ StructureManager = Class {
                 if manager.FactoryManager.FactoryList and RNGGETN(manager.FactoryManager.FactoryList) > 0 then
                     for c, unit in manager.FactoryManager.FactoryList do
                         local unitCat = unit.Blueprint.CategoriesHash
-                        if not unit.Dead and not unit:BeenDestroyed() then
+                        if not IsDestroyed(unit) then
                             if unitCat.LAND then
                                 if unitCat.TECH1 then
                                     RNGINSERT(FactoryData.T1LAND, unit)
@@ -381,8 +381,8 @@ StructureManager = Class {
                     if not closestBase or baseDistance < closestBase then
                         local factoryList = v.FactoryManager.FactoryList
                         if factoryList then
-                            for c, b in factoryList do
-                                if ALLBPS[b.UnitId].CategoriesHash[type] and ALLBPS[b.UnitId].CategoriesHash[tech] then
+                            for _, b in factoryList do
+                                if b.Blueprint.CategoriesHash[type] and b.Blueprint.CategoriesHash[tech] then
                                     --RNGLOG('Found correct tech factory manager')
                                     --RNGLOG('This should upgrade now')
                                     closestBase = v
@@ -406,9 +406,9 @@ StructureManager = Class {
         local lowestUnit
         if factoryList then
             for _, fact in factoryList do
-                if fact and not fact.Dead and ALLBPS[fact.UnitId].CategoriesHash[type] and ALLBPS[fact.UnitId].CategoriesHash[tech] then
+                if fact and not fact.Dead and fact.Blueprint.CategoriesHash[type] and fact.Blueprint.CategoriesHash[tech] then
                     if hqFlag then
-                        if not ALLBPS[fact.UnitId].CategoriesHash.SUPPORTFACTORY then
+                        if not fact.Blueprint.CategoriesHash.SUPPORTFACTORY then
                             if not fact:IsUnitState('Upgrading') then
                                 unitPos = fact:GetPosition()
                                 DistanceToBase = VDist2Sq(basePosition[1] or 0, basePosition[3] or 0, unitPos[1] or 0, unitPos[3] or 0)
@@ -930,8 +930,8 @@ StructureManager = Class {
         local supportUpgradeID
         local followupUpgradeID = false
         --RNGLOG('Factory to upgrade unit id is '..unit.UnitId)
-        local upgradeID = ALLBPS[unit.UnitId].General.UpgradesTo
-        --RNGLOG('Upgrade ID for unit is '..ALLBPS[unit.UnitId].General.UpgradesTo)
+        local upgradeID = unit.Blueprint.General.UpgradesTo
+        --RNGLOG('Upgrade ID for unit is '..unit.Blueprint.General.UpgradesTo)
         if upgradeID then
             if ALLBPS[upgradeID].General.UpgradesTo then
                 followupUpgradeID = ALLBPS[upgradeID].General.UpgradesTo
@@ -995,7 +995,7 @@ StructureManager = Class {
             IssueUpgrade({unit}, upgradeID)
             
             coroutine.yield(2)
-            if not unit.Dead and not unit:BeenDestroyed() then
+            if not IsDestroyed(unit) then
                 local upgradedFactory = unit.UnitBeingBuilt
                 local fractionComplete = upgradedFactory:GetFractionComplete()
                 unit.Upgrading = true
@@ -1006,7 +1006,7 @@ StructureManager = Class {
                     self.Brain.EngineerAssistManagerFocusAirUpgrade = true
                     
                 end
-                while upgradedFactory and not upgradedFactory.Dead and not upgradedFactory:BeenDestroyed() and fractionComplete < 1 do
+                while upgradedFactory and not IsDestroyed(upgradedFactory) and fractionComplete < 1 do
                     fractionComplete = upgradedFactory:GetFractionComplete()
                     coroutine.yield(20)
                 end
@@ -1068,12 +1068,12 @@ StructureManager = Class {
             end
             if aiBrain.EcoManager.CoreMassPush and extractorsDetail.TECH2Upgrading < 1 and aiBrain.cmanager.income.r.m > (140 * aiBrain.EcoManager.EcoMultiplier) then
                 --LOG('Trigger all tiers true')
-                self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
+                self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                 coroutine.yield(60)
                 continue
             end
             if massStorage > 2500 and energyStorage > 8000 and extractorsDetail.TECH2Upgrading < 1 then
-                self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
+                self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                 coroutine.yield(60)
                 continue
             end
@@ -1087,13 +1087,13 @@ StructureManager = Class {
                         --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
                         if (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.2) and upgradeSpend - totalSpend > aiBrain.EcoManager.T3ExtractorSpend then
                             --RNGLOG('Extractor Ratio of T1 to T2 is >= 1.1 and and upgradeSpend - totalSpend > aiBrain.EcoManager.T3ExtractorSpend')
-                            self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
+                            self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         elseif (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7) or upgradeSpend < 15 then
                             --RNGLOG('Extractor Ratio of T1 to T2 is >= 1.5 or upgrade spend under 15')
-                            self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, false)
+                            self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                         else
                             --RNGLOG('Else all tiers upgrade')
-                            self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
+                            self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         end
                         coroutine.yield(30)
                     --end
@@ -1103,7 +1103,7 @@ StructureManager = Class {
             elseif extractorsDetail.TECH1Upgrading < 5 and massStorage > 150 and upgradeTrigger then
                 if totalSpend < upgradeSpend and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                     --RNGLOG('We Could upgrade a non t2 extractor now with over time')
-                    self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, false)
+                    self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                     coroutine.yield(60)
                 end
             elseif massStorage > 500 and energyStorage > 3000 and extractorsDetail.TECH2Upgrading < 2 then
@@ -1119,10 +1119,10 @@ StructureManager = Class {
                         --RNGLOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
                         if extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.5 or upgradeSpend < 15 then
                             --LOG('Trigger all tiers false')
-                            self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, false)
+                            self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                         else
                             --LOG('Trigger all tiers true')
-                            self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
+                            self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         end
                         coroutine.yield(30)
                     end
@@ -1140,7 +1140,7 @@ StructureManager = Class {
                     if energyEfficiency >= 0.8 and massEfficiency >= 0.8 then
                         --RNGLOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
                         --RNGLOG('Trigger all tiers true')
-                        self:ValidateExtractorUpgradeRNG(aiBrain, ALLBPS, extractorTable, true)
+                        self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         coroutine.yield(30)
                     end
                     coroutine.yield(30)
@@ -1166,7 +1166,7 @@ StructureManager = Class {
         return defended
     end,
     
-    ValidateExtractorUpgradeRNG = function(self, aiBrain, ALLBPS, extractorTable, allTiers)
+    ValidateExtractorUpgradeRNG = function(self, aiBrain, extractorTable, allTiers)
         --LOG('ValidateExtractorUpgrade Stuff')
         local UnitPos
         local DistanceToBase
@@ -1234,19 +1234,17 @@ StructureManager = Class {
                     aiBrain.CentralBrainExtractorUnitUpgradeClosest = lowestUnit
                 end
                 --RNGLOG('Closest Extractor')
-                self:ForkThread(self.UpgradeExtractorRNG, aiBrain, ALLBPS, lowestUnit, LowestDistanceToBase)
+                self:ForkThread(self.UpgradeExtractorRNG, aiBrain, lowestUnit, LowestDistanceToBase)
             else
                 --RNGLOG('There is no lowestUnit')
             end
         end
     end,
     
-    UpgradeExtractorRNG = function(self, aiBrain, ALLBPS, extractorUnit, distanceToBase)
+    UpgradeExtractorRNG = function(self, aiBrain, extractorUnit, distanceToBase)
         --LOG('Upgrading Extractor from central brain thread')
-        local upgradeBp
-        local upgradeID = ALLBPS[extractorUnit.UnitId].General.UpgradesTo or false
+        local upgradeID = extractorUnit.Blueprint.General.UpgradesTo or false
         if upgradeID then
-            upgradeBp = ALLBPS[upgradeID]
             IssueUpgrade({extractorUnit}, upgradeID)
             coroutine.yield(2)
             local fractionComplete
@@ -1374,41 +1372,41 @@ StructureManager = Class {
         local armyIndex = aiBrain:GetArmyIndex()
         -- loop over all units and search for upgrading units
         for _, extractor in extractors do
-            if not extractor.Dead and not extractor:BeenDestroyed() and extractor:GetAIBrain():GetArmyIndex() == armyIndex and extractor:GetFractionComplete() == 1 then
+            if not IsDestroyed(extractor) and extractor:GetAIBrain():GetArmyIndex() == armyIndex and extractor:GetFractionComplete() == 1 then
                 if not extractor.InitialDelayStarted then
                     self:ForkThread(self.ExtractorInitialDelay, aiBrain, extractor)
                 end
-                if ALLBPS[extractor.UnitId].CategoriesHash.TECH1 then
+                if extractor.Blueprint.CategoriesHash.TECH1 then
                     tech1Total = tech1Total + 1
                     if not aiBrain.EcoManager.T2ExtractorSpend then
-                        local upgradeId = ALLBPS[extractor.UnitId].General.UpgradesTo
-                        aiBrain.EcoManager.T2ExtractorSpend = (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (ALLBPS[extractor.UnitId].Economy.BuildRate * multiplier))
+                        local upgradeId = extractor.Blueprint.General.UpgradesTo
+                        aiBrain.EcoManager.T2ExtractorSpend = (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (extractor.Blueprint.Economy.BuildRate * multiplier))
                     end
                     if extractor:IsUnitState('Upgrading') then
-                        local upgradeId = ALLBPS[extractor.UnitId].General.UpgradesTo
-                        totalSpend = totalSpend +  (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (ALLBPS[extractor.UnitId].Economy.BuildRate * multiplier))
+                        local upgradeId = extractor.Blueprint.General.UpgradesTo
+                        totalSpend = totalSpend +  (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (extractor.Blueprint.Economy.BuildRate * multiplier))
                         extractor.Upgrading = true
                         tech1ExtNumBuilding = tech1ExtNumBuilding + 1
                     else
                         extractor.Upgrading = false
                         RNGINSERT(extractorTable.TECH1, extractor)
                     end
-                elseif ALLBPS[extractor.UnitId].CategoriesHash.TECH2 then
+                elseif extractor.Blueprint.CategoriesHash.TECH2 then
                     tech2Total = tech2Total + 1
                     if not aiBrain.EcoManager.T3ExtractorSpend then
-                        local upgradeId = ALLBPS[extractor.UnitId].General.UpgradesTo
-                        aiBrain.EcoManager.T3ExtractorSpend = (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (ALLBPS[extractor.UnitId].Economy.BuildRate * multiplier))
+                        local upgradeId = extractor.Blueprint.General.UpgradesTo
+                        aiBrain.EcoManager.T3ExtractorSpend = (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (extractor.Blueprint.Economy.BuildRate * multiplier))
                     end
                     if extractor:IsUnitState('Upgrading') then
-                        local upgradeId = ALLBPS[extractor.UnitId].General.UpgradesTo
-                        totalSpend = totalSpend + (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (ALLBPS[extractor.UnitId].Economy.BuildRate * multiplier))
+                        local upgradeId = extractor.Blueprint.General.UpgradesTo
+                        totalSpend = totalSpend + (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (extractor.Blueprint.Economy.BuildRate * multiplier))
                         extractor.Upgrading = true
                         tech2ExtNumBuilding = tech2ExtNumBuilding + 1
                     else
                         extractor.Upgrading = false
                         RNGINSERT(extractorTable.TECH2, extractor)
                     end
-                elseif ALLBPS[extractor.UnitId].CategoriesHash.TECH3 then
+                elseif extractor.Blueprint.CategoriesHash.TECH3 then
                     tech3Total = tech3Total + 1
                 end
             end
