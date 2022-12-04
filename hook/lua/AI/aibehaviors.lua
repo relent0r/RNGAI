@@ -701,7 +701,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
             cdr:SetAutoOvercharge(true)
         end
         for i=1, RNGGETN(path) do
-            if not retreat and cdr.Retreat and cdr.Caution then
+            if not retreat and (cdr.Retreat or cdr.Caution) then
                 --RNGLOG('CDR : ACU Retreat flag while moving')
                 return CDRRetreatRNG(aiBrain, cdr)
             end
@@ -764,15 +764,6 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
                     local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, cdrPosition, 30, 'Enemy')
                     if enemyUnitCount > 0 then
                         local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetACURNG(aiBrain, cdr.PlatoonHandle, cdrPosition, 'Attack', 30, (categories.LAND + categories.STRUCTURE), cdr.atkPri, false)
-                        cdr.EnemyThreat = totalThreat
-                        if totalThreat > cdr.ThreatLimit then
-                            --RNGLOG('CDR : cdr caution is true due to total threat around acu higher than threat limit total threat is '..totalThreat..' threat limit is '..cdr.ThreatLimit)
-                            cdr.Caution = true
-                            cdr.CautionReason = 'acuMovementHighThreat'
-                        else
-                            cdr.Caution = false
-                            cdr.CautionReason = 'none'
-                        end
                         if acuInRange then
                             --RNGLOG('CDR : Enemy ACU in range of ACU')
                             cdr.EnemyCDRPresent = true
@@ -1917,6 +1908,7 @@ function CDRReturnHomeRNG(aiBrain, cdr)
 end
 
 function CDRRetreatRNG(aiBrain, cdr, base)
+    --RNGLOG('CDR Retreat fired')
     if cdr:IsUnitState('Attached') then
        --RNGLOG('ACU on transport')
         return false
@@ -1927,6 +1919,7 @@ function CDRRetreatRNG(aiBrain, cdr, base)
     local closestAPlatPos = false
     local platoonValue = 0
     --RNGLOG('Getting list of allied platoons close by')
+    coroutine.yield( 2 )
     local supportPlatoon = aiBrain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
     if cdr.Health > 5000 and VDist3Sq(cdr.CDRHome, cdr.Position) > 6400 and not base then
         if supportPlatoon then
@@ -3268,7 +3261,7 @@ function ExpMoveToPosition(aiBrain, platoon, target, unit, ignoreUnits)
         categories.STRUCTURE * categories.DEFENSE * categories.INDIRECTFIRE,
         categories.MOBILE * categories.LAND * categories.TECH3,
         categories.MOBILE * categories.LAND,
-        categories.STRUCTURE,
+        categories.STRUCTURE - categories.WALL,
     }
     local function VariableKite(platoon,unit,target, maxDistance)
         local function KiteDist(pos1,pos2,distance)
@@ -3607,7 +3600,6 @@ function AirUnitRefitThreadRNG(unit, plan, data)
                     if closest then
                         local plat = aiBrain:MakePlatoon('', '')
                         aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
-                        coroutine.yield(5)
                         IssueClearCommands({unit})
                         IssueTransportLoad({unit}, closest)
                         --RNGLOG('Transport load issued')

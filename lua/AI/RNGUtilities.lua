@@ -2968,7 +2968,7 @@ CountSoonMassSpotsRNG = function(aiBrain)
     local enemies={}
     local VDist2Sq = VDist2Sq
     for i,v in ArmyBrains do
-        if ArmyIsCivilian(v:GetArmyIndex()) or not IsEnemy(aiBrain:GetArmyIndex(),v:GetArmyIndex()) or v.Result=="defeat" then continue end
+        if ArmyIsCivilian(v:GetArmyIndex()) or not IsEnemy(aiBrain:GetArmyIndex(),v:GetArmyIndex()) or v.Status=="defeat" then continue end
         local index = v:GetArmyIndex()
         local astartX, astartZ = v:GetArmyStartPos()
         local aiBrainstart = {Position={astartX, GetTerrainHeight(astartX, astartZ), astartZ},army=i}
@@ -4897,6 +4897,7 @@ end
 CheckACUSnipe = function(aiBrain, layerType)
     local potentialTarget = false
     local requiredCount = 0
+    local acuIndex
     for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
         if layerType == 'Land' then
             if v.LAND and v.LAND.GameTime then
@@ -4904,6 +4905,7 @@ CheckACUSnipe = function(aiBrain, layerType)
                     if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
                         potentialTarget = aiBrain.EnemyIntel.ACU[k].Unit
                         requiredCount = v.LAND.CountRequired
+                        acuIndex = k
                         break
                     end
                 end
@@ -4914,6 +4916,7 @@ CheckACUSnipe = function(aiBrain, layerType)
                     if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
                         potentialTarget = aiBrain.EnemyIntel.ACU[k].Unit
                         requiredCount = v.AIR.CountRequired
+                        acuIndex = k
                         break
                     end
                 end
@@ -4924,13 +4927,14 @@ CheckACUSnipe = function(aiBrain, layerType)
                     if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) and PositionInWater(aiBrain.EnemyIntel.ACU[k].Position) then
                         potentialTarget = aiBrain.EnemyIntel.ACU[k].Unit
                         requiredCount = v.AIR.CountRequired
+                        acuIndex = k
                         break
                     end
                 end
             end
         end
     end
-    return potentialTarget, requiredCount
+    return potentialTarget, requiredCount, acuIndex
 end
 
 CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid)

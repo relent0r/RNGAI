@@ -256,7 +256,7 @@ BuilderGroup {
             Construction = {
                 BuildClose = true,
                 NearDefensivePoints = false,
-                AdjacencyPriority = {categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2), categories.STRUCTURE * categories.FACTORY},
+                AdjacencyPriority = {categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2), categories.STRUCTURE * categories.FACTORY},
                 AvoidCategory = categories.STRUCTURE * categories.ANTIMISSILE * categories.TECH2 * categories.DEFENSE,
                 maxUnits = 1,
                 maxRadius = 5,
@@ -319,7 +319,7 @@ BuilderGroup {
                 NearDefensivePoints = true,
                 Type = 'STRUCTURE',
                 Tier = 1,
-                AdjacencyPriority = {categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2)},
+                AdjacencyPriority = {categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2)},
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY,
                 maxUnits = 1,
                 maxRadius = 5,
@@ -337,7 +337,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 12, categories.DEFENSE * categories.TECH3 * categories.ANTIAIR}},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3 } },
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.80}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -1212,7 +1212,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 800,
         BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3 }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 } },
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2 }},

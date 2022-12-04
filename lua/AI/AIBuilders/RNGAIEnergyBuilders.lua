@@ -23,8 +23,8 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 150.0 } }, -- If our energy is trending into negatives
             { EBC, 'GreaterThanMassStorageOrEfficiency', { 150, 0.85 }},
-            { UCBC, 'IsEngineerNotBuilding', { categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
+            { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -41,10 +41,9 @@ BuilderGroup {
                     categories.ENERGYSTORAGE,   
                     categories.INDIRECTFIRE * categories.DEFENSE,
                     categories.SHIELD * categories.STRUCTURE,
-                    categories.ENERGYPRODUCTION * categories.STRUCTURE,
                 },
                 Scale = true,
-                AvoidCategory = categories.ENERGYPRODUCTION,
+                AvoidCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION,
                 AdjacencyDistance = 50,
                 maxUnits = 1,
                 maxRadius = 2.5,
@@ -63,7 +62,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
             { EBC, 'NegativeEcoPowerCheck', { 60.0 } }, -- If our energy is trending into negatives
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -80,9 +79,8 @@ BuilderGroup {
                     categories.ENERGYSTORAGE,   
                     categories.INDIRECTFIRE * categories.DEFENSE,
                     categories.SHIELD * categories.STRUCTURE,
-                    categories.ENERGYPRODUCTION * categories.STRUCTURE,
                 },
-                AvoidCategory = categories.ENERGYPRODUCTION,
+                AvoidCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION,
                 AdjacencyDistance = 50,
                 maxUnits = 1,
                 maxRadius = 2.5,
@@ -142,8 +140,8 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'EnergyT2' }},
             { EBC, 'NegativeEcoPowerCheck', { 12.0 } },
-            { UCBC, 'IsEngineerNotBuilding', { categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 }},
+            { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION *  categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.1 }},
         },
         BuilderType = 'Any',
@@ -159,12 +157,11 @@ BuilderGroup {
                     categories.SHIELD * categories.STRUCTURE,
                     categories.STRUCTURE * categories.FACTORY * categories.AIR,
                     categories.RADAR * categories.STRUCTURE,
-                    categories.ENERGYPRODUCTION * categories.TECH2,
                     categories.FACTORY * categories.STRUCTURE,
                 },
-                AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
+                AvoidCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2,
                 maxUnits = 1,
-                maxRadius = 10,
+                maxRadius = 5,
                 BuildStructures = {
                     'T2EnergyProduction',
                 },
@@ -195,7 +192,6 @@ BuilderGroup {
                     categories.SHIELD * categories.STRUCTURE,
                     categories.STRUCTURE * categories.FACTORY * categories.AIR,
                     categories.RADAR * categories.STRUCTURE,
-                    categories.ENERGYPRODUCTION * categories.TECH2,
                     categories.FACTORY * categories.STRUCTURE,
                 },
                 maxUnits = 1,

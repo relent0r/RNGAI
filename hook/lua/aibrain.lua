@@ -1548,7 +1548,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 WARN('Missing RNGArea for builder manager land node or no path markers')
             end
             if graphArea then
-                RNGLOG('Graph Area for buildermanager is '..graphArea)
+                --RNGLOG('Graph Area for buildermanager is '..graphArea)
                 graphAreaSet = true
                 self.BuilderManagers[baseName].GraphArea = graphArea
             end
@@ -2350,42 +2350,44 @@ AIBrain = Class(RNGAIBrainClass) {
                 local enemy = false
 
                 for k, v in armyStrengthTable do
-                    -- Dont' target self
-                    if k == selfIndex then
-                        continue
-                    end
-
-                    -- Ignore allies
-                    if not v.Enemy then
-                        continue
-                    end
-
-                    -- If we have a better candidate; ignore really weak enemies
-                    if enemy and v.Strength < 20 then
-                        continue
-                    end
-
-                    if v.Strength == 0 then
-                        name = v.Brain.Nickname
-                        --RNGLOG('* AI-RNG: Name is'..name)
-                        --RNGLOG('* AI-RNG: v.strenth is 0')
-                        if name ~= 'civilian' then
-                            --RNGLOG('* AI-RNG: Inserted Name is '..name)
-                            RNGINSERT(enemyTable, v.Brain)
+                    if v.Brain.Status ~= 'Defeat' then
+                        -- Dont' target self
+                        if k == selfIndex then
+                            continue
                         end
-                        continue
-                    end
 
-                    -- The closer targets are worth more because then we get their mass spots
-                    local distanceWeight = 0.1
-                    local distance = VDist3(self:GetStartVector3f(), v.Position)
-                    local threatWeight = (1 / (distance * distanceWeight)) * v.Strength
-                    --RNGLOG('* AI-RNG: armyStrengthTable Strength is :'..v.Strength)
-                    --RNGLOG('* AI-RNG: Threat Weight is :'..threatWeight)
-                    if not enemy or threatWeight > enemyStrength then
-                        enemy = v.Brain
-                        enemyStrength = threatWeight
-                        --RNGLOG('* AI-RNG: Enemy Strength is'..enemyStrength)
+                        -- Ignore allies
+                        if not v.Enemy then
+                            continue
+                        end
+
+                        -- If we have a better candidate; ignore really weak enemies
+                        if enemy and v.Strength < 20 then
+                            continue
+                        end
+
+                        if v.Strength == 0 then
+                            name = v.Brain.Nickname
+                            --RNGLOG('* AI-RNG: Name is'..name)
+                            --RNGLOG('* AI-RNG: v.strenth is 0')
+                            if name ~= 'civilian' then
+                                --RNGLOG('* AI-RNG: Inserted Name is '..name)
+                                RNGINSERT(enemyTable, v.Brain)
+                            end
+                            continue
+                        end
+
+                        -- The closer targets are worth more because then we get their mass spots
+                        local distanceWeight = 0.1
+                        local distance = VDist3(self:GetStartVector3f(), v.Position)
+                        local threatWeight = (1 / (distance * distanceWeight)) * v.Strength
+                        --RNGLOG('* AI-RNG: armyStrengthTable Strength is :'..v.Strength)
+                        --RNGLOG('* AI-RNG: Threat Weight is :'..threatWeight)
+                        if not enemy or threatWeight > enemyStrength then
+                            enemy = v.Brain
+                            enemyStrength = threatWeight
+                            --RNGLOG('* AI-RNG: Enemy Strength is'..enemyStrength)
+                        end
                     end
                 end
 
@@ -3578,12 +3580,23 @@ AIBrain = Class(RNGAIBrainClass) {
 
         if platoonType == 'GUNSHIP' or platoonType == 'BOMBER' then
             for k, v in self.TacticalMonitor.TacticalMissions.ACUSnipe do
-                if v.AIR and v.AIR.GameTime then
-                    if v.AIR.GameTime + 500 > GetGameTimeSeconds() then
-                        if RUtils.HaveUnitVisual(self, self.EnemyIntel.ACU[k].Unit, true) then
-                            potentialTarget = self.EnemyIntel.ACU[k].Unit
-                            requiredCount = v.AIR.CountRequired
-                            break
+                if v.AIR and v.AIR.GameTime and v.AIR.GameTime + 500 > GetGameTimeSeconds() then
+                    if RUtils.HaveUnitVisual(self, self.EnemyIntel.ACU[k].Unit, true) then
+                        if self.EnemyIntel.ACU[k].HP > 0 then
+                            local acuHP = self.EnemyIntel.ACU[k].HP
+                            if platoonType == 'GUNSHIP' and platoonDPS then
+                                if ((acuHP / platoonDPS) < 15 or acuHP < 2500) then
+                                    potentialTarget = self.EnemyIntel.ACU[k].Unit
+                                    requiredCount = v.AIR.CountRequired
+                                    break
+                                end
+                            elseif platoonType == 'BOMBER' and strikeDamage then
+                                if strikeDamage > acuHP * 0.80 or acuHP < 2500 then
+                                    potentialTarget = self.EnemyIntel.ACU[k].Unit
+                                    requiredCount = v.AIR.CountRequired
+                                    break
+                                end
+                            end
                         end
                     end
                 end

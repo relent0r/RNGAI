@@ -299,7 +299,7 @@ BuilderGroup {
             PlatoonLimit = 18,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL,
-                categories.ENERGYPRODUCTION,
+                categories.STRUCTURE * categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
                 categories.MASSFABRICATION,
@@ -337,10 +337,10 @@ BuilderGroup {
             PlatoonLimit = 18,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL,
-                categories.ENERGYPRODUCTION,
+                categories.STRUCTURE * categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
-                categories.MASSFABRICATION,
+                categories.STRUCTURE * categories.MASSFABRICATION,
                 categories.ALLUNITS,
             },
             PrioritizedCategories = {
@@ -374,17 +374,17 @@ BuilderGroup {
             ThreatSupport = 5,
             TargetSearchPriorities = {
                 categories.STRUCTURE * categories.NAVAL * categories.FACTORY,
-                categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2),
+                categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2),
                 categories.MASSEXTRACTION,
                 categories.ENERGYSTORAGE,
-                categories.ENERGYPRODUCTION,
-                categories.MASSFABRICATION,
+                categories.STRUCTURE * categories.ENERGYPRODUCTION,
+                categories.STRUCTURE * categories.MASSFABRICATION,
                 categories.STRUCTURE,
             },
             PrioritizedCategories = {
                 categories.EXPERIMENTAL,
                 categories.STRUCTURE * categories.DEFENSE,
-                categories.ENERGYPRODUCTION,
+                categories.STRUCTURE * categories.ENERGYPRODUCTION,
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
                 categories.MASSFABRICATION,

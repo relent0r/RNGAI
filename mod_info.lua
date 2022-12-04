@@ -1,6 +1,6 @@
 name = "RNGAI"
-uid = "faf0863e-9577-ba0d-9ea3-8d82b622f1c0"
-version = 135
+uid = "faf0863e-9577-ba0d-b68c-8d82b622f1c0"
+version = 137
 copyright = "2022 relentless"
 description = "RNG Standard AI. IMPORTANT! Requires Uveso AI to be installed and enabled. Note . This version has some experimental features so may have issues. Does not support other sim mods such as total mayhem, blackops. For best experience all host game settings should be default. Best played with OMNI cheat disabled. For feedback please visit the FAF discord AI feedback channel."
 author = "relentless"

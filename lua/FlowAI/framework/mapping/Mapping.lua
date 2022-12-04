@@ -984,7 +984,7 @@ function SetMarkerInformation(aiBrain)
         end
     else
         for i,v in ArmyBrains do
-            if ArmyIsCivilian(v:GetArmyIndex()) or v.Result=="defeat" then continue end
+            if ArmyIsCivilian(v:GetArmyIndex()) or v.Status=="Defeat" then continue end
             local astartX, astartZ = v:GetArmyStartPos()
             local army = {position={astartX, GetTerrainHeight(astartX, astartZ), astartZ},army=i,brain=v}
             table.sort(aiBrain.expandspots,function(a,b) return VDist3Sq(a[1].position,army.position)<VDist3Sq(b[1].position,army.position) end)
