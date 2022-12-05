@@ -9903,6 +9903,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local allIdle
         local reclaimCount = 0
         local reclaimMax = data.ReclaimMax or 1
+        local ownIndex = aiBrain:GetArmyIndex()
         while aiBrain:PlatoonExists(self) do
             if reclaimCount >= reclaimMax then
                 self:PlatoonDisband()
@@ -9911,16 +9912,32 @@ Platoon = Class(RNGAIPlatoonClass) {
             unitPos = GetPlatoonPosition(self)
             reclaimunit = false
             distance = false
-            for num,cat in data.Reclaim do
-                reclaimables = aiBrain:GetListOfUnits(cat, false)
-                for k,v in reclaimables do
-                    local vPos = v:GetPosition()
-                    if not v.Dead and (not reclaimunit or VDist3Sq(unitPos, vPos) < distance) and unitPos and not v:IsUnitState('Upgrading') and VDist3Sq(aiBrain.BuilderManagers[data.Location].FactoryManager.Location, vPos) < (radius * radius) then
-                        reclaimunit = v
-                        distance = VDist3Sq(unitPos, vPos)
+            if data.JobType == 'ReclaimT1Power' then
+                local centerExtractors = GetUnitAroundPoint(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION, aiBrain.BuilderManagers[data.Location].FactoryManager.Location, 80, 'Ally')
+                for _,v in centerExtractors do
+                    if not v.Dead and ownIndex == v:GetAIBrain():GetArmyIndex() then
+                        local pgens = GetUnitAroundPoint(aiBrain, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH1, v:GetPosition(), 2.5, 'Ally')
+                        for _, b in pgens do
+                        local bPos = b:GetPosition()
+                        if not b.Dead and (not reclaimunit or VDist3Sq(unitPos, bPos) < distance) and unitPos and VDist3Sq(aiBrain.BuilderManagers[data.Location].FactoryManager.Location, bPos) < (radius * radius) then
+                            reclaimunit = b
+                            distance = VDist3Sq(unitPos, bPos)
+                        end
                     end
                 end
-                if reclaimunit then break end
+            end
+            if not reclaimunit then
+                for num,cat in data.Reclaim do
+                    reclaimables = aiBrain:GetListOfUnits(cat, false)
+                    for k,v in reclaimables do
+                        local vPos = v:GetPosition()
+                        if not v.Dead and (not reclaimunit or VDist3Sq(unitPos, vPos) < distance) and unitPos and not v:IsUnitState('Upgrading') and VDist3Sq(aiBrain.BuilderManagers[data.Location].FactoryManager.Location, vPos) < (radius * radius) then
+                            reclaimunit = v
+                            distance = VDist3Sq(unitPos, vPos)
+                        end
+                    end
+                    if reclaimunit then break end
+                end
             end
             if reclaimunit and not reclaimunit.Dead then
                 local unitDestroyed = false

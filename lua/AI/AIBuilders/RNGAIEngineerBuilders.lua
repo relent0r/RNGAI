@@ -939,7 +939,7 @@ BuilderGroup {
                 { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.1 }},
             },
         BuilderData = {
-            JobType = 'ReclaimStructure',
+            JobType = 'ReclaimT1Power',
             Location = 'LocationType',
             ReclaimMax = 5,
             Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.ENERGYPRODUCTION - categories.HYDROCARBON},
@@ -959,7 +959,7 @@ BuilderGroup {
                 { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.3 }},
             },
         BuilderData = {
-            JobType = 'ReclaimStructure',
+            JobType = 'ReclaimPower',
             Location = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH2 * categories.ENERGYPRODUCTION - categories.HYDROCARBON},
