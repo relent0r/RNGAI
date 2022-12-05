@@ -9108,6 +9108,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                 tml:SetAutoMode(true)
                 IssueClearCommands({tml})
             end
+            if VDist3Sq(GetPlatoonPosition(self), aiBrain.MapCenterPoint) < VDist3Sq(self.CenterPosition, aiBrain.MapCenterPoint) then
+                RNGLOG('Platoon Position is closer to center point, lets use that')
+                self.CenterPosition = GetPlatoonPosition(self)
+            end
             --RNGLOG('Checking for target')
             while not target do
                 local missileCount = 0

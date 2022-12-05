@@ -2746,8 +2746,7 @@ function FatBoyBehaviorRNG(self)
                     
                     if not inWater then
                         --RNGLOG('In water is false')
-                        local expPosition = unit:GetPosition()
-                        local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER - categories.TECH1, expPosition, unit.MaxWeaponRange, 'Enemy')
+                        local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER - categories.TECH1, unit:GetPosition(), unit.MaxWeaponRange, 'Enemy')
                         if enemyUnitCount > 0 then
                             target = self:FindClosestUnit('attack', 'Enemy', true, categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL - categories.TECH1)
                             while unit and not unit.Dead do
@@ -2761,7 +2760,7 @@ function FatBoyBehaviorRNG(self)
                                         continue
                                     end
                                     unitPos = unit:GetPosition()
-                                    alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
+                                    alpha = math.atan2(targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
                                     x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange - 15)
                                     y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange - 15)
                                     smartPos = { x, GetTerrainHeight( x, y), y }
@@ -2834,6 +2833,11 @@ function FatBoyGuardsRNG(self)
     repeat
         unitBeingBuilt = unitBeingBuilt or experimental.UnitBeingBuilt
         coroutine.yield(20)
+        local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER - categories.TECH1, experimental:GetPosition(), 30, 'Enemy')
+        if enemyUnitCount > 5 then
+            IssueClearCommands({experimental})
+            return
+        end
         buildTimeout = buildTimeout + 1
         if buildTimeout > 20 then
             --RNGLOG('FATBOY has not built within 40 seconds, breaking out')
@@ -2845,6 +2849,11 @@ function FatBoyGuardsRNG(self)
     
     local idleTimeout = 0
     repeat
+        local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER - categories.TECH1, experimental:GetPosition(), 45, 'Enemy')
+        if enemyUnitCount > 5 then
+            IssueClearCommands({experimental})
+            return
+        end
         coroutine.yield(30)
         idleTimeout = idleTimeout + 1
         if idleTimeout > 15 then
@@ -3379,11 +3388,11 @@ function ExpMoveToPosition(aiBrain, platoon, target, unit, ignoreUnits)
                                 if retreatTrigger > 5 then
                                     retreatTimeout = retreatTimeout + 1
                                 end
-                                coroutine.yield(20)
+                                coroutine.yield(30)
                                 if target and not target.Dead then
                                     IssueClearCommands({unit})
                                     IssueMove({unit},target:GetPosition())
-                                    coroutine.yield(40)
+                                    coroutine.yield(50)
                                 end
                                 if retreatTimeout > 3 then
                                     --RNGLOG('platoon stopped chasing unit')

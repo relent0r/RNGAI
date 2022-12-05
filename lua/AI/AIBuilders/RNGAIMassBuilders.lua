@@ -446,7 +446,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG T2 Mass Adjacency Engineer',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 910,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 1,

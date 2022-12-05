@@ -936,7 +936,7 @@ BuilderGroup {
                 { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 0.0 } },
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.ENERGYPRODUCTION}},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.ENERGYPRODUCTION - categories.HYDROCARBON }},
-                { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.3 }},
+                { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.1 }},
             },
         BuilderData = {
             JobType = 'ReclaimStructure',
