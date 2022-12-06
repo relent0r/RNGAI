@@ -1468,17 +1468,16 @@ BuilderGroup {
             IncludeWater = false,
             IgnoreFriendlyBase = true,
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
-            FindHighestThreat = true,			-- Don't find high threat targets
-            MaxThreatThreshold = 650,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 50,		    -- If threat is lower than this, do not attack
-            AvoidBases = true,
-            AvoidBasesRadius = 150,
             AggressiveMove = false,      
-            AvoidClosestRadius = 100,
             UseFormation = 'AttackFormation',
-            TargetSearchPriorities = { 
+            TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.MASSEXTRACTION,
-                categories.MOBILE * categories.LAND
+                categories.STRUCTURE * categories.ENERGYPRODUCTION,
+                categories.ENERGYSTORAGE,
+                categories.MASSFABRICATION,
+                categories.STRUCTURE,
+                categories.ALLUNITS,
             },
             SetWeaponPriorities = true,
             PrioritizedCategories = {   
@@ -1517,17 +1516,16 @@ BuilderGroup {
             IncludeWater = false,
             IgnoreFriendlyBase = true,
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
-            FindHighestThreat = true,			-- Don't find high threat targets
-            MaxThreatThreshold = 8900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 50,		    -- If threat is lower than this, do not attack
-            AvoidBases = true,
-            AvoidBasesRadius = 120,
             AggressiveMove = false,      
-            AvoidClosestRadius = 15,
             UseFormation = 'NoFormation',
-            TargetSearchPriorities = { 
+            TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.MASSEXTRACTION,
-                categories.MOBILE * categories.LAND
+                categories.STRUCTURE * categories.ENERGYPRODUCTION,
+                categories.ENERGYSTORAGE,
+                categories.MASSFABRICATION,
+                categories.STRUCTURE,
+                categories.ALLUNITS,
             },
             SetWeaponPriorities = true,
             PrioritizedCategories = {   
@@ -1565,17 +1563,16 @@ BuilderGroup {
             IncludeWater = false,
             IgnoreFriendlyBase = true,
             MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
-            FindHighestThreat = true,			-- Don't find high threat targets
-            MaxThreatThreshold = 9900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 100,		    -- If threat is lower than this, do not attack
-            AvoidBases = false,
-            AvoidBasesRadius = 150,
             AggressiveMove = true,      
-            AvoidClosestRadius = 15,
             UseFormation = 'NoFormation',
-            TargetSearchPriorities = { 
+            TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
                 categories.MASSEXTRACTION,
-                categories.MOBILE * categories.LAND,
+                categories.STRUCTURE * categories.ENERGYPRODUCTION,
+                categories.ENERGYSTORAGE,
+                categories.MASSFABRICATION,
+                categories.STRUCTURE,
+                categories.ALLUNITS,
             },
             SetWeaponPriorities = true,
             PrioritizedCategories = {   

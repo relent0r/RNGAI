@@ -7238,14 +7238,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                     if not PlatoonPosition then return end
                     self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
-                    if self.ScoutUnit and (not self.ScoutUnit.Dead) then
-                        IssueClearCommands({self.ScoutUnit})
-                        IssueMove({self.ScoutUnit}, PlatoonPosition)
-                        if self.CurrentPlatoonThreat < 0.5 then
-                            coroutine.yield(20)
-                            break
-                        end
-                    end
                     dist = VDist2Sq(path[i][1], path[i][3], PlatoonPosition[1], PlatoonPosition[3])
                     if dist < 400 then
                         IssueClearCommands(GetPlatoonUnits(self))
@@ -7268,68 +7260,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                             local target, acuInRange, acuUnit, totalThreat
                             if not (targetCheck and not targetCheck.Dead) then
                                 target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, PlatoonPosition, 'Attack', self.EnemyRadius, LandRadiusScanCategory, self.atkPri, false, true)
-                            end
-                            if acuInRange then
-                                target = false
-                                if self.CurrentPlatoonThreat < 25 then
-                                    local alternatePos = false
-                                    local mergePlatoon = false
-                                    local acuPos = acuUnit:GetPosition()
-                                    self:Stop()
-                                    self:MoveToLocation(RUtils.AvoidLocation(acuPos, PlatoonPosition, 60), false)
-                                    coroutine.yield(40)
-                                    PlatoonPosition = GetPlatoonPosition(self)
-                                    if not PlatoonPosition then return end
-                                    local massPoints = GetUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, PlatoonPosition, 120, 'Enemy')
-                                    if massPoints then
-                                        local massPointPos
-                                        for _, v in massPoints do
-                                            if not v.Dead then
-                                                massPointPos = v:GetPosition()
-                                                if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], acuPos[1], acuPos[3]) > 0.5 then
-                                                    --LOG('Mex point valid angle '..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], acuPos[1], acuPos[3]))
-                                                    alternatePos = massPointPos
-                                                end
-                                            end
-                                        end
-                                    end
-                                    if not alternatePos then
-                                        mergePlatoon, alternatePos = self:GetClosestPlatoonRNG(self.PlanName)
-                                    end
-    
-                                    if alternatePos then
-                                        self:Stop()
-                                        self:MoveToLocation(alternatePos, false)
-                                        while PlatoonExists(aiBrain, self) do
-                                            coroutine.yield(10)
-                                            if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
-                                                alternatePos = GetPlatoonPosition(mergePlatoon)
-                                            end
-                                            IssueClearCommands(GetPlatoonUnits(self))
-                                            self:MoveToLocation(alternatePos, false)
-                                            PlatoonPosition = GetPlatoonPosition(self)
-                                            dist = VDist2Sq(alternatePos[1], alternatePos[3], PlatoonPosition[1], PlatoonPosition[3])
-                                            if dist < 225 then
-                                                self:Stop()
-                                                if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
-                                                    self:MergeWithNearbyPlatoonsRNG(self.PlanName, 60, 30)
-                                                end
-                                                break
-                                            end
-                                            if Lastdist ~= dist then
-                                                Stuck = 0
-                                                Lastdist = dist
-                                            else
-                                                Stuck = Stuck + 1
-                                                if Stuck > 15 then
-                                                    self:Stop()
-                                                    break
-                                                end
-                                            end
-                                            coroutine.yield(30)
-                                        end
-                                    end
-                                end
                             end
                             if targetCheck then
                                 --RNGLOG('TargetCheck Found, setting to highpriority target')
