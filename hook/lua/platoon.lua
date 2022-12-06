@@ -9848,10 +9848,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if not v.Dead and ownIndex == v:GetAIBrain():GetArmyIndex() then
                         local pgens = GetUnitAroundPoint(aiBrain, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH1, v:GetPosition(), 2.5, 'Ally')
                         for _, b in pgens do
-                        local bPos = b:GetPosition()
-                        if not b.Dead and (not reclaimunit or VDist3Sq(unitPos, bPos) < distance) and unitPos and VDist3Sq(aiBrain.BuilderManagers[data.Location].FactoryManager.Location, bPos) < (radius * radius) then
-                            reclaimunit = b
-                            distance = VDist3Sq(unitPos, bPos)
+                            local bPos = b:GetPosition()
+                            if not b.Dead and (not reclaimunit or VDist3Sq(unitPos, bPos) < distance) and unitPos and VDist3Sq(aiBrain.BuilderManagers[data.Location].FactoryManager.Location, bPos) < (radius * radius) then
+                                reclaimunit = b
+                                distance = VDist3Sq(unitPos, bPos)
+                            end
                         end
                     end
                 end
