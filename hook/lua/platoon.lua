@@ -7156,7 +7156,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
         end
     end,
---[[
+
     MoveToPlatoonRNG = function(self, targetPlatoon)
         local function VariableKite(platoon,unit,target, maxDistance)
             local function KiteDist(pos1,pos2,distance)
@@ -7205,7 +7205,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                 return mod
             end
         end
+        local aiBrain = self:GetBrain()
+        local maxMergeDistance
         local path, reason
+        local ignoreUnits = false
         if targetPlatoon and PlatoonExists(aiBrain, targetPlatoon) then
             path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonUnits(self)[1]:GetPosition(), GetPlatoonPosition(targetPlatoon), 10)
             if not path then
@@ -7215,10 +7218,11 @@ Platoon = Class(RNGAIPlatoonClass) {
             if maxMergeDistance then
                 maxMergeDistance = maxMergeDistance * maxMergeDistance
             else
-                maxMergeDistance = 40000
+                maxMergeDistance = 625
             end
             local pathLength = RNGGETN(path)
             for i=1, pathLength do
+                LOG('Moving along path to destination platoon')
                 if self.PlatoonData.AggressiveMove then
                     self:AggressiveMoveToLocation(path[i])
                 else
@@ -7412,8 +7416,24 @@ Platoon = Class(RNGAIPlatoonClass) {
                     targetCheck = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, avoid)
                     coroutine.yield(15)
                 end
+                if PlatoonExists(aiBrain, self) and PlatoonExists(aiBrain, targetPlatoon) then
+                    local dist = VDist3Sq(PlatoonPosition , GetPlatoonPosition(targetPlatoon))
+                    while dist > maxMergeDistance do
+                        coroutine.yield(20)
+                        self:MoveToLocation(GetPlatoonPosition(targetPlatoon), false)
+                        coroutine.yield(20)
+                        dist = VDist3Sq(PlatoonPosition , GetPlatoonPosition(targetPlatoon))
+                        if not PlatoonExists(aiBrain, self) or not PlatoonExists(aiBrain, targetPlatoon) then
+                            return
+                        end
+                        if dist < maxMergeDistance then
+                            return true
+                        end
+                    end
+                end
             end
-    end,]]
+        end
+    end,
 
     ScoutFindNearbyPlatoonsRNG = function(self, radius)
         local aiBrain = self:GetBrain()
@@ -7602,12 +7622,20 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                 end
             elseif platoonType == 'tank' then
+                RNGLOG('tank feeder platoon firing')
                 local targetPlatoon = self:GetClosestPlatoonRNG('ZoneControlRNG', 62500)
-                self:MoveToPlatoonRNG(targetPlatoon)
+                if targetPlatoon then
+                    RNGLOG('targetPlatoon is present')
+                end
+                local atPlatoon = self:MoveToPlatoonRNG(targetPlatoon)
+                if atPlatoon then
+                    RNGLOG('tank feeder platoon at targetPlatoon, attempting to merge')
+                    aiBrain:AssignUnitsToPlatoon(targetPlatoon, {GetPlatoonUnits(self)}, 'Attack', 'none' )
+                end
             else
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG', true)
             end
-            coroutine.yield(30)
+            coroutine.yield(20)
         end
     end,
 
@@ -9843,10 +9871,10 @@ Platoon = Class(RNGAIPlatoonClass) {
             reclaimunit = false
             distance = false
             if data.JobType == 'ReclaimT1Power' then
-                local centerExtractors = GetUnitAroundPoint(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION, aiBrain.BuilderManagers[data.Location].FactoryManager.Location, 80, 'Ally')
+                local centerExtractors = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION, aiBrain.BuilderManagers[data.Location].FactoryManager.Location, 80, 'Ally')
                 for _,v in centerExtractors do
                     if not v.Dead and ownIndex == v:GetAIBrain():GetArmyIndex() then
-                        local pgens = GetUnitAroundPoint(aiBrain, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH1, v:GetPosition(), 2.5, 'Ally')
+                        local pgens = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH1, v:GetPosition(), 2.5, 'Ally')
                         for _, b in pgens do
                             local bPos = b:GetPosition()
                             if not b.Dead and (not reclaimunit or VDist3Sq(unitPos, bPos) < distance) and unitPos and VDist3Sq(aiBrain.BuilderManagers[data.Location].FactoryManager.Location, bPos) < (radius * radius) then

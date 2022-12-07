@@ -28,6 +28,14 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'RNGAI LandFeeder',
+    Plan = 'FeederPlatoon',
+    GlobalSquads = {
+        { categories.LAND * categories.MOBILE - categories.SNIPER - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL - categories.xrl0302, 1, 100, 'Attack', 'none' },
+    }
+}
+
+PlatoonTemplate {
     Name = 'RNGAI T1LandScoutForm',
     Plan = 'ScoutingAIRNG',
     GlobalSquads = {

@@ -5345,6 +5345,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 elseif unitCat.ENGINEER then
                     if unit.JobType then
+                        if not engineerDistribution[unit.JobType] then
+                            engineerDistribution[unit.JobType] = 0
+                        end
                         --LOG('Engineer Job Type '..unit.JobType)
                         engineerDistribution[unit.JobType] = engineerDistribution[unit.JobType] + 1
                         engineerDistribution.Total = engineerDistribution.Total + 1
