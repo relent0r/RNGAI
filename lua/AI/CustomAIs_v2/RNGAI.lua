@@ -7,10 +7,12 @@ AI = {
         {
             key = 'RNGStandard',
             name = "<LOC RNG_0001>AI: RNG Standard",
+            requiresNavMesh = true,
         },
         {
             key = 'RNGStandardExperimental',
             name = "<LOC RNG_0002>AI: RNG Standard Experimental",
+            requiresNavMesh = true,
         },
         --{
         --   key = 'RNGStandardnull',
@@ -22,10 +24,12 @@ AI = {
         {
             key = 'RNGStandardcheat',
             name = "<LOC RNG_0003>AIx: RNG Standard",
+            requiresNavMesh = true,
         },
         {
             key = 'RNGStandardExperimentalcheat',
             name = "<LOC RNG_0004>AIx: RNG Standard Experimental",
+            requiresNavMesh = true,
         },
         --{
         --   key = 'RNGStandardnullcheat',

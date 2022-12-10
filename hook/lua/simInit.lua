@@ -1,4 +1,6 @@
 
+local AIUtils = import("/lua/ai/aiutilities.lua")
+local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 local RNGBeginSession = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').BeginSession
 local RNGAIBeginSessionFunction = BeginSession
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG

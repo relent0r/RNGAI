@@ -99,7 +99,7 @@ BuilderGroup {
         Priority = 997,
         InstanceCount = 3,
         BuilderConditions = { 
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 400, nil, nil, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 400, -500, 2, 0, 'AntiSurface', 1}},
         },
         BuilderType = 'Any',
         BuilderData = {

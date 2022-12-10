@@ -7270,7 +7270,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 target = targetCheck
                             end
                             --LOG('MoveWithMicro - platoon threat '..self.CurrentPlatoonThreat.. ' Enemy Threat '..totalThreat * 1.5)
-                            if totalThreat and avoid and totalThreat * 1.5 >= self.CurrentPlatoonThreat then
+                            if totalThreat and self.PlatoonData.Avoid and totalThreat * 1.5 >= self.CurrentPlatoonThreat then
                                 --LOG('MoveWithMicro - Threat too high are we are in avoid mode')
                                 local alternatePos = false
                                 local mergePlatoon = false
@@ -7364,7 +7364,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                             continue
                                         end
                                         IssueClearCommands({unit})
-                                        retreatTrigger = VariableKite(self,unit,target, maxDistance)
+                                        retreatTrigger = VariableKite(self,unit,target)
                                     end
                                 else
                                     self:MoveToLocation(path[i], false)
@@ -7413,22 +7413,31 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
     
                     end
-                    targetCheck = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, avoid)
+                    targetCheck = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, self.PlatoonData.Avoid)
                     coroutine.yield(15)
                 end
                 if PlatoonExists(aiBrain, self) and PlatoonExists(aiBrain, targetPlatoon) then
-                    local dist = VDist3Sq(PlatoonPosition , GetPlatoonPosition(targetPlatoon))
+                    local targetPlatoonPos = GetPlatoonPosition(targetPlatoon)
+                    local dist = VDist3Sq(PlatoonPosition , targetPlatoonPos)
                     while dist > maxMergeDistance do
                         coroutine.yield(20)
-                        self:MoveToLocation(GetPlatoonPosition(targetPlatoon), false)
-                        coroutine.yield(20)
-                        dist = VDist3Sq(PlatoonPosition , GetPlatoonPosition(targetPlatoon))
-                        if not PlatoonExists(aiBrain, self) or not PlatoonExists(aiBrain, targetPlatoon) then
+                        if not PlatoonExists(aiBrain, targetPlatoon) then
                             return
                         end
+                        targetPlatoonPos = GetPlatoonPosition(targetPlatoon)
+                        self:MoveToLocation(targetPlatoonPos, false)
+                        coroutine.yield(20)
+                        if not PlatoonExists(aiBrain, targetPlatoon) then
+                            return
+                        end
+                        targetPlatoonPos = GetPlatoonPosition(targetPlatoon)
+                        dist = VDist3Sq(PlatoonPosition , targetPlatoonPos)
                         if dist < maxMergeDistance then
                             return true
+                        else
+                            LOG('Not in merge distance, distance is '..VDist3Sq(PlatoonPosition , targetPlatoonPos))
                         end
+                        IssueClearCommands(GetPlatoonUnits(self))
                     end
                 end
             end
@@ -7573,6 +7582,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         --local platoonSearchRange = self.PlatoonData.PlatoonSearchRange * self.PlatoonData.PlatoonSearchRange or 250000
         local aiBrain = self:GetBrain()
         local feederTimeout = 0
+        self.EnemyRadius = 45
         while PlatoonExists(aiBrain, self) do
             --RNGLOG('Feeder starting loop')
             if platoonType == 'fighter' then
@@ -7630,7 +7640,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local atPlatoon = self:MoveToPlatoonRNG(targetPlatoon)
                 if atPlatoon then
                     RNGLOG('tank feeder platoon at targetPlatoon, attempting to merge')
-                    aiBrain:AssignUnitsToPlatoon(targetPlatoon, {GetPlatoonUnits(self)}, 'Attack', 'none' )
+                    aiBrain:AssignUnitsToPlatoon(targetPlatoon, GetPlatoonUnits(self), 'Attack', 'none' )
+                    coroutine.yield(2)
+                    RNGLOG('tank feeder platoon should be merged, disbanding')
+                    self:PlatoonDisband()
                 end
             else
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG', true)
@@ -10890,7 +10903,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         if enemy and not enemy.Dead and NavUtils.CanPathTo(self.MovementLayer, self.Pos, enemy:GetPosition()) then
                             local dist=VDist3Sq(enemy:GetPosition(),self.Pos)
                             if self.raid or self.guard then
-                                if dist<1225 then
+                                if dist<2025 then
                                     --RNGLOG('Exit Path Navigation for raid')
                                     return true
                                 end
@@ -11017,41 +11030,42 @@ Platoon = Class(RNGAIPlatoonClass) {
             local snum=0
             if GetTerrainHeight(platoon.Pos[1],platoon.Pos[3])<platoon.Pos[2]+3 then
                 for _,v in platoonUnits do
-                    if not v or v.Dead then continue end
-                    local unitPos = v:GetPosition()
-                    if VDist2Sq(unitPos[1],unitPos[3],platoon.Pos[1],platoon.Pos[3])>platoon.MaxWeaponRange*platoon.MaxWeaponRange+900 then
-                        local vec={}
-                        vec[1],vec[2],vec[3]=v:GetVelocity()
-                        if VDist3Sq({0,0,0},vec)<1 then
-                            IssueClearCommands({v})
-                            IssueMove({v},platoon.base)
-                            aiBrain:AssignUnitsToPlatoon('ArmyPool', {v}, 'Unassigned', 'NoFormation')
-                            continue
+                    if v and not v.Dead then
+                        local unitPos = v:GetPosition()
+                        if VDist2Sq(unitPos[1],unitPos[3],platoon.Pos[1],platoon.Pos[3])>platoon.MaxWeaponRange*platoon.MaxWeaponRange+900 then
+                            local vec={}
+                            vec[1],vec[2],vec[3]=v:GetVelocity()
+                            if VDist3Sq({0,0,0},vec)<1 then
+                                IssueClearCommands({v})
+                                IssueMove({v},platoon.base)
+                                aiBrain:AssignUnitsToPlatoon('ArmyPool', {v}, 'Unassigned', 'NoFormation')
+                                continue
+                            end
                         end
-                    end
-                    if VDist2Sq(unitPos[1],unitPos[3],platoon.Pos[1],platoon.Pos[3])>v.MaxWeaponRange/3*v.MaxWeaponRange/3+platoonNum*platoonNum then
-                        --spread=spread+VDist3Sq(v:GetPosition(),platoon.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
-                        --snum=snum+1
-                        ---[[
-                        if platoon.dest then
-                            IssueClearCommands({v})
-                            if v.Sniper then
-                                IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.dest,{VDist3(platoon.dest,platoon.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
+                        if VDist2Sq(unitPos[1],unitPos[3],platoon.Pos[1],platoon.Pos[3])>v.MaxWeaponRange/3*v.MaxWeaponRange/3+platoonNum*platoonNum then
+                            --spread=spread+VDist3Sq(v:GetPosition(),platoon.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
+                            --snum=snum+1
+                            ---[[
+                            if platoon.dest then
+                                IssueClearCommands({v})
+                                if v.Sniper then
+                                    IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.dest,{VDist3(platoon.dest,platoon.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
+                                else
+                                    IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.dest,{VDist3(platoon.dest,platoon.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
+                                end
+                                spread=spread+VDist3Sq(unitPos,platoon.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
+                                snum=snum+1
                             else
-                                IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.dest,{VDist3(platoon.dest,platoon.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
-                            end
-                            spread=spread+VDist3Sq(unitPos,platoon.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
-                            snum=snum+1
-                        else
-                            IssueClearCommands({v})
-                            if v.Sniper or v.Support then
-                                IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.home,{VDist3(platoon.home,platoon.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
-                            else
-                                IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.home,{VDist3(platoon.home,platoon.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
-                            end
-                            spread=spread+VDist3Sq(unitPos,platoon.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
-                            snum=snum+1
-                        end--]]
+                                IssueClearCommands({v})
+                                if v.Sniper or v.Support then
+                                    IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.home,{VDist3(platoon.home,platoon.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
+                                else
+                                    IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.home,{VDist3(platoon.home,platoon.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
+                                end
+                                spread=spread+VDist3Sq(unitPos,platoon.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
+                                snum=snum+1
+                            end--]]
+                        end
                     end
                 end
             end

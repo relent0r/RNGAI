@@ -344,9 +344,7 @@ EngineerManager = Class(RNGEngineerManager) {
 
 CreateFloatingEngineerManager = function(brain, location)
     local em = EngineerManager()
-    --LOG('brain nickname '..repr(brain.Nickname))
-    --LOG('location is '..repr(location))
-    LOG('Starting Floating Engineer Manager...')
+    --LOG('Starting Floating Engineer Manager...')
     em:CreateFloatingEM(brain, location)
     return em
 end
