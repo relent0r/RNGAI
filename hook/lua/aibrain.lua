@@ -5196,7 +5196,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 --RNGLOG('Transfer Energy to team mate')
                                 local amount
                                 amount = GetEconomyStored( self, 'ENERGY') / 8
-                                SUtils.AISendChat('allies', self.Nickname, 'AI '..self.Nickname..' Sending '..amount..' energy to '..brain.Nickname, ArmyBrains[brain:GetArmyIndex()].Nickname)
+                                SUtils.AISendChat('allies', self.Nickname, 'AI '..self.Nickname..' Sending '..amount..' energy to '..brain.Nickname, ArmyBrains[index].Nickname)
                                 self:TakeResource('Energy', amount)
                                 brain:GiveResource( 'Energy', amount)
                             end
