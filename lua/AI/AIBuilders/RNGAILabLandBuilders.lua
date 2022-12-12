@@ -49,8 +49,8 @@ BuilderGroup {
             Avoid        = true,
             ThreatType = 'Economy',			    -- Type of threat to use for gauging attacks
             FindHighestThreat = true,			-- Don't find high threat targets
-            MaxThreatThreshold = 3900,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 1000,			-- If threat is lower than this, do not attack
+            MaxThreatThreshold = 140,			-- If threat is higher than this, do not attack
+            MinThreatThreshold = 50,			-- If threat is lower than this, do not attack
             AvoidBases = true,
             AvoidBasesRadius = 150,
             AggressiveMove = true,      
