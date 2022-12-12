@@ -5191,7 +5191,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if GetEconomyStoredRatio(self, 'ENERGY') > 0.95 and GetEconomyTrend(self, 'ENERGY') > 10 then
                 for index, brain in ArmyBrains do
                     if index ~= selfIndex then
-                        if IsAlly(selfIndex, brain:GetArmyIndex()) then
+                        if not ArmyIsCivilian(index) and IsAlly(selfIndex, index) then
                             if GetEconomyStoredRatio(brain, 'ENERGY') < 0.01 then
                                 --RNGLOG('Transfer Energy to team mate')
                                 local amount
