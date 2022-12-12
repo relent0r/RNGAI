@@ -5188,7 +5188,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local SUtils = import('/lua/AI/sorianutilities.lua')
         coroutine.yield(180)
         while true do
-            if GetEconomyStoredRatio(self, 'ENERGY') > 0.95 and GetEconomyTrend(self, 'ENERGY') > 10 then
+            if GetEconomyStoredRatio(self, 'ENERGY') > 0.95 and GetEconomyTrend(self, 'ENERGY') > 100 then
                 for index, brain in ArmyBrains do
                     if index ~= selfIndex then
                         if not ArmyIsCivilian(index) and IsAlly(selfIndex, index) then
