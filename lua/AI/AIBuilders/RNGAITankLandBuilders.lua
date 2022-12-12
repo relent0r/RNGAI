@@ -775,16 +775,17 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI Land Response Formers',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
+    --[[
     Builder {
         BuilderName = 'RNGAI Land Feeder',
         PlatoonTemplate = 'RNGAI LandFeeder',
         Priority = 400,
-        InstanceCount = 30,
+        InstanceCount = 5,
         BuilderType = 'Any',
         BuilderData = {
             PlatoonType = 'tank',
             PlatoonSearchRange = BaseDMZArea,
-            AvoidBases = true,
+            Avoid = true,
             SearchRadius = BaseEnemyArea,
             LocationType = 'LocationType',
             NeverGuardEngineers = true,
@@ -798,8 +799,9 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PlatoonTemplateExist', { 'RNGAI Zone Control' } },
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE } },
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
          },
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI Response BaseRestrictedArea',                              -- Random Builder Name.
         PlatoonTemplate = 'RNG TruePlatoon Combat',                          -- Template Name. 

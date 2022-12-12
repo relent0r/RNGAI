@@ -313,13 +313,13 @@ StructureManager = Class {
                                     if unit:IsUnitState('Upgrading') then
                                         FactoryData.T2NAVALUpgrading = FactoryData.T2NAVALUpgrading + 1
                                     end
-                                    FactoryData.TotalT1NAVAL = FactoryData.TotalT1NAVAL + 1
+                                    FactoryData.TotalT2NAVAL = FactoryData.TotalT2NAVAL + 1
                                 elseif unitCat.TECH3 then
                                     RNGINSERT(FactoryData.T3NAVAL, unit)
                                     if not unitCat.SUPPORTFACTORY then
                                         FactoryData.T3NAVALHQCount[unit.UnitId] = FactoryData.T3NAVALHQCount[unit.UnitId] + 1
                                     end
-                                    FactoryData.TotalT1NAVAL = FactoryData.TotalT1NAVAL + 1
+                                    FactoryData.TotalT3NAVAL = FactoryData.TotalT3NAVAL + 1
                                 end
                             end
                         end
@@ -433,7 +433,7 @@ StructureManager = Class {
                 end
             end
         else
-            WARN('No factory list found during factory upgrade cycle')
+            WARN('No factory list found during factory upgrade cycle '..base)
         end
         if lowestUnit then
             return lowestUnit
@@ -821,21 +821,15 @@ StructureManager = Class {
             end
         end
         local t3NavalPass = false
-        if totalNavalT3HQCount < 1 and totalNavalT2HQCount > 0 and self.Factories.NAVAL[2].UpgradingCount < 1 and self.Factories.NAVAL[2].Total > 0 then
-            --RNGLOG('Factory T2 Air Upgrade HQ Check passed')
+        if totalNavalT3HQCount < 1 and totalNavalT2HQCount > 0 and self.Factories.NAVAL[2].UpgradingCount < 1 and self.Factories.NAVAL[2].Total > 1 then
             if self.Brain.EconomyOverTimeCurrent.MassIncome > (8.0 * self.Brain.EcoManager.EcoMultiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 150.0 then
-                --RNGLOG('Factory Upgrade Income Over time check passed')
                 if GetEconomyIncome(self.Brain,'MASS') >= (8.0 * self.Brain.EcoManager.EcoMultiplier) and GetEconomyIncome(self.Brain,'ENERGY') >= 150.0 then
-                    --RNGLOG('Factory Upgrade Income check passed')
                     if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.05 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05 then
-                        --RNGLOG('Factory Upgrade efficiency over time check passed')
                         local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                         local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
                         if MassEfficiency >= 1.05 and EnergyEfficiency >= 1.05 then
-                            --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
                             local factoryToUpgrade = self:GetClosestFactory('NAVAL', 'NAVAL', 'TECH2', true)
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
-                                --RNGLOG('Structure Manager Triggering T3 Air HQ Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'NAVAL')
                                 t3NavalPass = true
                                 coroutine.yield(30)

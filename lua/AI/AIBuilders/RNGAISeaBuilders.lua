@@ -173,7 +173,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Subhunter',
-        PlatoonTemplate = 'T2SeaDestroyer',
+        PlatoonTemplate = 'T2SubKiller',
         Priority = 748,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
@@ -234,6 +234,21 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
         BuilderType = 'Sea',
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Battleship',
+        PlatoonTemplate = 'T3SeaBattleship',
+        Priority = 751,
+        BuilderConditions = {
+            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { EBC, 'FactorySpendRatioRNG', {'Naval', true}},
+            { UCBC, 'ArmyManagerBuild', { 'Naval', 'T3', 'battleship'} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Sea',
+        BuilderData = {
+            TechLevel = 3
+        },
     },
     Builder {
         BuilderName = 'RNGAI Factory Sub Enemy Threat T3',

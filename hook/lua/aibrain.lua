@@ -1365,7 +1365,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     EconomyMonitorRNG = function(self)
         -- This over time thread is based on Sprouto's LOUD AI.
-        LOG('RNG EconomyMonitor Starting')
+        --LOG('RNG EconomyMonitor Starting')
         self.EconomyData = { ['EnergyIncome'] = {}, ['EnergyRequested'] = {}, ['EnergyStorage'] = {}, ['EnergyTrend'] = {}, ['MassIncome'] = {}, ['MassRequested'] = {}, ['MassStorage'] = {}, ['MassTrend'] = {}, ['Period'] = 300 }
         -- number of sample points
         -- local point
@@ -5247,8 +5247,8 @@ AIBrain = Class(RNGAIBrainClass) {
         local armyAir={T1={scout=0,interceptor=0,bomber=0,gunship=0,transport=0},T2={fighter=0,bomber=0,gunship=0,mercy=0,transport=0,torpedo=0},T3={scout=0,asf=0,bomber=0,gunship=0,torpedo=0,transport=0}}
         local armyAirType={scout=0,interceptor=0,bomber=0,asf=0,gunship=0,fighter=0,torpedo=0,transport=0,mercy=0}
         local armyAirTiers={T1=0,T2=0,T3=0}
-        local armyNaval={T1={frigate=0,sub=0,shard=0},T2={destroyer=0,cruiser=0,subhunter=0,transport=0},T3={battleship=0}}
-        local armyNavalType={frigate=0,sub=0,shard=0,destroyer=0,cruiser=0,subhunter=0,battleship=0}
+        local armyNaval={T1={frigate=0,sub=0,shard=0},T2={destroyer=0,cruiser=0,subhunter=0,transport=0},T3={battleship=0,carrier=0,missileship=0,subkiller=0,battlecruiser=0,nukesub=0}}
+        local armyNavalType={frigate=0,sub=0,shard=0,destroyer=0,cruiser=0,subhunter=0,battleship=0,carrier=0,missileship=0,subkiller=0,battlecruiser=0,nukesub=0}
         local armyNavalTiers={T1=0,T2=0,T3=0}
         local launcherspend = {T2=0,T3=0}
         local facspend = {Land=0,Air=0,Naval=0}
@@ -5574,27 +5574,27 @@ AIBrain = Class(RNGAIBrainClass) {
                             armyNaval.T2.subhunter=armyNaval.T2.subhunter+1
                             armyNavalType.subhunter=armyNavalType.subhunter+1
                         end
-                    --[[elseif EntityCategoryContains(categories.TECH3,unit) then
+                    elseif EntityCategoryContains(categories.TECH3,unit) then
                         armyNavalTiers.T3=armyNavalTiers.T3+1
-                        if EntityCategoryContains(categories.SCOUT,unit) then
-                            armyNaval.T3.scout=armyNaval.T3.scout+1
-                            armyNavalType.scout=armyNavalType.scout+1
-                        elseif EntityCategoryContains(categories.ANTIAIR - categories.BOMBER - categories.GROUNDATTACK ,unit) then
-                            armyNaval.T3.asf=armyNaval.T3.asf+1
-                            armyNavalType.asf=armyNavalType.asf+1
-                        elseif EntityCategoryContains(categories.BOMBER,unit) then
-                            armyNaval.T3.bomber=armyNaval.T3.bomber+1
-                            armyNavalType.bomber=armyNavalType.bomber+1
-                        elseif EntityCategoryContains(categories.GROUNDATTACK - categories.EXPERIMENTAL,unit) then
-                            armyNaval.T3.gunship=armyNaval.T3.gunship+1
-                            armyNavalType.gunship=armyNavalType.gunship+1
-                        elseif EntityCategoryContains(categories.TRANSPORTFOCUS,unit) then
-                            armyNaval.T3.transport=armyNaval.T3.transport+1
-                            armyNavalType.transport=armyNavalType.transport+1
-                        elseif EntityCategoryContains(categories.ANTINAVY - categories.EXPERIMENTAL,unit) then
-                            armyNaval.T3.torpedo=armyNaval.T3.torpedo+1
-                            armyNavalType.torpedo=armyNavalType.torpedo+1
-                        end]]
+                        if EntityCategoryContains(categories.NUKE * categories.SUBMERSIBLE,unit) then
+                            armyNaval.T3.nukesub=armyNaval.T3.nukesub+1
+                            armyNavalType.nukesub=armyNavalType.nukesub+1
+                        elseif EntityCategoryContains(categories.xss0304,unit) then
+                            armyNaval.T3.subkiller=armyNaval.T3.subkiller+1
+                            armyNavalType.subkiller=armyNavalType.subkiller+1
+                        elseif EntityCategoryContains(categories.xes0307,unit) then
+                            armyNaval.T3.battlecruiser=armyNaval.T3.battlecruiser+1
+                            armyNavalType.battlecruiser=armyNavalType.battlecruiser+1
+                        elseif EntityCategoryContains(categories.uas0303,unit) then
+                            armyNaval.T3.missileship=armyNaval.T3.missileship+1
+                            armyNavalType.missileship=armyNavalType.missileship+1
+                        elseif EntityCategoryContains(categories.CARRIER,unit) then
+                            armyNaval.T3.carrier=armyNaval.T3.carrier+1
+                            armyNavalType.carrier=armyNavalType.carrier+1
+                        elseif EntityCategoryContains(categories.BATTLESHIP - categories.EXPERIMENTAL,unit) then
+                            armyNaval.T3.battleship=armyNaval.T3.battleship+1
+                            armyNavalType.battleship=armyNavalType.battleship+1
+                        end
                     end
                 elseif unitCat.SILO then
                     if unitCat.TECH2 then
