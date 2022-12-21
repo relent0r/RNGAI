@@ -138,6 +138,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
     self.BadReclaimables = self.BadReclaimables or {}
 
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
+        coroutine.yield(1)
         local engPos = self:GetPosition()
         local minRec = platoon.PlatoonData.MinimumReclaim
         if not aiBrain.StartReclaimTaken then
@@ -149,7 +150,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 local reclaimCount = 0
                 local firstReclaim = false
                 while tableSize > 0 do
-                    --coroutine.yield(10)
+                    coroutine.yield(1)
                     aiBrain.StartReclaimTaken = true
                     local closestReclaimDistance = false
                     local closestReclaim
@@ -188,6 +189,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         local reclaimTimeout = 0
                         local massOverflow = false
                         while aiBrain:PlatoonExists(platoon) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 40) do
+                            coroutine.yield(1)
                             reclaimTimeout = reclaimTimeout + 1
                             --RNGLOG('Waiting for reclaim to no longer exist')
                             if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
@@ -228,6 +230,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         if engReclaiming then
                             local idleCounter = 0
                             while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
+                                coroutine.yield(1)
                                 if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
                                     --RNGLOG('We are not reclaiming or moving in the reclaim loop')
                                     --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
@@ -314,6 +317,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         local Lastdist
                         local dist
                         while not self.Dead and aiBrain:PlatoonExists(platoon) do
+                            coroutine.yield(1)
                             engPos = self:GetPosition()
                             dist = VDist3Sq(engPos, validLocation)
                             if dist < 144 then
@@ -428,6 +432,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                     if engReclaiming then
                                         local idleCounter = 0
                                         while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
+                                            coroutine.yield(1)
                                             if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
                                                 --RNGLOG('We are not reclaiming or moving in the reclaim loop')
                                                 --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
@@ -958,27 +963,27 @@ function HaveUnitVisual(aiBrain, unit, checkBlipOnly)
     --returns true if aiBrain can see a unit
     --checkBlipOnly - returns true if can see a blip
     --RNGLOG('HaveUnitVisual : Check if available')
+    local iArmyIndex = aiBrain:GetArmyIndex()
     if checkBlipOnly == nil then checkBlipOnly = false end
     local unitBrain
-    if not unit.Dead then
+    if not unit.Dead and unit.GetAIBrain then
         unitBrain = unit:GetAIBrain()
     end
-    if unitBrain == aiBrain then 
+    if unitBrain and unitBrain:GetArmyIndex() == iArmyIndex then 
         return true
     else
         local bCanSeeUnit = false
-        local iArmyIndex = aiBrain:GetArmyIndex()
         if not(unit.Dead) then
             if not(unit.GetBlip) then
-                return true
+                if unit.GetPosition then
+                    return true
+                end
             else
                 local blip = unit:GetBlip(iArmyIndex)
                 if blip then
                     if checkBlipOnly then 
-                        --RNGLOG('HaveUnitVisual : blip seen')
                         return true
                     elseif blip:IsSeenEver(iArmyIndex) then 
-                        --RNGLOG('HaveUnitVisual : blip IsSeenEver')
                         return true 
                     end
                 end
@@ -1378,9 +1383,10 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
         --RNGLOG('High Threat at main base, get target from there')
         cdrPos = aiBrain.BuilderManagers['MAIN'].Position
     end
-    closestDistance = false
-    closestTarget = false
-    closestTargetPosition = false
+    local closestDistance = false
+    local closestTarget = false
+    local closestTargetPosition = false
+    local enemyACUPresent
     --RNGLOG('ACUTARGETTING : MaxRange on target search '..maxRange)
     for _, range in RangeList do
         if maxRange > range then
@@ -1605,7 +1611,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
         --RNGLOG('Looking for targets from position '..platoon.PlatoonData.LocationType)
         position = aiBrain.BuilderManagers[platoon.PlatoonData.LocationType].Position
     end
-    local enemyThreat, targetUnits, category
+    local enemyThreat, targetUnits, category, unit
     local RangeList = { [1] = maxRange }
     if not aiBrain or not position or not maxRange then
         return false
@@ -1861,6 +1867,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, 
     end
     local targetUnits = GetUnitsAroundPoint(aiBrain, categories.COMMAND, position, maxRange, 'Enemy')
     local retUnit = false
+    local unit
     local distance = false
     local targetShields = 9999
     for num, unit in targetUnits do
@@ -2194,6 +2201,8 @@ end
 function GetNavalPlatoonMaxRangeRNG(aiBrain, platoon)
     local maxRange = 0
     local platoonUnits = platoon:GetPlatoonUnits()
+    local isTech1
+    local selectedWeaponArc
     for _,unit in platoonUnits do
         if unit.Dead then
             continue
@@ -2204,7 +2213,7 @@ function GetNavalPlatoonMaxRangeRNG(aiBrain, platoon)
                 continue
             end
 
-            #Check if the weapon can hit land from water
+            --Check if the weapon can hit land from water
             local canAttackLand = string.find(weapon.FireTargetLayerCapsTable.Water, 'Land', 1, true)
 
             if canAttackLand and weapon.MaxRadius > maxRange then
@@ -4833,6 +4842,7 @@ GetHoldingPosition = function(aiBrain, platoonPos, platoon, threatType)
     local threatLocations = aiBrain:GetThreatsAroundPosition( aiBrain.BuilderManagers['MAIN'].Position, 16, true, threatType )
     local bestThreat
     local bestThreatPos
+    local bestThreatDist
     if aiBrain.RNGDEBUG then
         --RNGLOG('CurrentPlatoonThreat '..platoon.CurrentPlatoonThreat)
         --RNGLOG('threatLocations for antiair platoon '..repr(threatLocations))
@@ -4945,9 +4955,10 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid)
         if platoon then
             platPos = platoon:GetPlatoonPosition()
         end
-        local rangeCheck = 2
+        -- again because we are dealing with vdist3sq in ClosestEnemyBase the rangeCheck is also squared
+        local rangeCheck = 4
         if avoid then
-            rangeCheck = 3
+            rangeCheck = 9
         end
         if platPos and VDist3Sq(platPos, aiBrain.BrainIntel.StartPos) < (aiBrain.EnemyIntel.ClosestEnemyBase / rangeCheck) then
             for k, v in aiBrain.prioritypointshighvalue do

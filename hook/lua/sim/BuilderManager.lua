@@ -41,7 +41,7 @@ BuilderManager = Class(RNGBuilderManager) {
         end
         return temptable
     end,
-
+    --[[
     ManagerThread = function(self)
         if not self.Brain.RNG then
             return RNGBuilderManager.ManagerThread(self)
@@ -70,7 +70,7 @@ BuilderManager = Class(RNGBuilderManager) {
                 coroutine.yield((self.BuilderCheckInterval * 10) - numTicks)
             end
         end
-    end,
+    end,]]
 
     SortBuilderList = function(self, bType)
         if not self.Brain.RNG then

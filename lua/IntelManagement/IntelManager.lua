@@ -996,6 +996,7 @@ IntelManager = Class {
             threatType = 'AntiAir'
             minimumExtractorTier = 2
         end
+        -- note to self. When dividing using vdist3sq the division also needs to be squared. e.g instead of divide by 3, divide by 9.
         if type == 'AirAntiSurface' then
             --RNGLOG('self.Brain.BrainIntel.SelfThreat.AirNow '..self.Brain.BrainIntel.SelfThreat.AirNow)
             --RNGLOG('self.Brain.EnemyIntel.EnemyThreatCurrent.Air '..self.Brain.EnemyIntel.EnemyThreatCurrent.Air)
@@ -1009,7 +1010,7 @@ IntelManager = Class {
             if minThreatRisk > 0 then
                 for k, v in self.Brain.EnemyIntel.ACU do
                     if not v.Ally and v.HP ~= 0 and v.Position[1] and v.LastSpotted + 120 > gameTime then
-                        if v.HP < 12000 and minThreatRisk >= 50 and VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase / 2.2) then
+                        if v.HP < 12000 and minThreatRisk >= 50 and VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase / 4.84) then
                             if GetThreatBetweenPositions(self.Brain, self.Brain.BrainIntel.StartPos, v.Position, nil, threatType) < 5 then
                                 --RNGLOG('ACU ClosestEnemy base distance is '..(self.Brain.EnemyIntel.ClosestEnemyBase /2))
                                 --RNGLOG('ACU Distance from start position '..VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos))
@@ -1131,10 +1132,9 @@ IntelManager = Class {
                 --if v.Position[1] then
                 --    RNGLOG('Current Distance '..VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos))
                 --end
-                --RNGLOG('Closest enemy base '..self.Brain.EnemyIntel.ClosestEnemyBase)
-                --RNGLOG('Cutoff distance '..(self.Brain.EnemyIntel.ClosestEnemyBase / 3))
+                
                 if not v.Ally and v.Position[1] and v.HP ~= 0 and v.LastSpotted + 120 > gameTime then
-                    if VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase / 3) then
+                    if VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase / 9) then
                         local gridX, gridZ = self:GetIntelGrid(v.Position)
                         if v.HP < 4000 then
                             desiredStrikeDamage = desiredStrikeDamage + v.HP
@@ -1142,6 +1142,12 @@ IntelManager = Class {
                             desiredStrikeDamage = desiredStrikeDamage + 4000
                         end
                         desiredStrikeDamage = desiredStrikeDamage + 4000
+                        if self.Brain.RNGDEBUG then
+                            RNGLOG('Setting up antisurface acu snipe')
+                            RNGLOG('Closest enemy base '..self.Brain.EnemyIntel.ClosestEnemyBase)
+                            RNGLOG('Distance required is '..(self.Brain.EnemyIntel.ClosestEnemyBase / 9))
+                            RNGLOG('Distance is '..VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos))
+                        end
                         table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'ACU', Index = k} )
                     end
                 end
@@ -1159,7 +1165,7 @@ IntelManager = Class {
             if minThreatRisk > 0 then
                 for k, v in self.Brain.EnemyIntel.ACU do
                     if not v.Ally and v.HP ~= 0 and v.Position[1] then
-                        if minThreatRisk >= 50 and VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase / 2) then
+                        if minThreatRisk >= 50 and VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase / 4) then
                             if RUtils.PositionInWater(v.Position) then
                                 if GetThreatBetweenPositions(self.Brain, self.Brain.BrainIntel.StartPos, v.Position, nil, threatType) < threatMax * 2 then
                                     --RNGLOG('ACU ClosestEnemy base distance is '..(self.Brain.EnemyIntel.ClosestEnemyBase /2))
@@ -1499,15 +1505,29 @@ ExpansionIntelScanRNG = function(aiBrain)
                     info:   type="Land Path Node"
                     info: }
                 ]]
-                local label, reason = NavUtils.GetLabel('Land', v.Position)
-                if not label then
-                    WARN('No expansion label returned reason '..reason)
-                    WARN('Water label failure position was '..repr(v.Position))
+                local label, reason
+                if RUtils.PositionInWater(v.Position) then
+                    label, reason = NavUtils.GetLabel('Water', v.Position)
+                    if not label then
+                        WARN('No expansion label returned reason '..reason)
+                        WARN('Water label failure position was '..repr(v.Position))
+                    else
+                        aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
+                        aiBrain.BrainIntel.ExpansionWatchTable[k].RNGLayer = 'Water'
+                        --RNGLOG('Expansion Marker has had label added '..repr(v))
+                    end
                 else
-                    aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
-                    aiBrain.BrainIntel.ExpansionWatchTable[k].RNGLayer = 'Land'
-                    --RNGLOG('Expansion Marker has had label added '..repr(v))
+                    label, reason = NavUtils.GetLabel('Land', v.Position)
+                    if not label then
+                        WARN('No expansion label returned reason '..reason)
+                        WARN('Land label failure position was '..repr(v.Position))
+                    else
+                        aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
+                        aiBrain.BrainIntel.ExpansionWatchTable[k].RNGLayer = 'Land'
+                        --RNGLOG('Expansion Marker has had label added '..repr(v))
+                    end
                 end
+                
             end
             if v.MassPoints > 2 then
                 for _, t in threatTypes do
@@ -1566,7 +1586,9 @@ function InitialNavalAttackCheck(aiBrain)
             local checkPoints = DrawCirclePoints(6, 26, v.position)
             if checkPoints then
                 for _, m in checkPoints do
-                    if RUtils.PositionInWater(m) then
+                    local terrainHeight = GetTerrainHeight(m[1], m[3])
+                    local surfaceHeight = GetSurfaceHeight(m[1], m[3])
+                    if terrainHeight < surfaceHeight and (surfaceHeight - terrainHeight > 1) then
                        --RNGLOG('Location '..repr({m[1], m[3]})..' is in water for extractor'..repr({v.position[1], v.position[3]}))
                        --RNGLOG('Surface Height at extractor '..GetSurfaceHeight(v.position[1], v.position[3]))
                        --RNGLOG('Surface height at position '..GetSurfaceHeight(m[1], m[3]))
@@ -1586,13 +1608,14 @@ function InitialNavalAttackCheck(aiBrain)
                 end
             end
         end
-       --RNGLOG('There are potentially '..markerCount..' markers that are in range for frigates')
-       --RNGLOG('There are '..markerCountNotBlocked..' markers NOT blocked by terrain')
-       --RNGLOG('There are '..markerCountBlocked..' markers that ARE blocked')
-        --RNGLOG('Markers that frigates can try and raid '..repr(frigateRaidMarkers))
+        if aiBrain.RNGDEBUG then
+            RNGLOG('There are potentially '..markerCount..' markers that are in range for frigates')
+            RNGLOG('There are '..markerCountNotBlocked..' markers NOT blocked by terrain')
+            RNGLOG('There are '..markerCountBlocked..' markers that ARE blocked')
+            RNGLOG('Markers that frigates can try and raid '..repr(frigateRaidMarkers))
+        end
         if markerCountNotBlocked > 8 then
             aiBrain.EnemyIntel.FrigateRaid = true
-            --RNGLOG('Frigate Raid is true')
             aiBrain.EnemyIntel.FrigateRaidMarkers = frigateRaidMarkers
         end
     end

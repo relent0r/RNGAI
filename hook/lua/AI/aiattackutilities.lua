@@ -938,8 +938,8 @@ function GetRealThreatAtPosition(aiBrain, position, range )
     local bp
     local ALLBPS = __blueprints
     
-    airthreat = 0
-    surthreat = 0
+    local airthreat = 0
+    local surthreat = 0
 
     local eunits = GetUnitsAroundPoint( aiBrain, categories.ALLUNITS - categories.FACTORY - categories.ECONOMIC - categories.SHIELD - categories.WALL , position, range,  'Enemy')
 
@@ -1448,7 +1448,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
         local threatDistNorm = -1
         if targetThreat > 0 then
             threatDist = math.sqrt(VDist2Sq(threat[1], threat[2], platoonPosition[1], platoonPosition[3]))
-            #distance is 1-100 of the max map length, distance function weights are split by the distance radius
+            --distance is 1-100 of the max map length, distance function weights are split by the distance radius
 
             threatDistNorm = 100 * threatDist / maxMapLengthSq
             if threatDistNorm < 1 then
@@ -1512,20 +1512,20 @@ function CheckNavalPathingRNG(aiBrain, platoon, location, maxRange, selectedWeap
     --if it is not in the water or we can't get to it, then see if there is water within weapon range that we can get to
     if not success and maxRange then
         --Check vectors in 8 directions around the threat location at maxRange to see if they are in water.
-        local rootSaver = maxRange / 1.4142135623 #For diagonals. X and Z components of the vector will have length maxRange / sqrt(2)
+        local rootSaver = maxRange / 1.4142135623 --For diagonals. X and Z components of the vector will have length maxRange / sqrt(2)
         local vectors = {
-            {location[1],             0, location[3] + maxRange},   #up
-            {location[1],             0, location[3] - maxRange},   #down
-            {location[1] + maxRange,  0, location[3]},              #right
-            {location[1] - maxRange,  0, location[3]},              #left
+            {location[1],             0, location[3] + maxRange},   --up
+            {location[1],             0, location[3] - maxRange},   --down
+            {location[1] + maxRange,  0, location[3]},              --right
+            {location[1] - maxRange,  0, location[3]},              --left
 
-            {location[1] + rootSaver,  0, location[3] + rootSaver},   #right-up
-            {location[1] + rootSaver,  0, location[3] - rootSaver},   #right-down
-            {location[1] - rootSaver,  0, location[3] + rootSaver},   #left-up
-            {location[1] - rootSaver,  0, location[3] - rootSaver},   #left-down
+            {location[1] + rootSaver,  0, location[3] + rootSaver},   --right-up
+            {location[1] + rootSaver,  0, location[3] - rootSaver},   --right-down
+            {location[1] - rootSaver,  0, location[3] + rootSaver},   --left-up
+            {location[1] - rootSaver,  0, location[3] - rootSaver},   --left-down
         }
 
-        #Sort the vectors by their distance to us.
+        --Sort the vectors by their distance to us.
         table.sort(vectors, function(a,b)
             local distA = VDist2Sq(platoonPosition[1], platoonPosition[3], a[1], a[3])
             local distB = VDist2Sq(platoonPosition[1], platoonPosition[3], b[1], b[3])

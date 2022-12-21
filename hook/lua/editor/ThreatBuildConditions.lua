@@ -36,7 +36,7 @@ function EnemyThreatGreaterThanValueAtBaseRNG(aiBrain, locationType, threatValue
     if not baseposition then
         return false
     end
-    currentThreat = aiBrain:GetThreatAtPosition( baseposition, testRings, true, threatType or 'Overall' )
+    local currentThreat = aiBrain:GetThreatAtPosition( baseposition, testRings, true, threatType or 'Overall' )
     --RNGLOG('Threat Value Detected :'..currentThreat..'Threat Value Desired'..threatValue)
     if currentThreat > threatValue then
         --RNGLOG('EnemyThreatGreaterThanValueAtBase returning true for : ', builder)

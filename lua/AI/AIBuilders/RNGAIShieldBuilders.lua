@@ -149,6 +149,7 @@ BuilderGroup {
                 --AvoidCategory = categories.STRUCTURE * categories.SHIELD,
                 --maxUnits = 1,
                 --maxRadius = 35,
+                Centered = true,
                 AdjacencyPriority = {
                     categories.EXPERIMENTAL * categories.STRUCTURE,
                     categories.STRATEGIC * categories.STRUCTURE - categories.AIRSTAGINGPLATFORM,

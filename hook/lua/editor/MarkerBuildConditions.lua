@@ -90,7 +90,7 @@ function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, thre
             --RNGLOG(_..'Checking marker with max distance ['..distance..']. Actual marker has distance: ('..(v.Distance)..').')
             if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
                 if threatCheck then
-                    threat = aiBrain:GetThreatAtPosition(v.Position, threatRings, true, threatType or 'Overall')
+                    local threat = aiBrain:GetThreatAtPosition(v.Position, threatRings, true, threatType or 'Overall')
                     if threat <= threatMin or threat >= threatMax then
                         continue
                     end
@@ -138,7 +138,7 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
             --RNGLOG(_..'Checking marker with max maxDistance ['..maxDistance..'] minDistance ['..minDistance..'] . Actual marker has distance: ('..(v.Distance)..').')
             if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
                 if threatCheck then
-                    threat = aiBrain:GetThreatAtPosition(v.Position, threatRings, true, threatType or 'Overall')
+                    local threat = aiBrain:GetThreatAtPosition(v.Position, threatRings, true, threatType or 'Overall')
                     if threat <= threatMin or threat >= threatMax then
                         continue
                     end

@@ -605,7 +605,7 @@ StructureManager = Class {
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
                                 --RNGLOG('Structure Manager Triggering T2 Air Support Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
-                                t3LandPass = true
+                                t2AirPass = true
                                 coroutine.yield(30)
                             end
                         end

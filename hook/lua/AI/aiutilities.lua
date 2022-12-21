@@ -179,7 +179,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
                     if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, pos, 45, 'Enemy') > 0 then
                         local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, pos, 45, 'Enemy')
                         for _, eunit in enemyUnits do
-                            enemyUnitPos = eunit:GetPosition()
+                            local enemyUnitPos = eunit:GetPosition()
                             if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, eunit) then
                                 if VDist3Sq(enemyUnitPos, pos) < 144 then
                                     --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
@@ -427,7 +427,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                     if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, pos, 45, 'Enemy') > 0 then
                         local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, pos, 45, 'Enemy')
                         for _, eunit in enemyUnits do
-                            enemyUnitPos = eunit:GetPosition()
+                            local enemyUnitPos = eunit:GetPosition()
                             if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, eunit) then
                                 if VDist3Sq(enemyUnitPos, pos) < 144 then
                                     --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
@@ -1100,6 +1100,7 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
             end
         end
         if retUnit and targetShields > 0 then
+            local unit
             local platoonUnits = platoon:GetPlatoonUnits()
             for _, w in platoonUnits do
                 if not w.Dead then

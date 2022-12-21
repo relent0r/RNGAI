@@ -118,6 +118,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- TURNING OFF AI POOL PLATOON, I MAY JUST REMOVE THAT PLATOON FUNCTIONALITY LATER
         local poolPlatoon = self:GetPlatoonUniquelyNamed('ArmyPool')
         if poolPlatoon then
+            poolPlatoon.ArmyPool = true
             poolPlatoon:TurnOffPoolAI()
         end
         --local mapSizeX, mapSizeZ = GetMapSize()
@@ -2106,7 +2107,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local massLocations = RUtils.AIGetMassMarkerLocations(self, true)
         
             for _, start in startLocations do
-                markersStartPos = AIUtils.AIGetMarkersAroundLocationRNG(self, 'Mass', start.Position, 30)
+                local markersStartPos = AIUtils.AIGetMarkersAroundLocationRNG(self, 'Mass', start.Position, 30)
                 for _, marker in markersStartPos do
                     --RNGLOG('* AI-RNG: Start Mass Marker ..'..repr(marker))
                     RNGINSERT(startPosMarkers, marker)
@@ -2367,7 +2368,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
 
                         if v.Strength == 0 then
-                            name = v.Brain.Nickname
+                            local name = v.Brain.Nickname
                             --RNGLOG('* AI-RNG: Name is'..name)
                             --RNGLOG('* AI-RNG: v.strenth is 0')
                             if name ~= 'civilian' then
@@ -2726,7 +2727,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         for k, v in unitsAtPosition do
                             if v and not v.Dead then
                                 --RNGLOG('Unit ID is '..v.UnitId)
-                                bp = ALLBPS[v.UnitId].Defense
+                                local bp = ALLBPS[v.UnitId].Defense
                                 --RNGLOG(repr(ALLBPS[v.UnitId].Defense))
                                 if bp.SubThreatLevel ~= nil then
                                     myThreat = myThreat + bp.SubThreatLevel
@@ -2772,6 +2773,7 @@ AIBrain = Class(RNGAIBrainClass) {
     BaseMonitorPlatoonDistressThreadRNG = function(self)
         self.BaseMonitor.PlatoonAlertSounded = true
         while true do
+            RNGLOG('MassEfficiencyOverTime --'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime)
             local numPlatoons = 0
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 if self:PlatoonExists(v.Platoon) then
@@ -3121,9 +3123,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         c.Position = unit:GetPosition()
                         c.HP = unit:GetHealth()
                         --RNGLOG('Enemy ACU of index '..enemyIndex..' has '..c.HP..' health')
-                        acuThreat = self:GetThreatAtPosition(c.Position, self.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
-                       --RNGLOG('* AI-RNG: Threat at ACU location is :'..acuThreat)
-                        c.Threat = acuThreat
+                        c.Threat = self:GetThreatAtPosition(c.Position, self.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
                         c.LastSpotted = currentGameTime
                         c.Unit = unit
                         --LOG('Enemy ACU Position is set')
@@ -3338,7 +3338,6 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                         if self.CheatEnabled then
                             acuHealth = v:GetHealth()
-                            lastSpotted = GetGameTimeSeconds()
                         end
                     end
                     if gunBool then
@@ -3349,7 +3348,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     if self.CheatEnabled then
                         self.EnemyIntel.ACU[enemyIndex].HP = acuHealth
-                        self.EnemyIntel.ACU[enemyIndex].LastSpotted = lastSpotted
                         --RNGLOG('Cheat is enabled and acu has '..acuHealth..' Health '..'Brain intel says '..self.EnemyIntel.ACU[enemyIndex].HP)
                     end
                 end
@@ -3527,7 +3525,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local currentGameTime = GetGameTimeSeconds()
 
         for _, t in threatTypes do
-            rawThreats = GetThreatsAroundPosition(self, self.BuilderManagers.MAIN.Position, 16, true, t)
+            local rawThreats = GetThreatsAroundPosition(self, self.BuilderManagers.MAIN.Position, 16, true, t)
             for _, raw in rawThreats do
                 potentialThreats[raw[1]] = potentialThreats[raw[1]] or { }
                 potentialThreats[raw[1]][raw[2]] = potentialThreats[raw[1]][raw[2]] or { }
@@ -3575,6 +3573,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local potentialTarget = false
         local targetType = false
         local potentialTargetValue = 0
+        local requiredCount = 0
         local enemyACUIndexes = {}
         local im = IntelManagerRNG.GetIntelManager(self)
 
