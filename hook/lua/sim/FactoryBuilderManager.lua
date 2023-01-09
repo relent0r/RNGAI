@@ -205,6 +205,9 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                 return
             end
         end
+        if self.LocationType == 'MAIN' then
+            return
+        end
         self.LocationActive = false
         --self.Brain:RemoveConsumption(self.LocationType, factory)
     end,

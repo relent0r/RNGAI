@@ -136,6 +136,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
                 end
             end
             local dist
+            local movementTimeout = 0
             while not unit.Dead do
                 if brokenPathMovement and unit.EngineerBuildQueue and RNGGETN(unit.EngineerBuildQueue) > 0 then
                     for i=currentPathNode, pathLength do
@@ -212,6 +213,12 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
                                 end
                             end
                         end
+                    end
+                end
+                if unit:IsIdleState() then
+                    movementTimeout = movementTimeout + 1
+                    if movementTimeout > 10 then
+                        break
                     end
                 end
             end

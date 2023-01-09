@@ -4990,7 +4990,7 @@ GetPlatUnitEnemyBias = function(aiBrain, platoon)
         local enemyX, enemyZ = enemy:GetArmyStartPos()
         local closestDistance
         for _, v in GetPlatoonUnits(platoon) do
-            if not v.Dead then
+            if not v.Dead and (not v.Blueprint.CategoriesHash.SCOUT) then
                 local unitPos = v:GetPosition()
                 local distance = VDist2Sq(unitPos[1], unitPos[3], enemyX, enemyZ)
                 if not closestUnit or VDist2Sq(unitPos[1], unitPos[3], enemyX, enemyZ) < closestDistance then
@@ -5001,7 +5001,7 @@ GetPlatUnitEnemyBias = function(aiBrain, platoon)
         end
     else
         for _, v in GetPlatoonUnits(platoon) do
-            if not v.Dead then
+            if not v.Dead and (not v.Blueprint.CategoriesHash.SCOUT) then
                 closestUnit = v
                 break
             end
