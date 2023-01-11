@@ -36,7 +36,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local platPos = GetPlatoonPosition(self)
             if platPos then
                 if self.MaxRadius then
-                    DrawCircle(platPos, self.MaxRadius, 'cc0000')
+                    DrawCircle(self.HoldingPosition, self.MaxRadius, 'cc0000')
                 end
                 if self.HoldingPosition then
                     DrawLine(platPos, self.HoldingPosition, 'aa000000')
@@ -95,10 +95,8 @@ Platoon = Class(RNGAIPlatoonClass) {
         local maxRadius = data.SearchRadius or 1000
         local threatCountLimit = 0
         local acuCheck = false
-        --[[
-        if aiBrain.RNGDEBUG then
-            self:ForkThread(self.AirHuntDraw, aiBrain)
-        end]]
+        -- temp
+        self:ForkThread(self.AirHuntDraw, aiBrain)
         local holdPosTimer = GetGameTimeSeconds()
         local holdPosTimerExpired = true
         while PlatoonExists(aiBrain, self) do
@@ -158,19 +156,19 @@ Platoon = Class(RNGAIPlatoonClass) {
                 self.Target = target
                 local targetPos = target:GetPosition()
                 local platoonCount = RNGGETN(GetPlatoonUnits(self))
-                --RNGLOG('Air Hunt Enemy Threat at target position is '..GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir'))
+                RNGLOG('Air Hunt Enemy Threat at target position is '..GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir'))
                 --RNGLOG('Target Position is '..repr(targetPos))
                 --RNGLOG('Platoon Threat is '..self.CurrentPlatoonThreat)
-                --RNGLOG('threatCountLimit is '..threatCountLimit)
+                RNGLOG('threatCountLimit is '..threatCountLimit)
                 if currentPlatPos then
                     local targetThreat = GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
-                    --RNGLOG('Air threat at target position '..targetThreat)
-                    --RNGLOG('Current Platoon threat '..self.CurrentPlatoonThreat)
+                    RNGLOG('Air threat at target position '..targetThreat)
+                    RNGLOG('Current Platoon threat '..self.CurrentPlatoonThreat)
                     if VDist3Sq(currentPlatPos, targetPos) > restrictedZone then
                         if (threatCountLimit < 6 ) and (VDist2Sq(currentPlatPos[1], currentPlatPos[2], startX, startZ) < 22500) and (targetThreat * 1.3 > self.CurrentPlatoonThreat) and platoonCount < platoonLimit and not aiBrain.CDRUnit.Caution then
                             --RNGLOG('Target air threat too high')
                             threatCountLimit = threatCountLimit + 1
-                            self:MoveToLocation(aiBrain.BuilderManagers['MAIN'].Position, false)
+                            self:MoveToLocation(self.HoldingPosition, false)
                             coroutine.yield(80)
                             self:Stop()
                             self:MergeWithNearbyPlatoonsRNG('AirHuntAIRNG', 60, 20)
@@ -4268,7 +4266,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                         else
                             WARN('No buildLocation or whatToBuild during ACU initialization')
                         end
-                        buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 15, true)
+                        RNGLOG("Attempt to build air factory")
+                        buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 25, true)
                         if buildLocation and whatToBuild then
                             --RNGLOG('CommanderInitializeAIRNG : Execute Build Structure adjacent Land Factory')
                             --RNGLOG('CommanderInitializeAIRNG : whatToBuild '..whatToBuild)

@@ -3577,7 +3577,7 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
             local differenceZ=math.abs(targetSize.SkirtSizeZ-unitSize.SkirtSizeZ)
             local offsetZ=math.floor(differenceZ/2)
             local offsetfactory=0
-            if EntityCategoryContains(categories.FACTORY, unit) and (buildUnit=='T1LandFactory' or buildUnit=='T2SupportLandFactory' or buildUnit=='T3SupportLandFactory') then
+            if EntityCategoryContains(categories.FACTORY, unit) and (buildUnit=='T1LandFactory' or buildUnit=='T1AirFactory' or buildUnit=='T2SupportLandFactory' or buildUnit=='T3SupportLandFactory') then
                 offsetfactory=2
             end
             -- Top/bottom of unit
@@ -3592,8 +3592,8 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
                 end
                 if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
                     if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) then
-                        if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) and VDist3Sq(engPos,normalposition(testPos)) < radius * radius then
-                            return heightbuildpos(testPos), whatToBuild
+                        if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) and VDist3Sq(engPos,normalposition(testPos2)) < radius * radius then
+                            return heightbuildpos(testPos2), whatToBuild
                         end
                     end
                 end
@@ -3609,8 +3609,8 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
                 end
                 if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
                     if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) then
-                        if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos)) and VDist3Sq(engPos,normalposition(testPos)) < radius * radius then
-                            return heightbuildpos(testPos), whatToBuild
+                        if CanBuildStructureAt(aiBrain, whatToBuild, normalposition(testPos2)) and VDist3Sq(engPos,normalposition(testPos2)) < radius * radius then
+                            return heightbuildpos(testPos2), whatToBuild
                         end
                     end
                 end
