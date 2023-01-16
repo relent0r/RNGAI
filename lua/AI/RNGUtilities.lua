@@ -110,10 +110,8 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 2)
                 EngineerTryRepair(aiBrain, eng, whatToBuild, massMarker.Position)
                 if massMarker.BorderWarning then
-                    --RNGLOG('Border Warning on mass point marker')
                     IssueBuildMobile({eng}, massMarker.Position, whatToBuild, {})
                 else
-                    --RNGLOG('Reclaim AI building mex')
                     aiBrain:BuildStructure(eng, whatToBuild, {massMarker.Position[1], massMarker.Position[3], 0}, false)
                 end
             end
@@ -2786,9 +2784,10 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
     local targetStartPosition = false
     --We look for the closest
     for k, v in startPositions do
-        local waterNodePos, waterNodeName, waterNodeDist = AIUtils.AIGetClosestMarkerLocationRNG(aiBrain, 'Water Path Node', v.Position[1], v.Position[3])
+        local waterNodePos, waterNodeName, waterNodeDist = AIUtils.AIGetClosestMarkerLocationRNG(aiBrain, 'Water Path Node', v.Position[1], v.Position[3], false, true, 'Water')
         if waterNodeDist and waterNodeDist < (MaxPlatoonWeaponRange * MaxPlatoonWeaponRange + 900) then
-            --RNGLOG('Start position is '..waterNodeDist..' from water node, weapon range on platoon is '..MaxPlatoonWeaponRange..' we are going to attack from this position')
+            RNGLOG('Start position is '..waterNodeDist..' from water node, weapon range on platoon is '..MaxPlatoonWeaponRange..' we are going to attack from this position')
+            RNGLOG('This position is '..repr(waterNodePos))
             if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition, waterNodePos) then
                 attackPosition = waterNodePos
                 targetStartPosition = v.Position
@@ -2797,7 +2796,7 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
         end
     end
     if attackPosition then
-        --RNGLOG('Valid Attack Position '..repr(attackPosition)..' target Start Position '..repr(targetStartPosition))
+        RNGLOG('Valid Attack Position '..repr(attackPosition)..' target Start Position '..repr(targetStartPosition))
     end
     return attackPosition, targetStartPosition
 end

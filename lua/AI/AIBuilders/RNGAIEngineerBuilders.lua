@@ -1106,6 +1106,23 @@ BuilderGroup {
         },
         BuilderType = 'Any',
     },
+    Builder {
+        BuilderName = 'RNGAI Assist Manager T3',
+        PlatoonTemplate = 'EngineerAssistManagerT3RNG',
+        Priority = 999,
+        DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH3 }},
+            { UCBC, 'EngineerAssistManagerNeedsEngineers', {} },
+        },
+        BuilderData = {
+            JobType = 'Assist',
+            PlatoonPlan = 'EngineerAssistManagerRNG',
+            Location = 'LocationType'
+        },
+        BuilderType = 'Any',
+    },
 }
 
 BuilderGroup {

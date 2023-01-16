@@ -57,12 +57,12 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
         T1EngOnly = true
     end
     -- don't check a path if we are in build range
-    if not alwaysCheckPath and VDist2(pos[1], pos[3], destination[1], destination[3]) < 12 then
+    if not alwaysCheckPath and VDist3Sq(pos, destination) < 144 then
         return true
     end
 
     -- first try to find a path with markers. 
-    local result, bestPos
+    local result, navReason
     local path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination)
     if unit.PlatoonHandle.BuilderName then
         --RNGLOG('EngineerGenerateSafePathToRNG for '..unit.PlatoonHandle.BuilderName..' reason '..reason)
@@ -80,7 +80,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
                 SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
                 return false
             end
-            result, bestPos = unit:CanPathTo(destination)
+            result, navReason = NavUtils.CanPathTo('Amphibious', pos, destination)
         end 
     end
     if result then
@@ -250,7 +250,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
     end]]
 
     -- first try to find a path with markers. 
-    local result, bestPos
+    local result, navReason
     local path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination, nil, 300)
     --RNGLOG('EngineerGenerateSafePathToRNG reason is'..reason)
     -- only use CanPathTo for distance closer then 200 and if we can't path with markers
@@ -265,7 +265,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                 SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
                 return false
             end
-            result, bestPos = eng:CanPathTo(destination)
+            result, navReason = NavUtils.CanPathTo('Amphibious', pos, destination)
         end 
     end
     --RNGLOG('EngineerGenerateSafePathToRNG move to next bit')
@@ -368,14 +368,14 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                     aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
                 end
             end
-            while not eng.Dead do
+            while not IsDestroyed(eng) do
                 if brokenPathMovement and eng.EngineerBuildQueue and RNGGETN(eng.EngineerBuildQueue) > 0 then
                     pos = eng:GetPosition()
                     local queuePointTaken = {}
                     local skipPath = false
                     for i=currentPathNode, pathLength do
                         for k, v in eng.EngineerBuildQueue do
-                            if v.PathPoint == i then
+                            if v.PathPoint and (v.PathPoint == i or i > v.PathPoint and not queuePointTaken[k]) then
                                 if eng.EngineerBuildQueue[k][5] then
                                     --RNGLOG('BorderWarning build')
                                     --RNGLOG('Found build command at point '..repr(eng.EngineerBuildQueue[k][2]))
@@ -391,6 +391,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                         if not skipPath then
                             IssueMove({eng}, path[i])
                         end
+                        skipPath = false
                     end
                     --RNGLOG('queuePointTaken list '..repr(queuePointTaken))
                     --IssueMove({eng}, destination)
@@ -456,7 +457,13 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                                             IssueClearCommands({eng})
                                             IssueReclaim({eng}, eunit)
                                             brokenPathMovement = true
-                                            coroutine.yield(60)
+                                            coroutine.yield(20)
+                                            if not IsDestroyed(eunit) and VDist3Sq(eng:GetPosition(), eunit:GetPosition()) < 100 then
+                                                IssueClearCommands({eng})
+                                                IssueReclaim({eng}, eunit)
+                                                coroutine.yield(30)
+                                            end
+                                            coroutine.yield(40)
                                             break
                                         end
                                     end
@@ -975,7 +982,7 @@ function AIFindMarkerNeedsEngineerThreatRNG(aiBrain, pos, radius, tMin, tMax, tR
     return retPos, retName
 end
 
-function AIGetClosestMarkerLocationRNG(aiBrain, markerType, startX, startZ, extraTypes)
+function AIGetClosestMarkerLocationRNG(aiBrain, markerType, startX, startZ, extraTypes, pathCheck, movementLayer)
     local markerList = AIGetMarkerLocations(aiBrain, markerType)
     if extraTypes then
         for num, pType in extraTypes do
@@ -995,9 +1002,17 @@ function AIGetClosestMarkerLocationRNG(aiBrain, markerType, startX, startZ, extr
         local z = v.Position[3]
         distance = VDist2Sq(startX, startZ, x, z)
         if not lowest or distance < lowest then
-            loc = v.Position
-            name = v.Name
-            lowest = distance
+            if pathCheck then 
+                if NavUtils.CanPathTo(movementLayer, {startX, GetSurfaceHeight(startX, startZ), startZ}, v.Position) then
+                    loc = v.Position
+                    name = v.Name
+                    lowest = distance
+                end
+            else
+                loc = v.Position
+                name = v.Name
+                lowest = distance
+            end
         end
     end
 

@@ -1356,6 +1356,15 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit, aiBrain)
     local targetCat = targetUnit.Blueprint.CategoriesHash
     local sourceCat = sourceUnit.Blueprint.CategoriesHash
 
+    if sourceCat.EXPERIMENTAL then
+        data.sourcecat = 'Experimental'
+    elseif sourceCat.AIR then
+        data.sourcecat = 'Air'
+    elseif sourceCat.LAND then
+        data.sourcecat = 'Land'
+    elseif sourceCat.STRUCTURE then
+        data.sourcecat = 'Structure'
+    end
 
     if targetCat.EXPERIMENTAL then
         data.targetcat = 'Experimental'
@@ -1370,16 +1379,6 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit, aiBrain)
         data.targetcat = 'Structure'
     end
       
-    if sourceCat.EXPERIMENTAL then
-        data.sourcecat = 'Experimental'
-    elseif sourceCat.AIR then
-        data.sourcecat = 'Air'
-    elseif sourceCat.LAND then
-        data.sourcecat = 'Land'
-    elseif sourceCat.STRUCTURE then
-        data.sourcecat = 'Structure'
-    end
-
     if data.targetcat and data.sourcecat then
         aiBrain.IntelManager.UnitStats[data.targetcat].Deaths.Total[data.sourcecat] = aiBrain.IntelManager.UnitStats[data.targetcat].Deaths.Total[data.sourcecat] + 1
     end

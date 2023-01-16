@@ -103,7 +103,7 @@ function EngineerGeneratePathRNG(aiBrain, startNode, endNode, threatType, threat
     -- Is the Start and End node the same OR is the distance to the first node longer then to the destination ?
     if startNode.name == endNode.name
     or VDist2Sq(startPos[1], startPos[3], startNode.position[1], startNode.position[3]) > VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3])
-    or VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3]) < 2500 then
+    or VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3]) < 2500 and NavUtils.CanPathTo(platoonLayer, startPos, endPos) then
         -- store as path only our current destination.
         fork.path = { { position = endPos } }
         aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = fork }

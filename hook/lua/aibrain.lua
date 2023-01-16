@@ -5279,329 +5279,331 @@ AIBrain = Class(RNGAIBrainClass) {
         local unitCat
 
         for _,unit in units do
-            if unit and not unit.Dead then 
-                unitCat = unit.Blueprint.CategoriesHash
-                local spendm=GetConsumptionPerSecondMass(unit)
-                local spende=GetConsumptionPerSecondEnergy(unit)
-                local producem=GetProductionPerSecondMass(unit)
-                local producee=GetProductionPerSecondEnergy(unit)
-                tspend.m=tspend.m+spendm
-                tspend.e=tspend.e+spende
-                rincome.m=rincome.m+producem
-                rincome.e=rincome.e+producee
-                if unitCat.MASSEXTRACTION then
-                    totalEconomyThreat = totalEconomyThreat + unit.Blueprint.Defense.EconomyThreatLevel
-                    totalExtractorCount = totalExtractorCount + 1
-                    if not unit.zoneid and self.ZonesInitialized then
-                        --LOG('unit has no zone')
-                        local mexPos = GetPosition(unit)
-                        if RUtils.PositionOnWater(mexPos[1], mexPos[3]) then
-                            -- tbd define water based zones
-                            unit.zoneid = 'water'
-                        else
-                            unit.zoneid = MAP:GetZoneID(mexPos,self.Zones.Land.index)
-                            --LOG('Unit zone is '..unit.zoneid)
-                        end
-                    end
-                    if not extractors[unit.zoneid] then
-                        --LOG('Trying to add unit to zone')
-                        extractors[unit.zoneid] = {T1 = 0,T2 = 0,T3 = 0,}
-                    end
-                    if unitCat.TECH1 then
-                        extractors[unit.zoneid].T1=extractors[unit.zoneid].T1+1
-                        mexspend.T1=mexspend.T1+spendm
-                        if unit.MAINBASE then
-                            mainBaseExtractors.T1 = mainBaseExtractors.T1 + 1
-                        end
-                    elseif unitCat.TECH2 then
-                        extractors[unit.zoneid].T2=extractors[unit.zoneid].T2+1
-                        mexspend.T2=mexspend.T2+spendm
-                        if unit.MAINBASE then
-                            mainBaseExtractors.T2 = mainBaseExtractors.T2 + 1
-                        end
-                    elseif unitCat.TECH3 then
-                        extractors[unit.zoneid].T3=extractors[unit.zoneid].T3+1
-                        mexspend.T3=mexspend.T3+spendm
-                        if unit.MAINBASE then
-                            mainBaseExtractors.T3 = mainBaseExtractors.T3 + 1
-                        end
-                    end
-                elseif unitCat.COMMAND or unitCat.SUBCOMMANDER then
-                    if unitCat.COMMAND then
-                        coms.acu = coms.acu + 1
-                        engspend.com = engspend.com + spendm
-                        engbuildpower.com = engbuildpower.com + unit.Blueprint.Economy.BuildRate
-                    elseif unitCat.SUBCOMMANDER then
-                        coms.sacu = coms.sacu + 1
-                        engspend.com = engspend.com + spendm
-                        engbuildpower.sacu = engbuildpower.sacu + unit.Blueprint.Economy.BuildRate
-                    end
-                elseif unitCat.MASSFABRICATION then
-                    if unitCat.TECH2 then
-                        fabs.T2=fabs.T2+1
-                    elseif unitCat.TECH3 then
-                        fabs.T3=fabs.T3+1
-                    end
-                elseif unitCat.ENGINEER then
-                    if unit.JobType then
-                        if not engineerDistribution[unit.JobType] then
-                            engineerDistribution[unit.JobType] = 0
-                        end
-                        --LOG('Engineer Job Type '..unit.JobType)
-                        engineerDistribution[unit.JobType] = engineerDistribution[unit.JobType] + 1
-                        engineerDistribution.Total = engineerDistribution.Total + 1
-                    end
-                    if unitCat.TECH1 then
-                        engspend.T1=engspend.T1+spendm
-                        engbuildpower.T1 = engbuildpower.T1 + unit.Blueprint.Economy.BuildRate
-                    elseif unitCat.TECH2 then
-                        engspend.T2=engspend.T2+spendm
-                        engbuildpower.T2 = engbuildpower.T2 + unit.Blueprint.Economy.BuildRate
-                    elseif unitCat.TECH3 then
-                        engspend.T3=engspend.T3+spendm
-                        engbuildpower.T3 = engbuildpower.T3 + unit.Blueprint.Economy.BuildRate
-                    end
-                elseif unitCat.FACTORY then
-                    if unitCat.LAND then
-                        facspend.Land=facspend.Land+spendm
-                        if unitCat.TECH1 then
-                            factories.Land.T1=factories.Land.T1+1
-                        elseif unitCat.TECH2 then
-                            factories.Land.T2=factories.Land.T2+1
-                        elseif unitCat.TECH3 then
-                            factories.Land.T3=factories.Land.T3+1
-                        end
-                    elseif unitCat.AIR then
-                        facspend.Air=facspend.Air+spendm
-                        if unitCat.TECH1 then
-                            factories.Air.T1=factories.Air.T1+1
-                        elseif unitCat.TECH2 then
-                            factories.Air.T2=factories.Air.T2+1
-                        elseif unitCat.TECH3 then
-                            factories.Air.T3=factories.Air.T3+1
-                        end
-                    elseif unitCat.NAVAL then
-                        facspend.Naval=facspend.Naval+spendm
-                        if unitCat.TECH1 then
-                            factories.Naval.T1=factories.Naval.T1+1
-                        elseif unitCat.TECH2 then
-                            factories.Naval.T2=factories.Naval.T2+1
-                        elseif unitCat.TECH3 then
-                            factories.Naval.T3=factories.Naval.T3+1
-                        end
-                    end
-                elseif unitCat.ENERGYPRODUCTION then
-                    if unitCat.HYDROCARBON then
-                        --LOG('HydroCarbon detected, adding zone data')
+            if unit and not unit.Dead then
+                if unit:GetFractionComplete() == 1 then 
+                    unitCat = unit.Blueprint.CategoriesHash
+                    local spendm=GetConsumptionPerSecondMass(unit)
+                    local spende=GetConsumptionPerSecondEnergy(unit)
+                    local producem=GetProductionPerSecondMass(unit)
+                    local producee=GetProductionPerSecondEnergy(unit)
+                    tspend.m=tspend.m+spendm
+                    tspend.e=tspend.e+spende
+                    rincome.m=rincome.m+producem
+                    rincome.e=rincome.e+producee
+                    if unitCat.MASSEXTRACTION then
+                        totalEconomyThreat = totalEconomyThreat + unit.Blueprint.Defense.EconomyThreatLevel
+                        totalExtractorCount = totalExtractorCount + 1
                         if not unit.zoneid and self.ZonesInitialized then
                             --LOG('unit has no zone')
-                            local hydroPos = GetPosition(unit)
-                            unit.zoneid = MAP:GetZoneID(hydroPos,self.Zones.Land.index)
-                            --LOG('Unit zone is '..unit.zoneid)
+                            local mexPos = GetPosition(unit)
+                            if RUtils.PositionOnWater(mexPos[1], mexPos[3]) then
+                                -- tbd define water based zones
+                                unit.zoneid = 'water'
+                            else
+                                unit.zoneid = MAP:GetZoneID(mexPos,self.Zones.Land.index)
+                                --LOG('Unit zone is '..unit.zoneid)
+                            end
                         end
-                        if not hydros[unit.zoneid] then
+                        if not extractors[unit.zoneid] then
                             --LOG('Trying to add unit to zone')
-                            hydros[unit.zoneid] = { hydrocarbon = 0 }
+                            extractors[unit.zoneid] = {T1 = 0,T2 = 0,T3 = 0,}
                         end
-                        hydros[unit.zoneid].hydrocarbon=hydros[unit.zoneid].hydrocarbon+1
-                    elseif unitCat.TECH1 then
-                        pgens.T1=pgens.T1+1
-                    elseif unitCat.TECH2 then
-                        pgens.T2=pgens.T2+1
-                    elseif unitCat.TECH3 then
-                        pgens.T3=pgens.T3+1
-                    end
-                elseif unitCat.LAND then
-                    if not unitCat.EXPERIMENTAL then
-                        totalLandThreat = totalLandThreat + unit.Blueprint.Defense.SurfaceThreatLevel
-                    end
-                    if unitCat.TECH1 then
-                        armyLandTiers.T1=armyLandTiers.T1+1
-                        if unitCat.SCOUT then
-                            armyLand.T1.scout=armyLand.T1.scout+1
-                            armyLandType.scout=armyLandType.scout+1
-                        elseif unitCat.DIRECTFIRE and not unitCat.ANTIAIR then
-                            armyLand.T1.tank=armyLand.T1.tank+1
-                            armyLandType.tank=armyLandType.tank+1
-                        elseif unitCat.INDIRECTFIRE and not unitCat.ANTIAIR then
-                            armyLand.T1.arty=armyLand.T1.arty+1
-                            armyLandType.arty=armyLandType.arty+1
-                        elseif unitCat.ANTIAIR then
-                            armyLand.T1.aa=armyLand.T1.aa+1
-                            armyLandType.aa=armyLandType.aa+1
+                        if unitCat.TECH1 then
+                            extractors[unit.zoneid].T1=extractors[unit.zoneid].T1+1
+                            mexspend.T1=mexspend.T1+spendm
+                            if unit.MAINBASE then
+                                mainBaseExtractors.T1 = mainBaseExtractors.T1 + 1
+                            end
+                        elseif unitCat.TECH2 then
+                            extractors[unit.zoneid].T2=extractors[unit.zoneid].T2+1
+                            mexspend.T2=mexspend.T2+spendm
+                            if unit.MAINBASE then
+                                mainBaseExtractors.T2 = mainBaseExtractors.T2 + 1
+                            end
+                        elseif unitCat.TECH3 then
+                            extractors[unit.zoneid].T3=extractors[unit.zoneid].T3+1
+                            mexspend.T3=mexspend.T3+spendm
+                            if unit.MAINBASE then
+                                mainBaseExtractors.T3 = mainBaseExtractors.T3 + 1
+                            end
                         end
-                    elseif unitCat.TECH2 then
-                        armyLandTiers.T2=armyLandTiers.T2+1
-                        if unitCat.DIRECTFIRE and not unitCat.BOT and not unitCat.ANTIAIR then
-                            armyLand.T2.tank=armyLand.T2.tank+1
-                            armyLandType.tank=armyLandType.tank+1
-                        elseif unitCat.DIRECTFIRE and unitCat.BOT and unitCat.BOMB then
-                            armyLand.T2.mobilebomb=armyLand.T2.mobilebomb+1
-                            armyLandType.tank=armyLandType.tank+1
-                        elseif unitCat.DIRECTFIRE and unitCat.BOT and not unitCat.ANTIAIR then
-                            armyLand.T2.bot=armyLand.T2.bot+1
-                            armyLandType.bot=armyLandType.bot+1
-                        elseif unitCat.SILO then
-                            armyLand.T2.mml=armyLand.T2.mml+1
-                            armyLandType.mml=armyLandType.mml+1
-                        elseif unitCat.ANTIAIR then
-                            armyLand.T2.aa=armyLand.T2.aa+1
-                            armyLandType.aa=armyLandType.aa+1
-                        elseif unitCat.SHIELD then
-                            armyLand.T2.shield=armyLand.T2.shield+1
-                            armyLandType.shield=armyLandType.shield+1
+                    elseif unitCat.COMMAND or unitCat.SUBCOMMANDER then
+                        if unitCat.COMMAND then
+                            coms.acu = coms.acu + 1
+                            engspend.com = engspend.com + spendm
+                            engbuildpower.com = engbuildpower.com + unit.Blueprint.Economy.BuildRate
+                        elseif unitCat.SUBCOMMANDER then
+                            coms.sacu = coms.sacu + 1
+                            engspend.com = engspend.com + spendm
+                            engbuildpower.sacu = engbuildpower.sacu + unit.Blueprint.Economy.BuildRate
                         end
-                    elseif unitCat.TECH3 then
-                        armyLandTiers.T3=armyLandTiers.T3+1
-                        if unitCat.SNIPER then
-                            armyLand.T3.sniper=armyLand.T3.sniper+1
-                            armyLandType.sniper=armyLandType.sniper+1
-                        elseif unitCat.DIRECTFIRE and EntityCategoryContains(categories.xel0305 + categories.xrl0305, unit) then
-                            armyLand.T3.armoured=armyLand.T3.armoured+1
-                            armyLandType.armoured=armyLandType.armoured+1
-                        elseif unitCat.DIRECTFIRE and not unitCat.ANTIAIR then
-                            armyLand.T3.tank=armyLand.T3.tank+1
-                            armyLandType.tank=armyLandType.tank+1
-                        elseif unitCat.SILO then
-                            armyLand.T3.mml=armyLand.T3.mml+1
-                            armyLandType.mml=armyLandType.mml+1
-                        elseif unitCat.INDIRECTFIRE then
-                            armyLand.T3.arty=armyLand.T3.arty+1
-                            armyLandType.arty=armyLandType.arty+1
-                        elseif unitCat.ANTIAIR then
-                            armyLand.T3.aa=armyLand.T3.aa+1
-                            armyLandType.aa=armyLandType.aa+1
-                        elseif unitCat.SHIELD then
-                            armyLand.T3.shield=armyLand.T3.shield+1
-                            armyLandType.shield=armyLandType.shield+1
+                    elseif unitCat.MASSFABRICATION then
+                        if unitCat.TECH2 then
+                            fabs.T2=fabs.T2+1
+                        elseif unitCat.TECH3 then
+                            fabs.T3=fabs.T3+1
                         end
-                    end
-                elseif unitCat.AIR then
-                    if not unitCat.EXPERIMENTAL then
-                        totalAirThreat = totalAirThreat + unit.Blueprint.Defense.AirThreatLevel + unit.Blueprint.Defense.SubThreatLevel + unit.Blueprint.Defense.SurfaceThreatLevel
-                    end
-                    if unitCat.TECH1 then
-                        armyAirTiers.T1=armyAirTiers.T1+1
-                        if unitCat.SCOUT then
-                            armyAir.T1.scout=armyAir.T1.scout+1
-                            armyAirType.scout=armyAirType.scout+1
-                        elseif unitCat.ANTIAIR then
-                            totalAntiAirThreat = totalAntiAirThreat + unit.Blueprint.Defense.AirThreatLevel
-                            armyAir.T1.interceptor=armyAir.T1.interceptor+1
-                            armyAirType.interceptor=armyAirType.interceptor+1
-                        elseif unitCat.BOMBER then
-                            armyAir.T1.bomber=armyAir.T1.bomber+1
-                            armyAirType.bomber=armyAirType.bomber+1
-                        elseif unitCat.GROUNDATTACK and not unitCat.EXPERIMENTAL then
-                            armyAir.T1.gunship=armyAir.T1.gunship+1
-                            armyAirType.gunship=armyAirType.gunship+1
-                        elseif unitCat.TRANSPORTFOCUS then
-                            armyAir.T1.transport=armyAir.T1.transport+1
-                            armyAirType.transport=armyAirType.transport+1
+                    elseif unitCat.ENGINEER then
+                        if unit.JobType then
+                            if not engineerDistribution[unit.JobType] then
+                                engineerDistribution[unit.JobType] = 0
+                            end
+                            --LOG('Engineer Job Type '..unit.JobType)
+                            engineerDistribution[unit.JobType] = engineerDistribution[unit.JobType] + 1
+                            engineerDistribution.Total = engineerDistribution.Total + 1
                         end
-                    elseif unitCat.TECH2 then
-                        armyAirTiers.T2=armyAirTiers.T2+1
-                        if unitCat.BOMBER and not unitCat.ANTINAVY and not EntityCategoryContains(categories.daa0206, unit) then
-                            armyAir.T2.bomber=armyAir.T2.bomber+1
-                            armyAirType.bomber=armyAirType.bomber+1
-                        elseif EntityCategoryContains(categories.xaa0202, unit)then
-                            totalAntiAirThreat = totalAntiAirThreat + unit.Blueprint.Defense.AirThreatLevel
-                            armyAir.T2.fighter=armyAir.T2.fighter+1
-                            armyAirType.fighter=armyAirType.fighter+1
-                        elseif unitCat.GROUNDATTACK and not unitCat.EXPERIMENTAL then
-                            armyAir.T2.gunship=armyAir.T2.gunship+1
-                            armyAirType.gunship=armyAirType.gunship+1
-                        elseif unitCat.ANTINAVY and not unitCat.EXPERIMENTAL then
-                            armyAir.T2.torpedo=armyAir.T2.torpedo+1
-                            armyAirType.torpedo=armyAirType.torpedo+1
-                        elseif EntityCategoryContains(categories.daa0206, unit) then
-                            armyAir.T2.mercy=armyAir.T2.mercy+1
-                            armyAirType.mercy=armyAirType.mercy+1
-                        elseif unitCat.TRANSPORTFOCUS then
-                            armyAir.T2.transport=armyAir.T2.transport+1
-                            armyAirType.transport=armyAirType.transport+1
+                        if unitCat.TECH1 then
+                            engspend.T1=engspend.T1+spendm
+                            engbuildpower.T1 = engbuildpower.T1 + unit.Blueprint.Economy.BuildRate
+                        elseif unitCat.TECH2 then
+                            engspend.T2=engspend.T2+spendm
+                            engbuildpower.T2 = engbuildpower.T2 + unit.Blueprint.Economy.BuildRate
+                        elseif unitCat.TECH3 then
+                            engspend.T3=engspend.T3+spendm
+                            engbuildpower.T3 = engbuildpower.T3 + unit.Blueprint.Economy.BuildRate
                         end
-                    elseif unitCat.TECH3 then
-                        armyAirTiers.T3=armyAirTiers.T3+1
-                        if unitCat.SCOUT then
-                            armyAir.T3.scout=armyAir.T3.scout+1
-                            armyAirType.scout=armyAirType.scout+1
-                        elseif unitCat.ANTIAIR and not unitCat.BOMBER and not unitCat.GROUNDATTACK then
-                            totalAntiAirThreat = totalAntiAirThreat + unit.Blueprint.Defense.AirThreatLevel
-                            armyAir.T3.asf=armyAir.T3.asf+1
-                            armyAirType.asf=armyAirType.asf+1
-                        elseif unitCat.BOMBER then
-                            armyAir.T3.bomber=armyAir.T3.bomber+1
-                            armyAirType.bomber=armyAirType.bomber+1
-                        elseif unitCat.GROUNDATTACK and not unitCat.EXPERIMENTAL then
-                            armyAir.T3.gunship=armyAir.T3.gunship+1
-                            armyAirType.gunship=armyAirType.gunship+1
-                        elseif unitCat.TRANSPORTFOCUS then
-                            armyAir.T3.transport=armyAir.T3.transport+1
-                            armyAirType.transport=armyAirType.transport+1
-                        elseif unitCat.ANTINAVY and not unitCat.EXPERIMENTAL then
-                            armyAir.T3.torpedo=armyAir.T3.torpedo+1
-                            armyAirType.torpedo=armyAirType.torpedo+1
+                    elseif unitCat.FACTORY then
+                        if unitCat.LAND then
+                            facspend.Land=facspend.Land+spendm
+                            if unitCat.TECH1 then
+                                factories.Land.T1=factories.Land.T1+1
+                            elseif unitCat.TECH2 then
+                                factories.Land.T2=factories.Land.T2+1
+                            elseif unitCat.TECH3 then
+                                factories.Land.T3=factories.Land.T3+1
+                            end
+                        elseif unitCat.AIR then
+                            facspend.Air=facspend.Air+spendm
+                            if unitCat.TECH1 then
+                                factories.Air.T1=factories.Air.T1+1
+                            elseif unitCat.TECH2 then
+                                factories.Air.T2=factories.Air.T2+1
+                            elseif unitCat.TECH3 then
+                                factories.Air.T3=factories.Air.T3+1
+                            end
+                        elseif unitCat.NAVAL then
+                            facspend.Naval=facspend.Naval+spendm
+                            if unitCat.TECH1 then
+                                factories.Naval.T1=factories.Naval.T1+1
+                            elseif unitCat.TECH2 then
+                                factories.Naval.T2=factories.Naval.T2+1
+                            elseif unitCat.TECH3 then
+                                factories.Naval.T3=factories.Naval.T3+1
+                            end
                         end
-                    end
-                elseif unitCat.NAVAL then
-                    if not unitCat.EXPERIMENTAL then
-                        totalNavalThreat = totalNavalThreat + unit.Blueprint.Defense.AirThreatLevel + unit.Blueprint.Defense.SubThreatLevel + unit.Blueprint.Defense.SurfaceThreatLevel
-                        totalNavalSubThreat = totalNavalSubThreat + unit.Blueprint.Defense.SubThreatLevel
-                    end
-                    if unitCat.TECH1 then
-                        armyNavalTiers.T1=armyNavalTiers.T1+1
-                        if unitCat.FRIGATE then
-                            armyNaval.T1.frigate=armyNaval.T1.frigate+1
-                            armyNavalType.frigate=armyNavalType.frigate+1
-                        elseif unitCat.T1SUBMARINE then
-                            armyNaval.T1.sub=armyNaval.T1.sub+1
-                            armyNavalType.sub=armyNavalType.sub+1
-                        elseif EntityCategoryContains(categories.uas0102, unit) then
-                            armyNaval.T1.shard=armyNaval.T1.shard+1
-                            armyNavalType.shard=armyNavalType.shard+1
+                    elseif unitCat.ENERGYPRODUCTION then
+                        if unitCat.HYDROCARBON then
+                            --LOG('HydroCarbon detected, adding zone data')
+                            if not unit.zoneid and self.ZonesInitialized then
+                                --LOG('unit has no zone')
+                                local hydroPos = GetPosition(unit)
+                                unit.zoneid = MAP:GetZoneID(hydroPos,self.Zones.Land.index)
+                                --LOG('Unit zone is '..unit.zoneid)
+                            end
+                            if not hydros[unit.zoneid] then
+                                --LOG('Trying to add unit to zone')
+                                hydros[unit.zoneid] = { hydrocarbon = 0 }
+                            end
+                            hydros[unit.zoneid].hydrocarbon=hydros[unit.zoneid].hydrocarbon+1
+                        elseif unitCat.TECH1 then
+                            pgens.T1=pgens.T1+1
+                        elseif unitCat.TECH2 then
+                            pgens.T2=pgens.T2+1
+                        elseif unitCat.TECH3 then
+                            pgens.T3=pgens.T3+1
                         end
-                    elseif unitCat.TECH2 then
-                        armyNavalTiers.T2=armyNavalTiers.T2+1
-                        if unitCat.DESTROYER then
-                            armyNaval.T2.destroyer=armyNaval.T2.destroyer+1
-                            armyNavalType.destroyer=armyNavalType.destroyer+1
-                        elseif unitCat.CRUISER then
-                            armyNaval.T2.cruiser=armyNaval.T2.cruiser+1
-                            armyNavalType.cruiser=armyNavalType.cruiser+1
-                        elseif unitCat.T2SUBMARINE or EntityCategoryContains(categories.xes0102, unit) then
-                            armyNaval.T2.subhunter=armyNaval.T2.subhunter+1
-                            armyNavalType.subhunter=armyNavalType.subhunter+1
+                    elseif unitCat.LAND then
+                        if not unitCat.EXPERIMENTAL then
+                            totalLandThreat = totalLandThreat + unit.Blueprint.Defense.SurfaceThreatLevel
                         end
-                    elseif EntityCategoryContains(categories.TECH3,unit) then
-                        armyNavalTiers.T3=armyNavalTiers.T3+1
-                        if EntityCategoryContains(categories.NUKE * categories.SUBMERSIBLE,unit) then
-                            armyNaval.T3.nukesub=armyNaval.T3.nukesub+1
-                            armyNavalType.nukesub=armyNavalType.nukesub+1
-                        elseif EntityCategoryContains(categories.xss0304,unit) then
-                            armyNaval.T3.subkiller=armyNaval.T3.subkiller+1
-                            armyNavalType.subkiller=armyNavalType.subkiller+1
-                        elseif EntityCategoryContains(categories.xes0307,unit) then
-                            armyNaval.T3.battlecruiser=armyNaval.T3.battlecruiser+1
-                            armyNavalType.battlecruiser=armyNavalType.battlecruiser+1
-                        elseif EntityCategoryContains(categories.uas0303,unit) then
-                            armyNaval.T3.missileship=armyNaval.T3.missileship+1
-                            armyNavalType.missileship=armyNavalType.missileship+1
-                        elseif EntityCategoryContains(categories.CARRIER,unit) then
-                            armyNaval.T3.carrier=armyNaval.T3.carrier+1
-                            armyNavalType.carrier=armyNavalType.carrier+1
-                        elseif EntityCategoryContains(categories.BATTLESHIP - categories.EXPERIMENTAL,unit) then
-                            armyNaval.T3.battleship=armyNaval.T3.battleship+1
-                            armyNavalType.battleship=armyNavalType.battleship+1
+                        if unitCat.TECH1 then
+                            armyLandTiers.T1=armyLandTiers.T1+1
+                            if unitCat.SCOUT then
+                                armyLand.T1.scout=armyLand.T1.scout+1
+                                armyLandType.scout=armyLandType.scout+1
+                            elseif unitCat.DIRECTFIRE and not unitCat.ANTIAIR then
+                                armyLand.T1.tank=armyLand.T1.tank+1
+                                armyLandType.tank=armyLandType.tank+1
+                            elseif unitCat.INDIRECTFIRE and not unitCat.ANTIAIR then
+                                armyLand.T1.arty=armyLand.T1.arty+1
+                                armyLandType.arty=armyLandType.arty+1
+                            elseif unitCat.ANTIAIR then
+                                armyLand.T1.aa=armyLand.T1.aa+1
+                                armyLandType.aa=armyLandType.aa+1
+                            end
+                        elseif unitCat.TECH2 then
+                            armyLandTiers.T2=armyLandTiers.T2+1
+                            if unitCat.DIRECTFIRE and not unitCat.BOT and not unitCat.ANTIAIR then
+                                armyLand.T2.tank=armyLand.T2.tank+1
+                                armyLandType.tank=armyLandType.tank+1
+                            elseif unitCat.DIRECTFIRE and unitCat.BOT and unitCat.BOMB then
+                                armyLand.T2.mobilebomb=armyLand.T2.mobilebomb+1
+                                armyLandType.tank=armyLandType.tank+1
+                            elseif unitCat.DIRECTFIRE and unitCat.BOT and not unitCat.ANTIAIR then
+                                armyLand.T2.bot=armyLand.T2.bot+1
+                                armyLandType.bot=armyLandType.bot+1
+                            elseif unitCat.SILO then
+                                armyLand.T2.mml=armyLand.T2.mml+1
+                                armyLandType.mml=armyLandType.mml+1
+                            elseif unitCat.ANTIAIR then
+                                armyLand.T2.aa=armyLand.T2.aa+1
+                                armyLandType.aa=armyLandType.aa+1
+                            elseif unitCat.SHIELD then
+                                armyLand.T2.shield=armyLand.T2.shield+1
+                                armyLandType.shield=armyLandType.shield+1
+                            end
+                        elseif unitCat.TECH3 then
+                            armyLandTiers.T3=armyLandTiers.T3+1
+                            if unitCat.SNIPER then
+                                armyLand.T3.sniper=armyLand.T3.sniper+1
+                                armyLandType.sniper=armyLandType.sniper+1
+                            elseif unitCat.DIRECTFIRE and EntityCategoryContains(categories.xel0305 + categories.xrl0305, unit) then
+                                armyLand.T3.armoured=armyLand.T3.armoured+1
+                                armyLandType.armoured=armyLandType.armoured+1
+                            elseif unitCat.DIRECTFIRE and not unitCat.ANTIAIR then
+                                armyLand.T3.tank=armyLand.T3.tank+1
+                                armyLandType.tank=armyLandType.tank+1
+                            elseif unitCat.SILO then
+                                armyLand.T3.mml=armyLand.T3.mml+1
+                                armyLandType.mml=armyLandType.mml+1
+                            elseif unitCat.INDIRECTFIRE then
+                                armyLand.T3.arty=armyLand.T3.arty+1
+                                armyLandType.arty=armyLandType.arty+1
+                            elseif unitCat.ANTIAIR then
+                                armyLand.T3.aa=armyLand.T3.aa+1
+                                armyLandType.aa=armyLandType.aa+1
+                            elseif unitCat.SHIELD then
+                                armyLand.T3.shield=armyLand.T3.shield+1
+                                armyLandType.shield=armyLandType.shield+1
+                            end
                         end
-                    end
-                elseif unitCat.SILO then
-                    if unitCat.TECH2 then
-                        silo.T2=silo.T2+1
-                        launcherspend.T2=launcherspend.T2+spendm
-                    elseif unitCat.TECH3 then
-                        silo.T3=silo.T3+1
-                        launcherspend.T3=launcherspend.T3+spendm
+                    elseif unitCat.AIR then
+                        if not unitCat.EXPERIMENTAL then
+                            totalAirThreat = totalAirThreat + unit.Blueprint.Defense.AirThreatLevel + unit.Blueprint.Defense.SubThreatLevel + unit.Blueprint.Defense.SurfaceThreatLevel
+                        end
+                        if unitCat.TECH1 then
+                            armyAirTiers.T1=armyAirTiers.T1+1
+                            if unitCat.SCOUT then
+                                armyAir.T1.scout=armyAir.T1.scout+1
+                                armyAirType.scout=armyAirType.scout+1
+                            elseif unitCat.ANTIAIR then
+                                totalAntiAirThreat = totalAntiAirThreat + unit.Blueprint.Defense.AirThreatLevel
+                                armyAir.T1.interceptor=armyAir.T1.interceptor+1
+                                armyAirType.interceptor=armyAirType.interceptor+1
+                            elseif unitCat.BOMBER then
+                                armyAir.T1.bomber=armyAir.T1.bomber+1
+                                armyAirType.bomber=armyAirType.bomber+1
+                            elseif unitCat.GROUNDATTACK and not unitCat.EXPERIMENTAL then
+                                armyAir.T1.gunship=armyAir.T1.gunship+1
+                                armyAirType.gunship=armyAirType.gunship+1
+                            elseif unitCat.TRANSPORTFOCUS then
+                                armyAir.T1.transport=armyAir.T1.transport+1
+                                armyAirType.transport=armyAirType.transport+1
+                            end
+                        elseif unitCat.TECH2 then
+                            armyAirTiers.T2=armyAirTiers.T2+1
+                            if unitCat.BOMBER and not unitCat.ANTINAVY and not EntityCategoryContains(categories.daa0206, unit) then
+                                armyAir.T2.bomber=armyAir.T2.bomber+1
+                                armyAirType.bomber=armyAirType.bomber+1
+                            elseif EntityCategoryContains(categories.xaa0202, unit)then
+                                totalAntiAirThreat = totalAntiAirThreat + unit.Blueprint.Defense.AirThreatLevel
+                                armyAir.T2.fighter=armyAir.T2.fighter+1
+                                armyAirType.fighter=armyAirType.fighter+1
+                            elseif unitCat.GROUNDATTACK and not unitCat.EXPERIMENTAL then
+                                armyAir.T2.gunship=armyAir.T2.gunship+1
+                                armyAirType.gunship=armyAirType.gunship+1
+                            elseif unitCat.ANTINAVY and not unitCat.EXPERIMENTAL then
+                                armyAir.T2.torpedo=armyAir.T2.torpedo+1
+                                armyAirType.torpedo=armyAirType.torpedo+1
+                            elseif EntityCategoryContains(categories.daa0206, unit) then
+                                armyAir.T2.mercy=armyAir.T2.mercy+1
+                                armyAirType.mercy=armyAirType.mercy+1
+                            elseif unitCat.TRANSPORTFOCUS then
+                                armyAir.T2.transport=armyAir.T2.transport+1
+                                armyAirType.transport=armyAirType.transport+1
+                            end
+                        elseif unitCat.TECH3 then
+                            armyAirTiers.T3=armyAirTiers.T3+1
+                            if unitCat.SCOUT then
+                                armyAir.T3.scout=armyAir.T3.scout+1
+                                armyAirType.scout=armyAirType.scout+1
+                            elseif unitCat.ANTIAIR and not unitCat.BOMBER and not unitCat.GROUNDATTACK then
+                                totalAntiAirThreat = totalAntiAirThreat + unit.Blueprint.Defense.AirThreatLevel
+                                armyAir.T3.asf=armyAir.T3.asf+1
+                                armyAirType.asf=armyAirType.asf+1
+                            elseif unitCat.BOMBER then
+                                armyAir.T3.bomber=armyAir.T3.bomber+1
+                                armyAirType.bomber=armyAirType.bomber+1
+                            elseif unitCat.GROUNDATTACK and not unitCat.EXPERIMENTAL then
+                                armyAir.T3.gunship=armyAir.T3.gunship+1
+                                armyAirType.gunship=armyAirType.gunship+1
+                            elseif unitCat.TRANSPORTFOCUS then
+                                armyAir.T3.transport=armyAir.T3.transport+1
+                                armyAirType.transport=armyAirType.transport+1
+                            elseif unitCat.ANTINAVY and not unitCat.EXPERIMENTAL then
+                                armyAir.T3.torpedo=armyAir.T3.torpedo+1
+                                armyAirType.torpedo=armyAirType.torpedo+1
+                            end
+                        end
+                    elseif unitCat.NAVAL then
+                        if not unitCat.EXPERIMENTAL then
+                            totalNavalThreat = totalNavalThreat + unit.Blueprint.Defense.AirThreatLevel + unit.Blueprint.Defense.SubThreatLevel + unit.Blueprint.Defense.SurfaceThreatLevel
+                            totalNavalSubThreat = totalNavalSubThreat + unit.Blueprint.Defense.SubThreatLevel
+                        end
+                        if unitCat.TECH1 then
+                            armyNavalTiers.T1=armyNavalTiers.T1+1
+                            if unitCat.FRIGATE then
+                                armyNaval.T1.frigate=armyNaval.T1.frigate+1
+                                armyNavalType.frigate=armyNavalType.frigate+1
+                            elseif unitCat.T1SUBMARINE then
+                                armyNaval.T1.sub=armyNaval.T1.sub+1
+                                armyNavalType.sub=armyNavalType.sub+1
+                            elseif EntityCategoryContains(categories.uas0102, unit) then
+                                armyNaval.T1.shard=armyNaval.T1.shard+1
+                                armyNavalType.shard=armyNavalType.shard+1
+                            end
+                        elseif unitCat.TECH2 then
+                            armyNavalTiers.T2=armyNavalTiers.T2+1
+                            if unitCat.DESTROYER then
+                                armyNaval.T2.destroyer=armyNaval.T2.destroyer+1
+                                armyNavalType.destroyer=armyNavalType.destroyer+1
+                            elseif unitCat.CRUISER then
+                                armyNaval.T2.cruiser=armyNaval.T2.cruiser+1
+                                armyNavalType.cruiser=armyNavalType.cruiser+1
+                            elseif unitCat.T2SUBMARINE or EntityCategoryContains(categories.xes0102, unit) then
+                                armyNaval.T2.subhunter=armyNaval.T2.subhunter+1
+                                armyNavalType.subhunter=armyNavalType.subhunter+1
+                            end
+                        elseif EntityCategoryContains(categories.TECH3,unit) then
+                            armyNavalTiers.T3=armyNavalTiers.T3+1
+                            if EntityCategoryContains(categories.NUKE * categories.SUBMERSIBLE,unit) then
+                                armyNaval.T3.nukesub=armyNaval.T3.nukesub+1
+                                armyNavalType.nukesub=armyNavalType.nukesub+1
+                            elseif EntityCategoryContains(categories.xss0304,unit) then
+                                armyNaval.T3.subkiller=armyNaval.T3.subkiller+1
+                                armyNavalType.subkiller=armyNavalType.subkiller+1
+                            elseif EntityCategoryContains(categories.xes0307,unit) then
+                                armyNaval.T3.battlecruiser=armyNaval.T3.battlecruiser+1
+                                armyNavalType.battlecruiser=armyNavalType.battlecruiser+1
+                            elseif EntityCategoryContains(categories.uas0303,unit) then
+                                armyNaval.T3.missileship=armyNaval.T3.missileship+1
+                                armyNavalType.missileship=armyNavalType.missileship+1
+                            elseif EntityCategoryContains(categories.CARRIER,unit) then
+                                armyNaval.T3.carrier=armyNaval.T3.carrier+1
+                                armyNavalType.carrier=armyNavalType.carrier+1
+                            elseif EntityCategoryContains(categories.BATTLESHIP - categories.EXPERIMENTAL,unit) then
+                                armyNaval.T3.battleship=armyNaval.T3.battleship+1
+                                armyNavalType.battleship=armyNavalType.battleship+1
+                            end
+                        end
+                    elseif unitCat.SILO then
+                        if unitCat.TECH2 then
+                            silo.T2=silo.T2+1
+                            launcherspend.T2=launcherspend.T2+spendm
+                        elseif unitCat.TECH3 then
+                            silo.T3=silo.T3+1
+                            launcherspend.T3=launcherspend.T3+spendm
+                        end
                     end
                 end
             end

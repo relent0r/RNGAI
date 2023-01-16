@@ -566,7 +566,7 @@ function CDRBuildFunction(aiBrain, cdr, object)
         end
     elseif object.type == 'mass' then
         local whatToBuild = aiBrain:DecideWhatToBuild(cdr, 'T1Resource', buildingTmpl)
-       RNGLOG('ACU Looping through markers')
+       --RNGLOG('ACU Looping through markers')
         local adaptiveResourceMarkers = GetMarkersRNG()
         local MassMarker = {}
         for _, v in adaptiveResourceMarkers do
@@ -575,13 +575,13 @@ function CDRBuildFunction(aiBrain, cdr, object)
             end
         end
         RNGSORT(MassMarker, function(a,b) return a.Distance < b.Distance end)
-       RNGLOG('ACU MassMarker table sorted, looking for markers to build')
+       --RNGLOG('ACU MassMarker table sorted, looking for markers to build')
         for _, v in MassMarker do
             if v.Distance > 900 then
                 break
             end
             if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
-               RNGLOG('ACU Adding entry to BuildQueue')
+               --RNGLOG('ACU Adding entry to BuildQueue')
                 local newEntry = {whatToBuild, {v.Position[1], v.Position[3], 0}, false, Position=v.Position}
                 RNGINSERT(cdr.EngineerBuildQueue, newEntry)
             end
@@ -589,7 +589,7 @@ function CDRBuildFunction(aiBrain, cdr, object)
        --RNGLOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
         if RNGGETN(cdr.EngineerBuildQueue) > 0 then
             for k,v in cdr.EngineerBuildQueue do
-               RNGLOG('Attempt to build queue item of '..repr(v))
+               --RNGLOG('Attempt to build queue item of '..repr(v))
                 while not cdr.Dead and RNGGETN(cdr.EngineerBuildQueue) > 0 do
                     IssueClearCommands({cdr})
                     IssueMove({cdr},v.Position)
@@ -597,16 +597,16 @@ function CDRBuildFunction(aiBrain, cdr, object)
                         IssueClearCommands({cdr})
                         RUtils.EngineerTryReclaimCaptureArea(aiBrain, cdr, v.Position, 5)
                         AIUtils.EngineerTryRepair(aiBrain, cdr, v[1], v.Position)
-                        RNGLOG('ACU attempting to build in while loop')
+                        --RNGLOG('ACU attempting to build in while loop')
                         aiBrain:BuildStructure(cdr, v[1],v[2],v[3])
                         while (cdr.Active and not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr.Active and cdr:IsUnitState('Building')) or (cdr.Active and cdr:IsUnitState("Moving")) do
                             coroutine.yield(10)
                         end
-                       RNGLOG('Build Queue item should be finished '..k)
+                       --RNGLOG('Build Queue item should be finished '..k)
                         cdr.EngineerBuildQueue[k] = nil
                         break
                     end
-                    RNGLOG('Current Build Queue is '..RNGGETN(cdr.EngineerBuildQueue))
+                    --RNGLOG('Current Build Queue is '..RNGGETN(cdr.EngineerBuildQueue))
                     coroutine.yield(10)
                 end
             end
