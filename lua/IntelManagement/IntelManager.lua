@@ -2539,6 +2539,9 @@ TruePlatoonPriorityDirector = function(aiBrain)
                         unitAddedCount = unitAddedCount + 1
                         aiBrain.prioritypoints[c]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object}
                         if priority > 200 then
+                            if b.type == 'mex' then
+                                priority = priority - 40
+                            end
                             aiBrain.prioritypointshighvalue[c]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object}
                             --RNGLOG('HighPriority target added '..repr(aiBrain.prioritypointshighvalue[c]))
                         end

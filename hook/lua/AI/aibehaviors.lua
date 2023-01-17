@@ -3346,6 +3346,7 @@ function ExpMoveToPosition(aiBrain, platoon, target, unit, ignoreUnits)
                     if enemyUnitCount > 0 then
                         pathCheckRequired = true
                         local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, unitPosition, 'Attack', 70, LandRadiusScanCategory, TargetSearchPriorities, false)
+                        --RNGLOG('Experimental is detecting a total threat of '..totalThreat)
                         if acuInRange then
                             target = acuUnit
                         end

@@ -982,7 +982,7 @@ function AIFindMarkerNeedsEngineerThreatRNG(aiBrain, pos, radius, tMin, tMax, tR
     return retPos, retName
 end
 
-function AIGetClosestMarkerLocationRNG(aiBrain, markerType, startX, startZ, extraTypes, pathCheck, movementLayer)
+function AIGetClosestMarkerLocationRNG(aiBrain, markerType, startX, startZ, extraTypes)
     local markerList = AIGetMarkerLocations(aiBrain, markerType)
     if extraTypes then
         for num, pType in extraTypes do
@@ -1002,20 +1002,31 @@ function AIGetClosestMarkerLocationRNG(aiBrain, markerType, startX, startZ, extr
         local z = v.Position[3]
         distance = VDist2Sq(startX, startZ, x, z)
         if not lowest or distance < lowest then
-            if pathCheck then 
-                if NavUtils.CanPathTo(movementLayer, {startX, GetSurfaceHeight(startX, startZ), startZ}, v.Position) then
-                    loc = v.Position
-                    name = v.Name
-                    lowest = distance
-                end
-            else
+            loc = v.Position
+            name = v.Name
+            lowest = distance
+        end
+    end
+    return loc, name, lowest
+end
+
+function AIGetClosestMarkerPathCheckRNG(aiBrain, markerType, targetPosition, platoonPosition, movementLayer)
+    local markerList = AIGetMarkerLocations(aiBrain, markerType)
+
+    local loc, distance, lowest, name = nil
+    for _, v in markerList do
+        local x = v.Position[1]
+        local y = v.Position[2]
+        local z = v.Position[3]
+        distance = VDist2Sq(targetPosition[1], targetPosition[3], x, z)
+        if not lowest or distance < lowest then
+            if NavUtils.CanPathTo(movementLayer, platoonPosition, v.Position) then
                 loc = v.Position
                 name = v.Name
                 lowest = distance
             end
         end
     end
-
     return loc, name, lowest
 end
 

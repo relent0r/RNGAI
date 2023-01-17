@@ -2784,10 +2784,10 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
     local targetStartPosition = false
     --We look for the closest
     for k, v in startPositions do
-        local waterNodePos, waterNodeName, waterNodeDist = AIUtils.AIGetClosestMarkerLocationRNG(aiBrain, 'Water Path Node', v.Position[1], v.Position[3], false, true, 'Water')
+        local waterNodePos, waterNodeName, waterNodeDist = AIUtils.AIGetClosestMarkerPathCheckRNG(aiBrain, 'Water Path Node', v.Position, platoonPosition, 'Water')
         if waterNodeDist and waterNodeDist < (MaxPlatoonWeaponRange * MaxPlatoonWeaponRange + 900) then
-            RNGLOG('Start position is '..waterNodeDist..' from water node, weapon range on platoon is '..MaxPlatoonWeaponRange..' we are going to attack from this position')
-            RNGLOG('This position is '..repr(waterNodePos))
+            --RNGLOG('Start position is '..waterNodeDist..' from water node, weapon range on platoon is '..MaxPlatoonWeaponRange..' we are going to attack from this position')
+            --RNGLOG('This position is '..repr(waterNodePos))
             if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition, waterNodePos) then
                 attackPosition = waterNodePos
                 targetStartPosition = v.Position
@@ -2796,7 +2796,7 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
         end
     end
     if attackPosition then
-        RNGLOG('Valid Attack Position '..repr(attackPosition)..' target Start Position '..repr(targetStartPosition))
+        --RNGLOG('Valid Attack Position '..repr(attackPosition)..' target Start Position '..repr(targetStartPosition))
     end
     return attackPosition, targetStartPosition
 end
@@ -4966,7 +4966,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid)
                     local tempPoint = v.priority/(RNGMAX(targetDistance,30*30)+(v.danger or 0))
                     if tempPoint > highestPriority then
                         if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
-                            highestPriority = targetDistance
+                            highestPriority = tempPoint
                             closestTarget = v.unit
                         end
                     end

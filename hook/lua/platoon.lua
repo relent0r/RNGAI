@@ -156,14 +156,14 @@ Platoon = Class(RNGAIPlatoonClass) {
                 self.Target = target
                 local targetPos = target:GetPosition()
                 local platoonCount = RNGGETN(GetPlatoonUnits(self))
-                RNGLOG('Air Hunt Enemy Threat at target position is '..GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir'))
+                --RNGLOG('Air Hunt Enemy Threat at target position is '..GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir'))
                 --RNGLOG('Target Position is '..repr(targetPos))
                 --RNGLOG('Platoon Threat is '..self.CurrentPlatoonThreat)
-                RNGLOG('threatCountLimit is '..threatCountLimit)
+                --RNGLOG('threatCountLimit is '..threatCountLimit)
                 if currentPlatPos then
                     local targetThreat = GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
-                    RNGLOG('Air threat at target position '..targetThreat)
-                    RNGLOG('Current Platoon threat '..self.CurrentPlatoonThreat)
+                    --RNGLOG('Air threat at target position '..targetThreat)
+                    --RNGLOG('Current Platoon threat '..self.CurrentPlatoonThreat)
                     if VDist3Sq(currentPlatPos, targetPos) > restrictedZone then
                         if (threatCountLimit < 6 ) and (VDist2Sq(currentPlatPos[1], currentPlatPos[2], startX, startZ) < 22500) and (targetThreat * 1.3 > self.CurrentPlatoonThreat) and platoonCount < platoonLimit and not aiBrain.CDRUnit.Caution then
                             --RNGLOG('Target air threat too high')
@@ -2863,6 +2863,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                 platoonPosition = GetPlatoonPosition(self)
                 target = RUtils.CheckACUSnipe(aiBrain, 'Land')
                 if target then
+                    if data.Defensive then
+                        RNGLOG('Defensive bomber has been given an acusnipe assignment')
+                        RNGLOG('Strike damage is '..self.PlatoonStrikeDamage)
+                    end
                     if not self.PlatoonStrikeDamage or self.PlatoonStrikeDamage < 1000 then
                         target = false
                     end
@@ -2886,12 +2890,16 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if data.Defensive then
                         local highPriorityTarget = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
                         if highPriorityTarget then
+                            RNGLOG('Defensive bomber has high priority target')
+                            RNGLOG('Distance from base is '..VDist3(highPriorityTarget:GetPosition(), platoonPosition))
                             target = highPriorityTarget
                         else
                             local mult = { 1,2,3 }
                             for _,i in mult do
                                 target = RUtils.AIFindBrainTargetInRangeOrigRNG(aiBrain, mainBasePos, self, 'Attack', maxRadius * i , atkPri)
                                 if target then
+                                    RNGLOG('Defensive bomber has standard target')
+                                    RNGLOG('Distance from base is '..VDist3(target:GetPosition(), platoonPosition))
                                     break
                                 end
                                 coroutine.yield(10) --DUNCAN - was 3
@@ -3124,7 +3132,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if baseDist < 6400 then
                         break
                     end
-                    if not target and self.CurrentPlatoonThreat > 8 and data.UnitType ~= 'GUNSHIP' then
+                    if not data.Defensive and not target and self.CurrentPlatoonThreat > 8 and data.UnitType ~= 'GUNSHIP' then
                         --RNGLOG('Checking for director target')
                         target = aiBrain:CheckDirectorTargetAvailable('AntiAir', self.CurrentPlatoonThreat, data.UnitType, self.PlatoonStrikeDamage)
                         if target then
@@ -7640,6 +7648,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                         else
                             while PlatoonExists(aiBrain, self) do
                                 --RNGLOG('Feeder target moving to found platoon')
+                                if IsDestroyed(targetPlatoon) then
+                                    break
+                                end
                                 local targetPlatPos = GetPlatoonPosition(targetPlatoon)
                                 if targetPlatPos then
                                     IssueClearCommands(GetPlatoonUnits(self))
