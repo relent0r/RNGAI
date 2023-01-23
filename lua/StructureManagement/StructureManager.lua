@@ -485,7 +485,7 @@ StructureManager = Class {
         local t2LandPass = false
         if totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 then
             --RNGLOG('Factory T1 Upgrade HQ Check passed')
-            if actualMexIncome > (25 * self.Brain.EcoManager.EcoMultiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 20.0 then
+            if (not self.Brain.RNGEXP and actualMexIncome > (25 * self.Brain.EcoManager.EcoMultiplier) or self.Brain.RNGEXP and actualMexIncome > (18 * self.Brain.EcoManager.EcoMultiplier)) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 20.0 then
                 --RNGLOG('Factory Upgrade actual mex income is '..actualMexIncome)
                 if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.025 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                     --RNGLOG('Factory Upgrade efficiency over time check passed')
@@ -766,7 +766,7 @@ StructureManager = Class {
         local t2NavalPass = false
         if totalNavalT2HQCount < 1 and totalNavalT3HQCount < 1 and self.Factories.NAVAL[1].UpgradingCount < 1 and self.Factories.NAVAL[1].Total > 0 then
             --RNGLOG('Factory Naval T1 Upgrade HQ Check passed')
-            if actualMexIncome > (55 * self.Brain.EcoManager.EcoMultiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 50.0 then
+            if actualMexIncome > (45 * self.Brain.EcoManager.EcoMultiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 50.0 then
                 --RNGLOG('Factory Naval Upgrade actual mex income is '..actualMexIncome)
                 if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.025 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
                     --RNGLOG('Factory Naval Upgrade efficiency over time check passed')

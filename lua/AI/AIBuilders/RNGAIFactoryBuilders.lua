@@ -165,6 +165,7 @@ BuilderGroup {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH3 }},
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -187,11 +188,10 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.95}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 8, categories.FACTORY * categories.LAND * categories.TECH3 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, categories.FACTORY * categories.LAND * categories.TECH3 }},
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -368,6 +368,59 @@ BuilderGroup {
                 BuildClose = false,
                 BuildStructures = {
                     'T1LandFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Land T2 MainBase Large',
+        PlatoonTemplate = 'EngineerBuilderT23RNG',
+        Priority = 1000,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH3 }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = false,
+                AdjacencyPriority = {categories.ENERGYPRODUCTION},
+                BuildStructures = {
+                    'T2SupportLandFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Land T3 MainBase Large',
+        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        Priority = 1000,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, categories.FACTORY * categories.LAND * categories.TECH3 }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = false,
+                AdjacencyPriority = {categories.ENERGYPRODUCTION},
+                BuildStructures = {
+                    'T3SupportLandFactory',
                 },
             }
         }

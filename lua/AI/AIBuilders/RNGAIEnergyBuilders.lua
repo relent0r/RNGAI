@@ -21,7 +21,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
-            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 150.0 } }, -- If our energy is trending into negatives
+            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 15.0 } }, -- If our energy is trending into negatives
             { EBC, 'GreaterThanMassStorageOrEfficiency', { 150, 0.85 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
@@ -61,7 +61,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
-            { EBC, 'NegativeEcoPowerCheck', { 60.0 } }, -- If our energy is trending into negatives
+            { EBC, 'NegativeEcoPowerCheck', { 6.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
         },
         BuilderType = 'Any',
@@ -81,7 +81,7 @@ BuilderGroup {
                     categories.SHIELD * categories.STRUCTURE,
                 },
                 AvoidCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                AdjacencyDistance = 50,
+                AdjacencyDistance = 10,
                 maxUnits = 1,
                 maxRadius = 2.5,
                 BuildStructures = {
@@ -139,7 +139,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EnergyT2', 6},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'EnergyT2' }},
-            { EBC, 'NegativeEcoPowerCheck', { 12.0 } },
+            { EBC, 'NegativeEcoPowerCheck', { 25.0 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION *  categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.1 }},

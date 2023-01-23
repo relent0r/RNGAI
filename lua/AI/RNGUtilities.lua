@@ -3956,7 +3956,7 @@ function PerformEngReclaim(aiBrain, eng, minimumReclaim)
         for c, b in reclaimRect do
             if not IsProp(b) then continue end
             if b.MaxMassReclaim and b.MaxMassReclaim > minimumReclaim then
-                if VDist2Sq(engPos[1], engPos[3], b.CachePosition[1], b.CachePosition[3]) <= 100 then
+                if VDist3Sq(engPos, b.CachePosition) <= 100 then
                     RNGINSERT(closeReclaim, b)
                     maxReclaimCount = maxReclaimCount + 1
                 end
@@ -4981,22 +4981,41 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid)
     return false
 end
 
-GetPlatUnitEnemyBias = function(aiBrain, platoon)
+GetPlatUnitEnemyBias = function(aiBrain, platoon, acuSupport)
 
     local enemy = aiBrain:GetCurrentEnemy()
     local closestUnit
-    if enemy then
+    if enemy and not acuSupport then
         local enemyX, enemyZ = enemy:GetArmyStartPos()
         local closestDistance
         for _, v in GetPlatoonUnits(platoon) do
             if not v.Dead and (not v.Blueprint.CategoriesHash.SCOUT) then
                 local unitPos = v:GetPosition()
                 local distance = VDist2Sq(unitPos[1], unitPos[3], enemyX, enemyZ)
-                if not closestUnit or VDist2Sq(unitPos[1], unitPos[3], enemyX, enemyZ) < closestDistance then
+                if not closestUnit or distance < closestDistance then
                     closestUnit = v
                     closestDistance = distance
                 end
             end
+        end
+    elseif acuSupport then
+        local acuPos = aiBrain.CDRUnit.Position
+        local closestDistance
+        RNGLOG('acuPos is '..repr(acuPos))
+        for _, v in GetPlatoonUnits(platoon) do
+            if not v.Dead and (not v.Blueprint.CategoriesHash.SCOUT) then
+                local unitPos = v:GetPosition()
+                local distance = VDist3Sq(unitPos, acuPos)
+                if not closestUnit or distance < closestDistance then
+                    closestUnit = v
+                    closestDistance = distance
+                end
+            end
+        end
+        if closestUnit then
+            RNGLOG('Closest Unit to acu is '..closestUnit.UnitId)
+        else
+            RNGLOG('No closest unit to acu')
         end
     else
         for _, v in GetPlatoonUnits(platoon) do

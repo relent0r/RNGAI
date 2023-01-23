@@ -1957,7 +1957,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             numOpponents = numOpponents + 1
                             -- I would rather use army ndexes for the table keys of the enemyStarts so I can easily reference them in queries. To be pondered.
                             local enemyDistance = VDist3Sq(self.BrainIntel.StartPos, startPos)
-                            RNGINSERT(enemyStarts, {Position = startPos, Index = army.ArmyIndex, Distance = enemyDistance })
+                            enemyStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex, Distance = enemyDistance }
                             local gridXID, gridZID = im:GetIntelGrid(startPos)
                             if im.MapIntelGrid[gridXID][gridZID].Enabled then
                                 im.MapIntelGrid[gridXID][gridZID].ScoutPriority = 150
@@ -1970,7 +1970,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 self.EnemyIntel.ClosestEnemyBase = enemyDistance
                             end
                         else
-                            RNGINSERT(allyTempStarts, {Position = startPos, Index = army.ArmyIndex})
+                            allyTempStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex}
                             allyStarts['ARMY_' .. i] = startPos
                         end
                     end
@@ -2029,12 +2029,12 @@ AIBrain = Class(RNGAIBrainClass) {
                         if army.ArmyIndex == myArmy.ArmyIndex or (army.Team == myArmy.Team and army.Team ~= 1) then
                             allyStarts['ARMY_' .. i] = startPos
                             local allyDistance = VDist3Sq(self.BrainIntel.StartPos, startPos)
-                            RNGINSERT(allyTempStarts, {Position = startPos, Index = army.ArmyIndex, Distance = allyDistance })
+                            allyTempStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex, Distance = allyDistance }
                             --allyTempStarts[army.ArmyIndex] = {Position = startPos}
                         else
                             numOpponents = numOpponents + 1
                             local enemyDistance = VDist3Sq(self.BrainIntel.StartPos, startPos)
-                            RNGINSERT(enemyStarts, {Position = startPos, Index = army.ArmyIndex, Distance = enemyDistance })
+                            enemyStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex, Distance = enemyDistance }
                             --startLocations[army.ArmyIndex] = {Position = startPos}
                         end
                     end
@@ -3228,8 +3228,10 @@ AIBrain = Class(RNGAIBrainClass) {
             
             --Lets ponder this one some more
             if self.BrainIntel.LandPhase > 2 then
-                if self.cmanager.income.r.m > (120 * self.EcoManager.EcoMultiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBuilding(self, categories.EXPERIMENTAL) == 1 then
+                if not self.RNGEXP and self.cmanager.income.r.m > (120 * self.EcoManager.EcoMultiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBuilding(self, categories.EXPERIMENTAL) == 1 then
                     --RNGLOG('Land Phase > 2 and eco is above 120 and number units building for exp is 1')
+                    self.EngineerAssistManagerFocusExperimental = true
+                elseif self.RNGEXP and self.cmanager.income.r.m > (90 * self.EcoManager.EcoMultiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBuilding(self, categories.EXPERIMENTAL) == 1 then
                     self.EngineerAssistManagerFocusExperimental = true
                 else
                     self.EngineerAssistManagerFocusExperimental = false

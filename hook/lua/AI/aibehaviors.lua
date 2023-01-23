@@ -131,8 +131,13 @@ end
 function DrawACUInfo(cdr)
     while cdr and not cdr.Dead do
         if cdr.Position then
-            DrawCircle(cdr.Position,80,'aaffaa')
-            DrawCircle(cdr.Position,70,'aaffaa')
+            if cdr.Caution then
+                DrawCircle(cdr.Position,80,'ff0000')
+                DrawCircle(cdr.Position,35,'ff0000')
+            else
+                DrawCircle(cdr.Position,80,'aaffaa')
+                DrawCircle(cdr.Position,35,'aaffaa')
+            end
         end
         if cdr.TargetPosition[1] then
             DrawLine(cdr.Position, cdr.TargetPosition, 'aaffaa')
