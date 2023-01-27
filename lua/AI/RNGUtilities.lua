@@ -1808,16 +1808,12 @@ function AIFindBrainTargetInACURangeRNG(aiBrain, position, platoon, squad, maxRa
             local targetShields = 9999
             for num, unit in targetUnits do
                 if not unit.Dead and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
-                    if ignoreCivilian then
-                        if ArmyIsCivilian(unit:GetArmy()) then
-                            --RNGLOG('Unit is civilian')
-                            continue
-                        end
+                    if ignoreCivilian and ArmyIsCivilian(unit:GetArmy()) then
+                        --RNGLOG('Unit is civilian')
+                        continue
                     end
-                    if ignoreNotCompleted then
-                        if unit:GetFractionComplete() ~= 1 then
-                            continue
-                        end
+                    if ignoreNotCompleted and unit:GetFractionComplete() ~= 1 then
+                        continue
                     end
                     local unitPos = unit:GetPosition()
                     if platoon.MovementLayer == 'Air' and platoonThreat then
@@ -1829,7 +1825,6 @@ function AIFindBrainTargetInACURangeRNG(aiBrain, position, platoon, squad, maxRa
                     end
                     if EntityCategoryContains(categories.COMMAND, unit) then
                         acuUnit = unit
-
                     end
                     local unitDistance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                     if EntityCategoryContains(categories.MOBILE, unit) then
@@ -4836,7 +4831,7 @@ CanPathToCurrentEnemyRNG = function(aiBrain) -- Uveso's function modified to run
     end
 end
 
-GetHoldingPosition = function(aiBrain, platoonPos, platoon, threatType)
+GetHoldingPosition = function(aiBrain, platoonPos, platoon, threatType, maxRadius)
     local holdingPos = false
     local threatLocations = aiBrain:GetThreatsAroundPosition( aiBrain.BuilderManagers['MAIN'].Position, 16, true, threatType )
     local bestThreat
@@ -4849,16 +4844,23 @@ GetHoldingPosition = function(aiBrain, platoonPos, platoon, threatType)
 
     if next(threatLocations) then
         for k, v in threatLocations do
-            if not bestThreat or VDist3Sq(aiBrain.BuilderManagers['MAIN'].Position, {v[1],0,v[2]}) < bestThreatDist then
+            local locationDistance = VDist3Sq(aiBrain.BuilderManagers['MAIN'].Position, {v[1],0,v[2]})
+            if not bestThreat or locationDistance < bestThreatDist then
                 bestThreat = v[3]
                 bestThreatPos = {v[1],0,v[2]}
-                bestThreatDist = VDist3Sq(aiBrain.BuilderManagers['MAIN'].Position, {v[1],0,v[2]})
+                bestThreatDist = locationDistance
             end
         end
     end
     if bestThreatPos and platoonPos then
         local distance = VDist3(aiBrain.BuilderManagers['MAIN'].Position, bestThreatPos)
-        holdingPos = lerpy(aiBrain.BuilderManagers['MAIN'].Position, bestThreatPos, {distance, (distance / 2)})
+        local distanceSplit
+        if distance / 2 > maxRadius then
+            distanceSplit = maxRadius
+        else
+            distanceSplit = distance / 2
+        end
+        holdingPos = lerpy(aiBrain.BuilderManagers['MAIN'].Position, bestThreatPos, {distance, (distanceSplit)})
         if aiBrain.RNGDEBUG then
             RNGLOG('Holding Position is set to '..repr(holdingPos))
         end
@@ -5001,7 +5003,7 @@ GetPlatUnitEnemyBias = function(aiBrain, platoon, acuSupport)
     elseif acuSupport then
         local acuPos = aiBrain.CDRUnit.Position
         local closestDistance
-        RNGLOG('acuPos is '..repr(acuPos))
+        --RNGLOG('acuPos is '..repr(acuPos))
         for _, v in GetPlatoonUnits(platoon) do
             if not v.Dead and (not v.Blueprint.CategoriesHash.SCOUT) then
                 local unitPos = v:GetPosition()
@@ -5012,11 +5014,6 @@ GetPlatUnitEnemyBias = function(aiBrain, platoon, acuSupport)
                 end
             end
         end
-        if closestUnit then
-            RNGLOG('Closest Unit to acu is '..closestUnit.UnitId)
-        else
-            RNGLOG('No closest unit to acu')
-        end
     else
         for _, v in GetPlatoonUnits(platoon) do
             if not v.Dead and (not v.Blueprint.CategoriesHash.SCOUT) then
@@ -5026,4 +5023,20 @@ GetPlatUnitEnemyBias = function(aiBrain, platoon, acuSupport)
         end
     end
     return closestUnit
+end
+
+GetTargetRange = function(target)
+    local maxRange = false
+    if target and target.Blueprint.Weapon then
+        for _, v in target.Blueprint.Weapon do
+            if not(v.CannotAttackGround == true) then
+                if not(v.ManualFire == true) and not(v.BelowWaterFireOnly == true)then
+                    if not maxRange or v.MaxRadius > maxRange then
+                        maxRange = v.MaxRadius
+                    end
+                end
+            end
+        end
+    end
+    return maxRange
 end

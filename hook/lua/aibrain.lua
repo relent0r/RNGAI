@@ -1643,9 +1643,11 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SelfThreat.MassMarker = markerCount
         self.BrainIntel.SelfThreat.MassMarkerBuildable = massMarkerBuildable
         self.BrainIntel.SelfThreat.MassMarkerBuildableTable = MassMarker
+        --RNGLOG('Team count '..self.BrainIntel.TeamCount)
         if self.BrainIntel.SelfThreat.MassMarker and self.BrainIntel.TeamCount > 0 then
-            self.BrainIntel.SelfThreat.MassMarkerTeamShare = self.BrainIntel.SelfThreat.MassMarker / self.BrainIntel.TeamCount
+            self.BrainIntel.MassMarkerTeamShare = markerCount / self.BrainIntel.TeamCount
         end
+        --RNGLOG('MassMarkerTeamShare '..self.BrainIntel.MassMarkerTeamShare)
         --RNGLOG('self.BrainIntel.SelfThreat.MassMarker '..self.BrainIntel.SelfThreat.MassMarker)
         --RNGLOG('self.BrainIntel.SelfThreat.MassMarkerBuildable '..self.BrainIntel.SelfThreat.MassMarkerBuildable)
     end,
@@ -2320,8 +2322,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 armyStrengthTable[v:GetArmyIndex()] = insertTable
             end
         end
-        --RNGLOG('teams table '..repr(teams))
         self.BrainIntel.TeamCount = 0
+        --RNGLOG('teams table '..repr(teams))
         for _, v in teams do
             if v then
                 self.BrainIntel.TeamCount = self.BrainIntel.TeamCount + 1
@@ -3165,7 +3167,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 enemyCount = 1
             end
             if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) * 1.3 and (not self.EnemyIntel.ChokeFlag) and self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.MassMarkerTeamShare then
-                --RNGLOG('Land Threat Higher, shift ratio to 0.4')
+                RNGLOG('Land Threat Higher, shift ratio to 0.4')
+                RNGLOG('Ally Extractors '..self.BrainIntel.SelfThreat.AllyExtractorCount)
+                RNGLOG('Team share '..self.BrainIntel.MassMarkerTeamShare)
+                RNGLOG('Self Threat '..self.BrainIntel.SelfThreat.LandNow)
+                RNGLOG('Enemy threat '..((self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) * 1.3))
 
                 if not self.RNGEXP then
                     self.ProductionRatios.Land = 0.4

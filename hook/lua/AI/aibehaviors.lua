@@ -204,7 +204,7 @@ function CDRBrainThread(cdr)
             if (not cdr.GunUpgradePresent) then
                 cdr.GunUpgradeRequired = true
             end
-            if (not cdr.HighThreatUpgradePresent) then
+            if (not cdr.HighThreatUpgradePresent) and GetEconomyIncome(aiBrain, 'ENERGY') > 80 then
                 cdr.HighThreatUpgradeRequired = true
             end
         end
@@ -1746,7 +1746,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                         end
                         if cdr.Phase < 3 and not cdr.HighThreatUpgradePresent and closestThreatUnit and closestUnitPosition then
                             if not closestThreatUnit.Dead then
-                                if GetThreatAtPosition(aiBrain, closestUnitPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > cdr.ThreatLimit * 1.3 then
+                                if GetThreatAtPosition(aiBrain, closestUnitPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > cdr.ThreatLimit * 1.3 and GetEconomyIncome(aiBrain, 'ENERGY') > 80 then
                                     --RNGLOG('HighThreatUpgrade is now required')
                                     cdr.HighThreatUpgradeRequired = true
                                 end
@@ -1807,7 +1807,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     --RNGLOG('ACU Low health and no gun upgrade, set required')
                     cdr.GunUpgradeRequired = true
                 end
-                if (not cdr.HighThreatUpgradePresent) and cdr.CurrentEnemyThreat > cdr.ThreatLimit then
+                if (not cdr.HighThreatUpgradePresent) and cdr.CurrentEnemyThreat > cdr.ThreatLimit and GetEconomyIncome(aiBrain, 'ENERGY') > 80 then
                     cdr.HighThreatUpgradeRequired = true
                 end
                 --RNGLOG('cdr retreating due to low health')
@@ -1819,7 +1819,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                     --RNGLOG('ACU Low health and no gun upgrade, set required')
                     cdr.GunUpgradeRequired = true
                 end
-                if (not cdr.HighThreatUpgradePresent) then
+                if (not cdr.HighThreatUpgradePresent) and GetEconomyIncome(aiBrain, 'ENERGY') > 80 then
                     cdr.HighThreatUpgradeRequired = true
                 end
                 --RNGLOG('cdr retreating due to low health')
@@ -2427,7 +2427,7 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
             return true
         end
     elseif priorityUpgrade and cdr.HighThreatUpgradeRequired and not aiBrain.RNGEXP then
-        if (GetGameTimeSeconds() < 1500) and (GetEconomyIncome(aiBrain, 'ENERGY') > 40)
+        if (GetGameTimeSeconds() < 1500) and (GetEconomyIncome(aiBrain, 'ENERGY') > 60)
          and (GetEconomyIncome(aiBrain, 'MASS') > 1.0) then
             --RNGLOG('* RNGAI: Gun Upgrade Eco Check True')
             return true
@@ -2513,7 +2513,7 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
         if cdr.Upgrading then
             --RNGLOG('cdr.Upgrading is set to true')
         end
-        if cdr.HealthPercent < 0.40 and eta > 3 then
+        if cdr.HealthPercent < 0.40 and eta > 3 and cdr.CurrentEnemyThreat > 10 then
             --RNGLOG('* RNGAI: * BuildEnhancementRNG: '..aiBrain:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
             IssueStop({cdr})
             IssueClearCommands({cdr})

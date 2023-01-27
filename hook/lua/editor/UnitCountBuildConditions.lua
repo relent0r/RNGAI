@@ -1013,7 +1013,6 @@ function ArmyManagerBuild(aiBrain, uType, tier, unit)
         --RNGLOG('Current Ratio for '..unit..' is '..(aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100)..'should be '..aiBrain.amanager.Ratios[uType][tier][unit])
         return true
     end
-    --RNGLOG('Current Ratio for '..unit..' is '..(aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100)..'should be '..aiBrain.amanager.Ratios[uType][tier][unit])
     return false
 
 end

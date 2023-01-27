@@ -117,7 +117,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         end
         --self:GenerateInitialQueue('InitialBuildQueueRNG', factory)
         factory.DelayThread = true
-        coroutine.yield(math.random(10,30))
+        coroutine.yield(math.random(5,15))
         factory.DelayThread = false
         if factory.Offline then
             while factory.Offline and factory and (not factory.Dead) do

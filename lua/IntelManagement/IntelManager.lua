@@ -1934,7 +1934,7 @@ MapReclaimAnalysis = function(aiBrain)
                 end
             end
             aiBrain.StartReclaimCurrent = startReclaim
-            RNGLOG('Current Starting Reclaim is'..aiBrain.StartReclaimCurrent)
+            --RNGLOG('Current Starting Reclaim is'..aiBrain.StartReclaimCurrent)
         end
         coroutine.yield(300)
     end
