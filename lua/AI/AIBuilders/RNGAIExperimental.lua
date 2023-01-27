@@ -250,6 +250,7 @@ BuilderGroup {
         BuilderName = 'RNGEXP Experimental1 1st',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 800,
+        PriorityFunction = ExperimentalDelayWaterMap,
         DelayEqualBuildPlattons = {'HighValue', 10},
         InstanceCount = 1,
         BuilderConditions = {

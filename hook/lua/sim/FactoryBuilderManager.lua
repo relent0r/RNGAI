@@ -117,7 +117,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         end
         --self:GenerateInitialQueue('InitialBuildQueueRNG', factory)
         factory.DelayThread = true
-        coroutine.yield(math.random(10,30))
+        coroutine.yield(math.random(5,15))
         factory.DelayThread = false
         if factory.Offline then
             while factory.Offline and factory and (not factory.Dead) do
@@ -256,7 +256,6 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
     end,
 
     GenerateInitialBO = function(self, factory)
-        --RNGLOG('GenerateInitialBO')
         local faction = self:GetFactoryFaction(factory)
         local queue = {
             'T1BuildEngineer',
@@ -264,7 +263,6 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         }
         if faction then
             local mapSizeX, mapSizeZ = GetMapSize()
-            --RNGLOG('Map Size is X '..mapSizeX..' Z '..mapSizeZ)
             local OwnIndex = self.Brain:GetArmyIndex()
             local EnemyIndex = self.Brain:GetCurrentEnemy():GetArmyIndex()
             if mapSizeX >= 4000 and mapSizeZ >= 4000 then
@@ -390,6 +388,11 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                             table.insert(queue, 'T1BuildEngineer')
                         end
                     end
+                    if self.Brain.StartReclaimCurrent > 500 then
+                        for i=1, 2 do
+                            table.insert(queue, 'T1BuildEngineer')
+                        end
+                    end
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1LandDFTank')
@@ -407,6 +410,11 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     table.insert(queue, 'T1LandDFTank')
                     for i=1, 3 do
                         table.insert(queue, 'T1BuildEngineer')
+                    end
+                    if self.Brain.StartReclaimCurrent > 500 then
+                        for i=1, 2 do
+                            table.insert(queue, 'T1BuildEngineer')
+                        end
                     end
                     table.insert(queue, 'T1LandArtillery')
                     table.insert(queue, 'T1LandAA')
@@ -444,6 +452,11 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                             table.insert(queue, 'T1BuildEngineer')
                         end
                     end
+                    if self.Brain.StartReclaimCurrent > 500 then
+                        for i=1, 2 do
+                            table.insert(queue, 'T1BuildEngineer')
+                        end
+                    end
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1LandDFTank')
@@ -471,6 +484,11 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     table.insert(queue, 'T1LandAA')
                     table.insert(queue, 'T1BuildEngineer')
                     if self.Brain.BrainIntel.RestrictedMassMarker > 8 then
+                        for i=1, 2 do
+                            table.insert(queue, 'T1BuildEngineer')
+                        end
+                    end
+                    if self.Brain.StartReclaimCurrent > 500 then
                         for i=1, 2 do
                             table.insert(queue, 'T1BuildEngineer')
                         end
@@ -501,6 +519,11 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1LandScout')
                     end
+                    if self.Brain.StartReclaimCurrent > 500 then
+                        for i=1, 2 do
+                            table.insert(queue, 'T1BuildEngineer')
+                        end
+                    end
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1LandDFTank')
@@ -521,6 +544,11 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     table.insert(queue, 'T1LandDFTank')
                     for i=1, 3 do
                         table.insert(queue, 'T1BuildEngineer')
+                    end
+                    if self.Brain.StartReclaimCurrent > 500 then
+                        for i=1, 2 do
+                            table.insert(queue, 'T1BuildEngineer')
+                        end
                     end
                     table.insert(queue, 'T1LandArtillery')
                     table.insert(queue, 'T1LandAA')

@@ -50,11 +50,11 @@ local AirDefenseScramble = function(self, aiBrain, builderManager, builderData)
         --RNGLOG('Enable Air ASF Scramble Pool Builder')
         --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         if builderData.BuilderData.TechLevel == 1 then
-            return 860
+            return 880
         elseif builderData.BuilderData.TechLevel == 2 then
-            return 865
+            return 885
         elseif builderData.BuilderData.TechLevel == 3 then
-            return 870
+            return 890
         end
         return 870
     else

@@ -5,8 +5,6 @@ local NavUtils = import('/lua/sim/NavUtils.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local GetClosestPathNodeInRadiusByLayerRNG = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayerRNG
--- This is due for merge in the default codebase soon..YAY
---local navutils = import('/lua/sim/NavUtils.lua')
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetThreatBetweenPositions = moho.aibrain_methods.GetThreatBetweenPositions
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
@@ -1767,7 +1765,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
 end
 
 CreateReclaimGrid = function(aiBrain)
-    coroutine.yield(Random(30,70))
+    coroutine.yield(Random(10,30))
     -- by default, 16x16 iMAP
     local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     --LOG('playableArea is '..repr(playableArea))
@@ -1910,7 +1908,7 @@ end
 MapReclaimAnalysis = function(aiBrain)
     -- Loops through map grid squares that roughly match IMAP 
     CreateReclaimGrid(aiBrain)
-    coroutine.yield(50)
+    coroutine.yield(30)
     while aiBrain.Status ~= "Defeat" do
         if aiBrain.ReclaimEnabled then
             local currentGameTime = GetGameTimeSeconds()
