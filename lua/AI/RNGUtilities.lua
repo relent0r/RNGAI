@@ -5040,3 +5040,17 @@ GetTargetRange = function(target)
     end
     return maxRange
 end
+
+CheckDefenseThreat = function(aiBrain, targetPos)
+    
+    local enemyDefenses = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, targetPos, 45, 'Enemy')
+    local totalDefenseThreat = 0
+    for _, v in enemyDefenses do
+        if v and not v.Dead and v.Blueprint.Defense.SurfaceThreatLevel and v.Blueprint.Weapon[1].MaxRadius then
+            if VDist3Sq(v:GetPosition(),targetPos) <= (v.Blueprint.Weapon[1].MaxRadius * v.Blueprint.Weapon[1].MaxRadius) then
+                totalDefenseThreat = totalDefenseThreat + v.Blueprint.Defense.SurfaceThreatLevel
+            end
+        end
+    end
+    return totalDefenseThreat
+end

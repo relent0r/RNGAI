@@ -273,7 +273,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
-            { EBC, 'LessThanEnergyTrendRNG', { 2.0 } },
+            { EBC, 'LessThanEnergyTrendRNG', { 6.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION - categories.HYDROCARBON } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Trend'}},
@@ -710,7 +710,7 @@ BuilderGroup {
         Priority = 850,
         DelayEqualBuildPlattons = {'ACUAssist', 3},
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.3}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.2}},
         },
         BuilderType = 'Any',
         BuilderData = {

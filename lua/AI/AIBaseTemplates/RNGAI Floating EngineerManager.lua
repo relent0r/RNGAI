@@ -30,9 +30,15 @@ BaseBuilderTemplate {
         },
         
         MassToFactoryValues = {
-            T1Value = 0,
-            T2Value = 0,
-            T3Value = 0,
+            T1LandValue = 0,
+            T2LandValue = 0,
+            T3LandValue = 0,
+            T1AirValue = 0,
+            T2AirValue = 0,
+            T3AirValue = 0,
+            T1NavalValue = 0,
+            T2NavalValue = 0,
+            T3NavalValue = 0,
         },
         NoGuards = true,
     },

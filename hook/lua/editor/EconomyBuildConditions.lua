@@ -302,47 +302,79 @@ function GreaterThanEconIncomeCombinedRNG(aiBrain, mIncome, eIncome)
     return false
 end
 
-function MassIncomeToFactoryRNG(aiBrain, compareType, t1Drain, t2Drain, t3Drain)
 
-    -- T1 Test
-    local testCat = categories.TECH1 * categories.FACTORY
-    local unitCount = aiBrain:GetCurrentUnits(testCat)
-    -- Find units of this type being built or about to be built
-    unitCount = unitCount + aiBrain:GetEngineerManagerUnitsBeingBuilt((categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.FACTORY)
 
-    local massTotal = unitCount * t1Drain
 
-    -- T2 Test
-    testCat = categories.TECH2 * categories.FACTORY
-    unitCount = aiBrain:GetCurrentUnits(testCat)
-    massTotal = massTotal + (unitCount * t2Drain)
+function MassIncomeToFactoryRNG(aiBrain, compareType, factoryDrain)
 
-    -- T3 Test
-    testCat = categories.TECH3 * categories.FACTORY
-    unitCount = aiBrain:GetCurrentUnits(testCat)
-    massTotal = massTotal + (unitCount * t3Drain)
+    local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
 
+
+    local factoryList = aiBrain:GetListOfUnits(categories.STRUCTURE * categories.FACTORY)
+    local t1LandFactories = 0
+    local t2LandFactories = 0
+    local t3LandFactories = 0
+    local t1AirFactories = 0
+    local t2AirFactories = 0
+    local t3AirFactories = 0
+    local t1NavalFactories = 0
+    local t2NavalFactories = 0
+    local t3NavalFactories = 0
+
+    for _, v in factoryList do
+        if v.Blueprint.CategoriesHash.TECH1 then
+            if v.Blueprint.CategoriesHash.LAND then
+                t1LandFactories = t1LandFactories + 1
+            elseif v.Blueprint.CategoriesHash.AIR then
+                t1AirFactories = t1AirFactories + 1
+            elseif v.Blueprint.CategoriesHash.NAVAL then
+                t1NavalFactories = t1NavalFactories + 1
+            end
+        elseif v.Blueprint.CategoriesHash.TECH2 then
+            if v.Blueprint.CategoriesHash.LAND then
+                t2LandFactories = t2LandFactories + 1
+            elseif v.Blueprint.CategoriesHash.AIR then
+                t2AirFactories = t2AirFactories + 1
+            elseif v.Blueprint.CategoriesHash.NAVAL then
+                t2NavalFactories = t2NavalFactories + 1
+            end
+        elseif v.Blueprint.CategoriesHash.TECH3 then
+            if v.Blueprint.CategoriesHash.LAND then
+                t3LandFactories = t3LandFactories + 1
+            elseif v.Blueprint.CategoriesHash.AIR then
+                t3AirFactories = t3AirFactories + 1
+            elseif v.Blueprint.CategoriesHash.NAVAL then
+                t3NavalFactories = t3NavalFactories + 1
+            end
+        end
+    end
+    --RNGLOG('T1 Land Factories '..t1LandFactories)
+    --RNGLOG('T2 Land Factories '..t2LandFactories)
+    --RNGLOG('T3 Land Factories '..t3LandFactories)
+    --RNGLOG('T1 Air Factories '..t1AirFactories)
+    --RNGLOG('T2 Air Factories '..t2AirFactories)
+    --RNGLOG('T3 Air Factories '..t3AirFactories)
+    --RNGLOG('T1 Naval Factories '..t1NavalFactories)
+    --RNGLOG('T2 Naval Factories '..t2NavalFactories)
+    --RNGLOG('T3 Naval Factories '..t3NavalFactories)
+
+    local massTotal = (t1LandFactories * factoryDrain.t1LandDrain) + (t2LandFactories * factoryDrain.t2LandDrain) + (t3LandFactories * factoryDrain.t3LandDrain)
+    --RNGLOG('massTotal land '..massTotal)
+    massTotal = massTotal + (t1AirFactories * factoryDrain.t1AirDrain) + (t2AirFactories * factoryDrain.t2AirDrain) + (t3AirFactories * factoryDrain.t3AirDrain)
+    --RNGLOG('massTotal air '..massTotal)
+    massTotal = massTotal + (t1NavalFactories * factoryDrain.t1NavalDrain) + (t2NavalFactories * factoryDrain.t2NavalDrain) + (t3NavalFactories * factoryDrain.t3NavalDrain)
+    --RNGLOG('massTotal naval '..massTotal)
+    
     -- T4 Test
     unitCount = aiBrain:GetEngineerManagerUnitsBeingBuilt(categories.EXPERIMENTAL + (categories.STRATEGIC * categories.TECH3))
     massTotal = massTotal + (unitCount * 40)
 
-    -- aiBrain.EconomyOverTimeCurrent.MassIncome * 10
-    -- (aiBrain.cmanager.income.r.m - mexSpend)
-    --local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3)
     aiBrain.EcoManager.ApproxFactoryMassConsumption = massTotal
     if not CompareBody((aiBrain.EconomyOverTimeCurrent.MassIncome * 10), massTotal, compareType) then
-        --RNGLOG('MassToFactoryRatio false')
-        --RNGLOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
-        --RNGLOG('Actual Mex Income is '..aiBrain.cmanager.income.r.m)
-        --RNGLOG('Mex Income minus mex spend '..(aiBrain.cmanager.income.r.m - mexSpend))
-        --RNGLOG('Factory massTotal : '..massTotal)
+        --RNGLOG('Mass to factory ratio false, mass consumption is '..massTotal)
         return false
     end
-
-    --RNGLOG('MassToFactoryRatio true')
-    --RNGLOG('aiBrain.EconomyOverTimeCurrent.MassIncome * 10 : '..(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
-    --RNGLOG('Actual Mex Income is '..aiBrain.cmanager.income.r.m)
-    --RNGLOG('Factory massTotal : '..massTotal)
+    --RNGLOG('Mass to factory ratio true, mass consumption is '..massTotal)
     return true
 end
 
@@ -366,21 +398,33 @@ function GreaterThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
         WARN('*AI WARNING: FactoryCapCheck - Invalid location - ' .. locationType)
         return false
     end
+    --RNGLOG('Location Type '..locationType)
 
-    local t1
-    local t2
-    local t3
+    local factoryDrain = {}
     if aiBrain.CheatEnabled then
-        t1 = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1Value or 8) * aiBrain.EcoManager.EcoMultiplier
-        t2 = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2Value or 20) * aiBrain.EcoManager.EcoMultiplier
-        t3 = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3Value or 30) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t1LandDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1LandValue or 8) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t2LandDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2LandValue or 20) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t3LandDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3LandValue or 30) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t1AirDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1AirValue or 8) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t2AirDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2AirValue or 20) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t3AirDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3AirValue or 30) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t1NavalDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1NavalValue or 8) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t2NavalDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2NavalValue or 20) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t3NavalDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3NavalValue or 30) * aiBrain.EcoManager.EcoMultiplier
     else
-        t1 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1Value or 8
-        t2 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2Value or 20
-        t3 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3Value or 30
+        factoryDrain.t1LandDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1LandValue or 8
+        factoryDrain.t2LandDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2LandValue or 20
+        factoryDrain.t3LandDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3LandValue or 30
+        factoryDrain.t1AirDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1AirValue or 8
+        factoryDrain.t2AirDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2AirValue or 20
+        factoryDrain.t3AirDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3AirValue or 30
+        factoryDrain.t1NavalDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1NavalValue or 8
+        factoryDrain.t2NavalDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2NavalValue or 20
+        factoryDrain.t3NavalDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3NavalValue or 30
     end
+    --RNGLOG('Total Factory Drain '..repr(factoryDrain))
 
-    return MassIncomeToFactoryRNG(aiBrain,'>', t1, t2, t3)
+    return MassIncomeToFactoryRNG(aiBrain,'>', factoryDrain)
 end
 
 function LessThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
@@ -389,21 +433,33 @@ function LessThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
         WARN('*AI WARNING: FactoryCapCheck - Invalid location - ' .. locationType)
         return false
     end
+    --RNGLOG('Location Type '..locationType)
 
-    local t1
-    local t2
-    local t3
+    local factoryDrain = {}
     if aiBrain.CheatEnabled then
-        t1 = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1Value or 8) * aiBrain.EcoManager.EcoMultiplier
-        t2 = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2Value or 20) * aiBrain.EcoManager.EcoMultiplier
-        t3 = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3Value or 30) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t1LandDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1LandValue or 8) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t2LandDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2LandValue or 20) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t3LandDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3LandValue or 30) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t1AirDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1AirValue or 8) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t2AirDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2AirValue or 20) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t3AirDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3AirValue or 30) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t1NavalDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1NavalValue or 8) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t2NavalDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2NavalValue or 20) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t3NavalDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3NavalValue or 30) * aiBrain.EcoManager.EcoMultiplier
     else
-        t1 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1Value or 8
-        t2 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2Value or 20
-        t3 = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3Value or 30
+        factoryDrain.t1LandDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1LandValue or 8
+        factoryDrain.t2LandDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2LandValue or 20
+        factoryDrain.t3LandDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3LandValue or 30
+        factoryDrain.t1AirDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1AirValue or 8
+        factoryDrain.t2AirDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2AirValue or 20
+        factoryDrain.t3AirDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3AirValue or 30
+        factoryDrain.t1NavalDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1NavalValue or 8
+        factoryDrain.t2NavalDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2NavalValue or 20
+        factoryDrain.t3NavalDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3NavalValue or 30
     end
+    --RNGLOG('Total Factory Drain '..repr(factoryDrain))
 
-    return MassIncomeToFactoryRNG(aiBrain,'<', t1, t2, t3)
+    return MassIncomeToFactoryRNG(aiBrain,'<', factoryDrain)
 end
 
 function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)

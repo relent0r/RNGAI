@@ -6511,6 +6511,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 --LOG('The enemy unit is a '..target.UnitId)
                                 self:Stop()
                                 self:MoveToLocation(RUtils.AvoidLocation(unitPos, PlatoonPosition, 60), false)
+                                pathPosCheck = true
                                 coroutine.yield(40)
                                 PlatoonPosition = GetPlatoonPosition(self)
                                 if not PlatoonPosition then return end

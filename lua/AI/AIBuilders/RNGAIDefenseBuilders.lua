@@ -1039,7 +1039,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Defence Sea - Perimeter Naval',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
         PriorityFunction = NavalExpansionAdjust,
         Priority = 650,
         InstanceCount = 1,

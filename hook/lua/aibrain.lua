@@ -3167,11 +3167,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 enemyCount = 1
             end
             if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) * 1.3 and (not self.EnemyIntel.ChokeFlag) and self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.MassMarkerTeamShare then
-                RNGLOG('Land Threat Higher, shift ratio to 0.4')
-                RNGLOG('Ally Extractors '..self.BrainIntel.SelfThreat.AllyExtractorCount)
-                RNGLOG('Team share '..self.BrainIntel.MassMarkerTeamShare)
-                RNGLOG('Self Threat '..self.BrainIntel.SelfThreat.LandNow)
-                RNGLOG('Enemy threat '..((self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) * 1.3))
+                --RNGLOG('Land Threat Higher, shift ratio to 0.4')
+                --RNGLOG('Ally Extractors '..self.BrainIntel.SelfThreat.AllyExtractorCount)
+                --RNGLOG('Team share '..self.BrainIntel.MassMarkerTeamShare)
+                --RNGLOG('Self Threat '..self.BrainIntel.SelfThreat.LandNow)
+                --RNGLOG('Enemy threat '..((self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) * 1.3))
 
                 if not self.RNGEXP then
                     self.ProductionRatios.Land = 0.4
@@ -4365,7 +4365,7 @@ AIBrain = Class(RNGAIBrainClass) {
         coroutine.yield(Random(1,7))
         while true do
             coroutine.yield(50)
-            local buildingTable = GetListOfUnits(self, categories.ENGINEER + categories.STRUCTURE * (categories.FACTORY + categories.RADAR + categories.MASSEXTRACTION), false)
+            local buildingTable = GetListOfUnits(self, categories.ENGINEER + categories.STRUCTURE * (categories.FACTORY + categories.RADAR + categories.MASSEXTRACTION + categories.SHIELD), false)
             local potentialPowerConsumption = 0
             local unitCat
             for k, v in buildingTable do
@@ -4405,21 +4405,39 @@ AIBrain = Class(RNGAIBrainClass) {
                                 continue
                             end
                         end
-                    elseif unitCat.TECH3 and unitCat.AIR then
+                    elseif unitCat.FACTORY then
+                        if unitCat.TECH3 and unitCat.AIR then
+                                if v:GetFractionComplete() < 0.7 then
+                                    --RNGLOG('EcoPowerPreemptive : T3 Air Being Built')
+                                    potentialPowerConsumption = potentialPowerConsumption + (1800 * multiplier)
+                                    continue
+                                else
+                                    v.BuildCompleted = true
+                                end
+                        elseif unitCat.TECH2 and unitCat.AIR then
                             if v:GetFractionComplete() < 0.7 then
-                                --RNGLOG('EcoPowerPreemptive : T3 Air Being Built')
-                                potentialPowerConsumption = potentialPowerConsumption + (1800 * multiplier)
+                                --RNGLOG('EcoPowerPreemptive : T2 Air Being Built')
+                                potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
                                 continue
                             else
                                 v.BuildCompleted = true
                             end
-                    elseif unitCat.TECH2 and unitCat.AIR then
-                        if v:GetFractionComplete() < 0.7 then
-                            --RNGLOG('EcoPowerPreemptive : T2 Air Being Built')
-                            potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
-                            continue
-                        else
-                            v.BuildCompleted = true
+                        elseif unitCat.TECH3 and unitCat.LAND then
+                            if v:GetFractionComplete() < 0.7 then
+                                --RNGLOG('EcoPowerPreemptive : T3 Air Being Built')
+                                potentialPowerConsumption = potentialPowerConsumption + (250 * multiplier)
+                                continue
+                            else
+                                v.BuildCompleted = true
+                            end
+                        elseif unitCat.TECH2 and unitCat.LAND then
+                            if v:GetFractionComplete() < 0.7 then
+                                --RNGLOG('EcoPowerPreemptive : T2 Air Being Built')
+                                potentialPowerConsumption = potentialPowerConsumption + (70 * multiplier)
+                                continue
+                            else
+                                v.BuildCompleted = true
+                            end
                         end
                     elseif unitCat.MASSEXTRACTION then
                         if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.7 then
@@ -4429,9 +4447,13 @@ AIBrain = Class(RNGAIBrainClass) {
                         else
                             v.BuildCompleted = true
                         end
-                    elseif unitCat.STRUCTURE and (unitCat.RADAR or unitCat.SONAR) then
+                    elseif unitCat.STRUCTURE and (unitCat.RADAR or unitCat.SONAR or unitCat.SHIELD) then
                         if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.7 then
                             --RNGLOG('EcoPowerPreemptive : Radar being upgraded next power consumption is '..ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy)
+                            if v:IsUnitState('Upgrading') then
+                                RNGLOG('Unit is upgrading, check power consumption during upgrade')
+                                potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildCostEnergy / ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildTime * (ALLBPS[v.UnitId].Economy.BuildRate * multiplier))
+                            end
                             potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy
                             continue
                         else

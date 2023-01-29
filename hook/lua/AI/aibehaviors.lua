@@ -1608,14 +1608,22 @@ function CDROverChargeRNG(aiBrain, cdr)
                         if enemyACUHealth < cdr.Health then
                             acuAdvantage = true
                         end
+                        local defenseThreat = RUtils.CheckDefenseThreat(aiBrain, targetPos)
                         --RNGLOG('Enemy ACU Detected , our health is '..cdr.Health..' enemy is '..enemyACUHealth)
+                        --RNGLOG('Defense Threat is '..defenseThreat)
+                        if defenseThreat > 45 and cdr.SuicideMode then
+                            --RNGLOG('ACU defense threat too high, disable suicide mode')
+                            SetAcuSnipeMode(cdr, false)
+                            cdr.SnipeMode = false
+                            cdr.SuicideMode = false
+                        end
                         if enemyACUHealth < 4500 and cdr.Health - enemyACUHealth < 3000 then
                             if not cdr.SnipeMode then
                                 --RNGLOG('Enemy ACU is under HP limit we can potentially draw')
                                 SetAcuSnipeMode(cdr, true)
                                 cdr.SnipeMode = true
                             end
-                        elseif enemyACUHealth < 7000 and cdr.Health - enemyACUHealth > 3250 and not RUtils.PositionInWater(targetPos) then
+                        elseif enemyACUHealth < 7000 and cdr.Health - enemyACUHealth > 3250 and not RUtils.PositionInWater(targetPos) and defenseThreat < 45 then
                             --RNGLOG('Enemy ACU could be killed or drawn, should we try?')
                             SetAcuSnipeMode(cdr, true)
                             cdr:SetAutoOvercharge(true)
@@ -2116,6 +2124,9 @@ function CDRGetUnitClump(aiBrain, cdrPos, radius)
     --RNGLOG('Check for unit clump')
     for k, v in unitList do
         if v and not v.Dead then
+            if v.Blueprint.CategoriesHash.STRUCTURE and v.Blueprint.CategoriesHash.DEFENSE and v.Blueprint.CategoriesHash.DIRECTFIRE then
+                return true, v
+            end
             local unitPos = v:GetPosition()
             local unitCount = GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE + categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, unitPos, 2.5, 'Enemy')
             if unitCount > 1 then
@@ -2136,8 +2147,9 @@ function SetAcuSnipeMode(unit, bool)
                 categories.MOBILE * categories.EXPERIMENTAL,
                 categories.MOBILE * categories.TECH3,
                 categories.MOBILE * categories.TECH2,
-                categories.MOBILE * categories.TECH1,
+                categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE,
                 (categories.STRUCTURE * categories.DEFENSE - categories.ANTIMISSILE),
+                categories.MOBILE * categories.TECH1,
                 (categories.ALLUNITS - categories.SPECIALLOWPRI),
             }
         --RNGLOG('Setting to snipe mode')

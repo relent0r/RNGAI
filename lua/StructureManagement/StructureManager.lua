@@ -1293,7 +1293,7 @@ StructureManager = Class {
                     fractionComplete = upgradedExtractor:GetFractionComplete()
                 end
                 if not extractorUpgradeTimeoutReached then
-                    if GetGameTimeSeconds() - upgradeTimeStamp > aiBrain.EcoManager.EcoMassUpgradeTimeout then
+                    if GetGameTimeSeconds() - upgradeTimeStamp > aiBrain.EcoManager.EcoMassUpgradeTimeout and GetEconomyStored( aiBrain, 'ENERGY') > 500 then
                         extractorUpgradeTimeoutReached = true
                     end
                 end
