@@ -1449,10 +1449,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         maxRadius = 512 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
         aiBrain.ACUSupport.ACUMaxSearchRadius = maxRadius
     elseif cdr.Health > 5000 and GetGameTimeSeconds() > 260 and cdr.Initialized then
-        maxRadius = 160 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
-        if maxRadius < 80 then 
-            maxRadius = 100 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
-        end
+        maxRadius = math.max((160 - GetGameTimeSeconds()/60*6), 100) -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
         aiBrain.ACUSupport.ACUMaxSearchRadius = maxRadius
     end
     

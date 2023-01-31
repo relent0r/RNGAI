@@ -44,7 +44,7 @@ BuilderGroup {
                 },
                 Scale = true,
                 AvoidCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                AdjacencyDistance = 50,
+                AdjacencyDistance = 15,
                 maxUnits = 1,
                 maxRadius = 2.5,
                 BuildStructures = {

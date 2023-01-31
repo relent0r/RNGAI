@@ -157,7 +157,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     if not firstReclaim then
                         for k, r in aiBrain.StartReclaimTable do
                             if r.Reclaim and not IsDestroyed(r.Reclaim) then
-                                if r.Reclaim.MaxMassReclaim > highestValue then
+                                if r.Reclaim.MaxMassReclaim > highestValue and NavUtils.CanPathTo('Amphibious', engPos, r.Reclaim.CachePosition) then
                                     closestReclaim = r.Reclaim
                                     closestReclaimKey = k
                                     highestValue  = r.Reclaim.MaxMassReclaim
@@ -170,7 +170,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             local reclaimDistance
                             if r.Reclaim and not IsDestroyed(r.Reclaim) then
                                 reclaimDistance = VDist3Sq(engPos, r.Reclaim.CachePosition)
-                                if not closestReclaimDistance or reclaimDistance < closestReclaimDistance then
+                                if not closestReclaimDistance or reclaimDistance < closestReclaimDistance and NavUtils.CanPathTo('Amphibious', engPos, r.Reclaim.CachePosition) then
                                     closestReclaim = r.Reclaim
                                     closestReclaimDistance = reclaimDistance
                                     closestReclaimKey = k
@@ -4965,7 +4965,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid)
             for k, v in aiBrain.prioritypointshighvalue do
                 if not v.unit.Dead then
                     local targetDistance = VDist3Sq(v.Position, platPos)
-                    local tempPoint = v.priority/(RNGMAX(targetDistance,30*30)+(v.danger or 0))
+                    local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
                     if tempPoint > highestPriority then
                         if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
                             highestPriority = tempPoint
@@ -4975,7 +4975,8 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid)
                 end
             end
             if closestTarget then
-                --RNGLOG('CheckHighPriorityTarget has found unit')
+                RNGLOG('CheckHighPriorityTarget has found unit')
+                RNGLOG('Distance to base is '..repr(VDist3(closestTarget:GetPosition(), aiBrain.BrainIntel.StartPos)))
                 return closestTarget
             end
         end
