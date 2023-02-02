@@ -703,11 +703,24 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI TransportFactoryBuilders Small',
     BuildersType = 'FactoryBuilder',
     Builder {
+        BuilderName = 'RNGAI T1 Air Transport NoPath',
+        PlatoonTemplate = 'T1AirTransport',
+        Priority = 880,
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
+            { MIBC, 'ArmyNeedOrWantTransports', {} },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 0.95 }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
         BuilderName = 'RNGAI T1 Air Transport',
         PlatoonTemplate = 'T1AirTransport',
         Priority = 880,
         BuilderConditions = {
-            { MIBC, 'ArmyNeedOrWantTransports', {} },
+            { MIBC, 'ArmyNeedsTransports', {} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 0.95 }},
@@ -720,7 +733,7 @@ BuilderGroup {
         Priority = 700,
         BuilderConditions = {
             { MIBC, 'MapGreaterThan', { 256, 256 }},
-            { MIBC, 'ArmyNeedsTransports', {} },
+            { MIBC, 'ArmyNeedOrWantTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },

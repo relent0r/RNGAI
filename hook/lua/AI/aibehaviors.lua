@@ -445,6 +445,7 @@ function CDRBuildFunction(aiBrain, cdr, object)
                     if cdr.Caution then
                         break
                     end
+
                    --RNGLOG('Current Build Queue is '..RNGGETN(cdr.EngineerBuildQueue))
                     coroutine.yield(10)
                 end
@@ -475,6 +476,7 @@ function CDRBuildFunction(aiBrain, cdr, object)
                     local baseValues = {}
                     local highPri = false
                     local markerType = false
+                    local abortBuild = false
                     if object.dataobject.Type == 'Blank Marker' then
                         markerType = 'Start Location'
                     else
@@ -524,6 +526,9 @@ function CDRBuildFunction(aiBrain, cdr, object)
                         factoryCount = 1
                     end
                     for i=1, factoryCount do
+                        if i == 2 and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 0.85 then
+                            break
+                        end
                         local whatToBuild = aiBrain:DecideWhatToBuild(cdr, 'T1LandFactory', buildingTmpl)
                         local location = aiBrain:FindPlaceToBuild('T1LandFactory', whatToBuild, baseTmplDefault['BaseTemplates'][factionIndex], true, cdr, nil, cdr.Position[1], cdr.Position[3])
                         local relativeLoc = {location[1], 0, location[2]}
@@ -534,6 +539,10 @@ function CDRBuildFunction(aiBrain, cdr, object)
                         if RNGGETN(cdr.EngineerBuildQueue) > 0 then
                             for k,v in cdr.EngineerBuildQueue do
                                --RNGLOG('Attempt to build queue item of '..repr(v))
+                               if abortBuild then
+                                    cdr.EngineerBuildQueue[k] = nil
+                                    break
+                                end
                                 while not cdr.Dead and RNGGETN(cdr.EngineerBuildQueue) > 0 do
                                     IssueClearCommands({cdr})
                                     IssueMove({cdr},v.Position)
@@ -547,6 +556,18 @@ function CDRBuildFunction(aiBrain, cdr, object)
                                             coroutine.yield(10)
                                             if cdr.Caution then
                                                 break
+                                            end
+                                            if cdr.UnitBeingBuilt then
+                                                RNGLOG('UnitBeingBuilt fraction '..cdr.UnitBeingBuilt:GetFractionComplete())
+                                            else
+                                                RNGLOG('No UnitBeingBuilt on cdr')
+                                            end
+                                            if cdr.EnemyCDRPresent and cdr.UnitBeingBuilt then
+                                                if GetNumUnitsAroundPoint(aiBrain, categories.COMMAND, cdr.Position, 25, 'Enemy') > 0 and cdr.UnitBeingBuilt:GetFractionComplete() < 0.5 then
+                                                    abortBuild = true
+                                                    cdr.EngineerBuildQueue[k] = nil
+                                                    break
+                                                end
                                             end
                                         end
                                        --RNGLOG('Build Queue item should be finished '..k)

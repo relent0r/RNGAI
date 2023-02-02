@@ -5027,7 +5027,7 @@ GetPlatUnitEnemyBias = function(aiBrain, platoon, acuSupport)
 end
 
 GetTargetRange = function(target)
-    local maxRange = false
+    local maxRange
     if target and target.Blueprint.Weapon then
         for _, v in target.Blueprint.Weapon do
             if not(v.CannotAttackGround == true) then
