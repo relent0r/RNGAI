@@ -380,9 +380,9 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
                 --RNGLOG('buildingType is T1EnergyProduction')
                 if aiBrain.EconomyMonitorThread then
                     local currentEnergyTrend = aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime
-                    --RNGLOG('EnergyTrend when going to build T1 power '..currentEnergyTrend)
-                    --RNGLOG('Amount of power needed is '..(60 - currentEnergyTrend))
-                    local energyNumber = 60 - currentEnergyTrend
+                    RNGLOG('EnergyTrend when going to build T1 power '..currentEnergyTrend)
+                    RNGLOG('Amount of power needed is '..(80 - currentEnergyTrend))
+                    local energyNumber = 80 - currentEnergyTrend
                     scaleCount = math.ceil(energyNumber/20)
                 end
             end

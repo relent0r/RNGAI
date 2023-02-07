@@ -193,10 +193,11 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 BuildClose = false,
-                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
-                AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH2,
                 maxUnits = 1,
                 maxRadius = 35,
+                NearDefensivePoints = true,
+                Type = 'Land',
+                Tier = 1,
                 BuildStructures = {
                     'T2Artillery',
                 },
@@ -417,7 +418,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1 Defence Restricted Breach Air Expansion',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 950,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.ANTIAIR}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
@@ -443,7 +444,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1 Defence Restricted Breach Sea Expansion',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 950,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.ANTINAVY}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'NAVAL' }},

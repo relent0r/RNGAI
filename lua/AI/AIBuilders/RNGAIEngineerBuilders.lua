@@ -333,8 +333,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 450, -- low factory priority
         BuilderConditions = {
-            { UCBC, 'EngineerLessAtLocation', { 'LocationType', 1, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 2 of them.
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 0.9} },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9} },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -1003,8 +1002,7 @@ BuilderGroup {
         InstanceCount = 8,
         BuilderConditions = {
             { UCBC, 'CheckBuildPlattonDelay', { 'Assist' }},
-            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.05, 1.05 }},
-            { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
+            { EBC, 'NavalAssistControlRNG', { 1.05, 1.05, 'LocationType', 'Naval' }},
         },
         BuilderType = 'Any',
         BuilderData = {

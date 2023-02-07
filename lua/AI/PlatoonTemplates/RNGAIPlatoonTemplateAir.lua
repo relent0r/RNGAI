@@ -119,16 +119,16 @@ PlatoonTemplate {
     Name = 'RNGAIT1AirScoutBurst',
     FactionSquads = {
         UEF = {
-            { 'uea0101', 1, 3, 'scout', 'None' },
+            { 'uea0101', 1, 2, 'scout', 'None' },
         },
         Aeon = {
-            { 'uaa0101', 1, 3, 'scout', 'None' },
+            { 'uaa0101', 1, 2, 'scout', 'None' },
         },
         Cybran = {
-            { 'ura0101', 1, 3, 'scout', 'None' },
+            { 'ura0101', 1, 2, 'scout', 'None' },
         },
         Seraphim = {
-            { 'xsa0101', 1, 3, 'scout', 'None' },
+            { 'xsa0101', 1, 2, 'scout', 'None' },
         },
     }
 }
@@ -137,16 +137,16 @@ PlatoonTemplate {
     Name = 'RNGAIT3ScoutBurst',
     FactionSquads = {
         UEF = {
-            { 'uea0302', 1, 3, 'scout', 'none' },      -- Scout
+            { 'uea0302', 1, 2, 'scout', 'none' },      -- Scout
         },
         Aeon = {
-            { 'uaa0302', 1, 3, 'scout', 'None' },
+            { 'uaa0302', 1, 2, 'scout', 'None' },
         },
         Cybran = {
-            { 'ura0302', 1, 3, 'scout', 'None' },
+            { 'ura0302', 1, 2, 'scout', 'None' },
         },
         Seraphim = {
-            { 'xsa0302', 1, 3, 'scout', 'None' },
+            { 'xsa0302', 1, 2, 'scout', 'None' },
         },
     }
 }

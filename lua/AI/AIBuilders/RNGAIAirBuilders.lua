@@ -431,6 +431,8 @@ BuilderGroup {
             IgnoreCivilian = true,
             SearchRadius = BaseEnemyArea,
             UnitType = 'BOMBER',
+            UnitTarget = 'ENGINEER',
+            LocationType = 'LocationType',
             PlatoonLimit = 2,
             PrioritizedCategories = {
                 categories.ENGINEER - categories.COMMAND,

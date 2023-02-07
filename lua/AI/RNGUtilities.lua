@@ -1421,6 +1421,19 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
         --RNGLOG('ACUTARGETTING : ACU Targets are within range')
         for k, v in enemyACUTargets do
             if not v.unit.Dead and not v.unit:BeenDestroyed() then
+                if v.distance < 900 then
+                    local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
+                    local targetLayer = v.unit:GetCurrentLayer()
+                    if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
+                       not (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
+                        if NavUtils.CanPathTo('Amphibious', v.position, cdrPos) then
+                            --RNGLOG('ACUTARGETTING : returnTarget set in for loop for enemyACUTargets')
+                            returnTarget = v.unit
+                            returnAcu = true
+                            break
+                        end
+                    end
+                end
                 local surfaceThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
                 --RNGLOG('ACU distance '..v.distance..' closest distance '..(closestDistance * 2))
                 --RNGLOG('Commander threat is '..GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander'))
@@ -1991,6 +2004,8 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                 if Target.Sync.id and not unitThreatTable[Target.Sync.id] then
                     if platoon.MovementLayer == 'Water' then
                         totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel + ALLBPS[Target.UnitId].Defense.SubThreatLevel
+                    elseif platoon.MovementLayer == 'Air' then
+                        totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.AirThreatLevel
                     else
                         totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel
                     end
@@ -4740,88 +4755,59 @@ CanPathToCurrentEnemyRNG = function(aiBrain) -- Uveso's function modified to run
         end
         --We are getting the current base position rather than the start position so we can use this for expansions.
         for k, v in aiBrain.BuilderManagers do
-            local locPos = v.Position 
-            -- added this incase the position came back nil
-            local enemyX, enemyZ
-            if aiBrain:GetCurrentEnemy() then
-                enemyX, enemyZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
-                -- if we don't have an enemy position then we can't search for a path. Return until we have an enemy position
-                if not enemyX then
+            if k ~= 'FLOATING' then
+                local locPos = v.Position 
+                -- added this incase the position came back nil
+                local enemyX, enemyZ
+                if aiBrain:GetCurrentEnemy() then
+                    enemyX, enemyZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
+                    -- if we don't have an enemy position then we can't search for a path. Return until we have an enemy position
+                    if not enemyX then
+                        coroutine.yield(30)
+                        break
+                    end
+                else
                     coroutine.yield(30)
                     break
                 end
-            else
-                coroutine.yield(30)
-                break
-            end
 
-            -- Get the armyindex from the enemy
-            local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
-            local OwnIndex = aiBrain:GetArmyIndex()
-            -- create a table for the enemy index in case it's nil
-            aiBrain.CanPathToEnemyRNG[OwnIndex] = aiBrain.CanPathToEnemyRNG[OwnIndex] or {}
-            aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex] = aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex] or {}
-            -- Check if we have already done a path search to the current enemy
-            if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] == 'LAND' then
-                coroutine.yield(20)
-                continue
-            elseif aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] == 'AMPHIBIOUS' then
-                coroutine.yield(20)
-                continue
-            elseif aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] == 'NOPATH' then
-                coroutine.yield(20)
-                continue
-            end
-            -- path wit AI markers from our base to the enemy base
-            --RNGLOG('Validation GenerateSafePath inputs locPos :'..repr(locPos)..'Enemy Pos: '..repr({enemyX,0,enemyZ}))
-            local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
-            local path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, 'Land', locPos, {enemyX,0,enemyZ}, 10000)
-            -- if we have a path generated with AI path markers then....
-            if path then
-                --RNGLOG('* RNG CanPathToCurrentEnemyRNG: Land path to the enemy found! LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..k)
-                aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] = 'LAND'
-            -- if we not have a path
-            else
-                --RNGLOG('* RNG CanPathToCurrentEnemyRNG not path returned ')
-                -- "NoPath" means we have AI markers but can't find a path to the enemy - There is no path!
-                if reason == 'NoPath' then
+                -- Get the armyindex from the enemy
+                local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
+                local OwnIndex = aiBrain:GetArmyIndex()
+                -- create a table for the enemy index in case it's nil
+                aiBrain.CanPathToEnemyRNG[OwnIndex] = aiBrain.CanPathToEnemyRNG[OwnIndex] or {}
+                aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex] = aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex] or {}
+                -- Check if we have already done a path search to the current enemy
+                if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] == 'LAND' then
+                    coroutine.yield(20)
+                    continue
+                elseif aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] == 'AMPHIBIOUS' then
+                    coroutine.yield(20)
+                    continue
+                elseif aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] == 'NOPATH' then
+                    coroutine.yield(20)
+                    continue
+                end
+                -- path wit AI markers from our base to the enemy base
+                --RNGLOG('Validation GenerateSafePath inputs locPos :'..repr(locPos)..'Enemy Pos: '..repr({enemyX,0,enemyZ}))
+                local path, reason = NavUtils.CanPathTo('Land', locPos, {enemyX,0,enemyZ})
+                -- if we have a path generated with AI path markers then....
+                if path then
+                    RNGLOG('* RNG CanPathToCurrentEnemyRNG: Land path to the enemy found! LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..k)
+                    aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] = 'LAND'
+                -- if we not have a path
+                else
+                    --RNGLOG('* RNG CanPathToCurrentEnemyRNG not path returned ')
+                    --"NoPath" means we have AI markers but can't find a path to the enemy - There is no path!
                     --RNGLOG('* RNG CanPathToCurrentEnemyRNG: No land path to the enemy found! Testing Amphib map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..k)
-                    local amphibPath, amphibReason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, 'Amphibious', locPos, {enemyX,0,enemyZ}, 10000)
+                    local amphibPath, amphibReason = NavUtils.CanPathTo('Amphibious', locPos, {enemyX,0,enemyZ})
                     --RNGLOG('amphibReason '..amphibReason)
-                    if amphibPath then
-                        --RNGLOG('Amphib path detected ')
-                        aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] = 'AMPHIBIOUS'
-                    else
-                        if amphibReason == 'NoPath' then
-                            --RNGLOG('No land or amphib path detected')
-                            -- No land or amphib path, we are likely on a plateu and cant go anywhere without transports.
-                            aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] = 'NOPATH'
-                        elseif amPhibReason == 'NoGraph' then
-                            --RNGLOG('* RNG CanPathToCurrentEnemyRNG: No AI markers found! Using land/water ratio instead')
-                            -- Check if we have less then 50% water on the map
-                            if aiBrain:GetMapWaterRatio() < 0.50 then
-                                --lets asume we can move on land to the enemy
-                                --RNGLOG(string.format('* RNG CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..k ,aiBrain:GetMapWaterRatio()*100 ))
-                                aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] = 'LAND'
-                            else
-                                -- we have more then 50% water on this map. Ity maybe a water map..
-                                --RNGLOG(string.format('* RNG CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming WATER map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..k ,aiBrain:GetMapWaterRatio()*100 ))
-                                aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] = 'NOPATH'
-                            end
-                        end
-                    end
-                -- "NoGraph" means we have no AI markers and cant graph to the enemy. We can't search for a path - No markers
-                elseif reason == 'NoGraph' then
-                    --RNGLOG('* RNG CanPathToCurrentEnemyRNG: No AI markers found! Using land/water ratio instead')
-                    -- Check if we have less then 50% water on the map
-                    if aiBrain:GetMapWaterRatio() < 0.50 then
-                        --lets asume we can move on land to the enemy
-                        --RNGLOG(string.format('* RNG CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..k ,aiBrain:GetMapWaterRatio()*100 ))
-                        aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] = 'LAND'
-                    else
-                        -- we have more then 50% water on this map. Ity maybe a water map..
-                        --RNGLOG(string.format('* RNG CanPathToCurrentEnemy: Water on map: %0.2f%%. Assuming WATER map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..k ,aiBrain:GetMapWaterRatio()*100 ))
+                    if not amphibPath then
+                        RNGLOG('* RNG CanPathToCurrentEnemyRNG: NOPATH path to the enemy found! Air map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..k)
                         aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] = 'NOPATH'
+                    else
+                        RNGLOG('* RNG CanPathToCurrentEnemyRNG: Amphibious path to the enemy found! Water map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..k)
+                        aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] = 'AMPHIBIOUS'
                     end
                 end
             end
@@ -4964,7 +4950,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid)
         if platPos and VDist3Sq(platPos, aiBrain.BrainIntel.StartPos) < (aiBrain.EnemyIntel.ClosestEnemyBase / rangeCheck) then
             for k, v in aiBrain.prioritypointshighvalue do
                 if not v.unit.Dead then
-                    local targetDistance = VDist3Sq(v.Position, platPos)
+                    local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
                     local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
                     if tempPoint > highestPriority then
                         if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
@@ -5054,4 +5040,61 @@ CheckDefenseThreat = function(aiBrain, targetPos)
         end
     end
     return totalDefenseThreat
+end
+
+function SetAcuSnipeMode(unit, bool)
+    local targetPriorities = {}
+    --RNGLOG('Set ACU weapon priorities.')
+    if bool then
+       targetPriorities = {
+                categories.COMMAND,
+                categories.MOBILE * categories.EXPERIMENTAL,
+                categories.MOBILE * categories.TECH3,
+                categories.MOBILE * categories.TECH2,
+                categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE,
+                (categories.STRUCTURE * categories.DEFENSE - categories.ANTIMISSILE),
+                categories.MOBILE * categories.TECH1,
+                (categories.ALLUNITS - categories.SPECIALLOWPRI),
+            }
+        --RNGLOG('Setting to snipe mode')
+    else
+       targetPriorities = {
+                categories.MOBILE * categories.EXPERIMENTAL,
+                categories.MOBILE * categories.TECH3,
+                categories.MOBILE * categories.TECH2,
+                categories.MOBILE * categories.TECH1,
+                categories.COMMAND,
+                (categories.STRUCTURE * categories.DEFENSE - categories.ANTIMISSILE),
+                (categories.ALLUNITS - categories.SPECIALLOWPRI),
+            }
+        --RNGLOG('Setting to default weapon mode')
+    end
+    for i = 1, unit:GetWeaponCount() do
+        local wep = unit:GetWeapon(i)
+        wep:SetWeaponPriorities(targetPriorities)
+    end
+end
+
+CenterPlatoonUnitsRNG = function(platoon, platoonPos)
+    local furtherest
+    local furtherestSpeed
+    for _, v in GetPlatoonUnits(platoon) do
+        if not v.Dead then
+            local unitPos = v:GetPosition()
+            local distance = VDist3Sq(unitPos, platoonPos)
+            if VDist3Sq(unitPos, platoonPos) > 625 then
+                IssueClearCommands({v})
+                IssueMove({v}, platoonPos)
+                if not furtherest or distance > furtherest then
+                    furtherest = distance
+                    furtherestSpeed = v.Blueprint.Physics.MaxSpeed
+                end
+            end
+        end
+    end
+    if furtherestSpeed and furtherestSpeed > 0 then
+        return furtherestSpeed
+    else
+        return 4
+    end
 end

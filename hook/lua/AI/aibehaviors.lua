@@ -1559,7 +1559,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 end
                 if target and not target.Dead then
                     cdr.Target = target
-                    --RNGLOG('ACU OverCharge Target Found')
+                    --RNGLOG('ACU OverCharge Target Found '..target.UnitId)
                     local targetPos = target:GetPosition()
                     local cdrPos = cdr:GetPosition()
                     local cdrNewPos = {}
@@ -1635,7 +1635,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                             cdr.SnipeMode = false
                             cdr.SuicideMode = false
                         end
-                        if enemyACUHealth < 4500 and cdr.Health - enemyACUHealth < 3000 then
+                        if enemyACUHealth < 4500 and cdr.Health - enemyACUHealth < 3000 or cdr.CurrentFriendlyInnerCircle > cdr.CurrentEnemyInnerCircle * 1.3 then
                             if not cdr.SnipeMode then
                                 --RNGLOG('Enemy ACU is under HP limit we can potentially draw')
                                 SetAcuSnipeMode(cdr, true)
@@ -1926,10 +1926,11 @@ function CDRRetreatRNG(aiBrain, cdr, base)
     local closestPlatoonDistance = false
     local closestAPlatPos = false
     local platoonValue = 0
+    local distanceToHome = VDist3Sq(cdr.CDRHome, cdr.Position)
     --RNGLOG('Getting list of allied platoons close by')
     coroutine.yield( 2 )
     local supportPlatoon = aiBrain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
-    if cdr.Health > 5000 and VDist3Sq(cdr.CDRHome, cdr.Position) > 6400 and not base then
+    if cdr.Health > 5000 and distanceToHome > 6400 and not base then
         if supportPlatoon then
             closestPlatoon = supportPlatoon
             closestAPlatPos = GetPlatoonPosition(supportPlatoon)
@@ -1953,9 +1954,8 @@ function CDRRetreatRNG(aiBrain, cdr, base)
                     if aPlat.MovementLayer == 'Land' or aPlat.MovementLayer == 'Amphibious' then
                         local aPlatPos = GetPlatoonPosition(aPlat)
                         local aPlatDistance = VDist2Sq(cdr.Position[1],cdr.Position[3],aPlatPos[1],aPlatPos[3])
-                        local homeDistance = VDist2Sq(cdr.Position[1],cdr.Position[3],cdr.CDRHome[1],cdr.CDRHome[3])
                         local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],cdr.CDRHome[1],cdr.CDRHome[3])
-                        if aPlatDistance > 1600 and aPlatToHomeDistance < homeDistance then
+                        if aPlatDistance > 1600 and aPlatToHomeDistance < distanceToHome then
                             local threat = aPlat:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                             local platoonValue = aPlatDistance * aPlatDistance / threat
                             if not closestPlatoonDistance then
@@ -1985,7 +1985,8 @@ function CDRRetreatRNG(aiBrain, cdr, base)
             if RNGGETN(base.FactoryManager.FactoryList) > 0 then
                 --RNGLOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
                 local baseDistance = VDist3Sq(cdr.Position, base.Position)
-                if baseDistance > 1600 or (cdr.GunUpgradeRequired and not cdr.Caution) or (cdr.HighThreatUpgradeRequired and not cdr.Caution) or baseName == 'MAIN' then
+                local homeDistance = VDist3Sq(cdr.CDRHome, base.Position)
+                if homeDistance < distanceToHome and baseDistance > 1225 or (cdr.GunUpgradeRequired and not cdr.Caution) or (cdr.HighThreatUpgradeRequired and not cdr.Caution) or baseName == 'MAIN' then
                     if not closestBaseDistance then
                         closestBaseDistance = baseDistance
                     end
