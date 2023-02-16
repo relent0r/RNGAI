@@ -172,7 +172,7 @@ EngineerManager = Class(RNGEngineerManager) {
         if not self.Brain.RNG then
             return RNGEngineerManager.AssignEngineerTask(self, unit)
         end
-        --LOG('Engineer trying to have task assigned '..unit.Sync.id)
+        --LOG('Engineer trying to have task assigned '..unit.EntityId)
         if unit.Active or unit.Combat or unit.GoingHome or unit.UnitBeingBuiltBehavior or unit.Upgrading then
             --RNGLOG('Unit Still in combat or going home, delay')
             self.AssigningTask = false
@@ -180,7 +180,7 @@ EngineerManager = Class(RNGEngineerManager) {
             self:DelayAssign(unit, 50)
             return
         end
-        --LOG('Engineer passed active, combat, goinghome, unitbeingbuiltbehavior or upgrading '..unit.Sync.id)
+        --LOG('Engineer passed active, combat, goinghome, unitbeingbuiltbehavior or upgrading '..unit.EntityId)
         unit.LastActive = GetGameTimeSeconds()
         if unit.UnitBeingAssist or unit.UnitBeingBuilt then
             --RNGLOG('UnitBeingAssist Delay')

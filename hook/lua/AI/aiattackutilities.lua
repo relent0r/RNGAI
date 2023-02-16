@@ -1359,7 +1359,8 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     #eval platoon threat
     local myThreat = GetThreatOfUnits(platoon)
     --RNGLOG('GetBestNavalTarget myThreat is '..myThreat)
-    local friendlyThreat = aiBrain:GetThreatAtPosition(platoonPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, ThreatTable[platoon.MovementLayer], aiBrain:GetArmyIndex()) - myThreat
+    
+    local friendlyThreat = platoon:CalculatePlatoonThreatAroundPosition('Surface', categories.MOBILE * categories.NAVAL, platoonPosition, 50) - myThreat
     friendlyThreat = friendlyThreat * -1
     --RNGLOG('GetBestNavalTarget friendlyThreat is '..friendlyThreat)
 

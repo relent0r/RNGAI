@@ -477,7 +477,7 @@ function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)
                 return true
             end
         elseif uType == 'Land' then
-            if  GetEconomyStored(aiBrain, 'MASS') >= 5 and (aiBrain.EnemyIntel.EnemyThreatCurrent.Land > aiBrain.BrainIntel.SelfThreat.LandNow or GetEconomyStored(aiBrain, 'ENERGY') >= 200) then
+            if GetEconomyStored(aiBrain, 'MASS') >= 5 and GetEconomyStored(aiBrain, 'ENERGY') >= 200 then
                 return true
             end
         else
@@ -492,11 +492,11 @@ end
 function NavalAssistControlRNG(aiBrain, MassEfficiency, EnergyEfficiency, locationType, threatType)
     -- Used to try and get the engineer assist to work at the correct times.
     if (aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= MassEfficiency and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= EnergyEfficiency) then
-        RNGLOG('Naval Assist GreaterThanEconEfficiencyOverTime Returned True')
+        --RNGLOG('Naval Assist GreaterThanEconEfficiencyOverTime Returned True')
         return true
     elseif aiBrain.BaseMonitor.AlertSounded and (aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 0.7 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.9) then
         if threatType == 'NAVAL' and aiBrain.BasePerimeterMonitor[locationType].NavalUnits > 0 then
-            RNGLOG('Naval Assist Alert sounded and GreaterThanEconEfficiencyOverTime Returned True')
+            --RNGLOG('Naval Assist Alert sounded and GreaterThanEconEfficiencyOverTime Returned True')
             return true
         end
     end

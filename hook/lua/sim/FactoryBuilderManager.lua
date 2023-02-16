@@ -189,7 +189,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
             end
         end
         for k,v in self.FactoryList do
-            if (not v.Sync.id) or v.Dead then
+            if (not v.EntityId) or v.Dead then
                 --RNGLOG('Removing factory from FactoryList'..v.UnitId)
                 self.FactoryList[k] = nil
                 factoryDestroyed = true
@@ -226,9 +226,6 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         local queue = self:GenerateInitialBO(factory)
         if not queue then
             queue = backupqueue
-        end
-        if self.Brain.RNGDEBUG then
-            RNGLOG('Queue in GenerateInitialBuildOrder is '..repr(queue))
         end
         local template = {
             'InitialBuildQueueRNG',

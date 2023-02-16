@@ -42,7 +42,7 @@ BaseBuilderTemplate {
             T1AirValue = 7,
             T2AirValue = 25,
             T3AirValue = 45,
-            T1NavalValue = 7,
+            T1NavalValue = 6,
             T2NavalValue = 25,
             T3NavalValue = 45,
         },

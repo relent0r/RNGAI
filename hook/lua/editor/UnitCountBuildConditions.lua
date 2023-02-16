@@ -906,6 +906,9 @@ function FactoryGreaterAtLocationRNG(aiBrain, locationType, unitCount, unitCateg
 end
 
 function ForcePathLimitRNG(aiBrain, locationType, unitCategory, pathType, unitCount)
+    if not aiBrain:GetCurrentEnemy() then
+        return true
+    end
     local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
     local OwnIndex = aiBrain:GetArmyIndex()
     if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] ~= pathType and FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, '>') then
@@ -1284,17 +1287,18 @@ end
 function DefensivePointShieldRequired(aiBrain, locationType)
     for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[2] do
         local unitCount = 0
-        if next(v.DirectFire) then
-            for c, b in v.DirectFire do
+        for _, b in v.DirectFire do
+            if b and not b.Dead then
                 unitCount = unitCount + 1
-                --RNGLOG('We have a directfire unit at this defensive point, current count is '..unitCount)
             end
         end
         if unitCount > 1 then
-            if not next(v.Shields) then
-                --RNGLOG('We can have a shield at this defensive point')
-                return true
+            for _, b in v.Shields do
+                if b and not b.Dead then
+                    return false
+                end
             end
+            return true
         end
     end
     return false
@@ -1319,6 +1323,56 @@ function PlatoonTemplateExist(aiBrain, template)
     return false
 end
 
+function DefensiveClusterCloseRNG(aiBrain, locationType)
+    if aiBrain.BuilderManagers[locationType].FactoryManager.Location then
+        if RUtils.DefensiveClusterCheck(aiBrain, aiBrain.BuilderManagers[locationType].FactoryManager.Location) then
+            return true
+        end
+    end
+    return false
+end
+
+function MinimumFactoryCheckRNG(aiBrain, locationType, structureType)
+    if not aiBrain.BrainIntel.AirPlayer then
+        local factoryCount = 0
+        if not aiBrain:GetCurrentEnemy() then
+            return true
+        end
+        local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
+        local OwnIndex = aiBrain:GetArmyIndex()
+        if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+            --RNGLOG('Can Path to enemy')
+            if structureType == 'Air' then
+                if aiBrain.MapSize == 5 then
+                    --RNGLOG('Map size is 5')
+                    if aiBrain.BuilderManagers[locationType].FactoryManager.LocationActive then
+                        factoryCount = factoryCount + aiBrain.BuilderManagers[locationType].FactoryManager:GetNumCategoryFactories(categories.LAND * categories.FACTORY)
+                        --RNGLOG('Land factory count is '..factoryCount)
+                    end
+                    if factoryCount < 5 then
+                        return false
+                    end
+                elseif aiBrain.MapSize == 10 then
+                    if aiBrain.BuilderManagers[locationType].FactoryManager.LocationActive then
+                        factoryCount = factoryCount + aiBrain.BuilderManagers[locationType].FactoryManager:GetNumCategoryFactories(categories.LAND * categories.FACTORY)
+                    end
+                    if factoryCount < 4 then
+                        return false
+                    end
+                elseif aiBrain.MapSize == 20 then
+                    if aiBrain.BuilderManagers[locationType].FactoryManager.LocationActive then
+                        factoryCount = factoryCount + aiBrain.BuilderManagers[locationType].FactoryManager:GetNumCategoryFactories(categories.LAND * categories.FACTORY)
+                    end
+                    if factoryCount < 3 then
+                        return false
+                    end
+                end
+                
+            end
+        end
+    end
+    return true
+end
 --[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.

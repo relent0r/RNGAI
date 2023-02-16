@@ -404,8 +404,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 [1] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
+                            scout=10,
+                            tank=70,
                             arty=15,
                             aa=12,
                             total=0
@@ -470,8 +470,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 [2] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
+                            scout=10,
+                            tank=70,
                             arty=15,
                             aa=12,
                             total=0
@@ -535,8 +535,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 [3] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
+                            scout=10,
+                            tank=70,
                             arty=15,
                             aa=12,
                             total=0
@@ -601,8 +601,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 [4] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
+                            scout=10,
+                            tank=70,
                             arty=15,
                             aa=12,
                             total=0
@@ -664,8 +664,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 [5] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
+                            scout=10,
+                            tank=70,
                             arty=15,
                             aa=12,
                             total=0
@@ -921,6 +921,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Intel Data
         self.EnemyIntel = {}
         self.BrainIntel = {}
+        self.BrainIntel.AirPlayer = false
         self.BrainIntel.TeamCount = 0
         self.EnemyIntel.NavalRange = {
             Position = {},
@@ -1012,7 +1013,7 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         self.BrainIntel.AllyCount = 0
         self.BrainIntel.AllyStartLocations = {}
-        
+        self.BrainIntel.BaseRestrictedArea = BaseRestrictedArea
         self.BrainIntel.LandPhase = 1
         self.BrainIntel.AirPhase = 1
         self.BrainIntel.NavalPhase = 1
@@ -1972,7 +1973,8 @@ AIBrain = Class(RNGAIBrainClass) {
                                 self.EnemyIntel.ClosestEnemyBase = enemyDistance
                             end
                         else
-                            allyTempStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex}
+                            local friendDistance = VDist3Sq(self.BrainIntel.StartPos, startPos)
+                            allyTempStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex, Distance = friendDistance}
                             allyStarts['ARMY_' .. i] = startPos
                         end
                     end
@@ -3656,7 +3658,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     elseif platoonType == 'SATELLITE' and platoonDPS then
                         if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and v.LastSpotted + 120 > GetGameTimeSeconds() then
-                            if RUtils.HaveUnitVisual(self, v.Unit, true) and not RUtils.ShieldProtectingTargetRNG(aiBrain, v.Unit, nil) then
+                            if RUtils.HaveUnitVisual(self, v.Unit, true) and not RUtils.ShieldProtectingTargetRNG(self, v.Unit, nil) then
                                 RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
                                 local gridX, gridY = im:GetIntelGrid(v.Position)
                                 local scoutRequired = true
@@ -4451,7 +4453,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.7 then
                             --RNGLOG('EcoPowerPreemptive : Radar being upgraded next power consumption is '..ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy)
                             if v:IsUnitState('Upgrading') then
-                                RNGLOG('Unit is upgrading, check power consumption during upgrade')
+                                --RNGLOG('Unit is upgrading, check power consumption during upgrade')
                                 potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildCostEnergy / ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildTime * (ALLBPS[v.UnitId].Economy.BuildRate * multiplier))
                             end
                             potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy
@@ -4846,7 +4848,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     v:SetPaused(false)
                     continue
                 end
-                if EntityCategoryContains( categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE) , v.UnitBeingBuilt) then
+                if (not v.PlatoonHandle.PlatoonData.Construction.NearDefensivePoints) and EntityCategoryContains( categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE) , v.UnitBeingBuilt) then
                     v:SetPaused(true)
                     continue
                 end

@@ -380,9 +380,9 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
                 --RNGLOG('buildingType is T1EnergyProduction')
                 if aiBrain.EconomyMonitorThread then
                     local currentEnergyTrend = aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime
-                    RNGLOG('EnergyTrend when going to build T1 power '..currentEnergyTrend)
-                    RNGLOG('Amount of power needed is '..(80 - currentEnergyTrend))
-                    local energyNumber = 80 - currentEnergyTrend
+                    --RNGLOG('EnergyTrend when going to build T1 power '..currentEnergyTrend)
+                    --RNGLOG('Amount of power needed is '..(120 - currentEnergyTrend))
+                    local energyNumber = 120 - currentEnergyTrend
                     scaleCount = math.ceil(energyNumber/20)
                 end
             end
@@ -567,7 +567,7 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
         if cons.AdjRequired then
             return false
         else
-            return AIExecuteBuildStructure(aiBrain, builder, buildingType, builder, true,  buildingTemplate, baseTemplate)
+            return AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, builder, true,  buildingTemplate, baseTemplate)
         end
     end
     return false

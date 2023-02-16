@@ -72,7 +72,7 @@ BuilderGroup {
                 BuildClose = false,
                 OrderedTemplate = true,
                 NearDefensivePoints = true,
-                Type = 'Land',
+                Type = 'SHIELD',
                 Tier = 2,
                 LocationType = 'LocationType',
                 BuildStructures = {

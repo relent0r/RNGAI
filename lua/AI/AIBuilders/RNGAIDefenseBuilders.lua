@@ -911,7 +911,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  140, 'LocationType', 0, categories.STRUCTURE * categories.TECH2 * categories.DEFENSE }},
+            { UCBC, 'DefensiveClusterCloseRNG', {'LocationType'}},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.STRUCTURE * categories.TECH2 * categories.ARTILLERY}},
         },
         BuilderData = {

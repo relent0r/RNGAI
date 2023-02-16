@@ -575,10 +575,10 @@ BuilderGroup {
         BuilderName = 'RNGAI Bomber Attack Enemy',
         PlatoonTemplate = 'RNGAI BomberAttack',
         Priority = 890,
-        InstanceCount = 3,
+        InstanceCount = 2,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -999,29 +999,6 @@ BuilderGroup {
             DistressRange = 130,
             DistressReactionTime = 6,
             ThreatSupport = 0,
-        },
-    },
-    Builder {
-        BuilderName = 'RNGEXP Energy Attack',
-        PlatoonTemplate = 'RNGAI BomberEnergyAttack',
-        Priority = 890,
-        InstanceCount = 3,
-        BuilderType = 'Any',        
-        BuilderConditions = { 
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
-        },
-        BuilderData = {
-            SearchRadius = BaseEnemyArea,
-            UnitType = 'BOMBER',
-            PlatoonLimit = 18,
-            PrioritizedCategories = {
-                categories.RADAR * categories.STRUCTURE,
-                categories.ENERGYSTORAGE,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH1,
-                categories.ALLUNITS - (categories.T1SUBMARINE + categories.T2SUBMARINE),
-            },
         },
     },
 }

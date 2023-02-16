@@ -1394,16 +1394,16 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                     local targetPos = target:GetPosition()
                     local targetDistance = VDist3Sq(cdrPos, targetPos)
                     if ALLBPS[target.UnitId].CategoriesHash.COMMAND then
-                        if target.Sync.id and not enemyACUTargets[target.Sync.id] then
-                            enemyACUTargets[target.Sync.id] = { unit = target, position = targetPos, distance = targetDistance }
+                        if target.EntityId and not enemyACUTargets[target.EntityId] then
+                            enemyACUTargets[target.EntityId] = { unit = target, position = targetPos, distance = targetDistance }
                         end
                     elseif ALLBPS[target.UnitId].CategoriesHash.MOBILE then
-                        if target.Sync.id and not mobileTargets[target.Sync.id] then
-                            mobileTargets[target.Sync.id] = { unit = target, position = targetPos, distance = targetDistance }
+                        if target.EntityId and not mobileTargets[target.EntityId] then
+                            mobileTargets[target.EntityId] = { unit = target, position = targetPos, distance = targetDistance }
                         end
                     elseif ALLBPS[target.UnitId].CategoriesHash.STRUCTURE then
-                        if target.Sync.id and not structureTargets[target.Sync.id] then
-                            structureTargets[target.Sync.id] = { unit = target, position = targetPos, distance = targetDistance }
+                        if target.EntityId and not structureTargets[target.EntityId] then
+                            structureTargets[target.EntityId] = { unit = target, position = targetPos, distance = targetDistance }
                             structureThreat = structureThreat + ALLBPS[target.UnitId].Defense.SurfaceThreatLevel
                         end
                     end
@@ -2001,7 +2001,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                         continue
                     end
                 end
-                if Target.Sync.id and not unitThreatTable[Target.Sync.id] then
+                if Target.EntityId and not unitThreatTable[Target.EntityId] then
                     if platoon.MovementLayer == 'Water' then
                         totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel + ALLBPS[Target.UnitId].Defense.SubThreatLevel
                     elseif platoon.MovementLayer == 'Air' then
@@ -2012,7 +2012,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                     if EntityCategoryContains(CategoriesLandDefense, Target) then
                         RNGINSERT(defensiveStructureTable, Target)
                     end
-                    unitThreatTable[Target.Sync.id] = true
+                    unitThreatTable[Target.EntityId] = true
                 end
                 TargetPosition = Target:GetPosition()
                 -- check if we have a special player as enemy
@@ -2098,9 +2098,9 @@ function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, ta
                 if Target.Dead or Target:BeenDestroyed() then
                     continue
                 end
-                if Target.Sync.id and not unitThreatTable[Target.Sync.id] then
+                if Target.EntityId and not unitThreatTable[Target.EntityId] then
                     totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel
-                    unitThreatTable[Target.Sync.id] = true
+                    unitThreatTable[Target.EntityId] = true
                 end
                 TargetPosition = Target:GetPosition()
                 EnemyStrength = 0
@@ -4149,6 +4149,35 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
             --RNGLOG('bestPoint is '..repr(bestPoint.Position))
             defensivePoint = bestPoint.Position
         end
+    elseif type == 'SHIELD' then
+        local bestPoint = false
+        --RNGLOG('Performing DirectFire Structure Check')
+        if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
+            for k, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
+                local unitCount = 0
+                for _, b in v.DirectFire do
+                    if b and not b.Dead then
+                        unitCount = unitCount + 1
+                    end
+                end
+                if unitCount > 1 then
+                    local shieldPresent = false
+                    for _, b in v.Shields do
+                        if b and not b.Dead then
+                            shieldPresent = true
+                            break
+                        end
+                    end
+                    if not shieldPresent then
+                        bestPoint = v.Position
+                        break
+                    end
+                end
+            end
+        end
+        if bestPoint then
+            defensivePoint = bestPoint
+        end
     end
     if defensivePoint then
         if aiBrain.RNGDEBUG then
@@ -4270,14 +4299,6 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
                         closestDistance = distance
                     end
                 end
-                if aiBrain.RNGDEBUG then
-                    if closestPoint then
-                        RNGLOG('Closest point key is '..closestPoint)
-                        RNGLOG('Closest point distance is '..closestDistance)
-                    else
-                        RNGLOG('No closestPoint available')
-                    end
-                end
                 if closestPoint and closestDistance <= aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].Radius then
                     --RNGLOG('Adding T2 defensive unit to defensepoint table')
                     --RNGLOG('Unit ID is '..finishedUnit.UnitId)
@@ -4288,7 +4309,7 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
                 end
             else
                 for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[2] do
-                    local distance = VDist3Sq(v.Position, unitPos)
+                    local distance = VDist3(v.Position, unitPos)
                     if not closestPoint or distance < closestDistance then
                         closestPoint = k
                         closestDistance = distance
@@ -4793,7 +4814,6 @@ CanPathToCurrentEnemyRNG = function(aiBrain) -- Uveso's function modified to run
                 local path, reason = NavUtils.CanPathTo('Land', locPos, {enemyX,0,enemyZ})
                 -- if we have a path generated with AI path markers then....
                 if path then
-                    RNGLOG('* RNG CanPathToCurrentEnemyRNG: Land path to the enemy found! LAND map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..k)
                     aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] = 'LAND'
                 -- if we not have a path
                 else
@@ -4803,10 +4823,8 @@ CanPathToCurrentEnemyRNG = function(aiBrain) -- Uveso's function modified to run
                     local amphibPath, amphibReason = NavUtils.CanPathTo('Amphibious', locPos, {enemyX,0,enemyZ})
                     --RNGLOG('amphibReason '..amphibReason)
                     if not amphibPath then
-                        RNGLOG('* RNG CanPathToCurrentEnemyRNG: NOPATH path to the enemy found! Air map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..k)
                         aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] = 'NOPATH'
                     else
-                        RNGLOG('* RNG CanPathToCurrentEnemyRNG: Amphibious path to the enemy found! Water map! - '..OwnIndex..' vs '..EnemyIndex..''..' Location '..k)
                         aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][k] = 'AMPHIBIOUS'
                     end
                 end
@@ -4934,7 +4952,7 @@ CheckACUSnipe = function(aiBrain, layerType)
     return potentialTarget, requiredCount, acuIndex
 end
 
-CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid)
+CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, defensiveBomber)
     local platPos
     local closestTarget
     local highestPriority = 0
@@ -4961,8 +4979,6 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid)
                 end
             end
             if closestTarget then
-                RNGLOG('CheckHighPriorityTarget has found unit')
-                RNGLOG('Distance to base is '..repr(VDist3(closestTarget:GetPosition(), aiBrain.BrainIntel.StartPos)))
                 return closestTarget
             end
         end
@@ -5096,5 +5112,15 @@ CenterPlatoonUnitsRNG = function(platoon, platoonPos)
         return furtherestSpeed
     else
         return 4
+    end
+end
+
+DefensiveClusterCheck = function(aiBrain, position)
+    if aiBrain.EnemyIntel.DirectorData.DefenseCluster then
+        for _, v in aiBrain.EnemyIntel.DirectorData.DefenseCluster do
+            if v.DefensiveCount > 0 and VDist2Sq(position[1],position[3],v.aggx, v.aggz) < 19600 then
+                return true
+            end
+        end
     end
 end

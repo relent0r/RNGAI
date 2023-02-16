@@ -557,11 +557,6 @@ function CDRBuildFunction(aiBrain, cdr, object)
                                             if cdr.Caution then
                                                 break
                                             end
-                                            if cdr.UnitBeingBuilt then
-                                                RNGLOG('UnitBeingBuilt fraction '..cdr.UnitBeingBuilt:GetFractionComplete())
-                                            else
-                                                RNGLOG('No UnitBeingBuilt on cdr')
-                                            end
                                             if cdr.EnemyCDRPresent and cdr.UnitBeingBuilt then
                                                 if GetNumUnitsAroundPoint(aiBrain, categories.COMMAND, cdr.Position, 25, 'Enemy') > 0 and cdr.UnitBeingBuilt:GetFractionComplete() < 0.5 then
                                                     abortBuild = true
@@ -3439,9 +3434,15 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     if not aiBrain or not platoon then
         return nil
     end
-    local ALLBPS = __blueprints
-
+    local function GetMissileDetails(ALLBPS, unitId)
+        if ALLBPS[unitId].Weapon[1].DamageType == 'Nuke' and ALLBPS[unitId].Weapon[1].ProjectileId then
+            local projBp = ALLBPS[unitId].Weapon[1].ProjectileId
+            return ALLBPS[projBp].Economy.BuildCostMass, ALLBPS[unitId].Weapon[1].NukeInnerRingRadius
+        end
+        return false
+    end
     -- Look for commander first
+    local ALLBPS = __blueprints
     local AIFindNumberOfUnitsBetweenPointsRNG = import('/lua/ai/aiattackutilities.lua').AIFindNumberOfUnitsBetweenPointsRNG
     local im = IntelManagerRNG.GetIntelManager(aiBrain)
     local platoonPosition = GetPlatoonPosition(platoon)
@@ -3449,6 +3450,27 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     local minimumValue = 0
     local targetPositions = {}
     local validPosition = false
+    local missileCost
+    local missileRadius
+    for _, sml in GetPlatoonUnits(platoon) do
+        if sml and not sml.Dead then
+            local smlMissileCost, smlMissileRadius = GetMissileDetails(ALLBPS, sml.UnitId)
+            if not missileCost or smlMissileCost > missileCost then
+                missileCost = smlMissileCost
+            end
+            if not missileRadius or smlMissileRadius > missileRadius then
+                missileRadius = smlMissileRadius
+            end
+        end
+    end
+    --RNGLOG('SML Missile cost is '..missileCost)
+    --RNGLOG('SML Missile radius is '..missileRadius)
+    if not missileRadius or not missileCost then
+        -- fallback incase its a strange launcher
+        missileRadius = 30
+        missileCost = 12000
+    end
+    
 
     for k, v in aiBrain.EnemyIntel.ACU do
         if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
@@ -3480,26 +3502,23 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     end
 
     -- Now look through the bases for the highest economic threat and largest cluster of units
-    -- This must be changed!! to no longer use interest list.
+    local targetShortList = {}
     local enemyBases = aiBrain.EnemyIntel.EnemyThreatLocations
     local bestBaseThreat = nil
     local maxBaseThreat = 0
     for _, x in enemyBases do
         for _, z in x do
             if z.StructuresNotMex then
-                local threatTable = aiBrain:GetThreatsAroundPosition(z.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Economy')
-                if RNGGETN(threatTable) ~= 0 then
-                    if threatTable[1][3] > maxBaseThreat then
-                        maxBaseThreat = threatTable[1][3]
-                        bestBaseThreat = threatTable
-                    end
-                end
+                local posThreat = aiBrain:GetThreatAtPosition(z.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Economy')
+                RNGINSERT(targetShortList, { threat = posThreat, position = z.Position, massvalue = 0 })
             end
         end
     end
-    --RNGLOG('Bestbase threat '..repr(bestBaseThreat))
+    RNGSORT( targetShortList, function(a,b) return a.threat > b.threat  end )
 
-    if not bestBaseThreat then
+    --RNGLOG('targetShortList 1st pass '..repr(targetShortList))
+
+    if table.getn(targetShortList) == 0 then
         -- No threat
         return
     end
@@ -3508,22 +3527,23 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     local SMDPositions = {}
     local highestValue = -1
     local bestThreat = 1
-    for idx, threat in bestBaseThreat do
-        if threat[3] > 0 then
+    for _, target in targetShortList do
+        if target.threat > 0 then
             local numunits = 0
             local massValue = 0
-            local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, {threat[1], 0, threat[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
+            local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, target.position, missileRadius, 'Enemy')
             for k, v in unitsAtLocation do
                 numunits = numunits + 1
                 local unitPos = v:GetPosition()
+                local completion = v:GetFractionComplete()
                 if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE * categories.SILO, v) then
                     --RNGLOG('Found SMD')
-                    if not aiBrain.EnemyIntel.SMD[v.Sync.id] then
-                        aiBrain.EnemyIntel.SMD[v.Sync.id] = {object = v, Position=unitPos , Detected=GetGameTimeSeconds()}
+                    if not aiBrain.EnemyIntel.SMD[v.EntityId] then
+                        aiBrain.EnemyIntel.SMD[v.EntityId] = {object = v, Position=unitPos , Detected=GetGameTimeSeconds()}
                     end
-                    if v:GetFractionComplete() == 1 then
-                        if aiBrain.EnemyIntel.SMD[v.Sync.id].Detected + 240 < GetGameTimeSeconds() then
-                            RNGINSERT(SMDPositions, { Position = unitPos, Radius = ALLBPS[v.UnitId].Weapon[1].MaxRadius})
+                    if completion == 1 then
+                        if aiBrain.EnemyIntel.SMD[v.EntityId].Detected + 240 < GetGameTimeSeconds() then
+                            RNGINSERT(SMDPositions, { Position = unitPos, Radius = v.Blueprint.Weapon[1].MaxRadius * v.Blueprint.Weapon[1].MaxRadius, EntityId = v.EntityId})
                         end
                         --RNGLOG('AntiNuke present at location')
                     end
@@ -3531,54 +3551,64 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
                         break
                     end
                 end
-                if ALLBPS[v.UnitId].Economy.BuildCostMass then
-                    massValue = massValue + ALLBPS[v.UnitId].Economy.BuildCostMass
+                if completion > 0.4 then
+                    if v.Blueprint.Economy.BuildCostMass then
+                        massValue = massValue + v.Blueprint.Economy.BuildCostMass
+                    end
                 end
             end
-
-            if massValue > highestValue then
-                highestValue = massValue
-                bestThreat = idx
-            end
+            target.massvalue = massValue
         end
     end
-
-    if bestBaseThreat[bestThreat] then
+    RNGSORT( targetShortList, function(a,b) return a.massvalue > b.massvalue  end )
+    for _, finalTarget in targetShortList do
         local bestPos = {0, 0, 0}
         local maxValue = 0
-        local lookAroundTable = {-2, -1, 0, 1, 2}
-        local squareRadius = (ScenarioInfo.size[1] / 16) / RNGGETN(lookAroundTable)
-        for ix, offsetX in lookAroundTable do
-            for iz, offsetZ in lookAroundTable do
-                local searchPos = {bestBaseThreat[bestThreat][1] + offsetX*squareRadius, 0, bestBaseThreat[bestThreat][2]+offsetZ*squareRadius}
-                local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, searchPos, squareRadius, 'Enemy')
-                local currentValue = 0
-                for _, v in unitsAtLocation do
-                    if ALLBPS[v.UnitId].Economy.BuildCostMass then
-                        currentValue = currentValue + ALLBPS[v.UnitId].Economy.BuildCostMass
-                    end
-                end
-                local smdCovered = false
-                if currentValue > maxValue then
-                    maxValue = currentValue
-                    for _, v in SMDPositions do
-                        if VDist3Sq(searchPos, v.Position) < v.Radius then
-                            smdCovered = true
-                            break
+        if finalTarget.massvalue > (missileCost / 2) then
+            local lookAroundTable = {-2, -1, 0, 1, 2}
+            local squareRadius = (ScenarioInfo.size[1] / 16) / RNGGETN(lookAroundTable)
+            local smdCovered = false
+            for ix, offsetX in lookAroundTable do
+                for iz, offsetZ in lookAroundTable do
+                    local searchPos = {finalTarget.position[1] + offsetX*squareRadius, 0, finalTarget.position[3]+offsetZ*squareRadius}
+                    local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, searchPos, missileRadius, 'Enemy')
+                    local currentValue = 0
+                    for _, v in unitsAtLocation do
+                        if v.Blueprint.Economy.BuildCostMass then
+                            currentValue = currentValue + v.Blueprint.Economy.BuildCostMass
                         end
                     end
-                    if not smdCovered then
-                       bestPos = table.copy(unitsAtLocation[1]:GetPosition())
+                    if currentValue > maxValue then
+                        maxValue = currentValue
+                        for _, v in SMDPositions do
+                            --RNGLOG('Distance of SMD from strike position '..VDist3Sq(searchPos, v.Position)..' radius of smd is '..v.Radius)
+                            if VDist3Sq(searchPos, v.Position) < v.Radius then
+                                smdCovered = true
+                                break
+                            end
+                        end
+                        if not smdCovered then
+                            local antinukes = AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, platoonPosition, searchPos, categories.ANTIMISSILE * categories.SILO, 90, 'Enemy')
+                            --RNGLOG('No smd covering position, check for smds between points, count is  '..antinukes)
+                            if antinukes > 0 then
+                                smdCovered = true
+                                break
+                            end
+                        bestPos = table.copy(unitsAtLocation[1]:GetPosition())
+                        end
                     end
+                end
+                if smdCovered then
+                    break
                 end
             end
         end
         if bestPos[1] ~= 0 and bestPos[3] ~= 0 then
             --RNGLOG('Best pos found with a mass value of '..maxValue)
+            --RNGLOG('Best pos position is '..repr(bestPos))
             return bestPos
         end
     end
-
     return nil
 end
 
@@ -3688,7 +3718,7 @@ function AirStagingThreadRNG(unit)
         local refueledUnits = {}
         for _, v in unit.Refueling do
             if not v.Dead and v:GetFuelRatio() > 0.9 and v:GetHealthPercent() > 0.9 then
-                --RNGLOG('Unit not dead and fuel + health is above 0.9 '..v.Sync.id)
+                --RNGLOG('Unit not dead and fuel + health is above 0.9 '..v.EntityId)
                 --RNGLOG('Fueld Ratio is '..v:GetFuelRatio())
                 --RNGLOG('Health Percent is '..v:GetHealthPercent())
                 numUnits = numUnits + 1
