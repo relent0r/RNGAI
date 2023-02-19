@@ -3703,16 +3703,31 @@ end
 
 function AirStagingThreadRNG(unit)
     local aiBrain = unit:GetAIBrain()
+
     while not unit.Dead do
         local numUnits = 0
         local refueledUnits = {}
+        local currentTime = GetGameTimeSeconds()
         for _, v in unit.Refueling do
-            if not v.Dead and v:GetFuelRatio() > 0.9 and v:GetHealthPercent() > 0.9 then
+            if not v.TimeStamp then
+                v.TimeStamp = currentTime
+            elseif not v.Dead and v:GetFuelRatio() > 0.9 and v:GetHealthPercent() > 0.9 then
                 --RNGLOG('Unit not dead and fuel + health is above 0.9 '..v.EntityId)
                 --RNGLOG('Fueld Ratio is '..v:GetFuelRatio())
                 --RNGLOG('Health Percent is '..v:GetHealthPercent())
                 numUnits = numUnits + 1
                 RNGINSERT(refueledUnits, v)
+            elseif currentTime > (v.TimeStamp + 30) then
+                RNGLOG('What is this plane doing?')
+                if not v:IsUnitState('Attached') then
+
+                    IssueClearCommands({v})
+                    IssueTransportLoad({v}, unit)
+                    coroutine.yield(5)
+                end
+                if v:IsUnitState('Attacking') then
+                    RNGLOG('Unit is attacking but was asked to reset')
+                end
             end
         end
         
@@ -3739,6 +3754,7 @@ function AirStagingThreadRNG(unit)
                             plat.PlatoonData = {}
                             plat.PlatoonData = v.PlatoonData
                         end
+                        v.TimeStamp = nil
                         aiBrain:AssignUnitsToPlatoon(plat, {v}, 'Attack', 'GrowthFormation')
                     elseif v:IsUnitState('Attached') then
                         --RNGLOG('Air Unit Still attached, force unload')
