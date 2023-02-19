@@ -889,13 +889,6 @@ function GetLastACUPosition(aiBrain, enemyIndex)
             else
                 --RNGLOG('* AI-RNG: acuPos is currently false')
             end
-        --[[if aiBrain.EnemyIntel.ACU[enemyIndex] == enemyIndex then
-            acuPos = aiBrain.EnemyIntel.ACU[enemyIndex].ACUPosition
-            lastSpotted = aiBrain.EnemyIntel.ACU[enemyIndex].LastSpotted
-            --RNGLOG('* AI-RNG: acuPos has data')
-        else
-            --RNGLOG('* AI-RNG: acuPos is currently false')
-        end]]
         end
     end
     return acuPos, lastSpotted
@@ -1142,7 +1135,7 @@ function ManualBuildQueueItem(aiBrain, eng, structureToBuild, adjacent, category
     local baseTmplFile = import('/lua/BaseTemplates.lua')
     local buildingTmplFile = import('/lua/BuildingTemplates.lua')
     local buildingTmpl = buildingTmplFile[('BuildingTemplates')][factionIndex]
-    local buildLocation, whatToBuild = GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['BaseTemplates'][factionIndex], structureToBuild, eng, adjacent, category, 15, true)
+    local buildLocation, whatToBuild, borderWarning = GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['BaseTemplates'][factionIndex], structureToBuild, eng, adjacent, category, 15, true)
     LOG('Build Location '..repr(buildLocation).. ' WhatToBuild '..repr(whatToBuild))
     if buildLocation and whatToBuild then
         return buildLocation, whatToBuild
@@ -1420,7 +1413,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
         table.sort(enemyACUTargets, function(a,b) return a.distance < b.distance end)
         --RNGLOG('ACUTARGETTING : ACU Targets are within range')
         for k, v in enemyACUTargets do
-            if not v.unit.Dead and not v.unit:BeenDestroyed() then
+            if not v.unit:BeenDestroyed() then
                 if v.distance < 900 then
                     local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
                     local targetLayer = v.unit:GetCurrentLayer()
@@ -1501,7 +1494,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             table.sort(mobileTargets, function(a,b) return a.distance < b.distance end)
             --RNGLOG('ACUTARGETTING : Mobile Targets are within range')
             for k, v in mobileTargets do
-                if not v.unit.Dead and not v.unit:BeenDestroyed() then
+                if not v.unit:BeenDestroyed() then
                     if not PositionInWater(v.position) then
                         local surfaceThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
                         if v.distance < (closestDistance * 2) and surfaceThreat < math.max(55, cdrThreat) or acuDistanceToBase < 3600 or v.distance < 400 then
@@ -1554,7 +1547,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             table.sort(structureTargets, function(a,b) return a.distance < b.distance end)
             --RNGLOG('ACUTARGETTING : Mobile Targets are within range')
             for k, v in structureTargets do
-                if not v.unit.Dead and not v.unit:BeenDestroyed() then
+                if not v.unit:BeenDestroyed() then
                     local surfaceThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
                     if v.distance < (closestDistance * 2) and surfaceThreat < math.max(55, cdrThreat) or acuDistanceToBase < 3600 then
                         local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
@@ -3204,52 +3197,54 @@ ACUPriorityDirector = function(aiBrain, platoon, platoonPosition, maxRadius)
     end
     if aiBrain.EnemyIntel.ACU then
         for k, v in aiBrain.EnemyIntel.ACU do
-            if aiBrain.CDRUnit.EnemyCDRPresent then
-                target = AIFindACUTargetInRangeRNG(aiBrain, platoon, aiBrain.CDRUnit.Position, 'Attack', maxRadius, platoon.CurrentPlatoonThreat)
-                return target
-            elseif k ~= armyIndex and v.Ally then
-                if ArmyBrains[k].RNG and ArmyBrains[k].CDRUnit.EnemyCDRPresent then
-                    target = AIFindACUTargetInRangeRNG(aiBrain, self, ArmyBrains[k].CDRUnit.Position, 'Attack', maxRadius, self.CurrentPlatoonThreat)
-                    --RNGLOG('Return ACU enemy acu from ally cdr')
+            if not v.Unit.Dead then
+                if aiBrain.CDRUnit.EnemyCDRPresent then
+                    target = AIFindACUTargetInRangeRNG(aiBrain, platoon, aiBrain.CDRUnit.Position, 'Attack', maxRadius, platoon.CurrentPlatoonThreat)
                     return target
-                end
-            elseif not v.Ally and v.OnField and (v.LastSpotted + 30) > GetGameTimeSeconds() then
-                if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
-                    if VDist2Sq(v.Position[1], v.Position[3], platoonPosition[1], platoonPosition[3]) < 6400 then
-                        local enemyUnits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE + categories.INDIRECTFIRE, v.Position, 60 ,'Enemy')
+                elseif k ~= armyIndex and v.Ally then
+                    if ArmyBrains[k].RNG and ArmyBrains[k].CDRUnit.EnemyCDRPresent then
+                        target = AIFindACUTargetInRangeRNG(aiBrain, self, ArmyBrains[k].CDRUnit.Position, 'Attack', maxRadius, self.CurrentPlatoonThreat)
+                        --RNGLOG('Return ACU enemy acu from ally cdr')
+                        return target
+                    end
+                elseif not v.Ally and v.OnField and (v.LastSpotted + 30) > GetGameTimeSeconds() then
+                    if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
+                        if VDist2Sq(v.Position[1], v.Position[3], platoonPosition[1], platoonPosition[3]) < 6400 then
+                            local enemyUnits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE + categories.INDIRECTFIRE, v.Position, 60 ,'Enemy')
+                            for c, b in enemyUnits do
+                                if b and not b.Dead then
+                                    if EntityCategoryContains(categories.COMMAND, b) then
+                                        enemyUnitThreat = enemyUnitThreat + b:EnhancementThreatReturn()
+                                        RNGINSERT(enemyACUTable, b)
+                                    else
+                                        --RNGLOG('Unit ID is '..v.UnitId)
+                                        if bp.SurfaceThreatLevel ~= nil then
+                                            enemyUnitThreat = enemyUnitThreat + ALLBPS[b.UnitId].Defense.SurfaceThreatLevel
+                                        end
+                                    end
+                                end
+                            end
+                            if RNGGETN(enemyACUTable) > 0 then
+                                --Do funky stuff to see if we should try rush this acu
+                            end
+                        end
+                    elseif platoon.MovementLayer == 'Air' then
+                        local enemyUnits=GetUnitsAroundPoint(aiBrain, categories.ANTIAIR, v.Position, 60 ,'Enemy')
                         for c, b in enemyUnits do
                             if b and not b.Dead then
                                 if EntityCategoryContains(categories.COMMAND, b) then
-                                    enemyUnitThreat = enemyUnitThreat + b:EnhancementThreatReturn()
                                     RNGINSERT(enemyACUTable, b)
                                 else
                                     --RNGLOG('Unit ID is '..v.UnitId)
-                                    if bp.SurfaceThreatLevel ~= nil then
-                                        enemyUnitThreat = enemyUnitThreat + ALLBPS[b.UnitId].Defense.SurfaceThreatLevel
+                                    if bp.AirThreatLevel ~= nil then
+                                        enemyUnitThreat = enemyUnitThreat + ALLBPS[b.UnitId].Defense.AirThreatLevel
                                     end
                                 end
                             end
                         end
                         if RNGGETN(enemyACUTable) > 0 then
-                            --Do funky stuff to see if we should try rush this acu
+                            --Do funky stuff to see if we should try snipe this acu
                         end
-                    end
-                elseif platoon.MovementLayer == 'Air' then
-                    local enemyUnits=GetUnitsAroundPoint(aiBrain, categories.ANTIAIR, v.Position, 60 ,'Enemy')
-                    for c, b in enemyUnits do
-                        if b and not b.Dead then
-                            if EntityCategoryContains(categories.COMMAND, b) then
-                                RNGINSERT(enemyACUTable, b)
-                            else
-                                --RNGLOG('Unit ID is '..v.UnitId)
-                                if bp.AirThreatLevel ~= nil then
-                                    enemyUnitThreat = enemyUnitThreat + ALLBPS[b.UnitId].Defense.AirThreatLevel
-                                end
-                            end
-                        end
-                    end
-                    if RNGGETN(enemyACUTable) > 0 then
-                        --Do funky stuff to see if we should try snipe this acu
                     end
                 end
             end
@@ -3556,8 +3551,10 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
     -- Always set the engineers position to zero in the build location otherwise youll get buildings are super strange angles
     -- and you wont understand why. I think the 3rd param is actually rotation not height.
     local buildLocation = false
+    local borderWarning = false
     local whatToBuild = aiBrain:DecideWhatToBuild(eng, buildUnit, buildingTemplate)
     local engPos = eng:GetPosition()
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     local function normalposition(vec)
         return {vec[1],GetSurfaceHeight(vec[1],vec[2]),vec[2]}
     end
@@ -3630,10 +3627,17 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
         local location = aiBrain:FindPlaceToBuild(buildUnit, whatToBuild, baseTemplate, relative, eng, nil, engPos[1], engPos[3])
         --RNGLOG('Location is '..repr(location))
         if location and relative then
-            local relativeLoc = {location[1], 0, location[2]}
-            return {relativeLoc[1] + engPos[1], relativeLoc[3] + engPos[3], 0}, whatToBuild
+            local relativeLoc = {location[1] + engPos[1], location[3] + engPos[3], 0}
+            if relativeLoc[1] - playableArea[1] <= 8 or relativeLoc[1] >= playableArea[3] - 8 or relativeLoc[2] - playableArea[2] <= 8 or relativeLoc[2] >= playableArea[4] - 8 then
+                RNGLOG('Playable Area 1, 3 '..repr(playableArea))
+                RNGLOG('Scenario Info 1, 3 '..repr(ScenarioInfo.size))
+                RNGLOG('BorderWarning is true, location is '..repr(relativeLoc))
+                borderWarning = true
+            end
+            --RNGLOG('Adjusted location is '..repr({relativeLoc[1] + engPos[1], relativeLoc[3] + engPos[3], 0}))
+            return relativeLoc, whatToBuild, borderWarning
         else
-            return location, whatToBuild
+            return location, whatToBuild, borderWarning
         end
     end
     return false

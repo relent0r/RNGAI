@@ -155,7 +155,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --RNGLOG('Target Found')
                 self.Target = target
                 local targetPos = target:GetPosition()
-                local platoonCount = RNGGETN(GetPlatoonUnits(self))
+                platoonUnits = GetPlatoonUnits(self)
+                local platoonCount = RNGGETN(platoonUnits)
                 --RNGLOG('Air Hunt Enemy Threat at target position is '..GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir'))
                 --RNGLOG('Target Position is '..repr(targetPos))
                 --RNGLOG('Platoon Threat is '..self.CurrentPlatoonThreat)
@@ -182,7 +183,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         self:AttackTarget(target)
                     else
                         aggressiveMovement = true
-                        self:AggressiveMoveToLocation(targetPos)
+                        IssueAggressiveMove(platoonUnits, targetPos)
                     end
                 else
                     return
@@ -194,9 +195,12 @@ Platoon = Class(RNGAIPlatoonClass) {
                     currentPlatPos = GetPlatoonPosition(self)
                     platoonUnits = GetPlatoonUnits(self)
                     if aggressiveMovement then
-                        IssueClearCommands(platoonUnits)
-                        self:AggressiveMoveToLocation(targetPos)
-                        coroutine.yield(20)
+                        if target and not IsDestroyed(target) then
+                            targetPos = target:GetPosition()
+                            IssueClearCommands(platoonUnits)
+                            IssueAggressiveMove(platoonUnits, targetPos)
+                            coroutine.yield(20)
+                        end
                     end
                     if currentPlatPos then
                         if VDist2Sq(currentPlatPos[1], currentPlatPos[3], self.HoldingPosition[1], self.HoldingPosition[3]) > maxRadius * maxRadius then
@@ -4068,7 +4072,8 @@ Platoon = Class(RNGAIPlatoonClass) {
         local buildLocation = false
         local buildMassPoints = {}
         local buildMassDistantPoints = {}
-        
+        local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+        local borderWarning = false
         local factionIndex = aiBrain:GetFactionIndex()
         local platoonUnits = GetPlatoonUnits(self)
         local eng
@@ -4124,18 +4129,21 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         local inWater = RUtils.PositionInWater(engPos)
         if inWater then
-            buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1SeaFactory', eng, false, nil, nil, true)
+            buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1SeaFactory', eng, false, nil, nil, true)
         else
             if aiBrain.RNGEXP then
-                buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1AirFactory', eng, false, nil, nil, true)
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1AirFactory', eng, false, nil, nil, true)
             else
-                buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1LandFactory', eng, false, nil, nil, true)
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1LandFactory', eng, false, nil, nil, true)
             end
         end
         if aiBrain.RNGDEBUG then
             RNGLOG('RNG ACU wants to build '..whatToBuild)
         end
-        if buildLocation and whatToBuild then
+        if borderWarning and buildLocation and whatToBuild then
+            IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+            borderWarning = false
+        elseif buildLocation and whatToBuild then
             aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
         else
             WARN('No buildLocation or whatToBuild during ACU initialization')
@@ -4151,6 +4159,17 @@ Platoon = Class(RNGAIPlatoonClass) {
             whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
             for k, v in buildMassPoints do
                 --RNGLOG('CommanderInitializeAIRNG : MassPoint '..repr(v))
+                if v.Position[1] - playableArea[1] <= 8 or v.Position[1] >= playableArea[3] - 8 or v.Position[3] - playableArea[2] <= 8 or v.Position[3] >= playableArea[4] - 8 then
+                    borderWarning = true
+                end
+                if borderWarning and v.Position and whatToBuild then
+                    IssueBuildMobile({eng}, v.Position, whatToBuild, {})
+                    borderWarning = false
+                elseif buildLocation and whatToBuild then
+                    aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                else
+                    WARN('No buildLocation or whatToBuild during ACU initialization')
+                end
                 aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
                 --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
                 buildMassPoints[k] = nil
@@ -4171,7 +4190,17 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                 end
                 IssueClearCommands({eng})
-                aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                if v.Position[1] - playableArea[1] <= 8 or v.Position[1] >= playableArea[3] - 8 or v.Position[3] - playableArea[2] <= 8 or v.Position[3] >= playableArea[4] - 8 then
+                    borderWarning = true
+                end
+                if borderWarning and v.Position and whatToBuild then
+                    IssueBuildMobile({eng}, v.Position, whatToBuild, {})
+                    borderWarning = false
+                elseif buildLocation and whatToBuild then
+                    aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                else
+                    WARN('No buildLocation or whatToBuild during ACU initialization')
+                end
                 --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
                 buildMassDistantPoints[k] = nil
                 break
@@ -4185,18 +4214,22 @@ Platoon = Class(RNGAIPlatoonClass) {
         --RNGLOG('CommanderInitializeAIRNG : Close Mass Point table has '..RNGGETN(buildMassPoints)..' after initial build')
         --RNGLOG('CommanderInitializeAIRNG : Distant Mass Point table has '..RNGGETN(buildMassDistantPoints)..' after initial build')
         if hydroPresent then
-            buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)
-            if buildLocation and whatToBuild then
-                --RNGLOG('CommanderInitializeAIRNG : Insert First energy production '..whatToBuild.. ' at '..repr(buildLocation))
+            buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)
+            if borderWarning and buildLocation and whatToBuild then
+                IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                borderWarning = false
+            elseif buildLocation and whatToBuild then
                 aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
             else
                 WARN('No buildLocation or whatToBuild during ACU initialization')
             end
         else
             for i=1, 2 do
-                buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)
-                if buildLocation and whatToBuild then
-                    --RNGLOG('CommanderInitializeAIRNG : Insert First energy production '..whatToBuild.. ' at '..repr(buildLocation))
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)
+                if borderWarning and buildLocation and whatToBuild then
+                    IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                    borderWarning = false
+                elseif buildLocation and whatToBuild then
                     aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                 else
                     WARN('No buildLocation or whatToBuild during ACU initialization')
@@ -4210,7 +4243,17 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --RNGLOG('CommanderInitializeAIRNG : Less than 4 total mass points close')
                 for k, v in buildMassPoints do
                     --RNGLOG('CommanderInitializeAIRNG : MassPoint '..repr(v))
-                    aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                    if v.Position[1] - playableArea[1] <= 8 or v.Position[1] >= playableArea[3] - 8 or v.Position[3] - playableArea[2] <= 8 or v.Position[3] >= playableArea[4] - 8 then
+                        borderWarning = true
+                    end
+                    if borderWarning and v.Position and whatToBuild then
+                        IssueBuildMobile({eng}, v.Position, whatToBuild, {})
+                        borderWarning = false
+                    elseif buildLocation and whatToBuild then
+                        aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                    else
+                        WARN('No buildLocation or whatToBuild during ACU initialization')
+                    end
                     --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
                     buildMassPoints[k] = nil
                 end
@@ -4219,20 +4262,47 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --RNGLOG('CommanderInitializeAIRNG : Greater than 3 total mass points close')
                 for i=1, 2 do
                     --RNGLOG('CommanderInitializeAIRNG : MassPoint '..repr(buildMassPoints[i]))
+                    if buildMassPoints[i].Position[1] - playableArea[1] <= 8 or buildMassPoints[i].Position[1] >= playableArea[3] - 8 or buildMassPoints[i].Position[3] - playableArea[2] <= 8 or buildMassPoints[i].Position[3] >= playableArea[4] - 8 then
+                        borderWarning = true
+                    end
+                    if borderWarning and buildMassPoints[i].Position and whatToBuild then
+                        IssueBuildMobile({eng}, buildMassPoints[i].Position, whatToBuild, {})
+                        borderWarning = false
+                    elseif buildMassPoints[i].Position and whatToBuild then
+                        aiBrain:BuildStructure(eng, whatToBuild, {buildMassPoints[i].Position[1], buildMassPoints[i].Position[3], 0}, false)
+                    else
+                        WARN('No buildLocation or whatToBuild during ACU initialization')
+                    end
                     aiBrain:BuildStructure(eng, whatToBuild, {buildMassPoints[i].Position[1], buildMassPoints[i].Position[3], 0}, false)
                     --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {buildMassPoints[i].Position[1], buildMassPoints[i].Position[3], 0}, false})
                     buildMassPoints[i] = nil
                 end
                 buildMassPoints = aiBrain:RebuildTable(buildMassPoints)
-                buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)
                 --RNGLOG('CommanderInitializeAIRNG : Insert Second energy production '..whatToBuild.. ' at '..repr(buildLocation))
-                aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                if borderWarning and buildLocation and whatToBuild then
+                    IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                    borderWarning = false
+                elseif buildLocation and whatToBuild then
+                    aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                else
+                    WARN('No buildLocation or whatToBuild during ACU initialization')
+                end
                 --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, false})
                 if RNGGETN(buildMassPoints) < 2 then
                     whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
                     for k, v in buildMassPoints do
-                        aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
-                        --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
+                        if v.Position[1] - playableArea[1] <= 8 or v.Position[1] >= playableArea[3] - 8 or v.Position[3] - playableArea[2] <= 8 or v.Position[3] >= playableArea[4] - 8 then
+                            borderWarning = true
+                        end
+                        if borderWarning and v.Position and whatToBuild then
+                            IssueBuildMobile({eng}, v.Position, whatToBuild, {})
+                            borderWarning = false
+                        elseif v.Position and whatToBuild then
+                            aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                        else
+                            WARN('No buildLocation or whatToBuild during ACU initialization')
+                        end
                         buildMassPoints[k] = nil
                     end
                     buildMassPoints = aiBrain:RebuildTable(buildMassPoints)
@@ -4254,7 +4324,17 @@ Platoon = Class(RNGAIPlatoonClass) {
                             end
                         end
                         IssueClearCommands({eng})
-                        aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                        if v.Position[1] - playableArea[1] <= 8 or v.Position[1] >= playableArea[3] - 8 or v.Position[3] - playableArea[2] <= 8 or v.Position[3] >= playableArea[4] - 8 then
+                            borderWarning = true
+                        end
+                        if borderWarning and v.Position and whatToBuild then
+                            IssueBuildMobile({eng}, v.Position, whatToBuild, {})
+                            borderWarning = false
+                        elseif v.Position and whatToBuild then
+                            aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                        else
+                            WARN('No buildLocation or whatToBuild during ACU initialization')
+                        end
                         --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
                         coroutine.yield(5)
                         while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
@@ -4273,7 +4353,17 @@ Platoon = Class(RNGAIPlatoonClass) {
         if next(buildMassPoints) then
             whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
             for k, v in buildMassPoints do
-                aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                if v.Position[1] - playableArea[1] <= 8 or v.Position[1] >= playableArea[3] - 8 or v.Position[3] - playableArea[2] <= 8 or v.Position[3] >= playableArea[4] - 8 then
+                    borderWarning = true
+                end
+                if borderWarning and v.Position and whatToBuild then
+                    IssueBuildMobile({eng}, v.Position, whatToBuild, {})
+                    borderWarning = false
+                elseif v.Position and whatToBuild then
+                    aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                else
+                    WARN('No buildLocation or whatToBuild during ACU initialization')
+                end
                 --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
                 buildMassPoints[k] = nil
             end
@@ -4300,23 +4390,31 @@ Platoon = Class(RNGAIPlatoonClass) {
                 
             end
             for i=1, energyCount do
-                buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)
                 if buildLocation and whatToBuild then
                     --RNGLOG('CommanderInitializeAIRNG : Execute Build Structure with the following data')
                     --RNGLOG('CommanderInitializeAIRNG : whatToBuild '..whatToBuild)
                     --RNGLOG('CommanderInitializeAIRNG : Build Location '..repr(buildLocation))
-                    aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
-                else
-                    -- This is a backup to avoid a power stall
-                    buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, false, categories.STRUCTURE * categories.FACTORY, 12, true)
-                    if buildLocation and whatToBuild then
-                        --RNGLOG('CommanderInitializeAIRNG : Execute Build Structure with the following data')
-                        --RNGLOG('CommanderInitializeAIRNG : whatToBuild '..whatToBuild)
-                        --RNGLOG('CommanderInitializeAIRNG : Build Location '..repr(buildLocation))
+                    if borderWarning and buildLocation and whatToBuild then
+                        IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                        borderWarning = false
+                    elseif buildLocation and whatToBuild then
                         aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                     else
                         WARN('No buildLocation or whatToBuild during ACU initialization')
                     end
+                else
+                    -- This is a backup to avoid a power stall
+                    buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, false, categories.STRUCTURE * categories.FACTORY, 12, true)
+                    if borderWarning and buildLocation and whatToBuild then
+                        IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                        borderWarning = false
+                    elseif buildLocation and whatToBuild then
+                        aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                    else
+                        WARN('No buildLocation or whatToBuild during ACU initialization')
+                    end
+                    aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                 end
             end
         else
@@ -4324,15 +4422,16 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         if not hydroPresent and closeMarkers > 3 then
             --RNGLOG('CommanderInitializeAIRNG : not hydro and close markers greater than 3, Try to build land factory')
-            buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1LandFactory', eng, true, categories.MASSEXTRACTION, 15, true)
-            if buildLocation and whatToBuild then
-                --RNGLOG('CommanderInitializeAIRNG : Execute Build Structure with the following data')
-                --RNGLOG('CommanderInitializeAIRNG : whatToBuild '..whatToBuild)
-                --RNGLOG('CommanderInitializeAIRNG : Build Location '..repr(buildLocation))
+            buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1LandFactory', eng, true, categories.MASSEXTRACTION, 15, true)
+            if borderWarning and buildLocation and whatToBuild then
+                IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                borderWarning = false
+            elseif buildLocation and whatToBuild then
                 aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
             else
                 WARN('No buildLocation or whatToBuild during ACU initialization')
             end
+            aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
         end
         if not hydroPresent then
             while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
@@ -4409,36 +4508,39 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
                 if ((closeMarkers + distantMarkers > 2) or (closeMarkers + distantMarkers > 1 and GetEconomyStored(aiBrain, 'MASS') > 120)) and eng.UnitBeingAssist:GetFractionComplete() == 1 then
                     if aiBrain.MapSize >=20 or aiBrain.BrainIntel.AirPlayer then
-                        buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 15, true)
-                        if buildLocation and whatToBuild then
-                            --RNGLOG('CommanderInitializeAIRNG : Execute Build Structure for adjacent Air Factory')
-                            --RNGLOG('CommanderInitializeAIRNG : whatToBuild '..whatToBuild)
-                            --RNGLOG('CommanderInitializeAIRNG : Build Location '..repr(buildLocation))
+                        buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 15, true)
+                        if borderWarning and buildLocation and whatToBuild then
+                            IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                            borderWarning = false
+                        elseif buildLocation and whatToBuild then
                             aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                         else
                             WARN('No buildLocation or whatToBuild during ACU initialization')
                         end
+                        aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                     else
-                        buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1LandFactory', eng, true, categories.HYDROCARBON, 15, true)
-                        if buildLocation and whatToBuild then
-                            --RNGLOG('CommanderInitializeAIRNG : Execute Build Structure adjacent Land Factory')
-                            --RNGLOG('CommanderInitializeAIRNG : whatToBuild '..whatToBuild)
-                            --RNGLOG('CommanderInitializeAIRNG : Build Location '..repr(buildLocation))
+                        buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1LandFactory', eng, true, categories.HYDROCARBON, 15, true)
+                        if borderWarning and buildLocation and whatToBuild then
+                            IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                            borderWarning = false
+                        elseif buildLocation and whatToBuild then
                             aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                         else
                             WARN('No buildLocation or whatToBuild during ACU initialization')
                         end
+                        aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                         if aiBrain.MapSize > 5 then
                             --RNGLOG("Attempt to build air factory")
-                            buildLocation, whatToBuild = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 25, true)
-                            if buildLocation and whatToBuild then
-                                --RNGLOG('CommanderInitializeAIRNG : Execute Build Structure adjacent Land Factory')
-                                --RNGLOG('CommanderInitializeAIRNG : whatToBuild '..whatToBuild)
-                                --RNGLOG('CommanderInitializeAIRNG : Build Location '..repr(buildLocation))
+                            buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 25, true)
+                            if borderWarning and buildLocation and whatToBuild then
+                                IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                                borderWarning = false
+                            elseif buildLocation and whatToBuild then
                                 aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                             else
                                 WARN('No buildLocation or whatToBuild during ACU initialization')
                             end
+                            aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                         end
                     end
                     while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do

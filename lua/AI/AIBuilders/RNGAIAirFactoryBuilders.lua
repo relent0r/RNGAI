@@ -162,9 +162,9 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 Bomber',
         PlatoonTemplate = 'T3AirBomber',
-        Priority = 754,
+        Priority = 896,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Air', 'T3', 'bomber'} },
+            { UCBC, 'UnitBuildDemand', { 'Air', 'T3', 'bomber'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

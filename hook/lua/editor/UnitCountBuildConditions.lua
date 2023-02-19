@@ -920,9 +920,9 @@ end
 
 function ACUOnField(aiBrain, gun)
     for k, v in aiBrain.EnemyIntel.ACU do
-        if v.OnField and v.Gun and gun then
+        if (not v.Unit.Dead) and v.OnField and v.Gun and gun then
             return true
-        elseif v.OnField and not gun then
+        elseif (not v.Unit.Dead) and v.OnField and not gun then
             return true
         end
     end
@@ -931,7 +931,7 @@ end
 
 function ACUCloseCombat(aiBrain, bool)
     for k, v in aiBrain.EnemyIntel.ACU do
-        if not v.Ally then
+        if (not v.Unit.Dead) and (not v.Ally) then
             if bool == true and v.CloseCombat then
                 return true
             elseif bool == false and not v.CloseCombat then

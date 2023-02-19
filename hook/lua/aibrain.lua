@@ -935,6 +935,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.HighPriorityTargetAvailable = false
         self.EnemyIntel.ACU = {}
         self.EnemyIntel.Phase = 1
+        self.EnemyIntel.AirPhase = 1
+        self.EnemyIntel.LandPhase = 1
+        self.EnemyIntel.NavalPhase = 1
         self.EnemyIntel.TML = {}
         self.EnemyIntel.SMD = {}
         self.EnemyIntel.DirectorData = {
@@ -1189,6 +1192,9 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.EcoManager.CoreMassPush then
                 RNGLOG('We should be pushing for 3 core t3 extractors')
             end
+            RNGLOG('Enemy Air Phase '..self.EnemyIntel.AirPhase)
+            RNGLOG('Enemy Land Phase '..self.EnemyIntel.LandPhase)
+            RNGLOG('Enemy Naval Phase '..self.EnemyIntel.NavalPhase)
             RNGLOG('Current T1 Mobile AA count '..self.amanager.Current['Land']['T1']['aa'])
             RNGLOG('Current T2 Mobile AA count '..self.amanager.Current['Land']['T2']['aa'])
             RNGLOG('Current T3 Mobile AA count '..self.amanager.Current['Land']['T3']['aa'])
@@ -2475,7 +2481,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             for k, v in self.EnemyIntel.ACU do
                 local dupe = false
-                if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 and v.Position[1] then
+                if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.LastSpotted ~= 0 and v.Position[1] then
                     --RNGLOG('ACU last spotted '..(GetGameTimeSeconds() - v.LastSpotted)..' seconds ago')
                     if v.LastSpotted + 60 > GetGameTimeSeconds() then
                         local gridXID, gridZID = im:GetIntelGrid(v.Position)
@@ -3614,7 +3620,7 @@ AIBrain = Class(RNGAIBrainClass) {
             
         if not potentialTarget then
             for k, v in self.EnemyIntel.ACU do
-                if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
+                if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.LastSpotted ~= 0 then
                     if platoonType == 'GUNSHIP' and platoonDPS then
                         if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and v.LastSpotted + 120 > GetGameTimeSeconds() then
                             RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )

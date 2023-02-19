@@ -226,7 +226,7 @@ function CDRBrainThread(cdr)
             end
         end
         for k, v in aiBrain.EnemyIntel.ACU do
-            if not v.Ally then
+            if (not v.Unit.Dead) and (not v.Ally) then
                 local enemyStartPos = {}
                 if v.Position[1] and v.LastSpotted ~= 0 and gameTime - 60 < v.LastSpotted then
                     if VDist2Sq(v.Position[1], v.Position[3], cdr.Position[1], cdr.Position[2]) < 6400 then
@@ -949,7 +949,7 @@ function CDRExpansionRNG(aiBrain, cdr)
     end
     if cdr.Initialized then
         for _, v in aiBrain.EnemyIntel.ACU do
-            if not v.Ally and v.OnField then
+            if (not v.Unit.Dead) and (not v.Ally) and v.OnField then
                 --RNGLOG('Non Ally and OnField')
                 if v.LastSpotted ~= 0 and (GetGameTimeSeconds() - 30) < v.LastSpotted and v.DistanceToBase < 22500 then
                     --RNGLOG('Enemy ACU seen within 30 seconds and is within 150 of our start position')
@@ -1527,16 +1527,6 @@ function CDROverChargeRNG(aiBrain, cdr)
                 --RNGLOG('cdr retreating due to beyond max range and not building '..(cdr.MaxBaseRange * cdr.MaxBaseRange)..' current distance '..acuDistanceToBase)
                 return CDRRetreatRNG(aiBrain, cdr)
             end
-            --[[
-            if not target or target.Dead then
-                for k, v in aiBrain.EnemyIntel.ACU do
-                    if not v.Ally then
-                        if v.DistanceToBase ~= 0 and v.DistanceToBase < acuDistanceToBase then
-                            LOG('Enemy ACU is closer to our base than we are')
-                        end
-                    end
-                end
-            end]]
             if cdr.SuicideMode or counter >= 5 or not target or target.Dead or VDist3Sq(cdr.Position, target:GetPosition()) > maxRadius * maxRadius then
                 counter = 0
                 local searchRadius = 35
@@ -3473,7 +3463,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     
 
     for k, v in aiBrain.EnemyIntel.ACU do
-        if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
+        if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.LastSpotted ~= 0 then
             if RUtils.HaveUnitVisual(aiBrain, v.Unit, true) then
                 RNGINSERT(targetPositions, {v.Position, type = 'COMMAND'})
             end

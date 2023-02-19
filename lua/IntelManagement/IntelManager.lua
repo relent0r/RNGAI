@@ -60,6 +60,9 @@ IntelManager = Class {
             MustScoutArea = false,
             PerimeterExpired = false
         }
+        self.StrategyFlags = {
+            T3BomberRushActivated = false,
+        }
         self.UnitStats = {
             Land = {
                 Deaths = {
@@ -1044,7 +1047,7 @@ IntelManager = Class {
             end
             if minThreatRisk > 0 then
                 for k, v in self.Brain.EnemyIntel.ACU do
-                    if not v.Ally and v.HP ~= 0 and v.Position[1] and v.LastSpotted + 120 > gameTime then
+                    if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.Position[1] and v.LastSpotted + 120 > gameTime then
                         if v.HP < 12000 and minThreatRisk >= 50 and VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase / 4.84) then
                             if GetThreatBetweenPositions(self.Brain, self.Brain.BrainIntel.StartPos, v.Position, nil, threatType) < 5 then
                                 --RNGLOG('ACU ClosestEnemy base distance is '..(self.Brain.EnemyIntel.ClosestEnemyBase /2))
@@ -1168,7 +1171,7 @@ IntelManager = Class {
                 --    RNGLOG('Current Distance '..VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos))
                 --end
                 
-                if not v.Ally and v.Position[1] and v.HP ~= 0 and v.LastSpotted + 120 > gameTime then
+                if (not v.Unit.Dead) and (not v.Ally) and v.Position[1] and v.HP ~= 0 and v.LastSpotted + 120 > gameTime then
                     if VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase / 9) then
                         local gridX, gridZ = self:GetIntelGrid(v.Position)
                         if v.HP < 4000 then
@@ -1199,7 +1202,7 @@ IntelManager = Class {
             end
             if minThreatRisk > 0 then
                 for k, v in self.Brain.EnemyIntel.ACU do
-                    if not v.Ally and v.HP ~= 0 and v.Position[1] then
+                    if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.Position[1] then
                         if minThreatRisk >= 50 and VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos) < (self.Brain.EnemyIntel.ClosestEnemyBase / 4) then
                             if RUtils.PositionInWater(v.Position) then
                                 if GetThreatBetweenPositions(self.Brain, self.Brain.BrainIntel.StartPos, v.Position, nil, threatType) < threatMax * 2 then
@@ -1241,6 +1244,15 @@ IntelManager = Class {
         --RNGLOG('ThreatRisk is '..minThreatRisk)
         
         if type == 'AirAntiSurface' then
+            if not self.StrategyFlags.T3BomberRushActivated then
+                if self.Brain.BrainIntel.AirPhase == 3 and self.Brain.EnemyIntel.AirPhase < 3 then
+                    self.Brain.amanager.Demand.Air.T3.bomber = 1
+                    if self.Brain.amanager.Current['Air']['T3']['bomber'] > 0 then
+                        self.StrategyFlags.T3BomberRushActivated = true
+                        self.Brain.amanager.Demand.Air.T3.bomber = 0
+                    end
+                end
+            end
             if table.getn(potentialStrikes) > 0 then
                 local count = math.ceil(desiredStrikeDamage / 1000)
                 local acuSnipe = false
@@ -2096,6 +2108,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 })
                             elseif EntityCategoryContains( CategoriesFactory, unit) then
                                 --RNGLOG('Inserting Enemy Factory Structure '..unit.UnitId)
+                                
                                 RNGINSERT(factoryUnits, {
                                     EnemyIndex = unitIndex, 
                                     Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, 
@@ -2262,7 +2275,25 @@ TacticalThreatAnalysisRNG = function(aiBrain)
         end
     end
 
-
+    if next(factoryUnits) then
+        for k, unit in factoryUnits do
+            if aiBrain.EnemyIntel.AirPhase < 2 and unit.Object.Blueprint.CategoriesHash.AIR and unit.Object.Blueprint.CategoriesHash.TECH2 then
+                aiBrain.EnemyIntel.AirPhase = 2
+            elseif aiBrain.EnemyIntel.AirPhase < 3 and unit.Object.Blueprint.CategoriesHash.AIR and unit.Object.Blueprint.CategoriesHash.TECH3 then
+                aiBrain.EnemyIntel.AirPhase = 3
+            end
+            if aiBrain.EnemyIntel.LandPhase < 2 and unit.Object.Blueprint.CategoriesHash.LAND and unit.Object.Blueprint.CategoriesHash.TECH2 then
+                aiBrain.EnemyIntel.LandPhase = 2
+            elseif aiBrain.EnemyIntel.LandPhase < 3 and unit.Object.Blueprint.CategoriesHash.LAND and unit.Object.Blueprint.CategoriesHash.TECH3 then
+                aiBrain.EnemyIntel.LandPhase = 3
+            end
+            if aiBrain.EnemyIntel.NavalPhase < 2 and unit.Object.Blueprint.CategoriesHash.NAVAL and unit.Object.Blueprint.CategoriesHash.TECH2 then
+                aiBrain.EnemyIntel.NavalPhase = 2
+            elseif aiBrain.EnemyIntel.NavalPhase < 3 and unit.Object.Blueprint.CategoriesHash.NAVAL and unit.Object.Blueprint.CategoriesHash.TECH3 then
+                aiBrain.EnemyIntel.NavalPhase = 3
+            end
+        end
+    end
 
     -- populate the director
     aiBrain.EnemyIntel.DirectorData.Strategic = strategicUnits
