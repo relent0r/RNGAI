@@ -3717,16 +3717,10 @@ function AirStagingThreadRNG(unit)
                 --RNGLOG('Health Percent is '..v:GetHealthPercent())
                 numUnits = numUnits + 1
                 RNGINSERT(refueledUnits, v)
-            elseif currentTime > (v.TimeStamp + 30) then
-                RNGLOG('What is this plane doing?')
-                if not v:IsUnitState('Attached') then
-
+            elseif not v.Dead and currentTime > (v.TimeStamp + 30) then
+                if v:IsUnitState('Attacking') and (not v:IsUnitState('Attached')) and (v:GetFuelRatio() < 0.7 or v:GetHealthPercent() < 0.7) then
                     IssueClearCommands({v})
                     IssueTransportLoad({v}, unit)
-                    coroutine.yield(5)
-                end
-                if v:IsUnitState('Attacking') then
-                    RNGLOG('Unit is attacking but was asked to reset')
                 end
             end
         end

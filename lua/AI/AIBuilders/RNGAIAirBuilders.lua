@@ -374,6 +374,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Air Feeder',
         PlatoonTemplate = 'RNGAI AntiAirFeeder',
         Priority = 750,
+        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         InstanceCount = 30,
         BuilderType = 'Any',
         BuilderData = {

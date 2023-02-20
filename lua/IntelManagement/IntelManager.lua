@@ -2144,19 +2144,6 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                     if aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount + aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount > 5 then
                         aiBrain.EnemyIntel.EnemyFireBaseDetected = true
                     end
-                    --[[
-                    if aiBrain.EnemyIntel.EnemyFireBaseDetected then
-                        if not aiBrain.EnemyIntel.EnemyFireBaseTable[q] then
-                            aiBrain.EnemyIntel.EnemyFireBaseTable[q] = {}
-                            aiBrain.EnemyIntel.EnemyFireBaseTable[q] = { 
-                                EnemyIndex = unit.EnemyIndex, 
-                                Location = unit.IMAP, 
-                                Shielded = unit.Shielded, 
-                                Air = GetThreatAtPosition(aiBrain, unit.IMAP, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir'), 
-                                Land = GetThreatAtPosition(aiBrain, unit.IMAP, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
-                                }
-                        end
-                    end]]
                 end
                 --LOG('Enemy Threat Location '..q..' Have Land Defensive Structure Count of '..aiBrain.EnemyIntel.EnemyThreatLocations[q].LandDefStructureCount)
                 --LOG('Enemy Threat Location '..q..' Have Air Defensive Structure Count of '..aiBrain.EnemyIntel.EnemyThreatLocations[q].AirDefStructureCount)
@@ -2388,19 +2375,21 @@ LastKnownThread = function(aiBrain)
                                 elseif unitCat.INDIRECTFIRE then
                                     im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='arty'
                                 end
-                            elseif unitCat.RADAR then
-                                im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='radar'
-                            elseif unitCat.TACTICALMISSILEPLATFORM then
-                                im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='tml'
-                                if not aiBrain.EnemyIntel.TML[id] then
-                                    local angle = RUtils.GetAngleToPosition(aiBrain.BuilderManagers['MAIN'].Position, unitPosition)
-                                    aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=ALLBPS[v.UnitId].Weapon[1].MaxRadius }
-                                    aiBrain.BasePerimeterMonitor['MAIN'].RecentTMLAngle = angle
-                                end
-                            elseif unitCat.TECH3 and unitCat.ANTIMISSILE and unitCat.SILO then
-                                im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='smd'
-                                if not aiBrain.EnemyIntel.SMD[id] then
-                                    aiBrain.EnemyIntel.SMD[id] = {object = v, Position=unitPosition, Detected=GetGameTimeSeconds() }
+                            elseif unitCat.STRUCTURE then
+                                if unitCat.RADAR then
+                                    im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='radar'
+                                elseif unitCat.TACTICALMISSILEPLATFORM then
+                                    im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='tml'
+                                    if not aiBrain.EnemyIntel.TML[id] then
+                                        local angle = RUtils.GetAngleToPosition(aiBrain.BuilderManagers['MAIN'].Position, unitPosition)
+                                        aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=ALLBPS[v.UnitId].Weapon[1].MaxRadius }
+                                        aiBrain.BasePerimeterMonitor['MAIN'].RecentTMLAngle = angle
+                                    end
+                                elseif unitCat.TECH3 and unitCat.ANTIMISSILE and unitCat.SILO then
+                                    im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='smd'
+                                    if not aiBrain.EnemyIntel.SMD[id] then
+                                        aiBrain.EnemyIntel.SMD[id] = {object = v, Position=unitPosition, Detected=GetGameTimeSeconds() }
+                                    end
                                 end
                             end
                         end

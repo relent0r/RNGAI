@@ -1083,7 +1083,7 @@ StructureManager = Class {
                 continue
             end
             if massStorage > 1500 and aiBrain.EcoManager.CoreExtractorT3Count < aiBrain.EcoManager.CoreMassMarkerCount
-            and aiBrain.EcoManager.CoreExtractorT2Count == aiBrain.EcoManager.CoreMassMarkerCount
+            and aiBrain.EcoManager.CoreExtractorT2Count > 0
             and aiBrain.BrainIntel.SelfThreat.ExtractorCount > aiBrain.BrainIntel.MassSharePerPlayer 
             and extractorsDetail.TECH2Upgrading < aiBrain.EcoManager.CoreMassMarkerCount 
             and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 1.1 and energyStorage > 8000 then
@@ -1091,7 +1091,7 @@ StructureManager = Class {
                 coroutine.yield(80)
                 continue
             elseif extractorsDetail.TECH2Upgrading < 1 and aiBrain.BrainIntel.SelfThreat.ExtractorCount > aiBrain.BrainIntel.MassSharePerPlayer  
-            and aiBrain.EcoManager.CoreExtractorT2Count == aiBrain.EcoManager.CoreMassMarkerCount
+            and aiBrain.EcoManager.CoreExtractorT2Count > 0
             and energyStorage > 8000 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 1.1 then
                 self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                 coroutine.yield(80)

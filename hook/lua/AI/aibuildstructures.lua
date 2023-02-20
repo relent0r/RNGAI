@@ -248,13 +248,12 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
         end
     end
     -- if we have a location, build!
-    if location and IsResource(buildingType) then
+    if location then
         local borderWarning = false
         local relativeLoc = BuildToNormalLocation(location)
         if relative then
             relativeLoc = {relativeLoc[1] + relativeTo[1], relativeLoc[2] + relativeTo[2], relativeLoc[3] + relativeTo[3]}
         end
-        -- Need to update this to playable_area as it turns out that its 8 from that not the scenarioinfo size. See regor_highlands.
         if relativeLoc[1] - playableArea[1] <= 8 or relativeLoc[1] >= playableArea[3] - 8 or relativeLoc[3] - playableArea[2] <= 8 or relativeLoc[3] >= playableArea[4] - 8 then
             --RNGLOG('Playable Area 1, 3 '..repr(playableArea))
             --RNGLOG('Scenario Info 1, 3 '..repr(ScenarioInfo.size))
@@ -263,14 +262,6 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
         end
         -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
         AddToBuildQueueRNG(aiBrain, builder, whatToBuild, NormalToBuildLocation(relativeLoc), false, borderWarning)
-        return true
-    elseif location then
-        local relativeLoc = BuildToNormalLocation(location)
-        if relative then
-            relativeLoc = {relativeLoc[1] + relativeTo[1], relativeLoc[2] + relativeTo[2], relativeLoc[3] + relativeTo[3]}
-        end
-        -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
-        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, NormalToBuildLocation(relativeLoc), false)
         return true
     end
     -- At this point we're out of options, so move on to the next thing

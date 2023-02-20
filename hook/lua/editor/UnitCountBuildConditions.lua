@@ -633,7 +633,6 @@ function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory, 
             return true
         end
     end
-    local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
     local baseposition = aiBrain.BuilderManagers[locationType].FactoryManager.Location
     --RNGLOG('Searching water path from base ['..locationType..'] position '..repr(baseposition))
     local EnemyNavalUnits = aiBrain:GetUnitsAroundPoint(unitCategory, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ, 'Enemy')
@@ -641,7 +640,6 @@ function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory, 
     for _, EnemyUnit in EnemyNavalUnits do
         if not EnemyUnit.Dead then
             --RNGLOG('checking enemy factories '..repr(EnemyUnit:GetPosition()))
-            --path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', baseposition, EnemyUnit:GetPosition(), 1)
             --RNGLOG('reason'..repr(reason))
             if NavUtils.CanPathTo('Water', baseposition, EnemyUnit:GetPosition()) then
                 --RNGLOG('Found a water path from base ['..locationType..'] to enemy position '..repr(EnemyUnit:GetPosition()))

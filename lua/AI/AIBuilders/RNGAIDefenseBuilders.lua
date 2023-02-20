@@ -299,9 +299,10 @@ BuilderGroup {
         Priority = 825,
         InstanceCount = 1,
         BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
+            { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.1}},
+            { UCBC, 'CheckTargetInRangeRNG', { 'LocationType', 'T2StrategicMissile', categories.COMMAND + categories.STRUCTURE * (categories.TECH2 + categories.TECH3) } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1}},
             --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 400, 4000 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.80}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
