@@ -366,7 +366,7 @@ function MassIncomeToFactoryRNG(aiBrain, compareType, factoryDrain)
     --RNGLOG('massTotal naval '..massTotal)
     
     -- T4 Test
-    unitCount = aiBrain:GetEngineerManagerUnitsBeingBuilt(categories.EXPERIMENTAL + (categories.STRATEGIC * categories.TECH3))
+    local unitCount = aiBrain:GetEngineerManagerUnitsBeingBuilt(categories.EXPERIMENTAL + (categories.STRATEGIC * categories.TECH3))
     massTotal = massTotal + (unitCount * 40)
 
     aiBrain.EcoManager.ApproxFactoryMassConsumption = massTotal
