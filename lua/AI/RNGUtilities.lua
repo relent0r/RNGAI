@@ -1955,7 +1955,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
     local acuUnit = false
     local unitThreatTable = {}
     local defensiveStructureTable = {}
-    local totalThreat = 0
+    local threatTable = { AntiSurface = 0, Air = 0, AntiNaval = 0 }
     local RangeList = {
         [1] = 10,
         [2] = maxRange,
@@ -1996,11 +1996,11 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                 end
                 if Target.EntityId and not unitThreatTable[Target.EntityId] then
                     if platoon.MovementLayer == 'Water' then
-                        totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel + ALLBPS[Target.UnitId].Defense.SubThreatLevel
+                        threatTable['AntiNaval'] = threatTable['AntiNaval'] + Target.Blueprint.Defense.SurfaceThreatLevel + Target.Blueprint.Defense.SubThreatLevel
                     elseif platoon.MovementLayer == 'Air' then
-                        totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.AirThreatLevel
+                        threatTable['Air'] = threatTable['Air'] + Target.Blueprint.Defense.AirThreatLevel
                     else
-                        totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel
+                        threatTable['AntiSurface'] = threatTable['AntiSurface'] + Target.Blueprint.Defense.SurfaceThreatLevel
                     end
                     if EntityCategoryContains(CategoriesLandDefense, Target) then
                         RNGINSERT(defensiveStructureTable, Target)
@@ -2036,13 +2036,13 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
             end
             if TargetUnit then
                 --RNGLOG('Target Found in target aquisition function')
-                return TargetUnit, acuPresent, acuUnit, totalThreat, TargetsInRange, defensiveStructureTable
+                return TargetUnit, acuPresent, acuUnit, threatTable, TargetsInRange, defensiveStructureTable
             end
         end
         coroutine.yield(2)
     end
     --RNGLOG('NO Target Found in target aquisition function')
-    return TargetUnit, acuPresent, acuUnit, totalThreat, TargetsInRange, defensiveStructureTable
+    return TargetUnit, acuPresent, acuUnit, threatTable, TargetsInRange, defensiveStructureTable
 end
 
 function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, targetQueryCategory, TargetSearchCategory, enemyBrain)

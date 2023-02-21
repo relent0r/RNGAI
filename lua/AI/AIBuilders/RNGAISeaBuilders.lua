@@ -339,7 +339,7 @@ BuilderGroup {
         Priority = 310,
         InstanceCount = 20,
         BuilderConditions = {
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'NAVAL', categories.MOBILE * categories.NAVAL * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ENGINEER} },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.NAVAL * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ENGINEER} },
             --{ SeaAttackCondition, { 'LocationType', 14 } },
         },
         BuilderData = {
@@ -423,7 +423,7 @@ BuilderGroup {
         },
         BuilderConditions = {
             -- Change to NUKESUB once the Cybran BP is updated
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.NAVAL * categories.ANTINAVY - categories.ENGINEER - categories.EXPERIMENTAL - categories.NUKE } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.NAVAL * categories.ANTINAVY - categories.ENGINEER - categories.EXPERIMENTAL - categories.NUKE } },
             --{ SeaAttackCondition, { 'LocationType', 20 } },
         },
     },
@@ -439,7 +439,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {  
             { MIBC, 'MassMarkersInWater', {} },
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE * categories.TECH1 }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE * categories.TECH1 }},
             },
         BuilderData = {
             MarkerType = 'Mass',            

@@ -2520,8 +2520,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             --RNGLOG('* AI-RNG: * NavalAttackAIRNG:: Check for attack position')
             --attackPosition = RUtils.AIFindRangedAttackPositionRNG(aiBrain, self, MaxPlatoonWeaponRange)
             local attackPosition = AIAttackUtils.GetBestNavalTargetRNG(aiBrain, self)
-            self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
-            --RNGLOG('* NavalAttackAIRNG Platoon Naval Threat is '..self.CurrentPlatoonThreat)
+            self.CurrentPlatoonThreatAntiSurface = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+            --RNGLOG('* NavalAttackAIRNG Platoon Naval Threat is '..self.CurrentPlatoonThreatAntiSurface)
             local platoonCount = RNGGETN(GetPlatoonUnits(self))
             local platoonPos = false
             if attackPosition then
@@ -2532,13 +2532,13 @@ Platoon = Class(RNGAIPlatoonClass) {
                     platoonPos=GetPlatoonPosition(self)
                 end
                 local positionThreat
-                if self.CurrentPlatoonThreat and platoonCount < platoonLimit then
+                if self.CurrentPlatoonThreatAntiSurface and platoonCount < platoonLimit then
                     self.PlatoonFull = false
                     --RNGLOG('Merging with patoon count of '..platoonCount)
                     if VDist2Sq(platoonPos[1], platoonPos[3], mainBasePos[1], mainBasePos[3]) > 6400 then
                         positionThreat = GetThreatAtPosition(aiBrain, attackPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Naval')
                         --RNGLOG('* NavalAttackAIRNG targetThreat is '..positionThreat)
-                        if positionThreat > self.CurrentPlatoonThreat then
+                        if positionThreat > self.CurrentPlatoonThreatAntiSurface then
                             --RNGLOG('* NavalAttackAIRNG attempting merge and formation ')
                             self:Stop()
                             local merged = self:MergeWithNearbyPlatoonsRNG('NavalAttackAIRNG', 120, platoonLimit)
@@ -2566,7 +2566,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 if attackPositionDistance > 6400 then
                     if NavUtils.CanPathTo(self.MovementLayer, platoonPos, attackPosition) then
                         --RNGLOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' rangedPosition Position :'..repr(rangedPosition))
-                        local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), attackPosition, 10 , 1000)
+                        local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', GetPlatoonPosition(self), attackPosition, 10 , 1000)
                         if path then
                             IssueClearCommands(GetPlatoonUnits(self))
                             local threatAroundplatoon = 0
@@ -2603,12 +2603,12 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     local targetPosition
                                     local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, (categories.ANTINAVY + categories.NAVAL + categories.AMPHIBIOUS) - categories.SCOUT - categories.ENGINEER, platoonPos, self.EnemyRadius, 'Enemy')
                                     if enemyUnitCount > 0 then
-                                        self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+                                        self.CurrentPlatoonThreatAntiSurface = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+                                        self.CurrentPlatoonThreatAntiNavy = self:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
                                         target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPos, 'Attack', self.EnemyRadius, categories.MOBILE * (categories.NAVAL + categories.AMPHIBIOUS) - categories.AIR - categories.SCOUT - categories.WALL, categoryList, false)
-                                        local attackSquad = self:GetSquadUnits('Attack')
-                                        IssueClearCommands(attackSquad)
+                                        IssueClearCommands(self:GetSquadUnits('Attack'))
                                         --LOG('* NavalAttackAIRNG platoon threat is '..self.CurrentPlatoonThreat..' total threat of enemy'..totalThreat)
-                                        if self.CurrentPlatoonThreat < totalThreat and (target and not target.Dead or acuUnit) then
+                                        if (self.CurrentPlatoonThreatAntiSurface < totalThreat['AntiSurface'] or self.CurrentPlatoonThreatAntiNavy < totalThreat['AntiNaval']) and (target and not target.Dead or acuUnit) then
                                             local alternatePos = false
                                             local mergePlatoon = false
                                             if target and not target.Dead then
@@ -2625,7 +2625,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                             coroutine.yield(60)
                                             platoonPos = GetPlatoonPosition(self)
                                             --RNGLOG('Naval AI : Find platoon to merge with')
-                                            mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('NavalAttackAIRNG')
+                                            mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('NavalAttackAIRNG', 122500, targetPosition)
                                             if alternatePos then
                                                 RUtils.CenterPlatoonUnitsRNG(self, alternatePos)
                                             else
@@ -2676,7 +2676,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                             if target and not target.Dead then
                                                 targetPosition = target:GetPosition()
                                                 local microCap = 50
-                                                for _, unit in attackSquad do
+                                                for _, unit in self:GetSquadUnits('Attack') do
                                                     microCap = microCap - 1
                                                     if microCap <= 0 then break end
                                                     if unit.Dead then continue end
@@ -2782,12 +2782,12 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 end
                                 local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE, platoonPos, self.EnemyRadius, 'Enemy')
                                 if enemyUnitCount > 0 then
-                                    self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+                                    self.CurrentPlatoonThreatAntiSurface = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+                                    self.CurrentPlatoonThreatAntiNavy = self:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
                                     target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPos, 'Attack', self.EnemyRadius, (categories.MOBILE + categories.STRUCTURE) - categories.AIR - categories.SCOUT - categories.WALL, categoryList, false)
-                                    local attackSquad = self:GetSquadUnits('Attack')
-                                    IssueClearCommands(attackSquad)
+                                    IssueClearCommands(self:GetSquadUnits('Attack'))
                                     --RNGLOG('* NavalAttackAIRNG platoon threat is '..self.CurrentPlatoonThreat..' total threat of enemy'..totalThreat)
-                                    if self.CurrentPlatoonThreat < totalThreat and (target and not target.Dead or acuUnit) then
+                                    if (self.CurrentPlatoonThreatAntiSurface < totalThreat['AntiSurface'] or self.CurrentPlatoonThreatAntiNavy < totalThreat['AntiNaval']) and (target and not target.Dead or acuUnit) then
                                         local alternatePos = false
                                         local mergePlatoon = false
                                         if target and not target.Dead then
@@ -2804,7 +2804,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                         coroutine.yield(60)
                                         platoonPos = GetPlatoonPosition(self)
                                         --RNGLOG('Naval AI : Find platoon to merge with')
-                                        mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('NavalAttackAIRNG')
+                                        mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('NavalAttackAIRNG', 122500, targetPosition)
                                         if alternatePos then
                                             RUtils.CenterPlatoonUnitsRNG(self, alternatePos)
                                         else
@@ -2855,7 +2855,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                         if target and not target.Dead then
                                             targetPosition = target:GetPosition()
                                             local microCap = 50
-                                            for _, unit in attackSquad do
+                                            for _, unit in self:GetSquadUnits('Attack') do
                                                 microCap = microCap - 1
                                                 if microCap <= 0 then break end
                                                 if unit.Dead then continue end
@@ -7781,7 +7781,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         return false
     end,
 
-    GetClosestPlatoonRNG = function(self, planName, distanceLimit)
+    GetClosestPlatoonRNG = function(self, planName, distanceLimit, angleTargetPos)
         local aiBrain = self:GetBrain()
         if not aiBrain then
             return
@@ -7831,9 +7831,18 @@ Platoon = Class(RNGAIPlatoonClass) {
             local aPlatPos = GetPlatoonPosition(aPlat)
             local aPlatDistance = VDist2Sq(platPos[1],platPos[3],aPlatPos[1],aPlatPos[3])
             if aPlatDistance < closestDistance then
-                closestPlatoon = aPlat
-                closestDistance = aPlatDistance
-                closestAPlatPos = aPlatPos
+                if angleTargetPos then
+                    if RUtils.GetAngleRNG(platPos[1], platPos[3], aPlatPos[1], aPlatPos[3], angleTargetPos[1], angleTargetPos[3]) > 0.6 then
+                        RNGLOG('Found angle for platoon, naval most likely')
+                        closestPlatoon = aPlat
+                        closestDistance = aPlatDistance
+                        closestAPlatPos = aPlatPos
+                    end
+                else
+                    closestPlatoon = aPlat
+                    closestDistance = aPlatDistance
+                    closestAPlatPos = aPlatPos
+                end
             end
         end
         if closestPlatoon then

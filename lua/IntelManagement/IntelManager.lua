@@ -1238,6 +1238,23 @@ IntelManager = Class {
                         table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'AntiNavy'} )
                     end
                 end
+                if minThreatRisk > 25 then
+                    for _, x in self.Brain.EnemyIntel.EnemyThreatLocations do
+                        for _, z in x do
+                            if z['Naval'] and z['Naval'] > 0 and (gameTime - z.UpdateTime) < 45 then
+                                RNGLOG('Enemy Threat Locations has a NavalThreat table')
+                                -- position format as used by the engine
+                                local gridX, gridZ = self:GetIntelGrid(z.Position)
+                                RNGLOG('Enemy Threat Locations distance to naval threat grid is '..self.MapIntelGrid[gridX][gridZ].DistanceToMain)
+                                if self.MapIntelGrid[gridX][gridZ].DistanceToMain < BaseMilitaryArea then
+                                    desiredStrikeDamage = desiredStrikeDamage + (z['Naval'] * 150)
+                                    RNGLOG('Strike Damage request is '..desiredStrikeDamage)
+                                    table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'AntiNavy'} )
+                                end
+                            end
+                        end
+                    end
+                end
             end
         end
         --RNGLOG('CheckStrikPotential')
