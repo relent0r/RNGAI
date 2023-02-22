@@ -5128,3 +5128,4 @@ DefensiveClusterCheck = function(aiBrain, position)
         end
     end
 end
+

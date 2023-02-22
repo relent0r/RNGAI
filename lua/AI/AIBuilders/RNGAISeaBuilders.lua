@@ -318,6 +318,7 @@ BuilderGroup {
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
                 categories.MASSFABRICATION,
+                categories.ANTINAVY * categories.STRUCTURE,
                 categories.ALLUNITS,
             },
             PrioritizedCategories = {
@@ -356,6 +357,7 @@ BuilderGroup {
                 categories.ENERGYSTORAGE,
                 categories.MASSEXTRACTION,
                 categories.STRUCTURE * categories.MASSFABRICATION,
+                categories.ANTINAVY * categories.STRUCTURE,
                 categories.ALLUNITS,
             },
             PrioritizedCategories = {

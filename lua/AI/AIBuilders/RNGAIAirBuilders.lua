@@ -676,9 +676,21 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'RNGAI T2 Air Transport Large',
+        BuilderName = 'RNGAI T2 Air Transport Large Single',
         PlatoonTemplate = 'T2AirTransport',
         Priority = 910,
+        BuilderConditions = {
+            { MIBC, 'ArmyNeedOrWantTransports', {} },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.05 }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Air Transport Large',
+        PlatoonTemplate = 'T2AirTransport',
+        Priority = 880,
         BuilderConditions = {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
@@ -690,7 +702,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Air Transport Excess Large',
         PlatoonTemplate = 'T2AirTransport',
-        Priority = 900,
+        Priority = 875,
         BuilderConditions = {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},

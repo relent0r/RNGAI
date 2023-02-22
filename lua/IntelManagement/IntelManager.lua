@@ -1374,7 +1374,7 @@ IntelManager = Class {
                     self.Brain.EngineerAssistManagerFocusSnipe = true
                 end
                 if navalAttack then
-                    --RNGLOG('numer of navalAttack torps required '..count)
+                    RNGLOG('numer of navalAttack torps required '..count)
                     self.Brain.amanager.Demand.Air.T2.torpedo = count
                 end
             else

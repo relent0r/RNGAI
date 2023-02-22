@@ -5817,4 +5817,28 @@ AIBrain = Class(RNGAIBrainClass) {
             coroutine.yield(100)
         end
     end,
+
+    GetCallBackCheck = function(self, unit)
+        if unit.Blueprint.CategoriesHash.TECH1 and unit.Blueprint.CategoriesHash.FRIGATE then
+            RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
+            local oldOnDamaged = unit.OnDamaged
+            unit.OnDamaged = function(self, instigator)
+                local damaged = oldOnDamaged(self, instigator)
+                -- can be nil, so we better check
+                if damaged then
+                    if instigator.unit then
+                        RNGLOG('Naval Callback We have an instigator '..unit.UnitId)
+                        if instigator.unit.CategoriesHash.ANTINAVY then
+                            RNGLOG('Naval Callback instigator is antinavy')
+                        end
+                    end
+                    if instigator.unit and instigator.unit.CategoriesHash.ANTINAVY and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy == 0 then
+                        RNGLOG('Naval Callback We want to retreat '..unit.UnitId)
+                        unit.PlatoonHandle.RetreatOrdered = true
+                    end
+                end
+                return damaged
+            end
+        end
+    end,
 }

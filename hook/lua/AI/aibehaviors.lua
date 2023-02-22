@@ -410,11 +410,8 @@ function CDRBuildFunction(aiBrain, cdr, object)
         RNGSORT(MassMarker, function(a,b) return a.Distance < b.Distance end)
        --RNGLOG('ACU MassMarker table sorted, looking for markers to build')
         for _, v in MassMarker do
-            if v.Distance > 900 then
-                break
-            end
-            if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
-               --RNGLOG('ACU Adding entry to BuildQueue')
+            if v.Distance < 900 and NavUtils.CanPathTo('Amphibious', acuPos, v.Position) and CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
+                --RNGLOG('ACU Adding entry to BuildQueue')
                 local newEntry = {whatToBuild, {v.Position[1], v.Position[3], 0}, false, Position=v.Position}
                 RNGINSERT(cdr.EngineerBuildQueue, newEntry)
             end
