@@ -5355,7 +5355,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, scanPosition, 'Attack', zoneRangeCheck, (categories.LAND + categories.NAVAL + categories.STRUCTURE), self.atkPri, false)
                     local attackSquad = self:GetSquadUnits('Attack')
                     --RNGLOG('Zone Control at position platoonThreat is '..self.CurrentPlatoonThreat..' Enemy threat is '..totalThreat)
-                    if zoneRangeCheck < 120 and self.CurrentPlatoonThreat * 1.2 < totalThreat and (target and not target.Dead or acuUnit) then
+                    if zoneRangeCheck < 120 and self.CurrentPlatoonThreat * 1.2 < totalThreat['AntiSurface'] and (target and not target.Dead or acuUnit) then
                         local alternatePos = false
                         local mergePlatoon = false
                         local targetPos
@@ -5519,7 +5519,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, zonePosition, 'Attack', 60, (categories.LAND + categories.STRUCTURE), self.atkPri, false)
                     local attackSquad = self:GetSquadUnits('Attack')
                     --RNGLOG('Mass raid at position platoonThreat is '..self.CurrentPlatoonThreat..' Enemy threat is '..totalThreat)
-                    if self.CurrentPlatoonThreat < totalThreat and (target and not target.Dead or acuUnit) then
+                    if self.CurrentPlatoonThreat < totalThreat['AntiSurface'] and (target and not target.Dead or acuUnit) then
                         local alternatePos = false
                         local mergePlatoon = false
                         local targetPos
@@ -6127,7 +6127,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platLoc, 'Attack', 30, (categories.LAND + categories.NAVAL + categories.STRUCTURE), self.atkPri, false)
                 local attackSquad = self:GetSquadUnits('Attack')
                 --RNGLOG('Mass raid at position platoonThreat is '..self.CurrentPlatoonThreat..' Enemy threat is '..totalThreat)
-                if self.CurrentPlatoonThreat < totalThreat and (target and not target.Dead or acuUnit) then
+                if self.CurrentPlatoonThreat < totalThreat['AntiSurface'] and (target and not target.Dead or acuUnit) then
                     local alternatePos = false
                     local mergePlatoon = false
                     local targetPos
@@ -7112,7 +7112,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                     end
                    --RNGLOG('MoveWithZoneMicro - platoon threat '..self.CurrentPlatoonThreat.. ' Enemy Threat '..totalThreat)
-                    if totalThreat > self.CurrentPlatoonThreat then
+                    if totalThreat['AntiSurface'] > self.CurrentPlatoonThreat then
                        --RNGLOG('MoveWithZoneMicro - Threat too high are we are in avoid mode')
                         local alternatePos = false
                         local alternateZone = false
@@ -7361,7 +7361,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             if acuUnit and self.CurrentPlatoonThreat > 30 then
                                 target = acuUnit
                                 rangeModifier = 5
-                            elseif acuUnit and self.CurrentPlatoonThreat < totalThreat then
+                            elseif acuUnit and self.CurrentPlatoonThreat < totalThreat['AntiSurface'] then
                                 local alternatePos = false
                                 local mergePlatoon = false
                                 local unitPos = acuUnit:GetPosition() 
@@ -7626,7 +7626,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 target = targetCheck
                             end
                             --LOG('MoveWithMicro - platoon threat '..self.CurrentPlatoonThreat.. ' Enemy Threat '..totalThreat * 1.5)
-                            if totalThreat and self.PlatoonData.Avoid and totalThreat * 1.5 >= self.CurrentPlatoonThreat then
+                            if totalThreat and self.PlatoonData.Avoid and totalThreat['AntiSurface'] * 1.5 >= self.CurrentPlatoonThreat then
                                 --LOG('MoveWithMicro - Threat too high are we are in avoid mode')
                                 local alternatePos = false
                                 local mergePlatoon = false

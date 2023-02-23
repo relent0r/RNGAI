@@ -1254,6 +1254,8 @@ IntelManager = Class {
                             end
                         end
                     end
+                else
+                    RNGLOG('Enemy air threat too high, no looking for naval threat to activate torpedo bombers')
                 end
             end
         end

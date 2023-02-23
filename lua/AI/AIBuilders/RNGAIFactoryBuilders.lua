@@ -945,12 +945,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG Factory Builder Sea T1 Marker Large',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 700,
+        Priority = 0,
+        PriorityFunction = NavalAdjust,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.50}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.95, 1.0 }},
             { UCBC, 'LessThanFactoryCountRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) }, true },
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },

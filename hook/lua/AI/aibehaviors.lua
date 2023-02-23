@@ -3368,7 +3368,7 @@ function ExpMoveToPosition(aiBrain, platoon, target, unit, ignoreUnits)
                         if acuInRange then
                             target = acuUnit
                         end
-                        if totalThreat > 20 then
+                        if totalThreat['AntiSurface'] > 20 then
                             local retreatTrigger = 0
                             local retreatTimeout = 0
                             while unit and not unit.Dead do
