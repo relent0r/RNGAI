@@ -806,24 +806,24 @@ IntelManager = Class {
                     closestIndex = b.Index
                 end
             end
-            RNGLOG('Closest enemy is index '..closestIndex..' at '..closestDistance)
+            --RNGLOG('Closest enemy is index '..closestIndex..' at '..closestDistance)
             for _, v in self.Brain.BrainIntel.AllyStartLocations do
                 if v.Index ~= selfIndex and (not furtherestPlayerDistance or closestDistance > furtherestPlayerDistance) then
                     furtherestPlayerDistance = VDist3Sq(v.Position, self.Brain.EnemyIntel.EnemyStartLocations[closestIndex].Position)
                 end
             end
-            RNGLOG('Furtherest ally from enemy is index '..closestIndex..' is '..furtherestPlayerDistance)
+            --RNGLOG('Furtherest ally from enemy is index '..closestIndex..' is '..furtherestPlayerDistance)
             if closestDistance > furtherestPlayerDistance then
                 if math.sqrt(closestDistance) - math.sqrt(furtherestPlayerDistance) > 50 then
-                    RNGLOG('We are the futherest') 
-                    RNGLOG('The difference between positions is '..(math.sqrt(closestDistance) - math.sqrt(furtherestPlayerDistance)))
+                    --RNGLOG('We are the futherest') 
+                    --RNGLOG('The difference between positions is '..(math.sqrt(closestDistance) - math.sqrt(furtherestPlayerDistance)))
                     furtherestPlayer = true
                     self.Brain.BrainIntel.AirPlayer = true
                 end
             end
             if not furtherestPlayer then
-                RNGLOG('We are not the furtherest, start position is '..repr(self.Brain.BrainIntel.StartPos))
-                RNGLOG('The difference between positions is '..(closestDistance - furtherestPlayerDistance))
+                --RNGLOG('We are not the furtherest, start position is '..repr(self.Brain.BrainIntel.StartPos))
+                --RNGLOG('The difference between positions is '..(closestDistance - furtherestPlayerDistance))
             end
         end
     end,
@@ -1242,20 +1242,20 @@ IntelManager = Class {
                     for _, x in self.Brain.EnemyIntel.EnemyThreatLocations do
                         for _, z in x do
                             if z['Naval'] and z['Naval'] > 0 and (gameTime - z.UpdateTime) < 45 then
-                                RNGLOG('Enemy Threat Locations has a NavalThreat table')
+                                --RNGLOG('Enemy Threat Locations has a NavalThreat table')
                                 -- position format as used by the engine
                                 local gridX, gridZ = self:GetIntelGrid(z.Position)
-                                RNGLOG('Enemy Threat Locations distance to naval threat grid is '..self.MapIntelGrid[gridX][gridZ].DistanceToMain)
+                                --RNGLOG('Enemy Threat Locations distance to naval threat grid is '..self.MapIntelGrid[gridX][gridZ].DistanceToMain)
                                 if self.MapIntelGrid[gridX][gridZ].DistanceToMain < BaseMilitaryArea then
                                     desiredStrikeDamage = desiredStrikeDamage + (z['Naval'] * 150)
-                                    RNGLOG('Strike Damage request is '..desiredStrikeDamage)
+                                    --RNGLOG('Strike Damage request is '..desiredStrikeDamage)
                                     table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'AntiNavy'} )
                                 end
                             end
                         end
                     end
                 else
-                    RNGLOG('Enemy air threat too high, no looking for naval threat to activate torpedo bombers')
+                    --RNGLOG('Enemy air threat too high, no looking for naval threat to activate torpedo bombers')
                 end
             end
         end

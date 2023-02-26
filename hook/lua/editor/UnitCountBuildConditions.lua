@@ -1296,6 +1296,8 @@ function DefensivePointShieldRequired(aiBrain, locationType)
                     return false
                 end
             end
+            --RNGLOG('DefensivePoint needs shield unit count is '..unitCount)
+            --RNGLOG('DefensivePoint needs shield '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[2][k].DirectFire))
             return true
         end
     end

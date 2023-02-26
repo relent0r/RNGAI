@@ -1676,7 +1676,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                             local alternateFirePos = false
                             for k, v in checkPoints do
                                 --RNGLOG('Check points for alternative fire position '..repr({v[1],GetSurfaceHeight(v[1],v[3]),v[3]}))
-                                if not aiBrain:CheckBlockingTerrain({v[1],GetSurfaceHeight(v[1],v[3]),v[3]}, targetPos, 'none') and VDist3Sq({v[1],GetSurfaceHeight(v[1],v[3]),v[3]}, targetPos) < VDist3Sq(cdrPos, targetPos) then
+                                if not aiBrain:CheckBlockingTerrain({v[1],GetTerrainHeight(v[1],v[3]),v[3]}, targetPos, 'none') and VDist3Sq({v[1],GetTerrainHeight(v[1],v[3]),v[3]}, targetPos) < VDist3Sq(cdrPos, targetPos) then
                                     --RNGLOG('Found alternate position due to terrain blocking, attempting move')
                                     movePos = v
                                     alternateFirePos = true
@@ -3569,7 +3569,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
                         maxValue = currentValue
                         for _, v in SMDPositions do
                             --RNGLOG('Distance of SMD from strike position '..VDist3Sq(searchPos, v.Position)..' radius of smd is '..v.Radius)
-                            if VDist3Sq(searchPos, v.Position) < v.Radius then
+                            if v.object and not IsDestroyed(v.object) and VDist3Sq(searchPos, v.Position) < v.Radius then
                                 smdCovered = true
                                 break
                             end

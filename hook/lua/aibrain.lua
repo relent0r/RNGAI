@@ -169,7 +169,7 @@ AIBrain = Class(RNGAIBrainClass) {
             --RNGLOG('5 KM Map Check true')
             self.MapSize = 5
         end
-        self.MapCenterPoint = { (ScenarioInfo.size[1] / 2), GetSurfaceHeight((ScenarioInfo.size[1] / 2), (ScenarioInfo.size[2] / 2)) ,(ScenarioInfo.size[2] / 2) }
+        self.MapCenterPoint = { (ScenarioInfo.size[1] / 2), GetTerrainHeight((ScenarioInfo.size[1] / 2), (ScenarioInfo.size[2] / 2)) ,(ScenarioInfo.size[2] / 2) }
 
         -- Condition monitor for the whole brain
         self.ConditionsMonitor = BrainConditionsMonitor.CreateConditionsMonitor(self)
@@ -1001,7 +1001,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
 
         local selfStartPosX, selfStartPosY = self:GetArmyStartPos()
-        self.BrainIntel.StartPos = { selfStartPosX, GetSurfaceHeight(selfStartPosX, selfStartPosY), selfStartPosY }
+        self.BrainIntel.StartPos = { selfStartPosX, GetTerrainHeight(selfStartPosX, selfStartPosY), selfStartPosY }
         self.BrainIntel.CurrentIntelAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, self.MapCenterPoint)
         self.BrainIntel.MilitaryRange = BaseMilitaryArea
         self.BrainIntel.DMZRange = BaseDMZArea
@@ -2464,7 +2464,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if self:GetCurrentEnemy() then
                 local enemyX, enemyZ = self:GetCurrentEnemy():GetArmyStartPos()
                 local CenterPointAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, self.MapCenterPoint)
-                local EnemyAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, {enemyX, GetSurfaceHeight(enemyX, enemyZ), enemyZ})
+                local EnemyAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, {enemyX, GetTerrainHeight(enemyX, enemyZ), enemyZ})
                 --RNGLOG('CenterPointAngle '..CenterPointAngle..' EnemyAngle '..EnemyAngle)
                 --RNGLOG('Average should be '..((CenterPointAngle + EnemyAngle) / 2))
                 self.BrainIntel.CurrentIntelAngle = (CenterPointAngle + EnemyAngle) / 2
@@ -3546,7 +3546,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 potentialThreats[raw[1]] = potentialThreats[raw[1]] or { }
                 potentialThreats[raw[1]][raw[2]] = potentialThreats[raw[1]][raw[2]] or { }
                 potentialThreats[raw[1]][raw[2]][t] = raw[3]
-                potentialThreats[raw[1]][raw[2]].Position = potentialThreats[raw[1]][raw[2]].Position or {raw[1], GetSurfaceHeight(raw[1], raw[2]),raw[2]}
+                potentialThreats[raw[1]][raw[2]].Position = potentialThreats[raw[1]][raw[2]].Position or {raw[1], GetTerrainHeight(raw[1], raw[2]),raw[2]}
                 potentialThreats[raw[1]][raw[2]].UpdateTime = potentialThreats[raw[1]][raw[2]].UpdateTime or currentGameTime
                 --local threatRow = {posX=raw[1], posZ=raw[2], rThreat=raw[3], rThreatType=t}
                 --RNGINSERT(potentialThreats, threatRow)
@@ -5726,7 +5726,7 @@ AIBrain = Class(RNGAIBrainClass) {
     CivilianPDCheckRNG = function(self)
         -- This will momentarily reveal civilian structures at the start of the game so that the AI can detect threat from PD's
         --RNGLOG('Reveal Civilian PD')
-        coroutine.yield(2)
+        coroutine.yield(50)
         local AIIndex = self:GetArmyIndex()
         for i,v in ArmyBrains do
             local brainIndex = v:GetArmyIndex()
@@ -5819,26 +5819,16 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     GetCallBackCheck = function(self, unit)
-        if unit.Blueprint.CategoriesHash.TECH1 and unit.Blueprint.CategoriesHash.FRIGATE then
-            RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
-            local oldOnDamaged = unit.OnDamaged
-            unit.OnDamaged = function(self, instigator)
-                local damaged = oldOnDamaged(self, instigator)
-                -- can be nil, so we better check
-                if damaged then
-                    if instigator.unit then
-                        RNGLOG('Naval Callback We have an instigator '..unit.UnitId)
-                        if instigator.unit.CategoriesHash.ANTINAVY then
-                            RNGLOG('Naval Callback instigator is antinavy')
-                        end
-                    end
-                    if instigator.unit and instigator.unit.CategoriesHash.ANTINAVY and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy == 0 then
-                        RNGLOG('Naval Callback We want to retreat '..unit.UnitId)
-                        unit.PlatoonHandle.RetreatOrdered = true
-                    end
+        local function FrigateRetreat(unit, instigator)
+                --RNGLOG('AntiNavy Threat is '..unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy)
+                if instigator and instigator.IsUnit and not IsDestroyed(instigator) and instigator.CategoriesHash.ANTINAVY and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy == 0 then
+                    --RNGLOG('Naval Callback We want to retreat '..unit.UnitId)
+                    unit.PlatoonHandle.RetreatOrdered = true
                 end
-                return damaged
             end
+        if unit.Blueprint.CategoriesHash.TECH1 and unit.Blueprint.CategoriesHash.FRIGATE then
+            --RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
+            unit:AddOnDamagedCallback( FrigateRetreat, nil, 100)
         end
     end,
 }

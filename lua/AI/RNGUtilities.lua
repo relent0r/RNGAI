@@ -398,7 +398,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             --LOG('We are going to try reclaim within the grid')
                             local reclaimCount = 0
                             for k, square in reclaimGrid do
-                                local squarePos = {square[1], GetSurfaceHeight(square[1], square[3]), square[3]}
+                                local squarePos = {square[1], GetTerrainHeight(square[1], square[3]), square[3]}
                                 if NavUtils.CanPathTo('Amphibious', engPos, squarePos) then
                                     if square[1] - 8 <= 3 or square[1] + 8 >= ScenarioInfo.size[1] - 3 or square[3] - 8 <= 3 or square[3] + 8 >= ScenarioInfo.size[1] - 3 then
                                         --LOG('Grid square position outside of map border')
@@ -936,7 +936,7 @@ function AvoidLocation(pos,target,dist)
     local z = pos[3]+dist*delta[3]/norm
     x = math.min(ScenarioInfo.size[1]-5,math.max(5,x))
     z = math.min(ScenarioInfo.size[2]-5,math.max(5,z))
-    return {x,GetSurfaceHeight(x,z),z}
+    return {x,GetTerrainHeight(x,z),z}
 end
 
 function CheckCustomPlatoons(aiBrain)
@@ -1460,7 +1460,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                     local enemyUnitThreat = 0
                     for _,c in enemyUnits do
                         if c and not c.Dead then
-                            if EntityCategoryContains(categories.COMMAND, c) then
+                            if c.Blueprint.CategoriesHash.COMMAND then
                                 enemyACUPresent = true
                                 enemyUnitThreat = enemyUnitThreat + c:EnhancementThreatReturn()
                             else
@@ -1513,7 +1513,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                             local enemyUnitThreat = 0
                             for _,c in enemyUnits do
                                 if c and not c.Dead then
-                                    if EntityCategoryContains(categories.COMMAND, c) then
+                                    if c.Blueprint.CategoriesHash.COMMAND then
                                         enemyACUPresent = true
                                         enemyUnitThreat = enemyUnitThreat + c:EnhancementThreatReturn()
                                     else
@@ -1565,7 +1565,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                         local enemyUnitThreat = 0
                         for _,c in enemyUnits do
                             if c and not c.Dead then
-                                if EntityCategoryContains(categories.COMMAND, c) then
+                                if c.Blueprint.CategoriesHash.COMMAND then
                                     enemyACUPresent = true
                                     enemyUnitThreat = enemyUnitThreat + c:EnhancementThreatReturn()
                                 else
@@ -3556,7 +3556,7 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
     local engPos = eng:GetPosition()
     local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     local function normalposition(vec)
-        return {vec[1],GetSurfaceHeight(vec[1],vec[2]),vec[2]}
+        return {vec[1],GetTerrainHeight(vec[1],vec[2]),vec[2]}
     end
     local function heightbuildpos(vec)
         return {vec[1],vec[2],0}
@@ -3629,9 +3629,6 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
         if location and relative then
             local relativeLoc = {location[1] + engPos[1], location[3] + engPos[3], 0}
             if relativeLoc[1] - playableArea[1] <= 8 or relativeLoc[1] >= playableArea[3] - 8 or relativeLoc[2] - playableArea[2] <= 8 or relativeLoc[2] >= playableArea[4] - 8 then
-                RNGLOG('Playable Area 1, 3 '..repr(playableArea))
-                RNGLOG('Scenario Info 1, 3 '..repr(ScenarioInfo.size))
-                RNGLOG('BorderWarning is true, location is '..repr(relativeLoc))
                 borderWarning = true
             end
             --RNGLOG('Adjusted location is '..repr({relativeLoc[1] + engPos[1], relativeLoc[3] + engPos[3], 0}))
@@ -3794,7 +3791,7 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
         end
     end
     if setPointPos then
-        setPointPos = {setPointPos[1], GetSurfaceHeight(setPointPos[1], setPointPos[3]), setPointPos[3]} 
+        setPointPos = {setPointPos[1], GetTerrainHeight(setPointPos[1], setPointPos[3]), setPointPos[3]} 
         local movePoint = lerpy(platoonPosition, targetPosition, {targetDistance, targetDistance - (platoon.PlatoonStrikeRadiusDistance + 25)})
         if aiBrain.RNGDEBUG then
             platoon:ForkThread(platoon.DrawTargetRadius, movePoint, platoon.PlatoonStrikeRadius)
@@ -4026,7 +4023,7 @@ GenerateDefensivePointTable = function (range, position)
             local angle = slice * i
             local newX = center[1] + radius * math.cos(angle)
             local newY = center[3] + radius * math.sin(angle)
-            table.insert(circlePoints, { newX, GetSurfaceHeight(newX, newY) , newY})
+            table.insert(circlePoints, { newX, GetTerrainHeight(newX, newY) , newY})
         end
         return circlePoints
     end
@@ -4277,24 +4274,24 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
         --RNGLOG('Attempting to add defensive unit to defensepoint table at '..locationType)
         --RNGLOG('Unit ID is '..finishedUnit.UnitId)
         local unitPos = finishedUnit:GetPosition()
-        if EntityCategoryContains(categories.TECH1, finishedUnit) then
+        if finishedUnit.Blueprint.CategoriesHash.TECH1 then
             for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[1] do
                 local distance = VDist3(v.Position, unitPos)
-                if not closestPoint or closestDistance > distance then
+                if not closestPoint or distance < closestDistance then
                     closestPoint = k
                     closestDistance = distance
                 end
             end
             if closestPoint and closestDistance <= aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].Radius then
                 --RNGLOG('Adding T1 defensive unit to defensepoint table at key '..closestPoint)
-                if EntityCategoryContains(categories.ANTIAIR, finishedUnit) then
+                if finishedUnit.Blueprint.CategoriesHash.ANTIAIR then
                     RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiAir, finishedUnit)
-                elseif EntityCategoryContains(categories.DIRECTFIRE, finishedUnit) then
+                elseif finishedUnit.Blueprint.CategoriesHash.DIRECTFIRE then
                     RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].DirectFire, finishedUnit)
                 end
             end
-        elseif EntityCategoryContains(categories.TECH2, finishedUnit) then
-            if EntityCategoryContains(categories.ANTIMISSILE, finishedUnit) then
+        elseif finishedUnit.Blueprint.CategoriesHash.TECH2 then
+            if finishedUnit.Blueprint.CategoriesHash.ANTIMISSILE then
                 --RNGLOG('TMD defensive unit to defensepoint table')
                 for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[1] do
                     local distance = VDist3(v.Position, unitPos)
@@ -4306,10 +4303,7 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
                 if closestPoint and closestDistance <= aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].Radius then
                     --RNGLOG('Adding T2 defensive unit to defensepoint table')
                     --RNGLOG('Unit ID is '..finishedUnit.UnitId)
-                    if EntityCategoryContains(categories.ANTIMISSILE, finishedUnit) then
-                        --RNGLOG('Adding TMD to DefensivePoints pos 1 TMD table')
-                        RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].TMD, finishedUnit)
-                    end
+                    RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].TMD, finishedUnit)
                 end
             else
                 for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[2] do
@@ -4320,17 +4314,17 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
                     end
                 end
                 if closestPoint and closestDistance <= aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Radius then
-                    if EntityCategoryContains(categories.ANTIMISSILE, finishedUnit) then
+                    if finishedUnit.Blueprint.CategoriesHash.ANTIMISSILE then
                         RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TMD, finishedUnit)
-                    elseif EntityCategoryContains(categories.TACTICALMISSILEPLATFORM, finishedUnit) then
+                    elseif finishedUnit.Blueprint.CategoriesHash.TACTICALMISSILEPLATFORM then
                         RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TML, finishedUnit)
-                    elseif EntityCategoryContains(categories.ANTIAIR, finishedUnit) then
+                    elseif finishedUnit.Blueprint.CategoriesHash.ANTIAIR then
                         RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiAir, finishedUnit)
-                    elseif EntityCategoryContains(categories.INDIRECTFIRE, finishedUnit) then
+                    elseif finishedUnit.Blueprint.CategoriesHash.INDIRECTFIRE then
                         RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].IndirectFire, finishedUnit)
-                    elseif EntityCategoryContains(categories.DIRECTFIRE, finishedUnit) then
+                    elseif finishedUnit.Blueprint.CategoriesHash.DIRECTFIRE then
                         RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].DirectFire, finishedUnit)
-                    elseif EntityCategoryContains(categories.SHIELD, finishedUnit) then
+                    elseif finishedUnit.Blueprint.CategoriesHash.SHIELD then
                         RNGINSERT(aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Shields, finishedUnit)
                     end
                 end

@@ -319,6 +319,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Air AntiNavy BaseEnemyArea',
         PlatoonTemplate = 'RNGAI TorpBomberAttack',
+        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 960,
         InstanceCount = 4,
         BuilderType = 'Any',

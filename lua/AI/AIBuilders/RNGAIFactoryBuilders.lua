@@ -562,6 +562,7 @@ BuilderGroup {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.2 }},
             { UCBC, 'MinimumFactoryCheckRNG', { 'LocationType', 'Air'}},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
          },
         BuilderType = 'Any',
@@ -573,6 +574,31 @@ BuilderGroup {
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
                     'T2SupportAirFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Air T3 MainBase',
+        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        Priority = 1000,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.2 }},
+            { UCBC, 'MinimumFactoryCheckRNG', { 'LocationType', 'Air'}},
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = false,
+                AdjacencyPriority = {categories.ENERGYPRODUCTION},
+                BuildStructures = {
+                    'T3SupportAirFactory',
                 },
             }
         }
@@ -702,6 +728,7 @@ BuilderGroup {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.2 }},
             { UCBC, 'MinimumFactoryCheckRNG', { 'LocationType', 'Air'}},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR *  categories.TECH3 - categories.SUPPORTFACTORY }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
          },
         BuilderType = 'Any',
@@ -713,6 +740,31 @@ BuilderGroup {
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
                     'T2SupportAirFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Air T3 MainBase Large',
+        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        Priority = 1000,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Factories' }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.2 }},
+            { UCBC, 'MinimumFactoryCheckRNG', { 'LocationType', 'Air'}},
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = false,
+                AdjacencyPriority = {categories.ENERGYPRODUCTION},
+                BuildStructures = {
+                    'T3SupportAirFactory',
                 },
             }
         }

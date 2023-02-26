@@ -428,11 +428,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --RNGLOG('threatCountLimit is '..threatCountLimit)
                 if currentPlatPos then
                     local targetThreat = GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
-                    RNGLOG('Air threat at target position '..targetThreat)
-                    RNGLOG('Current Platoon threat '..self.CurrentPlatoonThreat)
+                    --RNGLOG('Air threat at target position '..targetThreat)
+                    --RNGLOG('Current Platoon threat '..self.CurrentPlatoonThreat)
                     if VDist3Sq(currentPlatPos, targetPos) > restrictedZone then
                         if (threatCountLimit < 6 ) and (VDist2Sq(currentPlatPos[1], currentPlatPos[2], startX, startZ) < 22500) and (targetThreat * 1.3 > self.CurrentPlatoonThreat) and platoonCount < platoonLimit and not aiBrain.CDRUnit.Caution then
-                            RNGLOG('Target air threat too high')
+                            --RNGLOG('Target air threat too high')
                             threatCountLimit = threatCountLimit + 1
                             self:MoveToLocation(aiBrain.BuilderManagers['MAIN'].Position, false)
                             coroutine.yield(80)
@@ -2537,9 +2537,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                     --RNGLOG('Merging with patoon count of '..platoonCount)
                     if VDist2Sq(platoonPos[1], platoonPos[3], mainBasePos[1], mainBasePos[3]) > 6400 then
                         positionThreat = GetThreatAtPosition(aiBrain, attackPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Naval')
-                        RNGLOG('* NavalAttackAIRNG targetThreat is '..positionThreat)
+                        --RNGLOG('* NavalAttackAIRNG targetThreat is '..positionThreat)
                         if positionThreat > self.CurrentPlatoonThreatAntiSurface then
-                            RNGLOG('* NavalAttackAIRNG attempting merge and formation ')
+                            --RNGLOG('* NavalAttackAIRNG attempting merge and formation ')
                             self:Stop()
                             local merged = self:MergeWithNearbyPlatoonsRNG('NavalAttackAIRNG', 120, platoonLimit)
                             if merged then
@@ -2666,7 +2666,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                         self.CurrentPlatoonThreatAntiNavy = self:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
                                         target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPos, 'Attack', self.EnemyRadius, categories.MOBILE * (categories.NAVAL + categories.AMPHIBIOUS) - categories.AIR - categories.SCOUT - categories.WALL, categoryList, false)
                                         IssueClearCommands(self:GetSquadUnits('Attack'))
-                                        RNGLOG('* NavalAttackAIRNG while pathing platoon threat is '..self.CurrentPlatoonThreatAntiSurface..' total antisurface threat of enemy'..totalThreat['AntiSurface']..'total antinaval threat is '..totalThreat['AntiNaval'])
+                                        --RNGLOG('* NavalAttackAIRNG while pathing platoon threat is '..self.CurrentPlatoonThreatAntiSurface..' total antisurface threat of enemy'..totalThreat['AntiSurface']..'total antinaval threat is '..totalThreat['AntiNaval'])
                                         if (self.CurrentPlatoonThreatAntiSurface < totalThreat['AntiSurface'] or self.CurrentPlatoonThreatAntiNavy < totalThreat['AntiNaval']) and (target and not target.Dead or acuUnit) then
                                             local alternatePos = false
                                             local mergePlatoon = false
@@ -2675,7 +2675,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                             elseif acuUnit then
                                                 targetPosition = acuUnit:GetPosition()
                                             end
-                                            RNGLOG('* NavalAttackAIRNG Attempt to run away from high threat')
+                                            --RNGLOG('* NavalAttackAIRNG Attempt to run away from high threat')
                                             --LOG('Naval AI : Current Platoon position is '..repr(platoonPos))
                                             --LOG('Naval AI : Avoid Position will be '..repr(RUtils.AvoidLocation(targetPosition, platoonPos,80)))
                                             self:SetPlatoonFormationOverride('NoFormation')
@@ -2845,7 +2845,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     self.CurrentPlatoonThreatAntiNavy = self:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
                                     target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPos, 'Attack', self.EnemyRadius, (categories.MOBILE + categories.STRUCTURE) - categories.AIR - categories.SCOUT - categories.WALL, categoryList, false)
                                     IssueClearCommands(self:GetSquadUnits('Attack'))
-                                    RNGLOG('* NavalAttackAIRNG platoon threat while at position is '..self.CurrentPlatoonThreatAntiSurface..' total antisurface threat of enemy'..totalThreat['AntiSurface']..'total antinaval threat is '..totalThreat['AntiNaval'])
+                                    --RNGLOG('* NavalAttackAIRNG platoon threat while at position is '..self.CurrentPlatoonThreatAntiSurface..' total antisurface threat of enemy'..totalThreat['AntiSurface']..'total antinaval threat is '..totalThreat['AntiNaval'])
                                     if (self.CurrentPlatoonThreatAntiSurface < totalThreat['AntiSurface'] or self.CurrentPlatoonThreatAntiNavy < totalThreat['AntiNaval']) and (target and not target.Dead or acuUnit) then
                                         local alternatePos = false
                                         local mergePlatoon = false
@@ -4200,7 +4200,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             RNGLOG('RNG ACU wants to build '..whatToBuild)
         end
         if borderWarning and buildLocation and whatToBuild then
-            IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+            IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
             borderWarning = false
         elseif buildLocation and whatToBuild then
             aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
@@ -4275,7 +4275,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         if hydroPresent then
             buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)
             if borderWarning and buildLocation and whatToBuild then
-                IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
                 borderWarning = false
             elseif buildLocation and whatToBuild then
                 aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
@@ -4286,7 +4286,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             for i=1, 2 do
                 buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)
                 if borderWarning and buildLocation and whatToBuild then
-                    IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                    IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
                     borderWarning = false
                 elseif buildLocation and whatToBuild then
                     aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
@@ -4340,7 +4340,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)
                 --RNGLOG('CommanderInitializeAIRNG : Insert Second energy production '..whatToBuild.. ' at '..repr(buildLocation))
                 if borderWarning and buildLocation and whatToBuild then
-                    IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                    IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
                     borderWarning = false
                 elseif buildLocation and whatToBuild then
                     aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
@@ -4455,7 +4455,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     --RNGLOG('CommanderInitializeAIRNG : whatToBuild '..whatToBuild)
                     --RNGLOG('CommanderInitializeAIRNG : Build Location '..repr(buildLocation))
                     if borderWarning and buildLocation and whatToBuild then
-                        IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                        IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
                         borderWarning = false
                     elseif buildLocation and whatToBuild then
                         aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
@@ -4466,7 +4466,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     -- This is a backup to avoid a power stall
                     buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, false, categories.STRUCTURE * categories.FACTORY, 12, true)
                     if borderWarning and buildLocation and whatToBuild then
-                        IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                        IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
                         borderWarning = false
                     elseif buildLocation and whatToBuild then
                         aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
@@ -4483,7 +4483,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             --RNGLOG('CommanderInitializeAIRNG : not hydro and close markers greater than 3, Try to build land factory')
             buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1LandFactory', eng, true, categories.MASSEXTRACTION, 15, true)
             if borderWarning and buildLocation and whatToBuild then
-                IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
                 borderWarning = false
             elseif buildLocation and whatToBuild then
                 aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
@@ -4569,7 +4569,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if aiBrain.MapSize >=20 or aiBrain.BrainIntel.AirPlayer then
                         buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 15, true)
                         if borderWarning and buildLocation and whatToBuild then
-                            IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                            IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
                             borderWarning = false
                         elseif buildLocation and whatToBuild then
                             aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
@@ -4580,7 +4580,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     else
                         buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1LandFactory', eng, true, categories.HYDROCARBON, 15, true)
                         if borderWarning and buildLocation and whatToBuild then
-                            IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                            IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
                             borderWarning = false
                         elseif buildLocation and whatToBuild then
                             aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
@@ -4592,7 +4592,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             --RNGLOG("Attempt to build air factory")
                             buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 25, true)
                             if borderWarning and buildLocation and whatToBuild then
-                                IssueBuildMobile({eng}, {buildLocation[1],GetSurfaceHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                                IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
                                 borderWarning = false
                             elseif buildLocation and whatToBuild then
                                 aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
@@ -4899,6 +4899,10 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+        if self.MovementLayer == 'Water' or self.MovementLayer == 'Amphibious' then
+            self.CurrentPlatoonThreatAntiSurface = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+            self.CurrentPlatoonThreatAntiNavy = self:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
+        end
         -- This is just to make the platoon functions a little easier to read
         if not self.EnemyRadius then
             self.EnemyRadius = 55
@@ -7893,7 +7897,6 @@ Platoon = Class(RNGAIPlatoonClass) {
             if aPlatDistance < closestDistance then
                 if angleTargetPos then
                     if RUtils.GetAngleRNG(platPos[1], platPos[3], aPlatPos[1], aPlatPos[3], angleTargetPos[1], angleTargetPos[3]) > 0.6 then
-                        RNGLOG('Found angle for platoon, naval most likely')
                         closestPlatoon = aPlat
                         closestDistance = aPlatDistance
                         closestAPlatPos = aPlatPos

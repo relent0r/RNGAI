@@ -276,10 +276,10 @@ function AIBuildAvoidRNG(aiBrain, builder, buildingType , closeToBuilder, relati
     local factionIndex = aiBrain:GetFactionIndex()
 
     local function normalposition(vec)
-        return {vec[1],GetSurfaceHeight(vec[1],vec[2]),vec[2]}
+        return {vec[1],GetTerrainHeight(vec[1],vec[2]),vec[2]}
     end
     local function heightbuildpos(vec)
-        return {vec[1],vec[2],GetSurfaceHeight(vec[1],vec[2])}
+        return {vec[1],vec[2],GetTerrainHeight(vec[1],vec[2])}
     end
     --LOG('AIBuildAvoidRNG Checking if close to builder')
     if closeToBuilder then
@@ -354,10 +354,10 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
         end
     end
     local function normalposition(vec)
-        return {vec[1],GetSurfaceHeight(vec[1],vec[2]),vec[2]}
+        return {vec[1],GetTerrainHeight(vec[1],vec[2]),vec[2]}
     end
     local function heightbuildpos(vec)
-        return {vec[1],vec[2],GetSurfaceHeight(vec[1],vec[2])}
+        return {vec[1],vec[2],GetTerrainHeight(vec[1],vec[2])}
     end
     if whatToBuild then
         local unitSize = aiBrain:GetUnitBlueprint(whatToBuild).Physics
