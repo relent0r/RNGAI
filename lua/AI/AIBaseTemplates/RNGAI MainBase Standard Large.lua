@@ -88,6 +88,7 @@ BaseBuilderTemplate {
 
         -- Land Factory Builders --
         'RNGAI Factory Builder Land Large',
+        'RNGAI Reaction Tanks',
         'RNGAI LandBuilder T1',
         'RNGAI LandBuilder T2',
         'RNGAI LandBuilder T3',

@@ -5819,16 +5819,33 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     GetCallBackCheck = function(self, unit)
-        local function FrigateRetreat(unit, instigator)
+        local function AntiNavalRetreat(unit, instigator)
                 --RNGLOG('AntiNavy Threat is '..unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy)
-                if instigator and instigator.IsUnit and not IsDestroyed(instigator) and instigator.CategoriesHash.ANTINAVY and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy == 0 then
-                    --RNGLOG('Naval Callback We want to retreat '..unit.UnitId)
+                if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.CategoriesHash.ANTINAVY 
+                and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy == 0 and (not unit.PlatoonHandle.RetreatOrdered) then
+                    RNGLOG('Naval Callback AntiNavy We want to retreat '..unit.UnitId)
                     unit.PlatoonHandle.RetreatOrdered = true
                 end
             end
+        local function AntiAirRetreat(unit, instigator)
+            --RNGLOG('AntiNavy Threat is '..unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy)
+            if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.CategoriesHash.ANTINAVY and instigator.CategoriesHash.AIR
+            and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiAir == 0 and (not unit.PlatoonHandle.RetreatOrdered) then
+                RNGLOG('Naval Callback AntiAir We want to retreat '..unit.UnitId)
+                unit.PlatoonHandle.RetreatOrdered = true
+            end
+        end
         if unit.Blueprint.CategoriesHash.TECH1 and unit.Blueprint.CategoriesHash.FRIGATE then
             --RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
-            unit:AddOnDamagedCallback( FrigateRetreat, nil, 100)
+            unit:AddOnDamagedCallback( AntiNavalRetreat, nil, 100)
+        end
+        if unit.Blueprint.CategoriesHash.TECH2 and unit.Blueprint.CategoriesHash.CRUISER then
+            --RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
+            unit:AddOnDamagedCallback( AntiNavalRetreat, nil, 100)
+        end
+        if unit.Blueprint.CategoriesHash.TECH2 and unit.Blueprint.CategoriesHash.DESTROYER then
+            --RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
+            unit:AddOnDamagedCallback( AntiAirRetreat, nil, 100)
         end
     end,
 }

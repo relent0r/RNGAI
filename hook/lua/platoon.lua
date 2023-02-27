@@ -2604,66 +2604,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, (categories.ANTINAVY + categories.NAVAL + categories.AMPHIBIOUS) - categories.SCOUT - categories.ENGINEER, platoonPos, self.EnemyRadius, 'Enemy')
                                     if enemyUnitCount > 0 or self.RetreatOrdered then
                                         if self.RetreatOrdered then
-                                            self:SetPlatoonFormationOverride('NoFormation')
-                                            self:Stop()
-                                            self:MoveToLocation(mainBasePos, false)
-                                            coroutine.yield(60)
-                                            platoonPos = GetPlatoonPosition(self)
-                                            --RNGLOG('Naval AI : Find platoon to merge with')
-                                            mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('NavalAttackAIRNG', 122500)
-                                            if alternatePos then
-                                                RUtils.CenterPlatoonUnitsRNG(self, alternatePos)
-                                            else
-                                                --RNGLOG('No Naval alternatePos found')
-                                            end
-                                            if alternatePos then
-                                                local Lastdist
-                                                local dist
-                                                local Stuck = 0
-                                                while PlatoonExists(aiBrain, self) do
-                                                    coroutine.yield(1)
-                                                    --RNGLOG('Moving to alternate position')
-                                                    --RNGLOG('We are '..VDist3(PlatoonPosition, alternatePos)..' from alternate position')
-                                                    coroutine.yield(10)
-                                                    if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
-                                                        --RNGLOG('MergeWith Platoon position updated')
-                                                        alternatePos = GetPlatoonPosition(mergePlatoon)
-                                                    end
-                                                    IssueClearCommands(GetPlatoonUnits(self))
-                                                    self:MoveToLocation(alternatePos, false)
-                                                    platoonPos = GetPlatoonPosition(self)
-                                                    dist = VDist2Sq(alternatePos[1], alternatePos[3], platoonPos[1], platoonPos[3])
-                                                    if dist < 225 then
-                                                        self:Stop()
-                                                        if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
-                                                            self:MergeWithNearbyPlatoonsRNG('NavalAttackAIRNG', 60, platoonLimit)
-                                                        end
-                                                        if self.RetreatOrdered then
-                                                            self.RetreatOrdered = false
-                                                        end
-                                                    --RNGLOG('Arrived at either friendly Naval Attack')
-                                                        break
-                                                    end
-                                                    if Lastdist ~= dist then
-                                                        Stuck = 0
-                                                        Lastdist = dist
-                                                    else
-                                                        Stuck = Stuck + 1
-                                                        if Stuck > 15 then
-                                                            self:Stop()
-                                                            if self.RetreatOrdered then
-                                                                self.RetreatOrdered = false
-                                                            end
-                                                            break
-                                                        end
-                                                    end
-                                                    coroutine.yield(30)
-                                                    --RNGLOG('End of movement loop we are '..VDist3(PlatoonPosition, alternatePos)..' from alternate position')
-                                                end
-                                            end
+                                            self:NavalRetreatRNG(aiBrain)
                                         end
                                         self.CurrentPlatoonThreatAntiSurface = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                                         self.CurrentPlatoonThreatAntiNavy = self:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
+                                        self.CurrentPlatoonThreatAntiAir = self:CalculatePlatoonThreat('Air', categories.ALLUNITS)
                                         target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPos, 'Attack', self.EnemyRadius, categories.MOBILE * (categories.NAVAL + categories.AMPHIBIOUS) - categories.AIR - categories.SCOUT - categories.WALL, categoryList, false)
                                         IssueClearCommands(self:GetSquadUnits('Attack'))
                                         --RNGLOG('* NavalAttackAIRNG while pathing platoon threat is '..self.CurrentPlatoonThreatAntiSurface..' total antisurface threat of enemy'..totalThreat['AntiSurface']..'total antinaval threat is '..totalThreat['AntiNaval'])
@@ -2779,6 +2724,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                                                 self:MoveToLocation(path[i], false)
                                                 break
                                             end
+                                            if self.RetreatOrdered then
+                                                self:NavalRetreatRNG(aiBrain)
+                                            end
                                             coroutine.yield(25)
                                         end
                                     end
@@ -2843,6 +2791,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if enemyUnitCount > 0 then
                                     self.CurrentPlatoonThreatAntiSurface = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                                     self.CurrentPlatoonThreatAntiNavy = self:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
+                                    self.CurrentPlatoonThreatAntiAir = self:CalculatePlatoonThreat('Air', categories.ALLUNITS)
                                     target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPos, 'Attack', self.EnemyRadius, (categories.MOBILE + categories.STRUCTURE) - categories.AIR - categories.SCOUT - categories.WALL, categoryList, false)
                                     IssueClearCommands(self:GetSquadUnits('Attack'))
                                     --RNGLOG('* NavalAttackAIRNG platoon threat while at position is '..self.CurrentPlatoonThreatAntiSurface..' total antisurface threat of enemy'..totalThreat['AntiSurface']..'total antinaval threat is '..totalThreat['AntiNaval'])
@@ -2956,6 +2905,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                                             end
                                         else
                                             break
+                                        end
+                                        if self.RetreatOrdered then
+                                            self:NavalRetreatRNG(aiBrain)
                                         end
                                         coroutine.yield(25)
                                     end
@@ -4902,6 +4854,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         if self.MovementLayer == 'Water' or self.MovementLayer == 'Amphibious' then
             self.CurrentPlatoonThreatAntiSurface = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
             self.CurrentPlatoonThreatAntiNavy = self:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
+            self.CurrentPlatoonThreatAntiAir = self:CalculatePlatoonThreat('Air', categories.ALLUNITS)
         end
         -- This is just to make the platoon functions a little easier to read
         if not self.EnemyRadius then
@@ -7800,6 +7753,73 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                         IssueClearCommands(GetPlatoonUnits(self))
                     end
+                end
+            end
+        end
+    end,
+
+    NavalRetreatRNG = function(self, aiBrain)
+        if self.RetreatOrdered then
+            RNGLOG('Naval Retreat Ordered During combat')
+            self:SetPlatoonFormationOverride('NoFormation')
+            self:Stop()
+            self:MoveToLocation(mainBasePos, false)
+            RNGLOG('Naval Retreat move back towards main base')
+            coroutine.yield(60)
+            local platoonPos = GetPlatoonPosition(self)
+            --RNGLOG('Naval AI : Find platoon to merge with')
+            local mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('NavalAttackAIRNG', 122500)
+            if alternatePos then
+                RNGLOG('Naval Retreat merge platoon found')
+                RUtils.CenterPlatoonUnitsRNG(self, alternatePos)
+            else
+                --RNGLOG('No Naval alternatePos found')
+            end
+            if alternatePos then
+                local Lastdist
+                local dist
+                local Stuck = 0
+                while PlatoonExists(aiBrain, self) do
+                    coroutine.yield(1)
+                    --RNGLOG('Moving to alternate position')
+                    --RNGLOG('We are '..VDist3(PlatoonPosition, alternatePos)..' from alternate position')
+                    coroutine.yield(10)
+                    if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
+                        --RNGLOG('MergeWith Platoon position updated')
+                        alternatePos = GetPlatoonPosition(mergePlatoon)
+                    end
+                    IssueClearCommands(GetPlatoonUnits(self))
+                    self:MoveToLocation(alternatePos, false)
+                    platoonPos = GetPlatoonPosition(self)
+                    dist = VDist2Sq(alternatePos[1], alternatePos[3], platoonPos[1], platoonPos[3])
+                    if dist < 225 then
+                        self:Stop()
+                        if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
+                            self:MergeWithNearbyPlatoonsRNG('NavalAttackAIRNG', 60, platoonLimit)
+                        end
+                        if self.RetreatOrdered then
+                            RNGLOG('Naval Retreat has retreated, setting retreat ordered back to false')
+                            self.RetreatOrdered = false
+                        end
+                    --RNGLOG('Arrived at either friendly Naval Attack')
+                        break
+                    end
+                    if Lastdist ~= dist then
+                        Stuck = 0
+                        Lastdist = dist
+                    else
+                        Stuck = Stuck + 1
+                        if Stuck > 15 then
+                            self:Stop()
+                            if self.RetreatOrdered then
+                                RNGLOG('Naval Retreat has got stuck, setting retreat ordered back to false')
+                                self.RetreatOrdered = false
+                            end
+                            break
+                        end
+                    end
+                    coroutine.yield(30)
+                    --RNGLOG('End of movement loop we are '..VDist3(PlatoonPosition, alternatePos)..' from alternate position')
                 end
             end
         end
