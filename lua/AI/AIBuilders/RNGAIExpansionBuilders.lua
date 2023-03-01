@@ -472,7 +472,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'LessThanOneLandExpansion', { } },
+            { UCBC, 'LessThanLandExpansions', { 1 } },
             { UCBC, 'StartLocationNeedsEngineerRNG', { 'LocationType', 500, -1000, 0, 2, 'AntiSurface' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },            
         },
@@ -504,6 +504,7 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
+            { UCBC, 'LessThanLandExpansions', { 3 } },
             { UCBC, 'DynamicExpansionAvailableRNG', { } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

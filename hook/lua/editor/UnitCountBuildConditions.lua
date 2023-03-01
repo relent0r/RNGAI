@@ -130,7 +130,7 @@ function NavalBaseLimitRNG(aiBrain, limit)
     return CompareBody(expBaseCount, limit, '<')
 end
 
-function LessThanOneLandExpansion(aiBrain)
+function LessThanLandExpansions(aiBrain, expansionCount)
     -- We are checking if we have any expansions.
     -- I use this to rush the first expansion on large maps without having engineers trying to make expansions everywhere.
     local count = 0
@@ -141,7 +141,7 @@ function LessThanOneLandExpansion(aiBrain)
         if v.BaseType ~= 'MAIN' and v.BaseType ~= 'Naval Area' then
             count = count + 1
         end
-        if count > 0 then
+        if count >= expansionCount then
             --RNGLOG('We have 1 expansion called '..v.BaseType)
             return false
         end

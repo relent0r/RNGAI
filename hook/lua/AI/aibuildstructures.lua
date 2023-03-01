@@ -18,6 +18,9 @@ function AddToBuildQueueRNG(aiBrain, builder, whatToBuild, buildLocation, relati
         --LOG('BorderWarning build')
         IssueBuildMobile({builder}, {buildLocation[1], buildLocation[3], buildLocation[2]}, whatToBuild, {})
     else
+        if whatToBuild == 'ueb4202' then
+            RNGLOG('Build location for shield is '..repr(buildLocation))
+        end
         aiBrain:BuildStructure(builder, whatToBuild, buildLocation, false)
     end
     local newEntry = {whatToBuild, buildLocation, relative, borderWarning}
@@ -27,7 +30,8 @@ end
 function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
     local factionIndex = aiBrain:GetFactionIndex()
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
-    --RNGLOG('AIBuildBaseTemplateOrderedRNG building '..whatToBuild)
+    RNGLOG('AIBuildBaseTemplateOrderedRNG building '..whatToBuild)
+    RNGLOG('Position is '..repr(reference))
     if whatToBuild then
         if IsResource(buildingType) then
             return AIExecuteBuildStructureRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference)

@@ -3701,14 +3701,14 @@ Platoon = Class(RNGAIPlatoonClass) {
             elseif cons.DynamicExpansion then
                 reference, refName = RUtils.AIFindDynamicExpansionPointRNG(aiBrain, cons.LocationType,
                         (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
-                --RNGLOG('Dynamic Expansion Engineer Platoon call')
-                --RNGLOG('refName is : '..refName)
+                RNGLOG('Dynamic Expansion Engineer Platoon call')
+                RNGLOG('refName is : '..repr(refName))
                 if not reference or not refName then
-                    --RNGLOG('Dynamic Expansion no reference for refName')
+                    RNGLOG('Dynamic Expansion no reference for refName')
                     self:PlatoonDisband()
                     return
                 end
-                --RNGLOG('Dynamic Expansion Position is '..repr(reference))
+                RNGLOG('Dynamic Expansion Position is '..repr(reference))
             elseif cons.NearMarkerType == 'Expansion Area' then
                 reference, refName = RUtils.AIFindExpansionAreaNeedsEngineerRNG(aiBrain, cons.LocationType,
                         (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
