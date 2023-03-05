@@ -130,7 +130,7 @@ function NavalBaseLimitRNG(aiBrain, limit)
     return CompareBody(expBaseCount, limit, '<')
 end
 
-function LessThanOneLandExpansion(aiBrain)
+function LessThanLandExpansions(aiBrain, expansionCount)
     -- We are checking if we have any expansions.
     -- I use this to rush the first expansion on large maps without having engineers trying to make expansions everywhere.
     local count = 0
@@ -141,7 +141,7 @@ function LessThanOneLandExpansion(aiBrain)
         if v.BaseType ~= 'MAIN' and v.BaseType ~= 'Naval Area' then
             count = count + 1
         end
-        if count > 0 then
+        if count >= expansionCount then
             --RNGLOG('We have 1 expansion called '..v.BaseType)
             return false
         end
@@ -633,7 +633,6 @@ function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory, 
             return true
         end
     end
-    local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
     local baseposition = aiBrain.BuilderManagers[locationType].FactoryManager.Location
     --RNGLOG('Searching water path from base ['..locationType..'] position '..repr(baseposition))
     local EnemyNavalUnits = aiBrain:GetUnitsAroundPoint(unitCategory, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ, 'Enemy')
@@ -641,7 +640,6 @@ function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory, 
     for _, EnemyUnit in EnemyNavalUnits do
         if not EnemyUnit.Dead then
             --RNGLOG('checking enemy factories '..repr(EnemyUnit:GetPosition()))
-            --path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', baseposition, EnemyUnit:GetPosition(), 1)
             --RNGLOG('reason'..repr(reason))
             if NavUtils.CanPathTo('Water', baseposition, EnemyUnit:GetPosition()) then
                 --RNGLOG('Found a water path from base ['..locationType..'] to enemy position '..repr(EnemyUnit:GetPosition()))
@@ -906,6 +904,9 @@ function FactoryGreaterAtLocationRNG(aiBrain, locationType, unitCount, unitCateg
 end
 
 function ForcePathLimitRNG(aiBrain, locationType, unitCategory, pathType, unitCount)
+    if not aiBrain:GetCurrentEnemy() then
+        return true
+    end
     local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
     local OwnIndex = aiBrain:GetArmyIndex()
     if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] ~= pathType and FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, '>') then
@@ -917,9 +918,9 @@ end
 
 function ACUOnField(aiBrain, gun)
     for k, v in aiBrain.EnemyIntel.ACU do
-        if v.OnField and v.Gun and gun then
+        if (not v.Unit.Dead) and v.OnField and v.Gun and gun then
             return true
-        elseif v.OnField and not gun then
+        elseif (not v.Unit.Dead) and v.OnField and not gun then
             return true
         end
     end
@@ -928,7 +929,7 @@ end
 
 function ACUCloseCombat(aiBrain, bool)
     for k, v in aiBrain.EnemyIntel.ACU do
-        if not v.Ally then
+        if (not v.Unit.Dead) and (not v.Ally) then
             if bool == true and v.CloseCombat then
                 return true
             elseif bool == false and not v.CloseCombat then
@@ -1284,17 +1285,20 @@ end
 function DefensivePointShieldRequired(aiBrain, locationType)
     for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[2] do
         local unitCount = 0
-        if next(v.DirectFire) then
-            for c, b in v.DirectFire do
+        for _, b in v.DirectFire do
+            if b and not b.Dead then
                 unitCount = unitCount + 1
-                --RNGLOG('We have a directfire unit at this defensive point, current count is '..unitCount)
             end
         end
         if unitCount > 1 then
-            if not next(v.Shields) then
-                --RNGLOG('We can have a shield at this defensive point')
-                return true
+            for _, b in v.Shields do
+                if b and not b.Dead then
+                    return false
+                end
             end
+            --RNGLOG('DefensivePoint needs shield unit count is '..unitCount)
+            --RNGLOG('DefensivePoint needs shield '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[2][k].DirectFire))
+            return true
         end
     end
     return false
@@ -1319,6 +1323,56 @@ function PlatoonTemplateExist(aiBrain, template)
     return false
 end
 
+function DefensiveClusterCloseRNG(aiBrain, locationType)
+    if aiBrain.BuilderManagers[locationType].FactoryManager.Location then
+        if RUtils.DefensiveClusterCheck(aiBrain, aiBrain.BuilderManagers[locationType].FactoryManager.Location) then
+            return true
+        end
+    end
+    return false
+end
+
+function MinimumFactoryCheckRNG(aiBrain, locationType, structureType)
+    if not aiBrain.BrainIntel.AirPlayer then
+        local factoryCount = 0
+        if not aiBrain:GetCurrentEnemy() then
+            return true
+        end
+        local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
+        local OwnIndex = aiBrain:GetArmyIndex()
+        if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+            --RNGLOG('Can Path to enemy')
+            if structureType == 'Air' then
+                if aiBrain.MapSize == 5 then
+                    --RNGLOG('Map size is 5')
+                    if aiBrain.BuilderManagers[locationType].FactoryManager.LocationActive then
+                        factoryCount = factoryCount + aiBrain.BuilderManagers[locationType].FactoryManager:GetNumCategoryFactories(categories.LAND * categories.FACTORY)
+                        --RNGLOG('Land factory count is '..factoryCount)
+                    end
+                    if factoryCount < 5 then
+                        return false
+                    end
+                elseif aiBrain.MapSize == 10 then
+                    if aiBrain.BuilderManagers[locationType].FactoryManager.LocationActive then
+                        factoryCount = factoryCount + aiBrain.BuilderManagers[locationType].FactoryManager:GetNumCategoryFactories(categories.LAND * categories.FACTORY)
+                    end
+                    if factoryCount < 4 then
+                        return false
+                    end
+                elseif aiBrain.MapSize == 20 then
+                    if aiBrain.BuilderManagers[locationType].FactoryManager.LocationActive then
+                        factoryCount = factoryCount + aiBrain.BuilderManagers[locationType].FactoryManager:GetNumCategoryFactories(categories.LAND * categories.FACTORY)
+                    end
+                    if factoryCount < 3 then
+                        return false
+                    end
+                end
+                
+            end
+        end
+    end
+    return true
+end
 --[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.

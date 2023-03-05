@@ -193,10 +193,11 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 BuildClose = false,
-                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
-                AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH2,
                 maxUnits = 1,
                 maxRadius = 35,
+                NearDefensivePoints = true,
+                Type = 'Land',
+                Tier = 1,
                 BuildStructures = {
                     'T2Artillery',
                 },
@@ -298,9 +299,10 @@ BuilderGroup {
         Priority = 825,
         InstanceCount = 1,
         BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
+            { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.1}},
+            { UCBC, 'CheckTargetInRangeRNG', { 'LocationType', 'T2StrategicMissile', categories.COMMAND + categories.STRUCTURE * (categories.TECH2 + categories.TECH3) } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1}},
             --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 400, 4000 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.80}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -417,7 +419,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1 Defence Restricted Breach Air Expansion',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 950,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.ANTIAIR}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
@@ -443,7 +445,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1 Defence Restricted Breach Sea Expansion',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 950,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.ANTINAVY}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'NAVAL' }},
@@ -910,7 +912,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
-            { UCBC, 'EnemyUnitsGreaterAtLocationRadiusRNG', {  140, 'LocationType', 0, categories.STRUCTURE * categories.TECH2 * categories.DEFENSE }},
+            { UCBC, 'DefensiveClusterCloseRNG', {'LocationType'}},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.STRUCTURE * categories.TECH2 * categories.ARTILLERY}},
         },
         BuilderData = {
@@ -1039,7 +1041,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Defence Sea - Perimeter Naval',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
         PriorityFunction = NavalExpansionAdjust,
         Priority = 650,
         InstanceCount = 1,

@@ -281,3 +281,22 @@ function FrigateRaidTrue(aiBrain)
     end
     return false
 end
+
+function AirPlayerCheck(aiBrain, locationType, unitCount, unitCategory)
+
+    if aiBrain.BrainIntel.AirPlayer then
+        local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+        if not factoryManager then
+            WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
+            return true
+        end
+        if factoryManager.LocationActive then
+            local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
+            if  numUnits >= unitCount then
+                --RNGLOG('We are air player and have hit land factory limit')
+                return false
+            end
+        end
+    end
+    return true
+end

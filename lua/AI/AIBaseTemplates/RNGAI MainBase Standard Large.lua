@@ -88,6 +88,7 @@ BaseBuilderTemplate {
 
         -- Land Factory Builders --
         'RNGAI Factory Builder Land Large',
+        'RNGAI Reaction Tanks',
         'RNGAI LandBuilder T1',
         'RNGAI LandBuilder T2',
         'RNGAI LandBuilder T3',
@@ -144,9 +145,15 @@ BaseBuilderTemplate {
             Gate = 1,
         },
         MassToFactoryValues = {
-            T1Value = 5,
-            T2Value = 15,
-            T3Value = 28,
+            T1LandValue = 4.5,
+            T2LandValue = 12,
+            T3LandValue = 27,
+            T1AirValue = 3.5,
+            T2AirValue = 12,
+            T3AirValue = 26,
+            T1NavalValue = 4.5,
+            T2NavalValue = 15,
+            T3NavalValue = 32,
         },
 
     },

@@ -36,9 +36,15 @@ BaseBuilderTemplate {
             SCU = 0,
         },
         MassToFactoryValues = {
-            T1Value = 7,
-            T2Value = 19,
-            T3Value = 28
+            T1LandValue = 7,
+            T2LandValue = 19,
+            T3LandValue = 28,
+            T1AirValue = 7,
+            T2AirValue = 19,
+            T3AirValue = 28,
+            T1NavalValue = 6,
+            T2NavalValue = 25,
+            T3NavalValue = 45,
         },
     },
     ExpansionFunction = function(aiBrain, location, markerType)

@@ -74,10 +74,10 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
         if reason == 'NoGraph' then
             result = true
         elseif VDist2(pos[1], pos[3], destination[1], destination[3]) < 200 then
-            SPEW('* AI-RNG: EngineerMoveWithSafePath(): executing CanPathTo(). LUA GenerateSafePathTo returned: ('..repr(reason)..') '..VDist2(pos[1], pos[3], destination[1], destination[3]))
+            --SPEW('* AI-RNG: EngineerMoveWithSafePath(): executing CanPathTo(). LUA GenerateSafePathTo returned: ('..repr(reason)..') '..VDist2(pos[1], pos[3], destination[1], destination[3]))
             -- be really sure we don't try a pathing with a destoryed c-object
             if IsDestroyed(unit) then
-                SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
+                --SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
                 return false
             end
             result, navReason = NavUtils.CanPathTo('Amphibious', pos, destination)
@@ -94,7 +94,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
     and unit.PlatoonHandle and not EntityCategoryContains(categories.COMMAND, unit) then
         -- If we can't path to our destination, we need, rather than want, transports
         local needTransports = not result and reason ~= 'PathOK'
-        if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 250 * 250 then
+        if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 295 * 295 then
             needTransports = true
         end
 
@@ -259,10 +259,10 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
         if reason == 'NoGraph' then
             result = true
         elseif VDist2Sq(pos[1], pos[3], destination[1], destination[3]) < 300*300 then
-            SPEW('* AI-RNG: EngineerMoveWithSafePath(): executing CanPathTo(). LUA GenerateSafePathTo returned: ('..repr(reason)..') '..VDist2Sq(pos[1], pos[3], destination[1], destination[3]))
+            --SPEW('* AI-RNG: EngineerMoveWithSafePath(): executing CanPathTo(). LUA GenerateSafePathTo returned: ('..repr(reason)..') '..VDist2Sq(pos[1], pos[3], destination[1], destination[3]))
             -- be really sure we don't try a pathing with a destoryed c-object
             if IsDestroyed(eng) then
-                SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
+                --SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
                 return false
             end
             result, navReason = NavUtils.CanPathTo('Amphibious', pos, destination)

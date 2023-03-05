@@ -896,8 +896,6 @@ function GenerateMapMarkers()
 
     --create land expansions
     RNGAIMarkerTable["LandExpansions"] = AIMarkerGenerator.CreateLandExpansions()
-    LOG('Generated Land Expansions'..repr(RNGAIMarkerTable.LandExpansions))
-
 end
 
 function GetMap()

@@ -27,7 +27,6 @@ end
 function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
     local factionIndex = aiBrain:GetFactionIndex()
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
-    --RNGLOG('AIBuildBaseTemplateOrderedRNG building '..whatToBuild)
     if whatToBuild then
         if IsResource(buildingType) then
             return AIExecuteBuildStructureRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference)
@@ -248,13 +247,12 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
         end
     end
     -- if we have a location, build!
-    if location and IsResource(buildingType) then
+    if location then
         local borderWarning = false
         local relativeLoc = BuildToNormalLocation(location)
         if relative then
             relativeLoc = {relativeLoc[1] + relativeTo[1], relativeLoc[2] + relativeTo[2], relativeLoc[3] + relativeTo[3]}
         end
-        -- Need to update this to playable_area as it turns out that its 8 from that not the scenarioinfo size. See regor_highlands.
         if relativeLoc[1] - playableArea[1] <= 8 or relativeLoc[1] >= playableArea[3] - 8 or relativeLoc[3] - playableArea[2] <= 8 or relativeLoc[3] >= playableArea[4] - 8 then
             --RNGLOG('Playable Area 1, 3 '..repr(playableArea))
             --RNGLOG('Scenario Info 1, 3 '..repr(ScenarioInfo.size))
@@ -263,14 +261,6 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
         end
         -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
         AddToBuildQueueRNG(aiBrain, builder, whatToBuild, NormalToBuildLocation(relativeLoc), false, borderWarning)
-        return true
-    elseif location then
-        local relativeLoc = BuildToNormalLocation(location)
-        if relative then
-            relativeLoc = {relativeLoc[1] + relativeTo[1], relativeLoc[2] + relativeTo[2], relativeLoc[3] + relativeTo[3]}
-        end
-        -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
-        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, NormalToBuildLocation(relativeLoc), false)
         return true
     end
     -- At this point we're out of options, so move on to the next thing
@@ -285,10 +275,10 @@ function AIBuildAvoidRNG(aiBrain, builder, buildingType , closeToBuilder, relati
     local factionIndex = aiBrain:GetFactionIndex()
 
     local function normalposition(vec)
-        return {vec[1],GetSurfaceHeight(vec[1],vec[2]),vec[2]}
+        return {vec[1],GetTerrainHeight(vec[1],vec[2]),vec[2]}
     end
     local function heightbuildpos(vec)
-        return {vec[1],vec[2],GetSurfaceHeight(vec[1],vec[2])}
+        return {vec[1],vec[2],GetTerrainHeight(vec[1],vec[2])}
     end
     --LOG('AIBuildAvoidRNG Checking if close to builder')
     if closeToBuilder then
@@ -363,10 +353,10 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
         end
     end
     local function normalposition(vec)
-        return {vec[1],GetSurfaceHeight(vec[1],vec[2]),vec[2]}
+        return {vec[1],GetTerrainHeight(vec[1],vec[2]),vec[2]}
     end
     local function heightbuildpos(vec)
-        return {vec[1],vec[2],GetSurfaceHeight(vec[1],vec[2])}
+        return {vec[1],vec[2],GetTerrainHeight(vec[1],vec[2])}
     end
     if whatToBuild then
         local unitSize = aiBrain:GetUnitBlueprint(whatToBuild).Physics
@@ -381,8 +371,8 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
                 if aiBrain.EconomyMonitorThread then
                     local currentEnergyTrend = aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime
                     --RNGLOG('EnergyTrend when going to build T1 power '..currentEnergyTrend)
-                    --RNGLOG('Amount of power needed is '..(60 - currentEnergyTrend))
-                    local energyNumber = 60 - currentEnergyTrend
+                    --RNGLOG('Amount of power needed is '..(120 - currentEnergyTrend))
+                    local energyNumber = 120 - currentEnergyTrend
                     scaleCount = math.ceil(energyNumber/20)
                 end
             end
@@ -567,7 +557,7 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
         if cons.AdjRequired then
             return false
         else
-            return AIExecuteBuildStructure(aiBrain, builder, buildingType, builder, true,  buildingTemplate, baseTemplate)
+            return AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, builder, true,  buildingTemplate, baseTemplate)
         end
     end
     return false
@@ -577,13 +567,13 @@ function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructio
     local radius = constructionData.ExpansionRadius or 100
     # PBM Style expansion bases here
     if aiBrain.HasPlatoonList then
-    # Figure out what type of builders to import
-        local expansionTypes = constructionData.ExpansionTypes
-    if not expansionTypes then
-        expansionTypes = { 'Air', 'Land', 'Sea', 'Gate' }
-    end
+        # Figure out what type of builders to import
+            local expansionTypes = constructionData.ExpansionTypes
+        if not expansionTypes then
+            expansionTypes = { 'Air', 'Land', 'Sea', 'Gate' }
+        end
 
-    # Check if it already exists
+        # Check if it already exists
         for k,v in aiBrain.PBM.Locations do
             if v.LocationType == baseName then
                 return
@@ -614,17 +604,17 @@ function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructio
 
     else
         if not aiBrain.BuilderManagers or aiBrain.BuilderManagers[baseName] or not builder.BuilderManagerData then
-            #LOG('*AI DEBUG: ARMY ' .. aiBrain:GetArmyIndex() .. ': New Engineer for expansion base - ' .. baseName)
-            builder.BuilderManagerData.EngineerManager:RemoveUnit(builder)
-            aiBrain.BuilderManagers[baseName].EngineerManager:AddUnit(builder, true)
+            --LOG('*AI DEBUG: ARMY ' .. aiBrain:GetArmyIndex() .. ': New Engineer for expansion base - ' .. baseName)
+            builder.BuilderManagerData.EngineerManager:RemoveUnitRNG(builder)
+            aiBrain.BuilderManagers[baseName].EngineerManager:AddUnitRNG(builder, true)
             return
         end
 
         aiBrain:AddBuilderManagers(position, radius, baseName, true)
 
         # Move the engineer to the new base managers
-        builder.BuilderManagerData.EngineerManager:RemoveUnit(builder)
-        aiBrain.BuilderManagers[baseName].EngineerManager:AddUnit(builder, true)
+        builder.BuilderManagerData.EngineerManager:RemoveUnitRNG(builder)
+        aiBrain.BuilderManagers[baseName].EngineerManager:AddUnitRNG(builder, true)
 
         # Iterate through bases finding the value of each expansion
         local baseValues = {}
@@ -651,7 +641,7 @@ function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructio
 
         # Error if no pick
         if not pick then
-            --RNGLOG('*AI DEBUG: ARMY ' .. aiBrain:GetArmyIndex() .. ': Layer Preference - ' .. per .. ' - yielded no base types at - ' .. locationType)
+            RNGLOG('*AI DEBUG: ARMY ' .. aiBrain:GetArmyIndex() .. ': Layer Preference - ' .. per .. ' - yielded no base types at - ' .. locationType)
         end
 
         # Setup base

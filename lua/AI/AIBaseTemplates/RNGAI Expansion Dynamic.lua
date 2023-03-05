@@ -59,9 +59,15 @@ BaseBuilderTemplate {
         },
         
         MassToFactoryValues = {
-            T1Value = 5,
-            T2Value = 15,
-            T3Value = 22.5,
+            T1LandValue = 5,
+            T2LandValue = 15,
+            T3LandValue = 22.5,
+            T1AirValue = 5,
+            T2AirValue = 15,
+            T3AirValue = 22.5,
+            T1NavalValue = 5,
+            T2NavalValue = 15,
+            T3NavalValue = 22.5,
         },
         NoGuards = true,
     },

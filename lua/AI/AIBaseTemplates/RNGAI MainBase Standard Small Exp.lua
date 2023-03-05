@@ -117,9 +117,15 @@ BaseBuilderTemplate {
             Gate = 1,
         },
         MassToFactoryValues = {
-            T1Value = 4.5,
-            T2Value = 15,
-            T3Value = 26,
+            T1LandValue = 4.5,
+            T2LandValue = 15,
+            T3LandValue = 26,
+            T1AirValue = 4.5,
+            T2AirValue = 15,
+            T3AirValue = 26,
+            T1NavalValue = 4.5,
+            T2NavalValue = 15,
+            T3NavalValue = 26,
         },
 
     },

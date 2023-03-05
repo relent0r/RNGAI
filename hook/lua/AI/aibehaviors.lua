@@ -81,6 +81,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.ThreatLimit = 35
     cdr.Confidence = 1
     cdr.EnemyCDRPresent = false
+    cdr.EnemyAirPresent = false
     cdr.Caution = false
     cdr.HealthPercent = 0
     cdr.DistanceToHome = 0
@@ -226,7 +227,7 @@ function CDRBrainThread(cdr)
             end
         end
         for k, v in aiBrain.EnemyIntel.ACU do
-            if not v.Ally then
+            if (not v.Unit.Dead) and (not v.Ally) then
                 local enemyStartPos = {}
                 if v.Position[1] and v.LastSpotted ~= 0 and gameTime - 60 < v.LastSpotted then
                     if VDist2Sq(v.Position[1], v.Position[3], cdr.Position[1], cdr.Position[2]) < 6400 then
@@ -262,7 +263,8 @@ function CDRCallPlatoon(cdr, threatRequired)
         if aPlat == cdr.PlatoonHandle or aPlat == supportPlatoonAvailable then
             continue
         end
-        if aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' or aPlat.PlanName == 'GuardMarkerRNG' or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlanName == 'ZoneControlRNG' then
+        if aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' or aPlat.PlanName == 'GuardMarkerRNG' 
+        or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlanName == 'ZoneControlRNG' then
             if aPlat.UsingTransport then
                 continue
             end
@@ -410,11 +412,8 @@ function CDRBuildFunction(aiBrain, cdr, object)
         RNGSORT(MassMarker, function(a,b) return a.Distance < b.Distance end)
        --RNGLOG('ACU MassMarker table sorted, looking for markers to build')
         for _, v in MassMarker do
-            if v.Distance > 900 then
-                break
-            end
-            if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
-               --RNGLOG('ACU Adding entry to BuildQueue')
+            if v.Distance < 900 and NavUtils.CanPathTo('Amphibious', acuPos, v.Position) and CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
+                --RNGLOG('ACU Adding entry to BuildQueue')
                 local newEntry = {whatToBuild, {v.Position[1], v.Position[3], 0}, false, Position=v.Position}
                 RNGINSERT(cdr.EngineerBuildQueue, newEntry)
             end
@@ -445,6 +444,7 @@ function CDRBuildFunction(aiBrain, cdr, object)
                     if cdr.Caution then
                         break
                     end
+
                    --RNGLOG('Current Build Queue is '..RNGGETN(cdr.EngineerBuildQueue))
                     coroutine.yield(10)
                 end
@@ -475,6 +475,7 @@ function CDRBuildFunction(aiBrain, cdr, object)
                     local baseValues = {}
                     local highPri = false
                     local markerType = false
+                    local abortBuild = false
                     if object.dataobject.Type == 'Blank Marker' then
                         markerType = 'Start Location'
                     else
@@ -524,6 +525,9 @@ function CDRBuildFunction(aiBrain, cdr, object)
                         factoryCount = 1
                     end
                     for i=1, factoryCount do
+                        if i == 2 and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 0.85 then
+                            break
+                        end
                         local whatToBuild = aiBrain:DecideWhatToBuild(cdr, 'T1LandFactory', buildingTmpl)
                         local location = aiBrain:FindPlaceToBuild('T1LandFactory', whatToBuild, baseTmplDefault['BaseTemplates'][factionIndex], true, cdr, nil, cdr.Position[1], cdr.Position[3])
                         local relativeLoc = {location[1], 0, location[2]}
@@ -534,6 +538,10 @@ function CDRBuildFunction(aiBrain, cdr, object)
                         if RNGGETN(cdr.EngineerBuildQueue) > 0 then
                             for k,v in cdr.EngineerBuildQueue do
                                --RNGLOG('Attempt to build queue item of '..repr(v))
+                               if abortBuild then
+                                    cdr.EngineerBuildQueue[k] = nil
+                                    break
+                                end
                                 while not cdr.Dead and RNGGETN(cdr.EngineerBuildQueue) > 0 do
                                     IssueClearCommands({cdr})
                                     IssueMove({cdr},v.Position)
@@ -547,6 +555,13 @@ function CDRBuildFunction(aiBrain, cdr, object)
                                             coroutine.yield(10)
                                             if cdr.Caution then
                                                 break
+                                            end
+                                            if cdr.EnemyCDRPresent and cdr.UnitBeingBuilt then
+                                                if GetNumUnitsAroundPoint(aiBrain, categories.COMMAND, cdr.Position, 25, 'Enemy') > 0 and cdr.UnitBeingBuilt:GetFractionComplete() < 0.5 then
+                                                    abortBuild = true
+                                                    cdr.EngineerBuildQueue[k] = nil
+                                                    break
+                                                end
                                             end
                                         end
                                        --RNGLOG('Build Queue item should be finished '..k)
@@ -933,7 +948,7 @@ function CDRExpansionRNG(aiBrain, cdr)
     end
     if cdr.Initialized then
         for _, v in aiBrain.EnemyIntel.ACU do
-            if not v.Ally and v.OnField then
+            if (not v.Unit.Dead) and (not v.Ally) and v.OnField then
                 --RNGLOG('Non Ally and OnField')
                 if v.LastSpotted ~= 0 and (GetGameTimeSeconds() - 30) < v.LastSpotted and v.DistanceToBase < 22500 then
                     --RNGLOG('Enemy ACU seen within 30 seconds and is within 150 of our start position')
@@ -1449,10 +1464,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         maxRadius = 512 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
         aiBrain.ACUSupport.ACUMaxSearchRadius = maxRadius
     elseif cdr.Health > 5000 and GetGameTimeSeconds() > 260 and cdr.Initialized then
-        maxRadius = 160 - GetGameTimeSeconds()/60*6 -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
-        if maxRadius < 80 then 
-            maxRadius = 100 -- IF maxTimeRadius < 60 THEN maxTimeRadius = 60
-        end
+        maxRadius = math.max((160 - GetGameTimeSeconds()/60*6), 100) -- reduce the radius by 6 map units per minute. After 30 minutes it's (240-180) = 60
         aiBrain.ACUSupport.ACUMaxSearchRadius = maxRadius
     end
     
@@ -1514,16 +1526,6 @@ function CDROverChargeRNG(aiBrain, cdr)
                 --RNGLOG('cdr retreating due to beyond max range and not building '..(cdr.MaxBaseRange * cdr.MaxBaseRange)..' current distance '..acuDistanceToBase)
                 return CDRRetreatRNG(aiBrain, cdr)
             end
-            --[[
-            if not target or target.Dead then
-                for k, v in aiBrain.EnemyIntel.ACU do
-                    if not v.Ally then
-                        if v.DistanceToBase ~= 0 and v.DistanceToBase < acuDistanceToBase then
-                            LOG('Enemy ACU is closer to our base than we are')
-                        end
-                    end
-                end
-            end]]
             if cdr.SuicideMode or counter >= 5 or not target or target.Dead or VDist3Sq(cdr.Position, target:GetPosition()) > maxRadius * maxRadius then
                 counter = 0
                 local searchRadius = 35
@@ -1541,7 +1543,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                 end
                 if target and not target.Dead then
                     cdr.Target = target
-                    --RNGLOG('ACU OverCharge Target Found')
+                    --RNGLOG('ACU OverCharge Target Found '..target.UnitId)
                     local targetPos = target:GetPosition()
                     local cdrPos = cdr:GetPosition()
                     local cdrNewPos = {}
@@ -1608,14 +1610,22 @@ function CDROverChargeRNG(aiBrain, cdr)
                         if enemyACUHealth < cdr.Health then
                             acuAdvantage = true
                         end
+                        local defenseThreat = RUtils.CheckDefenseThreat(aiBrain, targetPos)
                         --RNGLOG('Enemy ACU Detected , our health is '..cdr.Health..' enemy is '..enemyACUHealth)
-                        if enemyACUHealth < 4500 and cdr.Health - enemyACUHealth < 3000 then
+                        --RNGLOG('Defense Threat is '..defenseThreat)
+                        if defenseThreat > 45 and cdr.SuicideMode then
+                            --RNGLOG('ACU defense threat too high, disable suicide mode')
+                            SetAcuSnipeMode(cdr, false)
+                            cdr.SnipeMode = false
+                            cdr.SuicideMode = false
+                        end
+                        if enemyACUHealth < 4500 and cdr.Health - enemyACUHealth < 3000 or cdr.CurrentFriendlyInnerCircle > cdr.CurrentEnemyInnerCircle * 1.3 then
                             if not cdr.SnipeMode then
                                 --RNGLOG('Enemy ACU is under HP limit we can potentially draw')
                                 SetAcuSnipeMode(cdr, true)
                                 cdr.SnipeMode = true
                             end
-                        elseif enemyACUHealth < 7000 and cdr.Health - enemyACUHealth > 3250 and not RUtils.PositionInWater(targetPos) then
+                        elseif enemyACUHealth < 7000 and cdr.Health - enemyACUHealth > 3250 and not RUtils.PositionInWater(targetPos) and defenseThreat < 45 then
                             --RNGLOG('Enemy ACU could be killed or drawn, should we try?')
                             SetAcuSnipeMode(cdr, true)
                             cdr:SetAutoOvercharge(true)
@@ -1668,7 +1678,7 @@ function CDROverChargeRNG(aiBrain, cdr)
                             local alternateFirePos = false
                             for k, v in checkPoints do
                                 --RNGLOG('Check points for alternative fire position '..repr({v[1],GetSurfaceHeight(v[1],v[3]),v[3]}))
-                                if not aiBrain:CheckBlockingTerrain({v[1],GetSurfaceHeight(v[1],v[3]),v[3]}, targetPos, 'none') and VDist3Sq({v[1],GetSurfaceHeight(v[1],v[3]),v[3]}, targetPos) < VDist3Sq(cdrPos, targetPos) then
+                                if not aiBrain:CheckBlockingTerrain({v[1],GetTerrainHeight(v[1],v[3]),v[3]}, targetPos, 'none') and VDist3Sq({v[1],GetTerrainHeight(v[1],v[3]),v[3]}, targetPos) < VDist3Sq(cdrPos, targetPos) then
                                     --RNGLOG('Found alternate position due to terrain blocking, attempting move')
                                     movePos = v
                                     alternateFirePos = true
@@ -1900,10 +1910,11 @@ function CDRRetreatRNG(aiBrain, cdr, base)
     local closestPlatoonDistance = false
     local closestAPlatPos = false
     local platoonValue = 0
+    local distanceToHome = VDist3Sq(cdr.CDRHome, cdr.Position)
     --RNGLOG('Getting list of allied platoons close by')
     coroutine.yield( 2 )
     local supportPlatoon = aiBrain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
-    if cdr.Health > 5000 and VDist3Sq(cdr.CDRHome, cdr.Position) > 6400 and not base then
+    if cdr.Health > 5000 and distanceToHome > 6400 and not base then
         if supportPlatoon then
             closestPlatoon = supportPlatoon
             closestAPlatPos = GetPlatoonPosition(supportPlatoon)
@@ -1927,9 +1938,8 @@ function CDRRetreatRNG(aiBrain, cdr, base)
                     if aPlat.MovementLayer == 'Land' or aPlat.MovementLayer == 'Amphibious' then
                         local aPlatPos = GetPlatoonPosition(aPlat)
                         local aPlatDistance = VDist2Sq(cdr.Position[1],cdr.Position[3],aPlatPos[1],aPlatPos[3])
-                        local homeDistance = VDist2Sq(cdr.Position[1],cdr.Position[3],cdr.CDRHome[1],cdr.CDRHome[3])
                         local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],cdr.CDRHome[1],cdr.CDRHome[3])
-                        if aPlatDistance > 1600 and aPlatToHomeDistance < homeDistance then
+                        if aPlatDistance > 1600 and aPlatToHomeDistance < distanceToHome then
                             local threat = aPlat:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                             local platoonValue = aPlatDistance * aPlatDistance / threat
                             if not closestPlatoonDistance then
@@ -1959,7 +1969,8 @@ function CDRRetreatRNG(aiBrain, cdr, base)
             if RNGGETN(base.FactoryManager.FactoryList) > 0 then
                 --RNGLOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
                 local baseDistance = VDist3Sq(cdr.Position, base.Position)
-                if baseDistance > 1600 or (cdr.GunUpgradeRequired and not cdr.Caution) or (cdr.HighThreatUpgradeRequired and not cdr.Caution) or baseName == 'MAIN' then
+                local homeDistance = VDist3Sq(cdr.CDRHome, base.Position)
+                if homeDistance < distanceToHome and baseDistance > 1225 or (cdr.GunUpgradeRequired and not cdr.Caution) or (cdr.HighThreatUpgradeRequired and not cdr.Caution) or baseName == 'MAIN' then
                     if not closestBaseDistance then
                         closestBaseDistance = baseDistance
                     end
@@ -2116,6 +2127,9 @@ function CDRGetUnitClump(aiBrain, cdrPos, radius)
     --RNGLOG('Check for unit clump')
     for k, v in unitList do
         if v and not v.Dead then
+            if v.Blueprint.CategoriesHash.STRUCTURE and v.Blueprint.CategoriesHash.DEFENSE and v.Blueprint.CategoriesHash.DIRECTFIRE then
+                return true, v
+            end
             local unitPos = v:GetPosition()
             local unitCount = GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE + categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, unitPos, 2.5, 'Enemy')
             if unitCount > 1 then
@@ -2136,8 +2150,9 @@ function SetAcuSnipeMode(unit, bool)
                 categories.MOBILE * categories.EXPERIMENTAL,
                 categories.MOBILE * categories.TECH3,
                 categories.MOBILE * categories.TECH2,
-                categories.MOBILE * categories.TECH1,
+                categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE,
                 (categories.STRUCTURE * categories.DEFENSE - categories.ANTIMISSILE),
+                categories.MOBILE * categories.TECH1,
                 (categories.ALLUNITS - categories.SPECIALLOWPRI),
             }
         --RNGLOG('Setting to snipe mode')
@@ -3355,7 +3370,7 @@ function ExpMoveToPosition(aiBrain, platoon, target, unit, ignoreUnits)
                         if acuInRange then
                             target = acuUnit
                         end
-                        if totalThreat > 20 then
+                        if totalThreat['AntiSurface'] > 20 then
                             local retreatTrigger = 0
                             local retreatTimeout = 0
                             while unit and not unit.Dead do
@@ -3408,9 +3423,15 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     if not aiBrain or not platoon then
         return nil
     end
-    local ALLBPS = __blueprints
-
+    local function GetMissileDetails(ALLBPS, unitId)
+        if ALLBPS[unitId].Weapon[1].DamageType == 'Nuke' and ALLBPS[unitId].Weapon[1].ProjectileId then
+            local projBp = ALLBPS[unitId].Weapon[1].ProjectileId
+            return ALLBPS[projBp].Economy.BuildCostMass, ALLBPS[unitId].Weapon[1].NukeInnerRingRadius
+        end
+        return false
+    end
     -- Look for commander first
+    local ALLBPS = __blueprints
     local AIFindNumberOfUnitsBetweenPointsRNG = import('/lua/ai/aiattackutilities.lua').AIFindNumberOfUnitsBetweenPointsRNG
     local im = IntelManagerRNG.GetIntelManager(aiBrain)
     local platoonPosition = GetPlatoonPosition(platoon)
@@ -3418,9 +3439,30 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     local minimumValue = 0
     local targetPositions = {}
     local validPosition = false
+    local missileCost
+    local missileRadius
+    for _, sml in GetPlatoonUnits(platoon) do
+        if sml and not sml.Dead then
+            local smlMissileCost, smlMissileRadius = GetMissileDetails(ALLBPS, sml.UnitId)
+            if not missileCost or smlMissileCost > missileCost then
+                missileCost = smlMissileCost
+            end
+            if not missileRadius or smlMissileRadius > missileRadius then
+                missileRadius = smlMissileRadius
+            end
+        end
+    end
+    --RNGLOG('SML Missile cost is '..missileCost)
+    --RNGLOG('SML Missile radius is '..missileRadius)
+    if not missileRadius or not missileCost then
+        -- fallback incase its a strange launcher
+        missileRadius = 30
+        missileCost = 12000
+    end
+    
 
     for k, v in aiBrain.EnemyIntel.ACU do
-        if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
+        if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.LastSpotted ~= 0 then
             if RUtils.HaveUnitVisual(aiBrain, v.Unit, true) then
                 RNGINSERT(targetPositions, {v.Position, type = 'COMMAND'})
             end
@@ -3449,26 +3491,23 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     end
 
     -- Now look through the bases for the highest economic threat and largest cluster of units
-    -- This must be changed!! to no longer use interest list.
+    local targetShortList = {}
     local enemyBases = aiBrain.EnemyIntel.EnemyThreatLocations
     local bestBaseThreat = nil
     local maxBaseThreat = 0
     for _, x in enemyBases do
         for _, z in x do
             if z.StructuresNotMex then
-                local threatTable = aiBrain:GetThreatsAroundPosition(z.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Economy')
-                if RNGGETN(threatTable) ~= 0 then
-                    if threatTable[1][3] > maxBaseThreat then
-                        maxBaseThreat = threatTable[1][3]
-                        bestBaseThreat = threatTable
-                    end
-                end
+                local posThreat = aiBrain:GetThreatAtPosition(z.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Economy')
+                RNGINSERT(targetShortList, { threat = posThreat, position = z.Position, massvalue = 0 })
             end
         end
     end
-    --RNGLOG('Bestbase threat '..repr(bestBaseThreat))
+    RNGSORT( targetShortList, function(a,b) return a.threat > b.threat  end )
 
-    if not bestBaseThreat then
+    --RNGLOG('targetShortList 1st pass '..repr(targetShortList))
+
+    if table.getn(targetShortList) == 0 then
         -- No threat
         return
     end
@@ -3477,22 +3516,23 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     local SMDPositions = {}
     local highestValue = -1
     local bestThreat = 1
-    for idx, threat in bestBaseThreat do
-        if threat[3] > 0 then
+    for _, target in targetShortList do
+        if target.threat > 0 then
             local numunits = 0
             local massValue = 0
-            local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, {threat[1], 0, threat[2]}, ScenarioInfo.size[1] / 16, 'Enemy')
+            local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, target.position, missileRadius, 'Enemy')
             for k, v in unitsAtLocation do
                 numunits = numunits + 1
                 local unitPos = v:GetPosition()
+                local completion = v:GetFractionComplete()
                 if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE * categories.SILO, v) then
                     --RNGLOG('Found SMD')
-                    if not aiBrain.EnemyIntel.SMD[v.Sync.id] then
-                        aiBrain.EnemyIntel.SMD[v.Sync.id] = {object = v, Position=unitPos , Detected=GetGameTimeSeconds()}
+                    if not aiBrain.EnemyIntel.SMD[v.EntityId] then
+                        aiBrain.EnemyIntel.SMD[v.EntityId] = {object = v, Position=unitPos , Detected=GetGameTimeSeconds()}
                     end
-                    if v:GetFractionComplete() == 1 then
-                        if aiBrain.EnemyIntel.SMD[v.Sync.id].Detected + 240 < GetGameTimeSeconds() then
-                            RNGINSERT(SMDPositions, { Position = unitPos, Radius = ALLBPS[v.UnitId].Weapon[1].MaxRadius})
+                    if completion == 1 then
+                        if aiBrain.EnemyIntel.SMD[v.EntityId].Detected + 240 < GetGameTimeSeconds() then
+                            RNGINSERT(SMDPositions, { Position = unitPos, Radius = v.Blueprint.Weapon[1].MaxRadius * v.Blueprint.Weapon[1].MaxRadius, EntityId = v.EntityId})
                         end
                         --RNGLOG('AntiNuke present at location')
                     end
@@ -3500,54 +3540,64 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
                         break
                     end
                 end
-                if ALLBPS[v.UnitId].Economy.BuildCostMass then
-                    massValue = massValue + ALLBPS[v.UnitId].Economy.BuildCostMass
+                if completion > 0.4 then
+                    if v.Blueprint.Economy.BuildCostMass then
+                        massValue = massValue + v.Blueprint.Economy.BuildCostMass
+                    end
                 end
             end
-
-            if massValue > highestValue then
-                highestValue = massValue
-                bestThreat = idx
-            end
+            target.massvalue = massValue
         end
     end
-
-    if bestBaseThreat[bestThreat] then
+    RNGSORT( targetShortList, function(a,b) return a.massvalue > b.massvalue  end )
+    for _, finalTarget in targetShortList do
         local bestPos = {0, 0, 0}
         local maxValue = 0
-        local lookAroundTable = {-2, -1, 0, 1, 2}
-        local squareRadius = (ScenarioInfo.size[1] / 16) / RNGGETN(lookAroundTable)
-        for ix, offsetX in lookAroundTable do
-            for iz, offsetZ in lookAroundTable do
-                local searchPos = {bestBaseThreat[bestThreat][1] + offsetX*squareRadius, 0, bestBaseThreat[bestThreat][2]+offsetZ*squareRadius}
-                local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, searchPos, squareRadius, 'Enemy')
-                local currentValue = 0
-                for _, v in unitsAtLocation do
-                    if ALLBPS[v.UnitId].Economy.BuildCostMass then
-                        currentValue = currentValue + ALLBPS[v.UnitId].Economy.BuildCostMass
-                    end
-                end
-                local smdCovered = false
-                if currentValue > maxValue then
-                    maxValue = currentValue
-                    for _, v in SMDPositions do
-                        if VDist3Sq(searchPos, v.Position) < v.Radius then
-                            smdCovered = true
-                            break
+        if finalTarget.massvalue > (missileCost / 2) then
+            local lookAroundTable = {-2, -1, 0, 1, 2}
+            local squareRadius = (ScenarioInfo.size[1] / 16) / RNGGETN(lookAroundTable)
+            local smdCovered = false
+            for ix, offsetX in lookAroundTable do
+                for iz, offsetZ in lookAroundTable do
+                    local searchPos = {finalTarget.position[1] + offsetX*squareRadius, 0, finalTarget.position[3]+offsetZ*squareRadius}
+                    local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, searchPos, missileRadius, 'Enemy')
+                    local currentValue = 0
+                    for _, v in unitsAtLocation do
+                        if v.Blueprint.Economy.BuildCostMass then
+                            currentValue = currentValue + v.Blueprint.Economy.BuildCostMass
                         end
                     end
-                    if not smdCovered then
-                       bestPos = table.copy(unitsAtLocation[1]:GetPosition())
+                    if currentValue > maxValue then
+                        maxValue = currentValue
+                        for _, v in SMDPositions do
+                            --RNGLOG('Distance of SMD from strike position '..VDist3Sq(searchPos, v.Position)..' radius of smd is '..v.Radius)
+                            if v.object and not IsDestroyed(v.object) and VDist3Sq(searchPos, v.Position) < v.Radius then
+                                smdCovered = true
+                                break
+                            end
+                        end
+                        if not smdCovered then
+                            local antinukes = AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, platoonPosition, searchPos, categories.ANTIMISSILE * categories.SILO, 90, 'Enemy')
+                            --RNGLOG('No smd covering position, check for smds between points, count is  '..antinukes)
+                            if antinukes > 0 then
+                                smdCovered = true
+                                break
+                            end
+                        bestPos = table.copy(unitsAtLocation[1]:GetPosition())
+                        end
                     end
+                end
+                if smdCovered then
+                    break
                 end
             end
         end
         if bestPos[1] ~= 0 and bestPos[3] ~= 0 then
             --RNGLOG('Best pos found with a mass value of '..maxValue)
+            --RNGLOG('Best pos position is '..repr(bestPos))
             return bestPos
         end
     end
-
     return nil
 end
 
@@ -3652,16 +3702,25 @@ end
 
 function AirStagingThreadRNG(unit)
     local aiBrain = unit:GetAIBrain()
+
     while not unit.Dead do
         local numUnits = 0
         local refueledUnits = {}
+        local currentTime = GetGameTimeSeconds()
         for _, v in unit.Refueling do
-            if not v.Dead and v:GetFuelRatio() > 0.9 and v:GetHealthPercent() > 0.9 then
-                --RNGLOG('Unit not dead and fuel + health is above 0.9 '..v.Sync.id)
+            if not v.TimeStamp then
+                v.TimeStamp = currentTime
+            elseif not v.Dead and v:GetFuelRatio() > 0.9 and v:GetHealthPercent() > 0.9 then
+                --RNGLOG('Unit not dead and fuel + health is above 0.9 '..v.EntityId)
                 --RNGLOG('Fueld Ratio is '..v:GetFuelRatio())
                 --RNGLOG('Health Percent is '..v:GetHealthPercent())
                 numUnits = numUnits + 1
                 RNGINSERT(refueledUnits, v)
+            elseif not v.Dead and currentTime > (v.TimeStamp + 30) then
+                if v:IsUnitState('Attacking') and (not v:IsUnitState('Attached')) and (v:GetFuelRatio() < 0.7 or v:GetHealthPercent() < 0.7) then
+                    IssueClearCommands({v})
+                    IssueTransportLoad({v}, unit)
+                end
             end
         end
         
@@ -3688,6 +3747,7 @@ function AirStagingThreadRNG(unit)
                             plat.PlatoonData = {}
                             plat.PlatoonData = v.PlatoonData
                         end
+                        v.TimeStamp = nil
                         aiBrain:AssignUnitsToPlatoon(plat, {v}, 'Attack', 'GrowthFormation')
                     elseif v:IsUnitState('Attached') then
                         --RNGLOG('Air Unit Still attached, force unload')

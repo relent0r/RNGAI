@@ -319,6 +319,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Air AntiNavy BaseEnemyArea',
         PlatoonTemplate = 'RNGAI TorpBomberAttack',
+        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 960,
         InstanceCount = 4,
         BuilderType = 'Any',
@@ -374,6 +375,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Air Feeder',
         PlatoonTemplate = 'RNGAI AntiAirFeeder',
         Priority = 750,
+        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         InstanceCount = 30,
         BuilderType = 'Any',
         BuilderData = {
@@ -431,6 +433,8 @@ BuilderGroup {
             IgnoreCivilian = true,
             SearchRadius = BaseEnemyArea,
             UnitType = 'BOMBER',
+            UnitTarget = 'ENGINEER',
+            LocationType = 'LocationType',
             PlatoonLimit = 2,
             PrioritizedCategories = {
                 categories.ENGINEER - categories.COMMAND,
@@ -573,10 +577,10 @@ BuilderGroup {
         BuilderName = 'RNGAI Bomber Attack Enemy',
         PlatoonTemplate = 'RNGAI BomberAttack',
         Priority = 890,
-        InstanceCount = 3,
+        InstanceCount = 2,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
@@ -673,9 +677,21 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'RNGAI T2 Air Transport Large',
+        BuilderName = 'RNGAI T2 Air Transport Large Single',
         PlatoonTemplate = 'T2AirTransport',
         Priority = 910,
+        BuilderConditions = {
+            { MIBC, 'ArmyNeedOrWantTransports', {} },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.05 }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Air Transport Large',
+        PlatoonTemplate = 'T2AirTransport',
+        Priority = 880,
         BuilderConditions = {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
@@ -687,7 +703,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Air Transport Excess Large',
         PlatoonTemplate = 'T2AirTransport',
-        Priority = 900,
+        Priority = 875,
         BuilderConditions = {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},
@@ -703,11 +719,24 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI TransportFactoryBuilders Small',
     BuildersType = 'FactoryBuilder',
     Builder {
+        BuilderName = 'RNGAI T1 Air Transport NoPath',
+        PlatoonTemplate = 'T1AirTransport',
+        Priority = 880,
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
+            { MIBC, 'ArmyNeedOrWantTransports', {} },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 0.95 }},
+        },
+        BuilderType = 'Air',
+    },
+    Builder {
         BuilderName = 'RNGAI T1 Air Transport',
         PlatoonTemplate = 'T1AirTransport',
         Priority = 880,
         BuilderConditions = {
-            { MIBC, 'ArmyNeedOrWantTransports', {} },
+            { MIBC, 'ArmyNeedsTransports', {} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 0.95 }},
@@ -720,7 +749,7 @@ BuilderGroup {
         Priority = 700,
         BuilderConditions = {
             { MIBC, 'MapGreaterThan', { 256, 256 }},
-            { MIBC, 'ArmyNeedsTransports', {} },
+            { MIBC, 'ArmyNeedOrWantTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.8}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
@@ -984,29 +1013,6 @@ BuilderGroup {
             DistressRange = 130,
             DistressReactionTime = 6,
             ThreatSupport = 0,
-        },
-    },
-    Builder {
-        BuilderName = 'RNGEXP Energy Attack',
-        PlatoonTemplate = 'RNGAI BomberEnergyAttack',
-        Priority = 890,
-        InstanceCount = 3,
-        BuilderType = 'Any',        
-        BuilderConditions = { 
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
-        },
-        BuilderData = {
-            SearchRadius = BaseEnemyArea,
-            UnitType = 'BOMBER',
-            PlatoonLimit = 18,
-            PrioritizedCategories = {
-                categories.RADAR * categories.STRUCTURE,
-                categories.ENERGYSTORAGE,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH1,
-                categories.ALLUNITS - (categories.T1SUBMARINE + categories.T2SUBMARINE),
-            },
         },
     },
 }

@@ -470,7 +470,7 @@ StructureManager = Class {
             totalNavalT3HQCount = totalNavalT3HQCount + v
         end
         for _, v in self.Brain.BuilderManagers do
-            if v.FactoryManager.LocationType == self.Brain.BrainIntel.ActiveExpansion then
+            if v.FactoryManager.LocationType == self.Brain.BrainIntel.ActiveExpansion and v.FactoryManager.LocationActive then
                 --RNGLOG('ActiveExpansion during buildermanager loop is '..v.FactoryManager.LocationType)
                 activeExpansion = v.FactoryManager.LocationType
                 break
@@ -537,7 +537,7 @@ StructureManager = Class {
                 end
             end
         end
-        if (self.Brain.RNGEXP or (factionIndex == 2 and actualMexIncome > (25 * self.Brain.EcoManager.EcoMultiplier))) and totalAirT2HQCount < 1 and totalAirT3HQCount < 1 and self.Factories.AIR[1].UpgradingCount < 1 then
+        if (self.Brain.amanager.Demand.Air.T2.torpedo > 0 or self.Brain.RNGEXP or self.Brain.BrainIntel.AirPlayer or (factionIndex == 2 and actualMexIncome > (25 * self.Brain.EcoManager.EcoMultiplier))) and totalAirT2HQCount < 1 and totalAirT3HQCount < 1 and self.Factories.AIR[1].UpgradingCount < 1 then
             --RNGLOG('Factory T1 Air RNGEXP Upgrade HQ Check passed')
             if self.Brain.EconomyOverTimeCurrent.EnergyIncome > 32.0 and self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 0.9 and (self.Brain.RNGEXP and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.9 or self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05) then
                 --RNGLOG('RNGEXP Factory Upgrade efficiency over time check passed')
@@ -564,7 +564,7 @@ StructureManager = Class {
                         --RNGLOG('Factory Upgrade efficiency over time check passed')
                         local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                         local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
-                        if MassEfficiency >= 1.015 and EnergyEfficiency >= 1.0 then
+                        if MassEfficiency >= 1.0 and EnergyEfficiency >= 1.0 then
                             --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
                             local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH1')
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
@@ -595,11 +595,11 @@ StructureManager = Class {
             if self.Factories.AIR[2].UpgradingCount < 1 then
                 --RNGLOG('Factory Air T2 Upgrade Less than 1 Factory Upgrading')
                 if self.Brain.EconomyOverTimeCurrent.MassTrendOverTime >= 0.0 and self.Brain.EconomyOverTimeCurrent.EnergyTrendOverTime >= 0.0 then
-                    if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.025 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.2 then
+                    if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.015 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.2 then
                         --RNGLOG('Factory Upgrade efficiency over time check passed')
                         local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                         local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
-                        if MassEfficiency >= 1.025 and EnergyEfficiency >= 1.2 then
+                        if MassEfficiency >= 1.015 and EnergyEfficiency >= 1.2 then
                             --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
                             local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH1')
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
@@ -697,7 +697,7 @@ StructureManager = Class {
                         --RNGLOG('Factory Upgrade efficiency over time check passed')
                         local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                         local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
-                        if MassEfficiency >= 1.015 and EnergyEfficiency >= 1.0 then
+                        if MassEfficiency >= 1.0 and EnergyEfficiency >= 1.0 then
                             --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
                             local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH2')
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
@@ -766,7 +766,7 @@ StructureManager = Class {
         local t2NavalPass = false
         if totalNavalT2HQCount < 1 and totalNavalT3HQCount < 1 and self.Factories.NAVAL[1].UpgradingCount < 1 and self.Factories.NAVAL[1].Total > 0 then
             --RNGLOG('Factory Naval T1 Upgrade HQ Check passed')
-            if actualMexIncome > (45 * self.Brain.EcoManager.EcoMultiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 50.0 then
+            if actualMexIncome > (35 * self.Brain.EcoManager.EcoMultiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 50.0 then
                 --RNGLOG('Factory Naval Upgrade actual mex income is '..actualMexIncome)
                 if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.025 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
                     --RNGLOG('Factory Naval Upgrade efficiency over time check passed')
@@ -882,33 +882,41 @@ StructureManager = Class {
             if (totalLandT2HQCount > 0 or totalLandT3HQCount > 0) and self.Factories.LAND[1].Total > 0 and self.Factories.LAND[2].Total < 11 then
                 --RNGLOG('Factory T1 Upgrade Support Check passed')
                 --RNGLOG('Performing Upgrade Check '..activeExpansion)
-                if self.Factories.LAND[1].UpgradingCount < 2 then
-                    --RNGLOG('Factory T1 Upgrade Less than 1 Factory Upgrading')
-                    if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.015 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
-                        --RNGLOG('Factory Upgrade efficiency over time check passed')
-                        local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
-                        local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
-                        if MassEfficiency >= 1.0 and EnergyEfficiency >= 1.0 then
-                            --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
+                --RNGLOG('T2 Factory count at active expansion '..self:LocationFactoryCountRNG(self.Brain, categories.LAND * categories.FACTORY * categories.TECH2, activeExpansion))
+                if self:LocationFactoryCountRNG(self.Brain, categories.LAND * categories.FACTORY * categories.TECH2, activeExpansion) < 2 then
+                    if self.Factories.LAND[1].UpgradingCount < 2 then
+                        --RNGLOG('Factory T1 Upgrade Less than 1 Factory Upgrading')
+                        local t2Rush = false
+                        if RUtils.DefensiveClusterCheck(self.Brain, self.Brain.BuilderManagers[activeExpansion].FactoryManager.Location) then
+                            --RNGLOG('DefensiveClusterCheck detected close to expansion')
+                            t2Rush = true
+                        end
+                        if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.015 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 or t2Rush then
+                            --RNGLOG('Factory Upgrade efficiency over time check passed')
+                            local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
+                            local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
+                            if MassEfficiency >= 1.0 and EnergyEfficiency >= 1.0 or t2Rush then
+                                --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
+                                local factoryToUpgrade = self:GetClosestFactory(activeExpansion, 'LAND', 'TECH1')
+                                if factoryToUpgrade and not factoryToUpgrade.Dead then
+                                    --RNGLOG('Structure Manager Triggering T2 Land Support Upgrade')
+                                    self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
+                                    activeExpansionPass = true
+                                    coroutine.yield(30)
+                                end
+                            end
+                        end
+                    end
+                    if self.Factories.LAND[1].UpgradingCount < 2 then
+                        --RNGLOG('Factory T1 Upgrade Less than 2 Factory Upgrading')
+                        if GetEconomyStored(self.Brain, 'MASS') >= 1300 and GetEconomyStored(self.Brain, 'ENERGY') >= 3990 then
                             local factoryToUpgrade = self:GetClosestFactory(activeExpansion, 'LAND', 'TECH1')
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
-                                --RNGLOG('Structure Manager Triggering T2 Land Support Upgrade')
+                                --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                 activeExpansionPass = true
                                 coroutine.yield(30)
                             end
-                        end
-                    end
-                end
-                if self.Factories.LAND[1].UpgradingCount < 2 then
-                    --RNGLOG('Factory T1 Upgrade Less than 2 Factory Upgrading')
-                    if GetEconomyStored(self.Brain, 'MASS') >= 1300 and GetEconomyStored(self.Brain, 'ENERGY') >= 3990 then
-                        local factoryToUpgrade = self:GetClosestFactory(activeExpansion, 'LAND', 'TECH1')
-                        if factoryToUpgrade and not factoryToUpgrade.Dead then
-                            --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
-                            self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
-                            activeExpansionPass = true
-                            coroutine.yield(30)
                         end
                     end
                 end
@@ -987,8 +995,7 @@ StructureManager = Class {
             IssueClearCommands({unit})
             coroutine.yield(2)
             IssueUpgrade({unit}, upgradeID)
-            
-            coroutine.yield(2)
+            coroutine.yield(10)
             if not IsDestroyed(unit) then
                 local upgradedFactory = unit.UnitBeingBuilt
                 local fractionComplete = upgradedFactory:GetFractionComplete()
@@ -1017,6 +1024,14 @@ StructureManager = Class {
         end
     end,
 
+    LocationFactoryCountRNG = function(self, aiBrain, category, locationType)
+        local factoryCount = 0
+        if aiBrain.BuilderManagers[locationType].FactoryManager.LocationActive then
+            factoryCount = factoryCount + aiBrain.BuilderManagers[locationType].FactoryManager:GetNumCategoryFactories(category)
+        end
+        return factoryCount
+    end,
+
     EcoExtractorUpgradeCheckRNG = function(self, aiBrain)
     -- Keep track of how many extractors are currently upgrading
     -- Right now this is less about making the best decision to upgrade and more about managing the economy while that upgrade is happening.
@@ -1025,7 +1040,7 @@ StructureManager = Class {
         while true do
             local upgradeTrigger = false
             local upgradeSpend = aiBrain.cmanager.income.r.m*aiBrain.EconomyUpgradeSpend
-            if upgradeSpend > 4 or GetGameTimeSeconds() > (420 / aiBrain.EcoManager.EcoMultiplier) then
+            if upgradeSpend > 4 or GetGameTimeSeconds() > (420 / aiBrain.EcoManager.EcoMultiplier) or aiBrain.BrainIntel.AirPlayer then
                 upgradeTrigger = true
             end
             local extractorsDetail, extractorTable, totalSpend = self.ExtractorsBeingUpgraded(self, aiBrain)
@@ -1066,9 +1081,23 @@ StructureManager = Class {
                 coroutine.yield(60)
                 continue
             end
-            if massStorage > 2500 and energyStorage > 8000 and extractorsDetail.TECH2Upgrading < 1 then
+            if massStorage > 1500 and aiBrain.EcoManager.CoreExtractorT3Count < aiBrain.EcoManager.CoreMassMarkerCount
+            and aiBrain.EcoManager.CoreExtractorT2Count > 0
+            and aiBrain.BrainIntel.SelfThreat.ExtractorCount > aiBrain.BrainIntel.MassSharePerPlayer 
+            and extractorsDetail.TECH2Upgrading < aiBrain.EcoManager.CoreMassMarkerCount 
+            and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 1.1 and energyStorage > 8000 then
                 self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
-                coroutine.yield(60)
+                coroutine.yield(80)
+                continue
+            elseif extractorsDetail.TECH2Upgrading < 1 and aiBrain.BrainIntel.SelfThreat.ExtractorCount > aiBrain.BrainIntel.MassSharePerPlayer  
+            and aiBrain.EcoManager.CoreExtractorT2Count > 0
+            and energyStorage > 8000 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 1.1 then
+                self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
+                coroutine.yield(80)
+                continue
+            elseif massStorage > 2500 and energyStorage > 8000 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 1.1 and extractorsDetail.TECH2Upgrading < 1 then
+                self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
+                coroutine.yield(80)
                 continue
             end
             --RNGLOG(' extractorsDetail.TECH1'..extractorsDetail.TECH1..'extractorsDetail.TECH2 '..extractorsDetail.TECH2)
@@ -1293,7 +1322,7 @@ StructureManager = Class {
                     fractionComplete = upgradedExtractor:GetFractionComplete()
                 end
                 if not extractorUpgradeTimeoutReached then
-                    if GetGameTimeSeconds() - upgradeTimeStamp > aiBrain.EcoManager.EcoMassUpgradeTimeout then
+                    if GetGameTimeSeconds() - upgradeTimeStamp > aiBrain.EcoManager.EcoMassUpgradeTimeout and GetEconomyStored( aiBrain, 'ENERGY') > 500 then
                         extractorUpgradeTimeoutReached = true
                     end
                 end

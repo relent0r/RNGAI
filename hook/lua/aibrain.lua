@@ -169,7 +169,7 @@ AIBrain = Class(RNGAIBrainClass) {
             --RNGLOG('5 KM Map Check true')
             self.MapSize = 5
         end
-        self.MapCenterPoint = { (ScenarioInfo.size[1] / 2), GetSurfaceHeight((ScenarioInfo.size[1] / 2), (ScenarioInfo.size[2] / 2)) ,(ScenarioInfo.size[2] / 2) }
+        self.MapCenterPoint = { (ScenarioInfo.size[1] / 2), GetTerrainHeight((ScenarioInfo.size[1] / 2), (ScenarioInfo.size[2] / 2)) ,(ScenarioInfo.size[2] / 2) }
 
         -- Condition monitor for the whole brain
         self.ConditionsMonitor = BrainConditionsMonitor.CreateConditionsMonitor(self)
@@ -404,8 +404,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 [1] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
+                            scout=10,
+                            tank=70,
                             arty=15,
                             aa=12,
                             total=0
@@ -470,8 +470,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 [2] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
+                            scout=10,
+                            tank=70,
                             arty=15,
                             aa=12,
                             total=0
@@ -535,8 +535,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 [3] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
+                            scout=10,
+                            tank=70,
                             arty=15,
                             aa=12,
                             total=0
@@ -601,8 +601,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 [4] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
+                            scout=10,
+                            tank=70,
                             arty=15,
                             aa=12,
                             total=0
@@ -664,8 +664,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 [5] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
+                            scout=10,
+                            tank=70,
                             arty=15,
                             aa=12,
                             total=0
@@ -921,6 +921,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Intel Data
         self.EnemyIntel = {}
         self.BrainIntel = {}
+        self.BrainIntel.AirPlayer = false
         self.BrainIntel.TeamCount = 0
         self.EnemyIntel.NavalRange = {
             Position = {},
@@ -934,6 +935,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.HighPriorityTargetAvailable = false
         self.EnemyIntel.ACU = {}
         self.EnemyIntel.Phase = 1
+        self.EnemyIntel.AirPhase = 1
+        self.EnemyIntel.LandPhase = 1
+        self.EnemyIntel.NavalPhase = 1
         self.EnemyIntel.TML = {}
         self.EnemyIntel.SMD = {}
         self.EnemyIntel.DirectorData = {
@@ -997,7 +1001,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
 
         local selfStartPosX, selfStartPosY = self:GetArmyStartPos()
-        self.BrainIntel.StartPos = { selfStartPosX, GetSurfaceHeight(selfStartPosX, selfStartPosY), selfStartPosY }
+        self.BrainIntel.StartPos = { selfStartPosX, GetTerrainHeight(selfStartPosX, selfStartPosY), selfStartPosY }
         self.BrainIntel.CurrentIntelAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, self.MapCenterPoint)
         self.BrainIntel.MilitaryRange = BaseMilitaryArea
         self.BrainIntel.DMZRange = BaseDMZArea
@@ -1012,7 +1016,7 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         self.BrainIntel.AllyCount = 0
         self.BrainIntel.AllyStartLocations = {}
-        
+        self.BrainIntel.BaseRestrictedArea = BaseRestrictedArea
         self.BrainIntel.LandPhase = 1
         self.BrainIntel.AirPhase = 1
         self.BrainIntel.NavalPhase = 1
@@ -1188,6 +1192,9 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.EcoManager.CoreMassPush then
                 RNGLOG('We should be pushing for 3 core t3 extractors')
             end
+            RNGLOG('Enemy Air Phase '..self.EnemyIntel.AirPhase)
+            RNGLOG('Enemy Land Phase '..self.EnemyIntel.LandPhase)
+            RNGLOG('Enemy Naval Phase '..self.EnemyIntel.NavalPhase)
             RNGLOG('Current T1 Mobile AA count '..self.amanager.Current['Land']['T1']['aa'])
             RNGLOG('Current T2 Mobile AA count '..self.amanager.Current['Land']['T2']['aa'])
             RNGLOG('Current T3 Mobile AA count '..self.amanager.Current['Land']['T3']['aa'])
@@ -1972,7 +1979,8 @@ AIBrain = Class(RNGAIBrainClass) {
                                 self.EnemyIntel.ClosestEnemyBase = enemyDistance
                             end
                         else
-                            allyTempStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex}
+                            local friendDistance = VDist3Sq(self.BrainIntel.StartPos, startPos)
+                            allyTempStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex, Distance = friendDistance}
                             allyStarts['ARMY_' .. i] = startPos
                         end
                     end
@@ -2456,7 +2464,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if self:GetCurrentEnemy() then
                 local enemyX, enemyZ = self:GetCurrentEnemy():GetArmyStartPos()
                 local CenterPointAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, self.MapCenterPoint)
-                local EnemyAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, {enemyX, GetSurfaceHeight(enemyX, enemyZ), enemyZ})
+                local EnemyAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, {enemyX, GetTerrainHeight(enemyX, enemyZ), enemyZ})
                 --RNGLOG('CenterPointAngle '..CenterPointAngle..' EnemyAngle '..EnemyAngle)
                 --RNGLOG('Average should be '..((CenterPointAngle + EnemyAngle) / 2))
                 self.BrainIntel.CurrentIntelAngle = (CenterPointAngle + EnemyAngle) / 2
@@ -2473,7 +2481,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             for k, v in self.EnemyIntel.ACU do
                 local dupe = false
-                if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 and v.Position[1] then
+                if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.LastSpotted ~= 0 and v.Position[1] then
                     --RNGLOG('ACU last spotted '..(GetGameTimeSeconds() - v.LastSpotted)..' seconds ago')
                     if v.LastSpotted + 60 > GetGameTimeSeconds() then
                         local gridXID, gridZID = im:GetIntelGrid(v.Position)
@@ -2775,7 +2783,6 @@ AIBrain = Class(RNGAIBrainClass) {
     BaseMonitorPlatoonDistressThreadRNG = function(self)
         self.BaseMonitor.PlatoonAlertSounded = true
         while true do
-            RNGLOG('MassEfficiencyOverTime --'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime)
             local numPlatoons = 0
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 if self:PlatoonExists(v.Platoon) then
@@ -3167,11 +3174,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 enemyCount = 1
             end
             if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) * 1.3 and (not self.EnemyIntel.ChokeFlag) and self.BrainIntel.SelfThreat.AllyExtractorCount > self.BrainIntel.MassMarkerTeamShare then
-                RNGLOG('Land Threat Higher, shift ratio to 0.4')
-                RNGLOG('Ally Extractors '..self.BrainIntel.SelfThreat.AllyExtractorCount)
-                RNGLOG('Team share '..self.BrainIntel.MassMarkerTeamShare)
-                RNGLOG('Self Threat '..self.BrainIntel.SelfThreat.LandNow)
-                RNGLOG('Enemy threat '..((self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) * 1.3))
+                --RNGLOG('Land Threat Higher, shift ratio to 0.4')
+                --RNGLOG('Ally Extractors '..self.BrainIntel.SelfThreat.AllyExtractorCount)
+                --RNGLOG('Team share '..self.BrainIntel.MassMarkerTeamShare)
+                --RNGLOG('Self Threat '..self.BrainIntel.SelfThreat.LandNow)
+                --RNGLOG('Enemy threat '..((self.EnemyIntel.EnemyThreatCurrent.Land / enemyCount) * 1.3))
 
                 if not self.RNGEXP then
                     self.ProductionRatios.Land = 0.4
@@ -3538,7 +3545,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 potentialThreats[raw[1]] = potentialThreats[raw[1]] or { }
                 potentialThreats[raw[1]][raw[2]] = potentialThreats[raw[1]][raw[2]] or { }
                 potentialThreats[raw[1]][raw[2]][t] = raw[3]
-                potentialThreats[raw[1]][raw[2]].Position = potentialThreats[raw[1]][raw[2]].Position or {raw[1], GetSurfaceHeight(raw[1], raw[2]),raw[2]}
+                potentialThreats[raw[1]][raw[2]].Position = potentialThreats[raw[1]][raw[2]].Position or {raw[1], GetTerrainHeight(raw[1], raw[2]),raw[2]}
                 potentialThreats[raw[1]][raw[2]].UpdateTime = potentialThreats[raw[1]][raw[2]].UpdateTime or currentGameTime
                 --local threatRow = {posX=raw[1], posZ=raw[2], rThreat=raw[3], rThreatType=t}
                 --RNGINSERT(potentialThreats, threatRow)
@@ -3612,7 +3619,7 @@ AIBrain = Class(RNGAIBrainClass) {
             
         if not potentialTarget then
             for k, v in self.EnemyIntel.ACU do
-                if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
+                if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.LastSpotted ~= 0 then
                     if platoonType == 'GUNSHIP' and platoonDPS then
                         if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and v.LastSpotted + 120 > GetGameTimeSeconds() then
                             RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
@@ -3656,7 +3663,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     elseif platoonType == 'SATELLITE' and platoonDPS then
                         if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and v.LastSpotted + 120 > GetGameTimeSeconds() then
-                            if RUtils.HaveUnitVisual(self, v.Unit, true) and not RUtils.ShieldProtectingTargetRNG(aiBrain, v.Unit, nil) then
+                            if RUtils.HaveUnitVisual(self, v.Unit, true) and not RUtils.ShieldProtectingTargetRNG(self, v.Unit, nil) then
                                 RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
                                 local gridX, gridY = im:GetIntelGrid(v.Position)
                                 local scoutRequired = true
@@ -4365,7 +4372,7 @@ AIBrain = Class(RNGAIBrainClass) {
         coroutine.yield(Random(1,7))
         while true do
             coroutine.yield(50)
-            local buildingTable = GetListOfUnits(self, categories.ENGINEER + categories.STRUCTURE * (categories.FACTORY + categories.RADAR + categories.MASSEXTRACTION), false)
+            local buildingTable = GetListOfUnits(self, categories.ENGINEER + categories.STRUCTURE * (categories.FACTORY + categories.RADAR + categories.MASSEXTRACTION + categories.SHIELD), false)
             local potentialPowerConsumption = 0
             local unitCat
             for k, v in buildingTable do
@@ -4405,21 +4412,39 @@ AIBrain = Class(RNGAIBrainClass) {
                                 continue
                             end
                         end
-                    elseif unitCat.TECH3 and unitCat.AIR then
+                    elseif unitCat.FACTORY then
+                        if unitCat.TECH3 and unitCat.AIR then
+                                if v:GetFractionComplete() < 0.7 then
+                                    --RNGLOG('EcoPowerPreemptive : T3 Air Being Built')
+                                    potentialPowerConsumption = potentialPowerConsumption + (1800 * multiplier)
+                                    continue
+                                else
+                                    v.BuildCompleted = true
+                                end
+                        elseif unitCat.TECH2 and unitCat.AIR then
                             if v:GetFractionComplete() < 0.7 then
-                                --RNGLOG('EcoPowerPreemptive : T3 Air Being Built')
-                                potentialPowerConsumption = potentialPowerConsumption + (1800 * multiplier)
+                                --RNGLOG('EcoPowerPreemptive : T2 Air Being Built')
+                                potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
                                 continue
                             else
                                 v.BuildCompleted = true
                             end
-                    elseif unitCat.TECH2 and unitCat.AIR then
-                        if v:GetFractionComplete() < 0.7 then
-                            --RNGLOG('EcoPowerPreemptive : T2 Air Being Built')
-                            potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
-                            continue
-                        else
-                            v.BuildCompleted = true
+                        elseif unitCat.TECH3 and unitCat.LAND then
+                            if v:GetFractionComplete() < 0.7 then
+                                --RNGLOG('EcoPowerPreemptive : T3 Air Being Built')
+                                potentialPowerConsumption = potentialPowerConsumption + (250 * multiplier)
+                                continue
+                            else
+                                v.BuildCompleted = true
+                            end
+                        elseif unitCat.TECH2 and unitCat.LAND then
+                            if v:GetFractionComplete() < 0.7 then
+                                --RNGLOG('EcoPowerPreemptive : T2 Air Being Built')
+                                potentialPowerConsumption = potentialPowerConsumption + (70 * multiplier)
+                                continue
+                            else
+                                v.BuildCompleted = true
+                            end
                         end
                     elseif unitCat.MASSEXTRACTION then
                         if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.7 then
@@ -4429,9 +4454,13 @@ AIBrain = Class(RNGAIBrainClass) {
                         else
                             v.BuildCompleted = true
                         end
-                    elseif unitCat.STRUCTURE and (unitCat.RADAR or unitCat.SONAR) then
+                    elseif unitCat.STRUCTURE and (unitCat.RADAR or unitCat.SONAR or unitCat.SHIELD) then
                         if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.7 then
                             --RNGLOG('EcoPowerPreemptive : Radar being upgraded next power consumption is '..ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy)
+                            if v:IsUnitState('Upgrading') then
+                                --RNGLOG('Unit is upgrading, check power consumption during upgrade')
+                                potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildCostEnergy / ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildTime * (ALLBPS[v.UnitId].Economy.BuildRate * multiplier))
+                            end
                             potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy
                             continue
                         else
@@ -4824,7 +4853,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     v:SetPaused(false)
                     continue
                 end
-                if EntityCategoryContains( categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE) , v.UnitBeingBuilt) then
+                if (not v.PlatoonHandle.PlatoonData.Construction.NearDefensivePoints) and EntityCategoryContains( categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE) , v.UnitBeingBuilt) then
                     v:SetPaused(true)
                     continue
                 end
@@ -5696,7 +5725,7 @@ AIBrain = Class(RNGAIBrainClass) {
     CivilianPDCheckRNG = function(self)
         -- This will momentarily reveal civilian structures at the start of the game so that the AI can detect threat from PD's
         --RNGLOG('Reveal Civilian PD')
-        coroutine.yield(2)
+        coroutine.yield(50)
         local AIIndex = self:GetArmyIndex()
         for i,v in ArmyBrains do
             local brainIndex = v:GetArmyIndex()
@@ -5732,7 +5761,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     if self.GraphZones then
                         if self.GraphZones[v.Zone].MassMarkersInZone > 5 then
                             for c, b in self.BuilderManagers do
-                                if b.GraphArea and b.GraphArea == v.Zone then
+                                if b.GraphArea and string.find(b.GraphArea, v.Zone) then
                                     invalidZone = true
                                     break
                                 end
@@ -5785,6 +5814,46 @@ AIBrain = Class(RNGAIBrainClass) {
                --RNGLOG(repr(self.BrainIntel.DynamicExpansionPositions))
             end
             coroutine.yield(100)
+        end
+    end,
+
+    GetCallBackCheck = function(self, unit)
+        local function AntiNavalRetreat(unit, instigator)
+                --RNGLOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy))
+                if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.CategoriesHash.ANTINAVY 
+                and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy == 0 and (not unit.PlatoonHandle.RetreatOrdered) then
+                    --RNGLOG('Naval Callback AntiNavy We want to retreat '..unit.UnitId)
+                    unit.PlatoonHandle.RetreatOrdered = true
+                end
+            end
+        local function AntiAirRetreat(unit, instigator)
+            --RNGLOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiAir))
+            if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.CategoriesHash.ANTINAVY and instigator.Blueprint.CategoriesHash.AIR
+            and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiAir == 0 and (not unit.PlatoonHandle.RetreatOrdered) then
+                --RNGLOG('Naval Callback AntiAir We want to retreat '..unit.UnitId)
+                unit.PlatoonHandle.RetreatOrdered = true
+            end
+        end
+        local function ACUDamageDetail(unit, instigator)
+            --RNGLOG('ACU Damaged by unit '..repr(instigator.UnitId))
+            if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.Defense.SurfaceThreatLevel 
+            and instigator.Blueprint.Defense.SurfaceThreatLevel > 0 and instigator.Blueprint.CategoriesHash.AIR
+            and (not unit.EnemyAirPresent) then
+                --RNGLOG('ACU EnemyAir is now present '..instigator.UnitId)
+                unit.EnemyAirPresent = true
+            end
+        end
+        if unit.Blueprint.CategoriesHash.TECH1 and unit.Blueprint.CategoriesHash.FRIGATE then
+            --RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
+            unit:AddOnDamagedCallback( AntiNavalRetreat, nil, 100)
+        end
+        if unit.Blueprint.CategoriesHash.TECH2 and unit.Blueprint.CategoriesHash.CRUISER then
+            --RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
+            unit:AddOnDamagedCallback( AntiNavalRetreat, nil, 100)
+        end
+        if unit.Blueprint.CategoriesHash.TECH2 and unit.Blueprint.CategoriesHash.DESTROYER then
+            --RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
+            unit:AddOnDamagedCallback( AntiAirRetreat, nil, 100)
         end
     end,
 }

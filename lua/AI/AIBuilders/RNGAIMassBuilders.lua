@@ -252,6 +252,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassFab' }},
             { UCBC, 'GreaterThanT3CoreExtractorPercentage', { 0.85 }},
+            { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 160.0 } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { UCBC, 'HaveUnitRatioRNG', { 0.3, categories.STRUCTURE * categories.MASSFABRICATION, '<=',categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.95}}, -- Ratio from 0 to 1. (1=100%)
@@ -417,12 +418,12 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 900,
+        Priority = 925,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -447,7 +448,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG T2 Mass Adjacency Engineer',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 910,
+        Priority = 945,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 1,
         BuilderConditions = {

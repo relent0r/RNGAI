@@ -72,7 +72,7 @@ BuilderGroup {
                 BuildClose = false,
                 OrderedTemplate = true,
                 NearDefensivePoints = true,
-                Type = 'Land',
+                Type = 'SHIELD',
                 Tier = 2,
                 LocationType = 'LocationType',
                 BuildStructures = {
@@ -107,7 +107,8 @@ BuilderGroup {
                 --AvoidCategory = categories.STRUCTURE * categories.SHIELD,
                 AdjacencyPriority = {
                     categories.EXPERIMENTAL * categories.STRUCTURE,
-                    categories.STRATEGIC * categories.STRUCTURE - categories.AIRSTAGINGPLATFORM,
+                    categories.STRATEGIC * categories.STRUCTURE - categories.AIRSTAGINGPLATFORM - categories.TECH2,
+                    categories.FACTORY * categories.STRUCTURE * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY,
                     categories.ENERGYPRODUCTION * categories.TECH3,
                     categories.ENERGYPRODUCTION * categories.TECH2,
                     categories.FACTORY * categories.STRUCTURE,
@@ -152,7 +153,8 @@ BuilderGroup {
                 Centered = true,
                 AdjacencyPriority = {
                     categories.EXPERIMENTAL * categories.STRUCTURE,
-                    categories.STRATEGIC * categories.STRUCTURE - categories.AIRSTAGINGPLATFORM,
+                    categories.STRATEGIC * categories.STRUCTURE - categories.AIRSTAGINGPLATFORM - categories.TECH2,
+                    categories.FACTORY * categories.STRUCTURE * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY,
                     categories.ENERGYPRODUCTION * categories.TECH3,
                     categories.ENERGYPRODUCTION * categories.TECH2,
                     categories.FACTORY * categories.STRUCTURE,

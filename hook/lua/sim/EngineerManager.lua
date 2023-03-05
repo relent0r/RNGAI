@@ -97,12 +97,12 @@ EngineerManager = Class(RNGEngineerManager) {
 
                     if EntityCategoryContains(categories.ENGINEER - categories.STATIONASSISTPOD, unit) then
                         local unitConstructionFinished = function(unit, finishedUnit)
-                                                    -- Call function on builder manager; let it handle the finish of work
-                                                    local aiBrain = unit:GetAIBrain()
-                                                    local engManager = aiBrain.BuilderManagers[unit.BuilderManagerData.LocationType].EngineerManager
-                                                    if engManager then
-                                                        engManager:UnitConstructionFinished(unit, finishedUnit)
-                                                    end
+                                -- Call function on builder manager; let it handle the finish of work
+                                local aiBrain = unit:GetAIBrain()
+                                local engManager = aiBrain.BuilderManagers[unit.BuilderManagerData.LocationType].EngineerManager
+                                if engManager then
+                                    engManager:UnitConstructionFinished(unit, finishedUnit)
+                                end
                         end
                         import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(unitConstructionFinished, unit, categories.ALLUNITS)
 
@@ -155,9 +155,9 @@ EngineerManager = Class(RNGEngineerManager) {
                 bestManager = self.Brain.BuilderManagers['FLOATING'].EngineerManager
             end
         end
-        self:RemoveUnit(unit)
+        self:RemoveUnitRNG(unit)
         if bestManager and not unit.Dead then
-            bestManager:AddUnit(unit)
+            bestManager:AddUnitRNG(unit)
         end
     end,
 
@@ -172,7 +172,7 @@ EngineerManager = Class(RNGEngineerManager) {
         if not self.Brain.RNG then
             return RNGEngineerManager.AssignEngineerTask(self, unit)
         end
-        --LOG('Engineer trying to have task assigned '..unit.Sync.id)
+        --LOG('Engineer trying to have task assigned '..unit.EntityId)
         if unit.Active or unit.Combat or unit.GoingHome or unit.UnitBeingBuiltBehavior or unit.Upgrading then
             --RNGLOG('Unit Still in combat or going home, delay')
             self.AssigningTask = false
@@ -180,7 +180,7 @@ EngineerManager = Class(RNGEngineerManager) {
             self:DelayAssign(unit, 50)
             return
         end
-        --LOG('Engineer passed active, combat, goinghome, unitbeingbuiltbehavior or upgrading '..unit.Sync.id)
+        --LOG('Engineer passed active, combat, goinghome, unitbeingbuiltbehavior or upgrading '..unit.EntityId)
         unit.LastActive = GetGameTimeSeconds()
         if unit.UnitBeingAssist or unit.UnitBeingBuilt then
             --RNGLOG('UnitBeingAssist Delay')
