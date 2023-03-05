@@ -18,9 +18,6 @@ function AddToBuildQueueRNG(aiBrain, builder, whatToBuild, buildLocation, relati
         --LOG('BorderWarning build')
         IssueBuildMobile({builder}, {buildLocation[1], buildLocation[3], buildLocation[2]}, whatToBuild, {})
     else
-        if whatToBuild == 'ueb4202' then
-            RNGLOG('Build location for shield is '..repr(buildLocation))
-        end
         aiBrain:BuildStructure(builder, whatToBuild, buildLocation, false)
     end
     local newEntry = {whatToBuild, buildLocation, relative, borderWarning}
@@ -30,8 +27,6 @@ end
 function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
     local factionIndex = aiBrain:GetFactionIndex()
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
-    RNGLOG('AIBuildBaseTemplateOrderedRNG building '..whatToBuild)
-    RNGLOG('Position is '..repr(reference))
     if whatToBuild then
         if IsResource(buildingType) then
             return AIExecuteBuildStructureRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference)
@@ -572,13 +567,13 @@ function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructio
     local radius = constructionData.ExpansionRadius or 100
     # PBM Style expansion bases here
     if aiBrain.HasPlatoonList then
-    # Figure out what type of builders to import
-        local expansionTypes = constructionData.ExpansionTypes
-    if not expansionTypes then
-        expansionTypes = { 'Air', 'Land', 'Sea', 'Gate' }
-    end
+        # Figure out what type of builders to import
+            local expansionTypes = constructionData.ExpansionTypes
+        if not expansionTypes then
+            expansionTypes = { 'Air', 'Land', 'Sea', 'Gate' }
+        end
 
-    # Check if it already exists
+        # Check if it already exists
         for k,v in aiBrain.PBM.Locations do
             if v.LocationType == baseName then
                 return
@@ -609,17 +604,17 @@ function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructio
 
     else
         if not aiBrain.BuilderManagers or aiBrain.BuilderManagers[baseName] or not builder.BuilderManagerData then
-            #LOG('*AI DEBUG: ARMY ' .. aiBrain:GetArmyIndex() .. ': New Engineer for expansion base - ' .. baseName)
-            builder.BuilderManagerData.EngineerManager:RemoveUnit(builder)
-            aiBrain.BuilderManagers[baseName].EngineerManager:AddUnit(builder, true)
+            --LOG('*AI DEBUG: ARMY ' .. aiBrain:GetArmyIndex() .. ': New Engineer for expansion base - ' .. baseName)
+            builder.BuilderManagerData.EngineerManager:RemoveUnitRNG(builder)
+            aiBrain.BuilderManagers[baseName].EngineerManager:AddUnitRNG(builder, true)
             return
         end
 
         aiBrain:AddBuilderManagers(position, radius, baseName, true)
 
         # Move the engineer to the new base managers
-        builder.BuilderManagerData.EngineerManager:RemoveUnit(builder)
-        aiBrain.BuilderManagers[baseName].EngineerManager:AddUnit(builder, true)
+        builder.BuilderManagerData.EngineerManager:RemoveUnitRNG(builder)
+        aiBrain.BuilderManagers[baseName].EngineerManager:AddUnitRNG(builder, true)
 
         # Iterate through bases finding the value of each expansion
         local baseValues = {}
@@ -646,7 +641,7 @@ function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructio
 
         # Error if no pick
         if not pick then
-            --RNGLOG('*AI DEBUG: ARMY ' .. aiBrain:GetArmyIndex() .. ': Layer Preference - ' .. per .. ' - yielded no base types at - ' .. locationType)
+            RNGLOG('*AI DEBUG: ARMY ' .. aiBrain:GetArmyIndex() .. ': Layer Preference - ' .. per .. ' - yielded no base types at - ' .. locationType)
         end
 
         # Setup base

@@ -97,12 +97,12 @@ EngineerManager = Class(RNGEngineerManager) {
 
                     if EntityCategoryContains(categories.ENGINEER - categories.STATIONASSISTPOD, unit) then
                         local unitConstructionFinished = function(unit, finishedUnit)
-                                                    -- Call function on builder manager; let it handle the finish of work
-                                                    local aiBrain = unit:GetAIBrain()
-                                                    local engManager = aiBrain.BuilderManagers[unit.BuilderManagerData.LocationType].EngineerManager
-                                                    if engManager then
-                                                        engManager:UnitConstructionFinished(unit, finishedUnit)
-                                                    end
+                                -- Call function on builder manager; let it handle the finish of work
+                                local aiBrain = unit:GetAIBrain()
+                                local engManager = aiBrain.BuilderManagers[unit.BuilderManagerData.LocationType].EngineerManager
+                                if engManager then
+                                    engManager:UnitConstructionFinished(unit, finishedUnit)
+                                end
                         end
                         import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(unitConstructionFinished, unit, categories.ALLUNITS)
 
@@ -155,9 +155,9 @@ EngineerManager = Class(RNGEngineerManager) {
                 bestManager = self.Brain.BuilderManagers['FLOATING'].EngineerManager
             end
         end
-        self:RemoveUnit(unit)
+        self:RemoveUnitRNG(unit)
         if bestManager and not unit.Dead then
-            bestManager:AddUnit(unit)
+            bestManager:AddUnitRNG(unit)
         end
     end,
 

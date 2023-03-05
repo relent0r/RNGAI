@@ -2783,7 +2783,6 @@ AIBrain = Class(RNGAIBrainClass) {
     BaseMonitorPlatoonDistressThreadRNG = function(self)
         self.BaseMonitor.PlatoonAlertSounded = true
         while true do
-            RNGLOG('MassEfficiencyOverTime --'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime)
             local numPlatoons = 0
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 if self:PlatoonExists(v.Platoon) then
@@ -5762,7 +5761,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     if self.GraphZones then
                         if self.GraphZones[v.Zone].MassMarkersInZone > 5 then
                             for c, b in self.BuilderManagers do
-                                if b.GraphArea and b.GraphArea == v.Zone then
+                                if b.GraphArea and string.find(b.GraphArea, v.Zone) then
                                     invalidZone = true
                                     break
                                 end
@@ -5820,27 +5819,27 @@ AIBrain = Class(RNGAIBrainClass) {
 
     GetCallBackCheck = function(self, unit)
         local function AntiNavalRetreat(unit, instigator)
-                RNGLOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy))
+                --RNGLOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy))
                 if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.CategoriesHash.ANTINAVY 
                 and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy == 0 and (not unit.PlatoonHandle.RetreatOrdered) then
-                    RNGLOG('Naval Callback AntiNavy We want to retreat '..unit.UnitId)
+                    --RNGLOG('Naval Callback AntiNavy We want to retreat '..unit.UnitId)
                     unit.PlatoonHandle.RetreatOrdered = true
                 end
             end
         local function AntiAirRetreat(unit, instigator)
-            RNGLOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiAir))
+            --RNGLOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiAir))
             if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.CategoriesHash.ANTINAVY and instigator.Blueprint.CategoriesHash.AIR
             and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiAir == 0 and (not unit.PlatoonHandle.RetreatOrdered) then
-                RNGLOG('Naval Callback AntiAir We want to retreat '..unit.UnitId)
+                --RNGLOG('Naval Callback AntiAir We want to retreat '..unit.UnitId)
                 unit.PlatoonHandle.RetreatOrdered = true
             end
         end
         local function ACUDamageDetail(unit, instigator)
-            RNGLOG('ACU Damaged by unit '..repr(instigator.UnitId))
+            --RNGLOG('ACU Damaged by unit '..repr(instigator.UnitId))
             if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.Defense.SurfaceThreatLevel 
             and instigator.Blueprint.Defense.SurfaceThreatLevel > 0 and instigator.Blueprint.CategoriesHash.AIR
             and (not unit.EnemyAirPresent) then
-                RNGLOG('ACU EnemyAir is now present '..instigator.UnitId)
+                --RNGLOG('ACU EnemyAir is now present '..instigator.UnitId)
                 unit.EnemyAirPresent = true
             end
         end

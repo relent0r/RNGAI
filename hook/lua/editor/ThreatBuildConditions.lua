@@ -96,9 +96,6 @@ function EnemyInT3ArtilleryRangeRNG(aiBrain, locationtype, inrange)
 end
 
 function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
-    --RNGLOG('ThreatPresentInGraphRNG')
-    --RNGLOG('LocationType '..locationtype)
-    --RNGLOG('Threat Type '..tType)
     local factoryManager = aiBrain.BuilderManagers[locationtype].FactoryManager
     if not factoryManager then
         return false
@@ -113,10 +110,8 @@ function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
         --RNGLOG('Initial expansionMarker list is '..repr(expansionMarkers))
         for k, v in expansionMarkers do
             if v.type == 'Expansion Area' or v.type == 'Large Expansion Area' or v.type == 'Blank Marker' then
-                --RNGLOG('Expansion Area is '..repr(v))
                 if v.RNGArea then
-                    --RNGLOG('Expansion Graph Area is '..v.RNGArea)
-                    if v.RNGArea == graphArea then
+                    if string.find(graphArea, v.RNGArea) then
                         local threat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, tType)
                         if threat > 2 then
                             -- I had to do this because neutral civilians show up as structure threat
@@ -125,6 +120,7 @@ function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
                                 --RNGLOG('StructuresNotMex threat present for base '..locationtype)
                                 --RNGLOG('Expansion position detected is '..repr(v.position))
                                 --RNGLOG('There is '..threat..' enemy structure threat on the graph area expansion markers')
+                                --RNGLOG('Distance is '..VDist3(v.position, factoryManager.Location))
                                 return true
                             end
                         end

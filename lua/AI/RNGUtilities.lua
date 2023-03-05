@@ -1136,11 +1136,9 @@ function ManualBuildQueueItem(aiBrain, eng, structureToBuild, adjacent, category
     local buildingTmplFile = import('/lua/BuildingTemplates.lua')
     local buildingTmpl = buildingTmplFile[('BuildingTemplates')][factionIndex]
     local buildLocation, whatToBuild, borderWarning = GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['BaseTemplates'][factionIndex], structureToBuild, eng, adjacent, category, 15, true)
-    LOG('Build Location '..repr(buildLocation).. ' WhatToBuild '..repr(whatToBuild))
     if buildLocation and whatToBuild then
         return buildLocation, whatToBuild
     end
-    LOG('ManualBuildQueue returning false ')
     return false
 end
 
@@ -3532,7 +3530,7 @@ AIFindDynamicExpansionPointRNG = function(aiBrain, locationType, radius, threatM
                --RNGLOG('Distance is '..VDist3Sq(pos, v.Position)..' needs to be under '..radius)
                 if VDist3Sq(pos, v.Position) < radius and GetThreatAtPosition( aiBrain, v.Position, threatRings, true, threatType) < threatMax then
                     retPos = v.Position
-                    retName = v.Zone
+                    retName = 'DYNAMIC_'..v.Zone
                     break
                 end
             end
@@ -4312,9 +4310,6 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
                         closestPoint = k
                         closestDistance = distance
                     end
-                end
-                if finishedUnit.Blueprint.CategoriesHash.SHIELD then
-                    RNGLOG('closestDistance is '..closestDistance)
                 end
                 if closestPoint and closestDistance <= aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Radius then
                     if finishedUnit.Blueprint.CategoriesHash.ANTIMISSILE then

@@ -3701,14 +3701,10 @@ Platoon = Class(RNGAIPlatoonClass) {
             elseif cons.DynamicExpansion then
                 reference, refName = RUtils.AIFindDynamicExpansionPointRNG(aiBrain, cons.LocationType,
                         (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
-                RNGLOG('Dynamic Expansion Engineer Platoon call')
-                RNGLOG('refName is : '..repr(refName))
                 if not reference or not refName then
-                    RNGLOG('Dynamic Expansion no reference for refName')
                     self:PlatoonDisband()
                     return
                 end
-                RNGLOG('Dynamic Expansion Position is '..repr(reference))
             elseif cons.NearMarkerType == 'Expansion Area' then
                 reference, refName = RUtils.AIFindExpansionAreaNeedsEngineerRNG(aiBrain, cons.LocationType,
                         (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
@@ -7534,7 +7530,6 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             local pathLength = RNGGETN(path)
             for i=1, pathLength do
-                LOG('Moving along path to destination platoon')
                 if self.PlatoonData.AggressiveMove then
                     self:AggressiveMoveToLocation(path[i])
                 else
@@ -7748,9 +7743,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                         dist = VDist3Sq(PlatoonPosition , targetPlatoonPos)
                         if dist < maxMergeDistance then
                             return true
-                        else
-                            LOG('Not in merge distance, distance is '..VDist3Sq(PlatoonPosition , targetPlatoonPos))
                         end
+                        coroutine.yield(10)
                         IssueClearCommands(GetPlatoonUnits(self))
                     end
                 end
@@ -7759,18 +7753,25 @@ Platoon = Class(RNGAIPlatoonClass) {
     end,
 
     NavalRetreatRNG = function(self, aiBrain)
+        local LocationType = self.PlatoonData.LocationType or 'MAIN'
+        local mainBasePos
+        if LocationType then
+            mainBasePos = aiBrain.BuilderManagers[LocationType].Position
+        else
+            mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
+        end
         if self.RetreatOrdered then
-            RNGLOG('Naval Retreat Ordered During combat')
+            --RNGLOG('Naval Retreat Ordered During combat')
             self:SetPlatoonFormationOverride('NoFormation')
             self:Stop()
             self:MoveToLocation(mainBasePos, false)
-            RNGLOG('Naval Retreat move back towards main base')
+            --RNGLOG('Naval Retreat move back towards main base')
             coroutine.yield(60)
             local platoonPos = GetPlatoonPosition(self)
             --RNGLOG('Naval AI : Find platoon to merge with')
             local mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('NavalAttackAIRNG', 122500)
             if alternatePos then
-                RNGLOG('Naval Retreat merge platoon found')
+                --RNGLOG('Naval Retreat merge platoon found')
                 RUtils.CenterPlatoonUnitsRNG(self, alternatePos)
             else
                 --RNGLOG('No Naval alternatePos found')
@@ -7798,7 +7799,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             self:MergeWithNearbyPlatoonsRNG('NavalAttackAIRNG', 60, platoonLimit)
                         end
                         if self.RetreatOrdered then
-                            RNGLOG('Naval Retreat has retreated, setting retreat ordered back to false')
+                            --RNGLOG('Naval Retreat has retreated, setting retreat ordered back to false')
                             self.RetreatOrdered = false
                         end
                     --RNGLOG('Arrived at either friendly Naval Attack')
@@ -7812,7 +7813,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         if Stuck > 15 then
                             self:Stop()
                             if self.RetreatOrdered then
-                                RNGLOG('Naval Retreat has got stuck, setting retreat ordered back to false')
+                                --RNGLOG('Naval Retreat has got stuck, setting retreat ordered back to false')
                                 self.RetreatOrdered = false
                             end
                             break

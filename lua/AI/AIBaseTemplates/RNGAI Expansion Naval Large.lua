@@ -42,9 +42,9 @@ BaseBuilderTemplate {
             T1AirValue = 7,
             T2AirValue = 19,
             T3AirValue = 28,
-            T1NavalValue = 7,
-            T2NavalValue = 19,
-            T3NavalValue = 28,
+            T1NavalValue = 6,
+            T2NavalValue = 25,
+            T3NavalValue = 45,
         },
     },
     ExpansionFunction = function(aiBrain, location, markerType)
