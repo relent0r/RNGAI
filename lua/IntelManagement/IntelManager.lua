@@ -1530,6 +1530,7 @@ ExpansionIntelScanRNG = function(aiBrain)
         aiBrain:ForkThread(RUtils.RenderBrainIntelRNG)
     end
     local GetClosestPathNodeInRadiusByLayer = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayer
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     --RNGLOG('Starting ExpansionIntelScan')
     while aiBrain.Status ~= "Defeat" do
         for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
@@ -1570,29 +1571,30 @@ ExpansionIntelScanRNG = function(aiBrain)
                     info:   type="Land Path Node"
                     info: }
                 ]]
-                local label, reason
-                if RUtils.PositionInWater(v.Position) then
-                    label, reason = NavUtils.GetLabel('Water', v.Position)
-                    if not label then
-                        WARN('No expansion label returned reason '..reason)
-                        WARN('Water label failure position was '..repr(v.Position))
+                if v.Position[1] > 0 and v.Position[3] > 0 then
+                    local label, reason
+                    if RUtils.PositionInWater(v.Position) then
+                        label, reason = NavUtils.GetLabel('Water', v.Position)
+                        if not label then
+                            WARN('No expansion label returned reason '..reason)
+                            WARN('Water label failure position was '..repr(v.Position))
+                        else
+                            aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
+                            aiBrain.BrainIntel.ExpansionWatchTable[k].RNGLayer = 'Water'
+                            --RNGLOG('Expansion Marker has had label added '..repr(v))
+                        end
                     else
-                        aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
-                        aiBrain.BrainIntel.ExpansionWatchTable[k].RNGLayer = 'Water'
-                        --RNGLOG('Expansion Marker has had label added '..repr(v))
-                    end
-                else
-                    label, reason = NavUtils.GetLabel('Land', v.Position)
-                    if not label then
-                        WARN('No expansion label returned reason '..reason)
-                        WARN('Land label failure position was '..repr(v.Position))
-                    else
-                        aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
-                        aiBrain.BrainIntel.ExpansionWatchTable[k].RNGLayer = 'Land'
-                        --RNGLOG('Expansion Marker has had label added '..repr(v))
+                        label, reason = NavUtils.GetLabel('Land', v.Position)
+                        if not label then
+                            WARN('No expansion label returned reason '..reason)
+                            WARN('Land label failure position was '..repr(v.Position))
+                        else
+                            aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
+                            aiBrain.BrainIntel.ExpansionWatchTable[k].RNGLayer = 'Land'
+                            --RNGLOG('Expansion Marker has had label added '..repr(v))
+                        end
                     end
                 end
-                
             end
             if v.MassPoints > 2 then
                 for _, t in threatTypes do

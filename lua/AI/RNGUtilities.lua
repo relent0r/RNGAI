@@ -882,7 +882,7 @@ function GetLastACUPosition(aiBrain, enemyIndex)
     local lastSpotted = 0
     if aiBrain.EnemyIntel.ACU then
         for k, v in aiBrain.EnemyIntel.ACU do
-            if k == enemyIndex then
+            if v.Position[1] and k == enemyIndex then
                 acuPos = v.Position
                 lastSpotted = v.LastSpotted
                 --RNGLOG('* AI-RNG: acuPos has data')
@@ -3195,7 +3195,7 @@ ACUPriorityDirector = function(aiBrain, platoon, platoonPosition, maxRadius)
     end
     if aiBrain.EnemyIntel.ACU then
         for k, v in aiBrain.EnemyIntel.ACU do
-            if not v.Unit.Dead then
+            if not v.Unit.Dead and v.Position[1] then
                 if aiBrain.CDRUnit.EnemyCDRPresent then
                     target = AIFindACUTargetInRangeRNG(aiBrain, platoon, aiBrain.CDRUnit.Position, 'Attack', maxRadius, platoon.CurrentPlatoonThreat)
                     return target

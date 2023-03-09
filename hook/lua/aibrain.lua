@@ -3107,41 +3107,7 @@ AIBrain = Class(RNGAIBrainClass) {
             return
         end
     end,
-
     
-
-    ACUDetectionRNGOld = function(self, blip)
-        --LOG('ACUDetection Callback has fired')
-        local currentGameTime = GetGameTimeSeconds()
-        if blip then
-            --RNGLOG('* AI-RNG: ACU Detected')
-            local unit = blip:GetSource()
-            if not unit.Dead then
-                --unitDesc = GetBlueprint(v).Description
-                --RNGLOG('* AI-RNG: Units is'..unitDesc)
-                local enemyIndex = unit:GetAIBrain():GetArmyIndex()
-                --RNGLOG('* AI-RNG: EnemyIndex :'..enemyIndex)
-                --RNGLOG('* AI-RNG: Curent Game Time : '..currentGameTime)
-                --RNGLOG('* AI-RNG: Iterating ACUTable')
-                for k, c in self.EnemyIntel.ACU do
-                    --RNGLOG('* AI-RNG: Table Index is : '..k)
-                    --RNGLOG('* AI-RNG:'..c.LastSpotted)
-                    --RNGLOG('* AI-RNG:'..repr(c.Position))
-                    if k == enemyIndex then
-                        --RNGLOG('* AI-RNG: CurrentGameTime IF is true updating tables')
-                        c.Position = unit:GetPosition()
-                        c.HP = unit:GetHealth()
-                        --RNGLOG('Enemy ACU of index '..enemyIndex..' has '..c.HP..' health')
-                        c.Threat = self:GetThreatAtPosition(c.Position, self.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
-                        c.LastSpotted = currentGameTime
-                        c.Unit = unit
-                        --LOG('Enemy ACU Position is set')
-                    end
-                end
-            end
-        end
-    end,
-
     TacticalMonitorThreadRNG = function(self, ALLBPS)
         --RNGLOG('Monitor Tick Count :'..self.TacticalMonitor.TacticalMonitorTime)
         coroutine.yield(Random(2,10))
@@ -3619,7 +3585,7 @@ AIBrain = Class(RNGAIBrainClass) {
             
         if not potentialTarget then
             for k, v in self.EnemyIntel.ACU do
-                if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.LastSpotted ~= 0 then
+                if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.LastSpotted ~= 0 and v.Position[1] then
                     if platoonType == 'GUNSHIP' and platoonDPS then
                         if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and v.LastSpotted + 120 > GetGameTimeSeconds() then
                             RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
