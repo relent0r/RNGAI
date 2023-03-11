@@ -211,6 +211,20 @@ IntelManager = Class {
         end
     end,
 
+    RebuildTable = function(self, oldtable)
+        local temptable = {}
+        for k, v in oldtable do
+            if v ~= nil then
+                if type(k) == 'string' then
+                    temptable[k] = v
+                else
+                    table.insert(temptable, v)
+                end
+            end
+        end
+        return temptable
+    end,
+
     IntelDebugThread = function(self)
         self:WaitForZoneInitialization()
         WaitTicks(30)
@@ -955,15 +969,20 @@ IntelManager = Class {
         local gridX, gridZ = self:GetIntelGrid(position)
         local gridsSet = 0
         local intelRadius
+        local needSort = false
         --RNGLOG('Disinfecting Grid Positions, grid size is '..gridSize)
         if type == 'Radar' then
             self.MapIntelGrid[gridX][gridZ].Radars[unit.EntityId] = nil
+            needSort = true
             local radarCoverage = false
             for k, v in self.MapIntelGrid[gridX][gridZ].Radars do
                 if v and not v.Dead then
                     radarCoverage = true
                     break
                 end
+            end
+            if needSort then
+                self.MapIntelGrid[gridX][gridZ].Radars = self:RebuildTable(self.MapIntelGrid[gridX][gridZ].Radars)
             end
             if not radarCoverage then
                 self.MapIntelGrid[gridX][gridZ][property] = value
@@ -1448,6 +1467,20 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit, aiBrain)
     if data.targetcat and data.sourcecat then
         aiBrain.IntelManager.UnitStats[data.targetcat].Deaths.Total[data.sourcecat] = aiBrain.IntelManager.UnitStats[data.targetcat].Deaths.Total[data.sourcecat] + 1
     end
+end
+
+RebuildTable = function(oldtable)
+    local temptable = {}
+    for k, v in oldtable do
+        if v ~= nil then
+            if type(k) == 'string' then
+                temptable[k] = v
+            else
+                table.insert(temptable, v)
+            end
+        end
+    end
+    return temptable
 end
 
 function RecordUnitDeath(targetUnit, type)
@@ -2263,6 +2296,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
     end
 
     if next(aiBrain.EnemyIntel.TML) then
+        local needSort = false
         for k, v in aiBrain.EnemyIntel.TML do
             if not v.object.Dead then 
                 if not v.validated then
@@ -2281,6 +2315,9 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                 aiBrain.EnemyIntel.TML[k] = nil
             end
         end
+        if needSort then
+            aiBrain.EnemyIntel.TML = RebuildTable(aiBrain.EnemyIntel.TML)
+         end
     end
 
     if next(factoryUnits) then
@@ -2439,6 +2476,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
     end
     while aiBrain.Status ~= "Defeat" do
         local unitAddedCount = 0
+        local needSort = false
         --RNGLOG('Check Expansion table in priority directo')
         if aiBrain.BrainIntel.ExpansionWatchTable then
             for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
@@ -2566,15 +2604,25 @@ TruePlatoonPriorityDirector = function(aiBrain)
         for k, v in aiBrain.prioritypoints do
             if v.unit.Dead then
                 aiBrain.prioritypoints[k] = nil
+                needSort = true
             end
+        end
+        if needSort then
+            aiBrain.prioritypoints = RebuildTable(aiBrain.prioritypoints)
+            needSort = false
         end
         local highPriorityCount = 0
         for k, v in aiBrain.prioritypointshighvalue do
             if v.unit.Dead then
                 aiBrain.prioritypointshighvalue[k] = nil
+                needSort = true
             else
                 highPriorityCount = highPriorityCount + 1
             end
+        end
+        if needSort then
+            aiBrain.prioritypointshighvalue = RebuildTable(aiBrain.prioritypointshighvalue)
+            needSort = false
         end
         if highPriorityCount > 0 then
             --RNGLOG('HighPriorityTarget is available')

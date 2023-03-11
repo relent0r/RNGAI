@@ -954,6 +954,9 @@ function HaveUnitVisual(aiBrain, unit, checkBlipOnly)
     --returns true if aiBrain can see a unit
     --checkBlipOnly - returns true if can see a blip
     --RNGLOG('HaveUnitVisual : Check if available')
+    if ScenarioInfo.Options.OmniCheat == "on" then
+        return true
+    end
     local iArmyIndex = aiBrain:GetArmyIndex()
     if checkBlipOnly == nil then checkBlipOnly = false end
     local unitBrain

@@ -174,6 +174,20 @@ StructureManager = Class {
         end
     end,
 
+    RebuildTable = function(self, oldtable)
+        local temptable = {}
+        for k, v in oldtable do
+            if v ~= nil then
+                if type(k) == 'string' then
+                    temptable[k] = v
+                else
+                    table.insert(temptable, v)
+                end
+            end
+        end
+        return temptable
+    end,
+
     FactoryDataCaptureRNG = function(self)
         -- Lets try be smart about how we do this
         -- This captures the current factory states, replaces all those builder conditions
@@ -1175,6 +1189,7 @@ StructureManager = Class {
 
     ExtractorTMLCheck = function(self, extractor)
         local defended = true
+        local needSort = false
         if extractor.TMLInRange then
             for k, v in extractor.TMLInRange do
                 if not aiBrain.EnemyIntel.TML[k] or aiBrain.EnemyIntel.TML[k].object.Dead then
@@ -1186,6 +1201,9 @@ StructureManager = Class {
                 defended = false
             end
         end
+        if needSort then
+            extractor.TMLInRange = self:RebuildTable(extractor.TMLInRange)
+         end
         return defended
     end,
     

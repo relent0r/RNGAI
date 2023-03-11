@@ -3071,7 +3071,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             while timeOut < 3 do
                 local currentGameTime = GetGameTimeSeconds()
-                if RUtils.HaveUnitVisual(self, unit, true) then
+                if (not IsDestroyed(unit)) and RUtils.HaveUnitVisual(self, unit, true) then
                     local acuPos = unit:GetPosition()
                     self.EnemyIntel.ACU[index].Position = acuPos
                     self.EnemyIntel.ACU[index].DistanceToBase = VDist3Sq(acuPos, self.BrainIntel.StartPos)
@@ -3126,10 +3126,25 @@ AIBrain = Class(RNGAIBrainClass) {
         local ALLBPS = __blueprints
         coroutine.yield(Random(150,200))
         local im = IntelManagerRNG.GetIntelManager(self)
+        local omniVisualThread = false
         while true do
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 --RNGLOG('Run TacticalThreatAnalysisRNG')
                 self:ForkThread(IntelManagerRNG.TacticalThreatAnalysisRNG, self)
+            end
+            if ScenarioInfo.Options.OmniCheat == "on" and (not omniVisualThread) then
+                for k, v in self.EnemyIntel.ACU do
+                    if (not v.Unit.Dead) and (not v.Ally) and (not v.VisualThread) then
+                        local enemyACUs = self:GetUnitsAroundPoint(categories.COMMAND, {0,0,0}, math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])*1.5, 'Enemy')
+                        for c, b in enemyACUs do
+                            if not IsDestroyed(b) and b:GetAIBrain():GetArmyIndex() == k then
+                                self.EnemyIntel.ACU[k].VisualThread = self:ForkThread(self.ACUVisualThread, k, b)
+                                omniVisualThread = true
+                                break
+                            end
+                        end
+                    end
+                end
             end
             self:CalculateMassMarkersRNG()
             local enemyCount = 0
@@ -3317,7 +3332,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 gunBool = true
                             end
                         end
-                        if self.CheatEnabled then
+                        if self.CheatEnabled and (not IsDestroyed(v)) then
                             acuHealth = v:GetHealth()
                         end
                     end
