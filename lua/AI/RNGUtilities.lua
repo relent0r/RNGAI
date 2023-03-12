@@ -1334,7 +1334,6 @@ function SetArcPoints(position,enemyPosition,radius,num,arclength)
 end
 
 function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, basePosition, cdrThreat)
-    local ALLBPS = __blueprints
 
     if not cdrPos then
         cdrPos = aiBrain.CDRUnit.Position
@@ -1942,7 +1941,6 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, 
 end
 
 function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, maxRange, targetQueryCategory, TargetSearchCategory, enemyBrain, ignoreNotCompleted)
-    local ALLBPS = ALLBPS
     if type(TargetSearchCategory) == 'string' then
         TargetSearchCategory = ParseEntityCategory(TargetSearchCategory)
     end
@@ -2093,7 +2091,7 @@ function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, ta
                     continue
                 end
                 if Target.EntityId and not unitThreatTable[Target.EntityId] then
-                    totalThreat = totalThreat + ALLBPS[Target.UnitId].Defense.SurfaceThreatLevel
+                    totalThreat = totalThreat + Target.Blueprint.Defense.SurfaceThreatLevel
                     unitThreatTable[Target.EntityId] = true
                 end
                 TargetPosition = Target:GetPosition()
@@ -3219,8 +3217,8 @@ ACUPriorityDirector = function(aiBrain, platoon, platoonPosition, maxRadius)
                                         RNGINSERT(enemyACUTable, b)
                                     else
                                         --RNGLOG('Unit ID is '..v.UnitId)
-                                        if bp.SurfaceThreatLevel ~= nil then
-                                            enemyUnitThreat = enemyUnitThreat + ALLBPS[b.UnitId].Defense.SurfaceThreatLevel
+                                        if b.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                                            enemyUnitThreat = enemyUnitThreat + b.Blueprint.Defense.SurfaceThreatLevel
                                         end
                                     end
                                 end
@@ -3237,8 +3235,8 @@ ACUPriorityDirector = function(aiBrain, platoon, platoonPosition, maxRadius)
                                     RNGINSERT(enemyACUTable, b)
                                 else
                                     --RNGLOG('Unit ID is '..v.UnitId)
-                                    if bp.AirThreatLevel ~= nil then
-                                        enemyUnitThreat = enemyUnitThreat + ALLBPS[b.UnitId].Defense.AirThreatLevel
+                                    if b.Blueprint.Defense.AirThreatLevel ~= nil then
+                                        enemyUnitThreat = enemyUnitThreat + b.Blueprint.Defense.AirThreatLevel
                                     end
                                 end
                             end
@@ -3285,21 +3283,20 @@ end
 
 GrabPosDangerRNG = function(aiBrain,pos,radius)
     if pos and radius then
-        local ALLBPS = __blueprints
         local brainThreats = {ally=0,enemy=0}
         local enemyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Enemy')
         for _,v in enemyunits do
             if not v.Dead then
                 local mult=1
                 
-                if ALLBPS[v.UnitId].CategoriesHash.INDIRECTFIRE then
+                if v.Blueprint.CategoriesHash.INDIRECTFIRE then
                     mult=0.3
                 end
-                if ALLBPS[v.UnitId].CategoriesHash.STRUCTURE then
+                if v.Blueprint.CategoriesHash.STRUCTURE then
                     mult=1.5
                 end
-                if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel ~= nil then
-                    brainThreats.enemy = brainThreats.enemy + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel*mult
+                if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                    brainThreats.enemy = brainThreats.enemy + v.Blueprint.Defense.SurfaceThreatLevel*mult
                 end
             end
         end
@@ -3308,11 +3305,11 @@ GrabPosDangerRNG = function(aiBrain,pos,radius)
         for _,v in allyunits do
             if not v.Dead then
                 local mult=1
-                if ALLBPS[v.UnitId].CategoriesHash.INDIRECTFIRE then
+                if v.Blueprint.CategoriesHash.INDIRECTFIRE then
                     mult=0.3
                 end
-                if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel ~= nil then
-                    brainThreats.ally = brainThreats.ally + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel*mult
+                if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                    brainThreats.ally = brainThreats.ally + v.Blueprint.Defense.SurfaceThreatLevel*mult
                 end
             end
         end
@@ -3733,7 +3730,7 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
     end
 
     local pointTable = DrawCirclePoints(8, platoon.PlatoonStrikeRadius, targetPosition)
-    local maxDamage = ALLBPS[target.UnitId].Economy.BuildCostMass
+    local maxDamage = target.Blueprint.Economy.BuildCostMass
     local setPointPos = false
     -- Check radius of target position to set the minimum damage
     local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE, targetPosition, platoon.PlatoonStrikeRadius + 4, 'Enemy')
@@ -3741,14 +3738,14 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
     for _, unit in enemiesAroundTarget do
         if not unit.Dead then
             local unitPos = unit:GetPosition()
-            local damageRadius = (ALLBPS[unit.UnitId].SizeX or 1 + ALLBPS[unit.UnitId].SizeZ or 1) / 4
+            local damageRadius = (unit.Blueprint.SizeX or 1 + unit.Blueprint.SizeZ or 1) / 4
             --RNGLOG('Unit is '..unit.UnitId)
             --RNGLOG('unitPos is '..repr(unitPos))
             --RNGLOG('Distance between units '..VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]))
             --RNGLOG('strike radius + damage radius '..(platoon.PlatoonStrikeRadius + damageRadius))
             if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (platoon.PlatoonStrikeRadius * 2 + damageRadius) then
-                if platoon.PlatoonStrikeDamage > ALLBPS[unit.UnitId].Defense.MaxHealth or platoon.PlatoonStrikeDamage > (unit:GetHealth() / 3) then
-                    damage = damage + ALLBPS[unit.UnitId].Economy.BuildCostMass
+                if platoon.PlatoonStrikeDamage > unit.Blueprint.Defense.MaxHealth or platoon.PlatoonStrikeDamage > (unit:GetHealth() / 3) then
+                    damage = damage + unit.Blueprint.Economy.BuildCostMass
                 else
                     --RNGLOG('Strike will not kill target or 3 passes')
                 end
@@ -3769,14 +3766,14 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
         for _, unit in enemiesAroundTarget do
             if not unit.Dead then
                 local unitPos = unit:GetPosition()
-                local damageRadius = (ALLBPS[unit.UnitId].SizeX or 1 + ALLBPS[unit.UnitId].SizeZ or 1) / 4
+                local damageRadius = (unit.Blueprint.SizeX or 1 + unit.Blueprint.SizeZ or 1) / 4
                 --RNGLOG('Unit is '..unit.UnitId)
                 --RNGLOG('unitPos is '..repr(unitPos))
                 --RNGLOG('Distance between units '..VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]))
                 --RNGLOG('strike radius + damage radius '..(platoon.PlatoonStrikeRadius + damageRadius))
                 if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (platoon.PlatoonStrikeRadius * 2 + damageRadius) then
-                    if platoon.PlatoonStrikeDamage > ALLBPS[unit.UnitId].Defense.MaxHealth or platoon.PlatoonStrikeDamage > (unit:GetHealth() / 3) then
-                        damage = damage + ALLBPS[unit.UnitId].Economy.BuildCostMass
+                    if platoon.PlatoonStrikeDamage > unit.Blueprint.Defense.MaxHealth or platoon.PlatoonStrikeDamage > (unit:GetHealth() / 3) then
+                        damage = damage + unit.Blueprint.Economy.BuildCostMass
                     else
                         --RNGLOG('Strike will not kill target or 3 passes')
                     end
@@ -3837,13 +3834,12 @@ function GetAngleToPosition(Pos1, Pos2)
 end
 
 function ShieldProtectingTargetRNG(aiBrain, targetUnit, shields)
-    local function GetShieldRadiusAboveGroundSquaredRNG(shield,ALLBPS)
-        local width = ALLBPS[shield.UnitId].Defense.Shield.ShieldSize
-        local height = ALLBPS[shield.UnitId].Defense.Shield.ShieldVerticalOffset
+    local function GetShieldRadiusAboveGroundSquaredRNG(shield)
+        local width = shield.Blueprint.Defense.Shield.ShieldSize
+        local height = shield.Blueprint.Defense.Shield.ShieldVerticalOffset
     
         return width * width - height * height
     end
-    local ALLBPS = __blueprints
     -- if no target unit, then we can skip
     if not targetUnit then
         return false
@@ -3855,7 +3851,7 @@ function ShieldProtectingTargetRNG(aiBrain, targetUnit, shields)
     for _, shield in shields do
         if not shield.Dead then
             local shieldPos = shield:GetPosition()
-            local shieldSizeSq = GetShieldRadiusAboveGroundSquaredRNG(shield, ALLBPS)
+            local shieldSizeSq = GetShieldRadiusAboveGroundSquaredRNG(shield)
             if VDist2Sq(tPos[1], tPos[3], shieldPos[1], shieldPos[3]) < shieldSizeSq then
                 return true
             end
@@ -3865,13 +3861,12 @@ function ShieldProtectingTargetRNG(aiBrain, targetUnit, shields)
 end
 
 function GetClosestShieldProtectingTargetRNG(attackingUnit, targetUnit, attackingPosition)
-    local function GetShieldRadiusAboveGroundSquaredRNG(shield, ALLBPS)
-        local width = ALLBPS[shield.UnitId].Defense.Shield.ShieldSize
-        local height = ALLBPS[shield.UnitId].Defense.Shield.ShieldVerticalOffset
+    local function GetShieldRadiusAboveGroundSquaredRNG(shield)
+        local width = shield.Blueprint.Defense.Shield.ShieldSize
+        local height = shield.Blueprint.Defense.Shield.ShieldVerticalOffset
     
         return width * width - height * height
     end
-    local ALLBPS = __blueprints
     if not targetUnit or not attackingUnit then
         return false
     end
@@ -3893,7 +3888,7 @@ function GetClosestShieldProtectingTargetRNG(attackingUnit, targetUnit, attackin
     for _, shield in shields do
         if not shield.Dead then
             local shieldPos = shield:GetPosition()
-            local shieldSizeSq = GetShieldRadiusAboveGroundSquaredRNG(shield, ALLBPS)
+            local shieldSizeSq = GetShieldRadiusAboveGroundSquaredRNG(shield)
 
             if VDist2Sq(tPos[1], tPos[3], shieldPos[1], shieldPos[3]) < shieldSizeSq then
                 table.insert(blockingList, shield)
@@ -4353,9 +4348,9 @@ AIWarningChecks = function(aiBrain)
 end
 
 GetShieldCoverAroundUnit = function(aiBrain, unit)
-    local function GetShieldRadiusAboveGroundSquaredRNG(shield,ALLBPS)
-        local width = ALLBPS[shield.UnitId].Defense.Shield.ShieldSize
-        local height = ALLBPS[shield.UnitId].Defense.Shield.ShieldVerticalOffset
+    local function GetShieldRadiusAboveGroundSquaredRNG(shield)
+        local width = shield.Blueprint.Defense.Shield.ShieldSize
+        local height = shield.Blueprint.Defense.Shield.ShieldVerticalOffset
     
         return width * width - height * height
     end
@@ -4367,7 +4362,7 @@ GetShieldCoverAroundUnit = function(aiBrain, unit)
         for _, shield in shields do
             if not shield.Dead and shield.MyShield then
                 local shieldPos = shield:GetPosition()
-                local shieldSizeSq = GetShieldRadiusAboveGroundSquaredRNG(shield, ALLBPS)
+                local shieldSizeSq = GetShieldRadiusAboveGroundSquaredRNG(shield)
                 if VDist3Sq(tPos, shieldPos) < shieldSizeSq then
                     totalShieldHealth = totalShieldHealth + shield.MyShield:GetHealth()
                     totalShields = totalShields + 1

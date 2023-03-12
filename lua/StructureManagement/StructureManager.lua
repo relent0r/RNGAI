@@ -380,7 +380,6 @@ StructureManager = Class {
     end,
 
     GetClosestFactory = function(self, base, type, tech, hqFlag)
-        local ALLBPS = __blueprints
         if base == 'NAVAL' then
             --RNGLOG('Naval upgrade wanted, finding closest base')
             local closestBase = false

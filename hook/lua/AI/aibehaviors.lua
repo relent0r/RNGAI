@@ -27,7 +27,6 @@ local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 local GetMostRestrictiveLayerRNG = import('/lua/ai/aiattackutilities.lua').GetMostRestrictiveLayerRNG
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
-local ALLBPS = __blueprints
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
 local RNGSORT = table.sort
@@ -116,7 +115,7 @@ function SetCDRDefaults(aiBrain, cdr)
     }
     aiBrain.CDRUnit = cdr
 
-    for k, v in ALLBPS[cdr.UnitId].Weapon do
+    for k, v in cdr.Blueprint.Weapon do
         if v.Label == 'OverCharge' then
             cdr.OverCharge = v
             --RNGLOG('* AI-RNG: ACU Overcharge is set ')
@@ -305,7 +304,7 @@ function CDRCallPlatoon(cdr, threatRequired)
                     local units = GetPlatoonUnits(plat.Platoon)
                     for _,u in units do
                         if not u.Dead and not u:IsUnitState('Attached') then
-                            threatValue = threatValue + ALLBPS[u.UnitId].Defense.SurfaceThreatLevel
+                            threatValue = threatValue + u.Blueprint.Defense.SurfaceThreatLevel
                             if EntityCategoryContains(categories.DIRECTFIRE, u) then
                                 RNGINSERT(validUnits.Attack, u)
                             elseif EntityCategoryContains(categories.INDIRECTFIRE, u) then
@@ -1269,18 +1268,18 @@ function CDRThreatAssessmentRNG(cdr)
                             friendlyUnitThreatInner = friendlyUnitThreatInner + v:EnhancementThreatReturn()
                         else
                             if EntityCategoryContains(categories.ANTIAIR, v) then
-                                friendAntiAirThreat = friendAntiAirThreat + ALLBPS[v.UnitId].Defense.AirThreatLevel
+                                friendAntiAirThreat = friendAntiAirThreat + v.Blueprint.Defense.AirThreatLevel
                             end
-                            friendlyUnitThreatInner = friendlyUnitThreatInner + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                            friendlyUnitThreatInner = friendlyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel
                         end
                     else
                         if EntityCategoryContains(categories.COMMAND, v) then
                             friendlyUnitThreat = friendlyUnitThreat + v:EnhancementThreatReturn()
                         else
                             if EntityCategoryContains(categories.ANTIAIR, v) then
-                                friendAntiAirThreat = friendAntiAirThreat + ALLBPS[v.UnitId].Defense.AirThreatLevel
+                                friendAntiAirThreat = friendAntiAirThreat + v.Blueprint.Defense.AirThreatLevel
                             end
-                            friendlyUnitThreat = friendlyUnitThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                            friendlyUnitThreat = friendlyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel
                         end
                     end
                 end
@@ -1291,8 +1290,8 @@ function CDRThreatAssessmentRNG(cdr)
                 if v and not v.Dead then
                     if VDist3Sq(v:GetPosition(), cdr.Position) < 1225 then
                         if EntityCategoryContains(CategoryT2Defense, v) then
-                            if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel then
-                                enemyUnitThreatInner = enemyUnitThreatInner + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel * 1.5
+                            if v.Blueprint.Defense.SurfaceThreatLevel then
+                                enemyUnitThreatInner = enemyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel * 1.5
                             end
                         end
                         if EntityCategoryContains(categories.COMMAND, v) then
@@ -1301,14 +1300,14 @@ function CDRThreatAssessmentRNG(cdr)
                             enemyACUHealthModifier = enemyACUHealthModifier + (v:GetHealth() / cdr.Health)
                         else
                             if EntityCategoryContains(categories.AIR, v) then
-                                enemyAirThreat = enemyAirThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                                enemyAirThreat = enemyAirThreat + v.Blueprint.Defense.SurfaceThreatLevel
                             end
-                            enemyUnitThreatInner = enemyUnitThreatInner + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                            enemyUnitThreatInner = enemyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel
                         end
                     else
                         if EntityCategoryContains(CategoryT2Defense, v) then
-                            if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel then
-                                enemyUnitThreatInner = enemyUnitThreatInner + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel * 1.5
+                            if v.Blueprint.Defense.SurfaceThreatLevel then
+                                enemyUnitThreatInner = enemyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel * 1.5
                             end
                         end
                         if EntityCategoryContains(categories.COMMAND, v) then
@@ -1316,9 +1315,9 @@ function CDRThreatAssessmentRNG(cdr)
                             enemyUnitThreat = enemyUnitThreat + v:EnhancementThreatReturn()
                         else
                             if EntityCategoryContains(categories.AIR, v) then
-                                enemyAirThreat = enemyAirThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                                enemyAirThreat = enemyAirThreat + v.Blueprint.Defense.SurfaceThreatLevel
                             end
-                            enemyUnitThreat = enemyUnitThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                            enemyUnitThreat = enemyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel
                         end
                     end
                 end
@@ -1508,7 +1507,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         local target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition
         local continueFighting = true
         local counter = 0
-        local cdrThreat = ALLBPS[cdr.UnitId].Defense.SurfaceThreatLevel or 75
+        local cdrThreat = cdr.Blueprint.Defense.SurfaceThreatLevel or 75
         local enemyThreat
         local snipeAttempt = false
         local threatFailures = 0
@@ -1572,11 +1571,8 @@ function CDROverChargeRNG(aiBrain, cdr)
                                     friendlyUnitThreat = v:EnhancementThreatReturn()
                                     --RNGLOG('Friendly ACU enhancement threat '..friendlyUnitThreat)
                                 else
-                                    --RNGLOG('Unit ID is '..v.UnitId)
-                                    local bp = ALLBPS[v.UnitId].Defense
-                                    --RNGLOG(repr(ALLBPS[v.UnitId].Defense))
-                                    if bp.SurfaceThreatLevel ~= nil then
-                                        friendlyUnitThreat = friendlyUnitThreat + bp.SurfaceThreatLevel
+                                    if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                                        friendlyUnitThreat = friendlyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel
                                     end
                                 end
                             end
@@ -2489,7 +2485,6 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
         local tempEnhanceBp = cdr:GetBlueprint().Enhancements[enhancement]
         local unitEnhancements = import('/lua/enhancementcommon.lua').GetEnhancements(cdr.EntityId)
         local preReqRequired = false
-        --local unitEnhancements = ALLBPS[cdr.UnitId].Enhancements
         -- Do we have already a enhancment in this slot ?
         if unitEnhancements[tempEnhanceBp.Slot] and unitEnhancements[tempEnhanceBp.Slot] ~= tempEnhanceBp.Prerequisite then
             -- remove the enhancement

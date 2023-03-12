@@ -1244,7 +1244,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local aiBrain = self:GetBrain()
         local scout = GetPlatoonUnits(self)[1]
         local im = IntelManagerRNG.GetIntelManager(aiBrain)
-        local intelRange = ALLBPS[scout.UnitId].Intel.RadarRadius
+        local intelRange = scout.Blueprint.Intel.RadarRadius
         if intelRange then
             self.IntelRange = intelRange
         end
@@ -1401,7 +1401,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         --RNGLOG('Starting ACUSupportRNG')
         self.BuilderName = 'ACUSupportRNG'
         self.PlanName = 'ACUSupportRNG'
-        local ALLBPS = __blueprints
         local enemyACUPresent
         local function VariableKite(platoon,unit,target, modOverride)
             local function KiteDist(pos1,pos2,distance)
@@ -1552,19 +1551,19 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             --RNGLOG('Platoon has been vented')
         end
-        local function GetThreatAroundTarget(self, aiBrain, ALLBPS, targetPosition)
+        local function GetThreatAroundTarget(self, aiBrain, targetPosition)
             local enemyUnitThreat = 0
             local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), targetPosition, 35, 'Enemy')
             for k,v in enemyUnits do
                 if v and not v.Dead then
                     if EntityCategoryContains(categories.STRUCTURE * categories.DEFENSE, v) then
-                        enemyUnitThreat = enemyUnitThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel + 10
+                        enemyUnitThreat = enemyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel + 10
                     end
                     if EntityCategoryContains(categories.COMMAND, v) then
                         enemyACUPresent = true
                         enemyUnitThreat = enemyUnitThreat + v:EnhancementThreatReturn()
                     else
-                        enemyUnitThreat = enemyUnitThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                        enemyUnitThreat = enemyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel
                     end
                 end
             end
@@ -1761,7 +1760,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 snipeAttempt = true
                             end
                             targetPosition = target:GetPosition()
-                            local enemyUnitThreat = GetThreatAroundTarget(self, aiBrain, ALLBPS, targetPosition)
+                            local enemyUnitThreat = GetThreatAroundTarget(self, aiBrain, targetPosition)
                             --RNGLOG('EnemyUnitThreat '..enemyUnitThreat)
                             --RNGLOG('CurrentPlatoonThreat '..self.CurrentPlatoonThreat)
                             if enemyUnitThreat > self.CurrentPlatoonThreat then
@@ -2108,7 +2107,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         if platoonUnits > 0 then
             for k, v in platoonUnits do
                 if not v.Dead then
-                    for _, weapon in ALLBPS[v.UnitId].Weapon or {} do
+                    for _, weapon in v.Blueprint.Weapon or {} do
                         -- unit can have MaxWeaponRange entry from the last platoon
                         if not v.MaxWeaponRange or weapon.MaxRadius > v.MaxWeaponRange then
                             -- save the weaponrange 
@@ -2453,7 +2452,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         if platoonUnits > 0 then
             for k, v in platoonUnits do
                 if not v.Dead then
-                    for _, weapon in ALLBPS[v.UnitId].Weapon or {} do
+                    for _, weapon in v.Blueprint.Weapon or {} do
                         -- unit can have MaxWeaponRange entry from the last platoon
                         if weapon.WeaponCategory == 'Anti Air' then
                             continue
@@ -4583,7 +4582,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         if (not eng) or eng.Dead or (not eng.PlatoonHandle) or eng.Combat or eng.Active or eng.Upgrading or eng.GoingHome then
             return
         end
-        ALLBPS = __blueprints
+        local ALLBPS = __blueprints
         local aiBrain = eng.PlatoonHandle:GetBrain()
         if not aiBrain or eng.Dead or not eng.EngineerBuildQueue or RNGGETN(eng.EngineerBuildQueue) == 0 then
             if PlatoonExists(aiBrain, eng.PlatoonHandle) then
@@ -4830,7 +4829,6 @@ Platoon = Class(RNGAIPlatoonClass) {
     end,
 
     ConfigurePlatoon = function(self)
-        local ALLBPS = ALLBPS
         local function SetZone(pos, zoneIndex)
             --RNGLOG('Set zone with the following params position '..repr(pos)..' zoneIndex '..zoneIndex)
             if not pos then
@@ -4883,7 +4881,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             if self.MovementLayer == 'Air' then
                                 --RNGLOG('Unit id is '..v.UnitId..' Configure Platoon Weapon Category'..weaponBlueprint.WeaponCategory..' Damage Radius '..weaponBlueprint.DamageRadius)
                             end
-                            if ALLBPS[v.UnitId].CategoriesHash.BOMBER and (weaponBlueprint.WeaponCategory == 'Bomb' or weaponBlueprint.RangeCategory == 'UWRC_DirectFire') then
+                            if v.Blueprint.CategoriesHash.BOMBER and (weaponBlueprint.WeaponCategory == 'Bomb' or weaponBlueprint.RangeCategory == 'UWRC_DirectFire') then
                                 v.DamageRadius = weaponBlueprint.DamageRadius
                                 v.StrikeDamage = weaponBlueprint.Damage * weaponBlueprint.MuzzleSalvoSize
                                 if weaponBlueprint.InitialDamage then
@@ -4899,7 +4897,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 end
                                 --RNGLOG('Have set units DamageRadius to '..v.DamageRadius)
                             end
-                            if ALLBPS[v.UnitId].CategoriesHash.GUNSHIP and weaponBlueprint.RangeCategory == 'UWRC_DirectFire' then
+                            if v.Blueprint.CategoriesHash.GUNSHIP and weaponBlueprint.RangeCategory == 'UWRC_DirectFire' then
                                 v.ApproxDPS = RUtils.CalculatedDPSRNG(weaponBlueprint) --weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
                                 maxPlatoonDPS = maxPlatoonDPS + v.ApproxDPS
                             end
@@ -4919,7 +4917,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                     local callBacks = aiBrain:GetCallBackCheck(v)
                     local primaryWeaponDamage = 0
-                    for _, weapon in ALLBPS[v.UnitId].Weapon or {} do
+                    for _, weapon in v.Blueprint.Weapon or {} do
                         -- unit can have MaxWeaponRange entry from the last platoon
                         if weapon.Damage and weapon.Damage > primaryWeaponDamage then
                             primaryWeaponDamage = weapon.Damage
@@ -6200,9 +6198,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     totalThreat = totalThreat + v:EnhancementThreatReturn()
                                     enemyUnitPos = v:GetPosition()
                                 else
-                                    --RNGLOG(repr(ALLBPS[v.UnitId].Defense))
-                                    if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel ~= nil then
-                                        totalThreat = totalThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                                    --RNGLOG(repr(v.Blueprint.Defense))
+                                    if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                                        totalThreat = totalThreat + v.Blueprint.Defense.SurfaceThreatLevel
                                     end
                                     if not enemyUnitPos then
                                         enemyUnitPos = v:GetPosition()
@@ -6873,9 +6871,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                                             totalThreat = totalThreat + v:EnhancementThreatReturn()
                                             enemyUnitPos = v:GetPosition()
                                         else
-                                            --RNGLOG(repr(ALLBPS[v.UnitId].Defense))
-                                            if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel ~= nil then
-                                                totalThreat = totalThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                                            --RNGLOG(repr(v.Blueprint.Defense))
+                                            if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                                                totalThreat = totalThreat + v.Blueprint.Defense.SurfaceThreatLevel
                                             end
                                             if not enemyUnitPos then
                                                 enemyUnitPos = v:GetPosition()
@@ -7166,8 +7164,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                     end
                     if closestTurret and not closestTurret.Dead then
-                        if ALLBPS[closestTurret.UnitId].Weapon[1].RangeCategory == 'UWRC_DirectFire' then
-                            closestTurretDistance = ALLBPS[closestTurret.UnitId].Weapon[1].MaxRadius
+                        if closestTurret.Blueprint.Weapon[1].RangeCategory == 'UWRC_DirectFire' then
+                            closestTurretDistance = closestTurret.Blueprint.Weapon[1].MaxRadius
                             --RNGLOG('Turret Found at a distance of '..closestTurretDistance)
                         end
                     end
@@ -7188,7 +7186,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     coroutine.yield(1)
                                     continue
                                 end
-                                if closestTurret and not closestTurret.Dead and ALLBPS[unit.UnitId].CategoriesHash.INDIRECTFIRE then
+                                if closestTurret and not closestTurret.Dead and unit.Blueprint.CategoriesHash.INDIRECTFIRE then
                                     if closestTurretDistance < unit.MaxWeaponRange + 5 then
                                         --RNGLOG('INDIRECTFIRE UNIT Being request to fire at turret')
                                         IssueAttack({unit}, closestTurret)
@@ -7700,9 +7698,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                                                 totalThreat = totalThreat + v:EnhancementThreatReturn()
                                                 enemyUnitPos = v:GetPosition()
                                             else
-                                                --RNGLOG(repr(ALLBPS[v.UnitId].Defense))
-                                                if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel ~= nil then
-                                                    totalThreat = totalThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                                                --RNGLOG(repr(v.Blueprint.Defense))
+                                                if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                                                    totalThreat = totalThreat + v.Blueprint.Defense.SurfaceThreatLevel
                                                 end
                                                 if not enemyUnitPos then
                                                     enemyUnitPos = v:GetPosition()
@@ -7947,11 +7945,11 @@ Platoon = Class(RNGAIPlatoonClass) {
         local antiAirThreat = 0
         for k, v in platoonUnits do
             if not v.Dead then
-                if ALLBPS[v.Unitid].Defense.SurfaceThreatLevel then
-                    surfaceThreat = surfaceThreat + ALLBPS[v.Unitid].Defense.SurfaceThreatLevel
+                if v.Blueprint.Defense.SurfaceThreatLevel then
+                    surfaceThreat = surfaceThreat + v.Blueprint.Defense.SurfaceThreatLevel
                 end
-                if ALLBPS[v.Unitid].Defense.AirThreatLevel then
-                    antiAirThreat = antiAirThreat + ALLBPS[v.Unitid].Defense.AirThreatLevel
+                if v.Blueprint.Defense.AirThreatLevel then
+                    antiAirThreat = antiAirThreat + v.Blueprint.Defense.AirThreatLevel
                 end
                 platoonCount = platoonCount + 1
             end
@@ -8186,7 +8184,7 @@ Platoon = Class(RNGAIPlatoonClass) {
 
         for _, u in platUnits do
             if not u.Dead then
-                threatValue = threatValue + ALLBPS[u.UnitId].Defense[translatedThreatType]
+                threatValue = threatValue + u.Blueprint.Defense[translatedThreatType]
                 platCount = platCount + 1
             end
         end
@@ -8262,7 +8260,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local units = GetPlatoonUnits(aPlat)
                 for _,u in units do
                     if not u.Dead and not u:IsUnitState('Attached') then
-                        threatValue = threatValue + ALLBPS[u.UnitId].Defense[translatedThreatType]
+                        threatValue = threatValue + u.Blueprint.Defense[translatedThreatType]
                         RNGINSERT(validUnits, u)
                         bValidUnits = true
                     end
@@ -9337,11 +9335,11 @@ Platoon = Class(RNGAIPlatoonClass) {
 
         for k, v in GetPlatoonUnits(self) do
             if not v.Dead then
-                if ALLBPS[v.UnitId].CategoriesHash.DIRECTFIRE then
+                if v.Blueprint.CategoriesHash.DIRECTFIRE then
                     directFire = directFire + 1
-                elseif ALLBPS[v.UnitId].CategoriesHash.INDIRECTFIRE then
+                elseif v.Blueprint.CategoriesHash.INDIRECTFIRE then
                     indirectFire = indirectFire + 1
-                elseif ALLBPS[v.UnitId].CategoriesHash.ANTIAIR then
+                elseif v.Blueprint.CategoriesHash.ANTIAIR then
                     antiAir = antiAir + 1
                 end
                 total = total + 1
@@ -9703,7 +9701,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local totalDdps = 0
             for _, unit in GetPlatoonUnits(platoon) do
                 if unit and not unit.Dead then
-                    local unitDps = RUtils.CalculatedDPSRNG(ALLBPS[unit.UnitId].Weapon[1])
+                    local unitDps = RUtils.CalculatedDPSRNG(unit.Blueprint.Weapon[1])
                     totalDdps = totalDdps + unitDps
                 end
             end
@@ -9875,7 +9873,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 self:PlatoonDisbandNoAssign()
                 return
             end
-            local smlWeapon = ALLBPS[sml.UnitId].Weapon
+            local smlWeapon = sml.Blueprint.Weapon
             for _, weapon in smlWeapon do
                 if weapon.DamageType == 'Nuke' then
                     if weapon.NukeInnerRingRadius > self.PlatoonDamageRadius then
@@ -9967,7 +9965,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         --RNGLOG('Set unit priorities')
         unit:SetTargetPriorities(atkPriTable)
-        local weapon = ALLBPS[unit.UnitId].Weapon[1]
+        local weapon = unit.Blueprint.Weapon[1]
         local maxRadius = weapon.MaxRadius
         --RNGLOG('Starting Platoon Loop')
 
@@ -10041,7 +10039,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         self:EngineerAssistRemoveRNG(aiBrain, eng)
                         platoonCount = platoonCount - 1
                     else
-                        totalBuildRate = totalBuildRate + ALLBPS[eng.UnitId].Economy.BuildRate
+                        totalBuildRate = totalBuildRate + eng.Blueprint.Economy.BuildRate
                         eng.Active = true
                     end
                 end
@@ -10262,7 +10260,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             if eng:IsPaused() then
                 eng:SetPaused( false )
             end
-            aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
+            aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - eng.Blueprint.Economy.BuildRate
             IssueStop({eng})
             IssueClearCommands({eng})
             if eng.BuilderManagerData.EngineerManager then
@@ -10566,7 +10564,6 @@ Platoon = Class(RNGAIPlatoonClass) {
 
     TruePlatoonRNG = function(self)
         local VDist2Sq = VDist2Sq
-        local ALLBPS = __blueprints
         local function GetWeightedHealthRatio(unit)--health % including shields
             if unit.MyShield then
                 return (unit.MyShield:GetHealth()+unit:GetHealth())/(unit.MyShield:GetMaxHealth()+unit:GetMaxHealth())
@@ -10661,8 +10658,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if EntityCategoryContains(categories.INDIRECTFIRE,v) then
                         mult=0.3
                     end
-                    if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel ~= nil then
-                        platoonthreat = platoonthreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel*GetWeightedHealthRatio(v)*mult
+                    if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                        platoonthreat = platoonthreat + v.Blueprint.Defense.SurfaceThreatLevel*GetWeightedHealthRatio(v)*mult
                     end
                     if (v.Sync.Regen>0) or not v.chpinitialized then
                         v.chpinitialized=true
@@ -10688,7 +10685,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         elseif EntityCategoryContains(categories.SHIELD,v) then
                             v.Role='Shield'
                         end
-                        for _, weapon in ALLBPS[v.UnitId].Weapon or {} do
+                        for _, weapon in v.Blueprint.Weapon or {} do
                             if not (weapon.RangeCategory == 'UWRC_DirectFire') then continue end
                             if not v.MaxWeaponRange or v.MaxRadius > v.MaxWeaponRange then
                                 v.MaxWeaponRange = weapon.MaxRadius * 0.9
@@ -10775,7 +10772,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         unit.chpdanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unit:GetPosition(),30).enemy)
                         unit.dangerupdate=GetGameTimeSeconds()
                     end
-                    if not unit.chpvalue then unit.chpvalue=ALLBPS[unit.UnitId].Economy.BuildCostMass/GetTrueHealth(unit) end
+                    if not unit.chpvalue then unit.chpvalue=unit.Blueprint.Economy.BuildCostMass/GetTrueHealth(unit) end
                     unit.chpworth=unit.chpvalue/GetTrueHealth(unit)
                     unit.chpdistance[id]=VDist3(position,unit:GetPosition())
                     unit.chppriority[id]=unit.chpworth/math.max(30,unit.chpdistance[id])/unit.chpdanger
@@ -11285,7 +11282,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 if enemies and next(enemies) then
                     local enemyThreat = 0
                     for _,enemy in enemies do
-                        enemyThreat = enemyThreat + ALLBPS[enemy.UnitId].Defense.SurfaceThreatLevel
+                        enemyThreat = enemyThreat + enemy.Blueprint.Defense.SurfaceThreatLevel
                         if enemyThreat * 1.1 > self.Threat then
                             --RNGLOG('TruePlatoon enemy threat too high during navigating, exiting')
                             self.navgood = false
@@ -11371,7 +11368,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         local pathmaxdist=0
         local lastfinalpoint=nil
         local lastfinaldist=0
-        local ALLBPS = __blueprints
         while not platoon.Dead and PlatoonExists(aiBrain, self) do
             coroutine.yield(1)
             local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, self)

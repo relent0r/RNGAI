@@ -679,10 +679,9 @@ IntelManager = Class {
     end,
 
     AssignIntelUnit = function(self, unit)
-        local ALLBPS = __blueprints
-        local intelRadius = ALLBPS[unit.UnitId].Intel.RadarRadius * ALLBPS[unit.UnitId].Intel.RadarRadius
+        local intelRadius = unit.Blueprint.Intel.RadarRadius * unit.Blueprint.Intel.RadarRadius
         local radarPosition = unit:GetPosition()
-        if ALLBPS[unit.UnitId].CategoriesHash.RADAR then
+        if unit.Blueprint.CategoriesHash.RADAR then
             --RNGLOG('Zone set for radar that has been built '..unit.UnitId)
             unit.zoneid = MAP:GetZoneID(radarPosition,self.Brain.Zones.Land.index)
             if unit.zoneid then
@@ -696,16 +695,15 @@ IntelManager = Class {
             else
                 WARN('No ZoneID for Radar, unable to set coverage area')
             end
-            local gridSearch = math.floor(ALLBPS[unit.UnitId].Intel.RadarRadius / MapIntelGridSize)
+            local gridSearch = math.floor(unit.Blueprint.Intel.RadarRadius / MapIntelGridSize)
             --RNGLOG('GridSearch for IntelCoverage is '..gridSearch)
             self:InfectGridPosition(radarPosition, gridSearch, 'Radar', 'IntelCoverage', true, unit)
         end
     end,
 
     UnassignIntelUnit = function(self, unit)
-        local ALLBPS = __blueprints
         local radarPosition = unit:GetPosition()
-        if ALLBPS[unit.UnitId].CategoriesHash.RADAR then
+        if unit.Blueprint.CategoriesHash.RADAR then
             --RNGLOG('Unassigning Radar Unit')
             for k, v in self.ZoneIntel.Assignment do
                 for c, b in v.RadarUnits do
@@ -719,7 +717,7 @@ IntelManager = Class {
                     v.RadarCoverage = false
                 end
             end
-            local gridSearch = math.floor(ALLBPS[unit.UnitId].Intel.RadarRadius / MapIntelGridSize)
+            local gridSearch = math.floor(unit.Blueprint.Intel.RadarRadius / MapIntelGridSize)
             self:DisinfectGridPosition(radarPosition, gridSearch, 'Radar', 'IntelCoverage', false, unit)
         end
     end,
@@ -740,7 +738,6 @@ IntelManager = Class {
         -- I did this because I didn't want to assign units directly to the zones since it makes it hard to troubleshoot
         -- replaces the previous expansion scout assignment so that all mass points can be monitored
         -- Will also set data for intel based scout production.
-        local ALLBPS = __blueprints
         
         self:WaitForZoneInitialization()
         coroutine.yield(Random(5,20))
@@ -2044,7 +2041,6 @@ MapReclaimAnalysis = function(aiBrain)
 end
 
 TacticalThreatAnalysisRNG = function(aiBrain)
-    local ALLBPS = __blueprints
 
     --RNGLOG("Started analysis for: " .. aiBrain.Nickname)
     --local startedAnalysisAt = GetSystemTimeSecondsOnlyForProfileUse()
@@ -2111,7 +2107,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 --RNGLOG('Inserting Enemy Energy Structure '..unit.UnitId)
                                 RNGINSERT(energyUnits, {
                                     EnemyIndex = unitIndex, 
-                                    Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel * 2, 
+                                    Value = unit.Blueprint.Defense.EconomyThreatLevel * 2, 
                                     HP = unit:GetHealth(), 
                                     Object = unit, 
                                     Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
@@ -2125,7 +2121,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 RNGINSERT(
                                     defensiveUnits, { 
                                     EnemyIndex = unitIndex, 
-                                    Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, 
+                                    Value = unit.Blueprint.Defense.EconomyThreatLevel, 
                                     HP = unit:GetHealth(), 
                                     Object = unit, 
                                     Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
@@ -2138,7 +2134,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 --RNGLOG('Inserting Enemy Strategic Structure '..unit.UnitId)
                                 RNGINSERT(strategicUnits, {
                                     EnemyIndex = unitIndex, 
-                                    Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, 
+                                    Value = unit.Blueprint.Defense.EconomyThreatLevel, 
                                     HP = unit:GetHealth(), 
                                     Object = unit, 
                                     Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
@@ -2151,7 +2147,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 --RNGLOG('Inserting Enemy Intel Structure '..unit.UnitId)
                                 RNGINSERT(intelUnits, {
                                     EnemyIndex = unitIndex, 
-                                    Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, 
+                                    Value = unit.Blueprint.Defense.EconomyThreatLevel, 
                                     HP = unit:GetHealth(), 
                                     Object = unit, 
                                     Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
@@ -2165,7 +2161,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 
                                 RNGINSERT(factoryUnits, {
                                     EnemyIndex = unitIndex, 
-                                    Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, 
+                                    Value = unit.Blueprint.Defense.EconomyThreatLevel, 
                                     HP = unit:GetHealth(), 
                                     Object = unit, 
                                     Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
@@ -2190,9 +2186,9 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                 aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount = 0
             end
             if aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]]['StructuresNotMex'] then
-                    if ALLBPS[unit.Object.UnitId].Defense.SurfaceThreatLevel > 0 then
+                    if unit.Object.Blueprint.Defense.SurfaceThreatLevel > 0 then
                         aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount = aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount + 1
-                    elseif ALLBPS[unit.Object.UnitId].Defense.AirThreatLevel > 0 then
+                    elseif unit.Object.Blueprint.Defense.AirThreatLevel > 0 then
                         aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount = aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount + 1
                     end
                     if aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount + aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount > 5 then
@@ -2353,7 +2349,6 @@ TacticalThreatAnalysisRNG = function(aiBrain)
 end
 
 LastKnownThread = function(aiBrain)
-    local ALLBPS = __blueprints
     local unitCat
     local im = GetIntelManager(aiBrain)
     aiBrain.lastknown={}
@@ -2440,7 +2435,7 @@ LastKnownThread = function(aiBrain)
                                     im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='tml'
                                     if not aiBrain.EnemyIntel.TML[id] then
                                         local angle = RUtils.GetAngleToPosition(aiBrain.BuilderManagers['MAIN'].Position, unitPosition)
-                                        aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=ALLBPS[v.UnitId].Weapon[1].MaxRadius }
+                                        aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=v.Blueprint.Weapon[1].MaxRadius }
                                         aiBrain.BasePerimeterMonitor['MAIN'].RecentTMLAngle = angle
                                     end
                                 elseif unitCat.TECH3 and unitCat.ANTIMISSILE and unitCat.SILO then

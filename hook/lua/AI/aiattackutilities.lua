@@ -934,25 +934,17 @@ end
 function GetRealThreatAtPosition(aiBrain, position, range )
 
     local sfake = GetThreatAtPosition( aiBrain, position, 0, true, 'AntiSurface' )
-    local afake = GetThreatAtPosition( aiBrain, position, 0, true, 'AntiAir' )
-    local bp
-    local ALLBPS = __blueprints
-    
+    local afake = GetThreatAtPosition( aiBrain, position, 0, true, 'AntiAir' )   
     local airthreat = 0
     local surthreat = 0
 
     local eunits = GetUnitsAroundPoint( aiBrain, categories.ALLUNITS - categories.FACTORY - categories.ECONOMIC - categories.SHIELD - categories.WALL , position, range,  'Enemy')
 
     if eunits then
-
         for _,u in eunits do
-    
             if not u.Dead then
-        
-                bp = ALLBPS[u.UnitId].Defense
-            
-                airthreat = airthreat + bp.AirThreatLevel
-                surthreat = surthreat + bp.SurfaceThreatLevel
+                airthreat = airthreat + u.Blueprint.Defense.AirThreatLevel
+                surthreat = surthreat + u.Blueprint.Defense.SurfaceThreatLevel
             end
         end
     end
