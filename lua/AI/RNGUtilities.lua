@@ -1387,18 +1387,18 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                 if not target.Dead then
                     local targetPos = target:GetPosition()
                     local targetDistance = VDist3Sq(cdrPos, targetPos)
-                    if ALLBPS[target.UnitId].CategoriesHash.COMMAND then
+                    if target.Blueprint.CategoriesHash.COMMAND then
                         if target.EntityId and not enemyACUTargets[target.EntityId] then
                             enemyACUTargets[target.EntityId] = { unit = target, position = targetPos, distance = targetDistance }
                         end
-                    elseif ALLBPS[target.UnitId].CategoriesHash.MOBILE then
+                    elseif target.Blueprint.CategoriesHash.MOBILE then
                         if target.EntityId and not mobileTargets[target.EntityId] then
                             mobileTargets[target.EntityId] = { unit = target, position = targetPos, distance = targetDistance }
                         end
-                    elseif ALLBPS[target.UnitId].CategoriesHash.STRUCTURE then
+                    elseif target.Blueprint.CategoriesHash.STRUCTURE then
                         if target.EntityId and not structureTargets[target.EntityId] then
                             structureTargets[target.EntityId] = { unit = target, position = targetPos, distance = targetDistance }
-                            structureThreat = structureThreat + ALLBPS[target.UnitId].Defense.SurfaceThreatLevel
+                            structureThreat = structureThreat + target.Blueprint.Defense.SurfaceThreatLevel
                         end
                     end
                     if not closestDistance or targetDistance < closestDistance then
@@ -1465,7 +1465,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                                 enemyACUPresent = true
                                 enemyUnitThreat = enemyUnitThreat + c:EnhancementThreatReturn()
                             else
-                                enemyUnitThreat = enemyUnitThreat + ALLBPS[c.UnitId].Defense.SurfaceThreatLevel
+                                enemyUnitThreat = enemyUnitThreat + c.Blueprint.Defense.SurfaceThreatLevel
                             end
                         end
                     end
@@ -1518,7 +1518,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                                         enemyACUPresent = true
                                         enemyUnitThreat = enemyUnitThreat + c:EnhancementThreatReturn()
                                     else
-                                        enemyUnitThreat = enemyUnitThreat + ALLBPS[c.UnitId].Defense.SurfaceThreatLevel
+                                        enemyUnitThreat = enemyUnitThreat + c.Blueprint.Defense.SurfaceThreatLevel
                                     end
                                 end
                             end
@@ -1570,7 +1570,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                                     enemyACUPresent = true
                                     enemyUnitThreat = enemyUnitThreat + c:EnhancementThreatReturn()
                                 else
-                                    enemyUnitThreat = enemyUnitThreat + ALLBPS[c.UnitId].Defense.SurfaceThreatLevel
+                                    enemyUnitThreat = enemyUnitThreat + c.Blueprint.Defense.SurfaceThreatLevel
                                 end
                             end
                         end
