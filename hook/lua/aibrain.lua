@@ -4361,33 +4361,33 @@ AIBrain = Class(RNGAIBrainClass) {
                     unitCat = v.Blueprint.CategoriesHash
                     if unitCat.ENGINEER then
                         if v.UnitBeingBuilt then
-                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.NUKE and v:GetFractionComplete() < 0.8 then
+                            if v.UnitBeingBuilt.Blueprint.CategoriesHash.NUKE and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Nuke Launcher being built')
                                 potentialPowerConsumption = potentialPowerConsumption + GetMissileConsumption(ALLBPS, v.UnitBeingBuilt.UnitId, multiplier)
                                 continue
                             end
-                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.TECH3 and ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.ANTIMISSILE and v:GetFractionComplete() < 0.8 then
+                            if v.UnitBeingBuilt.Blueprint.CategoriesHash.TECH3 and v.UnitBeingBuilt.Blueprint.CategoriesHash.ANTIMISSILE and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Anti Nuke Launcher being built')
                                 potentialPowerConsumption = potentialPowerConsumption + GetMissileConsumption(ALLBPS, v.UnitBeingBuilt.UnitId, multiplier)
                                 continue
                             end
-                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.TECH3 and ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.MASSFABRICATION and v:GetFractionComplete() < 0.8 then
+                            if v.UnitBeingBuilt.Blueprint.CategoriesHash.TECH3 and v.UnitBeingBuilt.Blueprint.CategoriesHash.MASSFABRICATION and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Mass Fabricator being built')
-                                if ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy then
+                                if v.UnitBeingBuilt.Blueprint.Economy.MaintenanceConsumptionPerSecondEnergy then
                                     --RNGLOG('Fabricator being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
-                                    potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy
+                                    potentialPowerConsumption = potentialPowerConsumption + v.UnitBeingBuilt.Blueprint.Economy.MaintenanceConsumptionPerSecondEnergy
                                 end
                                 continue
                             end
-                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.STRUCTURE and ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.SHIELD and v:GetFractionComplete() < 0.8 then
+                            if v.UnitBeingBuilt.Blueprint.CategoriesHash.STRUCTURE and v.UnitBeingBuilt.Blueprint.CategoriesHash.SHIELD and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Shield being built')
-                                if ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy then
+                                if v.UnitBeingBuilt.Blueprint.Economy.MaintenanceConsumptionPerSecondEnergy then
                                     --RNGLOG('Shield being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
-                                    potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy
+                                    potentialPowerConsumption = potentialPowerConsumption + v.UnitBeingBuilt.Blueprint.Economy.MaintenanceConsumptionPerSecondEnergy
                                 end
                                 continue
                             end
-                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.STRUCTURE and ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.FACTORY and ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.AIR and v:GetFractionComplete() < 0.8 then
+                            if v.UnitBeingBuilt.Blueprint.CategoriesHash.STRUCTURE and v.UnitBeingBuilt.Blueprint.CategoriesHash.FACTORY and v.UnitBeingBuilt.Blueprint.CategoriesHash.AIR and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Shield being built')
                                 potentialPowerConsumption = potentialPowerConsumption + (150 * multiplier)
                                 continue
@@ -4430,7 +4430,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     elseif unitCat.MASSEXTRACTION then
                         if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.7 then
                             --RNGLOG('EcoPowerPreemptive : Extractors being upgraded')
-                            potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildCostEnergy / ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildTime * (ALLBPS[v.UnitId].Economy.BuildRate * multiplier))
+                            potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildCostEnergy / ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildTime * (v.Blueprint.Economy.BuildRate * multiplier))
                             continue
                         else
                             v.BuildCompleted = true
@@ -4440,7 +4440,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             --RNGLOG('EcoPowerPreemptive : Radar being upgraded next power consumption is '..ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy)
                             if v:IsUnitState('Upgrading') then
                                 --RNGLOG('Unit is upgrading, check power consumption during upgrade')
-                                potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildCostEnergy / ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildTime * (ALLBPS[v.UnitId].Economy.BuildRate * multiplier))
+                                potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildCostEnergy / ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildTime * (v.Blueprint.Economy.BuildRate * multiplier))
                             end
                             potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy
                             continue
