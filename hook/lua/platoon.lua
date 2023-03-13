@@ -1509,7 +1509,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local platoonPos = GetPlatoonPosition(self)
                 movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{90,15})
                 if not NavUtils.CanPathTo(self.MovementLayer, platoonPos, movetoPoint) then
-                    movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{-90,15})
+                    movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{-120,15})
                 end
             else
                 local pointTable = false
