@@ -1198,7 +1198,7 @@ function AdjacencyCheckRNG(aiBrain, locationType, category, radius, testUnit)
     local unitSize = ALLBPS[testUnit].Physics
     for k,v in reference do
         if not v.Dead then
-            local targetSize = ALLBPS[v.UnitId].Physics
+            local targetSize = v.Blueprint.Physics
             local targetPos = v:GetPosition()
             targetPos[1] = targetPos[1] - (targetSize.SkirtSizeX/2)
             targetPos[3] = targetPos[3] - (targetSize.SkirtSizeZ/2)
