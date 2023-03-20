@@ -1207,13 +1207,15 @@ IntelManager = Class {
                 end
             end
         elseif type == 'AirAntiNaval' then
+            --RNGLOG(self.Brain.Nickname)
             --RNGLOG('self.Brain.BrainIntel.SelfThreat.AirNow '..self.Brain.BrainIntel.SelfThreat.AirNow)
+            --RNGLOG('ally air threat is '..self.Brain.BrainIntel.SelfThreat.AllyAirThreat)
             --RNGLOG('self.Brain.EnemyIntel.EnemyThreatCurrent.Air '..self.Brain.EnemyIntel.EnemyThreatCurrent.Air)
-            if self.Brain.BrainIntel.SelfThreat.AirNow > self.Brain.EnemyIntel.EnemyThreatCurrent.Air * 1.5 then
+            if self.Brain.BrainIntel.SelfThreat.AirNow + (self.Brain.BrainIntel.SelfThreat.AllyAirThreat / 2) > self.Brain.EnemyIntel.EnemyThreatCurrent.Air * 1.5 then
                 minThreatRisk = 80
-            elseif self.Brain.BrainIntel.SelfThreat.AirNow > self.Brain.EnemyIntel.EnemyThreatCurrent.Air then
+            elseif self.Brain.BrainIntel.SelfThreat.AirNow + (self.Brain.BrainIntel.SelfThreat.AllyAirThreat / 2) > self.Brain.EnemyIntel.EnemyThreatCurrent.Air then
                 minThreatRisk = 50
-            elseif self.Brain.BrainIntel.SelfThreat.AirNow * 1.5 > self.Brain.EnemyIntel.EnemyThreatCurrent.Air then
+            elseif self.Brain.BrainIntel.SelfThreat.AirNow + (self.Brain.BrainIntel.SelfThreat.AllyAirThreat / 2) * 1.5 > self.Brain.EnemyIntel.EnemyThreatCurrent.Air then
                 minThreatRisk = 25
             end
             if minThreatRisk > 0 then
@@ -1249,8 +1251,9 @@ IntelManager = Class {
                 for k, v in self.Brain.BasePerimeterMonitor do
                     if v.NavalUnits > 0 then
                         local gridX, gridZ = self:GetIntelGrid(self.Brain.BuilderManagers[k].FactoryManager.Location)
-                        desiredStrikeDamage = desiredStrikeDamage + (v.NavalThreat * 150)
+                        desiredStrikeDamage = desiredStrikeDamage + (v.NavalThreat * 120)
                         --RNGLOG('Naval Threat detected at base, requesting torps for '..desiredStrikeDamage..' strike damage')
+                        --RNGLOG('Naval threat at base is '..v.NavalThreat)
                         table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'AntiNavy'} )
                     end
                 end
@@ -1263,7 +1266,7 @@ IntelManager = Class {
                                 local gridX, gridZ = self:GetIntelGrid(z.Position)
                                 --RNGLOG('Enemy Threat Locations distance to naval threat grid is '..self.MapIntelGrid[gridX][gridZ].DistanceToMain)
                                 if self.MapIntelGrid[gridX][gridZ].DistanceToMain < BaseMilitaryArea then
-                                    desiredStrikeDamage = desiredStrikeDamage + (z['Naval'] * 150)
+                                    desiredStrikeDamage = desiredStrikeDamage + (z['Naval'] * 120)
                                     --RNGLOG('Strike Damage request is '..desiredStrikeDamage)
                                     table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'AntiNavy'} )
                                 end
@@ -1392,6 +1395,7 @@ IntelManager = Class {
                     self.Brain.EngineerAssistManagerFocusSnipe = true
                 end
                 if navalAttack then
+                    --RNGLOG(self.Brain.Nickname)
                     --RNGLOG('numer of navalAttack torps required '..count)
                     self.Brain.amanager.Demand.Air.T2.torpedo = count
                 end

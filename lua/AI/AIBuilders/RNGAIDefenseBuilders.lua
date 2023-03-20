@@ -251,12 +251,12 @@ BuilderGroup {
             JobType = 'BuildStructure',
             NumAssistees = 5,
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
+                BaseTemplate = 'DefenseTemplate',
                 BuildClose = true,
-                NearDefensivePoints = false,
-                AdjacencyPriority = {categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2), categories.STRUCTURE * categories.FACTORY},
-                AvoidCategory = categories.STRUCTURE * categories.ANTIMISSILE * categories.TECH2 * categories.DEFENSE,
-                maxUnits = 1,
-                maxRadius = 5,
+                NearDefensivePoints = true,
+                Type = 'TML',
+                Tier = 1,
                 BuildStructures = {
                     'T2MissileDefense',
                 },

@@ -909,9 +909,28 @@ function ForcePathLimitRNG(aiBrain, locationType, unitCategory, pathType, unitCo
     end
     local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
     local OwnIndex = aiBrain:GetArmyIndex()
-    if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] ~= pathType and FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, '>') then
-        --RNGLOG('ForcePathLimitRNG has no path and more than 3 land factories')
-        return false
+    if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] ~= pathType then
+        local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+        local testCat = unitCategory
+        if not factoryManager then
+            WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
+            return false
+        end
+        if factoryManager.LocationActive then
+            local numUnits = factoryManager:GetNumCategoryFactories(testCat) or 0
+            local unitsBuilding = aiBrain:GetListOfUnits(categories.CONSTRUCTION, false)
+            for unitNum, unit in unitsBuilding do
+                if not unit:BeenDestroyed() and unit:IsUnitState('Building') then
+                    local buildingUnit = unit.UnitBeingBuilt
+                    if buildingUnit and not buildingUnit:BeenDestroyed() and EntityCategoryContains(unitCategory, buildingUnit) then
+                        numUnits = numUnits + 1
+                    end
+                end
+            end
+            if numUnits > unitCount then
+                return false
+            end
+        end
     end
     return true
 end

@@ -1645,14 +1645,14 @@ AIBrain = Class(RNGAIBrainClass) {
             self.GraphZones.HasRun = true
             self.EcoManager.CoreMassMarkerCount = coreMassMarkers
             self.BrainIntel.RestrictedMassMarker = restrictedMarkers
-            self.BrainIntel.MassSharePerPlayer = markerCount / (self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount)
+            self.BrainIntel.MassSharePerPlayer = math.floor(markerCount / (self.EnemyIntel.EnemyCount + self.BrainIntel.AllyCount))
         end
         self.BrainIntel.SelfThreat.MassMarker = markerCount
         self.BrainIntel.SelfThreat.MassMarkerBuildable = massMarkerBuildable
         self.BrainIntel.SelfThreat.MassMarkerBuildableTable = MassMarker
         --RNGLOG('Team count '..self.BrainIntel.TeamCount)
         if self.BrainIntel.SelfThreat.MassMarker and self.BrainIntel.TeamCount > 0 then
-            self.BrainIntel.MassMarkerTeamShare = markerCount / self.BrainIntel.TeamCount
+            self.BrainIntel.MassMarkerTeamShare = math.floor(markerCount / self.BrainIntel.TeamCount)
         end
         --RNGLOG('MassMarkerTeamShare '..self.BrainIntel.MassMarkerTeamShare)
         --RNGLOG('self.BrainIntel.SelfThreat.MassMarker '..self.BrainIntel.SelfThreat.MassMarker)
@@ -5212,7 +5212,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if GetEconomyStoredRatio(brain, 'ENERGY') < 0.01 then
                                 --RNGLOG('Transfer Energy to team mate')
                                 local amount
-                                amount = GetEconomyStored( self, 'ENERGY') / 8
+                                amount = math.max(1000, GetEconomyStored( self, 'ENERGY') / 8)
                                 SUtils.AISendChat('allies', self.Nickname, 'AI '..self.Nickname..' Sending '..amount..' energy to '..brain.Nickname, ArmyBrains[index].Nickname)
                                 self:TakeResource('Energy', amount)
                                 brain:GiveResource( 'Energy', amount)
@@ -5706,7 +5706,7 @@ AIBrain = Class(RNGAIBrainClass) {
     CivilianPDCheckRNG = function(self)
         -- This will momentarily reveal civilian structures at the start of the game so that the AI can detect threat from PD's
         --RNGLOG('Reveal Civilian PD')
-        coroutine.yield(50)
+        coroutine.yield(math.random(50, 70))
         local AIIndex = self:GetArmyIndex()
         for i,v in ArmyBrains do
             local brainIndex = v:GetArmyIndex()

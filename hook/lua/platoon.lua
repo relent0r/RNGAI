@@ -1506,9 +1506,16 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
                 local reference = aiBrain.EnemyIntel.EnemyStartLocations[EnemyIndex].Position
                 local platoonPos = GetPlatoonPosition(self)
-                movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{90,15})
-                if not NavUtils.CanPathTo(self.MovementLayer, platoonPos, movetoPoint) then
-                    movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{-120,15})
+                if self.SupportRotate then
+                    movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{-90,15})
+                    RNGLOG('rotate to -90 for '..aiBrain.Nickname..' position '..repr(movetoPoint))
+                else
+                    movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{90,15})
+                    RNGLOG('movetoPoint to 90 for '..aiBrain.Nickname..' position '..repr(movetoPoint))
+                end
+                if (not self.SupportRotate) and (not NavUtils.CanPathTo(self.MovementLayer, platoonPos, movetoPoint)) then
+                    movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{-90,15})
+                    self.SupportRotate = true
                 end
             else
                 local pointTable = false

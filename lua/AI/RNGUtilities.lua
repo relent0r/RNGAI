@@ -4107,10 +4107,47 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
                         bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
                     end
                 end
+            else
+                local bestTargetDistance
+                local bestTargetPoint
+                for k, v in aiBrain.EnemyIntel.EnemyStartLocations do
+                    local currentTargetDistance = VDist3Sq(aiBrain.BuilderManagers[baseLocation].Position, v.Position)
+                    if not bestPoint or currentTargetDistance < bestTargetDistance then
+                        bestTargetDistance = currentTargetDistance
+                        bestTargetPoint = v.Position
+                    end
+                end
+                if not bestTargetPoint then
+                    bestTargetPoint = aiBrain.MapCenterPoint
+                end
+                if bestTargetPoint then
+                    --RNGLOG('BestTargetPoint is '..repr(bestTargetPoint))
+                    local pointCheck = GetAngleToPosition(basePosition, bestTargetPoint)
+                    --RNGLOG('Angle to pointCheck is '..pointCheck)
+                    for _, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
+                        local pointAngle = GetAngleToPosition(basePosition, v.Position)
+                        if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                            local tmdPresent = false
+                            if aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier].TMD then
+                                for _, c in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier].TMD do
+                                    if c and not c.Dead then
+                                        RNGLOG('TMD is present at defense point and this is not a reactive build')
+                                        tmdPresent = true
+                                        break
+                                    end
+                                end
+                            end
+                            if (not tmdPresent) then
+                                RNGLOG('TMD is not present at defense point, return position')
+                                bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                            end
+                        end
+                    end
+                end
             end
         end
-        --RNGLOG('bestPoint for TMD is '..repr(bestPoint.Position))
         if bestPoint then
+            RNGLOG('bestPoint for TMD is '..repr(bestPoint.Position))
             defensivePoint = bestPoint.Position
         end
     elseif type == 'STRUCTURE' then
@@ -4266,6 +4303,7 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
     -- Adding a defense unit to a base
     local closestPoint = false
     local closestDistance = false
+    local pointTier = 1
     if not finishedUnit.Dead then
         --RNGLOG('Attempting to add defensive unit to defensepoint table at '..locationType)
         --RNGLOG('Unit ID is '..finishedUnit.UnitId)
