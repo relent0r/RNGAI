@@ -1280,7 +1280,6 @@ IntelManager = Class {
         end
         --RNGLOG('CheckStrikPotential')
         --RNGLOG('ThreatRisk is '..minThreatRisk)
-        
         if type == 'AirAntiSurface' then
             if not self.StrategyFlags.T3BomberRushActivated then
                 if self.Brain.BrainIntel.AirPhase == 3 and self.Brain.EnemyIntel.AirPhase < 3 then
