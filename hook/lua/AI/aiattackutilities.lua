@@ -239,48 +239,37 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
     return finalPath, false, path.totalThreat
 end
 
-function PlatoonGeneratePathToRNG(aiBrain, platoonLayer, start, destination, optMaxMarkerDist, testPathDist)
+function PlatoonGeneratePathToRNG(platoonLayer, start, destination, optMaxMarkerDist, testPathDist)
     -- if we don't have markers for the platoonLayer, then we can't build a path.
-    if not GetPathGraphsRNG()[platoonLayer] then
-        return false, 'NoGraph'
-    end
-    local location = start
+    local NavUtils = import("/lua/sim/navutils.lua")
     optMaxMarkerDist = optMaxMarkerDist or 250
+    if testPathDist then
+        testPathDist = testPathDist * testPathDist
+    else
+        testPathDist = 400
+    end
     local finalPath = {}
 
     --If we are within 100 units of the destination, don't bother pathing. (Sorian and Duncan AI)
+    LOG('Generate Path')
+    LOG('Start '..repr(start))
+    LOG('Destination '..repr(destination))
+    LOG('Test Path Dist '..testPathDist)
     if (testPathDist and VDist2Sq(start[1], start[3], destination[1], destination[3]) <= testPathDist) then
+        LOG('within 100 units')
         RNGINSERT(finalPath, destination)
         return finalPath
     end
 
-    --Get the closest path node at the platoon's position
-    local startNode
+    --Generate path between the start and destination
+    LOG('Generating path')
+    local path, msg, distance = NavUtils.PathTo(platoonLayer, start, destination)
+    LOG('NavUtil path is '..repr(path))
 
-    startNode = GetClosestPathNodeInRadiusByLayer(location, optMaxMarkerDist, platoonLayer)
-    if not startNode then return false, 'NoStartNode' end
-
-    --Get the matching path node at the destiantion
-    local endNode
-
-    endNode = GetClosestPathNodeInRadiusByGraph(destination, optMaxMarkerDist, startNode.graphName)
-    if not endNode then return false, 'NoEndNode' end
-
-    --Generate the safest path between the start and destination
-    local path
-    path = GeneratePathNoThreatRNG(aiBrain, startNode, endNode, destination, location, platoonLayer)
-
-    if not path then return false, 'NoPath' end
+    if not path then return false, msg end
     -- Insert the path nodes (minus the start node and end nodes, which are close enough to our start and destination) into our command queue.
-    for i,node in path.path do
-        if i > 1 and i < table.getn(path.path) then
-            RNGINSERT(finalPath, node.position)
-        end
-    end
 
-    RNGINSERT(finalPath, destination)
-
-    return finalPath, false
+    return path, false, distance
 end
 
 function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, endPos, startPos, platoonLayer, acuPath)

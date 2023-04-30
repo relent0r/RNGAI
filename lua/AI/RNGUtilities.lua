@@ -3621,15 +3621,12 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
             end
         end
     else
-        --RNGLOG('ACU Trying to build non adjacent')
         local location = aiBrain:FindPlaceToBuild(buildUnit, whatToBuild, baseTemplate, relative, eng, nil, engPos[1], engPos[3])
-        --RNGLOG('Location is '..repr(location))
         if location and relative then
             local relativeLoc = {location[1] + engPos[1], location[3] + engPos[3], 0}
             if relativeLoc[1] - playableArea[1] <= 8 or relativeLoc[1] >= playableArea[3] - 8 or relativeLoc[2] - playableArea[2] <= 8 or relativeLoc[2] >= playableArea[4] - 8 then
                 borderWarning = true
             end
-            --RNGLOG('Adjusted location is '..repr({relativeLoc[1] + engPos[1], relativeLoc[3] + engPos[3], 0}))
             return relativeLoc, whatToBuild, borderWarning
         else
             return location, whatToBuild, borderWarning

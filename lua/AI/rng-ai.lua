@@ -119,6 +119,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         self.UnitBuiltTriggerList = {}
         self.FactoryAssistList = {}
+        self.DelayEqualBuildPlattons = {}
     end,
 
     OnSpawnPreBuiltUnits = function(self)

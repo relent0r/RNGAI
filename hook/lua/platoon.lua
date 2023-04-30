@@ -1641,7 +1641,7 @@ Platoon = Class(RNGAIPlatoonClass) {
 
             if NavUtils.CanPathTo(self.MovementLayer, platoonPos, aiBrain.CDRUnit.Position) then
                 if ACUDistance > 14400 then
-                    path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, self.MovementLayer, platoonPos, aiBrain.CDRUnit.Position, 10 , BaseEnemyArea)
+                    path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(self.MovementLayer, platoonPos, aiBrain.CDRUnit.Position, 10 , BaseEnemyArea)
                 end
             else
                 usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, aiBrain.CDRUnit.Position, false, true)
@@ -4086,6 +4086,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local buildMassPoints = {}
         local buildMassDistantPoints = {}
         local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+        local NavUtils = import("/lua/sim/navutils.lua")
         local borderWarning = false
         local factionIndex = aiBrain:GetFactionIndex()
         local platoonUnits = GetPlatoonUnits(self)
@@ -4111,13 +4112,13 @@ Platoon = Class(RNGAIPlatoonClass) {
         local distantMarkers = 0
         local closestMarker = false
         for k, marker in massMarkers do
-            if VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 165 then
+            if VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 165 and NavUtils.CanPathTo('Amphibious', engPos, marker.Position) then
                 closeMarkers = closeMarkers + 1
                 RNGINSERT(buildMassPoints, marker)
                 if closeMarkers > 3 then
                     break
                 end
-            elseif VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 484 then
+            elseif VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 484 and NavUtils.CanPathTo('Amphibious', engPos, marker.Position) then
                 distantMarkers = distantMarkers + 1
                 --RNGLOG('CommanderInitializeAIRNG : Inserting Distance Mass Point into table')
                 RNGINSERT(buildMassDistantPoints, marker)
@@ -4136,7 +4137,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         --RNGLOG('CommanderInitializeAIRNG : Closest Marker Distance is '..closestMarker)
         local closestHydro = RUtils.ClosestResourceMarkersWithinRadius(aiBrain, engPos, 'Hydrocarbon', 65, false, false, false)
         --RNGLOG('CommanderInitializeAIRNG : HydroTable '..repr(closestHydro))
-        if closestHydro then
+        if closestHydro and NavUtils.CanPathTo('Amphibious', engPos, closestHydro.Position) then
             --RNGLOG('CommanderInitializeAIRNG : Hydro Within 65 units of spawn')
             hydroPresent = true
         end

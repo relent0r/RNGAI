@@ -695,21 +695,19 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
     local path, reason
     plat.BuilderName = 'CDR Active Movement'
     aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
-    --RNGLOG('CDR : Moving ACU to position')
+    RNGLOG('CDR : Moving ACU to position')
     cdr.movetopos = position
     cdr.Combat = false
     if retreat then
         IssueClearCommands({cdr})
         IssueMove({cdr}, position)
         coroutine.yield(60)
-        --path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 10 , 512, 20, true)
-        path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 512, 120, 20)
+        path, reason = AIAttackUtils.PlatoonGeneratePathToRNG('Amphibious', cdr.Position, position, 512, 120, 20)
     else
-        path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 512, 120, 20)
+        path, reason = AIAttackUtils.PlatoonGeneratePathToRNG('Amphibious', cdr.Position, position, 512, 120, 20)
     end
     if path then
-        --RNGLOG('CDR : We have a path')
-        --RNGLOG('CDR : Distance to position is '..VDist3(cdr.Position, position))
+        RNGLOG('CDR : Distance to position is '..VDist3(cdr.Position, position))
         if retreat or platoonRetreat then
             --RNGLOG('CDR : We are retreating')
         end
@@ -956,7 +954,6 @@ function CDRExpansionRNG(aiBrain, cdr)
             end
         end
     end
-    
     local stageExpansion = IntelManagerRNG.QueryExpansionTable(aiBrain, cdr.Position, BaseDMZArea * 1.5, 'Land', 10, 'acu')
     if stageExpansion then
         cdr.Active = true
@@ -970,7 +967,6 @@ function CDRExpansionRNG(aiBrain, cdr)
                 cdr.PlatoonHandle:PlatoonDisband(aiBrain)
             end
         end
-       --RNGLOG('ACU Stage Position key returned for '..stageExpansion.Key..' Name is '..stageExpansion.Expansion.Name)
         CDRMoveToPosition(aiBrain, cdr, stageExpansion.Expansion.Position, 100)
         if VDist3Sq(cdr:GetPosition(),stageExpansion.Expansion.Position) < 900 then
            --RNGLOG('ACU ExpFunc building at expansion')
@@ -3319,7 +3315,7 @@ function ExpMoveToPosition(aiBrain, platoon, target, unit, ignoreUnits)
     if target and not target.Dead then
         destination = target:GetPosition()
     end
-    local path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, platoon.MovementLayer, unit:GetPosition(), destination, 62500)
+    local path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(platoon.MovementLayer, unit:GetPosition(), destination, 250)
     if path then
         local pathLength = RNGGETN(path)
         local pathCheckRequired = false
@@ -3678,7 +3674,7 @@ AhwassaBehaviorRNG = function(self)
         return
     end
 
-    AssignExperimentalPrioritiesSorian(self)
+    AssignExperimentalPriorities(self)
 
     local targetLocation = GetHighestThreatClusterLocation(aiBrain, experimental)
     local oldTargetLocation = nil
