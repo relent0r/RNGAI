@@ -138,12 +138,5 @@ function LandThreatAtBaseOwnZones(aiBrain)
     if aiBrain.BasePerimeterMonitor['MAIN'].LandUnits > 0 then
         return true
     end
-    for k, v in aiBrain.Zones.Land.zones do
-        if v.enemylandthreat > 0 then
-            if v.bestarmy == aiBrain.Name then
-                return true
-            end
-        end
-    end
     return false
 end

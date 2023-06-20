@@ -250,7 +250,7 @@ BuilderGroup {
         Priority = 500,
         DelayEqualBuildPlattons = {'MassFab', 7},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassFab' }},
+            -- { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassFab' }},
             { UCBC, 'GreaterThanT3CoreExtractorPercentage', { 0.85 }},
             { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 160.0 } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
@@ -422,7 +422,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
+            -- { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
@@ -452,7 +452,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
+            -- { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.MASSEXTRACTION * categories.TECH3}},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 80 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
@@ -482,7 +482,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
+            -- { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 500 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},

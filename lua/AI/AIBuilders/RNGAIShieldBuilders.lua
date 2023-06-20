@@ -218,7 +218,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } }, -- relative income
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.ENERGYPRODUCTION}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.SHIELD }},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Shield' }},
+            -- { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Shield' }},
         },
         BuilderType = 'Any',
     },
@@ -233,7 +233,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } }, -- relative income
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.ENERGYPRODUCTION}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.SHIELD }},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Shield' }},
+            -- { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Shield' }},
         },
         BuilderType = 'Any',
     },
@@ -248,7 +248,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } }, -- relative income
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.ENERGYPRODUCTION}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.SHIELD }},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Shield' }},
+            -- { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Shield' }},
         },
         BuilderType = 'Any',
     },
@@ -263,7 +263,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } }, -- relative income
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH3 * categories.ENERGYPRODUCTION}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.SHIELD }},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Shield' }},
+            -- { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Shield' }},
         },
         BuilderType = 'Any',
     },
@@ -278,7 +278,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } }, -- relative income
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH3 * categories.ENERGYPRODUCTION}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingUpgradedRNG', { 2, categories.STRUCTURE * categories.SHIELD }},
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Shield' }},
+            -- { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Shield' }},
         },
         BuilderType = 'Any',
     },

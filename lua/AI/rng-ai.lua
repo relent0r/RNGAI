@@ -13,7 +13,6 @@ local BrainConditionsMonitor = import("/lua/sim/brainconditionsmonitor.lua")
 local EngineerManager = import("/lua/sim/engineermanager.lua")
 
 local SUtils = import("/lua/ai/sorianutilities.lua")
-local StratManager = import("/lua/sim/strategymanager.lua")
 local TransferUnitsOwnership = import("/lua/simutils.lua").TransferUnitsOwnership
 local TransferUnfinishedUnitsAfterDeath = import("/lua/simutils.lua").TransferUnfinishedUnitsAfterDeath
 local CalculateBrainScore = import("/lua/sim/score.lua").CalculateBrainScore
@@ -40,7 +39,6 @@ local AIUtils = import('/lua/ai/AIUtilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local PlatoonGenerateSafePathToRNG = import('/lua/AI/aiattackutilities.lua').PlatoonGenerateSafePathToRNG
-local GetClosestPathNodeInRadiusByLayerRNG = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayerRNG
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
@@ -64,6 +62,25 @@ local StandardBrain = import("/lua/aibrain.lua").AIBrain
 
 local RNGAIBrainClass = import("/lua/aibrains/base-ai.lua").AIBrain
 AIBrain = Class(RNGAIBrainClass) {
+
+    --- Called after `BeginSession`, at this point all props, resources and initial units exist in the map
+    ---@param self AIBrainAdaptive
+    OnBeginSession = function(self)
+        StandardBrain.OnBeginSession(self)
+
+        -- requires navigational mesh
+        import("/lua/sim/NavUtils.lua").Generate()
+
+        -- requires these markers to exist
+        import("/lua/sim/MarkerUtilities.lua").GenerateExpansionMarkers()
+        --import("/lua/sim/MarkerUtilities.lua").GenerateRallyPointMarkers()
+
+        -- requires these datastructures to understand the game
+        self.GridReclaim = import("/lua/ai/gridreclaim.lua").Setup(self)
+        self.GridBrain = import("/lua/ai/gridbrain.lua").Setup()
+        --self.GridRecon = import("/lua/ai/gridrecon.lua").Setup(self)
+        self.GridPresence = import("/lua/AI/GridPresence.lua").Setup(self)
+    end,
 
     OnCreateAI = function(self, planName)
         LOG('Oncreate AI from RNG code')
@@ -1069,6 +1086,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         local selfStartPosX, selfStartPosY = self:GetArmyStartPos()
         self.BrainIntel.StartPos = { selfStartPosX, GetSurfaceHeight(selfStartPosX, selfStartPosY), selfStartPosY }
+        self.BrainIntel.MapOwnership = 0
         self.BrainIntel.CurrentIntelAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, self.MapCenterPoint)
         self.BrainIntel.MilitaryRange = BaseMilitaryArea
         self.BrainIntel.DMZRange = BaseDMZArea
@@ -1141,7 +1159,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.StartMassReclaimTotal = 0
         self.StartReclaimCurrent = 0
         self.StartReclaimTaken = false
-        self.MapReclaimTable = {}
         self.Zones = { }
 
         self.UpgradeMode = 'Normal'
@@ -1213,7 +1230,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.IntelManager:Run()
         self.StructureManager = StructureManagerRNG.CreateStructureManager(self)
         self.StructureManager:Run()
-        self:ForkThread(IntelManagerRNG.MapReclaimAnalysis)
         self:ForkThread(IntelManagerRNG.CreateIntelGrid, self.IntelManager)
         self:ForkThread(self.CreateFloatingEngineerBase, self.BrainIntel.StartPos)
         if self.RNGDEBUG then
@@ -1264,7 +1280,6 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Current T3 Mobile AA count '..self.amanager.Current['Land']['T3']['aa'])
             RNGLOG('Current engineer assist build power required '..self.EngineerAssistManagerBuildPowerRequired)
             RNGLOG('Approx Factory Mass Consumption '..self.EcoManager.ApproxFactoryMassConsumption)
-            RNGLOG('Soon Mex Count '..table.getn(self.emanager.soonmexes))
             RNGLOG('Ally Count is '..self.BrainIntel.AllyCount)
             RNGLOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
             RNGLOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
@@ -1562,7 +1577,6 @@ AIBrain = Class(RNGAIBrainClass) {
             FactoryManager = FactoryManager.CreateFactoryBuilderManager(self, baseName, position, radius, useCenter),
             PlatoonFormManager = PlatoonFormManager.CreatePlatoonFormManager(self, baseName, position, radius, useCenter),
             EngineerManager = EngineerManager.CreateEngineerManager(self, baseName, position, radius),
-            StrategyManager = StratManager.CreateStrategyManager(self, baseName, position, radius),
             DefensivePoints = RUtils.GenerateDefensivePointTable(BaseRestrictedArea, position),
             BuilderHandles = {},
             Position = position,
@@ -1794,10 +1808,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     if v.PlatoonFormManager then
                         v.PlatoonFormManager:SetEnabled(false)
                         v.PlatoonFormManager:Destroy()
-                    end
-                    if v.StrategyManager then
-                        v.StrategyManager:SetEnabled(false)
-                        v.StrategyManager:Destroy()
                     end
                     self.BuilderManagers[k] = nil
                     self.NumBases = self.NumBases - 1
@@ -3550,6 +3560,8 @@ AIBrain = Class(RNGAIBrainClass) {
             self.BrainIntel.IMAPConfig.IMAPSize = 256
             self.BrainIntel.IMAPConfig.Rings = 0
         end
+        self.IMAPConfig = {}
+        self.IMAPConfig.Rings = self.BrainIntel.IMAPConfig.Rings
     end,
 
     TacticalMonitorRNG = function(self, ALLBPS)
@@ -3990,6 +4002,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     EcoMassManagerRNG = function(self)
     -- Watches for low power states
+        coroutine.yield(Random(1,7))
         while true do
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
                 if GetGameTimeSeconds() < 240 then
@@ -4906,6 +4919,12 @@ AIBrain = Class(RNGAIBrainClass) {
     
     EcoSelectorManagerRNG = function(self, priorityUnit, units, action, type)
         --RNGLOG('Eco selector manager for '..priorityUnit..' is '..action..' Type is '..type)
+        local engineerCats
+        if self.BrainIntel.MapOwnership > 50 then
+            engineerCats = categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE)
+        else
+            engineerCats = categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE)
+        end
         
         for k, v in units do
             if v.Dead then continue end
@@ -4917,7 +4936,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     v:SetPaused(false)
                     continue
                 end
-                if EntityCategoryContains( categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE) , v.UnitBeingBuilt) then
+                if EntityCategoryContains( engineerCats , v.UnitBeingBuilt) then
                     v:SetPaused(true)
                     continue
                 end
@@ -5100,6 +5119,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         local path, reason, totalThreat = PlatoonGenerateSafePathToRNG(self, 'Land', selfStartPos, v.StartPosition, 1, nil, nil, true)
                         if path then
                            --RNGLOG('Choke point test Total Threat for path is '..totalThreat)
+                           -- Fix total threat later.
+                           totalThreat = 100000
                             self.EnemyIntel.ChokePoints[k].CurrentPathThreat = (totalThreat / RNGGETN(path))
                            --RNGLOG('We have a path to the enemy start position with an average of '..(totalThreat / RNGGETN(path)..' threat'))
 

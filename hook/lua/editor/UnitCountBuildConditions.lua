@@ -581,13 +581,6 @@ function GreaterThanGameTimeSecondsRNG(aiBrain, num)
     return false
 end
 
-function CheckBuildPlatoonDelayRNG(aiBrain, PlatoonName)
-    if aiBrain.DelayEqualBuildPlattons[PlatoonName] and aiBrain.DelayEqualBuildPlattons[PlatoonName] > GetGameTimeSeconds() then
-        return false
-    end
-    return true
-end
-
 function HaveUnitRatioAtLocationRNG(aiBrain, locType, ratio, categoryNeed, compareType, categoryHave)
     local AIName = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
     local baseposition, radius

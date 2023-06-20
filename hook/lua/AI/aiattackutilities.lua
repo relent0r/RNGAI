@@ -20,223 +20,49 @@ local RNGPI = math.pi
 local RNGCAT = table.cat
 
 function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, optThreatWeight, optMaxMarkerDist)
-    local VDist2Sq = VDist2Sq
-    if not GetPathGraphsRNG()[platoonLayer] then
-        return false, 'NoGraph'
-    end
 
+    local NavUtils = import("/lua/sim/navutils.lua")
     --Get the closest path node at the platoon's position
     optMaxMarkerDist = optMaxMarkerDist or 250
     optThreatWeight = optThreatWeight or 1
-    local startNode
-    startNode = GetClosestPathNodeInRadiusByLayer(startPos, optMaxMarkerDist, platoonLayer)
-    if not startNode then return false, 'NoStartNode' end
-
-    --Get the matching path node at the destiantion
-    local endNode = GetClosestPathNodeInRadiusByGraph(endPos, optMaxMarkerDist, startNode.graphName)
-    if not endNode then return false, 'NoEndNode' end
 
     --Generate the safest path between the start and destination
-    local path = EngineerGeneratePathRNG(aiBrain, startNode, endNode, ThreatTable[platoonLayer], optThreatWeight, endPos, startPos)
+    local path, msg, distance = NavUtils.PathToWithThreatThreshold(platoonLayer, startPos, endPos, aiBrain, NavUtils.ThreatFunctions.AntiSurface, 1000, aiBrain.BrainIntel.IMAPConfig.Rings)
     if not path then return false, 'NoPath' end
 
     -- Insert the path nodes (minus the start node and end nodes, which are close enough to our start and destination) into our command queue.
     -- delete the first and last node only if they are very near (under 30 map units) to the start or end destination.
-    local finalPath = {}
-    local NodeCount = table.getn(path.path)
-    for i,node in path.path do
-        -- IF this is the first AND not the only waypoint AND its nearer 30 THEN continue and don't add it to the finalpath
-        if i == 1 and NodeCount > 1 and VDist2Sq(startPos[1], startPos[3], node.position[1], node.position[3]) < 900 then  
-            continue
-        end
-        -- IF this is the last AND not the only waypoint AND its nearer 20 THEN continue and don't add it to the finalpath
-        if i == NodeCount and NodeCount > 1 and VDist2Sq(endPos[1], endPos[3], node.position[1], node.position[3]) < 400 then  
-            continue
-        end
-        RNGINSERT(finalPath, node.position)
-    end
 
     -- return the path
-    return finalPath, 'PathOK'
-end
-
-function EngineerGeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, endPos, startPos, platoonLayer)
-    threatWeight = threatWeight or 1
-    -- Check if we have this path already cached.
-    if aiBrain.PathCache[startNode.name][endNode.name][threatWeight].path then
-        -- Path is not older then 30 seconds. Is it a bad path? (the path is too dangerous)
-        if aiBrain.PathCache[startNode.name][endNode.name][threatWeight].path == 'bad' then
-            -- We can't move this way at the moment. Too dangerous.
-            return false
-        else
-            -- The cached path is newer then 30 seconds and not bad. Sounds good :) use it.
-            return aiBrain.PathCache[startNode.name][endNode.name][threatWeight].path
-        end
-    end
-    -- loop over all path's and remove any path from the cache table that is older then 30 seconds
-    if aiBrain.PathCache then
-        local GameTime = GetGameTimeSeconds()
-        -- loop over all cached paths
-        for StartNodeName, CachedPaths in aiBrain.PathCache do
-            -- loop over all paths starting from StartNode
-            for EndNodeName, ThreatWeightedPaths in CachedPaths do
-                -- loop over every path from StartNode to EndNode stored by ThreatWeight
-                for ThreatWeight, PathNodes in ThreatWeightedPaths do
-                    -- check if the path is older then 30 seconds.
-                    if GameTime - 30 > PathNodes.settime then
-                        --RNGLOG('* AI-RNG: GeneratePathRNG() Found old path: storetime: '..PathNodes.settime..' store+60sec: '..(PathNodes.settime + 30)..' actual time: '..GameTime..' timediff= '..(PathNodes.settime + 30 - GameTime) )
-                        -- delete the old path from the cache.
-                        aiBrain.PathCache[StartNodeName][EndNodeName][ThreatWeight] = nil
-                    end
-                end
-            end
-        end
-    end
-    -- We don't have a path that is newer then 30 seconds. Let's generate a new one.
-    --Create path cache table. Paths are stored in this table and saved for 30 seconds, so
-    --any other platoons needing to travel the same route can get the path without any extra work.
-    aiBrain.PathCache = aiBrain.PathCache or {}
-    aiBrain.PathCache[startNode.name] = aiBrain.PathCache[startNode.name] or {}
-    aiBrain.PathCache[startNode.name][endNode.name] = aiBrain.PathCache[startNode.name][endNode.name] or {}
-    aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = {}
-    local fork = {}
-    -- Is the Start and End node the same OR is the distance to the first node longer then to the destination ?
-    if startNode.name == endNode.name
-    or VDist2Sq(startPos[1], startPos[3], startNode.position[1], startNode.position[3]) > VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3])
-    or VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3]) < 2500 and NavUtils.CanPathTo(platoonLayer, startPos, endPos) then
-        -- store as path only our current destination.
-        fork.path = { { position = endPos } }
-        aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = fork }
-        -- return the destination position as path
-        return fork
-    end
-    -- Set up local variables for our path search
-    local AlreadyChecked = {}
-    local curPath = {}
-    local lastNode = {}
-    local newNode = {}
-    local dist = 0
-    local threat = 0
-    local lowestpathkey = 1
-    local lowestcost
-    local tableindex = 0
-    local armyIndex = aiBrain:GetArmyIndex()
-    -- Get all the waypoints that are from the same movementlayer than the start point.
-    local graph = GetPathGraphsRNG()[startNode.layer][startNode.graphName]
-    -- For the beginning we store the startNode here as first path node.
-    local queue = {
-        {
-        cost = 0,
-        path = {startNode},
-        }
-    }
-    -- Now loop over all path's that are stored in queue. If we start, only the startNode is inside the queue
-    -- (We are using here the "A*(Star) search algorithm". An extension of "Edsger Dijkstra's" pathfinding algorithm used by "Shakey the Robot" in 1959)
-    while true do
-        -- remove the table (shortest path) from the queue table and store the removed table in curPath
-        -- (We remove the path from the queue here because if we don't find a adjacent marker and we
-        --  have not reached the destination, then we no longer need this path. It's a dead end.)
-        curPath = table.remove(queue,lowestpathkey)
-        if not curPath then break end
-        -- get the last node from the path, so we can check adjacent waypoints
-        lastNode = curPath.path[table.getn(curPath.path)]
-        -- Have we already checked this node for adjacenties ? then continue to the next node.
-        if not AlreadyChecked[lastNode] then
-            -- Check every node (marker) inside lastNode.adjacent
-            for i, adjacentNode in lastNode.adjacent do
-                -- get the node data from the graph table
-                newNode = graph[adjacentNode]
-                -- check, if we have found a node.
-                if newNode then
-                    -- copy the path from the startNode to the lastNode inside fork,
-                    -- so we can add a new marker at the end and make a new path with it
-                    fork = {
-                        cost = curPath.cost,            -- cost from the startNode to the lastNode
-                        path = {unpack(curPath.path)},  -- copy full path from starnode to the lastNode
-                    }
-                    -- get distance from new node to destination node
-                    dist = VDist2(newNode.position[1], newNode.position[3], lastNode.position[1], lastNode.position[3])
-                    -- get threat from current node to adjacent node
-                    -- threat = Scenario.MasterChain._MASTERCHAIN_.Markers[newNode.name][armyIndex] or 0
-                    local threat = aiBrain:GetThreatBetweenPositions(newNode.position, lastNode.position, nil, threatType)
-                    -- add as cost for the path the path distance and threat to the overall cost from the whole path
-                    fork.cost = fork.cost + dist + (threat * 1) * threatWeight
-                    -- add the newNode at the end of the path
-                    RNGINSERT(fork.path, newNode)
-                    -- check if we have reached our destination
-                    if newNode.name == endNode.name then
-                        -- store the path inside the path cache
-                        aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = fork }
-                        -- return the path
-                        return fork
-                    end
-                    -- add the path to the queue, so we can check the adjacent nodes on the last added newNode
-                    RNGINSERT(queue,fork)
-                end
-            end
-            -- Mark this node as checked
-            AlreadyChecked[lastNode] = true
-        end
-        -- Search for the shortest / safest path and store the table key in lowestpathkey
-        lowestcost = 100000000
-        lowestpathkey = 1
-        tableindex = 1
-        while queue[tableindex].cost do
-            if lowestcost > queue[tableindex].cost then
-                lowestcost = queue[tableindex].cost
-                lowestpathkey = tableindex
-            end
-            tableindex = tableindex + 1
-        end
-    end
-    -- At this point we have not found any path to the destination.
-    -- The path is to dangerous at the moment (or there is no path at all). We will check this again in 30 seconds.
-    aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = 'bad' }
-    return false
+    return path, 'PathOK', distance
 end
 
 function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination, optThreatWeight, optMaxMarkerDist, testPathDist, acuPath)
     -- if we don't have markers for the platoonLayer, then we can't build a path.
-    if not GetPathGraphsRNG()[platoonLayer] then
-        return false, 'NoGraph'
-    end
-    local location = start
+    local NavUtils = import("/lua/sim/navutils.lua")
     optMaxMarkerDist = optMaxMarkerDist or 250
     optThreatWeight = optThreatWeight or 1
-    local finalPath = {}
-
-    if testPathDist and VDist2Sq(start[1], start[3], destination[1], destination[3]) <= testPathDist then
-        RNGINSERT(finalPath, destination)
-        return finalPath
+    local threatType = NavUtils.ThreatFunctions.AntiSurface
+    if testPathDist then
+        testPathDist = testPathDist * testPathDist
+    else
+        testPathDist = 400
     end
 
-    --Get the closest path node at the platoon's position
-    local startNode
-
-    startNode = GetClosestPathNodeInRadiusByLayer(location, optMaxMarkerDist, platoonLayer)
-    if not startNode then return false, 'NoStartNode' end
-
-    --Get the matching path node at the destiantion
-    local endNode
-
-    endNode = GetClosestPathNodeInRadiusByGraph(destination, optMaxMarkerDist, startNode.graphName)
-    if not endNode then return false, 'NoEndNode' end
+    --If we are within 100 units of the destination, don't bother pathing. (Sorian and Duncan AI)
+    if (testPathDist and VDist2Sq(start[1], start[3], destination[1], destination[3]) <= testPathDist) then
+        return { destination }
+    end
+    if platoonLayer == 'Air' then
+        threatType = NavUtils.ThreatFunctions.AntiAir
+    end
 
     --Generate the safest path between the start and destination
-    local path
-    path = GeneratePathRNG(aiBrain, startNode, endNode, ThreatTable[platoonLayer], optThreatWeight, destination, location, platoonLayer, acuPath)
-
+    local path = NavUtils.PathToWithThreatThreshold(platoonLayer, start, destination, aiBrain, threatType, 1000, aiBrain.BrainIntel.IMAPConfig.Rings)
     if not path then return false, 'NoPath' end
     -- Insert the path nodes (minus the start node and end nodes, which are close enough to our start and destination) into our command queue.
-    for i,node in path.path do
-        if i > 1 and i < table.getn(path.path) then
-            RNGINSERT(finalPath, node.position)
-        end
-    end
 
-    RNGINSERT(finalPath, destination)
-
-    return finalPath, false, path.totalThreat
+    return path, false, path.totalThreat
 end
 
 function PlatoonGeneratePathToRNG(platoonLayer, start, destination, optMaxMarkerDist, testPathDist)
@@ -248,173 +74,17 @@ function PlatoonGeneratePathToRNG(platoonLayer, start, destination, optMaxMarker
     else
         testPathDist = 400
     end
-    local finalPath = {}
 
     --If we are within 100 units of the destination, don't bother pathing. (Sorian and Duncan AI)
-    LOG('Generate Path')
-    LOG('Start '..repr(start))
-    LOG('Destination '..repr(destination))
-    LOG('Test Path Dist '..testPathDist)
     if (testPathDist and VDist2Sq(start[1], start[3], destination[1], destination[3]) <= testPathDist) then
-        LOG('within 100 units')
-        RNGINSERT(finalPath, destination)
-        return finalPath
+        return { destination }
     end
 
     --Generate path between the start and destination
-    LOG('Generating path')
     local path, msg, distance = NavUtils.PathTo(platoonLayer, start, destination)
-    LOG('NavUtil path is '..repr(path))
-
     if not path then return false, msg end
-    -- Insert the path nodes (minus the start node and end nodes, which are close enough to our start and destination) into our command queue.
 
     return path, false, distance
-end
-
-function GeneratePathRNG(aiBrain, startNode, endNode, threatType, threatWeight, endPos, startPos, platoonLayer, acuPath)
-    local VDist2 = VDist2
-    threatWeight = threatWeight or 1
-    -- Check if we have this path already cached.
-    if aiBrain.PathCache[startNode.name][endNode.name][threatWeight].path then
-        -- Path is not older then 30 seconds. Is it a bad path? (the path is too dangerous)
-        if aiBrain.PathCache[startNode.name][endNode.name][threatWeight].path == 'bad' then
-            -- We can't move this way at the moment. Too dangerous.
-            return false
-        else
-            -- The cached path is newer then 30 seconds and not bad. Sounds good :) use it.
-            return aiBrain.PathCache[startNode.name][endNode.name][threatWeight].path
-        end
-    end
-    -- loop over all path's and remove any path from the cache table that is older then 30 seconds
-    if aiBrain.PathCache then
-        local GameTime = GetGameTimeSeconds()
-        -- loop over all cached paths
-        for StartNodeName, CachedPaths in aiBrain.PathCache do
-            -- loop over all paths starting from StartNode
-            for EndNodeName, ThreatWeightedPaths in CachedPaths do
-                -- loop over every path from StartNode to EndNode stored by ThreatWeight
-                for ThreatWeight, PathNodes in ThreatWeightedPaths do
-                    -- check if the path is older then 30 seconds.
-                    if GameTime - 30 > PathNodes.settime then
-                        -- delete the old path from the cache.
-                        aiBrain.PathCache[StartNodeName][EndNodeName][ThreatWeight] = nil
-                    end
-                end
-            end
-        end
-    end
-    -- We don't have a path that is newer then 30 seconds. Let's generate a new one.
-    --Create path cache table. Paths are stored in this table and saved for 30 seconds, so
-    --any other platoons needing to travel the same route can get the path without any extra work.
-    aiBrain.PathCache = aiBrain.PathCache or {}
-    aiBrain.PathCache[startNode.name] = aiBrain.PathCache[startNode.name] or {}
-    aiBrain.PathCache[startNode.name][endNode.name] = aiBrain.PathCache[startNode.name][endNode.name] or {}
-    aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = {}
-    local fork = {}
-    -- Is the Start and End node the same OR is the distance to the first node longer then to the destination ?
-    if startNode.name == endNode.name
-    or VDist2(startPos[1], startPos[3], startNode.position[1], startNode.position[3]) > VDist2(startPos[1], startPos[3], endPos[1], endPos[3])
-    or VDist2(startPos[1], startPos[3], endPos[1], endPos[3]) < 50 then
-        -- store as path only our current destination.
-        fork.path = { { position = endPos } }
-        aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = fork }
-        -- return the destination position as path
-        return fork
-    end
-    -- Set up local variables for our path search
-    local AlreadyChecked = {}
-    local curPath = {}
-    local lastNode = {}
-    local newNode = {}
-    local dist = 0
-    local threat = 0
-    local lowestpathkey = 1
-    local lowestcost
-    local tableindex = 0
-    local mapSizeX = ScenarioInfo.size[1]
-    local mapSizeZ = ScenarioInfo.size[2]
-    -- Get all the waypoints that are from the same movementlayer than the start point.
-    local graph = GetPathGraphsRNG()[startNode.layer][startNode.graphName]
-    -- For the beginning we store the startNode here as first path node.
-    local queue = {
-        {
-        cost = 0,
-        path = {startNode},
-        totalThreat = 0
-        }
-    }
-    -- Now loop over all path's that are stored in queue. If we start, only the startNode is inside the queue
-    -- (We are using here the "A*(Star) search algorithm". An extension of "Edsger Dijkstra's" pathfinding algorithm used by "Shakey the Robot" in 1959)
-    while true do
-        -- remove the table (shortest path) from the queue table and store the removed table in curPath
-        -- (We remove the path from the queue here because if we don't find a adjacent marker and we
-        --  have not reached the destination, then we no longer need this path. It's a dead end.)
-        curPath = table.remove(queue,lowestpathkey)
-        if not curPath then break end
-        -- get the last node from the path, so we can check adjacent waypoints
-        lastNode = curPath.path[table.getn(curPath.path)]
-        -- Have we already checked this node for adjacenties ? then continue to the next node.
-        if not AlreadyChecked[lastNode] then
-            -- Check every node (marker) inside lastNode.adjacent
-            for i, adjacentNode in lastNode.adjacent do
-                -- get the node data from the graph table
-                newNode = graph[adjacentNode]
-                -- check, if we have found a node.
-                if newNode then
-                    -- copy the path from the startNode to the lastNode inside fork,
-                    -- so we can add a new marker at the end and make a new path with it
-                    fork = {
-                        cost = curPath.cost,            -- cost from the startNode to the lastNode
-                        path = {unpack(curPath.path)}, -- copy full path from starnode to the lastNode
-                        totalThreat = curPath.totalThreat  -- total threat across the path
-                    }
-                    -- get distance from new node to destination node
-                    dist = VDist2(newNode.position[1], newNode.position[3], endNode.position[1], endNode.position[3])
-                    -- this brings the dist value from 0 to 100% of the maximum length with can travel on a map
-                    dist = 100 * dist / ( mapSizeX + mapSizeZ )
-                    -- get threat from current node to adjacent node
-                    if platoonLayer == 'Air' or acuPath then
-                        threat = GetThreatAtPosition(aiBrain, newNode.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, threatType)
-                    else
-                        threat = GetThreatBetweenPositions(aiBrain, newNode.position, lastNode.position, nil, threatType)
-                    end
-                    -- add as cost for the path the distance and threat to the overall cost from the whole path
-                    fork.cost = fork.cost + dist + (threat * threatWeight)
-                    fork.totalThreat = fork.totalThreat + threat
-                    -- add the newNode at the end of the path
-                    RNGINSERT(fork.path, newNode)
-                    -- check if we have reached our destination
-                    if newNode.name == endNode.name then
-                        -- store the path inside the path cache
-                        aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = fork }
-                        fork.pathLength = table.getn(fork.path)
-                        -- return the path
-                        return fork
-                    end
-                    -- add the path to the queue, so we can check the adjacent nodes on the last added newNode
-                    RNGINSERT(queue,fork)
-                end
-            end
-            -- Mark this node as checked
-            AlreadyChecked[lastNode] = true
-        end
-        -- Search for the shortest / safest path and store the table key in lowestpathkey
-        lowestcost = 100000000
-        lowestpathkey = 1
-        tableindex = 1
-        while queue[tableindex].cost do
-            if lowestcost > queue[tableindex].cost then
-                lowestcost = queue[tableindex].cost
-                lowestpathkey = tableindex
-            end
-            tableindex = tableindex + 1
-        end
-    end
-    -- At this point we have not found any path to the destination.
-    -- The path is to dangerous at the moment (or there is no path at all). We will check this again in 30 seconds.
-    --RNGLOG('GeneratePath, no path found')
-    return false
 end
 
 function GetPathGraphsRNG()
@@ -478,47 +148,6 @@ function GetClosestPathNodeInRadiusByLayerRNG(location, radius, layer)
     end
 
     return bestMarker
-end
-
-function GetClosestPathNodeInRadiusByGraphRNG(location, radius, graphName)
-    local bestDist = radius*radius
-    local bestMarker = false
-
-    for graphLayer, graphTable in GetPathGraphsRNG() do
-        for name, graph in graphTable do
-            if graphName == name then
-                for mn, markerInfo in graph do
-                    local dist2 = VDist2Sq(location[1], location[3], markerInfo.position[1], markerInfo.position[3])
-
-                    if dist2 < bestDist then
-                        bestDist = dist2
-                        bestMarker = markerInfo
-                    end
-                end
-            end
-        end
-    end
-
-    return bestMarker
-end
-
-function CanGraphToRNG(startPos, destPos, layer)
-    local startNode = GetClosestPathNodeInRadiusByLayerRNG(startPos, 100, layer)
-    local endNode = false
-
-    if startNode then
-        endNode = GetClosestPathNodeInRadiusByGraphRNG(destPos, 100, startNode.graphName)
-    end
-
-    if endNode then
-        if startNode.RNGArea == endNode.RNGArea then
-            --RNGLOG('CanGraphToIsTrue for area '..startNode.RNGArea)
-            return true, endNode.Position
-        else
-            --RNGLOG('CanGraphToIsFalse for start area '..startNode.RNGArea..' and end area of '..endNode.RNGArea)
-        end
-    end
-    return false
 end
 
 function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1EngOnly, bRequired, bSkipLastMove, safeZone)
@@ -783,139 +412,6 @@ function SendPlatoonWithTransportsNoCheckRNG(aiBrain, platoon, destination, t1En
     end
     --RNGLOG('SendPlatoonWithTransportsNoCheckRNG returning true')
     return true
-end
-
-function GeneratePathNoThreatRNG(aiBrain, startNode, endNode, endPos, startPos)
-    local threatWeight = 0
-    -- Check if we have this path already cached.
-    if aiBrain.PathCache[startNode.name][endNode.name][threatWeight].path then
-        -- Path is not older then 30 seconds. Is it a bad path? (the path is too dangerous)
-        if aiBrain.PathCache[startNode.name][endNode.name][threatWeight].path == 'bad' then
-            -- We can't move this way at the moment. Too dangerous.
-            return false
-        else
-            -- The cached path is newer then 30 seconds and not bad. Sounds good :) use it.
-            return aiBrain.PathCache[startNode.name][endNode.name][threatWeight].path
-        end
-    end
-    -- loop over all path's and remove any path from the cache table that is older then 30 seconds
-    if aiBrain.PathCache then
-        local GameTime = GetGameTimeSeconds()
-        -- loop over all cached paths
-        for StartNodeName, CachedPaths in aiBrain.PathCache do
-            -- loop over all paths starting from StartNode
-            for EndNodeName, ThreatWeightedPaths in CachedPaths do
-                -- loop over every path from StartNode to EndNode stored by ThreatWeight
-                for ThreatWeight, PathNodes in ThreatWeightedPaths do
-                    -- check if the path is older then 30 seconds.
-                    if GameTime - 30 > PathNodes.settime then
-                        -- delete the old path from the cache.
-                        aiBrain.PathCache[StartNodeName][EndNodeName][ThreatWeight] = nil
-                    end
-                end
-            end
-        end
-    end
-    -- We don't have a path that is newer then 30 seconds. Let's generate a new one.
-    --Create path cache table. Paths are stored in this table and saved for 30 seconds, so
-    --any other platoons needing to travel the same route can get the path without any extra work.
-    aiBrain.PathCache = aiBrain.PathCache or {}
-    aiBrain.PathCache[startNode.name] = aiBrain.PathCache[startNode.name] or {}
-    aiBrain.PathCache[startNode.name][endNode.name] = aiBrain.PathCache[startNode.name][endNode.name] or {}
-    aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = {}
-    local fork = {}
-    -- Is the Start and End node the same OR is the distance to the first node longer then to the destination ?
-    if startNode.name == endNode.name
-    or VDist2Sq(startPos[1], startPos[3], startNode.position[1], startNode.position[3]) > VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3])
-    or VDist2Sq(startPos[1], startPos[3], endPos[1], endPos[3]) < 50*50 then
-        -- store as path only our current destination.
-        fork.path = { { position = endPos } }
-        aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = fork }
-        -- return the destination position as path
-        return fork
-    end
-    -- Set up local variables for our path search
-    local AlreadyChecked = {}
-    local curPath = {}
-    local lastNode = {}
-    local newNode = {}
-    local dist = 0
-    local lowestpathkey = 1
-    local lowestcost
-    local tableindex = 0
-    local mapSizeX = ScenarioInfo.size[1]
-    local mapSizeZ = ScenarioInfo.size[2]
-    -- Get all the waypoints that are from the same movementlayer than the start point.
-    local graph = GetPathGraphsRNG()[startNode.layer][startNode.graphName]
-    -- For the beginning we store the startNode here as first path node.
-    local queue = {
-        {
-        cost = 0,
-        path = {startNode},
-        }
-    }
-    -- Now loop over all path's that are stored in queue. If we start, only the startNode is inside the queue
-    -- (We are using here the "A*(Star) search algorithm". An extension of "Edsger Dijkstra's" pathfinding algorithm used by "Shakey the Robot" in 1959)
-    while true do
-        -- remove the table (shortest path) from the queue table and store the removed table in curPath
-        -- (We remove the path from the queue here because if we don't find a adjacent marker and we
-        --  have not reached the destination, then we no longer need this path. It's a dead end.)
-        curPath = table.remove(queue,lowestpathkey)
-        if not curPath then break end
-        -- get the last node from the path, so we can check adjacent waypoints
-        lastNode = curPath.path[table.getn(curPath.path)]
-        -- Have we already checked this node for adjacenties ? then continue to the next node.
-        if not AlreadyChecked[lastNode] then
-            -- Check every node (marker) inside lastNode.adjacent
-            for i, adjacentNode in lastNode.adjacent do
-                -- get the node data from the graph table
-                newNode = graph[adjacentNode]
-                -- check, if we have found a node.
-                if newNode then
-                    -- copy the path from the startNode to the lastNode inside fork,
-                    -- so we can add a new marker at the end and make a new path with it
-                    fork = {
-                        cost = curPath.cost,            -- cost from the startNode to the lastNode
-                        path = {unpack(curPath.path)}, -- copy full path from starnode to the lastNode
-                    }
-                    -- get distance from new node to destination node
-                    dist = VDist2(newNode.position[1], newNode.position[3], endNode.position[1], endNode.position[3])
-                    -- this brings the dist value from 0 to 100% of the maximum length with can travel on a map
-                    dist = 100 * dist / ( mapSizeX + mapSizeZ )
-                    -- add as cost for the path the distance to the overall cost from the whole path
-                    fork.cost = fork.cost + dist
-                    -- add the newNode at the end of the path
-                    RNGINSERT(fork.path, newNode)
-                    -- check if we have reached our destination
-                    if newNode.name == endNode.name then
-                        -- store the path inside the path cache
-                        aiBrain.PathCache[startNode.name][endNode.name][threatWeight] = { settime = GetGameTimeSeconds(), path = fork }
-                        fork.pathLength = table.getn(fork.path)
-                        -- return the path
-                        return fork
-                    end
-                    -- add the path to the queue, so we can check the adjacent nodes on the last added newNode
-                    RNGINSERT(queue,fork)
-                end
-            end
-            -- Mark this node as checked
-            AlreadyChecked[lastNode] = true
-        end
-        -- Search for the shortest / safest path and store the table key in lowestpathkey
-        lowestcost = 100000000
-        lowestpathkey = 1
-        tableindex = 1
-        while queue[tableindex].cost do
-            if lowestcost > queue[tableindex].cost then
-                lowestcost = queue[tableindex].cost
-                lowestpathkey = tableindex
-            end
-            tableindex = tableindex + 1
-        end
-    end
-    -- At this point we have not found any path to the destination.
-    -- We will check this again in 30 seconds.
-    return false
 end
 
 -- Sproutos work

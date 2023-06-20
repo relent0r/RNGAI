@@ -222,13 +222,9 @@ function ExpansionIsActive(aiBrain)
 end
 
 function ArmyNeedOrWantTransports(aiBrain)
-    if aiBrain and (not aiBrain.NoRush.Active ) and aiBrain.NeedTransports and aiBrain.NeedTransports > 0 then
+    if aiBrain and (not aiBrain.NoRush.Active ) and aiBrain.TransportRequested then
+        RNGLOG('Army transport requested')
         return true
-    elseif aiBrain and (not aiBrain.NoRush.Active ) and aiBrain.WantTransports then
-        local enemyCount = aiBrain.EnemyIntel.EnemyCount or 1
-        if aiBrain.BrainIntel.SelfThreat.AntiAirNow > (aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir / enemyCount) then
-            return true
-        end
     end
     return false
 end

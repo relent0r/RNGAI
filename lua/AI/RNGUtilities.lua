@@ -270,40 +270,35 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         end
         if platoon.PlatoonData.ReclaimTable then
            --RNGLOG('We are going to lookup the reclaim table for high reclaim positions')
-            if aiBrain.MapReclaimTable then
-                --RNGLOG('aiBrain MapReclaimTable exist')
-                local currentGameTime = GetGameTimeSeconds()
-                local reclaimOptions = {}
-                local maxReclaimCount = 30
-                local validLocation = false
-                for k, v in aiBrain.MapReclaimTable do
-                    if v.TotalReclaim > 100 then
-                        RNGINSERT(reclaimOptions, {Key = k, Position = v.Position, TotalReclaim = v.TotalReclaim, Distance=VDist3Sq(engPos, v.Position)})
+            if aiBrain.GridReclaim then
+                LOG('Engineer looking at reclaim grid')
+                local searchType
+                local reclaimGridInstance = aiBrain.GridReclaim
+                local brainGridInstance = aiBrain.GridBrain
+                local deathFunction = function(unit)
+                    if unit.CellAssigned then
+                        -- Brain is assigned on unit create, if issues use eng:GetAIBrain()
+                        local brainGridInstance = unit.Brain.GridBrain
+                        local brainCell = brainGridInstance:ToCellFromGridSpace(unit.CellAssigned[1], unit.CellAssigned[2])
+                        -- confirm engineer is removed from cell during debug
+                        brainGridInstance:RemoveReclaimingEngineer(brainCell, unit)
                     end
                 end
-                table.sort(reclaimOptions, function(a,b) return a.Distance < b.Distance end)
-                --RNGLOG('reclaimOptions table size is '..RNGGETN(reclaimOptions))
-                for _, v in reclaimOptions do
-                    if platoon.PlatoonData.Early and v.Distance > 14400 then
-                       --RNGLOG('Early reclaim and its too far away lets go for something closer')
-                        break
-                    end
-                    if (aiBrain.MapReclaimTable[v.Key].LastAssignment < currentGameTime - 5) and GetThreatAtPosition( aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 2 then
-                        if NavUtils.CanPathTo('Amphibious', engPos, v.Position) then
-                           --RNGLOG('Lets go to reclaim at '..repr(v))
-                            validLocation = v.Position
-                            aiBrain.MapReclaimTable[v.Key].LastAssignment = currentGameTime
-                            break
-                        elseif not platoon.PlatoonData.Early then
-                           --RNGLOG('We want to go to this reclaim but cant graph to it, transport time? '..repr(v))
-                            validLocation = v.Position
-                            break
-                        end
-                    else
-                        --RNGLOG('Reclaim threat too high or recent assignment')
-                    end
+        
+                import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, self)
+                if self.PlatoonData.Early then
+                    searchType = 'MAIN'
                 end
+
+                local reclaimTargetX, reclaimTargetZ = AIUtils.EngFindReclaimCell(aiBrain, self, platoon.MovementLayer, searchType)
+                local brainCell = brainGridInstance:ToCellFromGridSpace(reclaimTargetX, reclaimTargetZ)
+                -- Assign engineer to cell
+                self.CellAssigned = {reclaimTargetX, reclaimTargetZ}
+                brainGridInstance:AddReclaimingEngineer(brainCell, self)
+                local validLocation = reclaimGridInstance:ToWorldSpace(reclaimTargetX, reclaimTargetZ)
+
                 if validLocation then
+                    LOG('Valid reclaim location found')
                     --RNGLOG('We have a valid reclaim location')
                     IssueClearCommands({self})
                     if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, self, validLocation, true) then
@@ -621,6 +616,66 @@ function StartMoveDestination(self,destination)
         coroutine.yield(10)
     end
 end
+
+---@param aiBrain AIBrain
+---@param eng Unit
+---@param movementLayer string
+---@return number
+---@return number
+function EngFindReclaimCell(aiBrain, eng, movementLayer, searchType)
+    -- Will find a reclaim grid cell to target for reclaim engineers
+    -- requires the GridReclaim and GridBrain to have an instance against the 
+    -- AI Brain, movementLayer is included for mods that have different layer engineers
+    -- searchRadius could be improved to be dynamic
+        -----------------------------------
+    -- find a nearby cell to reclaim --
+
+    -- @Relent0r this uses the newly introduced API to find nearby cells. Short descriptions:
+    -- `MaximumInRadius`            Finds most valuable cell to reclaim in a radius
+    -- `FilterInRadius`             Finds all cells that meets some threshold
+    -- `FilterAndSortInRadius`      Finds all cells that meets some threshold and sorts the list of cells from high value to low value
+    local CanPathTo = import("/lua/sim/navutils.lua").CanPathTo
+    local reclaimGridInstance = aiBrain.GridReclaim
+    local brainGridInstance = aiBrain.GridBrain
+    local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
+    local searchRadius = 16
+    if maxmapdimension == 256 then
+        searchRadius = 8
+    end
+    if searchType == 'MAIN' then
+        searchRadius = aiBrain.IMAPConfig.Rings
+    end
+    local searchLoop = 0
+    local reclaimTargetX, reclaimTargetZ
+    local engPos = eng:GetPosition()
+    local gx, gz = reclaimGridInstance:ToGridSpace(engPos[1],engPos[3])
+    while searchLoop < searchRadius and (not (reclaimTargetX and reclaimTargetZ)) do 
+        WaitTicks(1)
+
+        -- retrieve a list of cells with some mass value
+        local cells, count = reclaimGridInstance:FilterAndSortInRadius(gx, gz, searchRadius, 10)
+        -- find out if we can path to the center of the cell and check engineer maximums
+        for k = 1, count do
+            local cell = cells[k] --[[@as AIGridReclaimCell]]
+            local centerOfCell = reclaimGridInstance:ToWorldSpace(cell.X, cell.Z)
+            local maxEngineers = math.min(math.ceil(cell.TotalMass / 500), 8)
+            -- make sure we can path to it and it doesnt have high threat e.g Point Defense
+            if CanPathTo(movementLayer, engPos, centerOfCell) and aiBrain:GetThreatAtPosition(centerOfCell, 0, true, 'AntiSurface') < 10 then
+                local brainCell = brainGridInstance:ToCellFromGridSpace(cell.X, cell.Z)
+                local engineersInCell = brainGridInstance:CountReclaimingEngineers(brainCell)
+                if engineersInCell < maxEngineers then
+                    reclaimTargetX, reclaimTargetZ = cell.X, cell.Z
+                    break
+                end
+            end
+        end
+        searchLoop = searchLoop + 1
+    end
+    if reclaimTargetX and reclaimTargetZ then
+        return reclaimTargetX, reclaimTargetZ
+    end
+end
+
 -- Get the military operational areas of the map. Credit to Uveso, this is based on his zones but a little more for small map sizes.
 function GetMOARadii(bool)
     -- Military area is slightly less than half the map size (10x10map) or maximal 200.
@@ -714,7 +769,7 @@ function EngineerTryRepair(aiBrain, eng, whatToBuild, pos)
 end
 
 function AIFindUnmarkedExpansionMarkerNeedsEngineerRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
-    local pos = aiBrain:PBMGetLocationCoords(locationType)
+    local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
     if not pos then
         return false
     end
@@ -733,7 +788,7 @@ function AIFindUnmarkedExpansionMarkerNeedsEngineerRNG(aiBrain, locationType, ra
 end
 
 function AIFindLargeExpansionMarkerNeedsEngineerRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
-    local pos = aiBrain:PBMGetLocationCoords(locationType)
+    local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
     if not pos then
         return false
     end
@@ -751,7 +806,7 @@ function AIFindLargeExpansionMarkerNeedsEngineerRNG(aiBrain, locationType, radiu
 end
 
 function AIFindStartLocationNeedsEngineerRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
-    local pos = aiBrain:PBMGetLocationCoords(locationType)
+    local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
     if not pos then
         return false
     end
@@ -780,7 +835,7 @@ function AIFindStartLocationNeedsEngineerRNG(aiBrain, locationType, radius, tMin
 end
 
 function AIFindExpansionAreaNeedsEngineerRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
-    local pos = aiBrain:PBMGetLocationCoords(locationType)
+    local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
     if not pos then
         return false
     end
@@ -1086,6 +1141,11 @@ function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxR
             for num, unit in targetUnits do
                 if not unit.Dead and not unit.CaptureInProgress and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
                     local unitPos = unit:GetPosition()
+                    if platoon.Defensive and aiBrain.GridPresence then
+                        if aiBrain.GridPresence:GetInferredStatus(unitPos) == 'Hostile' then
+                            continue
+                        end
+                    end
                     if not retUnit or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
                         retUnit = unit
                         distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
@@ -1676,6 +1736,11 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                             if unit:GetAIBrain():GetArmyIndex() == v then
                                 if not unit.CaptureInProgress and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
                                     local unitPos = unit:GetPosition()
+                                    if platoon.Defensive and aiBrain.GridPresence then
+                                        if aiBrain.GridPresence:GetInferredStatus(unitPos) == 'Hostile' then
+                                            continue
+                                        end
+                                    end
                                     if not retUnit or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
                                         retUnit = unit
                                         distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
@@ -1705,6 +1770,11 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                                 end
                             end
                             local unitPos = unit:GetPosition()
+                            if platoon.Defensive and aiBrain.GridPresence then
+                                if aiBrain.GridPresence:GetInferredStatus(unitPos)  == 'Hostile' then
+                                    continue
+                                end
+                            end
                             if avoidbases then
                                 for _, w in ArmyBrains do
                                     if IsEnemy(w:GetArmyIndex(), aiBrain:GetArmyIndex()) or (aiBrain:GetArmyIndex() == w:GetArmyIndex()) then
@@ -3048,34 +3118,6 @@ CountSoonMassSpotsRNG = function(aiBrain)
             end
         end
     end
-    aiBrain.cmanager.unclaimedmexcount=0
-    local massmarkers={}
-        for _, v in adaptiveResourceMarkers do
-            if v.type == 'Mass' then
-                table.insert(massmarkers,v)
-            end
-        end
-    while aiBrain.Status ~= "Defeat" do
-        local markercache=table.copy(massmarkers)
-        for _=0,10 do
-            local soonmexes={}
-            local unclaimedmexcount=0
-            for i,v in markercache do
-                if not CanBuildStructureAt(aiBrain, 'ueb1103', v.position) then 
-                    table.remove(markercache,i) 
-                    continue 
-                end
-                if aiBrain:GetNumUnitsAroundPoint(categories.MASSEXTRACTION + categories.ENGINEER, v.position, 50*ScenarioInfo.size[1]/256, 'Ally')>0 then
-                    unclaimedmexcount=unclaimedmexcount+1
-                    table.insert(soonmexes,{Position = v.position, Name = i})
-                end
-            end
-            aiBrain.cmanager.unclaimedmexcount=(aiBrain.cmanager.unclaimedmexcount+unclaimedmexcount)/2
-            aiBrain.emanager.soonmexes=soonmexes
-            --RNGLOG(repr(aiBrain.Nickname)..' unclaimedmex='..repr(aiBrain.cmanager.unclaimedmexcount))
-            coroutine.yield(20)
-        end
-    end
 end
 -- start of supporting functions for zone area thingy
 GenerateDistinctColorTable = function(num)
@@ -3512,7 +3554,7 @@ function MexUpgradeManagerRNG(aiBrain)
 end
 
 AIFindDynamicExpansionPointRNG = function(aiBrain, locationType, radius, threatMin, threatMax, threatRings, threatType)
-    local pos = aiBrain:PBMGetLocationCoords(locationType)
+    local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
     local retPos, retName
     radius = radius * radius
 
@@ -4376,10 +4418,12 @@ AIWarningChecks = function(aiBrain)
             uveso_enabled = true
         end
     end
+    --[[
     if not uveso_enabled then
         SUtils.AISendChat('all', aiBrain.Nickname, 'Uveso AI mod is not enabled, it is required for correct AI pathing when using RNGAI')
         coroutine.yield( 30 )
     end
+    ]]
 end
 
 GetShieldCoverAroundUnit = function(aiBrain, unit)
@@ -4798,8 +4842,8 @@ CanPathToCurrentEnemyRNG = function(aiBrain) -- Uveso's function modified to run
             --RNGLOG('Start path checking')
             --RNGLOG('CanPathToEnemyRNG Table '..repr(aiBrain.CanPathToEnemyRNG))
         end
-        if not ScenarioInfo.PathGraphsRNG then
-            WARN('No PathGraph Cache yet, waiting...')
+        if not NavUtils.IsGenerated() then
+            WARN('No Navmesh yet, waiting...')
             coroutine.yield(50)
             continue
         end

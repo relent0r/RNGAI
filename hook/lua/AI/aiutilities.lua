@@ -6,6 +6,7 @@ local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
+local TransportUtils = import("/lua/ai/transportutilities.lua")
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
@@ -101,7 +102,8 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
         -- Skip the last move... we want to return and do a build
         --RNGLOG('run SendPlatoonWithTransportsNoCheck')
         unit.WaitingForTransport = true
-        bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, unit.PlatoonHandle, destination, T1EngOnly, needTransports, true, false)
+        bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, unit.PlatoonHandle, destination, 2, true)
+        --bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, unit.PlatoonHandle, destination, T1EngOnly, needTransports, true, false)
         unit.WaitingForTransport = false
         --RNGLOG('finish SendPlatoonWithTransportsNoCheck')
 
@@ -173,6 +175,9 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
                         --RNGLOG('Attempt reclaim on eng movement')
                         if not unit:IsUnitState('Reclaiming') then
                             brokenPathMovement = RUtils.PerformEngReclaim(aiBrain, unit, 5)
+                            if brokenPathMovement then
+                                coroutine.yield(20)
+                            end
                         end
                     end
                 end
@@ -252,7 +257,16 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
     -- first try to find a path with markers. 
     local result, navReason
     local path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination, nil, 300)
-    --RNGLOG('EngineerGenerateSafePathToRNG reason is'..reason)
+    if path then
+        RNGLOG('EngineerMoveWithSafePathCHP has valid path')
+    else
+        RNGLOG('EngineerMoveWithSafePathCHP has no valid path')
+    end
+    if reason then
+        RNGLOG('EngineerGenerateSafePathToRNG reason is'..reason)
+    else
+        RNGLOG('EngineerGenerateSafePathToRNG reason is not present')
+    end
     -- only use CanPathTo for distance closer then 200 and if we can't path with markers
     if reason ~= 'PathOK' then
         -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
@@ -282,7 +296,8 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
         -- Skip the last move... we want to return and do a build
         --RNGLOG('run SendPlatoonWithTransportsNoCheck')
         eng.WaitingForTransport = true
-        bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, eng.PlatoonHandle, destination, T1EngOnly, needTransports, true, false)
+        bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, eng.PlatoonHandle, destination, 2, true)
+        --bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, eng.PlatoonHandle, destination, T1EngOnly, needTransports, true, false)
         eng.WaitingForTransport = false
         --RNGLOG('finish SendPlatoonWithTransportsNoCheck')
 
@@ -369,6 +384,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                 end
             end
             while not IsDestroyed(eng) do
+                local reclaimed
                 if brokenPathMovement and eng.EngineerBuildQueue and RNGGETN(eng.EngineerBuildQueue) > 0 then
                     pos = eng:GetPosition()
                     local queuePointTaken = {}
@@ -408,15 +424,22 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                             aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
                         end
                     end
+                    if reclaimed then
+                        coroutine.yield(20)
+                    end
+                    reclaimed = false
                     brokenPathMovement = false
                 end
                 pos = eng:GetPosition()
+                local nextPath
                 if currentPathNode <= pathLength then
-                    dist = VDist3Sq(path[currentPathNode], pos)
-                    if dist < 100 then
+                    dist = VDist3Sq(pos, path[currentPathNode])
+                    if dist < 100 or (currentPathNode+1 <= pathLength and dist > VDist3Sq(pos, path[currentPathNode+1])) then
                         currentPathNode = currentPathNode + 1
+                        nextPath = true
                     end
                 end
+                --< 100 or nextPath
                 if VDist3Sq(destination, pos) < 100 then
                     break
                 end
@@ -428,6 +451,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                     if ALLBPS[eng.EngineerBuildQueue[1][1]].CategoriesHash.MASSEXTRACTION and ALLBPS[eng.EngineerBuildQueue[1][1]].CategoriesHash.TECH1 then
                         if not eng:IsUnitState('Reclaiming') then
                             brokenPathMovement = RUtils.PerformEngReclaim(aiBrain, eng, 5)
+                            reclaimed = true
                         end
                     end
                 end

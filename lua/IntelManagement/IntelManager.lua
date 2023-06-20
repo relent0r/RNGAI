@@ -778,12 +778,6 @@ IntelManager = Class {
                     end
                 end
             end
-            for k, v in self.Brain.Zones.Land.zones do
-                local pathNode = GetClosestPathNodeInRadiusByLayerRNG(v.pos, 30, 'Land')
-                if pathNode.BestArmy then
-                    v.bestarmy = pathNode.BestArmy
-                end
-            end
         end
         
         if self.Brain.RNGDEBUG then
@@ -794,9 +788,6 @@ IntelManager = Class {
                     RNGLOG('Player Index '..v)
                     RNGLOG('Start Angle : '..repr(n.startangle))
                     RNGLOG('Start Distance : '..repr(n.startdistance))
-                end
-                if b.bestarmy then
-                    RNGLOG('Army team is '..b.bestarmy)
                 end
                 RNGLOG('---------------------')
             end
@@ -846,6 +837,7 @@ IntelManager = Class {
         while aiBrain.Status ~= "Defeat" do
             coroutine.yield(20)
             local intelCoverage = 0
+            local mapOwnership = 0
             local mustScoutPresent = false
             local perimeterExpired = false
             for i=self.MapIntelGridXMin, self.MapIntelGridXMax do
@@ -874,12 +866,17 @@ IntelManager = Class {
                             end
                         end
                     end
+                    local cellStatus = self.Brain.GridPresence:GetInferredStatus(self.MapIntelGrid[i][k].Position)
+                    if cellStatus == 'Allied' then
+                        mapOwnership = mapOwnership + 1
+                    end
                 end
                 coroutine.yield(1)
             end
             self.MapIntelStats.IntelCoverage = intelCoverage / (self.MapIntelGridXRes * self.MapIntelGridZRes) * 100
             self.MapIntelStats.MustScoutArea = mustScoutPresent
             self.MapIntelStats.PerimeterExpired = perimeterExpired
+            self.Brain.BrainIntel.MapOwnership = mapOwnership / self.Brain.IntelManager.CellCount * 100
             if aiBrain.RNGDEBUG then
                 if mustScoutPresent then
                     RNGLOG('mustScoutPresent is true after loop')
@@ -892,6 +889,7 @@ IntelManager = Class {
                     RNGLOG('perimeterExpired is false after loop')
                 end
             end
+            LOG('Current Map ownership '..self.Brain.BrainIntel.MapOwnership)
         end
     end,
 
@@ -1580,8 +1578,6 @@ ExpansionIntelScanRNG = function(aiBrain)
                     info:   GraphArea="LandArea_133",
                     info:   RNGArea="Land15-24",
                     info:   adjacentTo="Land19-11 Land20-11 Land20-12 Land20-13 Land18-11",
-                    info:   armydists={ ARMY_1=209.15859985352, ARMY_2=218.62866210938 },
-                    info:   bestarmy="ARMY_1",
                     info:   bestexpand="Expansion Area 6",
                     info:   color="fff4a460",
                     info:   expanddists={
@@ -1867,40 +1863,6 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
     return false
 end
 
-CreateReclaimGrid = function(aiBrain)
-    coroutine.yield(Random(10,30))
-    -- by default, 16x16 iMAP
-    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
-    --LOG('playableArea is '..repr(playableArea))
-    local n = 16 
-    local mx = ScenarioInfo.size[1]
-    local mz = ScenarioInfo.size[2]
-    local GetTerrainHeight = GetTerrainHeight
-
-    -- smaller maps have a 8x8 iMAP
-    if mx == mz and mx == 256 then 
-        n = 8
-    end
-    
-    local reclaimGrid = {}
-    
-    -- distance per cell
-    local fx = 1 / n * mx 
-    local fz = 1 / n * mz 
-
-    -- draw iMAP information
-    for x = 1, n do 
-        for z = 1, n do 
-            local cx = fx * (x - 0.5)
-            local cz = fz * (z - 0.5)
-            if cx < playableArea[1] or cz < playableArea[2] or cx > playableArea[3] or cz > playableArea[4] then
-                continue
-            end
-            table.insert(reclaimGrid, { Position = {cx, GetTerrainHeight(cx, cz), cz}, Size = { sx = fx, sz = fz}, TotalReclaim = 0, AirThreat = 0, SurfaceThreat = 0, NavalThreat = 0, LastUpdate = 0, LastAssignment = 0, })
-        end
-    end
-    aiBrain.MapReclaimTable = reclaimGrid
-end
 
 CreateIntelGrid = function(aiBrain)
     coroutine.yield(Random(30,70))
@@ -1911,6 +1873,7 @@ CreateIntelGrid = function(aiBrain)
     local mx = ScenarioInfo.size[1]
     local mz = ScenarioInfo.size[2]
     local GetTerrainHeight = GetTerrainHeight
+    local cellCount = 0
     if aiBrain.RNGDEBUG then
         RNGLOG('Intel Grid MapSize X : '..mx..' Z: '..mz)
     end
@@ -1965,6 +1928,7 @@ CreateIntelGrid = function(aiBrain)
             if cx < playableArea[1] or cz < playableArea[2] or cx > playableArea[3] or cz > playableArea[4] then
                 continue
             end
+            cellCount = cellCount + 1
             startingGridx = math.min(x, startingGridx)
             startingGridz = math.min(z, startingGridz)
             endingGridx = math.max(x, endingGridx)
@@ -1978,6 +1942,7 @@ CreateIntelGrid = function(aiBrain)
     end
     aiBrain.IntelManager.MapIntelGrid = intelGrid
     MapIntelGridSize = fx
+    aiBrain.IntelManager.CellCount = cellCount
     aiBrain.IntelManager.MapIntelGridXMin = startingGridx
     aiBrain.IntelManager.MapIntelGridXMax = endingGridx
     aiBrain.IntelManager.MapIntelGridZMin = startingGridz
@@ -2008,40 +1973,6 @@ end
     info:   },
 ]]
 
-MapReclaimAnalysis = function(aiBrain)
-    -- Loops through map grid squares that roughly match IMAP 
-    CreateReclaimGrid(aiBrain)
-    coroutine.yield(30)
-    while aiBrain.Status ~= "Defeat" do
-        if aiBrain.ReclaimEnabled then
-            local currentGameTime = GetGameTimeSeconds()
-            for k, square in aiBrain.MapReclaimTable do
-                local reclaimTotal = 0
-                local reclaimRaw = GetReclaimablesInRect(square.Position[1] - (square.Size.sx / 2), square.Position[3] - (square.Size.sz / 2), square.Position[1] + (square.Size.sx / 2), square.Position[3] + (square.Size.sz / 2))
-                if reclaimRaw and table.getn(reclaimRaw) > 0 then
-                    for k,v in reclaimRaw do
-                        if not IsProp(v) then continue end
-                        if v.MaxMassReclaim and v.MaxMassReclaim > 0 then
-                            reclaimTotal = reclaimTotal + v.MaxMassReclaim
-                        end
-                    end
-                end
-                square.TotalReclaim = reclaimTotal
-                square.LastUpdate = currentGameTime
-                coroutine.yield(1)
-            end
-            local startReclaim = 0
-            for k, square in aiBrain.MapReclaimTable do
-                if VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[3], square.Position[1], square.Position[3]) < 14400 then
-                    startReclaim = startReclaim + square.TotalReclaim
-                end
-            end
-            aiBrain.StartReclaimCurrent = startReclaim
-            --RNGLOG('Current Starting Reclaim is'..aiBrain.StartReclaimCurrent)
-        end
-        coroutine.yield(300)
-    end
-end
 
 TacticalThreatAnalysisRNG = function(aiBrain)
 
