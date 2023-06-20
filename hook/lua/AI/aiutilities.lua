@@ -139,8 +139,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
             end
             local dist
             local movementTimeout = 0
-            while not IsDestroyed(eng) do
-                local reclaimed
+            while not unit.Dead do
                 if brokenPathMovement and unit.EngineerBuildQueue and RNGGETN(unit.EngineerBuildQueue) > 0 then
                     for i=currentPathNode, pathLength do
                         IssueMove({unit}, path[i])
@@ -152,16 +151,12 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
                     else
                         aiBrain:BuildStructure(unit, unit.EngineerBuildQueue[1][1], {unit.EngineerBuildQueue[1][2][1], unit.EngineerBuildQueue[1][2][2], 0}, unit.EngineerBuildQueue[1][3])
                     end
-                    if reclaimed then
-                        coroutine.yield(20)
-                    end
-                    reclaimed = false
                     brokenPathMovement = false
                 end
                 pos = unit:GetPosition()
                 if currentPathNode <= pathLength then
                     dist = VDist3Sq(path[currentPathNode], pos)
-                    if dist < 100 or (currentPathNode+1 <= pathLength and dist > VDist3Sq(pos, path[currentPathNode+1])) then
+                    if dist < 100 then
                         currentPathNode = currentPathNode + 1
                     end
                 end
@@ -181,7 +176,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
                         if not unit:IsUnitState('Reclaiming') then
                             brokenPathMovement = RUtils.PerformEngReclaim(aiBrain, unit, 5)
                             if brokenPathMovement then
-                                reclaimed = true
+                                coroutine.yield(20)
                             end
                         end
                     end
@@ -436,12 +431,15 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                     brokenPathMovement = false
                 end
                 pos = eng:GetPosition()
+                local nextPath
                 if currentPathNode <= pathLength then
                     dist = VDist3Sq(pos, path[currentPathNode])
                     if dist < 100 or (currentPathNode+1 <= pathLength and dist > VDist3Sq(pos, path[currentPathNode+1])) then
                         currentPathNode = currentPathNode + 1
+                        nextPath = true
                     end
                 end
+                --< 100 or nextPath
                 if VDist3Sq(destination, pos) < 100 then
                     break
                 end
