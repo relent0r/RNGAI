@@ -1120,8 +1120,8 @@ end
 function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
     local currentIncome = aiBrain.cmanager.income.r.m
     local currentBuildPower = 0
-    local engSpend = 0.4
-    local availableIncome = engSpend * currentIncome
+    local engSpend = 0.5
+    local availableIncome = math.ceil(engSpend * currentIncome)
     local multiplier
     if aiBrain.CheatEnabled then
         multiplier = aiBrain.EcoManager.EcoMultiplier
@@ -1142,7 +1142,6 @@ function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
             return true
         end
         if aiBrain.cmanager.income.r.m > 55 and aiBrain.cmanager.buildpower.eng.T2 < 75 then
-
             return true
         end
         if availableIncome - aiBrain.cmanager.buildpower.eng.T2 > 0 then

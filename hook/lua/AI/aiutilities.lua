@@ -57,6 +57,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
     if EntityCategoryContains(categories.ENGINEER * categories.TECH1, unit) then
         T1EngOnly = true
     end
+    local jobType = unit.PlatoonHandle.PlatoonData.JobType or 'None'
     -- don't check a path if we are in build range
     if not alwaysCheckPath and VDist3Sq(pos, destination) < 144 then
         return true
@@ -139,18 +140,20 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
             end
             local dist
             local movementTimeout = 0
-            while not IsDestroyed(eng) do
+            while not IsDestroyed(unit) do
                 local reclaimed
-                if brokenPathMovement and unit.EngineerBuildQueue and RNGGETN(unit.EngineerBuildQueue) > 0 then
+                if brokenPathMovement and ( unit.EngineerBuildQueue and RNGGETN(unit.EngineerBuildQueue) > 0 or jobType == 'Reclaim' )then
                     for i=currentPathNode, pathLength do
                         IssueMove({unit}, path[i])
                     end
                     IssueMove({unit}, destination)
-                    if unit.EngineerBuildQueue[1][4] then
-                        --RNGLOG('BorderWarning build')
-                        IssueBuildMobile({unit}, {unit.EngineerBuildQueue[1][2][1], 0, unit.EngineerBuildQueue[1][2][2]}, unit.EngineerBuildQueue[1][1], {})
-                    else
-                        aiBrain:BuildStructure(unit, unit.EngineerBuildQueue[1][1], {unit.EngineerBuildQueue[1][2][1], unit.EngineerBuildQueue[1][2][2], 0}, unit.EngineerBuildQueue[1][3])
+                    if jobType ~= 'Reclaim' then
+                        if unit.EngineerBuildQueue[1][4] then
+                            --RNGLOG('BorderWarning build')
+                            IssueBuildMobile({unit}, {unit.EngineerBuildQueue[1][2][1], 0, unit.EngineerBuildQueue[1][2][2]}, unit.EngineerBuildQueue[1][1], {})
+                        else
+                            aiBrain:BuildStructure(unit, unit.EngineerBuildQueue[1][1], {unit.EngineerBuildQueue[1][2][1], unit.EngineerBuildQueue[1][2][2], 0}, unit.EngineerBuildQueue[1][3])
+                        end
                     end
                     if reclaimed then
                         coroutine.yield(20)
@@ -175,8 +178,8 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
                 if unit.Dead then
                     return
                 end
-                if unit.EngineerBuildQueue then
-                    if ALLBPS[unit.EngineerBuildQueue[1][1]].CategoriesHash.MASSEXTRACTION and ALLBPS[unit.EngineerBuildQueue[1][1]].CategoriesHash.TECH1 then
+                if unit.EngineerBuildQueue or jobType == 'Reclaim' then
+                    if jobType == 'Reclaim' or ALLBPS[unit.EngineerBuildQueue[1][1]].CategoriesHash.MASSEXTRACTION and ALLBPS[unit.EngineerBuildQueue[1][1]].CategoriesHash.TECH1 then
                         --RNGLOG('Attempt reclaim on eng movement')
                         if not unit:IsUnitState('Reclaiming') then
                             brokenPathMovement = RUtils.PerformEngReclaim(aiBrain, unit, 5)

@@ -4826,7 +4826,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                   or eng.UnitBeingBuiltBehavior or not eng:IsIdleState()
                  ) do
             coroutine.yield(30)
-
             if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                 if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
                     local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE - categories.SCOUT, engPos, 10, 'Enemy')
@@ -4841,10 +4840,13 @@ Platoon = Class(RNGAIPlatoonClass) {
             if eng.Combat or eng.Active then
                 return
             end
+            if not eng.UnitBeingBuilt or eng.UnitBeingBuilt and eng.UnitBeingBuilt:GetFractionComplete() == 1 then
+                break
+            end
         end
 
         eng.NotBuildingThread = nil
-        if not eng.Dead and eng:IsIdleState() and RNGGETN(eng.EngineerBuildQueue) ~= 0 and eng.PlatoonHandle and not eng.WaitingForTransport then
+        if not eng.BuildDoneCallbackSet and not eng.Dead and eng:IsIdleState() and RNGGETN(eng.EngineerBuildQueue) ~= 0 and eng.PlatoonHandle and not eng.WaitingForTransport then
             eng.PlatoonHandle.SetupEngineerCallbacksRNG(eng)
             if not eng.ProcessBuild then
                 --RNGLOG('Forking Process Build Command with table remove')

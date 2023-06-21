@@ -127,7 +127,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         --RNGLOG('Start Reclaim Table has '..RNGGETN(aiBrain.StartReclaimTable)..' items in it')
     end
     IssueClearCommands({self})
-    local locationType = self.PlatoonData.LocationType
+    local locationType = platoon.PlatoonData.LocationType
     local initialRange = 40
     local createTick = GetGameTick()
     local reclaimLoop = 0
@@ -286,11 +286,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 end
         
                 import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, self)
-                if self.PlatoonData.Early then
+                if platoon.PlatoonData.Early then
                     searchType = 'MAIN'
                 end
 
-                local reclaimTargetX, reclaimTargetZ = AIUtils.EngFindReclaimCell(aiBrain, self, platoon.MovementLayer, searchType)
+                local reclaimTargetX, reclaimTargetZ = EngFindReclaimCell(aiBrain, self, platoon.MovementLayer, searchType)
                 local brainCell = brainGridInstance:ToCellFromGridSpace(reclaimTargetX, reclaimTargetZ)
                 -- Assign engineer to cell
                 self.CellAssigned = {reclaimTargetX, reclaimTargetZ}
@@ -643,8 +643,9 @@ function EngFindReclaimCell(aiBrain, eng, movementLayer, searchType)
         searchRadius = 8
     end
     if searchType == 'MAIN' then
-        searchRadius = aiBrain.IMAPConfig.Rings
+        searchRadius = aiBrain.BrainIntel.IMAPConfig.Rings
     end
+    LOG('Find reclaim cell, search radius is '..searchRadius)
     local searchLoop = 0
     local reclaimTargetX, reclaimTargetZ
     local engPos = eng:GetPosition()
@@ -660,7 +661,7 @@ function EngFindReclaimCell(aiBrain, eng, movementLayer, searchType)
             local centerOfCell = reclaimGridInstance:ToWorldSpace(cell.X, cell.Z)
             local maxEngineers = math.min(math.ceil(cell.TotalMass / 500), 8)
             -- make sure we can path to it and it doesnt have high threat e.g Point Defense
-            if CanPathTo(movementLayer, engPos, centerOfCell) and aiBrain:GetThreatAtPosition(centerOfCell, 0, true, 'AntiSurface') < 10 then
+            if CanPathTo(movementLayer, engPos, centerOfCell) and aiBrain:GetThreatAtPosition(centerOfCell, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 10 then
                 local brainCell = brainGridInstance:ToCellFromGridSpace(cell.X, cell.Z)
                 local engineersInCell = brainGridInstance:CountReclaimingEngineers(brainCell)
                 if engineersInCell < maxEngineers then
@@ -672,6 +673,7 @@ function EngFindReclaimCell(aiBrain, eng, movementLayer, searchType)
         searchLoop = searchLoop + 1
     end
     if reclaimTargetX and reclaimTargetZ then
+        LOG('Returned reclaim target of X:'..reclaimTargetX..' Z:'..reclaimTargetZ)
         return reclaimTargetX, reclaimTargetZ
     end
 end

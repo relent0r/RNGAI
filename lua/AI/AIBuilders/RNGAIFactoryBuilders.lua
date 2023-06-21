@@ -160,7 +160,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.95, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { MIBC, 'AirPlayerCheck', {'LocationType', 3, categories.FACTORY * categories.LAND }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
@@ -187,7 +187,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.95, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { MIBC, 'AirPlayerCheck', {'LocationType', 3, categories.FACTORY * categories.LAND }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
