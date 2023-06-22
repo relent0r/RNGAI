@@ -1,4 +1,32 @@
-WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset aibrain.lua' )
+
+local AIDefaultPlansList = import("/lua/aibrainplans.lua").AIPlansList
+local AIUtils = import("/lua/ai/aiutilities.lua")
+
+local Utilities = import("/lua/utilities.lua")
+local ScenarioUtils = import("/lua/sim/scenarioutilities.lua")
+local Behaviors = import("/lua/ai/aibehaviors.lua")
+local AIBuildUnits = import("/lua/ai/aibuildunits.lua")
+
+local FactoryManager = import("/lua/sim/factorybuildermanager.lua")
+local PlatoonFormManager = import("/lua/sim/platoonformmanager.lua")
+local BrainConditionsMonitor = import("/lua/sim/brainconditionsmonitor.lua")
+local EngineerManager = import("/lua/sim/engineermanager.lua")
+
+local SUtils = import("/lua/ai/sorianutilities.lua")
+local TransferUnitsOwnership = import("/lua/simutils.lua").TransferUnitsOwnership
+local TransferUnfinishedUnitsAfterDeath = import("/lua/simutils.lua").TransferUnfinishedUnitsAfterDeath
+local CalculateBrainScore = import("/lua/sim/score.lua").CalculateBrainScore
+local Factions = import('/lua/factions.lua').GetFactions(true)
+
+-- upvalue for performance
+local BrainGetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
+local BrainGetListOfUnits = moho.aibrain_methods.GetListOfUnits
+local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
+local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
+local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
+local CategoriesDummyUnit = categories.DUMMYUNIT
+local CoroutineYield = coroutine.yield
+
 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
@@ -11,7 +39,6 @@ local AIUtils = import('/lua/ai/AIUtilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local PlatoonGenerateSafePathToRNG = import('/lua/AI/aiattackutilities.lua').PlatoonGenerateSafePathToRNG
-local GetClosestPathNodeInRadiusByLayerRNG = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayerRNG
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
@@ -31,12 +58,34 @@ local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local RNGINSERT = table.insert
 local RNGGETN = table.getn
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
+local StandardBrain = import("/lua/aibrain.lua").AIBrain
 
-local RNGAIBrainClass = AIBrain
+local RNGAIBrainClass = import("/lua/aibrains/base-ai.lua").AIBrain
 AIBrain = Class(RNGAIBrainClass) {
 
+    --- Called after `BeginSession`, at this point all props, resources and initial units exist in the map
+    ---@param self AIBrainAdaptive
+    OnBeginSession = function(self)
+        StandardBrain.OnBeginSession(self)
+
+        -- requires navigational mesh
+        import("/lua/sim/NavUtils.lua").Generate()
+
+        -- requires these markers to exist
+        import("/lua/sim/MarkerUtilities.lua").GenerateExpansionMarkers()
+        --import("/lua/sim/MarkerUtilities.lua").GenerateRallyPointMarkers()
+
+        -- requires these datastructures to understand the game
+        self.GridReclaim = import("/lua/ai/gridreclaim.lua").Setup(self)
+        self.GridBrain = import("/lua/ai/gridbrain.lua").Setup()
+        --self.GridRecon = import("/lua/ai/gridrecon.lua").Setup(self)
+        self.GridPresence = import("/lua/AI/GridPresence.lua").Setup(self)
+    end,
+
     OnCreateAI = function(self, planName)
-        RNGAIBrainClass.OnCreateAI(self, planName)
+        LOG('Oncreate AI from RNG code')
+        StandardBrain.OnCreateAI(self, planName)
+        LOG('Completed standard brain oncreate AI running rng')
         local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
@@ -49,6 +98,45 @@ AIBrain = Class(RNGAIBrainClass) {
             self.RNGEXP = true
             self.RNGDEBUG = false
         end
+        local civilian = false
+        for name, data in ScenarioInfo.ArmySetup do
+            if name == self.Name then
+                civilian = data.Civilian
+                break
+            end
+        end
+
+        if not civilian then
+            -- Flag this brain as a possible brain to have skirmish systems enabled on
+            self.SkirmishSystems = true
+            local cheatPos = string.find(per, 'cheat')
+            if cheatPos then
+                AIUtils.SetupCheat(self, true)
+                ScenarioInfo.ArmySetup[self.Name].AIPersonality = string.sub(per, 1, cheatPos - 1)
+            end
+
+            LOG('* OnCreateAI: AIPersonality: ('..per..')')
+
+            self.CurrentPlan = self.AIPlansList[self:GetFactionIndex()][1]
+            self:ForkThread(self.InitialAIThread)
+
+            self.PlatoonNameCounter = {}
+            self.PlatoonNameCounter['AttackForce'] = 0
+            self.BaseTemplates = {}
+            self.RepeatExecution = true
+            self.IntelData = {
+                ScoutCounter = 0,
+            }
+
+            -- Flag enemy starting locations with threat?
+            if ScenarioInfo.type == 'skirmish' then
+                self:AddInitialEnemyThreat(200, 0.005)
+            end
+        end
+
+        self.UnitBuiltTriggerList = {}
+        self.FactoryAssistList = {}
+        self.DelayEqualBuildPlattons = {}
     end,
 
     OnSpawnPreBuiltUnits = function(self)
@@ -169,7 +257,7 @@ AIBrain = Class(RNGAIBrainClass) {
             --RNGLOG('5 KM Map Check true')
             self.MapSize = 5
         end
-        self.MapCenterPoint = { (ScenarioInfo.size[1] / 2), GetTerrainHeight((ScenarioInfo.size[1] / 2), (ScenarioInfo.size[2] / 2)) ,(ScenarioInfo.size[2] / 2) }
+        self.MapCenterPoint = { (ScenarioInfo.size[1] / 2), GetSurfaceHeight((ScenarioInfo.size[1] / 2), (ScenarioInfo.size[2] / 2)) ,(ScenarioInfo.size[2] / 2) }
 
         -- Condition monitor for the whole brain
         self.ConditionsMonitor = BrainConditionsMonitor.CreateConditionsMonitor(self)
@@ -404,8 +492,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 [1] = {
                     Land = {
                         T1 = {
-                            scout=10,
-                            tank=70,
+                            scout=15,
+                            tank=65,
                             arty=15,
                             aa=12,
                             total=0
@@ -470,8 +558,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 [2] = {
                     Land = {
                         T1 = {
-                            scout=10,
-                            tank=70,
+                            scout=15,
+                            tank=65,
                             arty=15,
                             aa=12,
                             total=0
@@ -535,8 +623,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 [3] = {
                     Land = {
                         T1 = {
-                            scout=10,
-                            tank=70,
+                            scout=15,
+                            tank=65,
                             arty=15,
                             aa=12,
                             total=0
@@ -601,8 +689,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 [4] = {
                     Land = {
                         T1 = {
-                            scout=10,
-                            tank=70,
+                            scout=15,
+                            tank=65,
                             arty=15,
                             aa=12,
                             total=0
@@ -664,8 +752,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 [5] = {
                     Land = {
                         T1 = {
-                            scout=10,
-                            tank=70,
+                            scout=15,
+                            tank=65,
                             arty=15,
                             aa=12,
                             total=0
@@ -921,7 +1009,6 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Intel Data
         self.EnemyIntel = {}
         self.BrainIntel = {}
-        self.BrainIntel.AirPlayer = false
         self.BrainIntel.TeamCount = 0
         self.EnemyIntel.NavalRange = {
             Position = {},
@@ -935,9 +1022,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.HighPriorityTargetAvailable = false
         self.EnemyIntel.ACU = {}
         self.EnemyIntel.Phase = 1
-        self.EnemyIntel.AirPhase = 1
-        self.EnemyIntel.LandPhase = 1
-        self.EnemyIntel.NavalPhase = 1
         self.EnemyIntel.TML = {}
         self.EnemyIntel.SMD = {}
         self.EnemyIntel.DirectorData = {
@@ -1001,7 +1085,8 @@ AIBrain = Class(RNGAIBrainClass) {
         end
 
         local selfStartPosX, selfStartPosY = self:GetArmyStartPos()
-        self.BrainIntel.StartPos = { selfStartPosX, GetTerrainHeight(selfStartPosX, selfStartPosY), selfStartPosY }
+        self.BrainIntel.StartPos = { selfStartPosX, GetSurfaceHeight(selfStartPosX, selfStartPosY), selfStartPosY }
+        self.BrainIntel.MapOwnership = 0
         self.BrainIntel.CurrentIntelAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, self.MapCenterPoint)
         self.BrainIntel.MilitaryRange = BaseMilitaryArea
         self.BrainIntel.DMZRange = BaseDMZArea
@@ -1016,7 +1101,7 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         self.BrainIntel.AllyCount = 0
         self.BrainIntel.AllyStartLocations = {}
-        self.BrainIntel.BaseRestrictedArea = BaseRestrictedArea
+        
         self.BrainIntel.LandPhase = 1
         self.BrainIntel.AirPhase = 1
         self.BrainIntel.NavalPhase = 1
@@ -1074,7 +1159,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.StartMassReclaimTotal = 0
         self.StartReclaimCurrent = 0
         self.StartReclaimTaken = false
-        self.MapReclaimTable = {}
         self.Zones = { }
 
         self.UpgradeMode = 'Normal'
@@ -1146,7 +1230,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.IntelManager:Run()
         self.StructureManager = StructureManagerRNG.CreateStructureManager(self)
         self.StructureManager:Run()
-        self:ForkThread(IntelManagerRNG.MapReclaimAnalysis)
         self:ForkThread(IntelManagerRNG.CreateIntelGrid, self.IntelManager)
         self:ForkThread(self.CreateFloatingEngineerBase, self.BrainIntel.StartPos)
         if self.RNGDEBUG then
@@ -1192,15 +1275,11 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.EcoManager.CoreMassPush then
                 RNGLOG('We should be pushing for 3 core t3 extractors')
             end
-            RNGLOG('Enemy Air Phase '..self.EnemyIntel.AirPhase)
-            RNGLOG('Enemy Land Phase '..self.EnemyIntel.LandPhase)
-            RNGLOG('Enemy Naval Phase '..self.EnemyIntel.NavalPhase)
             RNGLOG('Current T1 Mobile AA count '..self.amanager.Current['Land']['T1']['aa'])
             RNGLOG('Current T2 Mobile AA count '..self.amanager.Current['Land']['T2']['aa'])
             RNGLOG('Current T3 Mobile AA count '..self.amanager.Current['Land']['T3']['aa'])
             RNGLOG('Current engineer assist build power required '..self.EngineerAssistManagerBuildPowerRequired)
             RNGLOG('Approx Factory Mass Consumption '..self.EcoManager.ApproxFactoryMassConsumption)
-            RNGLOG('Soon Mex Count '..table.getn(self.emanager.soonmexes))
             RNGLOG('Ally Count is '..self.BrainIntel.AllyCount)
             RNGLOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
             RNGLOG('Eco Costing Multiplier is '..self.EcoManager.EcoMultiplier)
@@ -1498,7 +1577,6 @@ AIBrain = Class(RNGAIBrainClass) {
             FactoryManager = FactoryManager.CreateFactoryBuilderManager(self, baseName, position, radius, useCenter),
             PlatoonFormManager = PlatoonFormManager.CreatePlatoonFormManager(self, baseName, position, radius, useCenter),
             EngineerManager = EngineerManager.CreateEngineerManager(self, baseName, position, radius),
-            StrategyManager = StratManager.CreateStrategyManager(self, baseName, position, radius),
             DefensivePoints = RUtils.GenerateDefensivePointTable(BaseRestrictedArea, position),
             BuilderHandles = {},
             Position = position,
@@ -1730,10 +1808,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     if v.PlatoonFormManager then
                         v.PlatoonFormManager:SetEnabled(false)
                         v.PlatoonFormManager:Destroy()
-                    end
-                    if v.StrategyManager then
-                        v.StrategyManager:SetEnabled(false)
-                        v.StrategyManager:Destroy()
                     end
                     self.BuilderManagers[k] = nil
                     self.NumBases = self.NumBases - 1
@@ -1979,8 +2053,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 self.EnemyIntel.ClosestEnemyBase = enemyDistance
                             end
                         else
-                            local friendDistance = VDist3Sq(self.BrainIntel.StartPos, startPos)
-                            allyTempStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex, Distance = friendDistance}
+                            allyTempStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex}
                             allyStarts['ARMY_' .. i] = startPos
                         end
                     end
@@ -2464,7 +2537,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if self:GetCurrentEnemy() then
                 local enemyX, enemyZ = self:GetCurrentEnemy():GetArmyStartPos()
                 local CenterPointAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, self.MapCenterPoint)
-                local EnemyAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, {enemyX, GetTerrainHeight(enemyX, enemyZ), enemyZ})
+                local EnemyAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, {enemyX, GetSurfaceHeight(enemyX, enemyZ), enemyZ})
                 --RNGLOG('CenterPointAngle '..CenterPointAngle..' EnemyAngle '..EnemyAngle)
                 --RNGLOG('Average should be '..((CenterPointAngle + EnemyAngle) / 2))
                 self.BrainIntel.CurrentIntelAngle = (CenterPointAngle + EnemyAngle) / 2
@@ -2481,7 +2554,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             for k, v in self.EnemyIntel.ACU do
                 local dupe = false
-                if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.LastSpotted ~= 0 and v.Position[1] then
+                if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 and v.Position[1] then
                     --RNGLOG('ACU last spotted '..(GetGameTimeSeconds() - v.LastSpotted)..' seconds ago')
                     if v.LastSpotted + 60 > GetGameTimeSeconds() then
                         local gridXID, gridZID = im:GetIntelGrid(v.Position)
@@ -2783,6 +2856,7 @@ AIBrain = Class(RNGAIBrainClass) {
     BaseMonitorPlatoonDistressThreadRNG = function(self)
         self.BaseMonitor.PlatoonAlertSounded = true
         while true do
+            RNGLOG('MassEfficiencyOverTime --'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime)
             local numPlatoons = 0
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 if self:PlatoonExists(v.Platoon) then
@@ -3486,6 +3560,8 @@ AIBrain = Class(RNGAIBrainClass) {
             self.BrainIntel.IMAPConfig.IMAPSize = 256
             self.BrainIntel.IMAPConfig.Rings = 0
         end
+        self.IMAPConfig = {}
+        self.IMAPConfig.Rings = self.BrainIntel.IMAPConfig.Rings
     end,
 
     TacticalMonitorRNG = function(self, ALLBPS)
@@ -3545,7 +3621,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 potentialThreats[raw[1]] = potentialThreats[raw[1]] or { }
                 potentialThreats[raw[1]][raw[2]] = potentialThreats[raw[1]][raw[2]] or { }
                 potentialThreats[raw[1]][raw[2]][t] = raw[3]
-                potentialThreats[raw[1]][raw[2]].Position = potentialThreats[raw[1]][raw[2]].Position or {raw[1], GetTerrainHeight(raw[1], raw[2]),raw[2]}
+                potentialThreats[raw[1]][raw[2]].Position = potentialThreats[raw[1]][raw[2]].Position or {raw[1], GetSurfaceHeight(raw[1], raw[2]),raw[2]}
                 potentialThreats[raw[1]][raw[2]].UpdateTime = potentialThreats[raw[1]][raw[2]].UpdateTime or currentGameTime
                 --local threatRow = {posX=raw[1], posZ=raw[2], rThreat=raw[3], rThreatType=t}
                 --RNGINSERT(potentialThreats, threatRow)
@@ -3619,7 +3695,7 @@ AIBrain = Class(RNGAIBrainClass) {
             
         if not potentialTarget then
             for k, v in self.EnemyIntel.ACU do
-                if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.LastSpotted ~= 0 then
+                if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
                     if platoonType == 'GUNSHIP' and platoonDPS then
                         if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and v.LastSpotted + 120 > GetGameTimeSeconds() then
                             RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
@@ -3663,7 +3739,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     elseif platoonType == 'SATELLITE' and platoonDPS then
                         if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and v.LastSpotted + 120 > GetGameTimeSeconds() then
-                            if RUtils.HaveUnitVisual(self, v.Unit, true) and not RUtils.ShieldProtectingTargetRNG(self, v.Unit, nil) then
+                            if RUtils.HaveUnitVisual(self, v.Unit, true) and not RUtils.ShieldProtectingTargetRNG(aiBrain, v.Unit, nil) then
                                 RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
                                 local gridX, gridY = im:GetIntelGrid(v.Position)
                                 local scoutRequired = true
@@ -3926,6 +4002,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     EcoMassManagerRNG = function(self)
     -- Watches for low power states
+        coroutine.yield(Random(1,7))
         while true do
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
                 if GetGameTimeSeconds() < 240 then
@@ -4458,7 +4535,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.7 then
                             --RNGLOG('EcoPowerPreemptive : Radar being upgraded next power consumption is '..ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy)
                             if v:IsUnitState('Upgrading') then
-                                --RNGLOG('Unit is upgrading, check power consumption during upgrade')
+                                RNGLOG('Unit is upgrading, check power consumption during upgrade')
                                 potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildCostEnergy / ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildTime * (ALLBPS[v.UnitId].Economy.BuildRate * multiplier))
                             end
                             potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy
@@ -4842,6 +4919,12 @@ AIBrain = Class(RNGAIBrainClass) {
     
     EcoSelectorManagerRNG = function(self, priorityUnit, units, action, type)
         --RNGLOG('Eco selector manager for '..priorityUnit..' is '..action..' Type is '..type)
+        local engineerCats
+        if self.BrainIntel.MapOwnership > 50 then
+            engineerCats = categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE)
+        else
+            engineerCats = categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE)
+        end
         
         for k, v in units do
             if v.Dead then continue end
@@ -4853,7 +4936,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     v:SetPaused(false)
                     continue
                 end
-                if (not v.PlatoonHandle.PlatoonData.Construction.NearDefensivePoints) and EntityCategoryContains( categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE) , v.UnitBeingBuilt) then
+                if EntityCategoryContains( engineerCats , v.UnitBeingBuilt) then
                     v:SetPaused(true)
                     continue
                 end
@@ -5036,6 +5119,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         local path, reason, totalThreat = PlatoonGenerateSafePathToRNG(self, 'Land', selfStartPos, v.StartPosition, 1, nil, nil, true)
                         if path then
                            --RNGLOG('Choke point test Total Threat for path is '..totalThreat)
+                           -- Fix total threat later.
+                           totalThreat = 100000
                             self.EnemyIntel.ChokePoints[k].CurrentPathThreat = (totalThreat / RNGGETN(path))
                            --RNGLOG('We have a path to the enemy start position with an average of '..(totalThreat / RNGGETN(path)..' threat'))
 
@@ -5725,7 +5810,7 @@ AIBrain = Class(RNGAIBrainClass) {
     CivilianPDCheckRNG = function(self)
         -- This will momentarily reveal civilian structures at the start of the game so that the AI can detect threat from PD's
         --RNGLOG('Reveal Civilian PD')
-        coroutine.yield(50)
+        coroutine.yield(2)
         local AIIndex = self:GetArmyIndex()
         for i,v in ArmyBrains do
             local brainIndex = v:GetArmyIndex()
@@ -5761,7 +5846,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     if self.GraphZones then
                         if self.GraphZones[v.Zone].MassMarkersInZone > 5 then
                             for c, b in self.BuilderManagers do
-                                if b.GraphArea and string.find(b.GraphArea, v.Zone) then
+                                if b.GraphArea and b.GraphArea == v.Zone then
                                     invalidZone = true
                                     break
                                 end

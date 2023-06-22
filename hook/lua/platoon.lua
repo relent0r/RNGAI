@@ -8,6 +8,7 @@ local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMa
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIUtils = import('/lua/ai/aiutilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
+local TransportUtils = import("/lua/ai/transportutilities.lua")
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetPosition = moho.entity_methods.GetPosition
@@ -796,10 +797,12 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if safeZone then
                         --RNGLOG('* AI-RNG: GuardMarkerRNG Safe Zone is true')
                     end
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, true, false, safeZone)
+                    usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, bestMarker.Position, 2, true)
+                    --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, true, false, safeZone)
                 elseif VDist2(platoonPosition[1], platoonPosition[3], bestMarker.Position[1], bestMarker.Position[3]) > 256 then
                     --RNGLOG('* AI-RNG: GuardMarkerRNG marker position > 256')
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, false, false, safeZone)
+                    usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, bestMarker.Position, 2, true)
+                    --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, false, false, safeZone)
                 end
                 if not usedTransports then
                     local pathLength = RNGGETN(path)
@@ -836,7 +839,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             elseif (not path and reason == 'NoPath') then
                 --RNGLOG('* AI-RNG: Guardmarker NoPath requesting transports')
-                usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, true, false, safeZone)
+                usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, bestMarker.Position, 2, true)
+                --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, true, false, safeZone)
                 --DUNCAN - if we need a transport and we cant get one the disband
                 if not usedTransports then
                     --RNGLOG('* AI-RNG: Guardmarker no transports available disbanding')
@@ -1244,7 +1248,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local aiBrain = self:GetBrain()
         local scout = GetPlatoonUnits(self)[1]
         local im = IntelManagerRNG.GetIntelManager(aiBrain)
-        local intelRange = ALLBPS[scout.UnitId].Intel.RadarRadius
+        local intelRange = scout.Blueprint.Intel.RadarRadius
         if intelRange then
             self.IntelRange = intelRange
         end
@@ -1401,7 +1405,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         --RNGLOG('Starting ACUSupportRNG')
         self.BuilderName = 'ACUSupportRNG'
         self.PlanName = 'ACUSupportRNG'
-        local ALLBPS = __blueprints
         local enemyACUPresent
         local function VariableKite(platoon,unit,target, modOverride)
             local function KiteDist(pos1,pos2,distance)
@@ -1507,9 +1510,16 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
                 local reference = aiBrain.EnemyIntel.EnemyStartLocations[EnemyIndex].Position
                 local platoonPos = GetPlatoonPosition(self)
-                movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{90,15})
-                if not NavUtils.CanPathTo(self.MovementLayer, platoonPos, movetoPoint) then
+                if self.SupportRotate then
                     movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{-90,15})
+                    RNGLOG('rotate to -90 for '..aiBrain.Nickname..' position '..repr(movetoPoint))
+                else
+                    movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{90,15})
+                    RNGLOG('movetoPoint to 90 for '..aiBrain.Nickname..' position '..repr(movetoPoint))
+                end
+                if (not self.SupportRotate) and (not NavUtils.CanPathTo(self.MovementLayer, platoonPos, movetoPoint)) then
+                    movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{-90,15})
+                    self.SupportRotate = true
                 end
             else
                 local pointTable = false
@@ -1552,19 +1562,19 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             --RNGLOG('Platoon has been vented')
         end
-        local function GetThreatAroundTarget(self, aiBrain, ALLBPS, targetPosition)
+        local function GetThreatAroundTarget(self, aiBrain, targetPosition)
             local enemyUnitThreat = 0
             local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), targetPosition, 35, 'Enemy')
             for k,v in enemyUnits do
                 if v and not v.Dead then
                     if EntityCategoryContains(categories.STRUCTURE * categories.DEFENSE, v) then
-                        enemyUnitThreat = enemyUnitThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel + 10
+                        enemyUnitThreat = enemyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel + 10
                     end
                     if EntityCategoryContains(categories.COMMAND, v) then
                         enemyACUPresent = true
                         enemyUnitThreat = enemyUnitThreat + v:EnhancementThreatReturn()
                     else
-                        enemyUnitThreat = enemyUnitThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                        enemyUnitThreat = enemyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel
                     end
                 end
             end
@@ -1635,10 +1645,11 @@ Platoon = Class(RNGAIPlatoonClass) {
 
             if NavUtils.CanPathTo(self.MovementLayer, platoonPos, aiBrain.CDRUnit.Position) then
                 if ACUDistance > 14400 then
-                    path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, self.MovementLayer, platoonPos, aiBrain.CDRUnit.Position, 10 , BaseEnemyArea)
+                    path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(self.MovementLayer, platoonPos, aiBrain.CDRUnit.Position, 10 , BaseEnemyArea)
                 end
             else
-                usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, aiBrain.CDRUnit.Position, false, true)
+                usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, aiBrain.CDRUnit.Position, 3, true)
+                --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, aiBrain.CDRUnit.Position, false, true)
             end
             if path then
                 self:PlatoonMoveWithMicro(aiBrain, path, false, true)
@@ -1761,7 +1772,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 snipeAttempt = true
                             end
                             targetPosition = target:GetPosition()
-                            local enemyUnitThreat = GetThreatAroundTarget(self, aiBrain, ALLBPS, targetPosition)
+                            local enemyUnitThreat = GetThreatAroundTarget(self, aiBrain, targetPosition)
                             --RNGLOG('EnemyUnitThreat '..enemyUnitThreat)
                             --RNGLOG('CurrentPlatoonThreat '..self.CurrentPlatoonThreat)
                             if enemyUnitThreat > self.CurrentPlatoonThreat then
@@ -2037,10 +2048,12 @@ Platoon = Class(RNGAIPlatoonClass) {
                     platoonPos = GetPlatoonPosition(self)
                     if not success or VDist2(platoonPos[1], platoonPos[3], targetPosition[1], targetPosition[3]) > 512 then
                         --RNGLOG('* AI-RNG: * HuntAIPATH: Requesting Transport range > 512')
-                        usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true, false, true)
+                        usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, targetPosition, 2, true)
+                        --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true, false, true)
                     elseif VDist2(platoonPos[1], platoonPos[3], targetPosition[1], targetPosition[3]) > 256 then
                         --RNGLOG('* AI-RNG: * HuntAIPATH: Requesting Transport range > 256')
-                        usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, false, false, true)
+                        usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, targetPosition, 1, true)
+                        --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, false, false, true)
                     end
                     if not usedTransports then
                        --RNGLOG('HUNTAIPATH performing platoonmovewithattackmicro')
@@ -2049,7 +2062,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                 elseif (not path and reason == 'NoPath') then
                     --RNGLOG('* AI-RNG: * HuntAIPATH: NoPath reason from path')
                     --RNGLOG('Guardmarker requesting transports')
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true, false, true)
+                    usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, targetPosition, 2, true)
+                    --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true, false, true)
                     --DUNCAN - if we need a transport and we cant get one the disband
                     if not usedTransports then
                         --RNGLOG('* AI-RNG: * HuntAIPATH: not used transports')
@@ -2108,7 +2122,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         if platoonUnits > 0 then
             for k, v in platoonUnits do
                 if not v.Dead then
-                    for _, weapon in ALLBPS[v.UnitId].Weapon or {} do
+                    for _, weapon in v.Blueprint.Weapon or {} do
                         -- unit can have MaxWeaponRange entry from the last platoon
                         if not v.MaxWeaponRange or weapon.MaxRadius > v.MaxWeaponRange then
                             -- save the weaponrange 
@@ -2453,7 +2467,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         if platoonUnits > 0 then
             for k, v in platoonUnits do
                 if not v.Dead then
-                    for _, weapon in ALLBPS[v.UnitId].Weapon or {} do
+                    for _, weapon in v.Blueprint.Weapon or {} do
                         -- unit can have MaxWeaponRange entry from the last platoon
                         if weapon.WeaponCategory == 'Anti Air' then
                             continue
@@ -2998,6 +3012,9 @@ Platoon = Class(RNGAIPlatoonClass) {
         if data.LocationType then
             basePosition = aiBrain.BuilderManagers[data.LocationType].Position
         end
+        if data.Defensive then
+            self.Defensive = true
+        end
         --RNGLOG('StrikeForceAI my threat is '..self.CurrentPlatoonThreat)
         --RNGLOG('StrikeForceAI my movement layer is '..self.MovementLayer)
 
@@ -3157,9 +3174,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                     --self:AttackTarget(target)
                 else
-                    local path, reason, totalThreat = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoonPosition, targetPosition, 10 , 10000)
+                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoonPosition, targetPosition, 10 , 10000)
                     self:Stop()
                     if path then
+                        -- totalThreat needs to be reworked. I've removed it for now.
+                        local totalThreat
                         local pathLength = RNGGETN(path)
                         if not totalThreat then
                             totalThreat = 1
@@ -3246,7 +3265,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                 end
             elseif data.Defensive then 
-                self:MoveToLocation(mainBasePos, false)
+                if VDist3Sq(platoonPosition, mainBasePos) > 6400 then
+                    self:MoveToLocation(mainBasePos, false)
+                end
                 local baseDist
                 --RNGLOG('StrikefoceAI Returning to base')
                 self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
@@ -3438,9 +3459,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                     --RNGLOG('Approaching Target')
                     IssueAttack(platoonUnits, target)
                 else
-                    local path, reason, totalThreat = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoonPosition, targetPosition, 10 , 10000)
+                    local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoonPosition, targetPosition, 10 , 10000)
                     self:Stop()
                     if path then
+                        -- totalThreat needs to be reworked. I've disabled it for now.
+                        local totalThreat
                         local pathLength = RNGGETN(path)
                         if not totalThreat then
                             totalThreat = 1
@@ -3685,8 +3708,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
 
         elseif cons.NearMarkerType and cons.ExpansionBase then
-            local pos = aiBrain:PBMGetLocationCoords(cons.LocationType) or cons.Position or GetPlatoonPosition(self)
-            local radius = cons.LocationRadius or aiBrain:PBMGetLocationRadius(cons.LocationType) or 100
+            local pos = aiBrain.BuilderManagers[cons.LocationType].EngineerManager.Location or cons.Position or GetPlatoonPosition(self)
+            local radius = cons.LocationRadius or aiBrain.BuilderManagers[cons.LocationType].EngineerManager.Radius or 100
 
             if cons.AggressiveExpansion then
                 --DUNCAN - pulled out and uses alt finder
@@ -4080,6 +4103,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local buildMassPoints = {}
         local buildMassDistantPoints = {}
         local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+        local NavUtils = import("/lua/sim/navutils.lua")
         local borderWarning = false
         local factionIndex = aiBrain:GetFactionIndex()
         local platoonUnits = GetPlatoonUnits(self)
@@ -4105,13 +4129,13 @@ Platoon = Class(RNGAIPlatoonClass) {
         local distantMarkers = 0
         local closestMarker = false
         for k, marker in massMarkers do
-            if VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 165 then
+            if VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 165 and NavUtils.CanPathTo('Amphibious', engPos, marker.Position) then
                 closeMarkers = closeMarkers + 1
                 RNGINSERT(buildMassPoints, marker)
                 if closeMarkers > 3 then
                     break
                 end
-            elseif VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 484 then
+            elseif VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 484 and NavUtils.CanPathTo('Amphibious', engPos, marker.Position) then
                 distantMarkers = distantMarkers + 1
                 --RNGLOG('CommanderInitializeAIRNG : Inserting Distance Mass Point into table')
                 RNGINSERT(buildMassDistantPoints, marker)
@@ -4130,7 +4154,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         --RNGLOG('CommanderInitializeAIRNG : Closest Marker Distance is '..closestMarker)
         local closestHydro = RUtils.ClosestResourceMarkersWithinRadius(aiBrain, engPos, 'Hydrocarbon', 65, false, false, false)
         --RNGLOG('CommanderInitializeAIRNG : HydroTable '..repr(closestHydro))
-        if closestHydro then
+        if closestHydro and NavUtils.CanPathTo('Amphibious', engPos, closestHydro.Position) then
             --RNGLOG('CommanderInitializeAIRNG : Hydro Within 65 units of spawn')
             hydroPresent = true
         end
@@ -4583,7 +4607,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         if (not eng) or eng.Dead or (not eng.PlatoonHandle) or eng.Combat or eng.Active or eng.Upgrading or eng.GoingHome then
             return
         end
-        ALLBPS = __blueprints
+        local ALLBPS = __blueprints
         local aiBrain = eng.PlatoonHandle:GetBrain()
         if not aiBrain or eng.Dead or not eng.EngineerBuildQueue or RNGGETN(eng.EngineerBuildQueue) == 0 then
             if PlatoonExists(aiBrain, eng.PlatoonHandle) then
@@ -4802,7 +4826,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                   or eng.UnitBeingBuiltBehavior or not eng:IsIdleState()
                  ) do
             coroutine.yield(30)
-
             if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                 if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
                     local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE - categories.SCOUT, engPos, 10, 'Enemy')
@@ -4817,10 +4840,13 @@ Platoon = Class(RNGAIPlatoonClass) {
             if eng.Combat or eng.Active then
                 return
             end
+            if not eng.UnitBeingBuilt or eng.UnitBeingBuilt and eng.UnitBeingBuilt:GetFractionComplete() == 1 then
+                break
+            end
         end
 
         eng.NotBuildingThread = nil
-        if not eng.Dead and eng:IsIdleState() and RNGGETN(eng.EngineerBuildQueue) ~= 0 and eng.PlatoonHandle and not eng.WaitingForTransport then
+        if not eng.BuildDoneCallbackSet and not eng.Dead and eng:IsIdleState() and RNGGETN(eng.EngineerBuildQueue) ~= 0 and eng.PlatoonHandle and not eng.WaitingForTransport then
             eng.PlatoonHandle.SetupEngineerCallbacksRNG(eng)
             if not eng.ProcessBuild then
                 --RNGLOG('Forking Process Build Command with table remove')
@@ -4830,7 +4856,6 @@ Platoon = Class(RNGAIPlatoonClass) {
     end,
 
     ConfigurePlatoon = function(self)
-        local ALLBPS = ALLBPS
         local function SetZone(pos, zoneIndex)
             --RNGLOG('Set zone with the following params position '..repr(pos)..' zoneIndex '..zoneIndex)
             if not pos then
@@ -4883,7 +4908,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             if self.MovementLayer == 'Air' then
                                 --RNGLOG('Unit id is '..v.UnitId..' Configure Platoon Weapon Category'..weaponBlueprint.WeaponCategory..' Damage Radius '..weaponBlueprint.DamageRadius)
                             end
-                            if ALLBPS[v.UnitId].CategoriesHash.BOMBER and (weaponBlueprint.WeaponCategory == 'Bomb' or weaponBlueprint.RangeCategory == 'UWRC_DirectFire') then
+                            if v.Blueprint.CategoriesHash.BOMBER and (weaponBlueprint.WeaponCategory == 'Bomb' or weaponBlueprint.RangeCategory == 'UWRC_DirectFire') then
                                 v.DamageRadius = weaponBlueprint.DamageRadius
                                 v.StrikeDamage = weaponBlueprint.Damage * weaponBlueprint.MuzzleSalvoSize
                                 if weaponBlueprint.InitialDamage then
@@ -4899,7 +4924,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 end
                                 --RNGLOG('Have set units DamageRadius to '..v.DamageRadius)
                             end
-                            if ALLBPS[v.UnitId].CategoriesHash.GUNSHIP and weaponBlueprint.RangeCategory == 'UWRC_DirectFire' then
+                            if v.Blueprint.CategoriesHash.GUNSHIP and weaponBlueprint.RangeCategory == 'UWRC_DirectFire' then
                                 v.ApproxDPS = RUtils.CalculatedDPSRNG(weaponBlueprint) --weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
                                 maxPlatoonDPS = maxPlatoonDPS + v.ApproxDPS
                             end
@@ -4919,7 +4944,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                     local callBacks = aiBrain:GetCallBackCheck(v)
                     local primaryWeaponDamage = 0
-                    for _, weapon in ALLBPS[v.UnitId].Weapon or {} do
+                    for _, weapon in v.Blueprint.Weapon or {} do
                         -- unit can have MaxWeaponRange entry from the last platoon
                         if weapon.Damage and weapon.Damage > primaryWeaponDamage then
                             primaryWeaponDamage = weapon.Damage
@@ -5135,9 +5160,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if path then
                         platLoc = GetPlatoonPosition(self)
                         if VDist3Sq(platLoc, targetPosition) > 262144 then
-                            usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true, false, true)
+                            usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, targetPosition, 2, true)
+                            --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true, false, true)
                         elseif VDist3Sq(platLoc, targetPosition) > 65536 and (not self.PlatoonData.EarlyRaid) then
-                            usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, false, false, true)
+                            usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, targetPosition, 1, true)
+                            --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, false, false, true)
                         end
                         if not usedTransports then
                             local retreated = self:PlatoonMoveWithZoneMicro(aiBrain, path, self.PlatoonData.Avoid)
@@ -5149,7 +5176,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                     elseif (not path and reason == 'NoPath') then
                         --RNGLOG('MassRaid requesting transports')
-                        usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true, false, true)
+                        usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, targetPosition, 3, true)
+                        --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true, false, true)
                         --DUNCAN - if we need a transport and we cant get one the disband
                         if not usedTransports then
                             coroutine.yield( 50 )
@@ -5230,9 +5258,11 @@ Platoon = Class(RNGAIPlatoonClass) {
             if path then
                 platLoc = GetPlatoonPosition(self)
                 if not success or VDist3Sq(platLoc, zonePosition) > 262144 then
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, zonePosition, false, true, false, true)
+                    usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, zonePosition, 2, true)
+                    --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, zonePosition, false, true, false, true)
                 elseif VDist3Sq(platLoc, zonePosition) > 65536 and (not self.PlatoonData.EarlyRaid) then
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, zonePosition, false, false, false, true)
+                    usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, zonePosition, 1, true)
+                    --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, zonePosition, false, false, false, true)
                 end
                 if not usedTransports then
                     local retreated = self:PlatoonMoveWithZoneMicro(aiBrain, path, self.PlatoonData.Avoid)
@@ -5244,7 +5274,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             elseif (not path and reason == 'NoPath') then
                 --RNGLOG('MassRaid requesting transports')
-                usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, zonePosition, false, true, false, true)
+                usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, zonePosition, 3, true)
+                --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, zonePosition, false, true, false, true)
                 --DUNCAN - if we need a transport and we cant get one the disband
                 if not usedTransports then
                     coroutine.yield( 50 )
@@ -6008,9 +6039,11 @@ Platoon = Class(RNGAIPlatoonClass) {
             if path then
                 platLoc = GetPlatoonPosition(self)
                 if not success or VDist2Sq(platLoc[1], platLoc[3], bestMarker.Position[1], bestMarker.Position[3]) > 262144 then
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, true)
+                    usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, bestMarker.Position, 2, true)
+                    --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, true)
                 elseif VDist2Sq(platLoc[1], platLoc[3], bestMarker.Position[1], bestMarker.Position[3]) > 65536 and (not self.PlatoonData.EarlyRaid) then
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, false)
+                    usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, bestMarker.Position, 1, true)
+                    --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, false)
                 end
                 if not usedTransports then
                     self:PlatoonMoveWithMicro(aiBrain, path, self.PlatoonData.Avoid, false, true, 60)
@@ -6019,7 +6052,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             elseif (not path and reason == 'NoPath') then
                 --RNGLOG('MassRaid requesting transports')
                 if not self.PlatoonData.EarlyRaid then
-                    usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, true)
+                    usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, bestMarker.Position, 3, true)
+                    --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, true)
                 end
                 --DUNCAN - if we need a transport and we cant get one the disband
                 if not usedTransports then
@@ -6200,9 +6234,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     totalThreat = totalThreat + v:EnhancementThreatReturn()
                                     enemyUnitPos = v:GetPosition()
                                 else
-                                    --RNGLOG(repr(ALLBPS[v.UnitId].Defense))
-                                    if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel ~= nil then
-                                        totalThreat = totalThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                                    --RNGLOG(repr(v.Blueprint.Defense))
+                                    if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                                        totalThreat = totalThreat + v.Blueprint.Defense.SurfaceThreatLevel
                                     end
                                     if not enemyUnitPos then
                                         enemyUnitPos = v:GetPosition()
@@ -6873,9 +6907,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                                             totalThreat = totalThreat + v:EnhancementThreatReturn()
                                             enemyUnitPos = v:GetPosition()
                                         else
-                                            --RNGLOG(repr(ALLBPS[v.UnitId].Defense))
-                                            if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel ~= nil then
-                                                totalThreat = totalThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                                            --RNGLOG(repr(v.Blueprint.Defense))
+                                            if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                                                totalThreat = totalThreat + v.Blueprint.Defense.SurfaceThreatLevel
                                             end
                                             if not enemyUnitPos then
                                                 enemyUnitPos = v:GetPosition()
@@ -7166,8 +7200,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                     end
                     if closestTurret and not closestTurret.Dead then
-                        if ALLBPS[closestTurret.UnitId].Weapon[1].RangeCategory == 'UWRC_DirectFire' then
-                            closestTurretDistance = ALLBPS[closestTurret.UnitId].Weapon[1].MaxRadius
+                        if closestTurret.Blueprint.Weapon[1].RangeCategory == 'UWRC_DirectFire' then
+                            closestTurretDistance = closestTurret.Blueprint.Weapon[1].MaxRadius
                             --RNGLOG('Turret Found at a distance of '..closestTurretDistance)
                         end
                     end
@@ -7188,7 +7222,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     coroutine.yield(1)
                                     continue
                                 end
-                                if closestTurret and not closestTurret.Dead and ALLBPS[unit.UnitId].CategoriesHash.INDIRECTFIRE then
+                                if closestTurret and not closestTurret.Dead and unit.Blueprint.CategoriesHash.INDIRECTFIRE then
                                     if closestTurretDistance < unit.MaxWeaponRange + 5 then
                                         --RNGLOG('INDIRECTFIRE UNIT Being request to fire at turret')
                                         IssueAttack({unit}, closestTurret)
@@ -7700,9 +7734,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                                                 totalThreat = totalThreat + v:EnhancementThreatReturn()
                                                 enemyUnitPos = v:GetPosition()
                                             else
-                                                --RNGLOG(repr(ALLBPS[v.UnitId].Defense))
-                                                if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel ~= nil then
-                                                    totalThreat = totalThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                                                --RNGLOG(repr(v.Blueprint.Defense))
+                                                if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                                                    totalThreat = totalThreat + v.Blueprint.Defense.SurfaceThreatLevel
                                                 end
                                                 if not enemyUnitPos then
                                                     enemyUnitPos = v:GetPosition()
@@ -7947,11 +7981,11 @@ Platoon = Class(RNGAIPlatoonClass) {
         local antiAirThreat = 0
         for k, v in platoonUnits do
             if not v.Dead then
-                if ALLBPS[v.Unitid].Defense.SurfaceThreatLevel then
-                    surfaceThreat = surfaceThreat + ALLBPS[v.Unitid].Defense.SurfaceThreatLevel
+                if v.Blueprint.Defense.SurfaceThreatLevel then
+                    surfaceThreat = surfaceThreat + v.Blueprint.Defense.SurfaceThreatLevel
                 end
-                if ALLBPS[v.Unitid].Defense.AirThreatLevel then
-                    antiAirThreat = antiAirThreat + ALLBPS[v.Unitid].Defense.AirThreatLevel
+                if v.Blueprint.Defense.AirThreatLevel then
+                    antiAirThreat = antiAirThreat + v.Blueprint.Defense.AirThreatLevel
                 end
                 platoonCount = platoonCount + 1
             end
@@ -8186,7 +8220,7 @@ Platoon = Class(RNGAIPlatoonClass) {
 
         for _, u in platUnits do
             if not u.Dead then
-                threatValue = threatValue + ALLBPS[u.UnitId].Defense[translatedThreatType]
+                threatValue = threatValue + u.Blueprint.Defense[translatedThreatType]
                 platCount = platCount + 1
             end
         end
@@ -8262,7 +8296,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local units = GetPlatoonUnits(aPlat)
                 for _,u in units do
                     if not u.Dead and not u:IsUnitState('Attached') then
-                        threatValue = threatValue + ALLBPS[u.UnitId].Defense[translatedThreatType]
+                        threatValue = threatValue + u.Blueprint.Defense[translatedThreatType]
                         RNGINSERT(validUnits, u)
                         bValidUnits = true
                     end
@@ -8435,7 +8469,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local unitPathing = false
                 if not NavUtils.CanPathTo(self.MovementLayer, GetPlatoonPosition(self), movePosition) then
                     if not NavUtils.CanPathTo(self.MovementLayer, GetPlatoonUnits(self)[1]:GetPosition(), movePosition) then
-                        usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, movePosition, false, true)
+                        usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, movePosition, 3, true)
+                        --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, movePosition, false, true)
                     else 
                         unitPathing = true
                     end
@@ -8943,9 +8978,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                         local position = GetPlatoonPosition(self)
                         local usedTransports = false
                         if not success or VDist2(position[1], position[3], targetPosition[1], targetPosition[3]) > 512 then
-                            usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true)
+                            usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, targetPosition, 2, true)
+                            --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true)
                         elseif VDist2(position[1], position[3], targetPosition[1], targetPosition[3]) > 256 then
-                            usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, false)
+                            usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, targetPosition, 1, true)
+                            --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, false)
                         end
                         if not usedTransports then
                             for i=1, RNGGETN(path) do
@@ -9044,7 +9081,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                     elseif (not path and reason == 'NoPath') then
                         --RNGLOG('* AI-RNG: * SACUATTACKAIRNG: NoPath reason from path')
                         --RNGLOG('Guardmarker requesting transports')
-                        local usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true)
+                        local usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, targetPosition, 3, true)
+                        --local usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, targetPosition, false, true)
                         --DUNCAN - if we need a transport and we cant get one the disband
                         if not usedTransports then
                             --RNGLOG('Guardmarker no transports')
@@ -9337,11 +9375,11 @@ Platoon = Class(RNGAIPlatoonClass) {
 
         for k, v in GetPlatoonUnits(self) do
             if not v.Dead then
-                if ALLBPS[v.UnitId].CategoriesHash.DIRECTFIRE then
+                if v.Blueprint.CategoriesHash.DIRECTFIRE then
                     directFire = directFire + 1
-                elseif ALLBPS[v.UnitId].CategoriesHash.INDIRECTFIRE then
+                elseif v.Blueprint.CategoriesHash.INDIRECTFIRE then
                     indirectFire = indirectFire + 1
-                elseif ALLBPS[v.UnitId].CategoriesHash.ANTIAIR then
+                elseif v.Blueprint.CategoriesHash.ANTIAIR then
                     antiAir = antiAir + 1
                 end
                 total = total + 1
@@ -9703,7 +9741,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local totalDdps = 0
             for _, unit in GetPlatoonUnits(platoon) do
                 if unit and not unit.Dead then
-                    local unitDps = RUtils.CalculatedDPSRNG(ALLBPS[unit.UnitId].Weapon[1])
+                    local unitDps = RUtils.CalculatedDPSRNG(unit.Blueprint.Weapon[1])
                     totalDdps = totalDdps + unitDps
                 end
             end
@@ -9875,7 +9913,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 self:PlatoonDisbandNoAssign()
                 return
             end
-            local smlWeapon = ALLBPS[sml.UnitId].Weapon
+            local smlWeapon = sml.Blueprint.Weapon
             for _, weapon in smlWeapon do
                 if weapon.DamageType == 'Nuke' then
                     if weapon.NukeInnerRingRadius > self.PlatoonDamageRadius then
@@ -9967,7 +10005,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         --RNGLOG('Set unit priorities')
         unit:SetTargetPriorities(atkPriTable)
-        local weapon = ALLBPS[unit.UnitId].Weapon[1]
+        local weapon = unit.Blueprint.Weapon[1]
         local maxRadius = weapon.MaxRadius
         --RNGLOG('Starting Platoon Loop')
 
@@ -10041,7 +10079,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         self:EngineerAssistRemoveRNG(aiBrain, eng)
                         platoonCount = platoonCount - 1
                     else
-                        totalBuildRate = totalBuildRate + ALLBPS[eng.UnitId].Economy.BuildRate
+                        totalBuildRate = totalBuildRate + eng.Blueprint.Economy.BuildRate
                         eng.Active = true
                     end
                 end
@@ -10262,7 +10300,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             if eng:IsPaused() then
                 eng:SetPaused( false )
             end
-            aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - ALLBPS[eng.UnitId].Economy.BuildRate
+            aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - eng.Blueprint.Economy.BuildRate
             IssueStop({eng})
             IssueClearCommands({eng})
             if eng.BuilderManagerData.EngineerManager then
@@ -10280,7 +10318,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         self:Stop()
         local aiBrain = self:GetBrain()
         local data = self.PlatoonData
-        local radius = aiBrain:PBMGetLocationRadius(data.Location)
+        local radius = aiBrain.BuilderManagers[data.Location].EngineerManager.Radius
         local counter = 0
         local reclaimcat
         local reclaimables
@@ -10566,7 +10604,6 @@ Platoon = Class(RNGAIPlatoonClass) {
 
     TruePlatoonRNG = function(self)
         local VDist2Sq = VDist2Sq
-        local ALLBPS = __blueprints
         local function GetWeightedHealthRatio(unit)--health % including shields
             if unit.MyShield then
                 return (unit.MyShield:GetHealth()+unit:GetHealth())/(unit.MyShield:GetMaxHealth()+unit:GetMaxHealth())
@@ -10661,8 +10698,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if EntityCategoryContains(categories.INDIRECTFIRE,v) then
                         mult=0.3
                     end
-                    if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel ~= nil then
-                        platoonthreat = platoonthreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel*GetWeightedHealthRatio(v)*mult
+                    if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                        platoonthreat = platoonthreat + v.Blueprint.Defense.SurfaceThreatLevel*GetWeightedHealthRatio(v)*mult
                     end
                     if (v.Sync.Regen>0) or not v.chpinitialized then
                         v.chpinitialized=true
@@ -10688,7 +10725,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         elseif EntityCategoryContains(categories.SHIELD,v) then
                             v.Role='Shield'
                         end
-                        for _, weapon in ALLBPS[v.UnitId].Weapon or {} do
+                        for _, weapon in v.Blueprint.Weapon or {} do
                             if not (weapon.RangeCategory == 'UWRC_DirectFire') then continue end
                             if not v.MaxWeaponRange or v.MaxRadius > v.MaxWeaponRange then
                                 v.MaxWeaponRange = weapon.MaxRadius * 0.9
@@ -10775,7 +10812,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         unit.chpdanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unit:GetPosition(),30).enemy)
                         unit.dangerupdate=GetGameTimeSeconds()
                     end
-                    if not unit.chpvalue then unit.chpvalue=ALLBPS[unit.UnitId].Economy.BuildCostMass/GetTrueHealth(unit) end
+                    if not unit.chpvalue then unit.chpvalue=unit.Blueprint.Economy.BuildCostMass/GetTrueHealth(unit) end
                     unit.chpworth=unit.chpvalue/GetTrueHealth(unit)
                     unit.chpdistance[id]=VDist3(position,unit:GetPosition())
                     unit.chppriority[id]=unit.chpworth/math.max(30,unit.chpdistance[id])/unit.chpdanger
@@ -11285,7 +11322,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 if enemies and next(enemies) then
                     local enemyThreat = 0
                     for _,enemy in enemies do
-                        enemyThreat = enemyThreat + ALLBPS[enemy.UnitId].Defense.SurfaceThreatLevel
+                        enemyThreat = enemyThreat + enemy.Blueprint.Defense.SurfaceThreatLevel
                         if enemyThreat * 1.1 > self.Threat then
                             --RNGLOG('TruePlatoon enemy threat too high during navigating, exiting')
                             self.navgood = false
@@ -11371,7 +11408,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         local pathmaxdist=0
         local lastfinalpoint=nil
         local lastfinaldist=0
-        local ALLBPS = __blueprints
         while not platoon.Dead and PlatoonExists(aiBrain, self) do
             coroutine.yield(1)
             local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, self)

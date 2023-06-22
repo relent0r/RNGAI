@@ -97,7 +97,6 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'EnergyT2', 6},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'EnergyT2' }},
             { EBC, 'NegativeEcoPowerCheck', { 35.0 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION *  categories.TECH3 }},
@@ -134,7 +133,6 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'EnergyT2', 6},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'EnergyT2' }},
             { EBC, 'LessThanEnergyTrendCombinedRNG', { 120.0 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.5 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.10}},
@@ -168,7 +166,6 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'EnergyT3', 6},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'EnergyT3' }},
             { EBC, 'NegativeEcoPowerCheck', { 160.0 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.1 }},
@@ -204,7 +201,6 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'EnergyT3', 6},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'EnergyT3' }},
             { EBC, 'LessThanEnergyTrendCombinedRNG', { 500.0 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.5 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.10}},
@@ -245,7 +241,6 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 0.1 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
@@ -271,7 +266,6 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 9},
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlatoonDelayRNG', { 'Energy' }},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 1.1, 0.1 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.0}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION *  categories.TECH3 }},

@@ -401,26 +401,28 @@ function GreaterThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
     --RNGLOG('Location Type '..locationType)
 
     local factoryDrain = {}
+    local massToFactoryValues = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues
+    local ecoMultiplier = aiBrain.EcoManager.EcoMultiplier
     if aiBrain.CheatEnabled then
-        factoryDrain.t1LandDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1LandValue or 8) * aiBrain.EcoManager.EcoMultiplier
-        factoryDrain.t2LandDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2LandValue or 20) * aiBrain.EcoManager.EcoMultiplier
-        factoryDrain.t3LandDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3LandValue or 30) * aiBrain.EcoManager.EcoMultiplier
-        factoryDrain.t1AirDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1AirValue or 8) * aiBrain.EcoManager.EcoMultiplier
-        factoryDrain.t2AirDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2AirValue or 20) * aiBrain.EcoManager.EcoMultiplier
-        factoryDrain.t3AirDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3AirValue or 30) * aiBrain.EcoManager.EcoMultiplier
-        factoryDrain.t1NavalDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1NavalValue or 8) * aiBrain.EcoManager.EcoMultiplier
-        factoryDrain.t2NavalDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2NavalValue or 20) * aiBrain.EcoManager.EcoMultiplier
-        factoryDrain.t3NavalDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3NavalValue or 30) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t1LandDrain = (massToFactoryValues.T1LandValue or 8) * ecoMultiplier
+        factoryDrain.t2LandDrain = (massToFactoryValues.T2LandValue or 20) * ecoMultiplier
+        factoryDrain.t3LandDrain = (massToFactoryValues.T3LandValue or 30) * ecoMultiplier
+        factoryDrain.t1AirDrain = (massToFactoryValues.T1AirValue or 8) * ecoMultiplier
+        factoryDrain.t2AirDrain = (massToFactoryValues.T2AirValue or 20) * ecoMultiplier
+        factoryDrain.t3AirDrain = (massToFactoryValues.T3AirValue or 30) * ecoMultiplier
+        factoryDrain.t1NavalDrain = (massToFactoryValues.T1NavalValue or 8) * ecoMultiplier
+        factoryDrain.t2NavalDrain = (massToFactoryValues.T2NavalValue or 20) * ecoMultiplier
+        factoryDrain.t3NavalDrain = (massToFactoryValues.T3NavalValue or 30) * ecoMultiplier
     else
-        factoryDrain.t1LandDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1LandValue or 8
-        factoryDrain.t2LandDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2LandValue or 20
-        factoryDrain.t3LandDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3LandValue or 30
-        factoryDrain.t1AirDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1AirValue or 8
-        factoryDrain.t2AirDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2AirValue or 20
-        factoryDrain.t3AirDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3AirValue or 30
-        factoryDrain.t1NavalDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1NavalValue or 8
-        factoryDrain.t2NavalDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2NavalValue or 20
-        factoryDrain.t3NavalDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3NavalValue or 30
+        factoryDrain.t1LandDrain = massToFactoryValues.T1LandValue or 8
+        factoryDrain.t2LandDrain = massToFactoryValues.T2LandValue or 20
+        factoryDrain.t3LandDrain = massToFactoryValues.T3LandValue or 30
+        factoryDrain.t1AirDrain = massToFactoryValues.T1AirValue or 8
+        factoryDrain.t2AirDrain = massToFactoryValues.T2AirValue or 20
+        factoryDrain.t3AirDrain = massToFactoryValues.T3AirValue or 30
+        factoryDrain.t1NavalDrain = massToFactoryValues.T1NavalValue or 8
+        factoryDrain.t2NavalDrain = massToFactoryValues.T2NavalValue or 20
+        factoryDrain.t3NavalDrain = massToFactoryValues.T3NavalValue or 30
     end
     --RNGLOG('Total Factory Drain '..repr(factoryDrain))
 
@@ -436,26 +438,28 @@ function LessThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
     --RNGLOG('Location Type '..locationType)
 
     local factoryDrain = {}
+    local massToFactoryValues = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues
+    local ecoMultiplier = aiBrain.EcoManager.EcoMultiplier
     if aiBrain.CheatEnabled then
-        factoryDrain.t1LandDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1LandValue or 8) * aiBrain.EcoManager.EcoMultiplier
-        factoryDrain.t2LandDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2LandValue or 20) * aiBrain.EcoManager.EcoMultiplier
-        factoryDrain.t3LandDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3LandValue or 30) * aiBrain.EcoManager.EcoMultiplier
-        factoryDrain.t1AirDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1AirValue or 8) * aiBrain.EcoManager.EcoMultiplier
-        factoryDrain.t2AirDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2AirValue or 20) * aiBrain.EcoManager.EcoMultiplier
-        factoryDrain.t3AirDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3AirValue or 30) * aiBrain.EcoManager.EcoMultiplier
-        factoryDrain.t1NavalDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1NavalValue or 8) * aiBrain.EcoManager.EcoMultiplier
-        factoryDrain.t2NavalDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2NavalValue or 20) * aiBrain.EcoManager.EcoMultiplier
-        factoryDrain.t3NavalDrain = (aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3NavalValue or 30) * aiBrain.EcoManager.EcoMultiplier
+        factoryDrain.t1LandDrain = (massToFactoryValues.T1LandValue or 8) * ecoMultiplier
+        factoryDrain.t2LandDrain = (massToFactoryValues.T2LandValue or 20) * ecoMultiplier
+        factoryDrain.t3LandDrain = (massToFactoryValues.T3LandValue or 30) * ecoMultiplier
+        factoryDrain.t1AirDrain = (massToFactoryValues.T1AirValue or 8) * ecoMultiplier
+        factoryDrain.t2AirDrain = (massToFactoryValues.T2AirValue or 20) * ecoMultiplier
+        factoryDrain.t3AirDrain = (massToFactoryValues.T3AirValue or 30) * ecoMultiplier
+        factoryDrain.t1NavalDrain = (massToFactoryValues.T1NavalValue or 8) * ecoMultiplier
+        factoryDrain.t2NavalDrain = (massToFactoryValues.T2NavalValue or 20) * ecoMultiplier
+        factoryDrain.t3NavalDrain = (massToFactoryValues.T3NavalValue or 30) * ecoMultiplier
     else
-        factoryDrain.t1LandDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1LandValue or 8
-        factoryDrain.t2LandDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2LandValue or 20
-        factoryDrain.t3LandDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3LandValue or 30
-        factoryDrain.t1AirDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1AirValue or 8
-        factoryDrain.t2AirDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2AirValue or 20
-        factoryDrain.t3AirDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3AirValue or 30
-        factoryDrain.t1NavalDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T1NavalValue or 8
-        factoryDrain.t2NavalDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T2NavalValue or 20
-        factoryDrain.t3NavalDrain = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues.T3NavalValue or 30
+        factoryDrain.t1LandDrain = massToFactoryValues.T1LandValue or 8
+        factoryDrain.t2LandDrain = massToFactoryValues.T2LandValue or 20
+        factoryDrain.t3LandDrain = massToFactoryValues.T3LandValue or 30
+        factoryDrain.t1AirDrain = massToFactoryValues.T1AirValue or 8
+        factoryDrain.t2AirDrain = massToFactoryValues.T2AirValue or 20
+        factoryDrain.t3AirDrain = massToFactoryValues.T3AirValue or 30
+        factoryDrain.t1NavalDrain = massToFactoryValues.T1NavalValue or 8
+        factoryDrain.t2NavalDrain = massToFactoryValues.T2NavalValue or 20
+        factoryDrain.t3NavalDrain = massToFactoryValues.T3NavalValue or 30
     end
     --RNGLOG('Total Factory Drain '..repr(factoryDrain))
 

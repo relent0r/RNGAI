@@ -174,6 +174,20 @@ StructureManager = Class {
         end
     end,
 
+    RebuildTable = function(self, oldtable)
+        local temptable = {}
+        for k, v in oldtable do
+            if v ~= nil then
+                if type(k) == 'string' then
+                    temptable[k] = v
+                else
+                    table.insert(temptable, v)
+                end
+            end
+        end
+        return temptable
+    end,
+
     FactoryDataCaptureRNG = function(self)
         -- Lets try be smart about how we do this
         -- This captures the current factory states, replaces all those builder conditions
@@ -366,7 +380,6 @@ StructureManager = Class {
     end,
 
     GetClosestFactory = function(self, base, type, tech, hqFlag)
-        local ALLBPS = __blueprints
         if base == 'NAVAL' then
             --RNGLOG('Naval upgrade wanted, finding closest base')
             local closestBase = false
@@ -595,11 +608,11 @@ StructureManager = Class {
             if self.Factories.AIR[2].UpgradingCount < 1 then
                 --RNGLOG('Factory Air T2 Upgrade Less than 1 Factory Upgrading')
                 if self.Brain.EconomyOverTimeCurrent.MassTrendOverTime >= 0.0 and self.Brain.EconomyOverTimeCurrent.EnergyTrendOverTime >= 0.0 then
-                    if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.015 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.2 then
+                    if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.0 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.2 then
                         --RNGLOG('Factory Upgrade efficiency over time check passed')
                         local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                         local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
-                        if MassEfficiency >= 1.015 and EnergyEfficiency >= 1.2 then
+                        if MassEfficiency >= 1.0 and EnergyEfficiency >= 1.2 then
                             --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
                             local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH1')
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
@@ -1175,6 +1188,7 @@ StructureManager = Class {
 
     ExtractorTMLCheck = function(self, extractor)
         local defended = true
+        local needSort = false
         if extractor.TMLInRange then
             for k, v in extractor.TMLInRange do
                 if not aiBrain.EnemyIntel.TML[k] or aiBrain.EnemyIntel.TML[k].object.Dead then
@@ -1186,6 +1200,9 @@ StructureManager = Class {
                 defended = false
             end
         end
+        if needSort then
+            extractor.TMLInRange = self:RebuildTable(extractor.TMLInRange)
+         end
         return defended
     end,
     
@@ -1287,6 +1304,9 @@ StructureManager = Class {
                     aiBrain.CentralBrainExtractorUnitUpgradeClosest = extractorUnit
                     --LOG('This is a new closest extractor upgrading at '..distanceToBase)
                 end
+                if aiBrain.BrainIntel.SelfThreat.ExtractorCount > aiBrain.BrainIntel.MassSharePerPlayer and aiBrain.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase == distanceToBase then
+                    bypassEcoManager = true
+                end
                 if not bypassEcoManager and fractionComplete < 0.65 then
                     if (GetEconomyTrend(aiBrain, 'MASS') <= 0.0 and GetEconomyStored(aiBrain, 'MASS') <= 150) or GetEconomyStored( aiBrain, 'ENERGY') < 200 then
                         if not extractorUnit:IsPaused() then
@@ -1326,7 +1346,8 @@ StructureManager = Class {
                         extractorUpgradeTimeoutReached = true
                     end
                 end
-                if fractionComplete < 1 and extractorUpgradeTimeoutReached and (aiBrain.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase == distanceToBase or extractorUnit.MAINBASE) then
+                if fractionComplete < 1 and extractorUpgradeTimeoutReached 
+                and (aiBrain.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase == distanceToBase or extractorUnit.MAINBASE) then
                     bypassEcoManager = true
                     if extractorUnit:IsPaused() then
                         extractorUnit:SetPaused(false)

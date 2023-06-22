@@ -2,6 +2,7 @@ local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 local LastGetMassMarkerRNG = 0
 local LastCheckMassMarkerRNG = {}
 local MassMarkerRNG = {}
+local NavUtils = import('/lua/sim/NavUtils.lua')
 local LastMassBOOLRNG = false
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
@@ -49,7 +50,7 @@ function CanBuildOnMassMexPlatoon(aiBrain, engPos, distance)
                 mexBorderWarn = true
             end 
             local mexDistance = VDist2Sq( v.position[1],v.position[3], engPos[1], engPos[3] )
-            if mexDistance < distance and CanBuildStructureAt(aiBrain, 'ueb1103', v.position) then
+            if mexDistance < distance and CanBuildStructureAt(aiBrain, 'ueb1103', v.position) and NavUtils.CanPathTo('Amphibious', engPos, v.position) then
                 --RNGLOG('mexDistance '..mexDistance)
                 table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v, BorderWarning = mexBorderWarn})
             end

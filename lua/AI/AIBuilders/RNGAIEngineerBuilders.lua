@@ -1001,7 +1001,6 @@ BuilderGroup {
         Priority = 500,
         InstanceCount = 8,
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'Assist' }},
             { EBC, 'NavalAssistControlRNG', { 1.05, 1.05, 'LocationType', 'Naval' }},
         },
         BuilderType = 'Any',

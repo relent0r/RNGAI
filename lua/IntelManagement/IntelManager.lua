@@ -211,6 +211,20 @@ IntelManager = Class {
         end
     end,
 
+    RebuildTable = function(self, oldtable)
+        local temptable = {}
+        for k, v in oldtable do
+            if v ~= nil then
+                if type(k) == 'string' then
+                    temptable[k] = v
+                else
+                    table.insert(temptable, v)
+                end
+            end
+        end
+        return temptable
+    end,
+
     IntelDebugThread = function(self)
         self:WaitForZoneInitialization()
         WaitTicks(30)
@@ -665,10 +679,9 @@ IntelManager = Class {
     end,
 
     AssignIntelUnit = function(self, unit)
-        local ALLBPS = __blueprints
-        local intelRadius = ALLBPS[unit.UnitId].Intel.RadarRadius * ALLBPS[unit.UnitId].Intel.RadarRadius
+        local intelRadius = unit.Blueprint.Intel.RadarRadius * unit.Blueprint.Intel.RadarRadius
         local radarPosition = unit:GetPosition()
-        if ALLBPS[unit.UnitId].CategoriesHash.RADAR then
+        if unit.Blueprint.CategoriesHash.RADAR then
             --RNGLOG('Zone set for radar that has been built '..unit.UnitId)
             unit.zoneid = MAP:GetZoneID(radarPosition,self.Brain.Zones.Land.index)
             if unit.zoneid then
@@ -682,16 +695,15 @@ IntelManager = Class {
             else
                 WARN('No ZoneID for Radar, unable to set coverage area')
             end
-            local gridSearch = math.floor(ALLBPS[unit.UnitId].Intel.RadarRadius / MapIntelGridSize)
+            local gridSearch = math.floor(unit.Blueprint.Intel.RadarRadius / MapIntelGridSize)
             --RNGLOG('GridSearch for IntelCoverage is '..gridSearch)
             self:InfectGridPosition(radarPosition, gridSearch, 'Radar', 'IntelCoverage', true, unit)
         end
     end,
 
     UnassignIntelUnit = function(self, unit)
-        local ALLBPS = __blueprints
         local radarPosition = unit:GetPosition()
-        if ALLBPS[unit.UnitId].CategoriesHash.RADAR then
+        if unit.Blueprint.CategoriesHash.RADAR then
             --RNGLOG('Unassigning Radar Unit')
             for k, v in self.ZoneIntel.Assignment do
                 for c, b in v.RadarUnits do
@@ -705,7 +717,7 @@ IntelManager = Class {
                     v.RadarCoverage = false
                 end
             end
-            local gridSearch = math.floor(ALLBPS[unit.UnitId].Intel.RadarRadius / MapIntelGridSize)
+            local gridSearch = math.floor(unit.Blueprint.Intel.RadarRadius / MapIntelGridSize)
             self:DisinfectGridPosition(radarPosition, gridSearch, 'Radar', 'IntelCoverage', false, unit)
         end
     end,
@@ -726,7 +738,6 @@ IntelManager = Class {
         -- I did this because I didn't want to assign units directly to the zones since it makes it hard to troubleshoot
         -- replaces the previous expansion scout assignment so that all mass points can be monitored
         -- Will also set data for intel based scout production.
-        local ALLBPS = __blueprints
         
         self:WaitForZoneInitialization()
         coroutine.yield(Random(5,20))
@@ -767,12 +778,6 @@ IntelManager = Class {
                     end
                 end
             end
-            for k, v in self.Brain.Zones.Land.zones do
-                local pathNode = GetClosestPathNodeInRadiusByLayerRNG(v.pos, 30, 'Land')
-                if pathNode.BestArmy then
-                    v.bestarmy = pathNode.BestArmy
-                end
-            end
         end
         
         if self.Brain.RNGDEBUG then
@@ -783,9 +788,6 @@ IntelManager = Class {
                     RNGLOG('Player Index '..v)
                     RNGLOG('Start Angle : '..repr(n.startangle))
                     RNGLOG('Start Distance : '..repr(n.startdistance))
-                end
-                if b.bestarmy then
-                    RNGLOG('Army team is '..b.bestarmy)
                 end
                 RNGLOG('---------------------')
             end
@@ -835,6 +837,7 @@ IntelManager = Class {
         while aiBrain.Status ~= "Defeat" do
             coroutine.yield(20)
             local intelCoverage = 0
+            local mapOwnership = 0
             local mustScoutPresent = false
             local perimeterExpired = false
             for i=self.MapIntelGridXMin, self.MapIntelGridXMax do
@@ -863,12 +866,17 @@ IntelManager = Class {
                             end
                         end
                     end
+                    local cellStatus = self.Brain.GridPresence:GetInferredStatus(self.MapIntelGrid[i][k].Position)
+                    if cellStatus == 'Allied' then
+                        mapOwnership = mapOwnership + 1
+                    end
                 end
                 coroutine.yield(1)
             end
             self.MapIntelStats.IntelCoverage = intelCoverage / (self.MapIntelGridXRes * self.MapIntelGridZRes) * 100
             self.MapIntelStats.MustScoutArea = mustScoutPresent
             self.MapIntelStats.PerimeterExpired = perimeterExpired
+            self.Brain.BrainIntel.MapOwnership = mapOwnership / self.Brain.IntelManager.CellCount * 100
             if aiBrain.RNGDEBUG then
                 if mustScoutPresent then
                     RNGLOG('mustScoutPresent is true after loop')
@@ -881,6 +889,7 @@ IntelManager = Class {
                     RNGLOG('perimeterExpired is false after loop')
                 end
             end
+            LOG('Current Map ownership '..self.Brain.BrainIntel.MapOwnership)
         end
     end,
 
@@ -955,15 +964,20 @@ IntelManager = Class {
         local gridX, gridZ = self:GetIntelGrid(position)
         local gridsSet = 0
         local intelRadius
+        local needSort = false
         --RNGLOG('Disinfecting Grid Positions, grid size is '..gridSize)
         if type == 'Radar' then
             self.MapIntelGrid[gridX][gridZ].Radars[unit.EntityId] = nil
+            needSort = true
             local radarCoverage = false
             for k, v in self.MapIntelGrid[gridX][gridZ].Radars do
                 if v and not v.Dead then
                     radarCoverage = true
                     break
                 end
+            end
+            if needSort then
+                self.MapIntelGrid[gridX][gridZ].Radars = self:RebuildTable(self.MapIntelGrid[gridX][gridZ].Radars)
             end
             if not radarCoverage then
                 self.MapIntelGrid[gridX][gridZ][property] = value
@@ -1191,13 +1205,15 @@ IntelManager = Class {
                 end
             end
         elseif type == 'AirAntiNaval' then
+            --RNGLOG(self.Brain.Nickname)
             --RNGLOG('self.Brain.BrainIntel.SelfThreat.AirNow '..self.Brain.BrainIntel.SelfThreat.AirNow)
+            --RNGLOG('ally air threat is '..self.Brain.BrainIntel.SelfThreat.AllyAirThreat)
             --RNGLOG('self.Brain.EnemyIntel.EnemyThreatCurrent.Air '..self.Brain.EnemyIntel.EnemyThreatCurrent.Air)
-            if self.Brain.BrainIntel.SelfThreat.AirNow > self.Brain.EnemyIntel.EnemyThreatCurrent.Air * 1.5 then
+            if self.Brain.BrainIntel.SelfThreat.AirNow + (self.Brain.BrainIntel.SelfThreat.AllyAirThreat / 2) > self.Brain.EnemyIntel.EnemyThreatCurrent.Air * 1.5 then
                 minThreatRisk = 80
-            elseif self.Brain.BrainIntel.SelfThreat.AirNow > self.Brain.EnemyIntel.EnemyThreatCurrent.Air then
+            elseif self.Brain.BrainIntel.SelfThreat.AirNow + (self.Brain.BrainIntel.SelfThreat.AllyAirThreat / 2) > self.Brain.EnemyIntel.EnemyThreatCurrent.Air then
                 minThreatRisk = 50
-            elseif self.Brain.BrainIntel.SelfThreat.AirNow * 1.5 > self.Brain.EnemyIntel.EnemyThreatCurrent.Air then
+            elseif self.Brain.BrainIntel.SelfThreat.AirNow + (self.Brain.BrainIntel.SelfThreat.AllyAirThreat / 2) * 1.5 > self.Brain.EnemyIntel.EnemyThreatCurrent.Air then
                 minThreatRisk = 25
             end
             if minThreatRisk > 0 then
@@ -1233,8 +1249,9 @@ IntelManager = Class {
                 for k, v in self.Brain.BasePerimeterMonitor do
                     if v.NavalUnits > 0 then
                         local gridX, gridZ = self:GetIntelGrid(self.Brain.BuilderManagers[k].FactoryManager.Location)
-                        desiredStrikeDamage = desiredStrikeDamage + (v.NavalThreat * 150)
+                        desiredStrikeDamage = desiredStrikeDamage + (v.NavalThreat * 120)
                         --RNGLOG('Naval Threat detected at base, requesting torps for '..desiredStrikeDamage..' strike damage')
+                        --RNGLOG('Naval threat at base is '..v.NavalThreat)
                         table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'AntiNavy'} )
                     end
                 end
@@ -1247,7 +1264,7 @@ IntelManager = Class {
                                 local gridX, gridZ = self:GetIntelGrid(z.Position)
                                 --RNGLOG('Enemy Threat Locations distance to naval threat grid is '..self.MapIntelGrid[gridX][gridZ].DistanceToMain)
                                 if self.MapIntelGrid[gridX][gridZ].DistanceToMain < BaseMilitaryArea then
-                                    desiredStrikeDamage = desiredStrikeDamage + (z['Naval'] * 150)
+                                    desiredStrikeDamage = desiredStrikeDamage + (z['Naval'] * 120)
                                     --RNGLOG('Strike Damage request is '..desiredStrikeDamage)
                                     table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'AntiNavy'} )
                                 end
@@ -1261,7 +1278,6 @@ IntelManager = Class {
         end
         --RNGLOG('CheckStrikPotential')
         --RNGLOG('ThreatRisk is '..minThreatRisk)
-        
         if type == 'AirAntiSurface' then
             if not self.StrategyFlags.T3BomberRushActivated then
                 if self.Brain.BrainIntel.AirPhase == 3 and self.Brain.EnemyIntel.AirPhase < 3 then
@@ -1376,6 +1392,7 @@ IntelManager = Class {
                     self.Brain.EngineerAssistManagerFocusSnipe = true
                 end
                 if navalAttack then
+                    --RNGLOG(self.Brain.Nickname)
                     --RNGLOG('numer of navalAttack torps required '..count)
                     self.Brain.amanager.Demand.Air.T2.torpedo = count
                 end
@@ -1448,6 +1465,20 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit, aiBrain)
     if data.targetcat and data.sourcecat then
         aiBrain.IntelManager.UnitStats[data.targetcat].Deaths.Total[data.sourcecat] = aiBrain.IntelManager.UnitStats[data.targetcat].Deaths.Total[data.sourcecat] + 1
     end
+end
+
+RebuildTable = function(oldtable)
+    local temptable = {}
+    for k, v in oldtable do
+        if v ~= nil then
+            if type(k) == 'string' then
+                temptable[k] = v
+            else
+                table.insert(temptable, v)
+            end
+        end
+    end
+    return temptable
 end
 
 function RecordUnitDeath(targetUnit, type)
@@ -1530,6 +1561,7 @@ ExpansionIntelScanRNG = function(aiBrain)
         aiBrain:ForkThread(RUtils.RenderBrainIntelRNG)
     end
     local GetClosestPathNodeInRadiusByLayer = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayer
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     --RNGLOG('Starting ExpansionIntelScan')
     while aiBrain.Status ~= "Defeat" do
         for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
@@ -1546,8 +1578,6 @@ ExpansionIntelScanRNG = function(aiBrain)
                     info:   GraphArea="LandArea_133",
                     info:   RNGArea="Land15-24",
                     info:   adjacentTo="Land19-11 Land20-11 Land20-12 Land20-13 Land18-11",
-                    info:   armydists={ ARMY_1=209.15859985352, ARMY_2=218.62866210938 },
-                    info:   bestarmy="ARMY_1",
                     info:   bestexpand="Expansion Area 6",
                     info:   color="fff4a460",
                     info:   expanddists={
@@ -1570,29 +1600,30 @@ ExpansionIntelScanRNG = function(aiBrain)
                     info:   type="Land Path Node"
                     info: }
                 ]]
-                local label, reason
-                if RUtils.PositionInWater(v.Position) then
-                    label, reason = NavUtils.GetLabel('Water', v.Position)
-                    if not label then
-                        WARN('No expansion label returned reason '..reason)
-                        WARN('Water label failure position was '..repr(v.Position))
+                if v.Position[1] > 0 and v.Position[3] > 0 then
+                    local label, reason
+                    if RUtils.PositionInWater(v.Position) then
+                        label, reason = NavUtils.GetLabel('Water', v.Position)
+                        if not label then
+                            WARN('No expansion label returned reason '..reason)
+                            WARN('Water label failure position was '..repr(v.Position))
+                        else
+                            aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
+                            aiBrain.BrainIntel.ExpansionWatchTable[k].RNGLayer = 'Water'
+                            --RNGLOG('Expansion Marker has had label added '..repr(v))
+                        end
                     else
-                        aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
-                        aiBrain.BrainIntel.ExpansionWatchTable[k].RNGLayer = 'Water'
-                        --RNGLOG('Expansion Marker has had label added '..repr(v))
-                    end
-                else
-                    label, reason = NavUtils.GetLabel('Land', v.Position)
-                    if not label then
-                        WARN('No expansion label returned reason '..reason)
-                        WARN('Land label failure position was '..repr(v.Position))
-                    else
-                        aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
-                        aiBrain.BrainIntel.ExpansionWatchTable[k].RNGLayer = 'Land'
-                        --RNGLOG('Expansion Marker has had label added '..repr(v))
+                        label, reason = NavUtils.GetLabel('Land', v.Position)
+                        if not label then
+                            WARN('No expansion label returned reason '..reason)
+                            WARN('Land label failure position was '..repr(v.Position))
+                        else
+                            aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
+                            aiBrain.BrainIntel.ExpansionWatchTable[k].RNGLayer = 'Land'
+                            --RNGLOG('Expansion Marker has had label added '..repr(v))
+                        end
                     end
                 end
-                
             end
             if v.MassPoints > 2 then
                 for _, t in threatTypes do
@@ -1832,40 +1863,6 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
     return false
 end
 
-CreateReclaimGrid = function(aiBrain)
-    coroutine.yield(Random(10,30))
-    -- by default, 16x16 iMAP
-    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
-    --LOG('playableArea is '..repr(playableArea))
-    local n = 16 
-    local mx = ScenarioInfo.size[1]
-    local mz = ScenarioInfo.size[2]
-    local GetTerrainHeight = GetTerrainHeight
-
-    -- smaller maps have a 8x8 iMAP
-    if mx == mz and mx == 256 then 
-        n = 8
-    end
-    
-    local reclaimGrid = {}
-    
-    -- distance per cell
-    local fx = 1 / n * mx 
-    local fz = 1 / n * mz 
-
-    -- draw iMAP information
-    for x = 1, n do 
-        for z = 1, n do 
-            local cx = fx * (x - 0.5)
-            local cz = fz * (z - 0.5)
-            if cx < playableArea[1] or cz < playableArea[2] or cx > playableArea[3] or cz > playableArea[4] then
-                continue
-            end
-            table.insert(reclaimGrid, { Position = {cx, GetTerrainHeight(cx, cz), cz}, Size = { sx = fx, sz = fz}, TotalReclaim = 0, AirThreat = 0, SurfaceThreat = 0, NavalThreat = 0, LastUpdate = 0, LastAssignment = 0, })
-        end
-    end
-    aiBrain.MapReclaimTable = reclaimGrid
-end
 
 CreateIntelGrid = function(aiBrain)
     coroutine.yield(Random(30,70))
@@ -1876,6 +1873,7 @@ CreateIntelGrid = function(aiBrain)
     local mx = ScenarioInfo.size[1]
     local mz = ScenarioInfo.size[2]
     local GetTerrainHeight = GetTerrainHeight
+    local cellCount = 0
     if aiBrain.RNGDEBUG then
         RNGLOG('Intel Grid MapSize X : '..mx..' Z: '..mz)
     end
@@ -1930,6 +1928,7 @@ CreateIntelGrid = function(aiBrain)
             if cx < playableArea[1] or cz < playableArea[2] or cx > playableArea[3] or cz > playableArea[4] then
                 continue
             end
+            cellCount = cellCount + 1
             startingGridx = math.min(x, startingGridx)
             startingGridz = math.min(z, startingGridz)
             endingGridx = math.max(x, endingGridx)
@@ -1943,6 +1942,7 @@ CreateIntelGrid = function(aiBrain)
     end
     aiBrain.IntelManager.MapIntelGrid = intelGrid
     MapIntelGridSize = fx
+    aiBrain.IntelManager.CellCount = cellCount
     aiBrain.IntelManager.MapIntelGridXMin = startingGridx
     aiBrain.IntelManager.MapIntelGridXMax = endingGridx
     aiBrain.IntelManager.MapIntelGridZMin = startingGridz
@@ -1973,43 +1973,8 @@ end
     info:   },
 ]]
 
-MapReclaimAnalysis = function(aiBrain)
-    -- Loops through map grid squares that roughly match IMAP 
-    CreateReclaimGrid(aiBrain)
-    coroutine.yield(30)
-    while aiBrain.Status ~= "Defeat" do
-        if aiBrain.ReclaimEnabled then
-            local currentGameTime = GetGameTimeSeconds()
-            for k, square in aiBrain.MapReclaimTable do
-                local reclaimTotal = 0
-                local reclaimRaw = GetReclaimablesInRect(square.Position[1] - (square.Size.sx / 2), square.Position[3] - (square.Size.sz / 2), square.Position[1] + (square.Size.sx / 2), square.Position[3] + (square.Size.sz / 2))
-                if reclaimRaw and table.getn(reclaimRaw) > 0 then
-                    for k,v in reclaimRaw do
-                        if not IsProp(v) then continue end
-                        if v.MaxMassReclaim and v.MaxMassReclaim > 0 then
-                            reclaimTotal = reclaimTotal + v.MaxMassReclaim
-                        end
-                    end
-                end
-                square.TotalReclaim = reclaimTotal
-                square.LastUpdate = currentGameTime
-                coroutine.yield(1)
-            end
-            local startReclaim = 0
-            for k, square in aiBrain.MapReclaimTable do
-                if VDist2Sq(aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[3], square.Position[1], square.Position[3]) < 14400 then
-                    startReclaim = startReclaim + square.TotalReclaim
-                end
-            end
-            aiBrain.StartReclaimCurrent = startReclaim
-            --RNGLOG('Current Starting Reclaim is'..aiBrain.StartReclaimCurrent)
-        end
-        coroutine.yield(300)
-    end
-end
 
 TacticalThreatAnalysisRNG = function(aiBrain)
-    local ALLBPS = __blueprints
 
     --RNGLOG("Started analysis for: " .. aiBrain.Nickname)
     --local startedAnalysisAt = GetSystemTimeSecondsOnlyForProfileUse()
@@ -2076,7 +2041,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 --RNGLOG('Inserting Enemy Energy Structure '..unit.UnitId)
                                 RNGINSERT(energyUnits, {
                                     EnemyIndex = unitIndex, 
-                                    Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel * 2, 
+                                    Value = unit.Blueprint.Defense.EconomyThreatLevel * 2, 
                                     HP = unit:GetHealth(), 
                                     Object = unit, 
                                     Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
@@ -2090,7 +2055,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 RNGINSERT(
                                     defensiveUnits, { 
                                     EnemyIndex = unitIndex, 
-                                    Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, 
+                                    Value = unit.Blueprint.Defense.EconomyThreatLevel, 
                                     HP = unit:GetHealth(), 
                                     Object = unit, 
                                     Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
@@ -2103,7 +2068,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 --RNGLOG('Inserting Enemy Strategic Structure '..unit.UnitId)
                                 RNGINSERT(strategicUnits, {
                                     EnemyIndex = unitIndex, 
-                                    Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, 
+                                    Value = unit.Blueprint.Defense.EconomyThreatLevel, 
                                     HP = unit:GetHealth(), 
                                     Object = unit, 
                                     Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
@@ -2116,7 +2081,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 --RNGLOG('Inserting Enemy Intel Structure '..unit.UnitId)
                                 RNGINSERT(intelUnits, {
                                     EnemyIndex = unitIndex, 
-                                    Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, 
+                                    Value = unit.Blueprint.Defense.EconomyThreatLevel, 
                                     HP = unit:GetHealth(), 
                                     Object = unit, 
                                     Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
@@ -2130,7 +2095,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 
                                 RNGINSERT(factoryUnits, {
                                     EnemyIndex = unitIndex, 
-                                    Value = ALLBPS[unit.UnitId].Defense.EconomyThreatLevel, 
+                                    Value = unit.Blueprint.Defense.EconomyThreatLevel, 
                                     HP = unit:GetHealth(), 
                                     Object = unit, 
                                     Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
@@ -2155,9 +2120,9 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                 aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount = 0
             end
             if aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]]['StructuresNotMex'] then
-                    if ALLBPS[unit.Object.UnitId].Defense.SurfaceThreatLevel > 0 then
+                    if unit.Object.Blueprint.Defense.SurfaceThreatLevel > 0 then
                         aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount = aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount + 1
-                    elseif ALLBPS[unit.Object.UnitId].Defense.AirThreatLevel > 0 then
+                    elseif unit.Object.Blueprint.Defense.AirThreatLevel > 0 then
                         aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount = aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount + 1
                     end
                     if aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount + aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount > 5 then
@@ -2261,6 +2226,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
     end
 
     if next(aiBrain.EnemyIntel.TML) then
+        local needSort = false
         for k, v in aiBrain.EnemyIntel.TML do
             if not v.object.Dead then 
                 if not v.validated then
@@ -2279,6 +2245,9 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                 aiBrain.EnemyIntel.TML[k] = nil
             end
         end
+        if needSort then
+            aiBrain.EnemyIntel.TML = RebuildTable(aiBrain.EnemyIntel.TML)
+         end
     end
 
     if next(factoryUnits) then
@@ -2314,7 +2283,6 @@ TacticalThreatAnalysisRNG = function(aiBrain)
 end
 
 LastKnownThread = function(aiBrain)
-    local ALLBPS = __blueprints
     local unitCat
     local im = GetIntelManager(aiBrain)
     aiBrain.lastknown={}
@@ -2401,7 +2369,7 @@ LastKnownThread = function(aiBrain)
                                     im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='tml'
                                     if not aiBrain.EnemyIntel.TML[id] then
                                         local angle = RUtils.GetAngleToPosition(aiBrain.BuilderManagers['MAIN'].Position, unitPosition)
-                                        aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=ALLBPS[v.UnitId].Weapon[1].MaxRadius }
+                                        aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=v.Blueprint.Weapon[1].MaxRadius }
                                         aiBrain.BasePerimeterMonitor['MAIN'].RecentTMLAngle = angle
                                     end
                                 elseif unitCat.TECH3 and unitCat.ANTIMISSILE and unitCat.SILO then
@@ -2437,6 +2405,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
     end
     while aiBrain.Status ~= "Defeat" do
         local unitAddedCount = 0
+        local needSort = false
         --RNGLOG('Check Expansion table in priority directo')
         if aiBrain.BrainIntel.ExpansionWatchTable then
             for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
@@ -2564,15 +2533,25 @@ TruePlatoonPriorityDirector = function(aiBrain)
         for k, v in aiBrain.prioritypoints do
             if v.unit.Dead then
                 aiBrain.prioritypoints[k] = nil
+                needSort = true
             end
+        end
+        if needSort then
+            aiBrain.prioritypoints = RebuildTable(aiBrain.prioritypoints)
+            needSort = false
         end
         local highPriorityCount = 0
         for k, v in aiBrain.prioritypointshighvalue do
             if v.unit.Dead then
                 aiBrain.prioritypointshighvalue[k] = nil
+                needSort = true
             else
                 highPriorityCount = highPriorityCount + 1
             end
+        end
+        if needSort then
+            aiBrain.prioritypointshighvalue = RebuildTable(aiBrain.prioritypointshighvalue)
+            needSort = false
         end
         if highPriorityCount > 0 then
             --RNGLOG('HighPriorityTarget is available')

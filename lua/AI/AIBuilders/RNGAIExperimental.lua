@@ -39,7 +39,6 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 10},
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'HighValue' }},
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.LAND } },
@@ -68,7 +67,6 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 10},
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'HighValue' }},
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'ValidateLateGameBuild', { }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.2 }},
@@ -98,7 +96,6 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 10},
         InstanceCount = 3,
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'HighValue' }},
             { UCBC, 'ValidateLateGameBuild', { }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 4, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
@@ -129,7 +126,6 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'CheckBuildPlattonDelay', { 'HighValue' }},
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'ValidateLateGameBuild', { }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
@@ -160,7 +156,6 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            { UCBC, 'CheckBuildPlattonDelay', { 'HighValue' }},
             { UCBC, 'ValidateLateGameBuild', { }},
             -- Have we the eco to build it ?
             --{ UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
@@ -189,7 +184,6 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 10},
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'HighValue' }},
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { UCBC, 'ValidateLateGameBuild', { }},
             -- Have we the eco to build it ?
@@ -220,7 +214,6 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 10},
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            { UCBC, 'CheckBuildPlattonDelay', { 'HighValue' }},
             { UCBC, 'ValidateLateGameBuild', { }},
             -- Have we the eco to build it ?
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
@@ -254,7 +247,6 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 10},
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'HighValue' }},
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
@@ -285,7 +277,6 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 10},
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'HighValue' }},
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 5, categories.MASSEXTRACTION * categories.TECH3}},
@@ -316,7 +307,6 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 10},
         InstanceCount = 3,
         BuilderConditions = {
-            { UCBC, 'CheckBuildPlattonDelay', { 'HighValue' }},
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 4, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
@@ -347,7 +337,6 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'CheckBuildPlattonDelay', { 'HighValue' }},
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
@@ -378,7 +367,6 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            { UCBC, 'CheckBuildPlattonDelay', { 'HighValue' }},
             -- Have we the eco to build it ?
             --{ UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
@@ -407,7 +395,6 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            { UCBC, 'CheckBuildPlattonDelay', { 'HighValue' }},
             -- Have we the eco to build it ?
             --{ UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
@@ -436,7 +423,6 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 10},
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            { UCBC, 'CheckBuildPlattonDelay', { 'HighValue' }},
             -- Have we the eco to build it ?
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.90 } },

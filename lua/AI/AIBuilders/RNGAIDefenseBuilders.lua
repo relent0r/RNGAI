@@ -241,7 +241,7 @@ BuilderGroup {
         Priority = 825,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 7, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -251,12 +251,12 @@ BuilderGroup {
             JobType = 'BuildStructure',
             NumAssistees = 5,
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
+                BaseTemplate = 'DefenseTemplate',
                 BuildClose = true,
-                NearDefensivePoints = false,
-                AdjacencyPriority = {categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2), categories.STRUCTURE * categories.FACTORY},
-                AvoidCategory = categories.STRUCTURE * categories.ANTIMISSILE * categories.TECH2 * categories.DEFENSE,
-                maxUnits = 1,
-                maxRadius = 5,
+                NearDefensivePoints = true,
+                Type = 'TML',
+                Tier = 1,
                 BuildStructures = {
                     'T2MissileDefense',
                 },
@@ -270,7 +270,7 @@ BuilderGroup {
         Priority = 825,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 7, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
             { UCBC, 'LastKnownUnitDetection', { 'LocationType', 'tml'}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8}},
             { UCBC, 'UnitCapCheckLess', { .9 } },

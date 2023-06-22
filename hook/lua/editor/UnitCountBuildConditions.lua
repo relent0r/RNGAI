@@ -581,13 +581,6 @@ function GreaterThanGameTimeSecondsRNG(aiBrain, num)
     return false
 end
 
-function CheckBuildPlatoonDelayRNG(aiBrain, PlatoonName)
-    if aiBrain.DelayEqualBuildPlattons[PlatoonName] and aiBrain.DelayEqualBuildPlattons[PlatoonName] > GetGameTimeSeconds() then
-        return false
-    end
-    return true
-end
-
 function HaveUnitRatioAtLocationRNG(aiBrain, locType, ratio, categoryNeed, compareType, categoryHave)
     local AIName = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
     local baseposition, radius
@@ -909,9 +902,28 @@ function ForcePathLimitRNG(aiBrain, locationType, unitCategory, pathType, unitCo
     end
     local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
     local OwnIndex = aiBrain:GetArmyIndex()
-    if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] ~= pathType and FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, '>') then
-        --RNGLOG('ForcePathLimitRNG has no path and more than 3 land factories')
-        return false
+    if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][locationType] ~= pathType then
+        local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+        local testCat = unitCategory
+        if not factoryManager then
+            WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
+            return false
+        end
+        if factoryManager.LocationActive then
+            local numUnits = factoryManager:GetNumCategoryFactories(testCat) or 0
+            local unitsBuilding = aiBrain:GetListOfUnits(categories.CONSTRUCTION, false)
+            for unitNum, unit in unitsBuilding do
+                if not unit:BeenDestroyed() and unit:IsUnitState('Building') then
+                    local buildingUnit = unit.UnitBeingBuilt
+                    if buildingUnit and not buildingUnit:BeenDestroyed() and EntityCategoryContains(unitCategory, buildingUnit) then
+                        numUnits = numUnits + 1
+                    end
+                end
+            end
+            if numUnits > unitCount then
+                return false
+            end
+        end
     end
     return true
 end
@@ -1108,8 +1120,8 @@ end
 function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
     local currentIncome = aiBrain.cmanager.income.r.m
     local currentBuildPower = 0
-    local engSpend = 0.4
-    local availableIncome = engSpend * currentIncome
+    local engSpend = 0.5
+    local availableIncome = math.ceil(engSpend * currentIncome)
     local multiplier
     if aiBrain.CheatEnabled then
         multiplier = aiBrain.EcoManager.EcoMultiplier
@@ -1130,7 +1142,6 @@ function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
             return true
         end
         if aiBrain.cmanager.income.r.m > 55 and aiBrain.cmanager.buildpower.eng.T2 < 75 then
-
             return true
         end
         if availableIncome - aiBrain.cmanager.buildpower.eng.T2 > 0 then
@@ -1198,7 +1209,7 @@ function AdjacencyCheckRNG(aiBrain, locationType, category, radius, testUnit)
     local unitSize = ALLBPS[testUnit].Physics
     for k,v in reference do
         if not v.Dead then
-            local targetSize = ALLBPS[v.UnitId].Physics
+            local targetSize = v.Blueprint.Physics
             local targetPos = v:GetPosition()
             targetPos[1] = targetPos[1] - (targetSize.SkirtSizeX/2)
             targetPos[3] = targetPos[3] - (targetSize.SkirtSizeZ/2)

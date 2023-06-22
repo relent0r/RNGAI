@@ -27,7 +27,6 @@ local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 local GetMostRestrictiveLayerRNG = import('/lua/ai/aiattackutilities.lua').GetMostRestrictiveLayerRNG
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
-local ALLBPS = __blueprints
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
 local RNGSORT = table.sort
@@ -116,7 +115,7 @@ function SetCDRDefaults(aiBrain, cdr)
     }
     aiBrain.CDRUnit = cdr
 
-    for k, v in ALLBPS[cdr.UnitId].Weapon do
+    for k, v in cdr.Blueprint.Weapon do
         if v.Label == 'OverCharge' then
             cdr.OverCharge = v
             --RNGLOG('* AI-RNG: ACU Overcharge is set ')
@@ -305,7 +304,7 @@ function CDRCallPlatoon(cdr, threatRequired)
                     local units = GetPlatoonUnits(plat.Platoon)
                     for _,u in units do
                         if not u.Dead and not u:IsUnitState('Attached') then
-                            threatValue = threatValue + ALLBPS[u.UnitId].Defense.SurfaceThreatLevel
+                            threatValue = threatValue + u.Blueprint.Defense.SurfaceThreatLevel
                             if EntityCategoryContains(categories.DIRECTFIRE, u) then
                                 RNGINSERT(validUnits.Attack, u)
                             elseif EntityCategoryContains(categories.INDIRECTFIRE, u) then
@@ -696,21 +695,19 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
     local path, reason
     plat.BuilderName = 'CDR Active Movement'
     aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
-    --RNGLOG('CDR : Moving ACU to position')
+    RNGLOG('CDR : Moving ACU to position')
     cdr.movetopos = position
     cdr.Combat = false
     if retreat then
         IssueClearCommands({cdr})
         IssueMove({cdr}, position)
         coroutine.yield(60)
-        --path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 10 , 512, 20, true)
-        path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 512, 120, 20)
+        path, reason = AIAttackUtils.PlatoonGeneratePathToRNG('Amphibious', cdr.Position, position, 512, 120, 20)
     else
-        path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, 'Amphibious', cdr.Position, position, 512, 120, 20)
+        path, reason = AIAttackUtils.PlatoonGeneratePathToRNG('Amphibious', cdr.Position, position, 512, 120, 20)
     end
     if path then
-        --RNGLOG('CDR : We have a path')
-        --RNGLOG('CDR : Distance to position is '..VDist3(cdr.Position, position))
+        RNGLOG('CDR : Distance to position is '..VDist3(cdr.Position, position))
         if retreat or platoonRetreat then
             --RNGLOG('CDR : We are retreating')
         end
@@ -957,7 +954,6 @@ function CDRExpansionRNG(aiBrain, cdr)
             end
         end
     end
-    
     local stageExpansion = IntelManagerRNG.QueryExpansionTable(aiBrain, cdr.Position, BaseDMZArea * 1.5, 'Land', 10, 'acu')
     if stageExpansion then
         cdr.Active = true
@@ -971,7 +967,6 @@ function CDRExpansionRNG(aiBrain, cdr)
                 cdr.PlatoonHandle:PlatoonDisband(aiBrain)
             end
         end
-       --RNGLOG('ACU Stage Position key returned for '..stageExpansion.Key..' Name is '..stageExpansion.Expansion.Name)
         CDRMoveToPosition(aiBrain, cdr, stageExpansion.Expansion.Position, 100)
         if VDist3Sq(cdr:GetPosition(),stageExpansion.Expansion.Position) < 900 then
            --RNGLOG('ACU ExpFunc building at expansion')
@@ -1269,18 +1264,18 @@ function CDRThreatAssessmentRNG(cdr)
                             friendlyUnitThreatInner = friendlyUnitThreatInner + v:EnhancementThreatReturn()
                         else
                             if EntityCategoryContains(categories.ANTIAIR, v) then
-                                friendAntiAirThreat = friendAntiAirThreat + ALLBPS[v.UnitId].Defense.AirThreatLevel
+                                friendAntiAirThreat = friendAntiAirThreat + v.Blueprint.Defense.AirThreatLevel
                             end
-                            friendlyUnitThreatInner = friendlyUnitThreatInner + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                            friendlyUnitThreatInner = friendlyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel
                         end
                     else
                         if EntityCategoryContains(categories.COMMAND, v) then
                             friendlyUnitThreat = friendlyUnitThreat + v:EnhancementThreatReturn()
                         else
                             if EntityCategoryContains(categories.ANTIAIR, v) then
-                                friendAntiAirThreat = friendAntiAirThreat + ALLBPS[v.UnitId].Defense.AirThreatLevel
+                                friendAntiAirThreat = friendAntiAirThreat + v.Blueprint.Defense.AirThreatLevel
                             end
-                            friendlyUnitThreat = friendlyUnitThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                            friendlyUnitThreat = friendlyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel
                         end
                     end
                 end
@@ -1291,8 +1286,8 @@ function CDRThreatAssessmentRNG(cdr)
                 if v and not v.Dead then
                     if VDist3Sq(v:GetPosition(), cdr.Position) < 1225 then
                         if EntityCategoryContains(CategoryT2Defense, v) then
-                            if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel then
-                                enemyUnitThreatInner = enemyUnitThreatInner + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel * 1.5
+                            if v.Blueprint.Defense.SurfaceThreatLevel then
+                                enemyUnitThreatInner = enemyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel * 1.5
                             end
                         end
                         if EntityCategoryContains(categories.COMMAND, v) then
@@ -1301,14 +1296,14 @@ function CDRThreatAssessmentRNG(cdr)
                             enemyACUHealthModifier = enemyACUHealthModifier + (v:GetHealth() / cdr.Health)
                         else
                             if EntityCategoryContains(categories.AIR, v) then
-                                enemyAirThreat = enemyAirThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                                enemyAirThreat = enemyAirThreat + v.Blueprint.Defense.SurfaceThreatLevel
                             end
-                            enemyUnitThreatInner = enemyUnitThreatInner + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                            enemyUnitThreatInner = enemyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel
                         end
                     else
                         if EntityCategoryContains(CategoryT2Defense, v) then
-                            if ALLBPS[v.UnitId].Defense.SurfaceThreatLevel then
-                                enemyUnitThreatInner = enemyUnitThreatInner + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel * 1.5
+                            if v.Blueprint.Defense.SurfaceThreatLevel then
+                                enemyUnitThreatInner = enemyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel * 1.5
                             end
                         end
                         if EntityCategoryContains(categories.COMMAND, v) then
@@ -1316,9 +1311,9 @@ function CDRThreatAssessmentRNG(cdr)
                             enemyUnitThreat = enemyUnitThreat + v:EnhancementThreatReturn()
                         else
                             if EntityCategoryContains(categories.AIR, v) then
-                                enemyAirThreat = enemyAirThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                                enemyAirThreat = enemyAirThreat + v.Blueprint.Defense.SurfaceThreatLevel
                             end
-                            enemyUnitThreat = enemyUnitThreat + ALLBPS[v.UnitId].Defense.SurfaceThreatLevel
+                            enemyUnitThreat = enemyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel
                         end
                     end
                 end
@@ -1508,7 +1503,7 @@ function CDROverChargeRNG(aiBrain, cdr)
         local target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition
         local continueFighting = true
         local counter = 0
-        local cdrThreat = ALLBPS[cdr.UnitId].Defense.SurfaceThreatLevel or 75
+        local cdrThreat = cdr.Blueprint.Defense.SurfaceThreatLevel or 75
         local enemyThreat
         local snipeAttempt = false
         local threatFailures = 0
@@ -1572,11 +1567,8 @@ function CDROverChargeRNG(aiBrain, cdr)
                                     friendlyUnitThreat = v:EnhancementThreatReturn()
                                     --RNGLOG('Friendly ACU enhancement threat '..friendlyUnitThreat)
                                 else
-                                    --RNGLOG('Unit ID is '..v.UnitId)
-                                    local bp = ALLBPS[v.UnitId].Defense
-                                    --RNGLOG(repr(ALLBPS[v.UnitId].Defense))
-                                    if bp.SurfaceThreatLevel ~= nil then
-                                        friendlyUnitThreat = friendlyUnitThreat + bp.SurfaceThreatLevel
+                                    if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                                        friendlyUnitThreat = friendlyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel
                                     end
                                 end
                             end
@@ -2191,107 +2183,6 @@ function StructureUpgradeDelay( aiBrain, delay )
     end
 end
 
-function StructureUpgradeNumDelay(aiBrain, type, tech)
-    -- Checked if a slot is available for unit upgrades
-    local numLimit = false
-    if type == 'MASSEXTRACTION' and tech == 'TECH1' then
-        numLimit = aiBrain.EcoManager.ExtractorsUpgrading.TECH1
-    elseif type == 'MASSEXTRACTION' and tech == 'TECH2' then
-        numLimit = aiBrain.EcoManager.ExtractorsUpgrading.TECH2
-    end
-    if numLimit then
-        return numLimit
-    else
-        return false
-    end
-    return false
-end
-
-function StructureTypeCheck(aiBrain, unitBp)
-    -- Returns the tech and type of a structure unit
-    local unitType = false
-    local unitTech = false
-    for k, v in unitBp.Categories do
-        if v == 'MASSEXTRACTION' then
-            --RNGLOG('Unit is Mass Extractor')
-            unitType = 'MASSEXTRACTION'
-        else
-            --RNGLOG('Value Not Mass Extraction')
-        end
-
-        if v == 'TECH1' then
-            --RNGLOG('Extractor is Tech 1')
-            unitTech = 'TECH1'
-        elseif v == 'TECH2' then
-            --RNGLOG('Extractor is Tech 2')
-            unitTech = 'TECH2'
-        else
-            --RNGLOG('Value not TECH1, TECH2')
-        end
-    end
-    if unitType and unitTech then
-       return unitType, unitTech
-    else
-        return false, false
-    end
-    return false, false
-end
-
-function ExtractorClosest(aiBrain, unit, unitBp)
-    -- Checks if the unit is closest to the main base
-    local MassExtractorUnitList = false
-    local unitType, unitTech = StructureTypeCheck(aiBrain, unitBp)
-    local BasePosition = aiBrain.BuilderManagers['MAIN'].Position
-    local DistanceToBase = nil
-    local LowestDistanceToBase = nil
-    local lowestUnitPos
-    local UnitPos
-
-    if unitType == 'MASSEXTRACTION' and unitTech == 'TECH1' then
-        MassExtractorUnitList = GetListOfUnits(aiBrain, categories.MASSEXTRACTION * (categories.TECH1), false, false)
-    elseif unitType == 'MASSEXTRACTION' and unitTech == 'TECH2' then
-        MassExtractorUnitList = GetListOfUnits(aiBrain, categories.MASSEXTRACTION * (categories.TECH2), false, false)
-    end
-
-    for k, v in MassExtractorUnitList do
-        local TempID
-        -- Check if we don't want to upgrade this unit
-        if not v
-            or v.Dead
-            or v:BeenDestroyed()
-            or v:IsPaused()
-            or not EntityCategoryContains(ParseEntityCategory(unitTech), v)
-            or v:GetFractionComplete() < 1
-        then
-            -- Skip this loop and continue with the next array
-            continue
-        end
-        if v:IsUnitState('Upgrading') then
-        -- skip upgrading buildings
-            continue
-        end
-        -- Check for the nearest distance from mainbase
-        UnitPos = v:GetPosition()
-        DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-        if DistanceToBase < 6400 then
-            --RNGLOG('Mainbase extractor set true')
-            v.MAINBASE = true
-        end
-        if (not LowestDistanceToBase and v.InitialDelay == false) or (DistanceToBase < LowestDistanceToBase and v.InitialDelay == false) then
-            -- see if we can find a upgrade
-            LowestDistanceToBase = DistanceToBase
-            lowestUnitPos = UnitPos
-        end
-    end
-    if unit:GetPosition() == lowestUnitPos then
-        --RNGLOG('Extractor is closest to base')
-        return true
-    else
-        --RNGLOG('Extractor is not closest to base')
-        return false
-    end
-end
-
 -- These 3 functions are from Uveso for CDR enhancements, modified slightly.
 function CDREnhancementsRNG(aiBrain, cdr)
     local gameTime = GetGameTimeSeconds()
@@ -2489,7 +2380,6 @@ BuildEnhancementRNG = function(aiBrain,cdr,enhancement)
         local tempEnhanceBp = cdr:GetBlueprint().Enhancements[enhancement]
         local unitEnhancements = import('/lua/enhancementcommon.lua').GetEnhancements(cdr.EntityId)
         local preReqRequired = false
-        --local unitEnhancements = ALLBPS[cdr.UnitId].Enhancements
         -- Do we have already a enhancment in this slot ?
         if unitEnhancements[tempEnhanceBp.Slot] and unitEnhancements[tempEnhanceBp.Slot] ~= tempEnhanceBp.Prerequisite then
             -- remove the enhancement
@@ -3324,7 +3214,7 @@ function ExpMoveToPosition(aiBrain, platoon, target, unit, ignoreUnits)
     if target and not target.Dead then
         destination = target:GetPosition()
     end
-    local path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(aiBrain, platoon.MovementLayer, unit:GetPosition(), destination, 62500)
+    local path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(platoon.MovementLayer, unit:GetPosition(), destination, 250)
     if path then
         local pathLength = RNGGETN(path)
         local pathCheckRequired = false
@@ -3683,7 +3573,7 @@ AhwassaBehaviorRNG = function(self)
         return
     end
 
-    AssignExperimentalPrioritiesSorian(self)
+    AssignExperimentalPriorities(self)
 
     local targetLocation = GetHighestThreatClusterLocation(aiBrain, experimental)
     local oldTargetLocation = nil

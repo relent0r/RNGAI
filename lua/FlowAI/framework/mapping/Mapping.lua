@@ -968,49 +968,6 @@ function SetMarkerInformation(aiBrain)
             end
         end
     end
-    --WaitSeconds(10)
-    --RNGLOG('colortable is'..repr(tablecolors))
-    --RNGLOG('Infecting armyspots '..aiBrain.Nickname)
-    --[[
-    local bases=false
-    if bases then
-        for _,army in aiBrain.armyspots do
-            local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(army[1].position,25,'Land').name]
-            --RNGLOG('closestpath is '..repr(closestpath))
-            RNGLOG('log army in first part'..repr(army))
-            aiBrain.renderthreadtracker=ForkThread(DoArmySpotDistanceInfect,aiBrain,closestpath,army[2])
-        end
-    else
-        for i,v in ArmyBrains do
-            if ArmyIsCivilian(v:GetArmyIndex()) or v.Status=="Defeat" then continue end
-            local astartX, astartZ = v:GetArmyStartPos()
-            local army = {position={astartX, GetTerrainHeight(astartX, astartZ), astartZ},army=i,brain=v}
-            table.sort(aiBrain.expandspots,function(a,b) return VDist3Sq(a[1].position,army.position)<VDist3Sq(b[1].position,army.position) end)
-            local closestpath
-            if RUtils.PositionInWater(aiBrain.expandspots[1][1].position) then
-                closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(aiBrain.expandspots[1][1].position,25,'Water').name]
-            else
-                closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(aiBrain.expandspots[1][1].position,25,'Land').name]
-            end
-            --RNGLOG('closestpath is '..repr(closestpath))
-            --RNGLOG('bases is false')
-            RNGLOG('log army in second part'..repr(aiBrain.expandspots[1]))
-            aiBrain.renderthreadtracker=ForkThread(DoArmySpotDistanceInfect,aiBrain,closestpath,aiBrain.expandspots[1][2])
-        end
-    end
-    --RNGLOG('loop through armybrains complete '..aiBrain.Nickname)
-    local expands=true]]
-    --RNGLOG('loop through expandspots '..aiBrain.Nickname)
-    --[[
-    if expands then
-        --tablecolors=GenerateDistinctColorTable(RNGGETN(aiBrain.expandspots))
-       --RNGLOG('Running Expansion spot checks for rngarea')
-        for _,expand in aiBrain.expandspots do
-            local closestpath=Scenario.MasterChain._MASTERCHAIN_.Markers[AIAttackUtils.GetClosestPathNodeInRadiusByLayer(expand[1].position,25,'Land').name]
-            --RNGLOG('closestpath is '..repr(closestpath))
-            aiBrain.renderthreadtracker=ForkThread(DoExpandSpotDistanceInfect,aiBrain,closestpath,expand[2])
-        end
-    end]]
    --RNGLOG('renderthreadtracker for expansions')
     while aiBrain.renderthreadtracker do
         coroutine.yield(2)
@@ -1064,69 +1021,7 @@ function InfectMarkersRNG(aiBrain,marker,nodekey)
         WARN('Marker provided for infection is nil')
     end
 end
-function DoArmySpotDistanceInfect(aiBrain,marker,army)
-    aiBrain.renderthreadtracker=CurrentThread()
-    coroutine.yield(1)
-    --DrawCircle(marker.position,5,'FF'..aiBrain.analysistablecolors[army])
-    if not marker then 
-        WARN('No marker sent to DoArmySpotDistanceInfect, is there a marker available in that movement layer?')
-        return 
-    end
-    if not marker.armydists then
-        marker.armydists={}
-    end
-    if not marker.armydists[army] then
-        marker.armydists[army]=0
-    end
-    local potentialdists={}
-    --RNGLOG('doarmyspotdistanceinfect start loop')
-    for i, node in STR_GetTokens(marker.adjacentTo or '', ' ') do
-        if node=='' then continue end
-        local adjnode=Scenario.MasterChain._MASTERCHAIN_.Markers[node]
-        local skip=false
-        local bestdist=nil
-        local adjdist=VDist3(marker.position,adjnode.position)
-        if adjnode.armydists then
-            for k,v in adjnode.armydists do
-                --[[if not bestdist or v<bestdist then
-                    bestdist=v
-                end
-                if k~=army and v<marker.armydists[army] then
-                    skip=true
-                end]]
-                if not potentialdists[k] or potentialdists[k]>v then
-                    potentialdists[k]=v+adjdist
-                end
-            end
-        end
-        if not adjnode.armydists then adjnode.armydists={} end
-        if not adjnode.armydists[army] then
-            adjnode.armydists[army]=adjdist+marker.armydists[army]
-            
-            --table.insert(aiBrain.renderlines,{marker.position,Scenario.MasterChain._MASTERCHAIN_.Markers[node].position,marker.type,army})
-            ForkThread(DoArmySpotDistanceInfect,aiBrain,adjnode,army)
-        elseif adjnode.armydists[army]>adjdist+marker.armydists[army] then
-            adjnode.armydists[army]=adjdist+marker.armydists[army]
-            adjnode.bestarmy=army
-            ForkThread(DoArmySpotDistanceInfect,aiBrain,adjnode,army)
-        end
-    end
-    --RNGLOG('doarmyspotdistanceinfect end loop')
-    for k,v in marker.armydists do
-        if potentialdists[k]<v then
-            v=potentialdists[k]
-        end
-    end
-    for k,v in marker.armydists do
-        if not marker.bestarmy or marker.armydists[marker.bestarmy]>v then
-            marker.bestarmy=k
-        end
-    end
-    coroutine.yield(1)
-    if aiBrain.renderthreadtracker==CurrentThread() then
-        aiBrain.renderthreadtracker=nil
-    end
-end
+
 function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
     aiBrain.renderthreadtracker=CurrentThread()
     coroutine.yield(1)
