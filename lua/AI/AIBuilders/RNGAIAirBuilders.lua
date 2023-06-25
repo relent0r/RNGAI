@@ -449,7 +449,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI BomberAttack T1',
         PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 910,
-        InstanceCount = 10,
+        InstanceCount = 30,
         BuilderType = 'Any',        
         BuilderConditions = { 
             { TBC, 'LandThreatAtBaseOwnZones', { }},

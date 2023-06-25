@@ -889,7 +889,7 @@ IntelManager = Class {
                     RNGLOG('perimeterExpired is false after loop')
                 end
             end
-            LOG('Current Map ownership '..self.Brain.BrainIntel.MapOwnership)
+            --LOG('Current Map ownership '..self.Brain.BrainIntel.MapOwnership)
         end
     end,
 
@@ -1126,7 +1126,7 @@ IntelManager = Class {
             if next(self.Brain.EnemyIntel.DirectorData.Defense) then
                 for k, v in self.Brain.EnemyIntel.DirectorData.Defense do
                     if v.Object and not v.Object.Dead then
-                        --RNGLOG('Found Defensive unit in directordata defense table')
+                        --RNGLOG('Found Defensive unit in directordata defense table '..v.Object.UnitId)
                         --RNGLOG('Table entry '..repr(v))
                         --RNGLOG('Land threat at position '..self.Brain:GetThreatAtPosition(v.IMAP, 0, true, 'Land'))
                         --RNGLOG('AntiSurface threat at position '..self.Brain:GetThreatAtPosition(v.IMAP, 0, true, 'AntiSurface'))
@@ -1145,7 +1145,8 @@ IntelManager = Class {
                                     self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.NoGraph = true
                                 end
                             end
-                            if self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked and self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.Land then
+                            if self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked and self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.Land 
+                                and (not v.Object.Blueprint.CategoriesHash.SHIELD) then
                                 defensiveUnitsFound = true
                                 defensiveUnitThreat = defensiveUnitThreat + v.AntiSurface
                             end
@@ -1282,10 +1283,10 @@ IntelManager = Class {
             if not self.StrategyFlags.T3BomberRushActivated then
                 if self.Brain.BrainIntel.AirPhase == 3 and self.Brain.EnemyIntel.AirPhase < 3 then
                     self.Brain.amanager.Demand.Air.T3.bomber = 1
-                    if self.Brain.amanager.Current['Air']['T3']['bomber'] > 0 then
-                        self.StrategyFlags.T3BomberRushActivated = true
-                        self.Brain.amanager.Demand.Air.T3.bomber = 0
-                    end
+                end
+                if self.Brain.amanager.Current['Air']['T3']['bomber'] > 0 then
+                    self.StrategyFlags.T3BomberRushActivated = true
+                    self.Brain.amanager.Demand.Air.T3.bomber = 0
                 end
             end
             if table.getn(potentialStrikes) > 0 then

@@ -271,7 +271,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         if platoon.PlatoonData.ReclaimTable then
            --RNGLOG('We are going to lookup the reclaim table for high reclaim positions')
             if aiBrain.GridReclaim then
-                LOG('Engineer looking at reclaim grid')
                 local searchType
                 local reclaimGridInstance = aiBrain.GridReclaim
                 local brainGridInstance = aiBrain.GridBrain
@@ -294,11 +293,13 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 local brainCell = brainGridInstance:ToCellFromGridSpace(reclaimTargetX, reclaimTargetZ)
                 -- Assign engineer to cell
                 self.CellAssigned = {reclaimTargetX, reclaimTargetZ}
-                brainGridInstance:AddReclaimingEngineer(brainCell, self)
+                if brainCell then
+                    brainGridInstance:AddReclaimingEngineer(brainCell, self)
+                end
                 local validLocation = reclaimGridInstance:ToWorldSpace(reclaimTargetX, reclaimTargetZ)
 
                 if validLocation then
-                    LOG('Valid reclaim location found')
+                    --LOG('Valid reclaim location found')
                     --RNGLOG('We have a valid reclaim location')
                     IssueClearCommands({self})
                     if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, self, validLocation, true) then
@@ -645,7 +646,7 @@ function EngFindReclaimCell(aiBrain, eng, movementLayer, searchType)
     if searchType == 'MAIN' then
         searchRadius = aiBrain.BrainIntel.IMAPConfig.Rings
     end
-    LOG('Find reclaim cell, search radius is '..searchRadius)
+   --('Find reclaim cell, search radius is '..searchRadius)
     local searchLoop = 0
     local reclaimTargetX, reclaimTargetZ
     local engPos = eng:GetPosition()
@@ -673,7 +674,7 @@ function EngFindReclaimCell(aiBrain, eng, movementLayer, searchType)
         searchLoop = searchLoop + 1
     end
     if reclaimTargetX and reclaimTargetZ then
-        LOG('Returned reclaim target of X:'..reclaimTargetX..' Z:'..reclaimTargetZ)
+        --LOG('Returned reclaim target of X:'..reclaimTargetX..' Z:'..reclaimTargetZ)
         return reclaimTargetX, reclaimTargetZ
     end
 end
@@ -2903,55 +2904,8 @@ function GetEnemyUnitsInRect( aiBrain, x1, z1, x2, z2 )
     return {}, 0
 end
 
-local markerTypeCache = { }
---- Flushes the entire cache
-function FlushMarkerTypeCache()
-    markerTypeCache = { }
-end
---- Flushes a single element from the cache
--- @param markerType The type to flush.
-function FlushElementOfMarkerTypeCache(markerType)
-    markerTypeCache[markerType] = nil
-end
---- Sets the cache for a specific marker type - it is up to you to make 
--- sure the format is correct: {Position = v.position, Name = k}.
--- @param markerType The type to set.
--- @param markers The marker to set.
-function SetMarkerTypeCache(markerType, markers)
-    markerTypeCache[markerType] = markers
-end
-
-function GetMarkersByType(markerType)
-
-    --RNGLOG("Retrieving markers of type: " .. markerType)
-
-    -- check if parameter is set, if not - help us all and return everything
-    if not markerType then 
-        return Scenario.MasterChain._MASTERCHAIN_.Markers
-    end
-    -- check if we already looked for these in the past
-    if not markerTypeCache[markerType] then
-        -- make it easier to read
-        local markers = Scenario.MasterChain._MASTERCHAIN_.Markers
-        -- prepare a table to keep the markers
-        local cache = { }
-        -- go over every marker and popualte our table
-        if markers then
-            for k, v in markers do
-                if v.type == markerType then
-                    table.insert(cache, {Position = v.position, Name = k})
-                end
-            end
-        end
-        -- add the markers of this type to the cache
-        markerTypeCache[markerType] = cache
-        --RNGLOG("ScenarioUtils: Cached " .. RNGGETN(cache) .. " markers of type: " .. markerType)
-    end
-    -- return the cached markers
-    return markerTypeCache[markerType]
-end
-
 function AIGetSortedMassLocationsThreatRNG(aiBrain, minDist, maxDist, tMin, tMax, tRings, tType, position)
+    local GetMarkersByType = import("/lua/sim/MarkerUtilities.lua").GetMarkersByType
 
     local threatCheck = false
     local maxDistance = 2000
@@ -2979,23 +2933,23 @@ function AIGetSortedMassLocationsThreatRNG(aiBrain, minDist, maxDist, tMin, tMax
     end
 
     local markerList = GetMarkersByType('Mass')
-    RNGSORT(markerList, function(a,b) return VDist2Sq(a.Position[1],a.Position[3], startX,startZ) < VDist2Sq(b.Position[1],b.Position[3], startX,startZ) end)
+    RNGSORT(markerList, function(a,b) return VDist2Sq(a.position[1],a.position[3], startX,startZ) < VDist2Sq(b.position[1],b.position[3], startX,startZ) end)
     --RNGLOG('Sorted Mass Marker List '..repr(markerList))
     local newList = {}
     for _, v in markerList do
         -- check distance to map border. (game engine can't build mass closer then 8 mapunits to the map border.) 
-        if VDist2Sq(v.Position[1], v.Position[3], startX, startZ) < minDistance then
+        if VDist2Sq(v.position[1], v.position[3], startX, startZ) < minDistance then
             continue
         end
-        if VDist2Sq(v.Position[1], v.Position[3], startX, startZ) > maxDistance  then
+        if VDist2Sq(v.position[1], v.position[3], startX, startZ) > maxDistance  then
             --RNGLOG('Current Distance of marker..'..VDist2Sq(v.Position[1], v.Position[3], startX, startZ))
             --RNGLOG('Max Distance'..maxDistance)
             --RNGLOG('mass marker MaxDistance Reached, breaking loop')
             break
         end
-        if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
+        if CanBuildStructureAt(aiBrain, 'ueb1103', v.position) then
             if threatCheck then
-                if GetThreatAtPosition(aiBrain, v.Position, 0, true, tType) >= tMax then
+                if GetThreatAtPosition(aiBrain, v.position, 0, true, tType) >= tMax then
                     --RNGLOG('mass marker threatMax Reached, continuing')
                     continue
                 end
@@ -4172,14 +4126,14 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
                             if aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier].TMD then
                                 for _, c in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier].TMD do
                                     if c and not c.Dead then
-                                        RNGLOG('TMD is present at defense point and this is not a reactive build')
+                                        --RNGLOG('TMD is present at defense point and this is not a reactive build')
                                         tmdPresent = true
                                         break
                                     end
                                 end
                             end
                             if (not tmdPresent) then
-                                RNGLOG('TMD is not present at defense point, return position')
+                                --RNGLOG('TMD is not present at defense point, return position')
                                 bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
                             end
                         end
@@ -4188,7 +4142,7 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
             end
         end
         if bestPoint then
-            RNGLOG('bestPoint for TMD is '..repr(bestPoint.Position))
+            --RNGLOG('bestPoint for TMD is '..repr(bestPoint.Position))
             defensivePoint = bestPoint.Position
         end
     elseif type == 'STRUCTURE' then
@@ -4641,7 +4595,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     end
     if aiBrain.RNGDEBUG then
         if scoutingData.Position then
-            RNGLOG('Trying to draw scoutingData position '..repr(scoutingData.Position))
+            --RNGLOG('Trying to draw scoutingData position '..repr(scoutingData.Position))
             aiBrain:ForkThread(drawScoutMarker, scoutingData.Position)
         end
     end

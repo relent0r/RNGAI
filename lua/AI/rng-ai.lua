@@ -85,7 +85,6 @@ AIBrain = Class(RNGAIBrainClass) {
     OnCreateAI = function(self, planName)
         LOG('Oncreate AI from RNG code')
         StandardBrain.OnCreateAI(self, planName)
-        LOG('Completed standard brain oncreate AI running rng')
         local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
         if string.find(per, 'RNG') then
             --RNGLOG('* AI-RNG: This is RNG')
@@ -4535,7 +4534,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         if v.UnitId.General.UpgradesTo and v:GetFractionComplete() < 0.7 then
                             --RNGLOG('EcoPowerPreemptive : Radar being upgraded next power consumption is '..ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy)
                             if v:IsUnitState('Upgrading') then
-                                RNGLOG('Unit is upgrading, check power consumption during upgrade')
+                                --RNGLOG('Unit is upgrading, check power consumption during upgrade')
                                 potentialPowerConsumption = potentialPowerConsumption + (ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildCostEnergy / ALLBPS[v.UnitId.General.UpgradesTo].Economy.BuildTime * (ALLBPS[v.UnitId].Economy.BuildRate * multiplier))
                             end
                             potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitId.General.UpgradesTo].Economy.MaintenanceConsumptionPerSecondEnergy

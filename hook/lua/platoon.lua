@@ -1512,10 +1512,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local platoonPos = GetPlatoonPosition(self)
                 if self.SupportRotate then
                     movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{-90,15})
-                    RNGLOG('rotate to -90 for '..aiBrain.Nickname..' position '..repr(movetoPoint))
+                    --RNGLOG('rotate to -90 for '..aiBrain.Nickname..' position '..repr(movetoPoint))
                 else
                     movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{90,15})
-                    RNGLOG('movetoPoint to 90 for '..aiBrain.Nickname..' position '..repr(movetoPoint))
+                    --RNGLOG('movetoPoint to 90 for '..aiBrain.Nickname..' position '..repr(movetoPoint))
                 end
                 if (not self.SupportRotate) and (not NavUtils.CanPathTo(self.MovementLayer, platoonPos, movetoPoint)) then
                     movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{-90,15})

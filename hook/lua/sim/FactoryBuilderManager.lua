@@ -262,12 +262,16 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
             'T1BuildEngineer',
         }
         if faction then
+            local EnemyIndex
             local mapSizeX, mapSizeZ = GetMapSize()
             local OwnIndex = self.Brain:GetArmyIndex()
-            local EnemyIndex = self.Brain:GetCurrentEnemy():GetArmyIndex()
+            local EnemyArmy = self.Brain:GetCurrentEnemy()
+            if EnemyArmy then
+                EnemyIndex = EnemyArmy:GetArmyIndex()
+            end
             if mapSizeX >= 4000 and mapSizeZ >= 4000 then
                 --RNGLOG('20 KM Map Check true')
-                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                if EnemyIndex and self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
                     for i=1, 4 do
                         table.insert(queue, 'T1BuildEngineer')
                     end
@@ -315,7 +319,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                 table.insert(queue, 'T1LandScout')
             elseif mapSizeX >= 2000 and mapSizeZ >= 2000 then
                 --RNGLOG('20 KM Map Check true')
-                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                if EnemyIndex and self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
                     for i=1, 4 do
                         table.insert(queue, 'T1BuildEngineer')
                     end
@@ -364,7 +368,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                 table.insert(queue, 'T1LandScout')
             elseif mapSizeX >= 1000 and mapSizeZ >= 1000 then
                 --RNGLOG('20 KM Map Check true')
-                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                if EnemyIndex and self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
                     for i=1, 2 do
                         table.insert(queue, 'T1BuildEngineer')
                     end
@@ -426,7 +430,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                 table.insert(queue, 'T1LandScout')
             elseif mapSizeX >= 500 and mapSizeZ >= 500 then
                 --RNGLOG('10 KM Map Check true')
-                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                if EnemyIndex and self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
                     for i=1, 1 do
                         table.insert(queue, 'T1BuildEngineer')
                     end
@@ -498,7 +502,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                 table.insert(queue, 'T1LandScout')
                 table.insert(queue, 'T1LandScout')
             elseif mapSizeX >= 200 and mapSizeZ >= 200 then
-                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                if EnemyIndex and self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
                     for i=1, 1 do
                         table.insert(queue, 'T1BuildEngineer')
                     end

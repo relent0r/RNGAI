@@ -1141,20 +1141,23 @@ function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
         if aiBrain.cmanager.buildpower.eng.T2 == 0 then
             return true
         end
-        if aiBrain.cmanager.income.r.m > 55 and aiBrain.cmanager.buildpower.eng.T2 < 75 then
+        if availableIncome - aiBrain.cmanager.buildpower.eng.T2 > 0 then
             return true
         end
-        if availableIncome - aiBrain.cmanager.buildpower.eng.T2 > 0 then
+        if aiBrain.cmanager.income.r.m > 55 and aiBrain.cmanager.buildpower.eng.T2 < 75 then
             return true
         end
     elseif type == 3 then
         if aiBrain.cmanager.buildpower.eng.T3 == 0 then
             return true
         end
-        if aiBrain.cmanager.income.r.m > 110 and aiBrain.cmanager.buildpower.eng.T3 < 225 then
+        if availableIncome - aiBrain.cmanager.buildpower.eng.T3 > 0 then
             return true
         end
-        if availableIncome - aiBrain.cmanager.buildpower.eng.T3 > 0 then
+        if aiBrain.cmanager.income.r.m > 100 and aiBrain.cmanager.buildpower.eng.T3 < 225 then
+            return true
+        end
+        if aiBrain.cmanager.income.r.m > 160 and aiBrain.cmanager.buildpower.eng.T3 < 400 then
             return true
         end
     elseif type == 4 then
