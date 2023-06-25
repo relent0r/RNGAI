@@ -7,6 +7,7 @@ local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
 local TransportUtils = import("/lua/ai/transportutilities.lua")
+local MarkerUtils = import("/lua/sim/MarkerUtilities.lua")
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
@@ -265,16 +266,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
     -- first try to find a path with markers. 
     local result, navReason
     local path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination, nil, 300)
-    if path then
-        RNGLOG('EngineerMoveWithSafePathCHP has valid path')
-    else
-        RNGLOG('EngineerMoveWithSafePathCHP has no valid path')
-    end
-    if reason then
-        RNGLOG('EngineerGenerateSafePathToRNG reason is'..reason)
-    else
-        RNGLOG('EngineerGenerateSafePathToRNG reason is not present')
-    end
+
     -- only use CanPathTo for distance closer then 200 and if we can't path with markers
     if reason ~= 'PathOK' then
         -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
@@ -888,14 +880,7 @@ end
 
 function AIGetMarkerLocationsRNG(aiBrain, markerType)
     local markerList = {}
-    if markerType == 'Start Location' then
-        local tempMarkers = AIGetMarkerLocationsRNG(aiBrain, 'Blank Marker')
-        for k, v in tempMarkers do
-            if string.sub(v.Name, 1, 5) == 'ARMY_' then
-                table.insert(markerList, {Position = v.Position, Name = v.Name, MassSpotsInRange = v.MassSpotsInRange})
-            end
-        end
-    else
+    if markerType == 'Naval Area' then
         local markers = Scenario.MasterChain._MASTERCHAIN_.Markers
         if markers then
             for k, v in markers do
@@ -904,8 +889,21 @@ function AIGetMarkerLocationsRNG(aiBrain, markerType)
                 end
             end
         end
+    elseif markerType == 'Large Expansion Area' or markerType == 'Expansion Area' then
+        local markers = MarkerUtils.GetMarkersByType(markerType)
+        for k, v in markers do
+            if v.type == markerType then
+                table.insert(markerList, {Position = v.position, Name = v.Name, MassSpotsInRange = RNGGETN(v.Extractors)})
+            end
+        end
+    else
+        local markers = MarkerUtils.GetMarkersByType(markerType)
+        for k, v in markers do
+            if v.type == markerType then
+                table.insert(markerList, {Position = v.position, Name = k })
+            end
+        end
     end
-
     return markerList
 end
 

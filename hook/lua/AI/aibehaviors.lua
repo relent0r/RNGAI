@@ -695,7 +695,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
     local path, reason
     plat.BuilderName = 'CDR Active Movement'
     aiBrain:AssignUnitsToPlatoon(plat, {cdr}, 'Attack', 'None')
-    RNGLOG('CDR : Moving ACU to position')
+    --RNGLOG('CDR : Moving ACU to position')
     cdr.movetopos = position
     cdr.Combat = false
     if retreat then
@@ -707,7 +707,7 @@ function CDRMoveToPosition(aiBrain, cdr, position, cutoff, retreat, platoonRetre
         path, reason = AIAttackUtils.PlatoonGeneratePathToRNG('Amphibious', cdr.Position, position, 512, 120, 20)
     end
     if path then
-        RNGLOG('CDR : Distance to position is '..VDist3(cdr.Position, position))
+        --RNGLOG('CDR : Distance to position is '..VDist3(cdr.Position, position))
         if retreat or platoonRetreat then
             --RNGLOG('CDR : We are retreating')
         end

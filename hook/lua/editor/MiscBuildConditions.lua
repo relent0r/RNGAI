@@ -223,7 +223,6 @@ end
 
 function ArmyNeedOrWantTransports(aiBrain)
     if aiBrain and (not aiBrain.NoRush.Active ) and aiBrain.TransportRequested then
-        RNGLOG('Army transport requested')
         return true
     end
     return false
