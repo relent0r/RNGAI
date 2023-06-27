@@ -275,6 +275,9 @@ StructureManager = Class {
                                 elseif unitCat.TECH2 then
                                     RNGINSERT(FactoryData.T2LAND, unit)
                                     if not unitCat.SUPPORTFACTORY then
+                                        if not FactoryData.T2LANDHQCount[unit.UnitId] then
+                                            FactoryData.T2LANDHQCount[unit.UnitId] = 0
+                                        end
                                         FactoryData.T2LANDHQCount[unit.UnitId] = FactoryData.T2LANDHQCount[unit.UnitId] + 1
                                     end
                                     if unit:IsUnitState('Upgrading') then
@@ -284,6 +287,9 @@ StructureManager = Class {
                                 elseif unitCat.TECH3 then
                                     RNGINSERT(FactoryData.T3LAND, unit)
                                     if not unitCat.SUPPORTFACTORY then
+                                        if not FactoryData.T3LANDHQCount[unit.UnitId] then
+                                            FactoryData.T3LANDHQCount[unit.UnitId] = 0
+                                        end
                                         FactoryData.T3LANDHQCount[unit.UnitId] = FactoryData.T3LANDHQCount[unit.UnitId] + 1
                                     end
                                     FactoryData.TotalT3LAND = FactoryData.TotalT3LAND + 1
@@ -298,6 +304,9 @@ StructureManager = Class {
                                 elseif unitCat.TECH2 then
                                     RNGINSERT(FactoryData.T2AIR, unit)
                                     if not unitCat.SUPPORTFACTORY then
+                                        if not FactoryData.T2AIRHQCount[unit.UnitId] then
+                                            FactoryData.T2AIRHQCount[unit.UnitId] = 0
+                                        end
                                         FactoryData.T2AIRHQCount[unit.UnitId] = FactoryData.T2AIRHQCount[unit.UnitId] + 1
                                     end
                                     if unit:IsUnitState('Upgrading') then
@@ -307,6 +316,9 @@ StructureManager = Class {
                                 elseif unitCat.TECH3 then
                                     RNGINSERT(FactoryData.T3AIR, unit)
                                     if not unitCat.SUPPORTFACTORY then
+                                        if not FactoryData.T3AIRHQCount[unit.UnitId] then
+                                            FactoryData.T3AIRHQCount[unit.UnitId] = 0
+                                        end
                                         FactoryData.T3AIRHQCount[unit.UnitId] = FactoryData.T3AIRHQCount[unit.UnitId] + 1
                                     end
                                     FactoryData.TotalT3AIR = FactoryData.TotalT3AIR + 1
@@ -322,6 +334,9 @@ StructureManager = Class {
                                 elseif unitCat.TECH2 then
                                     RNGINSERT(FactoryData.T2NAVAL, unit)
                                     if not unitCat.SUPPORTFACTORY then
+                                        if not FactoryData.T2NAVALHQCount[unit.UnitId] then
+                                            FactoryData.T2NAVALHQCount[unit.UnitId] = 0
+                                        end
                                         FactoryData.T2NAVALHQCount[unit.UnitId] = FactoryData.T2NAVALHQCount[unit.UnitId] + 1
                                     end
                                     if unit:IsUnitState('Upgrading') then
@@ -331,6 +346,9 @@ StructureManager = Class {
                                 elseif unitCat.TECH3 then
                                     RNGINSERT(FactoryData.T3NAVAL, unit)
                                     if not unitCat.SUPPORTFACTORY then
+                                        if not FactoryData.T3NAVALHQCount[unit.UnitId] then
+                                            FactoryData.T3NAVALHQCount[unit.UnitId] = 0
+                                        end
                                         FactoryData.T3NAVALHQCount[unit.UnitId] = FactoryData.T3NAVALHQCount[unit.UnitId] + 1
                                     end
                                     FactoryData.TotalT3NAVAL = FactoryData.TotalT3NAVAL + 1
@@ -1108,7 +1126,7 @@ StructureManager = Class {
                 self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                 coroutine.yield(80)
                 continue
-            elseif massStorage > 2500 and energyStorage > 8000 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 1.1 and extractorsDetail.TECH2Upgrading < 1 then
+            elseif massStorage > 2500 and energyStorage > 8000 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 1.1 and extractorsDetail.TECH2Upgrading < 2 then
                 self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                 coroutine.yield(80)
                 continue

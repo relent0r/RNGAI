@@ -3279,7 +3279,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.BrainIntel.SelfThreat.ExtractorCount > self.BrainIntel.MassSharePerPlayer then
                 if self.EconomyUpgradeSpend < 0.35 then
                     --RNGLOG('Increasing EconomyUpgradeSpend to 0.36')
-                    self.EconomyUpgradeSpend = 0.40
+                    self.EconomyUpgradeSpend = 0.45
                 end
             elseif self.EconomyUpgradeSpend > 0.35 then
                 self.EconomyUpgradeSpend = self.EconomyUpgradeSpendDefault

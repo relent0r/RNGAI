@@ -38,7 +38,7 @@ PlatoonTemplate {
     GlobalSquads = {
         { categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE - categories.xsb3202, 0, 20, 'Attack', 'GrowthFormation' },
         { categories.MOBILE * categories.NAVAL - categories.xsb3202, 0, 20, 'Attack', 'GrowthFormation' },
-        { categories.MOBILE * categories.NAVAL * categories.DESTROYER, 0, 20, 'Attack', 'GrowthFormation' },
+        { categories.MOBILE * categories.NAVAL * ( categories.DESTROYER + categories.BATTLESHIP ), 0, 20, 'Attack', 'GrowthFormation' },
         { categories.MOBILE * categories.NAVAL * categories.CRUISER, 0, 20, 'Artillery', 'GrowthFormation' },
     },
 }
@@ -48,7 +48,7 @@ PlatoonTemplate {
     Plan = 'NavalRangedAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE - categories.xsb3202, 0, 20, 'Attack', 'GrowthFormation' },
-        { categories.MOBILE * categories.NAVAL * (categories.DESTROYER + categories.BATTLESHIP), 0, 20, 'Attack', 'GrowthFormation' },
+        { categories.MOBILE * categories.NAVAL * ( categories.DESTROYER + categories.BATTLESHIP ), 0, 20, 'Attack', 'GrowthFormation' },
         { categories.MOBILE * categories.NAVAL * ( categories.CRUISER + categories.xas0306 + categories.NUKE ), 1, 20, 'Artillery', 'GrowthFormation' },
     },
 }

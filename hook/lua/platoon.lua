@@ -454,14 +454,15 @@ Platoon = Class(RNGAIPlatoonClass) {
                 while PlatoonExists(aiBrain, self) do
                     coroutine.yield(20)
                     currentPlatPos = GetPlatoonPosition(self)
-                    --RNGLOG('Is the target pos updating during this loop? '..repr(targetPos))
+                    --RNGLOG('AirTorp Is the target pos updating during this loop? '..repr(targetPos))
                     if (not target) or target.Dead then
                         --RNGLOG('* AI-RNG: Target Dead or not or Destroyed, breaking loop')
                         break
                     end
+                    --[[
                     if not self:CanAttackTarget('Attack', target) then
-                        --RNGLOG('Torp platoon cant attack target')
-                    end
+                        RNGLOG('AirTorp platoon cant attack target')
+                    end]]
                     if currentPlatPos and VDist3Sq(oldPlatPos, currentPlatPos) < 4 then
                         stuckCount = stuckCount + 1
                         if stuckCount > 5 then
@@ -480,7 +481,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 currentPlatPos = GetPlatoonPosition(self)
             end
             if (not target or target.Dead) and currentPlatPos then
-                --RNGLOG('* AI-RNG: No Target Returning to base')
+                --RNGLOG('* AI-RNG: AirTorp No Target Returning to base')
                 if PlatoonExists(aiBrain, self) then
                     platoonUnits = GetPlatoonUnits(self)
                     IssueClearCommands(platoonUnits)
@@ -489,6 +490,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         coroutine.yield(20)
                         target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, false, self, 'Attack', maxRadius, atkPri, avoidBases)
                         if target and not target.Dead then
+                            --RNGLOG('AirTorp new target found restarting platoon function')
                             self:SetAIPlanRNG('AirTorpAIRNG')
                         end
                     else
@@ -498,6 +500,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
             if not target or target.Dead then
+                --RNGLOG('* AI-RNG: AirTorp Checked for target and still no Target Returning to base')
                 self.HoldingPosition = aiBrain.BuilderManagers['MAIN'].Position
                 self:MoveToLocation(self.HoldingPosition, false)
                 while PlatoonExists(aiBrain, self) do
@@ -4096,7 +4099,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         -- Some of this is overly complex as I'm trying to get the power/mass to never stall during that initial bo.
         -- This is just a scripted engineer build, nothing special. But it ended up WAY bigger than I thought it'd be.
         local aiBrain = self:GetBrain()
-        local buildingTmpl, buildingTmplFile, baseTmpl, baseTmplFile, baseTmplDefault
+        local buildingTmpl, buildingTmplFile, baseTmpl, baseTmplFile, baseTmplDefault, templateKey
         local whatToBuild, location, relativeLoc
         local hydroPresent = false
         local buildLocation = false
@@ -4118,7 +4121,13 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         eng.Active = true
         eng.Initializing = true
-        baseTmplFile = import(self.PlatoonData.Construction.BaseTemplateFile or '/lua/BaseTemplates.lua')
+        if factionIndex < 5 then
+            templateKey = 'ACUBaseTemplate'
+            baseTmplFile = import(self.PlatoonData.Construction.BaseTemplateFile or '/lua/BaseTemplates.lua')
+        else
+            templateKey = 'BaseTemplates'
+            baseTmplFile = import('/lua/BaseTemplates.lua')
+        end
         baseTmplDefault = import('/lua/BaseTemplates.lua')
         buildingTmplFile = import(self.PlatoonData.Construction.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
         buildingTmpl = buildingTmplFile[('BuildingTemplates')][factionIndex]
@@ -4160,12 +4169,12 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         local inWater = RUtils.PositionInWater(engPos)
         if inWater then
-            buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1SeaFactory', eng, false, nil, nil, true)
+            buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile[templateKey][factionIndex], 'T1SeaFactory', eng, false, nil, nil, true)
         else
             if aiBrain.RNGEXP then
-                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1AirFactory', eng, false, nil, nil, true)
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile[templateKey][factionIndex], 'T1AirFactory', eng, false, nil, nil, true)
             else
-                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile['ACUBaseTemplate'][factionIndex], 'T1LandFactory', eng, false, nil, nil, true)
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile[templateKey][factionIndex], 'T1LandFactory', eng, false, nil, nil, true)
             end
         end
         if aiBrain.RNGDEBUG then
@@ -5867,15 +5876,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                 platLoc = GetPlatoonPosition(self)
             end
         end
-        if self.PlatoonData.FrigateRaid then
-            --RNGLOG('Platoon Frigate Raid is true')
-        end
-        if aiBrain.EnemyIntel.FrigateRaid then
-            --RNGLOG('Brain Frigate Raid is true')
-        end
         if self.PlatoonData.FrigateRaid and aiBrain.EnemyIntel.FrigateRaid then
             markerLocations = aiBrain.EnemyIntel.FrigateRaidMarkers
-            --RNGLOG('Marker Table for frigate raid is '..repr(markerLocations))
         else
             markerLocations = RUtils.AIGetMassMarkerLocations(aiBrain, includeWater, waterOnly)
         end
@@ -5943,32 +5945,53 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
         end]]
         --RNGLOG('MassRaid function')
-        --RNGLOG('* AI-RNG: Best Marker Selected is at position'..repr(bestMarker.Position))
         
         if bestMarker.Position == nil and GetGameTimeSeconds() > 600 and self.MovementLayer ~= 'Water' then
             --RNGLOG('Best Marker position was nil and game time greater than 15 mins, switch to hunt ai')
             coroutine.yield(2)
             return self:SetAIPlanRNG('HuntAIPATHRNG')
         elseif bestMarker.Position == nil then
-            
-            if RNGGETN(aiBrain.BrainIntel.ExpansionWatchTable) > 0  and (not self.EarlyRaidSet) then
-                for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
-                    local distSq = VDist2Sq(v.Position[1], v.Position[3], platLoc[1], platLoc[3])
-                    if distSq > (avoidClosestRadius * avoidClosestRadius) and NavUtils.CanPathTo(self.MovementLayer, platLoc, v.Position) then
-                        if GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > self.CurrentPlatoonThreat then
-                            continue
+            if self.MovementLayer == 'Water' and RNGGETN(markerLocations) > 0 then
+                local bestOption
+                local bestDistance
+                if aiBrain:GetCurrentEnemy() then
+                    local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
+                    local reference = aiBrain.EnemyIntel.EnemyStartLocations[EnemyIndex].Position
+                    if next(aiBrain.EnemyIntel.EnemyStartLocations) then
+                        for _, marker in markerLocations do
+                            local distance = VDist3Sq(marker.Position, reference)
+                            if not bestOption or bestDistance > distance then
+                                bestOption = marker
+                                bestDistance = distance
+                            end
                         end
-                        if not v.PlatoonAssigned then
-                            bestMarker = v
-                            aiBrain.BrainIntel.ExpansionWatchTable[k].PlatoonAssigned = self
-                            --RNGLOG('Expansion Best marker selected is index '..k..' at '..repr(bestMarker.Position))
-                            break
-                        end
-                    else
-                        --RNGLOG('Cant Graph to expansion marker location')
                     end
-                    coroutine.yield(1)
-                    --RNGLOG('Distance to marker '..k..' is '..VDist2(v.Position[1],v.Position[3],platLoc[1], platLoc[3]))
+                else
+                    bestOption = table.copy(markerLocations[Random(1,RNGGETN(markerLocations))])
+                end
+                if bestOption then
+                    bestMarker = bestOption
+                end
+            else
+                if RNGGETN(aiBrain.BrainIntel.ExpansionWatchTable) > 0  and (not self.EarlyRaidSet) then
+                    for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
+                        local distSq = VDist2Sq(v.Position[1], v.Position[3], platLoc[1], platLoc[3])
+                        if distSq > (avoidClosestRadius * avoidClosestRadius) and NavUtils.CanPathTo(self.MovementLayer, platLoc, v.Position) then
+                            if GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > self.CurrentPlatoonThreat then
+                                continue
+                            end
+                            if not v.PlatoonAssigned then
+                                bestMarker = v
+                                aiBrain.BrainIntel.ExpansionWatchTable[k].PlatoonAssigned = self
+                                --RNGLOG('Expansion Best marker selected is index '..k..' at '..repr(bestMarker.Position))
+                                break
+                            end
+                        else
+                            --RNGLOG('Cant Graph to expansion marker location')
+                        end
+                        coroutine.yield(1)
+                        --RNGLOG('Distance to marker '..k..' is '..VDist2(v.Position[1],v.Position[3],platLoc[1], platLoc[3]))
+                    end
                 end
             end
             if self.PlatoonData.EarlyRaid then
@@ -6038,12 +6061,14 @@ Platoon = Class(RNGAIPlatoonClass) {
             IssueClearCommands(GetPlatoonUnits(self))
             if path then
                 platLoc = GetPlatoonPosition(self)
-                if not success or VDist2Sq(platLoc[1], platLoc[3], bestMarker.Position[1], bestMarker.Position[3]) > 262144 then
-                    usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, bestMarker.Position, 2, true)
-                    --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, true)
-                elseif VDist2Sq(platLoc[1], platLoc[3], bestMarker.Position[1], bestMarker.Position[3]) > 65536 and (not self.PlatoonData.EarlyRaid) then
-                    usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, bestMarker.Position, 1, true)
-                    --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, false)
+                if self.MovementLayer ~= 'Water' and  self.MovementLayer ~= 'Air' then
+                    if not success or VDist2Sq(platLoc[1], platLoc[3], bestMarker.Position[1], bestMarker.Position[3]) > 262144 then
+                        usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, bestMarker.Position, 2, true)
+                        --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, true)
+                    elseif VDist2Sq(platLoc[1], platLoc[3], bestMarker.Position[1], bestMarker.Position[3]) > 65536 and (not self.PlatoonData.EarlyRaid) then
+                        usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, bestMarker.Position, 1, true)
+                        --usedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, self, bestMarker.Position, false, false)
+                    end
                 end
                 if not usedTransports then
                     self:PlatoonMoveWithMicro(aiBrain, path, self.PlatoonData.Avoid, false, true, 60)
@@ -7788,6 +7813,7 @@ Platoon = Class(RNGAIPlatoonClass) {
 
     NavalRetreatRNG = function(self, aiBrain)
         local LocationType = self.PlatoonData.LocationType or 'MAIN'
+        local platoonLimit = self.PlatoonData.PlatoonLimit or 18
         local mainBasePos
         if LocationType then
             mainBasePos = aiBrain.BuilderManagers[LocationType].Position

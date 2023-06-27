@@ -124,6 +124,8 @@ function SetCDRDefaults(aiBrain, cdr)
         if v.Label == 'RightDisruptor' or v.Label == 'RightZephyr' or v.Label == 'RightRipper' or v.Label == 'ChronotronCannon' then
             cdr.WeaponRange = v.MaxRadius - 2
             --RNGLOG('* AI-RNG: ACU Weapon Range is :'..cdr.WeaponRange)
+        else
+            cdr.WeaponRange = 20
         end
     end
 end

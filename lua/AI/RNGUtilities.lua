@@ -290,165 +290,165 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 end
 
                 local reclaimTargetX, reclaimTargetZ = EngFindReclaimCell(aiBrain, self, platoon.MovementLayer, searchType)
-                local brainCell = brainGridInstance:ToCellFromGridSpace(reclaimTargetX, reclaimTargetZ)
-                -- Assign engineer to cell
-                self.CellAssigned = {reclaimTargetX, reclaimTargetZ}
-                if brainCell then
-                    brainGridInstance:AddReclaimingEngineer(brainCell, self)
-                end
-                local validLocation = reclaimGridInstance:ToWorldSpace(reclaimTargetX, reclaimTargetZ)
+                if reclaimTargetX and reclaimTargetZ then
+                    local brainCell = brainGridInstance:ToCellFromGridSpace(reclaimTargetX, reclaimTargetZ)
+                    -- Assign engineer to cell
+                    self.CellAssigned = {reclaimTargetX, reclaimTargetZ}
+                    if brainCell then
+                        brainGridInstance:AddReclaimingEngineer(brainCell, self)
+                    end
+                    local validLocation = reclaimGridInstance:ToWorldSpace(reclaimTargetX, reclaimTargetZ)
 
-                if validLocation then
-                    --LOG('Valid reclaim location found')
-                    --RNGLOG('We have a valid reclaim location')
-                    IssueClearCommands({self})
-                    if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, self, validLocation, true) then
-                       --RNGLOG('We have issued move orders to get to the reclaim location')
-                        if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
-                            return
-                        end
-                        local engStuckCount = 0
-                        local Lastdist
-                        local dist
-                        while not self.Dead and aiBrain:PlatoonExists(platoon) do
-                            coroutine.yield(1)
-                            engPos = self:GetPosition()
-                            dist = VDist3Sq(engPos, validLocation)
-                            if dist < 144 then
-                                --RNGLOG('We are at the grid square location, dist is '..dist)
-                                IssueClearCommands({self})
-                                break
+                    if validLocation then
+                        --LOG('Valid reclaim location found')
+                        --RNGLOG('We have a valid reclaim location')
+                        IssueClearCommands({self})
+                        if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, self, validLocation, true) then
+                        --RNGLOG('We have issued move orders to get to the reclaim location')
+                            if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
+                                return
                             end
-                            if Lastdist ~= dist then
-                                engStuckCount = 0
-                                Lastdist = dist
-                            else
-                                engStuckCount = engStuckCount + 1
-                                --RNGLOG('* AI-RNG: * EngineerBuildAI: has no moved during move to build position look, adding one, current is '..engStuckCount)
-                                if engStuckCount > 15 and not self:IsUnitState('Reclaiming') then
-                                    --RNGLOG('* AI-RNG: * EngineerBuildAI: Stuck while moving to build position. Stuck='..engStuckCount)
+                            local engStuckCount = 0
+                            local Lastdist
+                            local dist
+                            while not self.Dead and aiBrain:PlatoonExists(platoon) do
+                                coroutine.yield(1)
+                                engPos = self:GetPosition()
+                                dist = VDist3Sq(engPos, validLocation)
+                                if dist < 144 then
+                                    --RNGLOG('We are at the grid square location, dist is '..dist)
+                                    IssueClearCommands({self})
                                     break
                                 end
-                            end
-                            --PerformEngReclaim(aiBrain, self, 25)
-                            if self:IsIdleState() then
-                                IssueMove({self}, validLocation)
-                            end
-                            if self:IsUnitState("Moving") then
-                                if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
-                                    local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy')
-                                    if enemyEngineer then
-                                        local enemyEngPos
-                                        for _, unit in enemyEngineer do
-                                            if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
-                                                enemyEngPos = unit:GetPosition()
-                                                if VDist2Sq(engPos[1], engPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
-                                                    IssueStop({self})
-                                                    IssueClearCommands({self})
-                                                    IssueReclaim({self}, enemyEngineer[1])
-                                                    break
+                                if Lastdist ~= dist then
+                                    engStuckCount = 0
+                                    Lastdist = dist
+                                else
+                                    engStuckCount = engStuckCount + 1
+                                    --RNGLOG('* AI-RNG: * EngineerBuildAI: has no moved during move to build position look, adding one, current is '..engStuckCount)
+                                    if engStuckCount > 15 and not self:IsUnitState('Reclaiming') then
+                                        --RNGLOG('* AI-RNG: * EngineerBuildAI: Stuck while moving to build position. Stuck='..engStuckCount)
+                                        break
+                                    end
+                                end
+                                --PerformEngReclaim(aiBrain, self, 25)
+                                if self:IsIdleState() then
+                                    IssueMove({self}, validLocation)
+                                end
+                                if self:IsUnitState("Moving") then
+                                    if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
+                                        local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy')
+                                        if enemyEngineer then
+                                            local enemyEngPos
+                                            for _, unit in enemyEngineer do
+                                                if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
+                                                    enemyEngPos = unit:GetPosition()
+                                                    if VDist2Sq(engPos[1], engPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
+                                                        IssueStop({self})
+                                                        IssueClearCommands({self})
+                                                        IssueReclaim({self}, enemyEngineer[1])
+                                                        break
+                                                    end
                                                 end
                                             end
                                         end
                                     end
                                 end
+                                coroutine.yield(25)
                             end
-                            coroutine.yield(25)
-                        end
-                        if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
-                            coroutine.yield(1)
-                            return
-                        end
-                        engPos = self:GetPosition()
-                        -- reclaim grid for a better reclaim position 9 points with 1 being the current engineer position
-                        -- we create a grid of 8 squares around the engineer that it will search after each grid square is reclaim it is removed.
-                        local reclaimGrid = {
-                            {engPos[1], 0 ,engPos[3]},
-                            {engPos[1], 0 ,engPos[3] + 15},
-                            {engPos[1] + 15, 0 ,engPos[3] + 15},
-                            {engPos[1] + 15, 0, engPos[3]},
-                            {engPos[1] + 15, 0, engPos[3] - 15},
-                            {engPos[1], 0, engPos[3] - 15},
-                            {engPos[1] - 15, 0, engPos[3] - 15},
-                            {engPos[1] - 15, 0, engPos[3]},
-                            {engPos[1] - 15, 0, engPos[3] + 15},
-                            {engPos[1], 0 ,engPos[3] + 25},
-                            {engPos[1] + 15, 0 ,engPos[3] + 25},
-                            {engPos[1] + 25, 0 ,engPos[3] + 25},
-                            {engPos[1] + 25, 0 ,engPos[3] + 15},
-                            {engPos[1] + 25, 0, engPos[3]},
-                            {engPos[1] + 25, 0, engPos[3] - 15},
-                            {engPos[1] + 25, 0, engPos[3] - 25},
-                            {engPos[1] + 15, 0, engPos[3] - 25},
-                            {engPos[1], 0, engPos[3] - 25},
-                            {engPos[1] - 15, 0, engPos[3] - 25},
-                            {engPos[1] - 25, 0, engPos[3] - 25},
-                            {engPos[1] - 25, 0, engPos[3] - 15},
-                            {engPos[1] - 25, 0, engPos[3]},
-                            {engPos[1] - 25, 0, engPos[3] + 15},
-                            {engPos[1] - 15, 0, engPos[3] + 25},
-                            {engPos[1] - 25, 0, engPos[3] + 25},
-                        }
-                        --LOG('EngineerReclaimGrid '..repr(reclaimGrid))
-                        if reclaimGrid and RNGGETN( reclaimGrid ) > 0 then
-                            --LOG('We are going to try reclaim within the grid')
-                            local reclaimCount = 0
-                            for k, square in reclaimGrid do
-                                local squarePos = {square[1], GetTerrainHeight(square[1], square[3]), square[3]}
-                                if NavUtils.CanPathTo('Amphibious', engPos, squarePos) then
-                                    if square[1] - 8 <= 3 or square[1] + 8 >= ScenarioInfo.size[1] - 3 or square[3] - 8 <= 3 or square[3] + 8 >= ScenarioInfo.size[1] - 3 then
-                                        --LOG('Grid square position outside of map border')
-                                        continue
-                                    end
-                                    --LOG('reclaimGrid square table is '..repr(square))
-                                    local rectDef = Rect(square[1] - 8, square[3] - 8, square[1] + 8, square[3] + 8)
-                                    local reclaimRect = GetReclaimablesInRect(rectDef)
-                                    local engReclaiming = false
-                                    if reclaimRect then
-                                        for c, b in reclaimRect do
-                                            if not IsProp(b) or self.BadReclaimables[b] then continue end
-                                            -- Start Blacklisted Props
-                                            local blacklisted = false
-                                            for _, BlackPos in PropBlacklist do
-                                                if b.CachePosition[1] == BlackPos[1] and b.CachePosition[3] == BlackPos[3] then
-                                                    blacklisted = true
-                                                    break
+                            if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
+                                coroutine.yield(1)
+                                return
+                            end
+                            engPos = self:GetPosition()
+                            -- reclaim grid for a better reclaim position 9 points with 1 being the current engineer position
+                            -- we create a grid of 8 squares around the engineer that it will search after each grid square is reclaim it is removed.
+                            local reclaimGrid = {
+                                {engPos[1], 0 ,engPos[3]},
+                                {engPos[1], 0 ,engPos[3] + 15},
+                                {engPos[1] + 15, 0 ,engPos[3] + 15},
+                                {engPos[1] + 15, 0, engPos[3]},
+                                {engPos[1] + 15, 0, engPos[3] - 15},
+                                {engPos[1], 0, engPos[3] - 15},
+                                {engPos[1] - 15, 0, engPos[3] - 15},
+                                {engPos[1] - 15, 0, engPos[3]},
+                                {engPos[1] - 15, 0, engPos[3] + 15},
+                                {engPos[1], 0 ,engPos[3] + 25},
+                                {engPos[1] + 15, 0 ,engPos[3] + 25},
+                                {engPos[1] + 25, 0 ,engPos[3] + 25},
+                                {engPos[1] + 25, 0 ,engPos[3] + 15},
+                                {engPos[1] + 25, 0, engPos[3]},
+                                {engPos[1] + 25, 0, engPos[3] - 15},
+                                {engPos[1] + 25, 0, engPos[3] - 25},
+                                {engPos[1] + 15, 0, engPos[3] - 25},
+                                {engPos[1], 0, engPos[3] - 25},
+                                {engPos[1] - 15, 0, engPos[3] - 25},
+                                {engPos[1] - 25, 0, engPos[3] - 25},
+                                {engPos[1] - 25, 0, engPos[3] - 15},
+                                {engPos[1] - 25, 0, engPos[3]},
+                                {engPos[1] - 25, 0, engPos[3] + 15},
+                                {engPos[1] - 15, 0, engPos[3] + 25},
+                                {engPos[1] - 25, 0, engPos[3] + 25},
+                            }
+                            --LOG('EngineerReclaimGrid '..repr(reclaimGrid))
+                            if reclaimGrid and RNGGETN( reclaimGrid ) > 0 then
+                                --LOG('We are going to try reclaim within the grid')
+                                local reclaimCount = 0
+                                for k, square in reclaimGrid do
+                                    local squarePos = {square[1], GetTerrainHeight(square[1], square[3]), square[3]}
+                                    if NavUtils.CanPathTo('Amphibious', engPos, squarePos) then
+                                        if square[1] - 8 <= 3 or square[1] + 8 >= ScenarioInfo.size[1] - 3 or square[3] - 8 <= 3 or square[3] + 8 >= ScenarioInfo.size[1] - 3 then
+                                            --LOG('Grid square position outside of map border')
+                                            continue
+                                        end
+                                        --LOG('reclaimGrid square table is '..repr(square))
+                                        local rectDef = Rect(square[1] - 8, square[3] - 8, square[1] + 8, square[3] + 8)
+                                        local reclaimRect = GetReclaimablesInRect(rectDef)
+                                        local engReclaiming = false
+                                        if reclaimRect then
+                                            for c, b in reclaimRect do
+                                                if not IsProp(b) or self.BadReclaimables[b] then continue end
+                                                -- Start Blacklisted Props
+                                                local blacklisted = false
+                                                for _, BlackPos in PropBlacklist do
+                                                    if b.CachePosition[1] == BlackPos[1] and b.CachePosition[3] == BlackPos[3] then
+                                                        blacklisted = true
+                                                        break
+                                                    end
+                                                end
+                                                if blacklisted then continue end
+                                                if b.MaxMassReclaim and b.MaxMassReclaim > 5 then
+                                                    engReclaiming = true
+                                                    reclaimCount = reclaimCount + 1
+                                                    IssueReclaim({self}, b)
                                                 end
                                             end
-                                            if blacklisted then continue end
-                                            if b.MaxMassReclaim and b.MaxMassReclaim > 5 then
-                                                engReclaiming = true
-                                                reclaimCount = reclaimCount + 1
-                                                IssueReclaim({self}, b)
+                                        end
+                                        if engReclaiming then
+                                            local idleCounter = 0
+                                            while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
+                                                coroutine.yield(1)
+                                                if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
+                                                    --RNGLOG('We are not reclaiming or moving in the reclaim loop')
+                                                    --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
+                                                    idleCounter = idleCounter + 1
+                                                    if idleCounter > 10 then
+                                                        --RNGLOG('idleCounter hit, breaking loop')
+                                                        break
+                                                    end
+                                                end
+                                                --RNGLOG('We are reclaiming stuff')
+                                                coroutine.yield(30)
                                             end
                                         end
                                     end
-                                    if engReclaiming then
-                                        local idleCounter = 0
-                                        while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
-                                            coroutine.yield(1)
-                                            if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
-                                                --RNGLOG('We are not reclaiming or moving in the reclaim loop')
-                                                --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
-                                                idleCounter = idleCounter + 1
-                                                if idleCounter > 10 then
-                                                    --RNGLOG('idleCounter hit, breaking loop')
-                                                    break
-                                                end
-                                            end
-                                            --RNGLOG('We are reclaiming stuff')
-                                            coroutine.yield(30)
-                                        end
-                                    end
+                                    MexBuild(platoon, self, aiBrain)
                                 end
-                                MexBuild(platoon, self, aiBrain)
+                                --RNGLOG('reclaim grid loop has finished')
+                                --RNGLOG('Total things that should have be issued reclaim are '..reclaimCount)
                             end
-                            --RNGLOG('reclaim grid loop has finished')
-                            --RNGLOG('Total things that should have be issued reclaim are '..reclaimCount)
                         end
                     end
-                else
-                    --RNGLOG('No valid reclaim options')
                 end
             else
                 --RNGLOG('aiBrain MapReclaimTable does not exist')
