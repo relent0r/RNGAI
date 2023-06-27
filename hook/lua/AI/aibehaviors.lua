@@ -3204,7 +3204,7 @@ function ExpMoveToPosition(aiBrain, platoon, target, unit, ignoreUnits)
         else
             dest=KiteDist(pos,tpos,platoon.MaxWeaponRange+5-math.random(1,3)-mod)
         end
-        if VDist3Sq(pos,dest)>6 then
+        if VDist3Sq(pos,dest)>8 then
             IssueMove({unit},dest)
             coroutine.yield(2)
             return mod
@@ -3267,10 +3267,11 @@ function ExpMoveToPosition(aiBrain, platoon, target, unit, ignoreUnits)
                             local retreatTimeout = 0
                             while unit and not unit.Dead do
                                 if target and not target.Dead then
-                                    if unit.Dead then continue end
+                                    if unit.Dead then return end
                                     if not unit.MaxWeaponRange then
                                         coroutine.yield(3)
                                         WARN('Warning : Experimental has no max weapon range')
+                                        unit.MaxWeaponRange = 20
                                         continue
                                     end
                                     IssueClearCommands({unit})
@@ -3283,11 +3284,11 @@ function ExpMoveToPosition(aiBrain, platoon, target, unit, ignoreUnits)
                                 if retreatTrigger > 5 then
                                     retreatTimeout = retreatTimeout + 1
                                 end
-                                coroutine.yield(30)
+                                coroutine.yield(60)
                                 if target and not target.Dead then
-                                    IssueClearCommands({unit})
+                                    --IssueClearCommands({unit})
                                     IssueMove({unit},target:GetPosition())
-                                    coroutine.yield(50)
+                                    coroutine.yield(40)
                                 end
                                 if retreatTimeout > 3 then
                                     --RNGLOG('platoon stopped chasing unit')
