@@ -39,7 +39,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Small',
-        PlatoonAddBehaviors = {'CommanderBehaviorRNG'},
+        --PlatoonAddBehaviors = {'CommanderBehaviorRNG'},
         PlatoonTemplate = 'CommanderInitializeRNG',
         Priority = 2000,
         PriorityFunction = function(self, aiBrain)
@@ -60,7 +60,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Small',
-        PlatoonAddBehaviors = {'CommanderBehaviorRNG'},
+        --PlatoonAddBehaviors = {'CommanderBehaviorRNG'},
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 2000,
         PriorityFunction = function(self, aiBrain)
@@ -82,6 +82,20 @@ BuilderGroup {
             }
         }
     },
+    Builder {
+        BuilderName = 'RNGAI CDR StateMachine Standard Small',
+        PlatoonTemplate = 'CommanderStateMachineRNG',
+        Priority = 1800,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.COMMAND}},
+        },
+        InstantCheck = true,
+        BuilderType = 'Any',
+        BuilderData = {
+            LocationType = 'LocationType',
+            StateMachine = 'ACU'
+        },
+    },
 }
 
 BuilderGroup {
@@ -89,7 +103,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Large',
-        PlatoonAddBehaviors = {'CommanderBehaviorRNG'},
+        --PlatoonAddBehaviors = {'CommanderBehaviorRNG'},
         PlatoonTemplate = 'CommanderInitializeRNG',
         Priority = 2000,
         PriorityFunction = function(self, aiBrain)
@@ -110,7 +124,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Large',
-        PlatoonAddBehaviors = {'CommanderBehaviorRNG'},
+        --PlatoonAddBehaviors = {'CommanderBehaviorRNG'},
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 2000,
         PriorityFunction = function(self, aiBrain)
@@ -131,6 +145,20 @@ BuilderGroup {
                 },
             }
         }
+    },
+    Builder {
+        BuilderName = 'RNGAI CDR StateMachine Standard Large',
+        PlatoonTemplate = 'CommanderStateMachineRNG',
+        Priority = 1800,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.COMMAND}},
+        },
+        InstantCheck = true,
+        BuilderType = 'Any',
+        BuilderData = {
+            LocationType = 'LocationType',
+            StateMachine = 'ACU'
+        },
     },
 }
 

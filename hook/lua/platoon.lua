@@ -4111,6 +4111,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local factionIndex = aiBrain:GetFactionIndex()
         local platoonUnits = GetPlatoonUnits(self)
         local eng
+        aiBrain:CDRDataThreads(eng)
         for k, v in platoonUnits do
             if not v.Dead and EntityCategoryContains(categories.ENGINEER, v) then
                 IssueClearCommands({v})
@@ -4131,7 +4132,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         baseTmplDefault = import('/lua/BaseTemplates.lua')
         buildingTmplFile = import(self.PlatoonData.Construction.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
         buildingTmpl = buildingTmplFile[('BuildingTemplates')][factionIndex]
-        
         local engPos = eng:GetPosition()
         local massMarkers = RUtils.AIGetMassMarkerLocations(aiBrain, false, false)
         local closeMarkers = 0
@@ -8652,7 +8652,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             --RNGLOG('BaseAlertTable'..repr(aiBrain.BaseMonitor.AlertsTable))
                             -- Backups old ai plan
                             --local cmd = false
-                            local oldPlan = self:GetPlan()
+                            local oldPlan = self.PlanName
                             if self.AiThread then
                                 self.AIThread:Destroy()
                             end
@@ -9494,7 +9494,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         --RNGLOG('Number of units are '..RNGGETN(units))
         local platoonList = aiBrain:GetPlatoonsList()
         for k, platoon in platoonList do
-            if platoon:GetPlan() == destinationPlan and platoon.Location == location then
+            if platoon.PlanName == destinationPlan and platoon.Location == location then
                 --RNGLOG('Setting mergedPlatoon to platoon')
                 mergedPlatoon = platoon
                 break
@@ -9852,7 +9852,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         AlliedPlatoons = aiBrain:GetPlatoonsList()
         local bMergedPlatoons = false
         for _,aPlat in AlliedPlatoons do
-            if aPlat:GetPlan() ~= planName then
+            if aPlat.PlanName ~= planName then
                 continue
             end
             if aPlat == self then
@@ -11655,6 +11655,16 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             self.chpdata.merging=false
         end
+    end,
+
+    StateMachineAIRNG = function(self)
+        local machineType = self.PlatoonData.StateMachine
+
+        if machineType == 'ACU' then
+            LOG('Starting ACU State')
+            import("/mods/rngai/lua/ai/statemachines/platoon-acu.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+        end
+        WaitTicks(50)
     end,
 
 

@@ -19,8 +19,6 @@ local CalculateBrainScore = import("/lua/sim/score.lua").CalculateBrainScore
 local Factions = import('/lua/factions.lua').GetFactions(true)
 
 -- upvalue for performance
-local BrainGetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
-local BrainGetListOfUnits = moho.aibrain_methods.GetListOfUnits
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
 local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
@@ -284,6 +282,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EconomyCurrentTick = 1
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
         self.EconomyOverTimeCurrent = {}
+        self.ACUData = {}
         --self.EconomyOverTimeThread = self:ForkThread(self.EconomyOverTimeRNG)
         self.EngineerAssistManagerActive = false
         self.EngineerAssistManagerEngineerCount = 0
@@ -5940,4 +5939,23 @@ AIBrain = Class(RNGAIBrainClass) {
             unit:AddOnDamagedCallback( AntiAirRetreat, nil, 100)
         end
     end,
+
+    CDRDataThreads = function(self, unit)
+        local ACUFunc = import('/mods/RNGAI/lua/AI/RNGACUFunctions.lua')
+
+        local acuUnits = GetListOfUnits(self, categories.COMMAND, false)
+
+        for _, v in acuUnits do
+            if not IsDestroyed(v) then
+                if  not self.ACUData[v.EntityId] then
+                    self.ACUData[v.EntityId] = {}
+                    self.ACUData[v.EntityId].CDRHealthThread = v:ForkThread(ACUFunc.CDRHealthThread)
+                    self.ACUData[v.EntityId].CDRBrainThread = v:ForkThread(ACUFunc.CDRBrainThread)
+                    self.ACUData[v.EntityId].CDRThreatAssessment = v:ForkThread(ACUFunc.CDRThreatAssessmentRNG)
+                    self.ACUData[v.EntityId].CDRUnit = v
+                end
+            end
+        end
+    end,
+
 }
