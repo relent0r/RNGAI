@@ -5947,6 +5947,9 @@ AIBrain = Class(RNGAIBrainClass) {
 
         for _, v in acuUnits do
             if not IsDestroyed(v) then
+                if not self.CDRUnit or self.CDRUnit.Dead then
+                    self.CDRUnit = v
+                end
                 if  not self.ACUData[v.EntityId] then
                     self.ACUData[v.EntityId] = {}
                     self.ACUData[v.EntityId].CDRHealthThread = v:ForkThread(ACUFunc.CDRHealthThread)
