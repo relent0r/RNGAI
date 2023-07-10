@@ -46,6 +46,11 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
             end
             self.cdr = self:GetPlatoonUnits()[1]
             self.cdr.Active = true
+            if self.PlatoonData.LocationType then
+                self.LocationType = self.PlatoonData.LocationType
+            else
+                self.LocationType = 'MAIN'
+            end
 
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -247,9 +252,9 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
         ---@param self AIPlatoonACUBehavior
         Main = function(self)
             local brain = self:GetBrain()
-            if self.PlatoonData.LocationType then
+            if self.LocationType then
                 local builderData
-                local engManager = brain.BuilderManagers[self.PlatoonData.LocationType].EngineerManager
+                local engManager = brain.BuilderManagers[self.LocationType].EngineerManager
                 local builder = engManager:GetHighestBuilder('Any', {self.cdr})
                 if builder then
                     builderData = builder:GetBuilderData(self.LocationType)
@@ -257,8 +262,12 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     if builderData.Assist then
                         self.BuilderData = builderData
                         self:ChangeState(self.AssistEngineers)
+                        return
+                    elseif builderData.Construction then
+                        self.BuilderData = builderData
+                        self:ChangeState(self.StructureBuild)
+                        return
                     end
-                    coroutine.yield(50)
                 end
             end
             coroutine.yield(10)
@@ -323,6 +332,101 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     end
                 end
             end
+            self.BuilderData = nil
+            coroutine.yield(10)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
+    StructureBuild = State {
+
+        StateName = 'StructureBuild',
+
+        --- The platoon raids the target
+        ---@param self AIPlatoonACUBehavior
+        Main = function(self)
+            local brain = self:GetBrain()
+            local eng = self.cdr
+            if self.BuilderData.Construction then
+                if self.BuilderData.Construction.BuildStructures then
+                    eng.EngineerBuildQueue = {}
+                    local factionIndex = brain:GetFactionIndex()
+                    local templateKey
+                    local baseTmplFile
+                    if factionIndex < 5 then
+                        templateKey = 'ACUBaseTemplate'
+                        baseTmplFile = import(self.BuilderData.Construction.BaseTemplateFile or '/lua/BaseTemplates.lua')
+                    else
+                        templateKey = 'BaseTemplates'
+                        baseTmplFile = import('/lua/BaseTemplates.lua')
+                    end
+                    local buildingTmplFile = import(self.BuilderData.Construction.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
+                    local buildingTmpl = buildingTmplFile[('BuildingTemplates')][factionIndex]
+                    local baseTmpl = baseTmplFile[(self.BuilderData.Construction.BaseTemplate or 'BaseTemplates')][factionIndex]
+                    local buildStructures = self.BuilderData.Construction.BuildStructures
+                    if self.BuilderData.Construction.OrderedTemplate then
+                        local tmpReference = brain:FindPlaceToBuild('T2EnergyProduction', 'uab1201', baseTmplDefault['BaseTemplates'][factionIndex], relative, eng, nil, relativeTo[1], relativeTo[3])
+                        if tmpReference then
+                            reference = eng:CalculateWorldPositionFromRelative(tmpReference)
+                        else
+                            return
+                        end
+                        local baseTmplList = RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference)
+                        for j, template in baseTmplList do
+                            for _, v in buildStructures do
+                                for l,bType in template do
+                                    for m,bString in bType[1] do
+                                        if bString == v then
+                                            for n,position in bType do
+                                                if n > 1 then
+                                                    if brain.CustomUnits and brain.CustomUnits[v] then
+                                                        local faction = RUtils.GetEngineerFactionRNG(eng)
+                                                        buildingTmpl = RUtils.GetTemplateReplacementRNG(brain, v, faction, buildingTmpl)
+                                                    end
+                                                    local whatToBuild = brain:DecideWhatToBuild(eng, v, buildingTmpl)
+                                                    table.insert(eng.EngineerBuildQueue, {whatToBuild, position, false})
+                                                    table.remove(bType,n)
+                                                    return --DoHackyLogic(buildingType, builder)
+                                                else
+                                                    --[[
+                                                    if n > 1 and not aiBrain:CanBuildStructureAt(whatToBuild, BuildToNormalLocation(position)) then
+                                                        RNGLOG('CanBuildStructureAt failed within Ordered Template Build')
+                                                    end]]
+                                                    
+                                                end
+                                            end 
+                                            break
+                                        end 
+                                    end 
+                                end
+                            end
+                        end
+                    else
+                        for _, v in buildStructures do
+                            local buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(brain, buildingTmpl, baseTmplFile[templateKey][factionIndex], v, eng, false, nil, nil, true)
+                            if buildLocation and whatToBuild then
+                                table.insert(eng.EngineerBuildQueue, {whatToBuild, buildLocation, borderWarning})
+                            else
+                                LOG('No buildLocation or whatToBuild for ACU State Machine')
+                            end
+                        end
+                    end
+                    if TableGetn(eng.EngineerBuildQueue) > 0 then
+                        for _, v in eng.EngineerBuildQueue do
+                            if v[3] and v[2] and v[1] then
+                                IssueBuildMobile({eng}, {v[2][1],GetTerrainHeight(v[2][1], v[2][2]),v[2][2]}, v[1], {})
+                            elseif v[2] and v[3] then
+                                aiBrain:BuildStructure(eng, v[1], v[2], false)
+                            end
+                        end
+                        while eng:IsUnitState('Building') or 0 < TableGetn(eng:GetCommandQueue()) do
+                            coroutine.yield(5)
+                        end
+                    end
+                end
+            end
+            self.BuilderData = nil      
             coroutine.yield(10)
             self:ChangeState(self.DecideWhatToDo)
             return

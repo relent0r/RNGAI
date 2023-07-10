@@ -3542,12 +3542,83 @@ AIFindDynamicExpansionPointRNG = function(aiBrain, locationType, radius, threatM
     return false
 end
 
+function GetEngineerFactionRNG(engineer)
+    if EntityCategoryContains(categories.UEF, engineer) then
+        return 'UEF'
+    elseif EntityCategoryContains(categories.AEON, engineer) then
+        return 'Aeon'
+    elseif EntityCategoryContains(categories.CYBRAN, engineer) then
+        return 'Cybran'
+    elseif EntityCategoryContains(categories.SERAPHIM, engineer) then
+        return 'Seraphim'
+    elseif EntityCategoryContains(categories.NOMADS, engineer) then
+        return 'Nomads'
+    else
+        return false
+    end
+end
+
+function GetTemplateReplacementRNG(aiBrain, building, faction, buildingTmpl)
+    local retTemplate = false
+    local templateData = aiBrain.CustomUnits[building]
+    -- check if we have an original building
+    local BuildingExist = nil
+    for k,v in buildingTmpl do
+        if v[1] == building then
+            BuildingExist = true
+            break
+        end
+    end
+    -- If there are Custom Units for this unit type and faction
+    if templateData and templateData[faction] then
+        local rand = Random(1,100)
+        local possibles = {}
+        -- Add all the possibile replacements into a table
+        for k,v in templateData[faction] do
+            if rand <= v[2] or not BuildingExist then
+                table.insert(possibles, v[1])
+            end
+        end
+        -- If we found a possibility
+        if not table.empty(possibles) then
+            rand = Random(1,table.getn(possibles))
+            local customUnitID = possibles[rand]
+            retTemplate = { { building, customUnitID, } }
+        end
+    end
+    return retTemplate
+end
+
+function AIBuildBaseTemplateFromLocationRNG(baseTemplate, location)
+    local baseT = {}
+    if location and baseTemplate then
+        for templateNum, template in baseTemplate do
+            baseT[templateNum] = {}
+            for rowNum,rowData in template do -- rowNum, rowData in template do
+                if type(rowData[1]) == 'number' then
+                    baseT[templateNum][rowNum] = {}
+                    baseT[templateNum][rowNum][1] = math.floor(rowData[1] + location[1]) + 0.5
+                    baseT[templateNum][rowNum][2] = math.floor(rowData[2] + location[3]) + 0.5
+                    baseT[templateNum][rowNum][3] = 0
+                else
+                    baseT[templateNum][rowNum] = template[rowNum]
+                end
+            end
+        end
+    end
+    return baseT
+end
+
 function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit, eng, adjacent, category, radius, relative)
     -- A small note that caught me out.
     -- Always set the engineers position to zero in the build location otherwise youll get buildings are super strange angles
     -- and you wont understand why. I think the 3rd param is actually rotation not height.
     local buildLocation = false
     local borderWarning = false
+    if aiBrain.CustomUnits and aiBrain.CustomUnits[buildUnit] then
+        local faction = GetEngineerFactionRNG(eng)
+        buildingTemplate = GetTemplateReplacementRNG(aiBrain, buildUnit, faction, buildingTemplate)
+    end
     local whatToBuild = aiBrain:DecideWhatToBuild(eng, buildUnit, buildingTemplate)
     local engPos = eng:GetPosition()
     local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
