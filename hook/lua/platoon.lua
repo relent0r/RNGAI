@@ -4758,7 +4758,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 -- check to see if we need to reclaim or capture...
                 RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation, 10)
                     -- check to see if we can repair
-                AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation)
+                RUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation)
                         -- otherwise, go ahead and build the next structure there
                 --RNGLOG('First marker location '..buildLocation[1]..':'..buildLocation[3])
                 if borderWarning then
@@ -4777,7 +4777,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 --RNGLOG(repr(MassMarkerTable))
                                 for _, v in MassMarkerTable do
                                     RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, v.MassSpot.position, 5)
-                                    AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, v.MassSpot.position)
+                                    RUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, v.MassSpot.position)
                                     aiBrain:BuildStructure(eng, whatToBuild, {v.MassSpot.position[1], v.MassSpot.position[3], 0}, buildRelative)
                                     local newEntry = {whatToBuild, {v.MassSpot.position[1], v.MassSpot.position[3], 0}, buildRelative, BorderWarning=v.BorderWarning}
                                     RNGINSERT(eng.EngineerBuildQueue, newEntry)
@@ -10544,7 +10544,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         --RNGLOG('Attempting second mass marker')
                         for _,massMarker in markers do
                             RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
-                            AIUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, massMarker.Position)
+                            RUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, massMarker.Position)
                             --eng:SetCustomName('MexBuild Platoon attempting to build in for loop')
                             if massMarker.BorderWarning then
                                 --RNGLOG('Border Warning on mass point marker')

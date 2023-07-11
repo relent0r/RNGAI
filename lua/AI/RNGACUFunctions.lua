@@ -3,6 +3,7 @@ local RNGINSERT = table.insert
 local RNGSORT = table.sort
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
+local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local CategoryT2Defense = categories.STRUCTURE * categories.DEFENSE * (categories.TECH2 + categories.TECH3)
 
 function SetCDRDefaults(aiBrain, cdr)
@@ -324,6 +325,28 @@ function CDRThreatAssessmentRNG(cdr)
     end
 end
 
+function CDRGunCheck(aiBrain, cdr)
+    local factionIndex = aiBrain:GetFactionIndex()
+    if factionIndex == 1 then
+        if not cdr:HasEnhancement('HeavyAntiMatterCannon') then
+            return true
+        end
+    elseif factionIndex == 2 then
+        if not cdr:HasEnhancement('CrysalisBeam') or not cdr:HasEnhancement('HeatSink') then
+            return true
+        end
+    elseif factionIndex == 3 then
+        if not cdr:HasEnhancement('CoolingUpgrade') then
+            return true
+        end
+    elseif factionIndex == 4 then
+        if not cdr:HasEnhancement('RateOfFire') then
+            return true
+        end
+    end
+    return false
+end
+
 GetStartingReclaim = function(aiBrain)
     --RNGLOG('Reclaim Start Check')
     local startReclaim
@@ -504,4 +527,18 @@ function CDRCallPlatoon(cdr, threatRequired)
         return true
     end
     return false
+end
+
+GetEngineerFactionIndexRNG = function(engineer)
+    if EntityCategoryContains(categories.UEF, engineer) then
+        return 1
+    elseif EntityCategoryContains(categories.AEON, engineer) then
+        return 2
+    elseif EntityCategoryContains(categories.CYBRAN, engineer) then
+        return 3
+    elseif EntityCategoryContains(categories.SERAPHIM, engineer) then
+        return 4
+    else
+        return 5
+    end
 end

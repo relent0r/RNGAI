@@ -11,6 +11,9 @@ EngineerManager = Class(RNGEngineerManager) {
         end
         if finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() and finishedUnit:GetFractionComplete() == 1 then
             if EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit) then
+                if unit.Blueprint.CategoriesHash.COMMAND then
+                    LOG('Adding factory built by acu to location '..self.LocationType)
+                end
                 self.Brain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
             end
             if EntityCategoryContains(categories.MASSEXTRACTION * categories.STRUCTURE, finishedUnit) then

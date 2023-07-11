@@ -1027,7 +1027,7 @@ StructureManager = Class {
             coroutine.yield(2)
             IssueUpgrade({unit}, upgradeID)
             coroutine.yield(10)
-            if not IsDestroyed(unit) then
+            if (not IsDestroyed(unit)) and (not IsDestroyed(unit.UnitBeingBuilt)) then
                 local upgradedFactory = unit.UnitBeingBuilt
                 local fractionComplete = upgradedFactory:GetFractionComplete()
                 unit.Upgrading = true

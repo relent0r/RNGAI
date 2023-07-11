@@ -429,7 +429,7 @@ function CDRBuildFunction(aiBrain, cdr, object)
                     if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then
                         IssueClearCommands({cdr})
                         RUtils.EngineerTryReclaimCaptureArea(aiBrain, cdr, v.Position, 5)
-                        AIUtils.EngineerTryRepair(aiBrain, cdr, v[1], v.Position)
+                        RUtils.EngineerTryRepair(aiBrain, cdr, v[1], v.Position)
                         --RNGLOG('ACU attempting to build in while loop')
                         aiBrain:BuildStructure(cdr, v[1],v[2],v[3])
                         while (cdr.Active and not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr.Active and cdr:IsUnitState('Building')) or (cdr.Active and cdr:IsUnitState("Moving")) do
@@ -549,7 +549,7 @@ function CDRBuildFunction(aiBrain, cdr, object)
                                     if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then
                                         IssueClearCommands({cdr})
                                         RUtils.EngineerTryReclaimCaptureArea(aiBrain, cdr, v.Position, 5)
-                                        AIUtils.EngineerTryRepair(aiBrain, cdr, v[1], v.Position)
+                                        RUtils.EngineerTryRepair(aiBrain, cdr, v[1], v.Position)
                                         --RNGLOG('ACU attempting to build in while loop')
                                         aiBrain:BuildStructure(cdr, v[1],v[2],v[3])
                                         while (cdr.Active and not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr.Active and cdr:IsUnitState('Building')) or (cdr.Active and cdr:IsUnitState("Moving")) do
@@ -617,7 +617,7 @@ function CDRBuildFunction(aiBrain, cdr, object)
                     if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then
                         IssueClearCommands({cdr})
                         RUtils.EngineerTryReclaimCaptureArea(aiBrain, cdr, v.Position, 5)
-                        AIUtils.EngineerTryRepair(aiBrain, cdr, v[1], v.Position)
+                        RUtils.EngineerTryRepair(aiBrain, cdr, v[1], v.Position)
                         --RNGLOG('ACU attempting to build in while loop')
                         aiBrain:BuildStructure(cdr, v[1],v[2],v[3])
                         while (cdr.Active and not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr.Active and cdr:IsUnitState('Building')) or (cdr.Active and cdr:IsUnitState("Moving")) do

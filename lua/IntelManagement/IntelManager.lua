@@ -1497,11 +1497,12 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
     local VDist2Sq = VDist2Sq
     local markerList = {}
     local armyStarts = {}
-    local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
+    local markerTypes = {'Expansion Area', 'Large Expansion Area', 'Blank Marker'}
+    local MarkerUtils = import("/lua/sim/MarkerUtilities.lua")
     local massPointValidated = false
     local myArmy = ScenarioInfo.ArmySetup[aiBrain.Name]
     --RNGLOG('Run ExpansionWatchTable Config')
-
+    
     for i = 1, 16 do
         local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
         local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
@@ -1510,25 +1511,24 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
         end
     end
     --RNGLOG(' Army Starts'..repr(armyStarts))
-
-    if expansionMarkers then
-        --RNGLOG('Initial expansionMarker list is '..repr(expansionMarkers))
-        for k, v in expansionMarkers do
-            local startPosUsed = false
-            if v.type == 'Expansion Area' or v.type == 'Large Expansion Area' or v.type == 'Blank Marker' then
+    for c, t in markerTypes do
+        local markers = MarkerUtils.GetMarkersByType(t)
+        for _, b in markers do
+            if b.type == 'Expansion Area' or b.type == 'Large Expansion Area' or b.type == 'Blank Marker' then
+                local startPosUsed = false
                 for _, p in armyStarts do
-                    if p == v.position then
+                    if p == b.position then
                         --RNGLOG('Position Taken '..repr(v)..' and '..repr(v.position))
                         startPosUsed = true
                         break
                     end
                 end
                 if not startPosUsed then
-                    if v.MassSpotsInRange then
+                    if b.Extractors then
                         massPointValidated = true
-                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = v.MassSpotsInRange, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false, Zone = false, Radar = false})
+                        table.insert(markerList, {Name = b.Name, Position = b.position, Type = b.type, TimeStamp = 0, MassPoints = RNGGETN(b.Extractors), Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false, Zone = false, Radar = false})
                     else
-                        table.insert(markerList, {Name = k, Position = v.position, Type = v.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false, Zone = false, Radar = false})
+                        table.insert(markerList, {Name = b.Name, Position = b.position, Type = b.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false, Zone = false, Radar = false})
                     end
                 end
             end
@@ -1541,7 +1541,6 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
     local startX, startZ = aiBrain:GetArmyStartPos()
     table.sort(markerList,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],startX, startZ)>VDist2Sq(b.Position[1],b.Position[3],startX, startZ) end)
     aiBrain.BrainIntel.ExpansionWatchTable = markerList
-    --RNGLOG('ExpansionWatchTable is '..repr(markerList))
 end
 
 ExpansionIntelScanRNG = function(aiBrain)
@@ -1773,10 +1772,10 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
         for k, expansion in aiBrain.BrainIntel.ExpansionWatchTable do
             if expansion.Zone == label then
                 local expansionDistance = VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3])
-                --RNGLOG('Distance to expansion '..expansionDistance)
-                --RNGLOG('Expansion position is '..repr(expansion.Position))
+                RNGLOG('Distance to expansion '..expansionDistance)
+                RNGLOG('Expansion position is '..repr(expansion.Position))
                 -- Check if this expansion has been staged already in the last 30 seconds unless there is land threat present
-                --RNGLOG('Expansion last visited timestamp is '..expansion.TimeStamp)
+                RNGLOG('Expansion last visited timestamp is '..expansion.TimeStamp)
                 if currentGameTime - expansion.TimeStamp > 45 or expansion.Land > 0 or type == 'acu' then
                     if expansionDistance < radius * radius then
                        --RNGLOG('Expansion Zone is within radius')

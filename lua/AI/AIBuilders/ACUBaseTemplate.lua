@@ -9,7 +9,8 @@ ACUBaseTemplate =
             'T1AirFactory',
             'T1SeaFactory',
             'T1Resource',
-            'T1EnergyProduction'
+            'T1EnergyProduction',
+            'T2EnergyProduction'
             },
             { -29, -30, 0 },
             { -29, -28, 0 },
