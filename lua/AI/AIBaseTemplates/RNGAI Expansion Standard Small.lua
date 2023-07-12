@@ -8,6 +8,9 @@
 BaseBuilderTemplate {
     BaseTemplateName = 'RNGAI Expansion Standard Small',
     Builders = {       
+                -- ACU Builders --
+                'RNGAI ACU Build Assist',
+                
                 -- Intel Builders --
                 'RNGAI RadarBuilders Expansion',
                 'RNGAI RadarUpgrade T1 Expansion',

@@ -1,9 +1,21 @@
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
 local RNGSORT = table.sort
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
+local NavUtils = import("/lua/sim/navutils.lua")
+local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
+local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
+local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
+local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
+local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
+local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
+local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
+local PlatoonExists = moho.aibrain_methods.PlatoonExists
+local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 local CategoryT2Defense = categories.STRUCTURE * categories.DEFENSE * (categories.TECH2 + categories.TECH3)
 
 function SetCDRDefaults(aiBrain, cdr)
@@ -310,7 +322,7 @@ function CDRThreatAssessmentRNG(cdr)
             enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + enemyUnitThreat
             cdr.Confidence = friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier
             if aiBrain.RNGEXP then
-                cdr.MaxBaseRange = 60
+                cdr.MaxBaseRange = 80
             else
                 if ScenarioInfo.Options.AICDRCombat == 'cdrcombatOff' then
                     --RNGLOG('cdrcombat is off setting max radius to 60')
@@ -319,6 +331,7 @@ function CDRThreatAssessmentRNG(cdr)
                     cdr.MaxBaseRange = math.max(120, cdr.DefaultRange * cdr.Confidence)
                 end
             end
+            aiBrain.ACUSupport.ACUMaxSearchRadius = cdr.MaxBaseRange
            --RNGLOG('Current CDR Max Base Range '..cdr.MaxBaseRange)
         end
         coroutine.yield(20)
@@ -341,6 +354,28 @@ function CDRGunCheck(aiBrain, cdr)
         end
     elseif factionIndex == 4 then
         if not cdr:HasEnhancement('RateOfFire') then
+            return true
+        end
+    end
+    return false
+end
+
+function CDRHpUpgradeCheck(aiBrain, cdr)
+    local factionIndex = aiBrain:GetFactionIndex()
+    if factionIndex == 1 then
+        if not cdr:HasEnhancement('DamageStabilization') then
+            return true
+        end
+    elseif factionIndex == 2 then
+        if not cdr:HasEnhancement('Shield') then
+            return true
+        end
+    elseif factionIndex == 3 then
+        if not cdr:HasEnhancement('StealthGenerator') then
+            return true
+        end
+    elseif factionIndex == 4 then
+        if not cdr:HasEnhancement('DamageStabilization') then
             return true
         end
     end
@@ -541,4 +576,223 @@ GetEngineerFactionIndexRNG = function(engineer)
     else
         return 5
     end
+end
+
+DrawCirclePoints = function(points, radius, center)
+    local extractorPoints = {}
+    local slice = 2 * math.pi / points
+    for i=1, points do
+        local angle = slice * i
+        local newX = center[1] + radius * math.cos(angle)
+        local newY = center[3] + radius * math.sin(angle)
+        table.insert(extractorPoints, { newX, 0 , newY})
+    end
+    return extractorPoints
+end
+
+CheckRetreat = function(pos1,pos2,target)
+    local vel = {}
+    vel[1], vel[2], vel[3]=target:GetVelocity()
+    --RNGLOG('vel is '..repr(vel))
+    --RNGLOG(repr(pos1))
+    --RNGLOG(repr(pos2))
+    local dotp=0
+    for i,k in pos2 do
+        if type(k)~='number' then continue end
+        dotp=dotp+(pos1[i]-k)*vel[i]
+    end
+    return dotp<0
+end
+
+function CDRGetUnitClump(aiBrain, cdrPos, radius)
+    -- Will attempt to get a unit clump rather than single unit targets for OC
+    local unitList = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE + categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, cdrPos, radius, 'Enemy')
+    --RNGLOG('Check for unit clump')
+    for k, v in unitList do
+        if v and not v.Dead then
+            if v.Blueprint.CategoriesHash.STRUCTURE and v.Blueprint.CategoriesHash.DEFENSE and v.Blueprint.CategoriesHash.DIRECTFIRE then
+                return true, v
+            end
+            local unitPos = v:GetPosition()
+            local unitCount = GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE + categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER, unitPos, 2.5, 'Enemy')
+            if unitCount > 1 then
+                --RNGLOG('Multiple Units found')
+                return true, v
+            end
+        end
+    end
+    return false
+end
+
+function SetAcuSnipeMode(unit, bool)
+    local targetPriorities = {}
+    --RNGLOG('Set ACU weapon priorities.')
+    if bool then
+       targetPriorities = {
+                categories.COMMAND,
+                categories.MOBILE * categories.EXPERIMENTAL,
+                categories.MOBILE * categories.TECH3,
+                categories.MOBILE * categories.TECH2,
+                categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE,
+                (categories.STRUCTURE * categories.DEFENSE - categories.ANTIMISSILE),
+                categories.MOBILE * categories.TECH1,
+                (categories.ALLUNITS - categories.SPECIALLOWPRI),
+            }
+        --RNGLOG('Setting to snipe mode')
+    else
+       targetPriorities = {
+                categories.MOBILE * categories.EXPERIMENTAL,
+                categories.MOBILE * categories.TECH3,
+                categories.MOBILE * categories.TECH2,
+                categories.MOBILE * categories.TECH1,
+                categories.COMMAND,
+                (categories.STRUCTURE * categories.DEFENSE - categories.ANTIMISSILE),
+                (categories.ALLUNITS - categories.SPECIALLOWPRI),
+            }
+        --RNGLOG('Setting to default weapon mode')
+    end
+    for i = 1, unit:GetWeaponCount() do
+        local wep = unit:GetWeapon(i)
+        wep:SetWeaponPriorities(targetPriorities)
+    end
+end
+
+ZoneUpdate = function(platoon)
+    local aiBrain = platoon:GetBrain()
+    local function SetZone(pos, zoneIndex)
+        --RNGLOG('Set zone with the following params position '..repr(pos)..' zoneIndex '..zoneIndex)
+        if not pos then
+            --RNGLOG('No Pos in Zone Update function')
+            return false
+        end
+        local zoneID = MAP:GetZoneID(pos,zoneIndex)
+        -- zoneID <= 0 => not in a zone
+        if zoneID > 0 then
+            platoon.Zone = zoneID
+        else
+            local searchPoints = RUtils.DrawCirclePoints(4, 5, pos)
+            for k, v in searchPoints do
+                zoneID = MAP:GetZoneID(v,zoneIndex)
+                if zoneID > 0 then
+                    --RNGLOG('We found a zone when we couldnt before '..zoneID)
+                    platoon.Zone = zoneID
+                    break
+                end
+            end
+        end
+    end
+    if not platoon.MovementLayer then
+        AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
+    end
+    while aiBrain:PlatoonExists(platoon) do
+        if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
+            SetZone(GetPlatoonPosition(platoon), aiBrain.Zones.Land.index)
+        elseif platoon.MovementLayer == 'Water' then
+            --SetZone(PlatoonPosition, aiBrain.Zones.Water.index)
+        end
+        platoon:GetPlatoonRatios()
+        WaitTicks(30)
+    end
+end
+
+EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
+
+    local BuildRate = cdr:GetBuildRate()
+    local priorityUpgrade = false
+    local priorityUpgrades = {
+        'HeavyAntiMatterCannon',
+        'HeatSink',
+        'CrysalisBeam',
+        'CoolingUpgrade',
+        'RateOfFire',
+        'DamageStabilization',
+        'StealthGenerator',
+        'Shield'
+    }
+    if not enhancement.BuildTime then
+        WARN('* RNGAI: EcoGoodForUpgrade: Enhancement has no buildtime: '..repr(enhancement))
+    end
+    --RNGLOG('Enhancement EcoCheck for '..enhancementName)
+    for k, v in priorityUpgrades do
+        if enhancementName == v then
+            priorityUpgrade = true
+            --RNGLOG('Priority Upgrade is true')
+            break
+        end
+    end
+    --RNGLOG('* RNGAI: cdr:GetBuildRate() '..BuildRate..'')
+    local drainMass = (BuildRate / enhancement.BuildTime) * enhancement.BuildCostMass
+    local drainEnergy = (BuildRate / enhancement.BuildTime) * enhancement.BuildCostEnergy
+    --RNGLOG('* RNGAI: drain: m'..drainMass..'  e'..drainEnergy..'')
+    --RNGLOG('* RNGAI: Pump: m'..math.floor(aiBrain:GetEconomyTrend('MASS')*10)..'  e'..math.floor(aiBrain:GetEconomyTrend('ENERGY')*10)..'')
+    if priorityUpgrade and cdr.GunUpgradeRequired and not aiBrain.RNGEXP then
+        if (GetGameTimeSeconds() < 1500) and (GetEconomyIncome(aiBrain, 'ENERGY') > 40)
+         and (GetEconomyIncome(aiBrain, 'MASS') > 1.0) then
+            --RNGLOG('* RNGAI: Gun Upgrade Eco Check True')
+            return true
+        end
+    elseif priorityUpgrade and cdr.HighThreatUpgradeRequired and not aiBrain.RNGEXP then
+        if (GetGameTimeSeconds() < 1500) and (GetEconomyIncome(aiBrain, 'ENERGY') > 60)
+         and (GetEconomyIncome(aiBrain, 'MASS') > 1.0) then
+            --RNGLOG('* RNGAI: Gun Upgrade Eco Check True')
+            return true
+        end
+    elseif aiBrain.EconomyOverTimeCurrent.MassTrendOverTime*10 >= (drainMass * 1.2) and aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime*10 >= (drainEnergy * 1.2)
+    and GetEconomyStoredRatio(aiBrain, 'MASS') > 0.05 and GetEconomyStoredRatio(aiBrain, 'ENERGY') > 0.95 then
+        return true
+    end
+    --RNGLOG('* RNGAI: Upgrade Eco Check False')
+    return false
+end
+
+CanBuildOnCloseMass = function(aiBrain, engPos, distance)
+    distance = distance * distance
+    local adaptiveResourceMarkers = GetMarkersRNG()
+    local MassMarker = {}
+    for _, v in adaptiveResourceMarkers do
+        if v.type == 'Mass' then
+            local mexBorderWarn = false
+            if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
+                mexBorderWarn = true
+            end 
+            local mexDistance = VDist2Sq( v.position[1],v.position[3], engPos[1], engPos[3] )
+            if mexDistance < distance and CanBuildStructureAt(aiBrain, 'ueb1103', v.position) then
+                table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v, BorderWarning = mexBorderWarn})
+            end
+        end
+    end
+    table.sort(MassMarker, function(a,b) return a.Distance < b.Distance end)
+    if table.getn(MassMarker) > 0 then
+        return true, MassMarker
+    else
+        return false
+    end
+end
+
+GetClosestBase = function(aiBrain, cdr)
+    local closestBase
+    local closestBaseDistance
+    local distanceToHome = VDist3Sq(cdr.CDRHome, cdr.Position)
+    if aiBrain.BuilderManagers then
+        for baseName, base in aiBrain.BuilderManagers do
+        --RNGLOG('Base Name '..baseName)
+        --RNGLOG('Base Position '..repr(base.Position))
+        --RNGLOG('Base Distance '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
+            if RNGGETN(base.FactoryManager.FactoryList) > 0 then
+                --RNGLOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
+                local baseDistance = VDist3Sq(cdr.Position, base.Position)
+                local homeDistance = VDist3Sq(cdr.CDRHome, base.Position)
+                if homeDistance < distanceToHome and baseDistance > 1225 or (cdr.GunUpgradeRequired and not cdr.Caution) or (cdr.HighThreatUpgradeRequired and not cdr.Caution) or baseName == 'MAIN' then
+                    if not closestBaseDistance then
+                        closestBaseDistance = baseDistance
+                    end
+                    if baseDistance <= closestBaseDistance then
+                        closestBase = baseName
+                        closestBaseDistance = baseDistance
+                    end
+                end
+            end
+        end
+    end
+    return closestBase
 end

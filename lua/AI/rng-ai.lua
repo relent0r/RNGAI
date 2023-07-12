@@ -2923,7 +2923,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local distance
 
         
-        if self.CDRUnit.Caution and VDist2(self.CDRUnit.Position[1], self.CDRUnit.Position[3], position[1], position[3]) < radius
+        if not IsDestroyed(self.CDRUnit) and self.CDRUnit.Caution and VDist2(self.CDRUnit.Position[1], self.CDRUnit.Position[3], position[1], position[3]) < radius
             and self.CDRUnit.CurrentEnemyThreat * 1.3 > self.CDRUnit.CurrentFriendlyThreat then
             -- Commander scared and nearby; help it
             return self.CDRUnit.Position
