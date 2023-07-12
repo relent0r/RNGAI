@@ -11,6 +11,7 @@ local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
+local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 
 -- upvalue scope for performance
@@ -983,7 +984,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         RNGINSERT(cdr.EngineerBuildQueue, newEntry)
                     end
                 end
-                --LOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
+                LOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
                 if RNGGETN(cdr.EngineerBuildQueue) > 0 then
                     for k,v in cdr.EngineerBuildQueue do
                         --LOG('Attempt to build queue item of '..repr(v))
@@ -1021,14 +1022,14 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
-                --LOG('Mass markers should be built unless they are already taken')
+                LOG('Mass markers should be built unless they are already taken')
                 cdr.EngineerBuildQueue={}
                 if object.Expansion.MassPoints > 1 then
-                    --RNGLOG('ACU Object has more than 1 mass points and is called '..object.Expansion.Name)
+                    LOG('ACU Object has more than 1 mass points and is called '..object.Expansion.Name)
                     local alreadyHaveExpansion = false
                     for k, manager in brain.BuilderManagers do
                     --RNGLOG('Checking through expansion '..k)
-                        if manager.FactoryManager.LocationActive and next(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
+                        if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and next(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
                         --RNGLOG('We already have an expansion with a factory')
                             alreadyHaveExpansion = true
                             break
