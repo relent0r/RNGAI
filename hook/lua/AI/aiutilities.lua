@@ -102,12 +102,9 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
         end
 
         -- Skip the last move... we want to return and do a build
-        --RNGLOG('run SendPlatoonWithTransportsNoCheck')
         unit.WaitingForTransport = true
         bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, unit.PlatoonHandle, destination, 2, true)
-        --bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, unit.PlatoonHandle, destination, T1EngOnly, needTransports, true, false)
         unit.WaitingForTransport = false
-        --RNGLOG('finish SendPlatoonWithTransportsNoCheck')
 
         if bUsedTransports then
             return true
@@ -294,12 +291,9 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
         end
 
         -- Skip the last move... we want to return and do a build
-        --RNGLOG('run SendPlatoonWithTransportsNoCheck')
         eng.WaitingForTransport = true
         bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, eng.PlatoonHandle, destination, 2, true)
-        --bUsedTransports = AIAttackUtils.SendPlatoonWithTransportsNoCheckRNG(aiBrain, eng.PlatoonHandle, destination, T1EngOnly, needTransports, true, false)
         eng.WaitingForTransport = false
-        --RNGLOG('finish SendPlatoonWithTransportsNoCheck')
 
         if bUsedTransports then
             return true

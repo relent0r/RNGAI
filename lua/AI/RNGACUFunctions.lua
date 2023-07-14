@@ -276,19 +276,19 @@ function CDRThreatAssessmentRNG(cdr)
            --RNGLOG('Current CDR Confidence '..cdr.Confidence)
            --RNGLOG('Enemy Bomber threat '..cdr.CurrentEnemyAirThreat)
            --RNGLOG('Friendly AA threat '..cdr.CurrentFriendlyAntiAirThreat)
-            if enemyACUPresent and not cdr.SuicideMode and enemyUnitThreatInner > 30 and enemyUnitThreatInner > friendlyUnitThreatInner and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
+            if enemyACUPresent and not cdr.SuicideMode and enemyUnitThreatInner > 30 and enemyUnitThreatInner > friendlyUnitThreatInner then
                 --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitInner > friendlyUnitInner')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreatInnerACU'
-            elseif enemyACUPresent and not cdr.SuicideMode and enemyUnitThreat > 30 and enemyUnitThreat * 0.8 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
+            elseif enemyACUPresent and not cdr.SuicideMode and enemyUnitThreat > 30 and enemyUnitThreat * 0.8 > friendlyUnitThreat then
                 --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnit * 0.8 > friendlyUnit')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreatACU'
-            elseif not cdr.SuicideMode and enemyUnitThreatInner > 45 and enemyUnitThreatInner > friendlyUnitThreatInner and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
+            elseif not cdr.SuicideMode and enemyUnitThreatInner > 45 and enemyUnitThreatInner > friendlyUnitThreatInner then
                 --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitThreatInner > friendlyUnitThreatInner')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreatInner'
-            elseif not cdr.SuicideMode and enemyUnitThreat > 45 and enemyUnitThreat * 0.8 > friendlyUnitThreat and VDist3Sq(cdr.CDRHome, cdr.Position) > 1600 then
+            elseif not cdr.SuicideMode and enemyUnitThreat > 45 and enemyUnitThreat * 0.8 > friendlyUnitThreat then
                --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreat'
@@ -726,14 +726,12 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
     --RNGLOG('* RNGAI: drain: m'..drainMass..'  e'..drainEnergy..'')
     --RNGLOG('* RNGAI: Pump: m'..math.floor(aiBrain:GetEconomyTrend('MASS')*10)..'  e'..math.floor(aiBrain:GetEconomyTrend('ENERGY')*10)..'')
     if priorityUpgrade and cdr.GunUpgradeRequired and not aiBrain.RNGEXP then
-        if (GetGameTimeSeconds() < 1500) and (GetEconomyIncome(aiBrain, 'ENERGY') > 40)
-         and (GetEconomyIncome(aiBrain, 'MASS') > 1.0) then
+        if (GetEconomyIncome(aiBrain, 'ENERGY') > 40) and (GetEconomyIncome(aiBrain, 'MASS') > 1.0) then
             --RNGLOG('* RNGAI: Gun Upgrade Eco Check True')
             return true
         end
     elseif priorityUpgrade and cdr.HighThreatUpgradeRequired and not aiBrain.RNGEXP then
-        if (GetGameTimeSeconds() < 1500) and (GetEconomyIncome(aiBrain, 'ENERGY') > 60)
-         and (GetEconomyIncome(aiBrain, 'MASS') > 1.0) then
+        if (GetEconomyIncome(aiBrain, 'ENERGY') > 60) and (GetEconomyIncome(aiBrain, 'MASS') > 1.0) then
             --RNGLOG('* RNGAI: Gun Upgrade Eco Check True')
             return true
         end

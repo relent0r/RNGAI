@@ -535,6 +535,71 @@ BuilderGroup {
 }
 
 BuilderGroup {
+    BuilderGroupName = 'RNGAI Mass Storage Builder Expansion',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNG T1 Mass Adjacency Engineer Expansion',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 925,
+        DelayEqualBuildPlattons = {'MassStorage', 5},
+        InstanceCount = 2,
+        BuilderConditions = {
+            -- { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
+            { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            Construction = {
+                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
+                AdjacencyDistance = 100,
+                BuildClose = false,
+                ThreatMin = -3,
+                ThreatMax = 0,
+                ThreatRings = 0,
+                BuildStructures = {
+                    'MassStorage',
+                }
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG T1 Mass Adjacency Engineer Distant Expansion',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 400,
+        DelayEqualBuildPlattons = {'MassStorage', 5},
+        InstanceCount = 2,
+        BuilderConditions = {
+            -- { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
+            { MABC, 'MassMarkerLessThanDistanceRNG',  { 500 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 500, 'ueb1106' } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            Construction = {
+                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
+                AdjacencyDistance = 500,
+                BuildClose = false,
+                ThreatMin = -3,
+                ThreatMax = 0,
+                ThreatRings = 0,
+                BuildStructures = {
+                    'MassStorage',
+                }
+            }
+        }
+    },
+}
+
+BuilderGroup {
     BuilderGroupName = 'RNGEXP Crazyrush Builder',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'EngineerBuilder',
     Builder {

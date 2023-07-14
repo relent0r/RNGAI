@@ -103,6 +103,18 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                 end
             end
             if cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired then
+                if cdr.GunUpgradeRequired then
+                    LOG('ACU wants gun upgrade')
+                    if cdr:HasEnhancement('HeavyAntiMatterCannon') then
+                        LOG('But we already have it')
+                    end
+                end
+                if cdr.HighThreatUpgradeRequired then
+                    LOG('ACU wants health upgrade')
+                    if cdr:HasEnhancement('DamageStabilization') then
+                        LOG('But we already have it')
+                    end
+                end
                 local inRange = false
                 local highThreat = false
                 --RNGLOG('Enhancement Thread run at '..gameTime)
@@ -417,7 +429,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         IssueGuard({eng}, eng.UnitBeingAssist)
                         coroutine.yield(30)
                         while eng and not eng.Dead and not eng:IsIdleState() do
-                            if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
+                            if eng.Caution or not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
                                 break
                             end
                             -- stop if our target is finished
@@ -680,12 +692,14 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             cdr.SuicideMode = true
                             snipeAttempt = true
                             local gameTime = GetGameTimeSeconds()
-                            local index = target:Getbrain():GetArmyIndex()
-                            if not brain.TacticalMonitor.TacticalMissions.ACUSnipe[index] then
-                                brain.TacticalMonitor.TacticalMissions.ACUSnipe[index] = {}
+                            if not IsDestroyed(target) then
+                                local index = target:Getbrain():GetArmyIndex()
+                                if not brain.TacticalMonitor.TacticalMissions.ACUSnipe[index] then
+                                    brain.TacticalMonitor.TacticalMissions.ACUSnipe[index] = {}
+                                end
+                                brain.TacticalMonitor.TacticalMissions.ACUSnipe[index]['AIR'] = { GameTime = GetGameTimeSeconds(), CountRequired = 4 }
+                                brain.TacticalMonitor.TacticalMissions.ACUSnipe[index]['LAND'] = { GameTime = GetGameTimeSeconds(), CountRequired = 4 }
                             end
-                            brain.TacticalMonitor.TacticalMissions.ACUSnipe[index]['AIR'] = { GameTime = GetGameTimeSeconds(), CountRequired = 4 }
-                            brain.TacticalMonitor.TacticalMissions.ACUSnipe[index]['LAND'] = { GameTime = GetGameTimeSeconds(), CountRequired = 4 }
                         elseif cdr.SnipeMode then
                             --RNGLOG('Target is not acu, setting default target priorities')
                             ACUFunc.SetAcuSnipeMode(cdr, false)
@@ -1171,17 +1185,18 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
             local cdrPos = cdr:GetPosition()
             
             local loc = cdr.CDRHome
-            local upgradeMode = false
+            local upgradeMode = 'Combat'
             if gameTime < 1500 and not brain.RNGEXP then
                 upgradeMode = 'Combat'
-            else
+            elseif (not cdr.GunUpgradeRequired) and (not cdr.HighThreatUpgradeRequired) or brain.RNGEXP then
                 upgradeMode = 'Engineering'
             end
 
             if cdr:IsIdleState() or cdr.GunUpgradeRequired  or cdr.HighThreatUpgradeRequired then
-                --RNGLOG('ACU within base range for enhancements')
+                RNGLOG('ACU within base range for enhancements')
                 if (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95) or cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired then
-                    --RNGLOG('Economy good for ACU upgrade')
+                    RNGLOG('Economy good for ACU upgrade')
+                    LOG('Upgrade mode is '..upgradeMode)
                     cdr.GoingHome = false
                     cdr.Combat = false
                     cdr.Upgrading = false
@@ -1252,7 +1267,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             -- Do we have already a enhancment in this slot ?
                             if unitEnhancements[tempEnhanceBp.Slot] and unitEnhancements[tempEnhanceBp.Slot] ~= tempEnhanceBp.Prerequisite then
                                 -- remove the enhancement
-                                --RNGLOG('* RNGAI: * Found enhancement ['..unitEnhancements[tempEnhanceBp.Slot]..'] in Slot ['..tempEnhanceBp.Slot..']. - Removing...')
+                                RNGLOG('* RNGAI: * Found enhancement ['..unitEnhancements[tempEnhanceBp.Slot]..'] in Slot ['..tempEnhanceBp.Slot..']. - Removing...')
                                 local order = { TaskName = "EnhanceTask", Enhancement = unitEnhancements[tempEnhanceBp.Slot]..'Remove' }
                                 IssueScript({cdr}, order)
                                 if tempEnhanceBp.Prerequisite then
@@ -1284,7 +1299,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                                 --RNGLOG('cdr.Upgrading is set to true')
                             end
                             if cdr.HealthPercent < 0.40 and eta > 3 and cdr.CurrentEnemyThreat > 10 then
-                                --RNGLOG('* RNGAI: * BuildEnhancementRNG: '..brain:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
+                                RNGLOG('* RNGAI: * BuildEnhancementRNG: '..brain:GetBrain().Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
                                 IssueStop({cdr})
                                 IssueClearCommands({cdr})
                                 cdr.Upgrading = false
