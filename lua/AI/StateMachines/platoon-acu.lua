@@ -102,7 +102,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     self.BuilderData = {}
                 end
             end
-            if cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired then
+            if (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) and GetEconomyIncome(brain, 'ENERGY') > 40 then
                 if cdr.GunUpgradeRequired then
                     LOG('ACU wants gun upgrade')
                     if cdr:HasEnhancement('HeavyAntiMatterCannon') then
@@ -271,6 +271,11 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         end
                     end
                 end
+            end
+            if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 then
+                LOG('ACU is beyond maxRadius of 80 and wants an engineering task')
+                self:ChangeState(self.Retreating)
+                return
             end
             self:ChangeState(self.EngineerTask)
             return
@@ -686,19 +691,19 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             end
                         elseif enemyACUHealth < 7000 and cdr.Health - enemyACUHealth > 3250 and not RUtils.PositionInWater(targetPos) and defenseThreat < 45 then
                             --RNGLOG('Enemy ACU could be killed or drawn, should we try?')
-                            ACUFunc.SetAcuSnipeMode(cdr, true)
-                            cdr:SetAutoOvercharge(true)
-                            cdr.SnipeMode = true
-                            cdr.SuicideMode = true
-                            snipeAttempt = true
-                            local gameTime = GetGameTimeSeconds()
-                            if not IsDestroyed(target) then
-                                local index = target:Getbrain():GetArmyIndex()
+                            if target and not IsDestroyed(target) then
+                                ACUFunc.SetAcuSnipeMode(cdr, true)
+                                cdr:SetAutoOvercharge(true)
+                                cdr.SnipeMode = true
+                                cdr.SuicideMode = true
+                                snipeAttempt = true
+                                local gameTime = GetGameTimeSeconds()
+                                local index = target:GetAIBrain():GetArmyIndex()
                                 if not brain.TacticalMonitor.TacticalMissions.ACUSnipe[index] then
                                     brain.TacticalMonitor.TacticalMissions.ACUSnipe[index] = {}
                                 end
-                                brain.TacticalMonitor.TacticalMissions.ACUSnipe[index]['AIR'] = { GameTime = GetGameTimeSeconds(), CountRequired = 4 }
-                                brain.TacticalMonitor.TacticalMissions.ACUSnipe[index]['LAND'] = { GameTime = GetGameTimeSeconds(), CountRequired = 4 }
+                                brain.TacticalMonitor.TacticalMissions.ACUSnipe[index]['AIR'] = { GameTime = gameTime, CountRequired = 4 }
+                                brain.TacticalMonitor.TacticalMissions.ACUSnipe[index]['LAND'] = { GameTime = gameTime, CountRequired = 4 }
                             end
                         elseif cdr.SnipeMode then
                             --RNGLOG('Target is not acu, setting default target priorities')
@@ -1182,9 +1187,6 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                 self:ChangeState(self.DecideWhatToDo)
             end
             
-            local cdrPos = cdr:GetPosition()
-            
-            local loc = cdr.CDRHome
             local upgradeMode = 'Combat'
             if gameTime < 1500 and not brain.RNGEXP then
                 upgradeMode = 'Combat'
@@ -1193,10 +1195,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
             end
 
             if cdr:IsIdleState() or cdr.GunUpgradeRequired  or cdr.HighThreatUpgradeRequired then
-                RNGLOG('ACU within base range for enhancements')
                 if (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95) or cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired then
-                    RNGLOG('Economy good for ACU upgrade')
-                    LOG('Upgrade mode is '..upgradeMode)
                     cdr.GoingHome = false
                     cdr.Combat = false
                     cdr.Upgrading = false

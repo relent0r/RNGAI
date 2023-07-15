@@ -1788,7 +1788,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                                    --RNGLOG('Threat at location too high for easy building')
                                     continue
                                 end
-                                if type == 'acu' and GetNumUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, expansion.Position, 30, 'Ally') >= expansion.MassPoints then
+                                if type == 'acu' and GetNumUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, expansion.Position, 30, 'Ally') >= (expansion.MassPoints / 2) then
                                    --RNGLOG('ACU Location has enough masspoints to indicate its already taken')
                                     continue
                                 end

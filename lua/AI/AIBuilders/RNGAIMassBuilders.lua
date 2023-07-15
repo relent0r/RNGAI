@@ -435,6 +435,7 @@ BuilderGroup {
             Construction = {
                 AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 100,
+                AdjRequired = true,
                 BuildClose = false,
                 ThreatMin = -3,
                 ThreatMax = 0,
@@ -465,6 +466,7 @@ BuilderGroup {
             Construction = {
                 AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 100,
+                AdjRequired = true,
                 BuildClose = false,
                 ThreatMin = -3,
                 ThreatMax = 5,
@@ -495,6 +497,7 @@ BuilderGroup {
             Construction = {
                 AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 500,
+                AdjRequired = true,
                 BuildClose = false,
                 ThreatMin = -3,
                 ThreatMax = 0,
@@ -522,6 +525,7 @@ BuilderGroup {
             Construction = {
                 AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 100,
+                AdjRequired = true,
                 BuildClose = false,
                 ThreatMin = -3,
                 ThreatMax = 0,
@@ -557,6 +561,7 @@ BuilderGroup {
             Construction = {
                 AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 100,
+                AdjRequired = true,
                 BuildClose = false,
                 ThreatMin = -3,
                 ThreatMax = 0,
@@ -587,6 +592,7 @@ BuilderGroup {
             Construction = {
                 AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
                 AdjacencyDistance = 500,
+                AdjRequired = true,
                 BuildClose = false,
                 ThreatMin = -3,
                 ThreatMax = 0,

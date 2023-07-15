@@ -5843,21 +5843,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         self:SetPrioritizedTargetList('Attack', categoryList)
 
-        if self.MovementLayer == 'Land' and not self.PlatoonData.EarlyRaid then
-            local stageExpansion = IntelManagerRNG.QueryExpansionTable(aiBrain, platLoc, math.min(BaseMilitaryArea, 250), self.MovementLayer, 10, 'raid')
-            if stageExpansion then
-                --RNGLOG('Stage Position key returned for '..stageExpansion.Key..' Name is '..stageExpansion.Expansion.Name)
-                platLoc = GetPlatoonPosition(self) or nil
-                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platLoc, stageExpansion.Expansion.Position, 10 , maxPathDistance)
-                if path then
-                    --RNGLOG('Found path to expansion, moving to position')
-                    self:PlatoonMoveWithMicro(aiBrain, path, false)
-                    aiBrain.BrainIntel.ExpansionWatchTable[stageExpansion.Key].TimeStamp = GetGameTimeSeconds()
-                    --RNGLOG('Arrived at expansion, set timestamp to '..aiBrain.BrainIntel.ExpansionWatchTable[stageExpansion.Key].TimeStamp)
-                end
-                platLoc = GetPlatoonPosition(self)
-            end
-        end
         if self.PlatoonData.FrigateRaid and aiBrain.EnemyIntel.FrigateRaid then
             markerLocations = aiBrain.EnemyIntel.FrigateRaidMarkers
         else

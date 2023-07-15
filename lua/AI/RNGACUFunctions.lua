@@ -261,6 +261,10 @@ function CDRThreatAssessmentRNG(cdr)
             else
                 cdr.EnemyCDRPresent = false
             end
+            if aiBrain.GridPresence and aiBrain.GridPresence:GetInferredStatus(cdr.Position) == 'Hostile' then
+                LOG('We are in the enemies side of the map')
+                enemyUnitThreat = enemyUnitThreat * 1.3
+            end
             --RNGLOG('Continue Fighting is set to true')
             --RNGLOG('ACU Cutoff Threat '..cdr.ThreatLimit)
             cdr.CurrentEnemyThreat = enemyUnitThreat
