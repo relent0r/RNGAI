@@ -273,7 +273,7 @@ function CDRThreatAssessmentRNG(cdr)
             cdr.CurrentFriendlyInnerCircle = friendlyUnitThreatInner
             cdr.CurrentEnemyAirThreat = enemyAirThreat
             cdr.CurrentFriendlyAntiAirThreat = friendAntiAirThreat
-           --RNGLOG('Current Enemy Inner Threat '..cdr.CurrentEnemyInnerCircle)
+            --RNGLOG('Current Enemy Inner Threat '..cdr.CurrentEnemyInnerCircle)
            --RNGLOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
            --RNGLOG('Current Friendly Inner Threat '..cdr.CurrentFriendlyInnerCircle)
            --RNGLOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
@@ -797,4 +797,53 @@ GetClosestBase = function(aiBrain, cdr)
         end
     end
     return closestBase
+end
+
+function PerformACUReclaim(aiBrain, cdr, minimumReclaim)
+    local cdrPos = cdr:GetPosition()
+    local rectDef = Rect(cdrPos[1] - 12, cdrPos[3] - 12, cdrPos[1] + 12, cdrPos[3] + 12)
+    local reclaimRect = GetReclaimablesInRect(rectDef)
+    local reclaiming = false
+    local maxReclaimCount = 0
+    if aiBrain.RNGDEBUG then
+        aiBrain:ForkThread(drawRect, cdr)
+    end
+    if reclaimRect then
+        local reclaimed = false
+        local closeReclaim = {}
+        for c, b in reclaimRect do
+            if not IsProp(b) then continue end
+            if b.MaxMassReclaim and b.MaxMassReclaim > minimumReclaim then
+                if VDist2Sq(cdrPos[1], cdrPos[3], b.CachePosition[1], b.CachePosition[3]) <= 100 then
+                    RNGINSERT(closeReclaim, b)
+                    maxReclaimCount = maxReclaimCount + 1
+                end
+            end
+            if maxReclaimCount > 10 then
+                break
+            end
+        end
+        if RNGGETN(closeReclaim) > 0 then
+            reclaiming = true
+            IssueClearCommands({cdr})
+            for _, rec in closeReclaim do
+                IssueReclaim({cdr}, rec)
+            end
+            reclaimed = true
+        end
+        if reclaiming then
+            coroutine.yield(3)
+            local counter = 0
+            while (not cdr.Caution) and reclaiming and counter < 10 do
+                coroutine.yield(10)
+                if cdr:IsIdleState() then
+                    reclaiming = false
+                end
+                if cdr.CurrentEnemyInnerCircle > 10 then
+                    reclaiming = false
+                end
+                counter = counter + 1
+            end
+        end
+    end
 end

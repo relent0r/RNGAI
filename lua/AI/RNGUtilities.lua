@@ -454,10 +454,10 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 --RNGLOG('aiBrain MapReclaimTable does not exist')
             end
         end
-        local furtherestReclaim = nil
-        local closestReclaim = nil
-        local closestDistance = 10000
-        local furtherestDistance = 0
+        local furtherestReclaim
+        local closestReclaim
+        local closestDistance
+        local furtherestDistance
         local x1 = engPos[1] - initialRange
         local x2 = engPos[1] + initialRange
         local z1 = engPos[3] - initialRange
@@ -492,16 +492,18 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     if v.MaxMassReclaim and v.MaxMassReclaim > minRec then
                         if not self.BadReclaimables[v] then
                             local distance = VDist2(engPos[1], engPos[3], v.CachePosition[1], v.CachePosition[3])
-                            if distance < closestDistance then
+                            if not closestDistance or distance < closestDistance then
                                 closestReclaim = v.CachePosition
                                 closestDistance = distance
                             end
-                            if distance > furtherestDistance then -- and distance < closestDistance + 20
-                                furtherestReclaim = v.CachePosition
-                                furtherestDistance = distance
-                            end
-                            if furtherestDistance - closestDistance > 20 then
-                                break
+                            if not furtherestDistance or distance > furtherestDistance then -- and distance < closestDistance + 20
+                                if NavUtils.CanPathTo(platoon.MovementLayer, engPos, v.CachePosition) then
+                                    furtherestReclaim = v.CachePosition
+                                    furtherestDistance = distance
+                                    if furtherestDistance - closestDistance > 20 then
+                                        break
+                                    end
+                                end
                             end
                         end
                     end
@@ -2122,7 +2124,6 @@ function AIFindBrainTargetACURNG(aiBrain, platoon, position, squad, maxRange, ta
         TargetSearchCategory = ParseEntityCategory(TargetSearchCategory)
     end
     local enemyIndex = false
-    local VDist2 = VDist2
     local MyArmyIndex = aiBrain:GetArmyIndex()
     if enemyBrain then
         enemyIndex = enemyBrain:GetArmyIndex()
