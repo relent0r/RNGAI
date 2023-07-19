@@ -1011,6 +1011,36 @@ Platoon = Class(RNGAIPlatoonClass) {
         self:PlatoonDisband()
     end,
 
+    CaptureUnitAIRNG = function(self, captureUnit)
+        LOG('CaptureUnitAI started')
+        local aiBrain = self:GetBrain()
+        local eng = self:GetPlatoonUnits()[1]
+        if eng and not eng.Dead and not eng.CaptureDoneCallbackSet and eng.PlatoonHandle and PlatoonExists(eng:GetAIBrain(), eng.PlatoonHandle) then
+            import('/lua/ScenarioTriggers.lua').CreateUnitStopCaptureTrigger(eng.PlatoonHandle.EngineerCaptureDoneRNG, eng)
+            eng.CaptureDoneCallbackSet = true
+        end
+        LOG('CaptureUnitAI trying to capture unit')
+        if captureUnit and not IsDestroyed(captureUnit) then
+            if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, captureUnit:GetPosition()) then
+                eng:SetCustomName('CaptureUnitAIRNG')
+                LOG('Unit Army Index is '..captureUnit:GetArmy())
+                local myIndex = aiBrain:GetArmyIndex()
+                IssueClearCommands({eng})
+                IssueCapture({eng}, captureUnit)
+                while aiBrain:PlatoonExists(self) do
+                    LOG('Should be moving to capture unit, current distance is '..VDist3(eng:GetPosition(), captureUnit:GetPosition()))
+                    if IsDestroyed(captureUnit) or captureUnit:GetArmy() == myIndex then
+                        LOG('Should have captured unit '..captureUnit.UnitId)
+                        break
+                    end
+                    coroutine.yield(30)
+                end
+            end
+        end
+        LOG('Should have captured unit')
+        self:PlatoonDisband()
+    end,
+
     RepairAIRNG = function(self)
         local aiBrain = self:GetBrain()
         if not self.PlatoonData or not self.PlatoonData.LocationType then
@@ -3651,6 +3681,43 @@ Platoon = Class(RNGAIPlatoonClass) {
         --DUNCAN - added
         if eng:IsUnitState('Building') or eng:IsUnitState('Upgrading') or eng:IsUnitState("Enhancing") then
            return
+        end
+
+        if not self.MovementLayer then
+            AIAttackUtils.GetMostRestrictiveLayerRNG(self)
+        end
+
+        if cons.CheckCivUnits then
+            if aiBrain.EnemyIntel.CivilianCaptureUnits and aiBrain.EnemyIntel.CivilianCaptureUnits > 0 then
+                LOG('We have capturable units')
+                local closestUnit
+                local closestDistance
+                local engPos = eng:GetPosition()
+                for _, v in aiBrain.EnemyIntel.CivilianCaptureUnits do
+                    if not IsDestroyed(v.Unit) and v.Risk == 'Low' and (not v.EngineerAssigned or v.EngineerAssigned.Dead) and v.CaptureAttempts < 3 and NavUtils.CanPathTo(self.MovementLayer,engPos,v.Position) then
+                        local distance = VDist3Sq(engPos, v.Position)
+                        if not closestDistance or distance < closestDistance then
+                            LOG('filtering closest unit, current distance is '..math.sqrt(distance))
+                            local unitValue = closestUnit.Blueprint.Economy.BuildCostEnergy.BuildCostMass or 50
+                            local distanceMult = math.sqrt(distance)
+                            if unitValue / distanceMult > 0.2 then
+                                LOG('Found right value unit '..(unitValue / distanceMult))
+                                closestUnit = v.Unit
+                                closestDistance = distance
+                            end
+                        end
+                    end
+                end
+                
+                if closestUnit and not IsDestroyed(closestUnit) then
+                    LOG('Found unit to capture, checking threat at position')
+                    if GetThreatAtPosition(aiBrain, closestUnit:GetPosition(), aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 5 then
+                        LOG('Attempting to start capture unit ai')
+                        self:CaptureUnitAIRNG(closestUnit)
+                        return
+                    end
+                end
+            end
         end
 
         local FactionToIndex  = { UEF = 1, AEON = 2, CYBRAN = 3, SERAPHIM = 4, NOMADS = 5}

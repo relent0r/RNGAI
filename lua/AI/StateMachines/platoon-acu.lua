@@ -222,13 +222,19 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     end
                 end
             end
-            if self.BuilderData.DefendExpansion and GetGameTimeSeconds() - self.BuilderData.Time < 30 then
-                LOG('Defending Expansion '..repr(self.BuilderData.Position))
-                numUnits = GetNumUnitsAroundPoint(brain, categories.LAND + categories.MASSEXTRACTION - categories.SCOUT, self.BuilderData.Position, 80, 'Enemy')
-            else
-                LOG('Normal Attack search')
-                numUnits = GetNumUnitsAroundPoint(brain, categories.LAND + categories.MASSEXTRACTION - categories.SCOUT, cdr.Position, (cdr.MaxBaseRange), 'Enemy')
+            local targetSearchPosition = cdr.Position
+            local targetSearchRange = cdr.MaxBaseRange
+            if self.BuilderData.DefendExpansion then
+                if GetGameTimeSeconds() - self.BuilderData.Time < 30 then
+                    LOG('Defending Expansion '..repr(self.BuilderData.Position))
+                    targetSearchPosition = self.BuilderData.Position
+                    targetSearchRange = 80
+                else
+                    self.BuilderData = {}
+                end
             end
+            
+            numUnits = GetNumUnitsAroundPoint(brain, categories.LAND + categories.MASSEXTRACTION - categories.SCOUT, targetSearchPosition, targetSearchRange, 'Enemy')
             if numUnits > 1 then
                 local target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition
                 cdr.Combat = true

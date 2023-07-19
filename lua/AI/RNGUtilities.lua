@@ -136,6 +136,38 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
     self.BadReclaimables = self.BadReclaimables or {}
 
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
+        if self.PlatoonData.Construction.CheckCivUnits then
+            if aiBrain.EnemyIntel.CivilianCaptureUnits and aiBrain.EnemyIntel.CivilianCaptureUnits > 0 then
+                LOG('We have capturable units')
+                local closestUnit
+                local closestDistance
+                local engPos = eng:GetPosition()
+                for _, v in aiBrain.EnemyIntel.CivilianCaptureUnits do
+                    if not IsDestroyed(v.Unit) and v.Risk == 'Low' and (not v.EngineerAssigned or v.EngineerAssigned.Dead) and v.CaptureAttempts < 3 and NavUtils.CanPathTo(self.MovementLayer,engPos,v.Position) then
+                        local distance = VDist3Sq(engPos, v.Position)
+                        if not closestDistance or distance < closestDistance then
+                            LOG('filtering closest unit, current distance is '..math.sqrt(distance))
+                            local unitValue = closestUnit.Blueprint.Economy.BuildCostEnergy.BuildCostMass or 50
+                            local distanceMult = math.sqrt(distance)
+                            if unitValue / distanceMult > 0.2 then
+                                LOG('Found right value unit '..(unitValue / distanceMult))
+                                closestUnit = v.Unit
+                                closestDistance = distance
+                            end
+                        end
+                    end
+                end
+                
+                if closestUnit and not IsDestroyed(closestUnit) then
+                    LOG('Found unit to capture, checking threat at position')
+                    if GetThreatAtPosition(aiBrain, closestUnit:GetPosition(), aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 5 then
+                        LOG('Attempting to start capture unit ai')
+                        self:CaptureUnitAIRNG(closestUnit)
+                        return
+                    end
+                end
+            end
+        end
         coroutine.yield(1)
         local engPos = self:GetPosition()
         local minRec = platoon.PlatoonData.MinimumReclaim
@@ -547,8 +579,10 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         IssueClearCommands({self})
         --RNGLOG('* AI-RNG: Attempting move to closest reclaim')
         --RNGLOG('* AI-RNG: Closest reclaim is '..repr(closestReclaim))
-        if not closestReclaim then
-            --self:SetCustomName('no closestDistance')
+        if not closestReclaim or not furtherestReclaim then
+            LOG('No closestReclaim or furtherestReclaim')
+            LOG('closestReclaim '..repr(closestReclaim))
+            LOG('furtherestReclaim '..repr(furtherestReclaim))
             coroutine.yield(2)
             return
         end

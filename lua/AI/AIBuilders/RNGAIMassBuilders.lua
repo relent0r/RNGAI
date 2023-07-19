@@ -304,7 +304,8 @@ BuilderGroup {
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
-                }
+                },
+                CheckCivUnits = true
             }
         }
     },
@@ -328,7 +329,8 @@ BuilderGroup {
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
                     'T1Resource',
-                }
+                },
+                CheckCivUnits = true
             }
         }
     },
