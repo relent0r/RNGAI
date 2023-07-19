@@ -1203,7 +1203,7 @@ AIBrain = Class(RNGAIBrainClass) {
         plat:ForkThread(plat.BaseManagersDistressAIRNG)
         self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitorRNG)
         self.EnemyPickerThread = self:ForkThread(self.PickEnemyRNG)
-        self:ForkThread(self.CivilianPDCheckRNG)
+        self:ForkThread(self.CivilianUnitCheckRNG)
         self:ForkThread(self.EcoPowerManagerRNG)
         self:ForkThread(self.EcoPowerPreemptiveRNG)
         self:ForkThread(self.EcoMassManagerRNG)
@@ -5805,7 +5805,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     
 
-    CivilianPDCheckRNG = function(self)
+    CivilianUnitCheckRNG = function(self)
         -- This will momentarily reveal civilian structures at the start of the game so that the AI can detect threat from PD's
         --RNGLOG('Reveal Civilian PD')
         coroutine.yield(2)
@@ -5817,12 +5817,73 @@ AIBrain = Class(RNGAIBrainClass) {
                 local real_state = IsAlly(AIIndex, brainIndex) and 'Ally' or IsEnemy(AIIndex, brainIndex) and 'Enemy' or 'Neutral'
                 --RNGLOG('Set Alliance to Ally')
                 SetAlliance(AIIndex, brainIndex, 'Ally')
-                coroutine.yield(5)
+                coroutine.yield(11)
                 --RNGLOG('Set Alliance back to '..real_state)
                 SetAlliance(AIIndex, brainIndex, real_state)
             end
         end
     end,
+
+    --[[
+        function GetCivilianCaptureTargets(aiBrain, tiCivilianBrainIndex, toCivilianBrains)
+    --Assumes is run at start of game and civilians have temporarily been set to be our ally, with tiCivilianBrainIndex being a table of civilian brains temporarily set as our allies
+    local bDebugMessages = false if M27Utilities.bGlobalDebugOverride == true then   bDebugMessages = true end
+    local sFunctionRef = 'GetCivilianCaptureTargets'
+    M27Utilities.FunctionProfiler(sFunctionRef, M27Utilities.refProfilerStart)
+
+    if M27Utilities.IsTableEmpty(tiCivilianBrainIndex) == false then
+
+        aiBrain[reftoCiviliansToCapture] = {}
+        local iSearchRange = math.min(300, math.max(aiBrain[M27Overseer.refiDistanceToNearestEnemyBase] * 0.4, 175, math.min(225, aiBrain[M27Overseer.refiDistanceToNearestEnemyBase] * 0.5)))
+        local iCategoriesOfInterest = M27UnitInfo.refCategoryLandCombat * categories.RECLAIMABLE - categories.TECH1
+        local tUnitsOfInterest = aiBrain:GetUnitsAroundPoint(iCategoriesOfInterest, M27MapInfo.PlayerStartPoints[aiBrain.M27StartPositionNumber], iSearchRange, 'Ally')
+        local sPathing = M27UnitInfo.refPathingTypeAmphibious
+        local iPlateauWanted = M27MapInfo.GetSegmentGroupOfLocation(sPathing, M27MapInfo.PlayerStartPoints[aiBrain.M27StartPositionNumber])
+        if bDebugMessages == true then LOG(sFunctionRef..': Running for aiBrain='..aiBrain.Nickname..' at gametime='..GetGameTimeSeconds()..'; Is table of tUnitsOfInterest empty='..tostring(M27Utilities.IsTableEmpty(tUnitsOfInterest))..'; iPlateauWanted='..iPlateauWanted..'; tiCivilianBrainIndex='..reprs(tiCivilianBrainIndex)..'; aiBrain[M27Overseer.refiDistanceToNearestEnemyBase]='..aiBrain[M27Overseer.refiDistanceToNearestEnemyBase]..'; iSearchRange='..iSearchRange) end
+        if M27Utilities.IsTableEmpty(tUnitsOfInterest) then
+            M27Utilities.FunctionProfiler(sFunctionRef, M27Utilities.refProfilerEnd)
+            WaitTicks(10)
+            M27Utilities.FunctionProfiler(sFunctionRef, M27Utilities.refProfilerStart)
+            for iBrain, oBrain in toCivilianBrains do
+                local tCivilianUnits = oBrain:GetListOfUnits(iCategoriesOfInterest, false, true)
+                if M27Utilities.IsTableEmpty(tCivilianUnits) == false then
+                    for iUnit, oUnit in tCivilianUnits do
+                        table.insert(tUnitsOfInterest, oUnit)
+                    end
+                end
+            end
+        end
+        if bDebugMessages == true then LOG(sFunctionRef..': Is tUnitsOfInterest empty after checking getlist of units='..tostring(M27Utilities.IsTableEmpty(tUnitsOfInterest))) end
+        --toCivilianBrains
+        if M27Utilities.IsTableEmpty(tUnitsOfInterest) == false then
+            local iCurPlateau, bIsCivilianUnit, iCurUnitIndex
+            for iUnit, oUnit in tUnitsOfInterest do
+                --Is it in the same plateua?
+                iCurPlateau = M27MapInfo.GetSegmentGroupOfLocation(sPathing, oUnit:GetPosition())
+                if bDebugMessages == true then LOG(sFunctionRef..': Considering civilian unit '..oUnit.UnitId..M27UnitInfo.GetUnitLifetimeCount(oUnit)..'; iCurPlateau='..(iCurPlateau or 'nil')..'; iPlateauWanted='..iPlateauWanted..'; Dist to our base='..M27Utilities.GetDistanceBetweenPositions(oUnit:GetPosition(), M27MapInfo.PlayerStartPoints[aiBrain.M27StartPositionNumber])..'; Mod dist='..M27Overseer.GetDistanceFromStartAdjustedForDistanceFromMid(aiBrain, oUnit:GetPosition())) end
+                if iCurPlateau == iPlateauWanted then
+                    --Is it one of the civilian brains we temporarily moved to be our ally?
+                    bIsCivilianUnit = false
+                    iCurUnitIndex = oUnit:GetAIBrain():GetArmyIndex()
+                    for iEntry, iBrainIndex in tiCivilianBrainIndex do
+                        if iBrainIndex == iCurUnitIndex then bIsCivilianUnit = true break end
+                    end
+                    if bDebugMessages == true then LOG(sFunctionRef..': bIsCivilianUnit='..tostring(bIsCivilianUnit)) end
+                    if bIsCivilianUnit then
+                        local tNearbyThreats = aiBrain:GetUnitsAroundPoint(M27UnitInfo.refCategoryPD + M27UnitInfo.refCategoryFixedT2Arti, oUnit:GetPosition(), 140, 'Enemy')
+                        if M27Utilities.IsTableEmpty(tNearbyThreats) then
+                            if bDebugMessages == true then LOG(sFunctionRef..': Adding unit '..oUnit.UnitId..M27UnitInfo.GetUnitLifetimeCount(oUnit)..' to the table of civilians to capture; unit brain='..(oUnit:GetAIBrain().Nickname or 'nil')..'; is civilian='..tostring(M27Logic.IsCivilianBrain(oUnit:GetAIBrain()))) end
+                            table.insert(aiBrain[reftoCiviliansToCapture], oUnit)
+                        end
+                    end
+                end
+            end
+        end
+    end
+    if bDebugMessages == true then LOG(sFunctionRef..': End of code, is aiBrain[reftoCiviliansToCapture] empty='..tostring(M27Utilities.IsTableEmpty(aiBrain[reftoCiviliansToCapture]))) end
+    M27Utilities.FunctionProfiler(sFunctionRef, M27Utilities.refProfilerEnd)
+end
+    ]]
 
     DynamicExpansionRequiredRNG = function(self)
 
