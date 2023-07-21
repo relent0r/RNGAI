@@ -452,6 +452,16 @@ function AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, start, finish, unitCat, s
 	return returnNum
 end
 
+function DrawTargetRadius(aiBrain, position)
+    --RNGLOG('Draw Target Radius points')
+    local counter = 0
+    while counter < 60 do
+        DrawCircle(position, 20, 'cc0000')
+        counter = counter + 1
+        coroutine.yield( 2 )
+    end
+end
+
 function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
 
     
@@ -529,7 +539,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     local selectedWeaponArc = 'None'
 
     if not platoonPosition then
-        #Platoon no longer exists.
+        --Platoon no longer exists.
         --RNGLOG('GetBestNavalTarget platoon position is nil returned false ')
         return false
     end
@@ -555,14 +565,8 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
         TargetCurrentEnemy = ThreatWeights.TargetCurrentyEnemy or TargetCurrentEnemy
     end
 
-    -- Need to use overall so we can get all the threat points on the map and then filter from there
-    -- if a specific threat is used, it will only report back threat locations of that type
-    local enemyIndex = -1
-    if aiBrain:GetCurrentEnemy() and TargetCurrentEnemy then
-        enemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
-    end
     
-    local threatTable = aiBrain:GetThreatsAroundPosition(platoonPosition, 16, true, 'OverallNotAssigned', enemyIndex)
+    local threatTable = aiBrain:GetThreatsAroundPosition(platoonPosition, 16, true, 'OverallNotAssigned')
 
     if table.empty(threatTable) then
         --RNGLOG('GetBestNavalTarget threat table is empty returned false ')
@@ -598,6 +602,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
 
     for tIndex,threat in threatTable do
         --check if we can path to the position or a position nearby
+        aiBrain:ForkThread(DrawTargetRadius, {threat[1], 0, threat[2]})
         if not bSkipPathability then
 
             local bestPos
@@ -621,11 +626,11 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
 
 
         -- Determine the value of the target
-        primaryThreat = aiBrain:GetThreatAtPosition({threat[1], 0, threat[2]}, aiBrain.BrainIntel.IMAPConfig.Rings, true, PrimaryTargetThreatType, enemyIndex)
+        primaryThreat = aiBrain:GetThreatAtPosition({threat[1], 0, threat[2]}, aiBrain.BrainIntel.IMAPConfig.Rings, true, PrimaryTargetThreatType)
         -- update : we are testing no longer multiplying since they are updating to threat numbers on everything.
         -- We are multipling the structure threat because the default threat allocation is shit. A T1 naval factory is only worth 3 threat which is not enough to make
         -- frigates / subs want to attack them over something else.
-        secondaryThreat = aiBrain:GetThreatAtPosition({threat[1], 0, threat[2]}, aiBrain.BrainIntel.IMAPConfig.Rings, true, SecondaryTargetThreatType, enemyIndex)
+        secondaryThreat = aiBrain:GetThreatAtPosition({threat[1], 0, threat[2]}, aiBrain.BrainIntel.IMAPConfig.Rings, true, SecondaryTargetThreatType)
         --RNGLOG('GetBestNavalTarget Primary Threat is '..primaryThreat..' secondaryThreat is '..secondaryThreat)
 
         baseThreat = primaryThreat + secondaryThreat
@@ -650,6 +655,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
 
         if threatDiff <= 0 then
             -- if we're weaker than the enemy... make the target less attractive anyway
+            --LOG('NavalAttackAI is weaker than the enemy')
             threat[3] = threat[3] + threatDiff * WeakAttackThreatWeight
         else
             -- ignore overall threats that are really low, otherwise we want to defeat the enemy wherever they are
@@ -703,6 +709,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     local x = threatTable[curMaxIndex][1]
     local y = GetTerrainHeight(threatTable[curMaxIndex][1], threatTable[curMaxIndex][2])
     local z = threatTable[curMaxIndex][2]
+    --local pathablePos = CheckNavalPathingRNG(aiBrain, platoon, {x, y, z}, maxRange, selectedWeaponArc)
     
     return {x, y, z}
 end

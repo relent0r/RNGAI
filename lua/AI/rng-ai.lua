@@ -1318,6 +1318,7 @@ AIBrain = Class(RNGAIBrainClass) {
             --RNGLOG('Unit Stats '..repr(im.UnitStats))
             RNGLOG('IntelCoverage Percentage '..repr(im.MapIntelStats.IntelCoverage))
             RNGLOG('Tactical Missions '..repr(self.TacticalMonitor.TacticalMissions))
+            RNGLOG('Enemy Build Power Table '..repr(im.EnemyBuildStrength))
             coroutine.yield(100)
         end
     end,
@@ -5967,8 +5968,11 @@ AIBrain = Class(RNGAIBrainClass) {
 
     CDRDataThreads = function(self, unit)
         local ACUFunc = import('/mods/RNGAI/lua/AI/RNGACUFunctions.lua')
-
+        local im = IntelManagerRNG.GetIntelManager(self)
         local acuUnits = GetListOfUnits(self, categories.COMMAND, false)
+        if not im.MapIntelStats.ScoutLocationsBuilt then
+            self:BuildScoutLocationsRNG()
+        end
 
         for _, v in acuUnits do
             if not IsDestroyed(v) then

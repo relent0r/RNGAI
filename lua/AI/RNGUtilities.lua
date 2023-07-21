@@ -579,11 +579,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         IssueClearCommands({self})
         --RNGLOG('* AI-RNG: Attempting move to closest reclaim')
         --RNGLOG('* AI-RNG: Closest reclaim is '..repr(closestReclaim))
-        if not closestReclaim or not furtherestReclaim then
-            LOG('No closestReclaim or furtherestReclaim')
-            LOG('closestReclaim '..repr(closestReclaim))
-            LOG('furtherestReclaim '..repr(furtherestReclaim))
-            coroutine.yield(2)
+        if not closestReclaim and not furtherestReclaim then
+            --LOG('No closestReclaim or furtherestReclaim')
+            --LOG('closestReclaim '..repr(closestReclaim))
+            --LOG('furtherestReclaim '..repr(furtherestReclaim))
+            coroutine.yield(5)
             return
         end
         if self.lastXtarget == closestReclaim[1] and self.lastYtarget == closestReclaim[3] then
@@ -606,7 +606,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         -- Clear Commands first
         --self:SetCustomName('Aggressive move to reclaim')
         IssueClearCommands({self})
-        IssueAggressiveMove({self}, furtherestReclaim)
+        if furtherestReclaim then
+            IssueAggressiveMove({self}, furtherestReclaim)
+        else
+            IssueAggressiveMove({self}, closestReclaim)
+        end
         local reclaiming = not self:IsIdleState()
         local max_time = platoon.PlatoonData.ReclaimTime
         local currentTime = 0
@@ -3328,7 +3332,9 @@ GrabPosDangerRNG = function(aiBrain,pos,radius)
                 if v.Blueprint.CategoriesHash.STRUCTURE then
                     mult=1.5
                 end
-                if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                if v.Blueprint.CategoriesHash.COMMAND then
+                    mult=0.3
+                elseif v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
                     brainThreats.enemy = brainThreats.enemy + v.Blueprint.Defense.SurfaceThreatLevel*mult
                 end
             end
@@ -3341,7 +3347,9 @@ GrabPosDangerRNG = function(aiBrain,pos,radius)
                 if v.Blueprint.CategoriesHash.INDIRECTFIRE then
                     mult=0.3
                 end
-                if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                if v.Blueprint.CategoriesHash.COMMAND then
+                    mult=0.3
+                elseif v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
                     brainThreats.ally = brainThreats.ally + v.Blueprint.Defense.SurfaceThreatLevel*mult
                 end
             end
@@ -5007,40 +5015,69 @@ GetHoldingPosition = function(aiBrain, platoonPos, platoon, threatType, maxRadiu
     return holdingPos
 end
 
-CDRWeaponCheckRNG = function (aiBrain, cdr)
+CDRWeaponCheckRNG = function (aiBrain, cdr, selfThreat)
 
     local factionIndex = aiBrain:GetFactionIndex()
+    local gunUpgradePresent = false
+    local weaponRange
+    local threatLimit
+
+    if cdr.Blueprint.Weapon then
+        for _, v in cdr.Blueprint.Weapon do
+            if v.Damage > 0 and v.MaxRadius > 0 and v.RangeCategory == "UWRC_DirectFire" then
+                weaponRange = v.MaxRadius
+                break
+            end
+        end
+    else
+        weaponRange = 22
+    end
+
         -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
     if not cdr.GunUpgradePresent then
         if factionIndex == 1 then
             if cdr:HasEnhancement('HeavyAntiMatterCannon') then
+                local enhancement = cdr.Blueprint.Enhancements
                 cdr.GunUpgradePresent = true
-                cdr.WeaponRange = 30 - 3
-                cdr.ThreatLimit = 45
+                weaponRange = enhancement.HeavyAntiMatterCannon.NewMaxRadius or 30
+                threatLimit = 45
             end
         elseif factionIndex == 2 then
             if cdr:HasEnhancement('HeatSink') then
                 cdr.GunUpgradePresent = true
-                cdr.ThreatLimit = 40
+                threatLimit = 40
             end
             if cdr:HasEnhancement('CrysalisBeam') then
+                local enhancement = cdr.Blueprint.Enhancements
                 cdr.GunUpgradePresent = true
-                cdr.WeaponRange = 35 - 3
+                weaponRange = enhancement.CrysalisBeam.NewMaxRadius or 30
                 cdr.ThreatLimit = 45
+            end
+            if cdr:HasEnhancement('FAF_CrysalisBeamAdvanced') then
+                local enhancement = cdr.Blueprint.Enhancements
+                cdr.GunUpgradePresent = true
+                weaponRange = enhancement.FAF_CrysalisBeamAdvanced.NewMaxRadius or 35
+                threatLimit = 45
             end
         elseif factionIndex == 3 then
             if cdr:HasEnhancement('CoolingUpgrade') then
+                local enhancement = cdr.Blueprint.Enhancements
                 cdr.GunUpgradePresent = true
-                cdr.WeaponRange = 30 - 3
-                cdr.ThreatLimit = 45
+                weaponRange = enhancement.CoolingUpgrade.NewMaxRadius or 30
+                threatLimit = 45
             end
         elseif factionIndex == 4 then
             if cdr:HasEnhancement('RateOfFire') then
                 cdr.GunUpgradePresent = true
-                cdr.WeaponRange = 30 - 3
-                cdr.ThreatLimit = 45
+                weaponRange = enhancement.RateOfFire.NewMaxRadius or 30
+                threatLimit = 45
             end
         end
+    end
+    if selfThreat then
+        cdr.GunUpgradePresent = gunUpgradePresent
+        cdr.WeaponRange = weaponRange
+        cdr.ThreatLimit = threatLimit
     end
 end
 

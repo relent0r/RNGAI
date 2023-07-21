@@ -74,6 +74,9 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
             -- reset state
             local brain = self:GetBrain()
             local cdr = self.cdr
+            if cdr and not cdr.Dead then
+                cdr:SetCustomName('cdr deciding what to do')
+            end
             if self.BuilderData.Expansion then
                 if self.BuilderData.ExpansionBuilt then
                     local expansionPosition = self.BuilderData.ExpansionData.Expansion.Position
@@ -109,15 +112,13 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
             end
             if (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) and GetEconomyIncome(brain, 'ENERGY') > 40 then
                 if cdr.GunUpgradeRequired then
-                    LOG('ACU wants gun upgrade')
-                    if cdr:HasEnhancement('HeavyAntiMatterCannon') then
-                        LOG('But we already have it')
+                    if cdr and not cdr.Dead then
+                        cdr:SetCustomName('cdr wants gun upgrade')
                     end
                 end
                 if cdr.HighThreatUpgradeRequired then
-                    LOG('ACU wants health upgrade')
-                    if cdr:HasEnhancement('DamageStabilization') then
-                        LOG('But we already have it')
+                    if cdr and not cdr.Dead then
+                        cdr:SetCustomName('cdr wants high threat health upgrade')
                     end
                 end
                 local inRange = false
@@ -368,6 +369,9 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
 
             -- sanity check
             local cdr = self.cdr
+            if cdr and not cdr.Dead then
+                cdr:SetCustomName('cdr is navigating')
+            end
             local builderData = self.BuilderData
             local destination = builderData.Position
             local navigateDistanceCutOff = builderData.CutOff or 400
@@ -542,6 +546,9 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
             local assistList
             local assistee = false
             local eng = self.cdr
+            if eng and not eng.Dead then
+                eng:SetCustomName('cdr is assisting')
+            end
             if self.BuilderData.Assist then
                 for _, cat in self.BuilderData.Assist.BeingBuiltCategories do
                     assistList = RUtils.GetAssisteesRNG(brain, 'MAIN', categories.ENGINEER, cat, categories.ALLUNITS)
@@ -604,6 +611,9 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
         Main = function(self)
             local brain = self:GetBrain()
             local eng = self.cdr
+            if eng and not eng.Dead then
+                eng:SetCustomName('cdr is building a structure')
+            end
             local engPos = eng:GetPosition()
             if self.BuilderData.Construction then
                 if self.BuilderData.Construction.BuildStructures then
@@ -748,6 +758,9 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
         Main = function(self)
             local brain = self:GetBrain()
             local cdr = self.cdr
+            if cdr and not cdr.Dead then
+                cdr:SetCustomName('cdr is attacking a target')
+            end
             if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) then
                 local target = self.BuilderData.AttackTarget
                 local snipeAttempt = false
@@ -960,6 +973,9 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
             if cdr:IsUnitState('Attached') then
                  return false
             end
+            if cdr and not cdr.Dead then
+                cdr:SetCustomName('cdr is retreating')
+            end
             local brain = self:GetBrain()
             local closestPlatoon = false
             local closestPlatoonDistance = false
@@ -1143,6 +1159,9 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
         Main = function(self)
             local brain = self:GetBrain()
             local cdr = self.cdr
+            if cdr and not cdr.Dead then
+                cdr:SetCustomName('cdr is expanding')
+            end
             local acuPos = cdr:GetPosition()
             local buildingTmplFile = import(self.BuilderData.Construction.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
             local factionIndex = ACUFunc.GetEngineerFactionIndexRNG(cdr)
@@ -1415,6 +1434,9 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
         Main = function(self)
             local brain = self:GetBrain()
             local cdr = self.cdr
+            if cdr and not cdr.Dead then
+                cdr:SetCustomName('cdr is enhancing')
+            end
             local gameTime = GetGameTimeSeconds()
             if gameTime < 300 then
                 coroutine.yield(30)

@@ -847,3 +847,14 @@ function PerformACUReclaim(aiBrain, cdr, minimumReclaim)
         end
     end
 end
+
+-- debug stuff
+
+function drawRect(aiBrain, cdr)
+    local counter = 0
+    while counter < 20 do
+        DrawCircle(cdr:GetPosition(), 10, '0000FF')
+        counter = counter + 1
+        coroutine.yield(2)
+    end
+end

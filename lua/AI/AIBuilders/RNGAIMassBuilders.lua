@@ -40,12 +40,12 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1Engineer Mass 60',
+        BuilderName = 'RNGAI T1Engineer Mass 80',
         PlatoonTemplate = 'EngineerBuilderRNG',
         Priority = 950,
         InstanceCount = 3,
         BuilderConditions = { 
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 60, nil, nil, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 80, nil, nil, 0, 'AntiSurface', 1}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -53,7 +53,7 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
-                MaxDistance = 60,
+                MaxDistance = 80,
                 MinDistance = 0,
                 ThreatMin = -500,
                 ThreatMax = 0,

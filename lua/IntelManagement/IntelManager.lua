@@ -180,6 +180,13 @@ IntelManager = Class {
                 Kills = {}
             }
         }
+        self.EnemyBuildStrength = {
+            Total = {
+                AirPower = 0,
+                LandPower = 0,
+                BuildPower = 0
+            }
+        }
     end,
 
     Run = function(self)
@@ -801,14 +808,16 @@ IntelManager = Class {
             local closestIndex
             local closestDistance
             local furtherestPlayerDistance
+            --LOG('EnemyStartLocations'..repr(self.Brain.EnemyIntel.EnemyStartLocations))
 
             for _, b in self.Brain.EnemyIntel.EnemyStartLocations do
                 if not closestIndex or b.Distance < closestDistance then
+                    --LOG('No index or distance is closer '..repr(b))
                     closestDistance = b.Distance
                     closestIndex = b.Index
                 end
             end
-            --RNGLOG('Closest enemy is index '..closestIndex..' at '..closestDistance)
+            --RNGLOG('Closest enemy is index '..repr(closestIndex)..' at '..repr(closestDistance))
             for _, v in self.Brain.BrainIntel.AllyStartLocations do
                 if v.Index ~= selfIndex and (not furtherestPlayerDistance or closestDistance > furtherestPlayerDistance) then
                     furtherestPlayerDistance = VDist3Sq(v.Position, self.Brain.EnemyIntel.EnemyStartLocations[closestIndex].Position)
@@ -2285,6 +2294,16 @@ end
 LastKnownThread = function(aiBrain)
     local unitCat
     local im = GetIntelManager(aiBrain)
+    local enemyBuildStrength = {
+        Total = {
+            EngineerBuildPower = 0,
+            LandBuildPower = 0,
+            AirBuildPower = 0,
+            NavalBuildPower = 0,
+        }
+        
+
+    }
     aiBrain.lastknown={}
     aiBrain:ForkThread(RUtils.ShowLastKnown)
     aiBrain:ForkThread(TruePlatoonPriorityDirector)
@@ -2302,6 +2321,9 @@ LastKnownThread = function(aiBrain)
             for _,v in eunits do
                 if not v or v.Dead then continue end
                 if ArmyIsCivilian(v:GetArmy()) then continue end
+                if v.Army and not enemyBuildStrength[v.Army] then
+                    enemyBuildStrength[v.Army] = {}
+                end
                 unitCat = v.Blueprint.CategoriesHash
                 local id=v.EntityId
                 local unitPosition = table.copy(v:GetPosition())
@@ -2345,6 +2367,14 @@ LastKnownThread = function(aiBrain)
                             im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id]={}
                             if unitCat.MOBILE then
                                 if unitCat.ENGINEER and not unitCat.COMMAND then
+                                    if v.Army and v.Blueprint.Economy.BuildRate then
+                                        local buildPower = v.Blueprint.Economy.BuildRate
+                                        enemyBuildStrength.Total.EngineerBuildPower = enemyBuildStrength.Total.EngineerBuildPower + buildPower
+                                        if not enemyBuildStrength[v.Army].EngineerBuildPower then
+                                            enemyBuildStrength[v.Army].EngineerBuildPower = 0
+                                        end
+                                        enemyBuildStrength[v.Army].EngineerBuildPower = enemyBuildStrength[v.Army].EngineerBuildPower + buildPower
+                                    end
                                     im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='eng'
                                 elseif unitCat.COMMAND then
                                     local acuIndex = v:GetAIBrain():GetArmyIndex()
@@ -2377,6 +2407,35 @@ LastKnownThread = function(aiBrain)
                                     if not aiBrain.EnemyIntel.SMD[id] then
                                         aiBrain.EnemyIntel.SMD[id] = {object = v, Position=unitPosition, Detected=GetGameTimeSeconds() }
                                     end
+                                elseif unitCat.FACTORY then
+                                    if unitCat.LAND then
+                                        if v.Army and v.Blueprint.Economy.BuildRate then
+                                            local buildPower = v.Blueprint.Economy.BuildRate
+                                            enemyBuildStrength.Total.LandBuildPower = enemyBuildStrength.Total.LandBuildPower + buildPower
+                                            if not enemyBuildStrength[v.Army].LandBuildPower then
+                                                enemyBuildStrength[v.Army].LandBuildPower = 0
+                                            end
+                                            enemyBuildStrength[v.Army].LandBuildPower = enemyBuildStrength[v.Army].LandBuildPower + buildPower
+                                        end
+                                    elseif unitCat.AIR then
+                                        if v.Army and v.Blueprint.Economy.BuildRate then
+                                            local buildPower = v.Blueprint.Economy.BuildRate
+                                            enemyBuildStrength.Total.AirBuildPower = enemyBuildStrength.Total.AirBuildPower + buildPower
+                                            if not enemyBuildStrength[v.Army].AirBuildPower then
+                                                enemyBuildStrength[v.Army].AirBuildPower = 0
+                                            end
+                                            enemyBuildStrength[v.Army].AirBuildPower = enemyBuildStrength[v.Army].AirBuildPower + buildPower
+                                        end
+                                    elseif unitCat.NAVAL then
+                                        if v.Army and v.Blueprint.Economy.BuildRate then
+                                            local buildPower = v.Blueprint.Economy.BuildRate
+                                            enemyBuildStrength.Total.NavalBuildPower = enemyBuildStrength.Total.NavalBuildPower + buildPower
+                                            if not enemyBuildStrength[v.Army].NavalBuildPower then
+                                                enemyBuildStrength[v.Army].NavalBuildPower = 0
+                                            end
+                                            enemyBuildStrength[v.Army].NavalBuildPower = enemyBuildStrength[v.Army].NavalBuildPower + buildPower
+                                        end
+                                    end
                                 end
                             end
                         end
@@ -2388,6 +2447,7 @@ LastKnownThread = function(aiBrain)
                 end
             end
             aiBrain.emanager.mex = enemyMexes
+            im.EnemyBuildStrength = enemyBuildStrength
             coroutine.yield(20)
             time=GetGameTimeSeconds()
         end

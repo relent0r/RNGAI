@@ -1180,11 +1180,12 @@ Platoon = Class(RNGAIPlatoonClass) {
         local estartZ = nil
         local targetData = {}
         local currentGameTime = GetGameTimeSeconds()
-        if aiBrain.CDRUnit.Active and (not aiBrain.CDRUnit.AirScout or aiBrain.CDRUnit.AirScout.Dead) then
-            aiBrain.CDRUnit.AirScout = scout
-            while not scout.Dead and aiBrain.CDRUnit.Active do
+        local cdr = aiBrain.CDRUnit
+        if not cdr.Dead and cdr.Active and (not cdr.AirScout or cdr.AirScout.Dead) and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 then
+            cdr.AirScout = scout
+            while not scout.Dead and cdr.Active do
                 coroutine.yield(1)
-                local acuPos = aiBrain.CDRUnit.Position
+                local acuPos = cdr.Position
                 --RNGLOG('ACU Supported is true, scout moving to patrol :'..repr(acuPos))
                 local patrolTime = self.PlatoonData.PatrolTime or 30
                 self:MoveToLocation(acuPos, false)
@@ -1198,7 +1199,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --RNGLOG('* AI-RNG: Scout looping ACU support movement')
                 coroutine.yield(2)
             end
-            aiBrain.CDRUnit.AirScout = false
+            cdr.AirScout = false
         end
         while not scout.Dead do
             coroutine.yield(1)
@@ -2082,6 +2083,13 @@ Platoon = Class(RNGAIPlatoonClass) {
             local platoonCount = RNGGETN(GetPlatoonUnits(self))
             if target and not target:BeenDestroyed() then
                 --RNGLOG('HUNTAIPATH target found')
+                if aiBrain.RNGDEBUG then
+                    for _, v in platoonUnits do
+                        if v and not v.Dead then
+                            v:SetCustomName('HuntAIPATH Target found '..target.UnitId)
+                        end
+                    end
+                end
                 local targetPosition = target:GetPosition()
                 local platoonPos = GetPlatoonPosition(self)
                 local targetThreat
@@ -2134,28 +2142,70 @@ Platoon = Class(RNGAIPlatoonClass) {
                     --RNGLOG('* AI-RNG: * HuntAIPATH: Path found')
                     platoonPos = GetPlatoonPosition(self)
                     if not success or VDist2Sq(platoonPos[1], platoonPos[3], targetPosition[1], targetPosition[3]) > 262144 then
+                        if aiBrain.RNGDEBUG then
+                            for _, v in platoonUnits do
+                                if v and not v.Dead then
+                                    v:SetCustomName('HuntAIPATH requesting transport to target '..target.UnitId)
+                                end
+                            end
+                        end
                         --RNGLOG('* AI-RNG: * HuntAIPATH: Requesting Transport range > 512')
                         usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, targetPosition, 2, true)
                     elseif VDist2(platoonPos[1], platoonPos[3], targetPosition[1], targetPosition[3]) > 67600 then
+                        if aiBrain.RNGDEBUG then
+                            for _, v in platoonUnits do
+                                if v and not v.Dead then
+                                    v:SetCustomName('HuntAIPATH requesting transport to target '..target.UnitId)
+                                end
+                            end
+                        end
                         --RNGLOG('* AI-RNG: * HuntAIPATH: Requesting Transport range > 256')
                         usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, targetPosition, 1, true)
                     end
                     if not usedTransports then
                        --RNGLOG('HUNTAIPATH performing platoonmovewithattackmicro')
+                       if aiBrain.RNGDEBUG then
+                          for _, v in platoonUnits do
+                            if v and not v.Dead then
+                                v:SetCustomName('HuntAIPATH no transport used moving to target '..target.UnitId)
+                            end
+                          end
+                       end
                         self:PlatoonMoveWithAttackMicro(aiBrain, path, false, bAggroMove)
                     end
                 elseif (not path and reason == 'NoPath') then
+                    if aiBrain.RNGDEBUG then
+                        for _, v in platoonUnits do
+                            if v and not v.Dead then
+                                v:SetCustomName('HuntAIPATH requesting transport to target '..target.UnitId)
+                            end
+                        end
+                    end
                     --RNGLOG('* AI-RNG: * HuntAIPATH: NoPath reason from path')
                     --RNGLOG('Guardmarker requesting transports')
                     usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, targetPosition, 2, true)
                     if not usedTransports then
                         --RNGLOG('* AI-RNG: * HuntAIPATH: not used transports')
+                        if aiBrain.RNGDEBUG then
+                            for _, v in platoonUnits do
+                              if v and not v.Dead then
+                                  v:SetCustomName('HuntAIPATH no transport used returning to base ')
+                              end
+                            end
+                        end
                         coroutine.yield(2)
                         return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                     end
                     --RNGLOG('Guardmarker found transports')
                 else
                     --RNGLOG('* AI-RNG: * HuntAIPATH: No Path found, no reason')
+                    if aiBrain.RNGDEBUG then
+                        for _, v in platoonUnits do
+                          if v and not v.Dead then
+                              v:SetCustomName('HuntAIPATH no transport used no path no reason returning to base ')
+                          end
+                        end
+                    end
                     coroutine.yield(2)
                     return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                 end
@@ -2166,8 +2216,23 @@ Platoon = Class(RNGAIPlatoonClass) {
                     return self:SetAIPlanRNG('ReturnToBaseAIRNG')
                 end
             elseif self.PlatoonData.GetTargetsFromBase then
+                if aiBrain.RNGDEBUG then
+                    for _, v in platoonUnits do
+                        if v and not v.Dead then
+                            v:SetCustomName('HuntAIPATH no target found at radius , return to base'..maxRadius)
+                        end
+                    end
+                end
                 coroutine.yield(2)
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG')
+            else
+                if aiBrain.RNGDEBUG then
+                    for _, v in platoonUnits do
+                        if v and not v.Dead then
+                            v:SetCustomName('HuntAIPATH no target found at radius wait 5 seconds'..maxRadius)
+                        end
+                    end
+                end
             end
             --RNGLOG('* AI-RNG: * HuntAIPATH: No target, waiting 5 seconds')
             coroutine.yield(50)
@@ -2611,12 +2676,26 @@ Platoon = Class(RNGAIPlatoonClass) {
             coroutine.yield(1)
             --RNGLOG('* AI-RNG: * NavalAttackAIRNG:: Check for attack position')
             --attackPosition = RUtils.AIFindRangedAttackPositionRNG(aiBrain, self, MaxPlatoonWeaponRange)
+            if aiBrain.RNGDEBUG then
+                for _, v in platoonUnits do
+                  if v and not v.Dead then
+                      v:SetCustomName('NavalAttackAI looking for Naval Attack Target ')
+                  end
+                end
+            end
             local attackPosition = AIAttackUtils.GetBestNavalTargetRNG(aiBrain, self)
             self.CurrentPlatoonThreatAntiSurface = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
             --RNGLOG('* NavalAttackAIRNG Platoon Naval Threat is '..self.CurrentPlatoonThreatAntiSurface)
             local platoonCount = RNGGETN(GetPlatoonUnits(self))
             local platoonPos = false
             if attackPosition then
+                if aiBrain.RNGDEBUG then
+                    for _, v in platoonUnits do
+                      if v and not v.Dead then
+                          v:SetCustomName('NavalAttackAI has an attackPosition ')
+                      end
+                    end
+                end
                 local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, self)
                 if platBiasUnit and not IsDestroyed(platBiasUnit) then
                     platoonPos=platBiasUnit:GetPosition()
@@ -2633,6 +2712,13 @@ Platoon = Class(RNGAIPlatoonClass) {
                         if positionThreat > self.CurrentPlatoonThreatAntiSurface then
                             --RNGLOG('* NavalAttackAIRNG attempting merge and formation ')
                             self:Stop()
+                            if aiBrain.RNGDEBUG then
+                                for _, v in platoonUnits do
+                                  if v and not v.Dead then
+                                      v:SetCustomName('NavalAttackAI merging due to high threat ')
+                                  end
+                                end
+                            end
                             local merged = self:MergeWithNearbyPlatoonsRNG('NavalAttackAIRNG', 120, platoonLimit)
                             if merged then
                                 --RNGLOG('* NavalAttackAIRNG merged and trying to center ')
@@ -2660,6 +2746,13 @@ Platoon = Class(RNGAIPlatoonClass) {
                         --RNGLOG('Details :'..' Movement Layer :'..self.MovementLayer..' Platoon Position :'..repr(GetPlatoonPosition(self))..' rangedPosition Position :'..repr(rangedPosition))
                         local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', GetPlatoonPosition(self), attackPosition, 10 , 1000)
                         if path then
+                            if aiBrain.RNGDEBUG then
+                                for _, v in platoonUnits do
+                                  if v and not v.Dead then
+                                      v:SetCustomName('NavalAttackAI pathing to attack position ')
+                                  end
+                                end
+                            end
                             IssueClearCommands(GetPlatoonUnits(self))
                             local threatAroundplatoon = 0
                             --RNGLOG('* NavalAttackAIRNG Path to attack position found')
@@ -3008,10 +3101,25 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 end
                             end
                         end
+                    else
+                        if aiBrain.RNGDEBUG then
+                            for _, v in platoonUnits do
+                              if v and not v.Dead then
+                                  v:SetCustomName('NavalAttackAI platoon cant path to attack position ')
+                              end
+                            end
+                        end
                     end
                 end
             else
                 --RNGLOG('NavalAttackAIRNG return to base')
+                if aiBrain.RNGDEBUG then
+                    for _, v in platoonUnits do
+                      if v and not v.Dead then
+                          v:SetCustomName('NavalAttackAI no attack position found, return to base ')
+                      end
+                    end
+                end
                 coroutine.yield(2)
                 return self:SetAIPlanRNG('ReturnToBaseAIRNG')
             end
@@ -11329,9 +11437,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                --RNGLOG('Trueplatoon Zone is currently false')
             end
             self:GetPlatoonRatios()
-            if aiBrain.RNGDEBUG then
-                RNGLOG('Trueplatoon Unit Ratios '..repr(self.UnitRatios))
-            end
             platoonUnits = GetPlatoonUnits(self)
             local platoonNum=RNGGETN(platoonUnits)
             if platoonNum < 20 and VDist2Sq(self.Pos[1], self.Pos[3], self.base[1], self.base[3]) > 3600 then
