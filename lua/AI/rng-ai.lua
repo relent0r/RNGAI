@@ -3739,7 +3739,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     elseif platoonType == 'SATELLITE' and platoonDPS then
                         if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and v.LastSpotted + 120 > GetGameTimeSeconds() then
-                            if RUtils.HaveUnitVisual(self, v.Unit, true) and not RUtils.ShieldProtectingTargetRNG(aiBrain, v.Unit, nil) then
+                            if RUtils.HaveUnitVisual(self, v.Unit, true) and not RUtils.ShieldProtectingTargetRNG(self, v.Unit, nil) then
                                 RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
                                 local gridX, gridY = im:GetIntelGrid(v.Position)
                                 local scoutRequired = true
