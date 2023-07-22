@@ -102,7 +102,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         break
                     end
                 end
-                if not alreadyHaveExpansion then
+                if not alreadyHaveExpansion and VDist3Sq(cdr.Position, self.BuilderData.Position) <= 400 and not cdr.Caution then
                     self:ChangeState(self.Expand)
                     return
                 else
@@ -218,6 +218,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
             end
             if brain.EnemyIntel.Phase > 2 then
                 if brain.GridPresence:GetInferredStatus(cdr.Position) == 'Hostile' then
+                    LOG('We are in hostile territory and should be retreating')
                     if cdr.CurrentEnemyThreat > 10 and cdr.CurrentEnemyThreat * 1.2 > cdr.CurrentFriendlyThreat then
                         self:ChangeState(self.Retreating)
                     end
@@ -339,6 +340,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                 self:ChangeState(self.EngineerTask)
                 return
             elseif VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 and cdr.Phase > 2 then
+                LOG('Phase 3 and not close to base')
                 self:ChangeState(self.Retreating)
                 return
             else
@@ -695,6 +697,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         end
                     end
                     if not TableEmpty(eng.EngineerBuildQueue) then
+                        IssueClearCommands({eng})
                         for _, v in eng.EngineerBuildQueue do
                             if v[3] and v[2] and v[1] then
                                 IssueBuildMobile({eng}, {v[2][1],GetTerrainHeight(v[2][1], v[2][2]),v[2][2]}, v[1], {})
@@ -728,6 +731,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         end
                     end
                     if not TableEmpty(eng.EngineerBuildQueue) then
+                        IssueClearCommands({eng})
                         for _, v in eng.EngineerBuildQueue do
                             if v[3] and v[2] and v[1] then
                                 IssueBuildMobile({eng}, {v[2][1],GetTerrainHeight(v[2][1], v[2][2]),v[2][2]}, v[1], {})

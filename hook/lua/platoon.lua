@@ -1012,32 +1012,46 @@ Platoon = Class(RNGAIPlatoonClass) {
     end,
 
     CaptureUnitAIRNG = function(self, captureUnit)
-        LOG('CaptureUnitAI started')
         local aiBrain = self:GetBrain()
         local eng = self:GetPlatoonUnits()[1]
         if eng and not eng.Dead and not eng.CaptureDoneCallbackSet and eng.PlatoonHandle and PlatoonExists(eng:GetAIBrain(), eng.PlatoonHandle) then
             import('/lua/ScenarioTriggers.lua').CreateUnitStopCaptureTrigger(eng.PlatoonHandle.EngineerCaptureDoneRNG, eng)
             eng.CaptureDoneCallbackSet = true
         end
-        LOG('CaptureUnitAI trying to capture unit')
         if captureUnit and not IsDestroyed(captureUnit) then
             if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, captureUnit:GetPosition()) then
                 eng:SetCustomName('CaptureUnitAIRNG')
-                LOG('Unit Army Index is '..captureUnit:GetArmy())
-                local myIndex = aiBrain:GetArmyIndex()
+                local captureUnitCallback = function(unit, captor)
+                    local aiBrain = captor:GetAIBrain()
+                    LOG('*AI DEBUG: ENGINEER: I was Captured by '..aiBrain.Nickname..'!')
+                    if unit and (unit.Blueprint.CategoriesHash.MOBILE and unit.Blueprint.CategoriesHash.LAND 
+                    and not unit.Blueprint.CategoriesHash.ENGINEER) then
+                        if unit:TestToggleCaps('RULEUTC_ShieldToggle') then
+                            LOG('Enable shield for '..unit.UnitId)
+                            unit:SetScriptBit('RULEUTC_ShieldToggle', true)
+                            if unit.MyShield then
+                                unit.MyShield:TurnOn()
+                            else
+                                LOG('Unit does not have myshield')
+                            end
+                        end
+                        if unit and not IsDestroyed(unit) then
+                            local capturedPlatoon = aiBrain:MakePlatoon('', 'TruePlatoonRNG')
+                            capturedPlatoon.PlanName = 'Captured Platoon'
+                            aiBrain:AssignUnitsToPlatoon(capturedPlatoon, {unit}, 'Attack', 'None')
+                        end
+                    end
+                    captor.CaptureComplete = true
+                end
+                import('/lua/scenariotriggers.lua').CreateUnitCapturedTrigger(nil, captureUnitCallback, captureUnit)
                 IssueClearCommands({eng})
                 IssueCapture({eng}, captureUnit)
-                while aiBrain:PlatoonExists(self) do
-                    LOG('Should be moving to capture unit, current distance is '..VDist3(eng:GetPosition(), captureUnit:GetPosition()))
-                    if IsDestroyed(captureUnit) or captureUnit:GetArmy() == myIndex then
-                        LOG('Should have captured unit '..captureUnit.UnitId)
-                        break
-                    end
+                while aiBrain:PlatoonExists(self) and not eng.CaptureComplete do
                     coroutine.yield(30)
                 end
+                eng.CaptureComplete = nil
             end
         end
-        LOG('Should have captured unit')
         self:PlatoonDisband()
     end,
 
@@ -3796,7 +3810,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
 
         if cons.CheckCivUnits then
-            if aiBrain.EnemyIntel.CivilianCaptureUnits and aiBrain.EnemyIntel.CivilianCaptureUnits > 0 then
+            if aiBrain.EnemyIntel.CivilianCaptureUnits and RNGGETN(aiBrain.EnemyIntel.CivilianCaptureUnits) > 0 then
                 LOG('We have capturable units')
                 local closestUnit
                 local closestDistance
@@ -3819,7 +3833,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 
                 if closestUnit and not IsDestroyed(closestUnit) then
                     LOG('Found unit to capture, checking threat at position')
-                    if GetThreatAtPosition(aiBrain, closestUnit:GetPosition(), aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 5 then
+                    if RUtils.GrabPosDangerRNG(aiBrain,closestUnit:GetPosition(), 40).enemy < 5 then
                         LOG('Attempting to start capture unit ai')
                         self:CaptureUnitAIRNG(closestUnit)
                         return
@@ -5203,9 +5217,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if v:TestToggleCaps('RULEUTC_JammingToggle') then
                         v:SetScriptBit('RULEUTC_JammingToggle', false)
                     end
-                    -- prevent units from reclaiming while attack moving
-                    v:RemoveCommandCap('RULEUCC_Reclaim')
-                    v:RemoveCommandCap('RULEUCC_Repair')
                     v.smartPos = {0,0,0}
                     if not v.MaxWeaponRange then
                         --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))

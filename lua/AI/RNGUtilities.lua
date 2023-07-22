@@ -137,7 +137,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
 
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
         if self.PlatoonData.Construction.CheckCivUnits then
-            if aiBrain.EnemyIntel.CivilianCaptureUnits and aiBrain.EnemyIntel.CivilianCaptureUnits > 0 then
+            if aiBrain.EnemyIntel.CivilianCaptureUnits and RNGGETN(aiBrain.EnemyIntel.CivilianCaptureUnits) > 0 then
                 LOG('We have capturable units')
                 local closestUnit
                 local closestDistance
@@ -160,7 +160,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 
                 if closestUnit and not IsDestroyed(closestUnit) then
                     LOG('Found unit to capture, checking threat at position')
-                    if GetThreatAtPosition(aiBrain, closestUnit:GetPosition(), aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 5 then
+                    if GrabPosDangerRNG(aiBrain,closestUnit:GetPosition(), 40).enemy < 5 then
                         LOG('Attempting to start capture unit ai')
                         self:CaptureUnitAIRNG(closestUnit)
                         return
