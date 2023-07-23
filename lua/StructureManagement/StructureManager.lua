@@ -6,6 +6,7 @@ local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
+local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
@@ -151,12 +152,14 @@ StructureManager = Class {
                 }
             },
         }
+        self.ShieldCoverage = {}
     end,
 
     Run = function(self)
        --LOG('RNGAI : StructureManager Starting')
         self:ForkThread(self.FactoryDataCaptureRNG)
         self:ForkThread(self.EcoExtractorUpgradeCheckRNG, self.Brain)
+        self:ForkThread(self.CheckShieldCoverage)
         if self.Debug then
             self:ForkThread(self.StructureDebugThread)
         end
@@ -1475,6 +1478,41 @@ StructureManager = Class {
         end
         aiBrain.EcoManager.TotalMexSpend = totalSpend
         return {TECH1 = tech1Total, TECH1Upgrading = tech1ExtNumBuilding, TECH2 = tech2Total, TECH2Upgrading = tech2ExtNumBuilding, TECH3 = tech3Total }, extractorTable, totalSpend
+    end,
+
+    CheckShieldCoverage = function(self)
+        coroutine.yield(math.random(50, 100))
+        local categoriesToCheck = categories.STRUCTURE * (categories.FACTORY + categories.ENERGYPRODUCTION + categories.STRATEGIC ) * ( categories.TECH3 + categories.EXPERIMENTAL)
+        while not self.Brain.Status ~= "Defeat" do
+            coroutine.yield(100)
+            local shieldCoverage = {}
+            for k, manager in self.Brain.BuilderManagers do
+                if manager.FactoryManager.LocationActive then
+                    local shieldedUnits = 0
+                    local totalUnits = 0
+                    local checkUnits = GetUnitsAroundPoint(self.Brain, categoriesToCheck, manager.FactoryManager.Location, manager.FactoryManager.Radius, 'Ally')
+                    for _, unit in checkUnits do
+                        if unit.AdjacentUnits and RNGGETN(unit.AdjacentUnits) > 0 then
+                            local shielded = false
+                            for d, adjUnit in unit.AdjacentUnits do
+                                if adjUnit.Blueprint.CategoriesHash.SHIELD then
+                                    shieldedUnits = shieldedUnits + 1
+                                    shielded = true
+                                end
+                            end
+                            totalUnits = totalUnits + 1
+                        end
+                    end
+                    if totalUnits > 0 and shieldedUnits > 0 then
+                        shieldCoverage[k] = { Coverage = shieldedUnits / totalUnits * 100 }
+                    else
+                        shieldCoverage[k] = { Coverage = 0 }
+                    end
+                end
+            end
+            self.ShieldCoverage = shieldCoverage
+            LOG('Shield Coverage '..repr(shieldCoverage))
+        end
     end,
 }
 

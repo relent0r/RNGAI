@@ -803,7 +803,7 @@ GetClosestBase = function(aiBrain, cdr)
     return closestBase
 end
 
-function PerformACUReclaim(aiBrain, cdr, minimumReclaim)
+function PerformACUReclaim(aiBrain, cdr, minimumReclaim, nextWaypoint)
     local cdrPos = cdr:GetPosition()
     local rectDef = Rect(cdrPos[1] - 12, cdrPos[3] - 12, cdrPos[1] + 12, cdrPos[3] + 12)
     local reclaimRect = GetReclaimablesInRect(rectDef)
@@ -833,12 +833,15 @@ function PerformACUReclaim(aiBrain, cdr, minimumReclaim)
             for _, rec in closeReclaim do
                 IssueReclaim({cdr}, rec)
             end
+            if nextWaypoint then
+                IssueMove({cdr}, nextWaypoint)
+            end
             reclaimed = true
         end
         if reclaiming then
             coroutine.yield(3)
             local counter = 0
-            while (not cdr.Caution) and reclaiming and counter < 10 do
+            while (not cdr.Caution) and RNGGETN(cdr:GetCommandQueue()) > 1 do
                 coroutine.yield(10)
                 if cdr:IsIdleState() then
                     reclaiming = false

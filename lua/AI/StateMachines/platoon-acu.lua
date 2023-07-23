@@ -237,7 +237,10 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     self.BuilderData = {}
                 end
             end
-            
+            -- not sure about this one. The acu needs to reclaim while its walking to targets and after but I'm not sure how to implement it this time around
+            if IsDestroyed(self.BuilderData.AttackTarget) and cdr.CurrentEnemyInnerCircle < 10 then
+                ACUFunc.PerformACUReclaim(brain, cdr, 25, false)
+            end
             numUnits = GetNumUnitsAroundPoint(brain, categories.LAND + categories.MASSEXTRACTION - categories.SCOUT, targetSearchPosition, targetSearchRange, 'Enemy')
             if numUnits > 1 then
                 local target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition
@@ -443,6 +446,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                 local wx = waypoint[1]
                 local wz = waypoint[3]
                 local movementTimeout = 0
+                local lastPos
                 while not IsDestroyed(self) do
                     local position = cdr:GetPosition()
 
@@ -486,17 +490,21 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         end
                     elseif cdr.Health > 6000 and builderData.Retreat and cdr.Phase < 3 then
                         local supportPlatoon = brain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
-                        if supportPlatoon and not IsDestroyed(supportPlatoon) and VDist3Sq(supportPlatoon:GetPlatoonPosition(), cdr.Position) < 3600 and cdr.CurrentEnemyInnerCircle * 1.2 < cdr.CurrentFriendlyInnerCircle then
-                            self.BuilderData = {}
-                            self:ChangeState(self.DecideWhatToDo)
+                        if supportPlatoon.GetPlatoonPosition then
+                            local supportPlatoonPos = supportPlatoon:GetPlatoonPosition()
+                            if not IsDestroyed(supportPlatoon) and supportPlatoonPos and VDist3Sq(supportPlatoonPos, cdr.Position) < 3600 and cdr.CurrentEnemyInnerCircle * 1.2 < cdr.CurrentFriendlyInnerCircle then
+                                self.BuilderData = {}
+                                self:ChangeState(self.DecideWhatToDo)
+                            end
                         end
                     end
                     if (not cdr.GunUpgradeRequired) and (not cdr.HighThreatUpgradeRequired) and cdr.Health > 6000 and (not builderData.Retreat or (cdr.CurrentEnemyInnerCircle < 10 and cdr.CurrentEnemyThreat < 50)) and GetEconomyStoredRatio(brain, 'MASS') < 0.70 then
-                        ACUFunc.PerformACUReclaim(brain, cdr, 25)
+                        ACUFunc.PerformACUReclaim(brain, cdr, 25, waypoint)
                     end
                 
                     WaitTicks(20)
-                    if VDist3Sq(origin, cdr.Position) < 4 then
+                    
+                    if not cdr:IsUnitState('Moving') then
                         LOG('Distance from origin to current position is '..VDist3Sq(origin, cdr.Position))
                         movementTimeout = movementTimeout + 1
                         LOG('No Movement, increase timeout by 1, current is '..movementTimeout)
