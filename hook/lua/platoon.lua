@@ -6849,7 +6849,10 @@ Platoon = Class(RNGAIPlatoonClass) {
         local function VariableKite(platoon,unit,target, maxDistance)
             local function KiteDist(pos1,pos2,distance)
                 local vec={}
-                local dist=VDist3(pos1,pos2)
+                local dx = pos2[1] - pos1[1]
+                local dy = pos2[2] - pos1[2]
+                local dz = pos2[3] - pos1[3]
+                local dist = math.sqrt(dx * dx + dy * dy + dz * dz)
                 for i,k in pos2 do
                     if type(k)~='number' then continue end
                     vec[i]=k+distance/dist*(pos1[i]-k)
@@ -6884,7 +6887,11 @@ Platoon = Class(RNGAIPlatoonClass) {
             else
                 dest=KiteDist(pos,tpos,self.MaxWeaponRange+5-math.random(1,3)-mod)
             end
-            if VDist3Sq(pos,dest)>6 then
+            local dx = pos[1] - dest[1]
+            local dy = pos[2] - dest[2]
+            local dz = pos[3] - dest[3]
+            local dist = dx * dx + dy * dy + dz * dz
+            if dist>6 then
                 IssueClearCommands({unit})
                 IssueMove({unit},dest)
                 coroutine.yield(2)
@@ -6992,7 +6999,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                                         if alternatePos then
                                             self:MoveToLocation(alternatePos, false)
                                             PlatoonPosition = GetPlatoonPosition(self)
-                                            dist = VDist2Sq(alternatePos[1], alternatePos[3], PlatoonPosition[1], PlatoonPosition[3])
+                                            local dx = PlatoonPosition[1] - alternatePos[1]
+                                            local dz = PlatoonPosition[3] - alternatePos[3]
+                                            dist = dx * dx + dz * dz
                                             if dist < 225 then
                                                 self:Stop()
                                                 if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
@@ -7055,7 +7064,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     --LOG('MoveWithMicro - No masspoint, look for closest platoon of massraidrng to run to')
                                     mergePlatoon, alternatePos = self:GetClosestPlatoonRNG(self.PlanName)
                                 end
-                                if alternatePos and VDist3Sq(PlatoonPosition, alternatePos) < maxMergeDistance then
+                                local dx = PlatoonPosition[1] - alternatePos[1]
+                                local dz = PlatoonPosition[3] - alternatePos[3]
+                                local altPosDist = dx * dx + dz * dz
+                                if alternatePos and altPosDist < maxMergeDistance then
                                     self:Stop()
                                     --LOG('MoveWithMicro - We found either an extractor or platoon')
                                     self:MoveToLocation(alternatePos, false)
@@ -7070,7 +7082,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                                         IssueClearCommands(GetPlatoonUnits(self))
                                         self:MoveToLocation(alternatePos, false)
                                         PlatoonPosition = GetPlatoonPosition(self)
-                                        dist = VDist2Sq(alternatePos[1], alternatePos[3], PlatoonPosition[1], PlatoonPosition[3])
+                                        local dx = PlatoonPosition[1] - alternatePos[1]
+                                        local dz = PlatoonPosition[3] - alternatePos[3]
+                                        dist = dx * dx + dz * dz
                                         if dist < 225 then
                                             self:Stop()
                                             if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
@@ -7094,7 +7108,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     end
                                 end
                                 unitPos = target:GetPosition()
-                                if target and VDist3Sq(unitPos, aiBrain.BrainIntel.StartPos) > BaseRestrictedArea * BaseRestrictedArea then
+                                local startPos = aiBrain.BrainIntel.StartPos
+                                local dx = unitPos[1] - startPos[1]
+                                local dz = unitPos[3] - startPos[3]
+                                local startDist = dx * dx + dz * dz
+                                if target and startDist > BaseRestrictedArea * BaseRestrictedArea then
                                     target = false
                                 end
                             end
