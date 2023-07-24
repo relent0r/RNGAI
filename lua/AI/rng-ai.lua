@@ -1022,6 +1022,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.Phase = 1
         self.EnemyIntel.TML = {}
         self.EnemyIntel.SMD = {}
+        self.EnemyIntel.Experimental = {}
         self.EnemyIntel.DirectorData = {
             Strategic = {},
             Energy = {},

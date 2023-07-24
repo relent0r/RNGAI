@@ -2385,6 +2385,10 @@ LastKnownThread = function(aiBrain)
                                         aiBrain.EnemyIntel.ACU[acuIndex].Unit = v
                                     end
                                     im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='acu'
+                                elseif unitCat.EXPERIMENTAL then
+                                    if not aiBrain.EnemyIntel.Experimental[id] then
+                                        aiBrain.EnemyIntel.Experimental[id] = {object = v, position=unitPosition }
+                                    end
                                 elseif unitCat.ANTIAIR then
                                     im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='aa'
                                 elseif unitCat.DIRECTFIRE then
@@ -2627,6 +2631,16 @@ TruePlatoonPriorityDirector = function(aiBrain)
             aiBrain.EnemyIntel.HighPriorityTargetAvailable = true
         else
             aiBrain.EnemyIntel.HighPriorityTargetAvailable = false
+        end
+        for k, v in aiBrain.EnemyIntel.Experimental do
+            if v.object.Dead then
+                aiBrain.EnemyIntel.Experimental[k] = nil
+                needSort = true
+            end
+        end
+        if needSort then
+            aiBrain.EnemyIntel.Experimental = RebuildTable(aiBrain.EnemyIntel.Experimental)
+            needSort = false
         end
         coroutine.yield(40)
     end

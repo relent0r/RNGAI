@@ -1819,11 +1819,19 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                                 end
                             end
                             if avoidbases then
-                                for _, w in ArmyBrains do
-                                    if IsEnemy(w:GetArmyIndex(), aiBrain:GetArmyIndex()) or (aiBrain:GetArmyIndex() == w:GetArmyIndex()) then
-                                        local estartX, estartZ = w:GetArmyStartPos()
-                                        if VDist2Sq(estartX, estartZ, unitPos[1], unitPos[3]) < 22500 then
+                                if RNGGETN(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
+                                    for _, pos in aiBrain.EnemyIntel.EnemyStartLocations do
+                                        if VDist2Sq(pos[1], pos[3], unitPos[1], unitPos[3]) < 22500 then
                                             continue
+                                        end
+                                    end
+                                else
+                                    for _, w in ArmyBrains do
+                                        if IsEnemy(w:GetArmyIndex(), aiBrain:GetArmyIndex()) or (aiBrain:GetArmyIndex() == w:GetArmyIndex()) then
+                                            local estartX, estartZ = w:GetArmyStartPos()
+                                            if VDist2Sq(estartX, estartZ, unitPos[1], unitPos[3]) < 22500 then
+                                                continue
+                                            end
                                         end
                                     end
                                 end

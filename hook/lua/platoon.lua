@@ -139,8 +139,16 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             if not target or target.Dead then
                 --RNGLOG('Looking for target at radius '..maxRadius)
+                for _, v in aiBrain.EnemyIntel.Experimental do
+                    if v.object and not v.object.Dead and v.object.Blueprint.CategoriesHash.AIR then
+                        target = v.object
+                        break
+                    end
+                end
+                if not target or target.Dead then
                 -- Params aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted
-                target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self.HoldingPosition, self, 'Attack', maxRadius, atkPri, avoidBases, self.CurrentPlatoonThreat, false, false, true)
+                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self.HoldingPosition, self, 'Attack', maxRadius, atkPri, avoidBases, self.CurrentPlatoonThreat, false, false, true)
+                end
                 if (not target or target.Dead) and acuCheck then
                     --RNGLOG('No target found at max radius, checking around acu as its active')
                     target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, aiBrain.CDRUnit.Position, self, 'Attack', 80, {categories.AIR * (categories.BOMBER + categories.GROUNDATTACK + categories.ANTINAVY)}, false)
@@ -3482,7 +3490,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                     if not target and self.CurrentPlatoonThreat > 8 and data.UnitType ~= 'GUNSHIP' then
                         --RNGLOG('Defensive platoon looking for target in lower part of logic '..self.PlanName)
-                        target = RUtils.AIFindBrainTargetInRangeOrigRNG(aiBrain, basePosition, self, 'Attack', maxRadius , atkPri)
+                        if not target or target.Dead then
+                            target = RUtils.AIFindBrainTargetInRangeOrigRNG(aiBrain, basePosition, self, 'Attack', maxRadius , atkPri)
+                        end
                         if target then
                             break
                         end
