@@ -129,7 +129,9 @@ function CDRBrainThread(cdr)
             --RNGLOG('Enemy is phase 3')
             cdr.Phase = 3
         end
-        cdr.DistanceToHome = VDist2Sq(cdr.Position[1], cdr.Position[3], cdr.CDRHome[1], cdr.CDRHome[3])
+        local dx = cdr.Position[1] - cdr.CDRHome[1]
+        local dz = cdr.Position[3] - cdr.CDRHome[3]
+        cdr.DistanceToHome = dx * dx + dz * dz
         if cdr.Health < 5500 and cdr.DistanceToHome > 900 then
             --RNGLOG('cdr caution is true due to health < 5000 and distance to home greater than 900')
             cdr.Caution = true
@@ -162,7 +164,10 @@ function CDRBrainThread(cdr)
             if (not v.Unit.Dead) and (not v.Ally) then
                 local enemyStartPos = {}
                 if v.Position[1] and v.LastSpotted ~= 0 and gameTime - 60 < v.LastSpotted then
-                    if VDist2Sq(v.Position[1], v.Position[3], cdr.Position[1], cdr.Position[2]) < 6400 then
+                    local dx = cdr.Position[1] - v.Position[1]
+                    local dz = cdr.Position[3] - v.Position[3]
+                    local acuDist = dx * dx + dz * dz
+                    if acuDist < 6400 then
                         v.CloseCombat = true
                     else
                         v.CloseCombat = false
@@ -490,9 +495,9 @@ function CDRCallPlatoon(cdr, threatRequired)
             if aPlat.MovementLayer == 'Water' or aPlat.MovementLayer == 'Air' then
                 continue
             end
-            local platDistance = VDist2Sq(cdr.Position[1], cdr.Position[3], allyPlatPos[1], allyPlatPos[3])
-            
-
+            local dx = cdr.Position[1] - allyPlatPos[1]
+            local dz = cdr.Position[3] - allyPlatPos[3]
+            local platDistance = dx * dx + dz * dz          
             if platDistance <= 32400 then
                 RNGINSERT(platoonTable, {Platoon = aPlat, Distance = platDistance, Position = allyPlatPos})
             end
@@ -771,7 +776,9 @@ CanBuildOnCloseMass = function(aiBrain, engPos, distance)
             if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
                 mexBorderWarn = true
             end 
-            local mexDistance = VDist2Sq( v.position[1],v.position[3], engPos[1], engPos[3] )
+            local dx = engPos[1] - v.position[1]
+            local dz = engPos[3] - v.position[3]
+            local mexDistance = dx * dx + dz * dz
             if mexDistance < distance and CanBuildStructureAt(aiBrain, 'ueb1103', v.position) then
                 table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v, BorderWarning = mexBorderWarn})
             end
@@ -828,7 +835,10 @@ function PerformACUReclaim(aiBrain, cdr, minimumReclaim, nextWaypoint)
         for c, b in reclaimRect do
             if not IsProp(b) then continue end
             if b.MaxMassReclaim and b.MaxMassReclaim > minimumReclaim then
-                if VDist2Sq(cdrPos[1], cdrPos[3], b.CachePosition[1], b.CachePosition[3]) <= 100 then
+                local dx = cdrPos[1] - b.CachePosition[1]
+                local dz = cdrPos[3] - b.CachePosition[3]
+                local reclaimDist = dx * dx + dz * dz
+                if reclaimDist <= 100 then
                     RNGINSERT(closeReclaim, b)
                     maxReclaimCount = maxReclaimCount + 1
                 end
