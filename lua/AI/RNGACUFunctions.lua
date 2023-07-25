@@ -408,7 +408,7 @@ GetStartingReclaim = function(aiBrain)
     
     startReclaim = GetReclaimablesInRect(posX - reclaimScanArea, posZ - reclaimScanArea, posX + reclaimScanArea, posZ + reclaimScanArea)
     --RNGLOG('Initial Reclaim Table size is '..table.getn(startReclaim))
-    if startReclaim and RNGGETN(startReclaim) > 0 then
+    if startReclaim and not table.empty(startReclaim) then
         for k,v in startReclaim do
             if not IsProp(v) then continue end
             if v.MaxMassReclaim or v.MaxEnergyReclaim  then
@@ -537,25 +537,25 @@ function CDRCallPlatoon(cdr, threatRequired)
         supportPlatoonAvailable = aiBrain:MakePlatoon('ACUSupportPlatoon', 'ACUSupportRNG')
         supportPlatoonAvailable:UniquelyNamePlatoon('ACUSupportPlatoon')
         supportPlatoonAvailable:ForkThread(ZoneUpdate)
-        if RNGGETN(validUnits.Attack) > 0 then
+        if not table.empty(validUnits.Attack) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Attack, 'Attack', 'None')
         end
-        if RNGGETN(validUnits.Artillery) > 0 then
+        if not table.empty(validUnits.Artillery) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Artillery, 'Artillery', 'None')
         end
-        if RNGGETN(validUnits.Guard) > 0 then
+        if not table.empty(validUnits.Guard) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Guard, 'Guard', 'None')
         end
         bMergedPlatoons = true
     elseif bValidUnits and PlatoonExists(aiBrain, supportPlatoonAvailable)then
         --RNGLOG('Support Platoon already exist, assigning to existing one')
-        if RNGGETN(validUnits.Attack) > 0 then
+        if not table.empty(validUnits.Attack) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Attack, 'Attack', 'None')
         end
-        if RNGGETN(validUnits.Artillery) > 0 then
+        if not table.empty(validUnits.Artillery) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Artillery, 'Artillery', 'None')
         end
-        if RNGGETN(validUnits.Guard) > 0 then
+        if not table.empty(validUnits.Guard) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Guard, 'Guard', 'None')
         end
         bMergedPlatoons = true
@@ -784,7 +784,7 @@ GetClosestBase = function(aiBrain, cdr)
         --RNGLOG('Base Name '..baseName)
         --RNGLOG('Base Position '..repr(base.Position))
         --RNGLOG('Base Distance '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
-            if RNGGETN(base.FactoryManager.FactoryList) > 0 then
+            if not table.empty(base.FactoryManager.FactoryList) then
                 --RNGLOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
                 local baseDistance = VDist3Sq(cdr.Position, base.Position)
                 local homeDistance = VDist3Sq(cdr.CDRHome, base.Position)

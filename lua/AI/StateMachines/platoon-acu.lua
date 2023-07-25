@@ -132,7 +132,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                 if brain.BuilderManagers then
                     local distSqAway = 2209
                     for baseName, base in brain.BuilderManagers do
-                        if RNGGETN(base.FactoryManager.FactoryList) > 0 then
+                        if not table.empty(base.FactoryManager.FactoryList) then
                             if VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]) < distSqAway then
                                 inRange = true
                                 if baseName == 'MAIN' and cdr.CurrentEnemyThreat > 20 then
@@ -344,6 +344,8 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         end
                     end
                 end
+            elseif self.BuilderData.DefendExpansion then
+                coroutine.yield(10)
             end
             if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < 6400 then
                 self:ChangeState(self.EngineerTask)
@@ -1097,7 +1099,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                 --RNGLOG('Base Name '..baseName)
                 --RNGLOG('Base Position '..repr(base.Position))
                 --RNGLOG('Base Distance '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
-                    if RNGGETN(base.FactoryManager.FactoryList) > 0 then
+                    if not table.empty(base.FactoryManager.FactoryList) then
                         --RNGLOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
                         local baseDistance = VDist3Sq(cdr.Position, base.Position)
                         local homeDistance = VDist3Sq(cdr.CDRHome, base.Position)
@@ -1228,10 +1230,10 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     end
                 end
                 LOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
-                if RNGGETN(cdr.EngineerBuildQueue) > 0 then
+                if not table.empty(cdr.EngineerBuildQueue) then
                     for k,v in cdr.EngineerBuildQueue do
                         --LOG('Attempt to build queue item of '..repr(v))
-                        while not cdr.Dead and RNGGETN(cdr.EngineerBuildQueue) > 0 do
+                        while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
                             IssueClearCommands({cdr})
                             IssueMove({cdr},v.Position)
                             if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then
@@ -1344,13 +1346,13 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                                     RNGINSERT(cdr.EngineerBuildQueue, newEntry)
                                 end
                                 LOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
-                                if RNGGETN(cdr.EngineerBuildQueue) > 0 then
+                                if not table.empty(cdr.EngineerBuildQueue) then
                                     for k,v in cdr.EngineerBuildQueue do
                                         if abortBuild then
                                             cdr.EngineerBuildQueue[k] = nil
                                             break
                                         end
-                                        while not cdr.Dead and RNGGETN(cdr.EngineerBuildQueue) > 0 do
+                                        while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
                                             IssueClearCommands({cdr})
                                             IssueMove({cdr},v.Position)
                                             if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then
@@ -1411,13 +1413,13 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                                     RNGINSERT(cdr.EngineerBuildQueue, newEntry)
                                 end
                                 LOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
-                                if RNGGETN(cdr.EngineerBuildQueue) > 0 then
+                                if not table.empty(cdr.EngineerBuildQueue) then
                                     for k,v in cdr.EngineerBuildQueue do
                                         if abortBuild then
                                             cdr.EngineerBuildQueue[k] = nil
                                             break
                                         end
-                                        while not cdr.Dead and RNGGETN(cdr.EngineerBuildQueue) > 0 do
+                                        while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
                                             IssueClearCommands({cdr})
                                             IssueMove({cdr},v.Position)
                                             if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then

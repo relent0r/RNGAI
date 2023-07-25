@@ -375,7 +375,10 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                             for _, unit in enemyEngineer do
                                                 if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
                                                     enemyEngPos = unit:GetPosition()
-                                                    if VDist2Sq(engPos[1], engPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
+                                                    local dx = engPos[1] - enemyEngPos[1]
+                                                    local dz = engPos[3] - enemyEngPos[3]
+                                                    local enemyEngPos = dx * dx + dz * dz
+                                                    if enemyEngPos < 100 then
                                                         IssueStop({self})
                                                         IssueClearCommands({self})
                                                         IssueReclaim({self}, enemyEngineer[1])
@@ -423,7 +426,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                 {engPos[1] - 25, 0, engPos[3] + 25},
                             }
                             --LOG('EngineerReclaimGrid '..repr(reclaimGrid))
-                            if reclaimGrid and RNGGETN( reclaimGrid ) > 0 then
+                            if reclaimGrid and not table.empty( reclaimGrid ) then
                                 --LOG('We are going to try reclaim within the grid')
                                 local reclaimCount = 0
                                 for k, square in reclaimGrid do
@@ -506,7 +509,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local needEnergy = aiBrain:GetEconomyStoredRatio('ENERGY') < 0.5
         --RNGLOG('* AI-RNG: Going through reclaim table')
         --self:SetCustomName('Loop through reclaim table')
-        if reclaimRect and RNGGETN( reclaimRect ) > 0 then
+        if reclaimRect and not table.empty( reclaimRect ) then
             for k,v in reclaimRect do
                 if not IsProp(v) or self.BadReclaimables[v] then continue end
                 local rpos = v.CachePosition
@@ -756,7 +759,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos, pointRadius)
     -- Check if enemy units are at location
     local checkUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE + categories.MOBILE) - categories.AIR, pos, pointRadius, 'Enemy')
     -- reclaim units near our building place.
-    if checkUnits and RNGGETN(checkUnits) > 0 then
+    if checkUnits and not table.empty(checkUnits) then
         for num, unit in checkUnits do
             --temporary for troubleshooting
             --unitdesc = GetBlueprint(unit).Description
@@ -782,7 +785,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos, pointRadius)
     end
     -- reclaim rocks etc or we can't build mexes or hydros
     local Reclaimables = GetReclaimablesInRect(Rect(pos[1], pos[3], pos[1], pos[3]))
-    if Reclaimables and RNGGETN( Reclaimables ) > 0 then
+    if Reclaimables and not table.empty( Reclaimables ) then
         for k,v in Reclaimables do
             if v.MaxMassReclaim and v.MaxMassReclaim > 5 or v.MaxEnergyReclaim and v.MaxEnergyReclaim > 5 then
                 IssueReclaim({eng}, v)
@@ -801,7 +804,7 @@ function EngineerTryRepair(aiBrain, eng, whatToBuild, pos)
 
     local structureCat = ParseEntityCategory(whatToBuild)
     local checkUnits = GetUnitsAroundPoint(aiBrain, structureCat, pos, 1, 'Ally')
-    if checkUnits and RNGGETN(checkUnits) > 0 then
+    if checkUnits and not table.empty(checkUnits) then
         for num, unit in checkUnits do
             IssueRepair({eng}, unit)
         end
@@ -1180,7 +1183,7 @@ function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxR
                 category = ParseEntityCategory(category)
             end
             local retUnit = false
-            local distance = false
+            local retDistance = false
             for num, unit in targetUnits do
                 if not unit.Dead and not unit.CaptureInProgress and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
                     local unitPos = unit:GetPosition()
@@ -1189,9 +1192,12 @@ function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxR
                             continue
                         end
                     end
-                    if not retUnit or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
+                    local dx = unitPos[1] - position[1]
+                    local dz = unitPos[3] - position[3]
+                    local distance = dx * dx + dz * dz
+                    if not retUnit or distance < retDistance then
                         retUnit = unit
-                        distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
+                        retDistance = distance
                     end
                 end
             end
@@ -1205,7 +1211,7 @@ function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxR
 end
 
 function InitialMassMarkersInWater(aiBrain)
-    if RNGGETN(AIGetMassMarkerLocations(aiBrain, false, true)) > 0 then
+    if not table.empty(AIGetMassMarkerLocations(aiBrain, false, true)) then
         return true
     else
         return false
@@ -1765,7 +1771,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                 category = ParseEntityCategory(category)
             end
             local retUnit = false
-            local distance = false
+            local retDistance = false
             local targetShields = 9999
             for num, unit in targetUnits do
                 if not unit.Dead then
@@ -1784,9 +1790,12 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                                             continue
                                         end
                                     end
-                                    if not retUnit or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
+                                    local dx = unitPos[1] - position[1]
+                                    local dz = unitPos[3] - position[3]
+                                    local distance = dx * dx + dz * dz
+                                    if not retUnit or distance < retDistance then
                                         retUnit = unit
-                                        distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
+                                        retDistance = distance
                                     end
                                     if platoon.MovementLayer == 'Air' and platoonThreat then
                                         enemyThreat = GetThreatAtPosition( aiBrain, unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
@@ -1796,9 +1805,9 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                                         end
                                     end
                                     local numShields = aiBrain:GetNumUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
-                                    if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
+                                    if not retUnit or numShields < targetShields or (numShields == targetShields and distance < retDistance) then
                                         retUnit = unit
-                                        distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
+                                        retDistance = distance
                                         targetShields = numShields
                                     end
                                 end
@@ -1819,17 +1828,24 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                                 end
                             end
                             if avoidbases then
-                                if RNGGETN(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
-                                    for _, pos in aiBrain.EnemyIntel.EnemyStartLocations do
-                                        if VDist2Sq(pos[1], pos[3], unitPos[1], unitPos[3]) < 22500 then
+                                if not table.empty(aiBrain.EnemyIntel.EnemyStartLocations) then
+                                    for _, start in aiBrain.EnemyIntel.EnemyStartLocations do
+                                        local dx = unitPos[1] - start.Position[1]
+                                        local dz = unitPos[3] - start.Position[3]
+                                        local startDist = dx * dx + dz * dz
+                                        if startDist < 22500 then
                                             continue
                                         end
                                     end
                                 else
+                                    LOG('No enemy start location '..repr(aiBrain.EnemyIntel.EnemyStartLocations))
                                     for _, w in ArmyBrains do
                                         if IsEnemy(w:GetArmyIndex(), aiBrain:GetArmyIndex()) or (aiBrain:GetArmyIndex() == w:GetArmyIndex()) then
                                             local estartX, estartZ = w:GetArmyStartPos()
-                                            if VDist2Sq(estartX, estartZ, unitPos[1], unitPos[3]) < 22500 then
+                                            local dx = unitPos[1] - estartX
+                                            local dz = unitPos[3] - estartZ
+                                            local startDist = dx * dx + dz * dz
+                                            if startDist < 22500 then
                                                 continue
                                             end
                                         end
@@ -1844,9 +1860,12 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                                 end
                             end
                             local numShields = aiBrain:GetNumUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
-                            if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
+                            local dx = unitPos[1] - position[1]
+                            local dz = unitPos[3] - position[3]
+                            local distance = dx * dx + dz * dz
+                            if not retUnit or numShields < targetShields or (numShields == targetShields and distance < retDistance) then
                                 retUnit = unit
-                                distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
+                                retDistance = distance
                                 targetShields = numShields
                             end
                         end
@@ -1953,7 +1972,9 @@ function AIFindBrainTargetInACURangeRNG(aiBrain, position, platoon, squad, maxRa
                     if EntityCategoryContains(categories.COMMAND, unit) then
                         acuUnit = unit
                     end
-                    local unitDistance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
+                    local dx = unitPos[1] - position[1]
+                    local dz = unitPos[3] - position[3]
+                    local unitDistance = dx * dx + dz * dz
                     if EntityCategoryContains(categories.MOBILE, unit) then
                         if not SquadTargetList.Attack.Unit or unitDistance < SquadTargetList.Attack.Distance then
                             SquadTargetList.Attack.Unit = unit
@@ -1988,7 +2009,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, 
     local targetUnits = GetUnitsAroundPoint(aiBrain, categories.COMMAND, position, maxRange, 'Enemy')
     local retUnit = false
     local unit
-    local distance = false
+    local retDistance = false
     local targetShields = 9999
     for num, unit in targetUnits do
         if index then
@@ -2009,9 +2030,12 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, 
                             end
                         end
                         local numShields = GetNumUnitsAroundPoint(aiBrain, CategoriesShield, unitPos, 46, 'Enemy')
-                        if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
+                        local dx = unitPos[1] - position[1]
+                        local dz = unitPos[3] - position[3]
+                        local distance = dx * dx + dz * dz
+                        if not retUnit or numShields < targetShields or (numShields == targetShields and distance < retDistance) then
                             retUnit = unit
-                            distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
+                            retDistance = distance
                             targetShields = numShields
                         end
                     end
@@ -2033,9 +2057,12 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, 
                     end
                 end
                 local numShields = GetNumUnitsAroundPoint(aiBrain, CategoriesShield, unitPos, 46, 'Enemy')
-                if not retUnit or numShields < targetShields or (numShields == targetShields and VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
+                local dx = unitPos[1] - position[1]
+                local dz = unitPos[3] - position[3]
+                local distance = dx * dx + dz * dz
+                if not retUnit or numShields < targetShields or (numShields == targetShields and distance < retDistance) then
                     retUnit = unit
-                    distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
+                    retDistance = distance
                     targetShields = numShields
                 end
             end
@@ -2279,7 +2306,7 @@ function ExpansionSpamBaseLocationCheck(aiBrain, location)
         return false
     end
 
-    if RNGGETN(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
+    if not table.empty(aiBrain.EnemyIntel.EnemyStartLocations) then
         --RNGLOG('*AI RNG: Enemy Start Locations are present for ExpansionSpamBase')
         --RNGLOG('*AI RNG: SpamBase position is'..repr(location))
         enemyStarts = aiBrain.EnemyIntel.EnemyStartLocations
@@ -3251,7 +3278,7 @@ ACUPriorityDirector = function(aiBrain, platoon, platoonPosition, maxRadius)
                         --RNGLOG('Return ACU enemy acu from ally cdr')
                         return target
                     end
-                elseif not v.Ally and v.OnField and (v.LastSpotted + 30) > GetGameTimeSeconds() then
+                elseif not v.Ally and v.OnField and (v.LastSpotted + 30) < GetGameTimeSeconds() then
                     if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
                         if VDist2Sq(v.Position[1], v.Position[3], platoonPosition[1], platoonPosition[3]) < 6400 then
                             local enemyUnits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE + categories.INDIRECTFIRE, v.Position, 60 ,'Enemy')
@@ -3268,7 +3295,7 @@ ACUPriorityDirector = function(aiBrain, platoon, platoonPosition, maxRadius)
                                     end
                                 end
                             end
-                            if RNGGETN(enemyACUTable) > 0 then
+                            if not table.empty(enemyACUTable) then
                                 --Do funky stuff to see if we should try rush this acu
                             end
                         end
@@ -3286,7 +3313,7 @@ ACUPriorityDirector = function(aiBrain, platoon, platoonPosition, maxRadius)
                                 end
                             end
                         end
-                        if RNGGETN(enemyACUTable) > 0 then
+                        if not table.empty(enemyACUTable) then
                             --Do funky stuff to see if we should try snipe this acu
                         end
                     end
@@ -3460,7 +3487,7 @@ PlatoonReclaimQueryRNGRNG = function(aiBrain,platoon)
                 coroutine.yield(1)
                 return
             end
-            if reclaimRect and RNGGETN( reclaimRect ) > 0 then
+            if reclaimRect and not table.empty( reclaimRect ) then
                 for k,v in reclaimRect do
                     if not IsProp(v) or self.BadReclaimables[v] then continue end
                     currentValue = currentValue + v.MaxMassReclaim
@@ -5303,5 +5330,12 @@ DefensiveClusterCheck = function(aiBrain, position)
             end
         end
     end
+end
+
+function IsTableEmptyRNG(tbl)
+    for _, _ in pairs(tbl) do
+        return false
+    end
+    return true
 end
 

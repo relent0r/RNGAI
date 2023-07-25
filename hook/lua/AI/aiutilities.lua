@@ -128,7 +128,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
                 IssueMove({unit}, path[i])
             end
             IssueMove({unit}, destination)
-            if unit.EngineerBuildQueue and RNGGETN(unit.EngineerBuildQueue) > 0 then
+            if unit.EngineerBuildQueue and not table.empty(unit.EngineerBuildQueue) then
                 if unit.EngineerBuildQueue[1][4] then
                     --RNGLOG('BorderWarning build')
                     IssueBuildMobile({unit}, {unit.EngineerBuildQueue[1][2][1], 0, unit.EngineerBuildQueue[1][2][2]}, unit.EngineerBuildQueue[1][1], {})
@@ -140,7 +140,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
             local movementTimeout = 0
             while not IsDestroyed(unit) do
                 local reclaimed
-                if brokenPathMovement and ( unit.EngineerBuildQueue and RNGGETN(unit.EngineerBuildQueue) > 0 or jobType == 'Reclaim' )then
+                if brokenPathMovement and ( unit.EngineerBuildQueue and not table.empty(unit.EngineerBuildQueue) or jobType == 'Reclaim' )then
                     for i=currentPathNode, pathLength do
                         IssueMove({unit}, path[i])
                     end
@@ -379,7 +379,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
             end
             while not IsDestroyed(eng) do
                 local reclaimed
-                if brokenPathMovement and eng.EngineerBuildQueue and RNGGETN(eng.EngineerBuildQueue) > 0 then
+                if brokenPathMovement and eng.EngineerBuildQueue and not table.empty(eng.EngineerBuildQueue) then
                     pos = eng:GetPosition()
                     local queuePointTaken = {}
                     local skipPath = false

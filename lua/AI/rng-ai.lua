@@ -1087,6 +1087,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local selfStartPosX, selfStartPosY = self:GetArmyStartPos()
         self.BrainIntel.StartPos = { selfStartPosX, GetSurfaceHeight(selfStartPosX, selfStartPosY), selfStartPosY }
         self.BrainIntel.MapOwnership = 0
+        self.BrainIntel.AirStagingRequired = false
         self.BrainIntel.CurrentIntelAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, self.MapCenterPoint)
         self.BrainIntel.MilitaryRange = BaseMilitaryArea
         self.BrainIntel.DMZRange = BaseDMZArea
@@ -2557,7 +2558,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 local dupe = false
                 if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 and v.Position[1] then
                     --RNGLOG('ACU last spotted '..(GetGameTimeSeconds() - v.LastSpotted)..' seconds ago')
-                    if v.LastSpotted + 60 > GetGameTimeSeconds() then
+                    if v.LastSpotted + 60 < GetGameTimeSeconds() then
                         local gridXID, gridZID = im:GetIntelGrid(v.Position)
                         if not im.MapIntelGrid[gridXID][gridZID].MustScout then
                             im.MapIntelGrid[gridXID][gridZID].MustScout = true
@@ -3698,7 +3699,7 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.EnemyIntel.ACU do
                 if not v.Ally and v.HP ~= 0 and v.LastSpotted ~= 0 then
                     if platoonType == 'GUNSHIP' and platoonDPS then
-                        if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and v.LastSpotted + 120 > GetGameTimeSeconds() then
+                        if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and v.LastSpotted + 120 < GetGameTimeSeconds() then
                             RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
                             --RNGLOG('ACU Added to target check in director')
                             local gridX, gridY = im:GetIntelGrid(v.Position)
@@ -3739,7 +3740,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                         end
                     elseif platoonType == 'SATELLITE' and platoonDPS then
-                        if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and v.LastSpotted + 120 > GetGameTimeSeconds() then
+                        if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and v.LastSpotted + 120 < GetGameTimeSeconds() then
                             if RUtils.HaveUnitVisual(self, v.Unit, true) and not RUtils.ShieldProtectingTargetRNG(self, v.Unit, nil) then
                                 RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
                                 local gridX, gridY = im:GetIntelGrid(v.Position)
@@ -5844,7 +5845,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
-        if RNGGETN(civUnits) > 0 then
+        if not table.empty(civUnits) then
             self.EnemyIntel.CivilianCaptureUnits = civUnits
         end
         LOG('Civ units '..repr(civUnits))

@@ -122,7 +122,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoon) {
                 --RNGLOG('Base Name '..baseName)
                 --RNGLOG('Base Position '..repr(base.Position))
                 --RNGLOG('Base Distance '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
-                    if RNGGETN(base.FactoryManager.FactoryList) > 0 then
+                    if not table.empty(base.FactoryManager.FactoryList) then
                         --RNGLOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
                         local baseDistance = VDist3Sq(position, base.Position)
                         local homeDistance = VDist3Sq(self.Home, base.Position)

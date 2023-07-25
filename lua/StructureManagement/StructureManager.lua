@@ -264,7 +264,7 @@ StructureManager = Class {
                 TotalT3NAVAL = 0,
             }
             for k, manager in self.Brain.BuilderManagers do
-                if manager.FactoryManager.FactoryList and RNGGETN(manager.FactoryManager.FactoryList) > 0 then
+                if manager.FactoryManager.FactoryList and not table.empty(manager.FactoryManager.FactoryList) then
                     for c, unit in manager.FactoryManager.FactoryList do
                         local unitCat = unit.Blueprint.CategoriesHash
                         if not IsDestroyed(unit) then

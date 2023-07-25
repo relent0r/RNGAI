@@ -1033,9 +1033,9 @@ BuilderGroup {
             -- Do we need additional conditions to build it ?
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 20.0 }},
             -- Have we the eco to build it ?
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.70}}, -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.AIRSTAGINGPLATFORM }},
-            { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
+            { MIBC, 'AirStagingWantedRNG', { } },
         },
         BuilderType = 'Any',
         BuilderData = {

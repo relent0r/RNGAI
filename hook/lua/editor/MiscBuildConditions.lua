@@ -146,7 +146,7 @@ end
 function TMLEnemyStartRangeCheck(aiBrain)
     local mainPos = aiBrain.BuilderManagers.MAIN.Position
     if aiBrain.EnemyIntel.EnemyStartLocations then
-        if table.getn(aiBrain.EnemyIntel.EnemyStartLocations) > 0 then
+        if not table.empty(aiBrain.EnemyIntel.EnemyStartLocations) then
             for e, pos in aiBrain.EnemyIntel.EnemyStartLocations do
                 if VDist2Sq(mainPos[1],  mainPos[3], pos.Position[1], pos.Position[3]) < 65536 then
                     --RNGLOG('TMLEnemyStartRangeCheck is true')
@@ -294,4 +294,11 @@ function AirPlayerCheck(aiBrain, locationType, unitCount, unitCategory)
         end
     end
     return true
+end
+
+function AirStagingWantedRNG(aiBrain)
+    if aiBrain.BrainIntel.AirStagingRequired or GetGameTimeSeconds() > 480 then
+        return true
+    end
+    return false
 end

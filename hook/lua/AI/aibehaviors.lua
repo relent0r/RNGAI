@@ -299,7 +299,7 @@ function CDRCallPlatoon(cdr, threatRequired)
         Guard = {},
         Artillery = {}
     }
-    if RNGGETN(platoonTable) > 0 then
+    if not table.empty(platoonTable) then
         for _, plat in platoonTable do
             if PlatoonExists(aiBrain, plat.Platoon) then
                 if NavUtils.CanPathTo(cdr.MovementLayer, cdr.Position, plat.Position) then
@@ -340,25 +340,25 @@ function CDRCallPlatoon(cdr, threatRequired)
         supportPlatoonAvailable = aiBrain:MakePlatoon('ACUSupportPlatoon', 'ACUSupportRNG')
         supportPlatoonAvailable:UniquelyNamePlatoon('ACUSupportPlatoon')
         supportPlatoonAvailable:ForkThread(ZoneUpdate)
-        if RNGGETN(validUnits.Attack) > 0 then
+        if not table.empty(validUnits.Attack) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Attack, 'Attack', 'None')
         end
-        if RNGGETN(validUnits.Artillery) > 0 then
+        if not table.empty(validUnits.Artillery) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Artillery, 'Artillery', 'None')
         end
-        if RNGGETN(validUnits.Guard) > 0 then
+        if not table.empty(validUnits.Guard) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Guard, 'Guard', 'None')
         end
         bMergedPlatoons = true
     elseif bValidUnits and PlatoonExists(aiBrain, supportPlatoonAvailable)then
         --RNGLOG('Support Platoon already exist, assigning to existing one')
-        if RNGGETN(validUnits.Attack) > 0 then
+        if not table.empty(validUnits.Attack) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Attack, 'Attack', 'None')
         end
-        if RNGGETN(validUnits.Artillery) > 0 then
+        if not table.empty(validUnits.Artillery) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Artillery, 'Artillery', 'None')
         end
-        if RNGGETN(validUnits.Guard) > 0 then
+        if not table.empty(validUnits.Guard) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Guard, 'Guard', 'None')
         end
         bMergedPlatoons = true
@@ -423,7 +423,7 @@ function CDRBuildFunction(aiBrain, cdr, object)
         if RNGGETN(cdr.EngineerBuildQueue) > 0 then
             for k,v in cdr.EngineerBuildQueue do
                --RNGLOG('Attempt to build queue item of '..repr(v))
-                while not cdr.Dead and RNGGETN(cdr.EngineerBuildQueue) > 0 do
+                while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
                     IssueClearCommands({cdr})
                     IssueMove({cdr},v.Position)
                     if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then
@@ -536,14 +536,14 @@ function CDRBuildFunction(aiBrain, cdr, object)
                         local newEntry = {whatToBuild, {relativeLoc[1], relativeLoc[3], 0}, false, Position=relativeLoc}
                         RNGINSERT(cdr.EngineerBuildQueue, newEntry)
                        --RNGLOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
-                        if RNGGETN(cdr.EngineerBuildQueue) > 0 then
+                        if not table.empty(cdr.EngineerBuildQueue) then
                             for k,v in cdr.EngineerBuildQueue do
                                --RNGLOG('Attempt to build queue item of '..repr(v))
                                if abortBuild then
                                     cdr.EngineerBuildQueue[k] = nil
                                     break
                                 end
-                                while not cdr.Dead and RNGGETN(cdr.EngineerBuildQueue) > 0 do
+                                while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
                                     IssueClearCommands({cdr})
                                     IssueMove({cdr},v.Position)
                                     if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then
@@ -611,7 +611,7 @@ function CDRBuildFunction(aiBrain, cdr, object)
         if RNGGETN(cdr.EngineerBuildQueue) > 0 then
             for k,v in cdr.EngineerBuildQueue do
                --RNGLOG('Attempt to build queue item of '..repr(v))
-                while not cdr.Dead and RNGGETN(cdr.EngineerBuildQueue) > 0 do
+                while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
                     IssueClearCommands({cdr})
                     IssueMove({cdr},v.Position)
                     if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then
@@ -894,7 +894,7 @@ function PerformACUReclaim(aiBrain, cdr, minimumReclaim)
                 break
             end
         end
-        if RNGGETN(closeReclaim) > 0 then
+        if not table.empty(closeReclaim) then
             reclaiming = true
             IssueClearCommands({cdr})
             for _, rec in closeReclaim do
@@ -1960,7 +1960,7 @@ function CDRRetreatRNG(aiBrain, cdr, base)
            --RNGLOG('Base Name '..baseName)
            --RNGLOG('Base Position '..repr(base.Position))
            --RNGLOG('Base Distance '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
-            if RNGGETN(base.FactoryManager.FactoryList) > 0 then
+            if not table.empty(base.FactoryManager.FactoryList) then
                 --RNGLOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
                 local baseDistance = VDist3Sq(cdr.Position, base.Position)
                 local homeDistance = VDist3Sq(cdr.CDRHome, base.Position)
@@ -2209,7 +2209,7 @@ function CDREnhancementsRNG(aiBrain, cdr)
             --RNGLOG('ACU Enhancement Base Name '..baseName)
             --RNGLOG('ACU Enhancement Base Position '..repr(base.Position))
             --RNGLOG('ACU Enhancement Base Distance '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
-            if RNGGETN(base.FactoryManager.FactoryList) > 0 then
+            if not table.empty(base.FactoryManager.FactoryList) then
                 if VDist2Sq(cdrPos[1], cdrPos[3], base.Position[1], base.Position[3]) < distSqAway then
                     inRange = true
                     if baseName == 'MAIN' and cdr.CurrentEnemyThreat > 20 then
@@ -3364,7 +3364,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
 
     --RNGLOG(' ACUs detected are '..table.getn(targetPositions))
 
-    if RNGGETN(targetPositions) > 0 then
+    if not table.empty(targetPositions) then
         for _, pos in targetPositions do
             local antinukes = AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, platoonPosition, pos[1], categories.ANTIMISSILE * categories.SILO, 90, 'Enemy')
             if antinukes < 1 then
@@ -3519,7 +3519,7 @@ function AirUnitRefitThreadRNG(unit, plan, data)
                 local unitPos = unit:GetPosition()
                 local plats = AIUtils.GetOwnUnitsAroundPoint(aiBrain, categories.AIRSTAGINGPLATFORM, unitPos, 400)
                 --RNGLOG('AirStaging Units found '..table.getn(plats))
-                if RNGGETN(plats) > 0 then
+                if not table.empty(plats) then
                     local closest, distance
                     for _, v in plats do
                         if not v.Dead then
@@ -3558,7 +3558,7 @@ function AirUnitRefitThreadRNG(unit, plan, data)
                     --RNGLOG('No AirStaging Units found in range')
                 end
             else
-                --RNGLOG('No AirStaging Units found')
+                aiBrain.BrainIntel.AirStagingRequired = true
             end
         end
         coroutine.yield(15)
