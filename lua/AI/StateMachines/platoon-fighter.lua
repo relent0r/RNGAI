@@ -81,12 +81,45 @@ AIPlatoonFighterBehavior = Class(AIPlatoon) {
 
     },
 
+    MoveToPosition = State {
+
+        StateName = "MoveToPosition",
+
+        --- The platoon retreats from a threat
+        ---@param self AIPlatoonFighterBehavior
+        Main = function(self)
+            local brain = self:GetBrain()
+            if not self.BuilderData.Position then
+                self:ChangeState(self.Error)
+            end
+            if self.BuilderData.Retreat then
+                IssueMove(self:GetPlatoonUnits(), self.BuilderData.Position)
+            else
+                IssueAggressiveMove(self:GetPlatoonUnits(), self.BuilderData.Position)
+            end
+            coroutine.yield(30)
+            self:ChangeState(self.DecideWhatToDo)
+            --[[
+            local movePosition = self.BuilderData.Position
+            while brain:PlatoonExists(self) do
+                coroutine.yield(15)
+                local platPos = self:GetPlatoonPosition()
+                local dx = platPos[1] - movePosition[1]
+                local dz = platPos[3] - movePosition[3]
+                local posDist = dx * dx + dz * dz
+                
+            end]]
+
+        end,
+
+    },
+
     Retreating = State {
 
         StateName = "Retreating",
 
         --- The platoon retreats from a threat
-        ---@param self AIPlatoonACUBehavior
+        ---@param self AIPlatoonFighterBehavior
         Main = function(self)
             local brain = self:GetBrain()
             local position = self:GetPlatoonPosition()
