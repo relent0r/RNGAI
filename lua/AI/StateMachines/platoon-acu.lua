@@ -1589,6 +1589,24 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                                     eta = seconds + ((tick - lastTick) / 10) * ((1-progress)/(progress-lastProgress))
                                 end
                             end
+                            --[[
+                                --Alternate version
+                                local eta = -1
+                                local tick = GetGameTick()
+                                local seconds = GetGameTimeSeconds()
+                                local progress = cdr:GetWorkProgress()
+
+                                if lastTick and progress > lastProgress then
+                                    local progressDelta = progress - lastProgress
+                                    local tickDelta = tick - lastTick
+
+                                    if progressDelta > 0 then
+                                        local estimatedProgress = 1 - progress
+                                        local progressRate = progressDelta / tickDelta
+                                        eta = seconds + (estimatedProgress / progressRate)
+                                    end
+                                end
+                            ]]
                             if cdr.Upgrading then
                                 --RNGLOG('cdr.Upgrading is set to true')
                             end

@@ -5332,10 +5332,23 @@ DefensiveClusterCheck = function(aiBrain, position)
     end
 end
 
-function IsTableEmptyRNG(tbl)
-    for _, _ in pairs(tbl) do
-        return false
-    end
-    return true
+--[[
+-- Calculate the distance ratio for a given position
+local function getDistanceRatio(position, startX, startZ, platLoc, mapSize)
+    local distanceToBorderX = math.min(position[1] - startX, mapSize[1] - position[1] + startX)
+    local distanceToBorderZ = math.min(position[3] - startZ, mapSize[2] - position[3] + startZ)
+    local distanceToBorder = math.min(distanceToBorderX, distanceToBorderZ)
+    
+    local distanceToPlatform = VDist2Sq(position[1], position[3], platLoc[1], platLoc[3])
+    local edgeDistance = RUtils.EdgeDistance(position[1], position[3], mapSize[1], mapSize[2])
+    
+    return distanceToBorder / (distanceToPlatform + edgeDistance)
 end
 
+-- Sort the MassMarkerTable using a lambda function as the comparison key
+table.sort(self.MassMarkerTable, function(a, b)
+    local ratioA = getDistanceRatio(a.Position, startX, startZ, platLoc, ScenarioInfo.size)
+    local ratioB = getDistanceRatio(b.Position, startX, startZ, platLoc, ScenarioInfo.size)
+    return ratioA < ratioB -- Use < instead of > to sort in ascending order (closest to farthest)
+end)
+]]
