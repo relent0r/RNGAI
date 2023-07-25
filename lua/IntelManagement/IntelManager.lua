@@ -1298,7 +1298,7 @@ IntelManager = Class {
                     self.Brain.amanager.Demand.Air.T3.bomber = 0
                 end
             end
-            if table.getn(potentialStrikes) > 0 then
+            if not table.empty(potentialStrikes) then
                 local count = math.ceil(desiredStrikeDamage / 1000)
                 local acuSnipe = false
                 local acuIndex = false
@@ -1345,7 +1345,7 @@ IntelManager = Class {
             end
         elseif type == 'LandAntiSurface' then
             local acuSnipe = false
-            if table.getn(potentialStrikes) > 0 then
+            if not table.empty(potentialStrikes) then
                 local count = math.ceil(desiredStrikeDamage / 1000)
                 local acuIndex = false
                 for k, v in potentialStrikes do
@@ -1378,7 +1378,7 @@ IntelManager = Class {
                 end
             end
         elseif type == 'AirAntiNaval' then
-            if table.getn(potentialStrikes) > 0 then
+            if not table.empty(potentialStrikes) then
                 --RNGLOG('potentialStrikes for navy '..repr(potentialStrikes))
                 local count = math.ceil(desiredStrikeDamage / 1000)
                 local acuSnipe = false
@@ -1830,7 +1830,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
         WARN('No RNGArea in path node, either its not created yet or the marker analysis hasnt happened')
     end
     --RNGLOG('We have '..RNGGETN(bestExpansions)..' expansions to pick from')
-    if RNGGETN(bestExpansions) > 0 then
+    if not table.empty(bestExpansions) then
         if type == 'acu' then
             local bestOption = false
             local secondBestOption = false
@@ -1839,7 +1839,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                 if VDist2Sq(MainPos[1], MainPos[3], v.Expansion.Position[1], v.Expansion.Position[3]) > 10000 then
                     local alreadySecure = false
                     for k, b in aiBrain.BuilderManagers do
-                        if k == v.Expansion.Name and RNGGETN(aiBrain.BuilderManagers[k].FactoryManager.FactoryList) > 0 then
+                        if k == v.Expansion.Name and not table.empty(aiBrain.BuilderManagers[k].FactoryManager.FactoryList) then
                            --RNGLOG('Already a builder manager with factory present, set')
                             alreadySecure = true
                             break

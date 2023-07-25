@@ -1492,7 +1492,7 @@ StructureManager = Class {
                     local totalUnits = 0
                     local checkUnits = GetUnitsAroundPoint(self.Brain, categoriesToCheck, manager.FactoryManager.Location, manager.FactoryManager.Radius, 'Ally')
                     for _, unit in checkUnits do
-                        if unit.AdjacentUnits and RNGGETN(unit.AdjacentUnits) > 0 then
+                        if unit.AdjacentUnits and not table.empty(unit.AdjacentUnits) then
                             local shielded = false
                             for d, adjUnit in unit.AdjacentUnits do
                                 if adjUnit.Blueprint.CategoriesHash.SHIELD then

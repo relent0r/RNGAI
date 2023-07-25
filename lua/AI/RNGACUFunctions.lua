@@ -196,7 +196,12 @@ function CDRThreatAssessmentRNG(cdr)
             local enemyThreatConfidenceModifier = 0
             for k,v in friendlyUnits do
                 if v and not v.Dead then
-                    if VDist3Sq(v:GetPosition(), cdr.Position) < 1225 then
+                    local unitPos = v:GetPosition()
+                    local dx = cdr.Position[1] - unitPos[1]
+                    local dy = cdr.Position[2] - unitPos[2]
+                    local dz = cdr.Position[3] - unitPos[3]
+                    local unitDist = dx * dx + dy * dy + dz * dz
+                    if unitDist < 1225 then
                         if EntityCategoryContains(categories.COMMAND, v) then
                             friendlyUnitThreatInner = friendlyUnitThreatInner + v:EnhancementThreatReturn()
                         else
@@ -221,7 +226,12 @@ function CDRThreatAssessmentRNG(cdr)
             local enemyACUHealthModifier = 1.0
             for k,v in enemyUnits do
                 if v and not v.Dead then
-                    if VDist3Sq(v:GetPosition(), cdr.Position) < 1225 then
+                    local unitPos = v:GetPosition()
+                    local dx = cdr.Position[1] - unitPos[1]
+                    local dy = cdr.Position[2] - unitPos[2]
+                    local dz = cdr.Position[3] - unitPos[3]
+                    local unitDist = dx * dx + dy * dy + dz * dz
+                    if unitDist < 1225 then
                         if EntityCategoryContains(CategoryT2Defense, v) then
                             if v.Blueprint.Defense.SurfaceThreatLevel then
                                 enemyUnitThreatInner = enemyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel * 1.5

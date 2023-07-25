@@ -999,7 +999,7 @@ function CDRCheckForCloseMassPoints(aiBrain, cdr)
             end
         end
         table.sort(MassMarker, function(a,b) return a.Distance < b.Distance end)
-        if table.getn(MassMarker) > 0 then
+        if not table.empty(MassMarker) then
             return true, MassMarker
         else
             return false

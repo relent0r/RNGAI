@@ -713,7 +713,7 @@ function UseTransportsRNG(units, transports, location, transportPlatoon)
 
     local monitorUnits = {}
     for num, data in transportTable do
-        if table.getn(data.Units) > 0 then
+        if not table.empty(data.Units) then
             IssueClearCommands(data.Units)
             IssueTransportLoad(data.Units, data.Transport)
             for k, v in data.Units do table.insert(monitorUnits, v) end
@@ -1008,7 +1008,7 @@ function AIGetClosestMarkerLocationRNG(aiBrain, markerType, startX, startZ, extr
     if extraTypes then
         for num, pType in extraTypes do
             local moreMarkers = AIGetMarkerLocations(aiBrain, pType)
-            if table.getn(moreMarkers) > 0 then
+            if not table.empty(moreMarkers) then
                 for _, v in moreMarkers do
                     table.insert(markerList, {Position = v.Position, Name = v.Name})
                 end

@@ -223,7 +223,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if aiBrain.EnemyIntel.EnemyStartLocations then
                         if not table.empty(aiBrain.EnemyIntel.EnemyStartLocations) then
                             for e, pos in aiBrain.EnemyIntel.EnemyStartLocations do
-                                if VDist2Sq(targetPos[1],  targetPos[3], pos.Position[1], pos.Position[3]) < 10000 then
+                                local dx = pos.Position[1] - targetPos[1]
+                                local dz = pos.Position[3] - targetPos[3]
+                                local startDist = dx * dx + dz * dz
+                                if startDist < 10000 then
                                     --RNGLOG('AirHuntAI target within enemy start range, return to base')
                                     target = false
                                     if PlatoonExists(aiBrain, self) then
@@ -440,7 +443,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     --RNGLOG('Air threat at target position '..targetThreat)
                     --RNGLOG('Current Platoon threat '..self.CurrentPlatoonThreat)
                     if VDist3Sq(currentPlatPos, targetPos) > restrictedZone then
-                        if (threatCountLimit < 6 ) and (VDist2Sq(currentPlatPos[1], currentPlatPos[2], startX, startZ) < 22500) and (targetThreat * 1.3 > self.CurrentPlatoonThreat) and platoonCount < platoonLimit and not aiBrain.CDRUnit.Caution then
+                        if (threatCountLimit < 6 ) and (VDist2Sq(currentPlatPos[1], currentPlatPos[3], startX, startZ) < 22500) and (targetThreat * 1.3 > self.CurrentPlatoonThreat) and platoonCount < platoonLimit and not aiBrain.CDRUnit.Caution then
                             --RNGLOG('Target air threat too high')
                             threatCountLimit = threatCountLimit + 1
                             self:MoveToLocation(aiBrain.BuilderManagers['MAIN'].Position, false)
@@ -746,8 +749,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                 else
                     markerThreat = GetThreatAtPosition(aiBrain, marker.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, threatType)
                 end
-                local distSq = VDist2Sq(marker.Position[1], marker.Position[3], platLoc[1], platLoc[3])
-
+                local dx = platLoc[1] - marker.Position[1]
+                local dz = platLoc[3] - marker.Position[3]
+                local distSq = dx * dx + dz * dz
                 if distSq > 100 then
                     if markerThreat >= minThreatThreshold and markerThreat <= maxThreatThreshold then
                         if self:AvoidsBases(marker.Position, bAvoidBases, avoidBasesRadius) then
@@ -775,7 +779,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                 self.LastMarker[2] = nil
             end
             for _,marker in markerLocations do
-                local distSq = VDist2Sq(marker.Position[1], marker.Position[3], platLoc[1], platLoc[3])
+                local dx = platLoc[1] - marker.Position[1]
+                local dz = platLoc[3] - marker.Position[3]
+                local distSq = dx * dx + dz * dz
                 if self:AvoidsBases(marker.Position, bAvoidBases, avoidBasesRadius) and distSq > (avoidClosestRadius * avoidClosestRadius) then
                     if distSq < bestDistSq then
                         if self.LastMarker[1] and marker.Position[1] == self.LastMarker[1][1] and marker.Position[3] == self.LastMarker[1][3] then
@@ -3486,7 +3492,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if not platoonPosition then
                         return
                     end
-                    baseDist = VDist2Sq(platoonPosition[1], platoonPosition[3], mainBasePos[1], mainBasePos[3])
+                    local dx = platoonPosition[1] - mainBasePos[1]
+                    local dz = platoonPosition[3] - mainBasePos[3]
+                    local baseDist = dx * dx + dz * dz
                     if baseDist < 6400 then
                         break
                     end
@@ -4384,13 +4392,16 @@ Platoon = Class(RNGAIPlatoonClass) {
         local distantMarkers = 0
         local closestMarker = false
         for k, marker in massMarkers do
-            if VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 165 and NavUtils.CanPathTo('Amphibious', engPos, marker.Position) then
+            local dx = engPos[1] - marker.Position[1]
+            local dz = engPos[3] - marker.Position[3]
+            local markerDist = dx * dx + dz * dz
+            if markerDist < 165 and NavUtils.CanPathTo('Amphibious', engPos, marker.Position) then
                 closeMarkers = closeMarkers + 1
                 RNGINSERT(buildMassPoints, marker)
                 if closeMarkers > 3 then
                     break
                 end
-            elseif VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 484 and NavUtils.CanPathTo('Amphibious', engPos, marker.Position) then
+            elseif markerDist < 484 and NavUtils.CanPathTo('Amphibious', engPos, marker.Position) then
                 distantMarkers = distantMarkers + 1
                 --RNGLOG('CommanderInitializeAIRNG : Inserting Distance Mass Point into table')
                 RNGINSERT(buildMassDistantPoints, marker)
@@ -4398,8 +4409,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                     break
                 end
             end
-            if not closestMarker or closestMarker > VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) then
-                closestMarker = VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3])
+            if not closestMarker or closestMarker > markerDist then
+                closestMarker = markerDist
             end
         end
         if aiBrain.RNGDEBUG then
@@ -4471,7 +4482,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                 while VDist2Sq(engPos[1],engPos[3],v.Position[1],v.Position[3]) > 165 do
                     coroutine.yield(5)
                     engPos = eng:GetPosition()
-                    if eng:IsIdleState() and VDist2Sq(engPos[1],engPos[3],v.Position[1],v.Position[3]) > 165 then
+                    local dx = engPos[1] - v.Position[1]
+                    local dz = engPos[3] - v.Position[3]
+                    local engDist = dx * dx + dz * dz
+                    if eng:IsIdleState() and engDist > 165 then
                         break
                     end
                 end
@@ -9514,7 +9528,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         for _,category in beingBuilt do
             -- Track all valid units in the assist list so we can load balance for builders
             local assistList = RUtils.GetAssisteesRNG(aiBrain, assistData.AssistLocation, assistData.AssisteeType, category, assisteeCat)
-            if RNGGETN(assistList) > 0 then
+            if not table.empty(assistList) then
                 -- only have one unit in the list; assist it
                 local low = false
                 local bestUnit = false
