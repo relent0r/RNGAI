@@ -3876,8 +3876,12 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
     local pointTable = DrawCirclePoints(8, platoon.PlatoonStrikeRadius, targetPosition)
     local maxDamage = target.Blueprint.Economy.BuildCostMass
     local setPointPos = false
+    local strikeCategories = categories.STRUCTURE
+    if target:GetFractionComplete() < 0.8 then
+        strikeCategories = categories.STRUCTURE + categories.ENGINEER
+    end
     -- Check radius of target position to set the minimum damage
-    local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE, targetPosition, platoon.PlatoonStrikeRadius + 4, 'Enemy')
+    local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, strikeCategories, targetPosition, platoon.PlatoonStrikeRadius + 4, 'Enemy')
     local damage = 0
     for _, unit in enemiesAroundTarget do
         if not unit.Dead then
@@ -3905,7 +3909,7 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
         --RNGLOG('pointPos distance from targetpos is '..VDist2(pointPos[1],pointPos[2],targetPosition[1],targetPosition[3]))
         
         local damage = 0
-        local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE, {pointPos[1], 0, pointPos[3]}, platoon.PlatoonStrikeRadius + 4, 'Enemy')
+        local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, strikeCategories, {pointPos[1], 0, pointPos[3]}, platoon.PlatoonStrikeRadius + 4, 'Enemy')
         --RNGLOG('Table count of enemies at pointPos '..table.getn(enemiesAroundTarget))
         for _, unit in enemiesAroundTarget do
             if not unit.Dead then
