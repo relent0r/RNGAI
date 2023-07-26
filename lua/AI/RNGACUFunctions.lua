@@ -847,7 +847,7 @@ function PerformACUReclaim(aiBrain, cdr, minimumReclaim, nextWaypoint)
                 break
             end
         end
-        if RNGGETN(closeReclaim) > 0 then
+        if not table.empty(closeReclaim) then
             reclaiming = true
             IssueClearCommands({cdr})
             for _, rec in closeReclaim do
