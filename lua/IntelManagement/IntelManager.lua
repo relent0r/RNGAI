@@ -375,22 +375,24 @@ IntelManager = Class {
                 elseif platoon.MovementLayer == 'Air' then
                     zoneSet = self.Brain.Zones.Air.zones
                 end
-                if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
-                    --RNGLOG('RNGAI : Zone Raid Selection Query Processing')
-                    local startPosZones = {}
-                    local platoonPosition = platoon:GetPlatoonPosition()
-                    local bestZoneDist
-                    local bestZone
-                    for k, v in zoneSet do
-                        local dx = platoonPosition[1] - v.pos[1]
-                        local dz = platoonPosition[3] - v.pos[3]
-                        local zoneDist = dx * dx + dz * dz
-                        if not bestZoneDist or zoneDist < bestZoneDist then
-                            bestZoneDist = zoneDist
-                            bestZone = v.id
-                        end
+                local startPosZones = {}
+                local platoonPosition = platoon:GetPlatoonPosition()
+                local bestZoneDist
+                local bestZone
+                for k, v in zoneSet do
+                    local dx = platoonPosition[1] - v.pos[1]
+                    local dz = platoonPosition[3] - v.pos[3]
+                    local zoneDist = dx * dx + dz * dz
+                    if not bestZoneDist or zoneDist < bestZoneDist then
+                        bestZoneDist = zoneDist
+                        bestZone = v.id
                     end
                 end
+                if bestZone then
+                    return bestZone
+                end
+            else
+                WARN('Mapping Zones are not initialized, unable to query zone information')
             end
         end
     end,
