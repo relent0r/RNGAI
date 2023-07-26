@@ -5352,3 +5352,58 @@ table.sort(self.MassMarkerTable, function(a, b)
     return ratioA < ratioB -- Use < instead of > to sort in ascending order (closest to farthest)
 end)
 ]]
+--[[ 
+function Vector3Subtract(a, b)
+    return {a[1] - b[1], a[2] - b[2], a[3] - b[3]}
+end
+
+function Vector3Normalize(v)
+    local length = math.sqrt(v[1]^2 + v[2]^2 + v[3]^2)
+    return {v[1] / length, v[2] / length, v[3] / length}
+end
+
+function AvoidObstacle(startPosition, targetPosition, obstaclePosition, avoidanceRadius)
+    local directionToTarget = Vector3Normalize(Vector3Subtract(targetPosition, startPosition))
+    local directionToObstacle = Vector3Normalize(Vector3Subtract(obstaclePosition, startPosition))
+    local distanceToObstacle = math.sqrt(directionToObstacle[1]^2 + directionToObstacle[2]^2 + directionToObstacle[3]^2)
+
+    if distanceToObstacle > avoidanceRadius then
+        -- Obstacle is far enough, move towards the target position
+        return directionToTarget
+    else
+        -- Calculate a new position to avoid the obstacle
+        local epsilon = 0.1
+        local newPosition = {
+            obstaclePosition[1] + (avoidanceRadius + epsilon) * directionToObstacle[1],
+            obstaclePosition[2] + (avoidanceRadius + epsilon) * directionToObstacle[2],
+            obstaclePosition[3] + (avoidanceRadius + epsilon) * directionToObstacle[3]
+        }
+        return Vector3Normalize(Vector3Subtract(newPosition, startPosition))
+    end
+end
+
+local startPosition = {0, 0, 0}
+local targetPosition = {10, 0, 0}
+local obstaclePosition = {5, 5, 0}
+local avoidanceRadius = 2
+
+local direction = AvoidObstacle(startPosition, targetPosition, obstaclePosition, avoidanceRadius)
+
+function Vector3Add(a, b)
+    return {a[1] + b[1], a[2] + b[2], a[3] + b[3]}
+end
+
+function GetPositionAlongDirection(startPosition, direction, distance)
+    -- Scale the direction vector by the distance
+    local displacement = {direction[1] * distance, direction[2] * distance, direction[3] * distance}
+    -- Add the displacement to the starting position to get the new position
+    return Vector3Add(startPosition, displacement)
+end
+
+local startPosition = {0, 0, 0}
+local direction = {1, 0, 0} -- Example direction (unit vector)
+local distance = 5 -- Distance to move along the direction
+
+local newPosition = GetPositionAlongDirection(startPosition, direction, distance)
+
+]]

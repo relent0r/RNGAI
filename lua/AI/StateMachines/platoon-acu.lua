@@ -127,6 +127,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                 local highThreat = false
                 --RNGLOG('Enhancement Thread run at '..gameTime)
                 if self.BuilderData.ExtractorRetreat and VDist3Sq(cdr.Position, self.BuilderData.Position) <= self.BuilderData.CutOff and cdr.CurrentEnemyThreat < 15 then
+                    LOG('ACU close to position and threat is '..cdr.CurrentEnemyThreat)
                     self:ChangeState(self.EnhancementBuild)
                 end
                 if brain.BuilderManagers then
@@ -134,8 +135,10 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     for baseName, base in brain.BuilderManagers do
                         if not table.empty(base.FactoryManager.FactoryList) then
                             if VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]) < distSqAway then
+                                LOG('Current distance from base is '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
+                                LOG('Current base key is '..baseName)
                                 inRange = true
-                                if baseName == 'MAIN' and cdr.CurrentEnemyThreat > 20 then
+                                if baseName ~= 'MAIN' and cdr.CurrentEnemyThreat > 20 then
                                     highThreat = true
                                 end
                                 break
@@ -144,6 +147,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     end
                 end
                 if inRange and not highThreat then
+                    LOG('ACU close to home and threat is '..cdr.CurrentEnemyThreat)
                     self:ChangeState(self.EnhancementBuild)
                     return
                 elseif not highThreat then
@@ -1579,6 +1583,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         local lastTick
                         local lastProgress
                         while not cdr.Dead and not cdr:HasEnhancement(NextEnhancement) do
+                            -- note eta will be in ticks not seconds
                             local eta = -1
                             local tick = GetGameTick()
                             local seconds = GetGameTimeSeconds()
@@ -1589,33 +1594,21 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                                     eta = seconds + ((tick - lastTick) / 10) * ((1-progress)/(progress-lastProgress))
                                 end
                             end
-                            --[[
-                                --Alternate version
-                                local eta = -1
-                                local tick = GetGameTick()
-                                local seconds = GetGameTimeSeconds()
-                                local progress = cdr:GetWorkProgress()
-
-                                if lastTick and progress > lastProgress then
-                                    local progressDelta = progress - lastProgress
-                                    local tickDelta = tick - lastTick
-
-                                    if progressDelta > 0 then
-                                        local estimatedProgress = 1 - progress
-                                        local progressRate = progressDelta / tickDelta
-                                        eta = seconds + (estimatedProgress / progressRate)
-                                    end
-                                end
-                            ]]
+                            
                             if cdr.Upgrading then
                                 --RNGLOG('cdr.Upgrading is set to true')
                             end
-                            if cdr.HealthPercent < 0.40 and eta > 3 and cdr.CurrentEnemyThreat > 10 then
-                                --RNGLOG('* RNGAI: * BuildEnhancementRNG: '..brain.Nickname..' Emergency!!! low health, canceling Enhancement '..enhancement)
+                            if (cdr.HealthPercent < 0.40 and eta > 30 and cdr.CurrentEnemyThreat > 10) or (cdr.CurrentEnemyThreat > 30 and eta > 450 and cdr.CurrentFriendlyThreat < 15) then
+                                --RNGLOG('* RNGAI: * BuildEnhancementRNG: '..brain.Nickname..' Emergency!!! low health, canceling Enhancement '..NextEnhancement)
+                                --LOG('Current enemy threat '..cdr.CurrentEnemyThreat)
+                                --LOG('eta on upgrade '..eta)
+                                --LOG('progress was '..progress)
+
                                 IssueStop({cdr})
                                 IssueClearCommands({cdr})
                                 cdr.Upgrading = false
-                                LOG('cancel upgrade and retreat')
+                                self.BuilderData = {}
+                                --LOG('cancel upgrade and retreat')
                                 self:ChangeState(self.Retreating)
                                 return
                             end
@@ -1631,7 +1624,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             end
                             lastProgress = progress
                             lastTick = tick
-                            --RNGLOG('eta on enhancement is '..eta)
+                            RNGLOG('eta on enhancement is '..eta)
                             coroutine.yield(10)
                         end
                         --LOG('* RNGAI: * BuildEnhancementRNG: '..brain:GetBrain().Nickname..' Upgrade finished '..enhancement)
