@@ -366,6 +366,35 @@ IntelManager = Class {
         end
     end,
 
+    GetClosestZone = function(self, aiBrain, platoon, enemyPosition)
+        if PlatoonExists(aiBrain, platoon) then
+            local zoneSet = false
+            if aiBrain.ZonesInitialized then
+                if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
+                    zoneSet = self.Brain.Zones.Land.zones
+                elseif platoon.MovementLayer == 'Air' then
+                    zoneSet = self.Brain.Zones.Air.zones
+                end
+                if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
+                    --RNGLOG('RNGAI : Zone Raid Selection Query Processing')
+                    local startPosZones = {}
+                    local platoonPosition = platoon:GetPlatoonPosition()
+                    local bestZoneDist
+                    local bestZone
+                    for k, v in zoneSet do
+                        local dx = platoonPosition[1] - v.pos[1]
+                        local dz = platoonPosition[3] - v.pos[3]
+                        local zoneDist = dx * dx + dz * dz
+                        if not bestZoneDist or zoneDist < bestZoneDist then
+                            bestZoneDist = zoneDist
+                            bestZone = v.id
+                        end
+                    end
+                end
+            end
+        end
+    end,
+
     SelectZoneRNG = function(self, aiBrain, platoon, type)
         -- Tricky subject. Distance + threat + percentage of zones owned. If own a high value position do we pay more attention to the edges of that zone? 
         --A multiplier to adjacent edges if you would. We know how many and of what tier extractors we have in a zone. Actually getting an engineer to expand by zone would be interesting.

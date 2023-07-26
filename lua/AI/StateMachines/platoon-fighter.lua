@@ -72,7 +72,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoon) {
         --- The platoon searches for a target
         ---@param self AIPlatoonACUBehavior
         Main = function(self)
-            if self.CurrentEnemyThreat > self.CurrentPlatoonThreat and not self.BuilderData.ProtectACU then
+            if self.CurrentEnemyThreat > self.CurrentPlatoonThreat and not self.BuilderData.ProtectUnit then
                 self:ChangeState(self.Retreating)
                 return
             end
