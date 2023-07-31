@@ -183,7 +183,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     for _, v in brain.EnemyIntel.ACU do
                         if (not v.Unit.Dead) and (not v.Ally) and v.OnField then
                             --RNGLOG('Non Ally and OnField')
-                            if v.LastSpotted ~= 0 and (GetGameTimeSeconds() - 30) < v.LastSpotted and v.DistanceToBase < 22500 then
+                            if v.LastSpotted ~= 0 and (gameTime - 30) < v.LastSpotted and v.DistanceToBase < 22500 then
                                 --RNGLOG('Enemy ACU seen within 30 seconds and is within 150 of our start position')
                                 enemyAcuClose = true
                             end
@@ -200,8 +200,17 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             end
                         end
                         if not alreadyHaveExpansion then
+                            local stageExpansion
                             local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
-                            local stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, BaseDMZArea * 1.5, 'Land', 10, 'acu')
+                            if gameTime < 480 then
+                                LOG('ACU Looking wide for expansion as its early')
+                                stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, BaseDMZArea * 1.5, 'Land', 10, 'acu')
+                            else
+                                LOG('ACU Looking close for expansion as its mid or later')
+                                local distanceCheck = math.sqrt(brain.EnemyIntel.ClosestEnemyBase) / 2 or BaseDMZArea * 0.8
+                                stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, distanceCheck, 'Land', 10, 'acu')
+                            end
+
                             if stageExpansion then
                                 self.BuilderData = {
                                     Expansion = true,
