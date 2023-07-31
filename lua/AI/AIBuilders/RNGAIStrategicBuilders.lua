@@ -31,6 +31,7 @@ BuilderGroup {
                 BuildClose = false,
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.NUKE,
+                HighValue = true,
                 maxUnits = 1,
                 maxRadius = 20,
                 LocationType = 'LocationType',
@@ -49,7 +50,7 @@ BuilderGroup {
             
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 9.0, 800.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.40, 0.90 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.NUKE * categories.STRUCTURE}},
@@ -65,6 +66,7 @@ BuilderGroup {
                 BuildClose = false,
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.NUKE,
+                HighValue = true,
                 maxUnits = 1,
                 maxRadius = 20,
                 LocationType = 'LocationType',
@@ -101,6 +103,7 @@ BuilderGroup {
                 DesiresAssist = true,
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH3,
+                HighValue = true,
                 maxUnits = 1,
                 maxRadius = 20,
                 BuildStructures = {
@@ -120,8 +123,8 @@ BuilderGroup {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { }},
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
-            { EBC, 'GreaterThanEconIncomeCombinedRNG', { 8.0, 700.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
+            { EBC, 'GreaterThanEconIncomeCombinedRNG', { 10.0, 800.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.95 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 } },
         },
@@ -134,6 +137,7 @@ BuilderGroup {
                 DesiresAssist = true,
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH3,
+                HighValue = true,
                 maxUnits = 1,
                 maxRadius = 20,
                 BuildStructures = {
@@ -168,6 +172,7 @@ BuilderGroup {
             Construction = {
                 BuildClose = true,
                 AdjacencyPriority = {categories.SHIELD * categories.STRUCTURE},
+                HighValue = true,
                 BuildStructures = {
                     'T4Artillery',
                 },
@@ -200,6 +205,7 @@ BuilderGroup {
             Construction = {
                 BuildClose = true,
                 AdjacencyPriority = {categories.SHIELD * categories.STRUCTURE},
+                HighValue = true,
                 BuildStructures = {
                     'T3RapidArtillery',
                 },
@@ -232,6 +238,7 @@ BuilderGroup {
             Construction = {
                 BuildClose = true,
                 AdjacencyCategory = categories.SHIELD * categories.STRUCTURE,
+                HighValue = true,
                 BuildStructures = {
                     'T4LandExperimental2',
                 },
@@ -268,6 +275,7 @@ BuilderGroup {
                 DesiresAssist = true,
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH3,
+                HighValue = true,
                 maxUnits = 1,
                 maxRadius = 20,
                 BuildStructures = {
@@ -301,6 +309,7 @@ BuilderGroup {
                 DesiresAssist = true,
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH3,
+                HighValue = true,
                 maxUnits = 1,
                 maxRadius = 20,
                 BuildStructures = {
@@ -336,6 +345,7 @@ BuilderGroup {
             Construction = {
                 BuildClose = true,
                 AdjacencyPriority = {categories.SHIELD * categories.STRUCTURE},
+                HighValue = true,
                 BuildStructures = {
                     'T4Artillery',
                 },
@@ -369,6 +379,7 @@ BuilderGroup {
             Construction = {
                 BuildClose = true,
                 AdjacencyPriority = {categories.SHIELD * categories.STRUCTURE},
+                HighValue = true,
                 BuildStructures = {
                     'T3RapidArtillery',
                 },
@@ -402,6 +413,7 @@ BuilderGroup {
             Construction = {
                 BuildClose = true,
                 AdjacencyCategory = categories.SHIELD * categories.STRUCTURE,
+                HighValue = true,
                 BuildStructures = {
                     'T4LandExperimental2',
                 },

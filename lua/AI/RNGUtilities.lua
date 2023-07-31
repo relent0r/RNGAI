@@ -18,6 +18,7 @@ local GetConsumptionPerSecondMass = moho.unit_methods.GetConsumptionPerSecondMas
 local GetConsumptionPerSecondEnergy = moho.unit_methods.GetConsumptionPerSecondEnergy
 local GetProductionPerSecondMass = moho.unit_methods.GetProductionPerSecondMass
 local GetProductionPerSecondEnergy = moho.unit_methods.GetProductionPerSecondEnergy
+local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local ALLBPS = __blueprints
@@ -138,7 +139,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
         if self.PlatoonData.Construction.CheckCivUnits then
             if aiBrain.EnemyIntel.CivilianCaptureUnits and RNGGETN(aiBrain.EnemyIntel.CivilianCaptureUnits) > 0 then
-                LOG('We have capturable units')
+                --LOG('We have capturable units')
                 local closestUnit
                 local closestDistance
                 local engPos = eng:GetPosition()
@@ -146,11 +147,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     if not IsDestroyed(v.Unit) and v.Risk == 'Low' and (not v.EngineerAssigned or v.EngineerAssigned.Dead) and v.CaptureAttempts < 3 and NavUtils.CanPathTo(self.MovementLayer,engPos,v.Position) then
                         local distance = VDist3Sq(engPos, v.Position)
                         if not closestDistance or distance < closestDistance then
-                            LOG('filtering closest unit, current distance is '..math.sqrt(distance))
+                            --LOG('filtering closest unit, current distance is '..math.sqrt(distance))
                             local unitValue = closestUnit.Blueprint.Economy.BuildCostEnergy.BuildCostMass or 50
                             local distanceMult = math.sqrt(distance)
                             if unitValue / distanceMult > 0.2 then
-                                LOG('Found right value unit '..(unitValue / distanceMult))
+                                --LOG('Found right value unit '..(unitValue / distanceMult))
                                 closestUnit = v.Unit
                                 closestDistance = distance
                             end
@@ -159,9 +160,9 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 end
                 
                 if closestUnit and not IsDestroyed(closestUnit) then
-                    LOG('Found unit to capture, checking threat at position')
+                    --LOG('Found unit to capture, checking threat at position')
                     if GrabPosDangerRNG(aiBrain,closestUnit:GetPosition(), 40).enemy < 5 then
-                        LOG('Attempting to start capture unit ai')
+                        --LOG('Attempting to start capture unit ai')
                         self:CaptureUnitAIRNG(closestUnit)
                         return
                     end
@@ -219,6 +220,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         local reclaimTimeout = 0
                         local massOverflow = false
                         while aiBrain:PlatoonExists(platoon) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 40) do
+                            local brokenPathMovement = false
                             coroutine.yield(1)
                             reclaimTimeout = reclaimTimeout + 1
                             --RNGLOG('Waiting for reclaim to no longer exist')
@@ -232,51 +234,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             if self:IsUnitState('Reclaiming') and reclaimTimeout > 0 then
                                 reclaimTimeout = reclaimTimeout - 1
                             end
+                            brokenPathMovement = PerformEngReclaim(aiBrain, self, 5)
+                            if brokenPathMovement and closestReclaim and (not IsDestroyed(closestReclaim)) then
+                                IssueReclaim({self}, closestReclaim)
+                            end
                             coroutine.yield(20)
-                        end
-                        engPos = self:GetPosition()
-                        local rectDef = Rect(engPos[1] - 8, engPos[3] - 8, engPos[1] + 8, engPos[3] + 8)
-                        local reclaimRect = GetReclaimablesInRect(rectDef)
-                        local engReclaiming = false
-                        if reclaimRect then
-                            for c, b in reclaimRect do
-                                if not IsProp(b) or self.BadReclaimables[b] then continue end
-                                -- Start Blacklisted Props
-                                local blacklisted = false
-                                for _, BlackPos in PropBlacklist do
-                                    if b.CachePosition[1] == BlackPos[1] and b.CachePosition[3] == BlackPos[3] then
-                                        blacklisted = true
-                                        break
-                                    end
-                                end
-                                if blacklisted then continue end
-                                if b.MaxMassReclaim then
-                                    engReclaiming = true
-                                    reclaimCount = reclaimCount + 1
-                                    IssueReclaim({self}, b)
-                                end
-                            end
-                        end
-                        if engReclaiming then
-                            local idleCounter = 0
-                            while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
-                                coroutine.yield(1)
-                                if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
-                                    --RNGLOG('We are not reclaiming or moving in the reclaim loop')
-                                    --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
-                                    idleCounter = idleCounter + 1
-                                    if idleCounter > 15 then
-                                        --RNGLOG('idleCounter hit, breaking loop')
-                                        break
-                                    end
-                                end
-                                --RNGLOG('We are reclaiming stuff')
-                                coroutine.yield(30)
-                            end
-                        end
-                        --RNGLOG('Reclaim Count is '..reclaimCount)
-                        if reclaimCount > 10 then
-                            break
                         end
                         --RNGLOG('Set key to nil '..closestReclaimKey)
                         aiBrain.StartReclaimTable[closestReclaimKey] = nil
@@ -1838,7 +1800,6 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                                         end
                                     end
                                 else
-                                    LOG('No enemy start location '..repr(aiBrain.EnemyIntel.EnemyStartLocations))
                                     for _, w in ArmyBrains do
                                         if IsEnemy(w:GetArmyIndex(), aiBrain:GetArmyIndex()) or (aiBrain:GetArmyIndex() == w:GetArmyIndex()) then
                                             local estartX, estartZ = w:GetArmyStartPos()
@@ -3368,7 +3329,7 @@ GrabPosDangerRNG = function(aiBrain,pos,radius)
                     mult=1.5
                 end
                 if v.Blueprint.CategoriesHash.COMMAND then
-                    mult=0.3
+                    brainThreats.enemy = brainThreats.enemy + v:EnhancementThreatReturn()
                 elseif v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
                     brainThreats.enemy = brainThreats.enemy + v.Blueprint.Defense.SurfaceThreatLevel*mult
                 end
@@ -3383,7 +3344,7 @@ GrabPosDangerRNG = function(aiBrain,pos,radius)
                     mult=0.3
                 end
                 if v.Blueprint.CategoriesHash.COMMAND then
-                    mult=0.3
+                    brainThreats.ally = brainThreats.ally + v:EnhancementThreatReturn()
                 elseif v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
                     brainThreats.ally = brainThreats.ally + v.Blueprint.Defense.SurfaceThreatLevel*mult
                 end
@@ -5121,13 +5082,14 @@ CDRWeaponCheckRNG = function (aiBrain, cdr, selfThreat)
 end
 
 CheckACUSnipe = function(aiBrain, layerType)
+    -- checks if less than 500 seconds have passed since an acu snipe mission was added
     local potentialTarget = false
     local requiredCount = 0
     local acuIndex
     for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
         if layerType == 'Land' then
             if v.LAND and v.LAND.GameTime then
-                if v.LAND.GameTime + 500 > GetGameTimeSeconds() then
+                if v.LAND.GameTime + 500 > GetGameTimeSeconds()then
                     if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
                         potentialTarget = aiBrain.EnemyIntel.ACU[k].Unit
                         requiredCount = v.LAND.CountRequired
@@ -5138,7 +5100,7 @@ CheckACUSnipe = function(aiBrain, layerType)
             end
         elseif layerType == 'Air' then
             if v.AIR and v.AIR.GameTime then
-                if v.AIR.GameTime + 500 > GetGameTimeSeconds() then
+                if v.AIR.GameTime + 500 > GetGameTimeSeconds()then
                     if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
                         potentialTarget = aiBrain.EnemyIntel.ACU[k].Unit
                         requiredCount = v.AIR.CountRequired
@@ -5336,6 +5298,50 @@ DefensiveClusterCheck = function(aiBrain, position)
     end
 end
 
+CheckHighValueUnitsBuilding = function(aiBrain, locationType)
+    LOG('CheckHighValueUnitsBuilding at '..repr(locationType))
+    if not locationType then
+        locationType = 'MAIN'
+    end
+    local baseposition = aiBrain.BuilderManagers[locationType].FactoryManager.Location
+    local radius = aiBrain.BuilderManagers[locationType].FactoryManager.Radius
+    local count = 0
+    if not baseposition then
+        --RNGLOG('No Base Position for GetUnitsBeingBuildlocation')
+        return false
+    end
+    if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime < 1.3 or aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.2 or GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 then
+        local filterUnits = GetOwnUnitsAroundLocationRNG(aiBrain, categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD, baseposition, radius)
+        local highestCompletion
+        local bestUnitId
+        for k,v in filterUnits do
+            if v:IsUnitState('Building') then
+                local beingBuiltUnit = v.UnitBeingBuilt
+                if beingBuiltUnit and EntityCategoryContains(categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC, beingBuiltUnit) then
+                    count = count + 1
+                end
+            end
+        end
+        if count then
+            LOG('Return count of high value units is '..count)
+            return count
+        end
+    end
+    return false
+end
+
+function GetOwnUnitsAroundLocationRNG(aiBrain, category, location, radius)
+    local units = aiBrain:GetUnitsAroundPoint(category, location, radius, 'Ally')
+    local index = aiBrain:GetArmyIndex()
+    local retUnits = {}
+    for _, v in units do
+        if not v.Dead and v:GetAIBrain():GetArmyIndex() == index then
+            RNGINSERT(retUnits, v)
+        end
+    end
+    return retUnits
+end
+
 --[[
 -- Calculate the distance ratio for a given position
 local function getDistanceRatio(position, startX, startZ, platLoc, mapSize)
@@ -5410,4 +5416,79 @@ local distance = 5 -- Distance to move along the direction
 
 local newPosition = GetPositionAlongDirection(startPosition, direction, distance)
 
+Bresenham Line
 ]]
+
+
+-- Function to get a list of positions forming a straight line at a given step size
+local function get_straight_line_at_step(start_positions)
+    local function calculate_center(map_size)
+        return {
+            math.floor(map_size[1] / 2),
+            math.floor(map_size[2] / 2)
+        }
+    end
+    
+    -- Function to determine the direction of the line based on player starting positions
+    local function get_line_direction(player_start_positions)
+        local x1, z1 = player_start_positions[1][1], player_start_positions[1][2]
+        local x2, z2 = player_start_positions[2][1], player_start_positions[2][2]
+    
+        if x1 == x2 then
+            return "vertical"
+        else
+            return "horizontal"
+        end
+    end
+    
+    -- Function to get a list of positions forming a straight line across the center of the map
+    local function get_center_line(map_size, player_start_positions)
+        local center_pos = calculate_center(map_size)
+        local line_positions = {}
+        local direction = get_line_direction(player_start_positions)
+    
+        if direction == "vertical" then
+            for z = 0, map_size[2] - 1 do
+                table.insert(line_positions, {center_pos[1], z})
+            end
+        else
+            for x = 0, map_size[1] - 1 do
+                table.insert(line_positions, {x, center_pos[2]})
+            end
+        end
+    
+        return line_positions
+    end
+
+    local map_size = {ScenarioInfo.size[1], ScenarioInfo.size[2]} -- Replace this with the actual size of your 2D map
+    local line_positions = get_center_line(map_size, start_positions)
+
+
+    return line_positions
+end
+
+function GenerateChokePointLines(aiBrain)
+    local function DrawTargetRadius(aiBrain, position)
+        --RNGLOG('Draw Target Radius points')
+        local counter = 0
+        while counter < 60 do
+            DrawCircle({position[1], 0, position[2]}, 20, 'cc0000')
+            counter = counter + 1
+            coroutine.yield( 2 )
+        end
+    end
+    local enemyx, enemyz = aiBrain:GetCurrentEnemy():GetArmyStartPos()
+    local player_start_positions = {
+        {aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[3]},   -- Player 1 starting position
+        {enemyx, enemyz}, -- Player 2 starting position
+    }
+    LOG('Player Start Positions '..repr(player_start_positions))
+    local step_size = 5
+    local line_positions = get_straight_line_at_step(player_start_positions)
+    for _, v in line_positions do
+        LOG('pos '..repr(v))
+        aiBrain:ForkThread(DrawTargetRadius, v)
+    end
+
+end
+

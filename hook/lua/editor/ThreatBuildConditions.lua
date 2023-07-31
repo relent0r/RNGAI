@@ -135,7 +135,7 @@ end
 
 function LandThreatAtBaseOwnZones(aiBrain)
     -- used for bomber response former
-    if aiBrain.BasePerimeterMonitor['MAIN'].LandUnits > 0 then
+    if aiBrain.BasePerimeterMonitor['MAIN'].LandUnits > 0 or aiBrain.EnemyIntel.HighPriorityTargetAvailable then
         return true
     end
     return false

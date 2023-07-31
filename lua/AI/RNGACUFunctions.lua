@@ -52,7 +52,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.CurrentFriendlyAntiAirThreat = false
     cdr.CurrentEnemyInnerCircle = false
     cdr.CurrentFriendlyInnerCircle = false
-    cdr.Phase = false
+    cdr.Phase = 1
     cdr.PositionStatus = 'Allied'
     cdr.Position = {}
     cdr.Target = false
@@ -125,7 +125,8 @@ function CDRBrainThread(cdr)
                     cdr.GunUpgradeRequired = false
                 end
             end
-        elseif aiBrain.EnemyIntel.Phase == 3 then
+        end
+        if cdr.Phase < 3 and (aiBrain.EnemyIntel.Phase == 3 or aiBrain.BrainIntel.LandPhase == 3 or aiBrain.BrainIntel.AirPhase == 3) then
             --RNGLOG('Enemy is phase 3')
             cdr.Phase = 3
         end
@@ -136,6 +137,15 @@ function CDRBrainThread(cdr)
             --RNGLOG('cdr caution is true due to health < 5000 and distance to home greater than 900')
             cdr.Caution = true
             cdr.CautionReason = 'lowhealth'
+            if (not cdr.GunUpgradePresent) then
+                cdr.GunUpgradeRequired = true
+            end
+            if (not cdr.HighThreatUpgradePresent) and GetEconomyIncome(aiBrain, 'ENERGY') > 80 then
+                cdr.HighThreatUpgradeRequired = true
+            end
+        elseif cdr.Health < 6500 and cdr.PositionStatus == 'Hostile' then
+            cdr.Caution = true
+            cdr.CautionReason = 'lowhealth and hostile'
             if (not cdr.GunUpgradePresent) then
                 cdr.GunUpgradeRequired = true
             end
@@ -280,7 +290,6 @@ function CDRThreatAssessmentRNG(cdr)
             if aiBrain.GridPresence then
                 cdr.PositionStatus = aiBrain.GridPresence:GetInferredStatus(cdr.Position)
                 if cdr.PositionStatus == 'Hostile' then
-                    LOG('We are in the enemies side of the map')
                     enemyUnitThreat = enemyUnitThreat * 1.3
                 end
             end
@@ -299,7 +308,11 @@ function CDRThreatAssessmentRNG(cdr)
            --RNGLOG('Current CDR Confidence '..cdr.Confidence)
            --RNGLOG('Enemy Bomber threat '..cdr.CurrentEnemyAirThreat)
            --RNGLOG('Friendly AA threat '..cdr.CurrentFriendlyAntiAirThreat)
-            if enemyACUPresent and not cdr.SuicideMode and enemyUnitThreatInner > 30 and enemyUnitThreatInner > friendlyUnitThreatInner then
+            if cdr.EnemyNavalPresent then
+                RNGLOG('ACU Threat Assessment . Enemy unit is antinaval and hitting me')
+                cdr.Caution = true
+                cdr.CautionReason = 'enemyNavalStriking'
+            elseif enemyACUPresent and not cdr.SuicideMode and enemyUnitThreatInner > 30 and enemyUnitThreatInner > friendlyUnitThreatInner then
                 RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitInner > friendlyUnitInner')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreatInnerACU'
@@ -762,7 +775,7 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
     and GetEconomyStoredRatio(aiBrain, 'MASS') > 0.05 and GetEconomyStoredRatio(aiBrain, 'ENERGY') > 0.95 then
         return true
     end
-    --RNGLOG('* RNGAI: Upgrade Eco Check False')
+    RNGLOG('* RNGAI: Upgrade Eco Check False')
     return false
 end
 

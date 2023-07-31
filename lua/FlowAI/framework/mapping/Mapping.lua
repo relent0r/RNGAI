@@ -997,7 +997,7 @@ function InfectMarkersRNG(aiBrain,marker,nodekey)
     --RNGLOG('InfectMarkersRNG triggered')
     if marker then
         if RUtils.PositionInWater(marker.position) then
-            local label, reason = NavUtils.GetLabel('Land', marker.position)
+            local label, reason = NavUtils.GetLabel('Water', marker.position)
             if not label then
                 WARN('No water label returned reason '..reason)
                 WARN('Water label failure position was '..repr(marker.position))

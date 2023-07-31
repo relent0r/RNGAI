@@ -52,6 +52,7 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 BuildClose = true,
+                HighValue = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
                     'T4LandExperimental1',
@@ -81,6 +82,7 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 BuildClose = true,
+                HighValue = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
                     'T4LandExperimental1',
@@ -110,6 +112,7 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 BuildClose = true,
+                HighValue = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
                     'T4LandExperimental1',
@@ -140,6 +143,7 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 BuildClose = false,
+                HighValue = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
                     'T4LandExperimental3',
@@ -170,6 +174,7 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 BuildClose = true,
+                HighValue = true,
                 BuildStructures = {
                     'T4AirExperimental1',
                 },
@@ -199,6 +204,7 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 BuildClose = true,
+                HighValue = true,
                 BuildStructures = {
                     'T4SeaExperimental1',
                 },
@@ -227,6 +233,7 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 BuildClose = true,
+                HighValue = true,
                 BuildStructures = {
                     'T4SatelliteExperimental',
                 },
@@ -262,6 +269,7 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 BuildClose = true,
+                HighValue = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
                     'T4LandExperimental1',
@@ -292,6 +300,7 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 BuildClose = true,
+                HighValue = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
                     'T4LandExperimental1',
@@ -321,6 +330,7 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 BuildClose = true,
+                HighValue = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
                     'T4LandExperimental1',
@@ -351,6 +361,7 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 BuildClose = false,
+                HighValue = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
                     'T4LandExperimental3',
@@ -380,6 +391,7 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 BuildClose = true,
+                HighValue = true,
                 BuildStructures = {
                     'T4AirExperimental1',
                 },
@@ -408,6 +420,7 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 BuildClose = true,
+                HighValue = true,
                 BuildStructures = {
                     'T4SeaExperimental1',
                 },
@@ -435,6 +448,7 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 BuildClose = true,
+                HighValue = true,
                 BuildStructures = {
                     'T4SatelliteExperimental',
                 },

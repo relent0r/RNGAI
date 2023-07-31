@@ -4938,6 +4938,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     v:SetPaused(false)
                     continue
                 end
+                if v.PlatoonHandle.PlatoonData.Construction.NoPause then continue end
                 if EntityCategoryContains( engineerCats , v.UnitBeingBuilt) then
                     v:SetPaused(true)
                     continue
@@ -5252,10 +5253,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
+                    {cat = categories.STRUCTURE * categories.EXPERIMENTAL, type = 'Completion'},
+                    {cat = categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade' }, 
                     {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
                     {cat = categories.FACTORY * categories.AIR, type = 'AssistFactory'}, 
-                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
                 }
             end
@@ -5832,12 +5834,12 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         local civUnits = {}
         local searchRadius = math.min(BaseMilitaryArea, minimumRadius)
-        LOG('civ unit search radius '..searchRadius)
+        --LOG('civ unit search radius '..searchRadius)
         local allyUnits = GetUnitsAroundPoint(self, categories.MOBILE + (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.UNSELECTABLE - categories.UNTARGETABLE, self.BrainIntel.StartPos, BaseEnemyArea, 'Neutral')
         for _, v in allyUnits do
             local unitPos = v:GetPosition()
-            LOG('Unit found '..v.UnitId..' distance to base '..VDist3(unitPos, self.BrainIntel.StartPos))
-            if not IsDestroyed(v) and ArmyIsCivilian(v:GetArmy()) and NavUtils.CanPathTo('Amphibious', self.BrainIntel.StartPos, unitPos) then
+            --LOG('Unit found '..v.UnitId..' distance to base '..VDist3(unitPos, self.BrainIntel.StartPos))
+            if not IsDestroyed(v) and v:IsCapturable() and ArmyIsCivilian(v:GetArmy()) and NavUtils.CanPathTo('Amphibious', self.BrainIntel.StartPos, unitPos) then
                 if GetThreatAtPosition(self, unitPos, self.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 1 then
                     RNGINSERT(civUnits, {Risk = 'Low', Unit = v, Position = unitPos, EngineerAssigned = false, CaptureAttempts = 0})
                 else
@@ -5848,8 +5850,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if not table.empty(civUnits) then
             self.EnemyIntel.CivilianCaptureUnits = civUnits
         end
-        LOG('Civ units '..repr(civUnits))
-
+        --LOG('Civ units '..repr(civUnits))
     end,
 
     DynamicExpansionRequiredRNG = function(self)
@@ -5947,11 +5948,17 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         local function ACUDamageDetail(unit, instigator)
             --RNGLOG('ACU Damaged by unit '..repr(instigator.UnitId))
-            if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.Defense.SurfaceThreatLevel 
-            and instigator.Blueprint.Defense.SurfaceThreatLevel > 0 and instigator.Blueprint.CategoriesHash.AIR
-            and (not unit.EnemyAirPresent) then
+            if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) then
+                if instigator.Blueprint.Defense.SurfaceThreatLevel 
+                and instigator.Blueprint.Defense.SurfaceThreatLevel > 0 and instigator.Blueprint.CategoriesHash.AIR
+                and (not unit.EnemyAirPresent) then
                 --RNGLOG('ACU EnemyAir is now present '..instigator.UnitId)
-                unit.EnemyAirPresent = true
+                    unit.EnemyAirPresent = true
+                elseif instigator.Blueprint.Defense.SubThreatLevel 
+                and instigator.Blueprint.Defense.SubThreatLevel > 0 and instigator.Blueprint.CategoriesHash.ANTINAVY
+                and (not unit.EnemyNavalPresent) then
+                    unit.EnemyNavalPresent = true
+                end
             end
         end
         if unit.Blueprint.CategoriesHash.TECH1 and unit.Blueprint.CategoriesHash.FRIGATE then
@@ -5966,6 +5973,9 @@ AIBrain = Class(RNGAIBrainClass) {
             --RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
             unit:AddOnDamagedCallback( AntiAirRetreat, nil, 100)
         end
+        if unit.Blueprint.CategoriesHash.COMMAND then
+            unit:AddOnDamagedCallback( ACUDamageDetail, nil, 100)
+        end
     end,
 
     CDRDataThreads = function(self, unit)
@@ -5975,9 +5985,9 @@ AIBrain = Class(RNGAIBrainClass) {
         if not im.MapIntelStats.ScoutLocationsBuilt then
             self:BuildScoutLocationsRNG()
         end
-
         for _, v in acuUnits do
             if not IsDestroyed(v) then
+                self:GetCallBackCheck(v)
                 if not self.CDRUnit or self.CDRUnit.Dead then
                     self.CDRUnit = v
                 end
@@ -5990,6 +6000,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
+        --RUtils.GenerateChokePointLines(self)
     end,
 
 }

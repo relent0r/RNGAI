@@ -31,7 +31,7 @@ BaseBuilderTemplate {
         },
         EngineerCount = {
             Tech1 = 5,
-            Tech2 = 2,
+            Tech2 = 3,
             Tech3 = 1,
             SCU = 0,
         },

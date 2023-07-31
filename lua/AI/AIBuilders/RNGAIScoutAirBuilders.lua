@@ -31,7 +31,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { UCBC, 'UnitBuildDemand', { 'Air', 'T1', 'scout'} },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 1.0 }},
             { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
             { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 20}},
         },
@@ -55,7 +55,7 @@ BuilderGroup {
         Priority = 897,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', { 'Air', 'T3', 'scout'} },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 1.0 }},
             { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
             { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 120}},
         },

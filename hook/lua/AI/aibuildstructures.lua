@@ -162,7 +162,7 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
         end
 
         local IsRestricted = import('/lua/game.lua').IsRestricted
-        if IsRestricted(BuildUnitWithID, GetFocusArmy()) then
+        if IsRestricted(BuildUnitWithID, aiBrain:GetArmyIndex()) then
             WARN('*AIExecuteBuildStructure: Unit is Restricted!!! Building Type: '..repr(buildingType)..', faction: '..repr(builder.factionCategory)..' - Unit:'..BuildUnitWithID)
             AntiSpamList[buildingType] = true
             return false

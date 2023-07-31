@@ -602,7 +602,6 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
 
     for tIndex,threat in threatTable do
         --check if we can path to the position or a position nearby
-        aiBrain:ForkThread(DrawTargetRadius, {threat[1], 0, threat[2]})
         if not bSkipPathability then
 
             local bestPos

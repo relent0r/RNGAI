@@ -1124,6 +1124,24 @@ IntelManager = Class {
                                 --RNGLOG('Adding ACU to potential strike target')
                                 table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'ACU', Index = k} )
                             end
+                        elseif v.HP < 7000 and self.Brain.BrainIntel.AirPhase == 3 then
+                            local gridX, gridZ = self:GetIntelGrid(v.Position)
+                            local scoutRequired = true
+                            if self.MapIntelGrid[gridX][gridZ].MustScout and self.MapIntelGrid[gridX][gridZ].ACUIndexes[k] then
+                                scoutRequired = false
+                            end
+                            if scoutRequired then
+                                self.MapIntelGrid[gridX][gridZ].MustScout = true
+                                self.MapIntelGrid[gridX][gridZ].ACUIndexes[k] = true
+                                --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(self.MapIntelGrid[gridX][gridY]))
+                            end
+                            if v.HP < 6000 then
+                                desiredStrikeDamage = desiredStrikeDamage + v.HP + 1000
+                            else
+                                desiredStrikeDamage = desiredStrikeDamage + 6000
+                            end
+                            --RNGLOG('Adding ACU to potential strike target')
+                            table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'ACU', Index = k} )
                         end
                     end
                 end
@@ -1358,7 +1376,7 @@ IntelManager = Class {
                 local disableBomb = true
                 for k, v in self.Brain.TacticalMonitor.TacticalMissions.ACUSnipe do
                     if v.AIR then
-                        if v.AIR.GameTime and v.AIR.GameTime + 300 > gameTime then
+                        if v.AIR.GameTime and v.AIR.GameTime + 300 < gameTime then
                             disableBomb = false
                         end
                     end
@@ -1397,7 +1415,7 @@ IntelManager = Class {
                 local disableBomb = true
                 for k, v in self.Brain.TacticalMonitor.TacticalMissions.ACUSnipe do
                     if v.LAND then
-                        if v.LAND.GameTime and v.LAND.GameTime + 300 > gameTime then
+                        if v.LAND.GameTime and v.LAND.GameTime + 300 < gameTime then
                             disableBomb = false
                         end
                     end
@@ -1441,7 +1459,7 @@ IntelManager = Class {
                 local disableStrike = true
                 for k, v in self.Brain.TacticalMonitor.TacticalMissions.ACUSnipe do
                     if v.AIRANTINAVY then
-                        if v.AIRANTINAVY.GameTime and v.AIRANTINAVY.GameTime + 300 > gameTime then
+                        if v.AIRANTINAVY.GameTime and v.AIRANTINAVY.GameTime + 300 < gameTime then
                             disableStrike = false
                         end
                     end
@@ -1645,7 +1663,7 @@ ExpansionIntelScanRNG = function(aiBrain)
                     if RUtils.PositionInWater(v.Position) then
                         label, reason = NavUtils.GetLabel('Water', v.Position)
                         if not label then
-                            WARN('No expansion label returned reason '..reason)
+                            WARN('No expansion water label returned reason '..reason)
                             WARN('Water label failure position was '..repr(v.Position))
                         else
                             aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
@@ -1655,7 +1673,7 @@ ExpansionIntelScanRNG = function(aiBrain)
                     else
                         label, reason = NavUtils.GetLabel('Land', v.Position)
                         if not label then
-                            WARN('No expansion label returned reason '..reason)
+                            WARN('No expansion land label returned reason '..reason)
                             WARN('Land label failure position was '..repr(v.Position))
                         else
                             aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
@@ -2559,7 +2577,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     --RNGLOG('Priority of angle and distance '..anglePriority)
                     im.MapIntelGrid[i][k].EnemyUnitDanger = RUtils.GrabPosDangerRNG(aiBrain,position,30).enemy
                     if aiBrain.GridPresence and aiBrain.GridPresence:GetInferredStatus(position) == 'Allied' then
-                        statusModifier = 1.3
+                        statusModifier = 1.5
                     end
                     for c, b in im.MapIntelGrid[i][k].EnemyUnits do
                         local priority = 0

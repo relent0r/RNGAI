@@ -159,7 +159,7 @@ StructureManager = Class {
        --LOG('RNGAI : StructureManager Starting')
         self:ForkThread(self.FactoryDataCaptureRNG)
         self:ForkThread(self.EcoExtractorUpgradeCheckRNG, self.Brain)
-        self:ForkThread(self.CheckShieldCoverage)
+        --self:ForkThread(self.CheckShieldCoverage)
         if self.Debug then
             self:ForkThread(self.StructureDebugThread)
         end

@@ -21,7 +21,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
-            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 25.0 } }, -- If our energy is trending into negatives
+            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 28.0 } }, -- If our energy is trending into negatives
             { EBC, 'GreaterThanMassStorageOrEfficiency', { 150, 0.85 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T2 Pgens Exist
@@ -374,6 +374,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             Construction = {
                 BuildClose = false,
+                NoPause = true,
                 BuildStructures = {
                     'EnergyStorage',
                 },
@@ -411,7 +412,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 960 } },
             { UCBC, 'UnitCapCheckLess', { .7 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.3 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.3 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENERGYSTORAGE }},
         },

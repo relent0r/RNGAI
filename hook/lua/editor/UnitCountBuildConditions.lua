@@ -183,18 +183,6 @@ function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRadiusRNG(aiBrain, lo
     return false
 end
 
-function GetOwnUnitsAroundLocationRNG(aiBrain, category, location, radius)
-    local units = aiBrain:GetUnitsAroundPoint(category, location, radius, 'Ally')
-    local index = aiBrain:GetArmyIndex()
-    local retUnits = {}
-    for _, v in units do
-        if not v.Dead and v:GetAIBrain():GetArmyIndex() == index then
-            RNGINSERT(retUnits, v)
-        end
-    end
-    return retUnits
-end
-
 function GreaterThanT3CoreExtractorPercentage(aiBrain, percentage)
     -- Checks if you have a certain percentage of core t3 extractors.
     -- Requires eco thread to be capturing MAINBASE property on extractors
@@ -245,7 +233,7 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         --RNGLOG('No Base Position for GetUnitsBeingBuildlocation')
         return false
     end
-    local filterUnits = GetOwnUnitsAroundLocationRNG(aiBrain, builderCategory, baseposition, radius)
+    local filterUnits = RUtils.GetOwnUnitsAroundLocationRNG(aiBrain, builderCategory, baseposition, radius)
     local unitCount = 0
     for k,v in filterUnits do
         -- Only assist if allowed
@@ -303,7 +291,7 @@ function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, b
         radius = radiusOverride
     end
     --RNGLOG('Radius is '..radius)
-    local filterUnits = GetOwnUnitsAroundLocationRNG(aiBrain, builderCategory, baseposition, radius)
+    local filterUnits = RUtils.GetOwnUnitsAroundLocationRNG(aiBrain, builderCategory, baseposition, radius)
     local unitCount = 0
     for k,v in filterUnits do
         -- Only assist if allowed
