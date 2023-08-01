@@ -111,7 +111,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     self:ChangeState(self.Expand)
                     return
                 else
-                    LOG('Wipe BuilderData in Expansion check')
+                    --LOG('Wipe BuilderData in Expansion check')
                     self.BuilderData = {}
                 end
             end
@@ -131,7 +131,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                 local highThreat = false
                 --RNGLOG('Enhancement Thread run at '..gameTime)
                 if self.BuilderData.ExtractorRetreat and VDist3Sq(cdr.Position, self.BuilderData.Position) <= self.BuilderData.CutOff and cdr.CurrentEnemyThreat < 15 then
-                    LOG('ACU close to position and threat is '..cdr.CurrentEnemyThreat)
+                    --LOG('ACU close to position and threat is '..cdr.CurrentEnemyThreat)
                     self:ChangeState(self.EnhancementBuild)
                 end
                 if brain.BuilderManagers then
@@ -139,8 +139,8 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     for baseName, base in brain.BuilderManagers do
                         if not table.empty(base.FactoryManager.FactoryList) then
                             if VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]) < distSqAway then
-                                LOG('Current distance from base is '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
-                                LOG('Current base key is '..baseName)
+                                --LOG('Current distance from base is '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
+                                --LOG('Current base key is '..baseName)
                                 inRange = true
                                 if baseName ~= 'MAIN' and cdr.CurrentEnemyThreat > 20 then
                                     highThreat = true
@@ -151,7 +151,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     end
                 end
                 if inRange and not highThreat and ((cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95))then
-                    LOG('ACU close to home and threat is '..cdr.CurrentEnemyThreat)
+                    --LOG('ACU close to home and threat is '..cdr.CurrentEnemyThreat)
                     self:ChangeState(self.EnhancementBuild)
                     return
                 elseif not highThreat and ((cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)) then
@@ -162,9 +162,9 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             CutOff = 625,
                             EnhancementBuild = true
                         }
-                        LOG('Move to closest base for enhancement')
-                        LOG('Current distance is '..VDist3Sq(self.BuilderData.Position, cdr.Position))
-                        LOG('Should be less than 2209')
+                        --LOG('Move to closest base for enhancement')
+                        --LOG('Current distance is '..VDist3Sq(self.BuilderData.Position, cdr.Position))
+                        --LOG('Should be less than 2209')
                         self:ChangeState(self.Navigating)
                         return
                     end
@@ -203,10 +203,10 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             local stageExpansion
                             local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
                             if gameTime < 480 then
-                                LOG('ACU Looking wide for expansion as its early')
+                                --LOG('ACU Looking wide for expansion as its early')
                                 stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, BaseDMZArea * 1.5, 'Land', 10, 'acu')
                             else
-                                LOG('ACU Looking close for expansion as its mid or later')
+                                --LOG('ACU Looking close for expansion as its mid or later')
                                 local distanceCheck = math.sqrt(brain.EnemyIntel.ClosestEnemyBase) / 2 or BaseDMZArea * 0.8
                                 stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, distanceCheck, 'Land', 10, 'acu')
                             end
@@ -218,7 +218,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                                     ExpansionData = stageExpansion,
                                     CutOff = 225
                                     }
-                                LOG('Move to base for expansion')
+                                --LOG('Move to base for expansion')
                                 self:ChangeState(self.Navigating)
                                 return
                             end
@@ -227,17 +227,17 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                 end
             end
             if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > cdr.MaxBaseRange * cdr.MaxBaseRange then
-                LOG('ACU is beyond maxRadius of '..(cdr.MaxBaseRange * cdr.MaxBaseRange))
+                --LOG('ACU is beyond maxRadius of '..(cdr.MaxBaseRange * cdr.MaxBaseRange))
                 self:ChangeState(self.Retreating)
                 return
             end
             local numUnits
             if self.BuilderData.DefendExpansion then
-                LOG('Time Left should be less than 30 '..(GetGameTimeSeconds() - self.BuilderData.Time))
+                --LOG('Time Left should be less than 30 '..(GetGameTimeSeconds() - self.BuilderData.Time))
             end
             if brain.EnemyIntel.Phase > 2 then
                 if brain.GridPresence:GetInferredStatus(cdr.Position) == 'Hostile' then
-                    LOG('We are in hostile territory and should be retreating')
+                    --LOG('We are in hostile territory and should be retreating')
                     if cdr.CurrentEnemyThreat > 10 and cdr.CurrentEnemyThreat * 1.2 > cdr.CurrentFriendlyThreat then
                         self:ChangeState(self.Retreating)
                     end
@@ -247,7 +247,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
             local targetSearchRange = cdr.MaxBaseRange
             if self.BuilderData.DefendExpansion then
                 if GetGameTimeSeconds() - self.BuilderData.Time < 30 then
-                    LOG('Defending Expansion '..repr(self.BuilderData.Position))
+                    --LOG('Defending Expansion '..repr(self.BuilderData.Position))
                     targetSearchPosition = self.BuilderData.Position
                     targetSearchRange = 80
                 else
@@ -264,34 +264,34 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                 cdr.Combat = true
                 local acuDistanceToBase = VDist3Sq(cdr.Position, cdr.CDRHome)
                 if (not cdr.SuicideMode and acuDistanceToBase > cdr.MaxBaseRange * cdr.MaxBaseRange and (not cdr:IsUnitState('Building'))) or (cdr.PositionStatus == 'Hostile' and cdr.Caution) then
-                    LOG('OverCharge running but ACU is beyond its MaxBaseRange property')
-                    LOG('cdr retreating due to beyond max range and not building '..(cdr.MaxBaseRange * cdr.MaxBaseRange)..' current distance '..acuDistanceToBase)
-                    LOG('Wipe BuilderData in numUnits > 1')
+                    --LOG('OverCharge running but ACU is beyond its MaxBaseRange property')
+                    --LOG('cdr retreating due to beyond max range and not building '..(cdr.MaxBaseRange * cdr.MaxBaseRange)..' current distance '..acuDistanceToBase)
+                    --LOG('Wipe BuilderData in numUnits > 1')
                     self.BuilderData = {}
                     self:ChangeState(self.Retreating)
                     return
                 end
                 if not cdr.SuicideMode then
                     if self.BuilderData.DefendExpansion then
-                        LOG('Defending Expansion findacu target')
+                        --LOG('Defending Expansion findacu target')
                         target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition = RUtils.AIAdvancedFindACUTargetRNG(brain, nil, nil, 80, self.BuilderData.Position)
                     else
-                        LOG('Normal Attack search findacu target')
+                        --LOG('Normal Attack search findacu target')
                         target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition = RUtils.AIAdvancedFindACUTargetRNG(brain)
                     end
                 elseif cdr.SuicideMode then
                     target = self.BuilderData.ACUTarget or nil
                 end
                 if target then
-                    LOG('Target status is '..brain.GridPresence:GetInferredStatus(target:GetPosition()))
-                    LOG('cdr phase is '..repr(cdr.Phase))
+                    --LOG('Target status is '..brain.GridPresence:GetInferredStatus(target:GetPosition()))
+                    --LOG('cdr phase is '..repr(cdr.Phase))
                 end
                 if target and cdr.Phase == 3 and brain.GridPresence:GetInferredStatus(target:GetPosition()) == 'Hostile' then
                     target = false
                 end
                 if not target and closestThreatDistance < 1600 and closestThreatUnit and not IsDestroyed(closestThreatUnit) then
-                    RNGLOG('No Target Found due to high threat, closestThreatDistance is below 1225 so we will attack that ')
-                    LOG('CDR Health '..cdr.Health)
+                    --RNGLOG('No Target Found due to high threat, closestThreatDistance is below 1225 so we will attack that ')
+                    --LOG('CDR Health '..cdr.Health)
                     if self.BuilderData.DefendExpansion then
                         self.BuilderData = {
                             AttackTarget = closestThreatUnit,
@@ -309,7 +309,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     target = closestThreatUnit
                 end
                 if cdr.Health < 4000 and cdr.DistanceToHome > 14400 then
-                    LOG('Emergency Retreat')
+                    --LOG('Emergency Retreat')
                     self.BuilderData = {}
                     self:ChangeState(self.Retreating)
                     return
@@ -329,13 +329,13 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             ACUTarget    = acuTarget,
                         }
                     end
-                    LOG('CDR Health '..cdr.Health)
-                    LOG('Current Inner Enemy Threat '..cdr.CurrentEnemyInnerCircle)
-                    LOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
-                    LOG('Current CurrentEnemyAirThreat '..cdr.CurrentEnemyAirThreat)
-                    LOG('Current CurrentFriendlyThreat '..cdr.CurrentFriendlyThreat)
-                    LOG('Current CurrentFriendlyAntiAirThreat '..cdr.CurrentFriendlyAntiAirThreat)
-                    LOG('Current CurrentFriendlyInnerCircle '..cdr.CurrentFriendlyInnerCircle)
+                    --LOG('CDR Health '..cdr.Health)
+                    --LOG('Current Inner Enemy Threat '..cdr.CurrentEnemyInnerCircle)
+                    --LOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
+                    --LOG('Current CurrentEnemyAirThreat '..cdr.CurrentEnemyAirThreat)
+                    --LOG('Current CurrentFriendlyThreat '..cdr.CurrentFriendlyThreat)
+                    --LOG('Current CurrentFriendlyAntiAirThreat '..cdr.CurrentFriendlyAntiAirThreat)
+                    --LOG('Current CurrentFriendlyInnerCircle '..cdr.CurrentFriendlyInnerCircle)
                     self:ChangeState(self.AttackTarget)
                     return
                 else
@@ -354,7 +354,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                                             CutOff = 625,
                                             Retreat = true
                                         }
-                                        LOG('Move to closest base for enhancement from combat thread')
+                                        --LOG('Move to closest base for enhancement from combat thread')
                                         self:ChangeState(self.Navigating)
                                         return
                                     end
@@ -383,7 +383,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                 self:ChangeState(self.EngineerTask)
                 return
             elseif VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 and cdr.Phase > 2 then
-                LOG('Phase 3 and not close to base')
+                --LOG('Phase 3 and not close to base')
                 self:ChangeState(self.Retreating)
                 return
             else
@@ -423,7 +423,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
             local navigateDistanceCutOff = builderData.CutOff or 400
             local destCutOff = math.sqrt(navigateDistanceCutOff) + 10
             if not destination then
-                LOG('BuilderData '..repr(builderData))
+                --LOG('BuilderData '..repr(builderData))
                 self:LogWarning(string.format('no destination to navigate to'))
                 coroutine.yield(10)
                 if cdr.EnemyNavalPresent then
@@ -445,12 +445,12 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                 local waypoint, length
                 
                 if builderData.SupportPlatoon and not IsDestroyed(builderData.SupportPlatoon) then
-                    LOG('destination move to platoon '..repr(destination))
+                    --LOG('destination move to platoon '..repr(destination))
                     destination = builderData.SupportPlatoon:GetPlatoonPosition()
                     waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 50)
                 else
-                    LOG('destination move to '..repr(destination))
-                    LOG('Current distance is '..VDist3(origin, destination))
+                    --LOG('destination move to '..repr(destination))
+                    --LOG('Current distance is '..VDist3(origin, destination))
                     waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 50)
                 end
                 if builderData.Retreat then
@@ -474,7 +474,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     local dx = origin[1] - wx
                     local dz = origin[3] - wz
                     if dx * dx + dz * dz < navigateDistanceCutOff then
-                        LOG('Waypoint = destination cutoff')
+                        --LOG('Waypoint = destination cutoff')
                         if cdr.EnemyNavalPresent then
                             cdr.EnemyNavalPresent = nil
                         end
@@ -498,7 +498,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     local dx = position[1] - wx
                     local dz = position[3] - wz
                     if dx * dx + dz * dz < navigateDistanceCutOff then
-                        LOG('close to waypoint position')
+                        --LOG('close to waypoint position')
                         break
                     end
                     -- check for threats
@@ -538,8 +538,8 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             end
                         end
                     elseif cdr.Health > 6000 and builderData.Retreat and cdr.Phase < 3 and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < cdr.MaxBaseRange * cdr.MaxBaseRange and (not cdr.Caution) then
-                        LOG('cdr is > 6000 and within max base range current range '..VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]))
-                        LOG('maxbaserange '..(cdr.MaxBaseRange * cdr.MaxBaseRange))
+                        --LOG('cdr is > 6000 and within max base range current range '..VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]))
+                        --LOG('maxbaserange '..(cdr.MaxBaseRange * cdr.MaxBaseRange))
                         local supportPlatoon = brain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
                         if supportPlatoon.GetPlatoonPosition then
                             local supportPlatoonPos = supportPlatoon:GetPlatoonPosition()
@@ -556,9 +556,9 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     WaitTicks(20)
                     
                     if not cdr:IsUnitState('Moving') then
-                        LOG('Distance from origin to current position is '..VDist3Sq(origin, cdr.Position))
+                        --LOG('Distance from origin to current position is '..VDist3Sq(origin, cdr.Position))
                         movementTimeout = movementTimeout + 1
-                        LOG('No Movement, increase timeout by 1, current is '..movementTimeout)
+                        --LOG('No Movement, increase timeout by 1, current is '..movementTimeout)
                         if movementTimeout > 5 then
                             IssueClearCommands({cdr})
                             break
@@ -589,7 +589,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         self:ChangeState(self.AssistEngineers)
                         return
                     elseif builderData.Construction then
-                        LOG('Builder Data '..repr(builderData))
+                        --LOG('Builder Data '..repr(builderData))
                         self.BuilderData = builderData
                         self:ChangeState(self.StructureBuild)
                         return
@@ -661,7 +661,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     end
                 end
             end
-            LOG('Wipe BuilderData at end of Assist')
+            --LOG('Wipe BuilderData at end of Assist')
             self.BuilderData = {}
             coroutine.yield(10)
             self:ChangeState(self.DecideWhatToDo)
@@ -709,14 +709,14 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         local location = brain:FindPlaceToBuild('T2EnergyProduction', 'uab1201', baseTmplFile[templateKey][factionIndex], relative, eng, nil, engPos[1], engPos[3])
                         local reference
                         if location then
-                            LOG('Findplacetobuild location '..repr(location))
+                            --LOG('Findplacetobuild location '..repr(location))
                             local relativeLoc = {location[1], 0, location[2]}
-                            LOG('Current CDR position '..repr(cdr.Position))
+                            --LOG('Current CDR position '..repr(cdr.Position))
                             reference = {relativeLoc[1] + cdr.Position[1], relativeLoc[2] + cdr.Position[2], relativeLoc[3] + cdr.Position[3]}
-                            LOG('Findplacetobuild relative location '..repr(relativeLoc))
+                            --LOG('Findplacetobuild relative location '..repr(relativeLoc))
                         else
-                            LOG('Can find place to build t2 energy in buildstructure')
-                            LOG('Wipe BuilderData in in build')
+                            --LOG('Can find place to build t2 energy in buildstructure')
+                            --LOG('Wipe BuilderData in in build')
                             self.BuilderData = {}
                             self:ChangeState(self.DecideWhatToDo)
                             return
@@ -757,7 +757,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             if buildLocation and whatToBuild then
                                 table.insert(eng.EngineerBuildQueue, {whatToBuild, buildLocation, borderWarning})
                             else
-                                LOG('No buildLocation or whatToBuild for ACU State Machine')
+                                --LOG('No buildLocation or whatToBuild for ACU State Machine')
                             end
                         end
                     end
@@ -775,7 +775,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         end
                     end
                 elseif self.BuilderData.Construction.Extractor then
-                    LOG('ACU Extractor build')
+                    --LOG('ACU Extractor build')
                     eng.EngineerBuildQueue = {}
                     local factionIndex = ACUFunc.GetEngineerFactionIndexRNG(eng)
                     local buildingTmplFile = import(self.BuilderData.Construction.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
@@ -810,7 +810,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     end
                 end
             end
-            LOG('Wipe BuilderData in Structure build')
+            --LOG('Wipe BuilderData in Structure build')
             self.BuilderData = {}      
             coroutine.yield(10)
             self:ChangeState(self.DecideWhatToDo)
@@ -1092,7 +1092,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                                 CutOff = 144,
                                 ExtractorRetreat = closestExtractor
                             }
-                            LOG('Retreating to extractor')
+                            --LOG('Retreating to extractor')
                             self:ChangeState(self.Navigating)
                         end
                     end
@@ -1181,7 +1181,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             CutOff = 625,
                             Retreat = true
                         }
-                        LOG('Retreating to base')
+                        --LOG('Retreating to base')
                         self:ChangeState(self.Navigating)
                         return
                     end
@@ -1195,7 +1195,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             CutOff = 400,
                             SupportPlatoon = closestPlatoon
                         }
-                        LOG('Retreating to platoon')
+                        --LOG('Retreating to platoon')
                         self:ChangeState(self.Navigating)
                         return
                     end
@@ -1211,7 +1211,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         CutOff = 625,
                         Retreat = true
                     }
-                    LOG('Retreating to base')
+                    --LOG('Retreating to base')
                     self:ChangeState(self.Navigating)
                     return
                 end
@@ -1228,7 +1228,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         CutOff = 400,
                         SupportPlatoon = closestPlatoon
                     }
-                    LOG('Retreating to platoon')
+                    --LOG('Retreating to platoon')
                     self:ChangeState(self.Navigating)
                     return
                 end
@@ -1261,7 +1261,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
             local MassMarker = {}
             cdr.EngineerBuildQueue = {}
             local object = self.BuilderData.ExpansionData
-            LOG('Object '..repr(object))
+            --LOG('Object '..repr(object))
             if object then
                 for _, v in adaptiveResourceMarkers do
                     if v.type == 'Mass' then
@@ -1278,7 +1278,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         RNGINSERT(cdr.EngineerBuildQueue, newEntry)
                     end
                 end
-                LOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
+                --LOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
                 if not table.empty(cdr.EngineerBuildQueue) then
                     for k,v in cdr.EngineerBuildQueue do
                         --LOG('Attempt to build queue item of '..repr(v))
@@ -1316,10 +1316,10 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
-                LOG('Mass markers should be built unless they are already taken')
+                --LOG('Mass markers should be built unless they are already taken')
                 cdr.EngineerBuildQueue={}
                 if object.Expansion.MassPoints > 1 then
-                    LOG('ACU Object has more than 1 mass points and is called '..object.Expansion.Name)
+                    --LOG('ACU Object has more than 1 mass points and is called '..object.Expansion.Name)
                     local alreadyHaveExpansion = false
                     for k, manager in brain.BuilderManagers do
                     --RNGLOG('Checking through expansion '..k)
@@ -1386,15 +1386,15 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                                     RNGINSERT(cdr.EngineerBuildQueue, newEntry)
                                 else
                                     local location = brain:FindPlaceToBuild('T1LandFactory', whatToBuild, baseTmplDefault['BaseTemplates'][factionIndex], true, cdr, nil, object.Expansion.Position[1], object.Expansion.Position[3])
-                                    LOG('Findplacetobuild location '..repr(location))
+                                    --LOG('Findplacetobuild location '..repr(location))
                                     local relativeLoc = {location[1], 0, location[2]}
-                                    LOG('Current CDR position '..repr(cdr.Position))
+                                    --LOG('Current CDR position '..repr(cdr.Position))
                                     relativeLoc = {relativeLoc[1] + cdr.Position[1], relativeLoc[2] + cdr.Position[2], relativeLoc[3] + cdr.Position[3]}
-                                    LOG('Findplacetobuild relative location '..repr(relativeLoc))
+                                    --LOG('Findplacetobuild relative location '..repr(relativeLoc))
                                     local newEntry = {whatToBuild, {relativeLoc[1], relativeLoc[3], 0}, false, Position=relativeLoc}
                                     RNGINSERT(cdr.EngineerBuildQueue, newEntry)
                                 end
-                                LOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
+                                --LOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
                                 if not table.empty(cdr.EngineerBuildQueue) then
                                     for k,v in cdr.EngineerBuildQueue do
                                         if abortBuild then
@@ -1461,7 +1461,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                                     local newEntry = {whatToBuild, {relativeLoc[1], relativeLoc[3], 0}, false, Position=relativeLoc}
                                     RNGINSERT(cdr.EngineerBuildQueue, newEntry)
                                 end
-                                LOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
+                                --LOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
                                 if not table.empty(cdr.EngineerBuildQueue) then
                                     for k,v in cdr.EngineerBuildQueue do
                                         if abortBuild then

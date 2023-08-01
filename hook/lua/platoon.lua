@@ -4961,11 +4961,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                 -- cancel all commands, also the buildcommand for blocking mex to check for reclaim or capture
                 eng.PlatoonHandle:Stop()
                 if eng.PlatoonHandle.PlatoonData.Construction.HighValue then
-                    LOG('HighValue Unit being built')
+                    --LOG('HighValue Unit being built')
                     local highValueCount = RUtils.CheckHighValueUnitsBuilding(aiBrain, eng.PlatoonHandle.PlatoonData.Construction.Location)
                     if highValueCount > 1 then
-                        LOG('highValueCount is 2 or more')
-                        LOG('We are going to abort '..repr(eng.EngineerBuildQueue[1]))
+                        --LOG('highValueCount is 2 or more')
+                        --LOG('We are going to abort '..repr(eng.EngineerBuildQueue[1]))
                         eng.UnitBeingBuilt = nil
                         table.remove(eng.EngineerBuildQueue, 1)
                         break
@@ -7132,7 +7132,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 mergePlatoon, alternatePos = self:GetClosestPlatoonRNG('ZoneControlRNG')
                             end
                             if alternatePos then
-                                LOG('alternatePos is '..repr(alternatePos))
+                                --LOG('alternatePos is '..repr(alternatePos))
                                 self.TargetZone = alternateZone
                                 IssueClearCommands(GetPlatoonUnits(self))
                                --RNGLOG('MoveWithZoneMicro - We found either a zone or platoon')
@@ -10881,9 +10881,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                 healthmod=healthmod*ratio*ratio
                 return healthmod/100
             end
-            if target.Blueprint.CategoriesHash.COMMAND then
-                LOG('TruePlatoon target is acu')
-            end
             local pos=unit:GetPosition()
             local tpos=target:GetPosition()
             local dest
@@ -11551,7 +11548,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local machineType = self.PlatoonData.StateMachine
 
         if machineType == 'ACU' then
-            LOG('Starting ACU State')
+            --LOG('Starting ACU State')
             import("/mods/rngai/lua/ai/statemachines/platoon-acu.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         end
         WaitTicks(50)

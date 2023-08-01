@@ -5299,7 +5299,7 @@ DefensiveClusterCheck = function(aiBrain, position)
 end
 
 CheckHighValueUnitsBuilding = function(aiBrain, locationType)
-    LOG('CheckHighValueUnitsBuilding at '..repr(locationType))
+    --LOG('CheckHighValueUnitsBuilding at '..repr(locationType))
     if not locationType then
         locationType = 'MAIN'
     end
@@ -5323,7 +5323,7 @@ CheckHighValueUnitsBuilding = function(aiBrain, locationType)
             end
         end
         if count then
-            LOG('Return count of high value units is '..count)
+            --LOG('Return count of high value units is '..count)
             return count
         end
     end
