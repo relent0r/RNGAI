@@ -1094,7 +1094,7 @@ StructureManager = Class {
 
             if aiBrain.EcoManager.CoreExtractorT3Count < 3 and aiBrain.EcoManager.TotalCoreExtractors > 2 and aiBrain.cmanager.income.r.m > (140 * aiBrain.EcoManager.EcoMultiplier) and (aiBrain.smanager.fact.Land.T3 > 0 or aiBrain.smanager.fact.Air.T3 > 0) and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
                 aiBrain.EcoManager.CoreMassPush = true
-                --RNGLOG('Assist Focus is Mass extraction')
+                RNGLOG('Assist Focus is Mass extraction')
                 aiBrain.EngineerAssistManagerFocusCategory = categories.MASSEXTRACTION
             elseif aiBrain.EcoManager.CoreMassPush then
                 aiBrain.EcoManager.CoreMassPush = false
@@ -1107,7 +1107,7 @@ StructureManager = Class {
             local massStorage = GetEconomyStored( aiBrain, 'MASS')
             local energyStorage = GetEconomyStored( aiBrain, 'ENERGY')
             if aiBrain.EcoManager.CoreExtractorT3Count then
-                --RNGLOG('CoreExtractorT3Count '..aiBrain.EcoManager.CoreExtractorT3Count)
+                RNGLOG('CoreExtractorT3Count '..aiBrain.EcoManager.CoreExtractorT3Count)
             end
             if aiBrain.EcoManager.CoreMassPush and extractorsDetail.TECH2Upgrading < 1 and aiBrain.cmanager.income.r.m > (140 * aiBrain.EcoManager.EcoMultiplier) then
                 --LOG('Trigger all tiers true')
@@ -1120,16 +1120,20 @@ StructureManager = Class {
             and aiBrain.BrainIntel.SelfThreat.ExtractorCount > aiBrain.BrainIntel.MassSharePerPlayer 
             and extractorsDetail.TECH2Upgrading < aiBrain.EcoManager.CoreMassMarkerCount 
             and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 1.1 and energyStorage > 8000 then
+                --LOG('We Could upgrade an extractor now with over time of 1.1 and energy storage of 8000')
                 self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                 coroutine.yield(80)
                 continue
-            elseif extractorsDetail.TECH2Upgrading < 1 and aiBrain.BrainIntel.SelfThreat.ExtractorCount > aiBrain.BrainIntel.MassSharePerPlayer  
+            elseif (aiBrain.EcoManager.CoreExtractorT2Count + aiBrain.EcoManager.CoreExtractorT3Count >= aiBrain.EcoManager.TotalCoreExtractors or aiBrain.EcoManager.CoreExtractorT2Count + aiBrain.EcoManager.CoreExtractorT3Count >= 4) 
+            and extractorsDetail.TECH2Upgrading < 1 and aiBrain.BrainIntel.SelfThreat.ExtractorCount > aiBrain.BrainIntel.MassSharePerPlayer  
             and aiBrain.EcoManager.CoreExtractorT2Count > 0
             and energyStorage > 8000 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 1.1 then
+                --LOG('Extractor upgrade triggered due to massshareperplayer being higher than average')
                 self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                 coroutine.yield(80)
                 continue
             elseif massStorage > 2500 and energyStorage > 8000 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 1.1 and extractorsDetail.TECH2Upgrading < 2 then
+                --LOG('We Could upgrade an extractor now with over time')
                 self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                 coroutine.yield(80)
                 continue
@@ -1157,12 +1161,11 @@ StructureManager = Class {
                     coroutine.yield(30)
                 end
                 coroutine.yield(30)
-            elseif extractorsDetail.TECH1Upgrading < 5 and massStorage > 150 and upgradeTrigger then
-                if totalSpend < upgradeSpend and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
+            elseif extractorsDetail.TECH1Upgrading < 5 and massStorage > 150 and upgradeTrigger and totalSpend < upgradeSpend 
+                and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                     --RNGLOG('We Could upgrade a non t2 extractor now with over time')
                     self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                     coroutine.yield(60)
-                end
             elseif massStorage > 500 and energyStorage > 3000 and extractorsDetail.TECH2Upgrading < 2 then
                 if aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.05 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.05 then
                     --RNGLOG('We Could upgrade an extractor now with over time')
@@ -1303,7 +1306,7 @@ StructureManager = Class {
     end,
     
     UpgradeExtractorRNG = function(self, aiBrain, extractorUnit, distanceToBase)
-        --LOG('Upgrading Extractor from central brain thread')
+        LOG('Upgrading Extractor from central brain thread')
         local upgradeID = extractorUnit.Blueprint.General.UpgradesTo or false
         if upgradeID then
             IssueUpgrade({extractorUnit}, upgradeID)

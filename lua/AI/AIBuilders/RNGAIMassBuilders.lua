@@ -418,16 +418,48 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Mass Storage Builder',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNG T1 Mass Adjacency Engineer',
+        BuilderName = 'RNG T1 Mass Adjacency Engineer Single',
         PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 925,
+        Priority = 930,
         DelayEqualBuildPlattons = {'MassStorage', 5},
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
             -- { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.80, 0.85 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            Construction = {
+                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
+                AdjacencyDistance = 100,
+                AdjRequired = true,
+                BuildClose = false,
+                NoPause = true,
+                ThreatMin = -3,
+                ThreatMax = 0,
+                ThreatRings = 0,
+                BuildStructures = {
+                    'MassStorage',
+                }
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG T1 Mass Adjacency Engineer',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 925,
+        DelayEqualBuildPlattons = {'MassStorage', 5},
+        InstanceCount = 1,
+        BuilderConditions = {
+            -- { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
+            { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.90 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
         },

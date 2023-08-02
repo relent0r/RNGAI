@@ -329,13 +329,13 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             ACUTarget    = acuTarget,
                         }
                     end
-                    --LOG('CDR Health '..cdr.Health)
-                    --LOG('Current Inner Enemy Threat '..cdr.CurrentEnemyInnerCircle)
-                    --LOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
-                    --LOG('Current CurrentEnemyAirThreat '..cdr.CurrentEnemyAirThreat)
-                    --LOG('Current CurrentFriendlyThreat '..cdr.CurrentFriendlyThreat)
-                    --LOG('Current CurrentFriendlyAntiAirThreat '..cdr.CurrentFriendlyAntiAirThreat)
-                    --LOG('Current CurrentFriendlyInnerCircle '..cdr.CurrentFriendlyInnerCircle)
+                    LOG('CDR Health '..cdr.Health)
+                    LOG('Current Inner Enemy Threat '..cdr.CurrentEnemyInnerCircle)
+                    LOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
+                    LOG('Current CurrentEnemyAirThreat '..cdr.CurrentEnemyAirThreat)
+                    LOG('Current CurrentFriendlyThreat '..cdr.CurrentFriendlyThreat)
+                    LOG('Current CurrentFriendlyAntiAirThreat '..cdr.CurrentFriendlyAntiAirThreat)
+                    LOG('Current CurrentFriendlyInnerCircle '..cdr.CurrentFriendlyInnerCircle)
                     self:ChangeState(self.AttackTarget)
                     return
                 else
