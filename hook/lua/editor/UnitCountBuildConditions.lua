@@ -1264,7 +1264,7 @@ function CheckTargetInRangeRNG(aiBrain, locationType, unitType, category, factio
 
     local basePosition = aiBrain.BuilderManagers[locationType].Position
 
-    # Check around basePosition for StructureThreat
+    -- Check around basePosition for StructureThreat
     local targetUnits = aiBrain:GetUnitsAroundPoint(category, basePosition, range, 'Enemy')
     local retUnit = false
     local distance = false
@@ -1293,14 +1293,18 @@ function DefensivePointShieldRequired(aiBrain, locationType)
             end
         end
         if unitCount > 1 then
+            local shieldPresent = false
             for _, b in v.Shields do
                 if b and not b.Dead then
-                    return false
+                    shieldPresent = true
+                    break
                 end
             end
             --RNGLOG('DefensivePoint needs shield unit count is '..unitCount)
             --RNGLOG('DefensivePoint needs shield '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[2][k].DirectFire))
-            return true
+            if not shieldPresent then
+                return true
+            end
         end
     end
     return false
