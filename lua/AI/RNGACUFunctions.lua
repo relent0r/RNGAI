@@ -42,6 +42,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.Active = false
     cdr.movetopos = false
     cdr.Retreating = false
+    cdr.AtHoldPosition = false
     cdr.SnipeMode = false
     cdr.SuicideMode = false
     cdr.AirScout = false
@@ -182,6 +183,21 @@ function CDRBrainThread(cdr)
                     else
                         v.CloseCombat = false
                     end
+                end
+            end
+        end
+        if cdr.EnemyAirPresent and not cdr.AtHoldPosition then
+            if aiBrain.BuilderManagers['MAIN'] and aiBrain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].PositionKey then
+                local positionKey = aiBrain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].PositionKey
+                local hx = aiBrain.BuilderManagers['MAIN'].DefensivePoints[2][positionKey].Position[1]
+                local hz = aiBrain.BuilderManagers['MAIN'].DefensivePoints[2][positionKey].Position[3]
+                local ax = cdr.Position[1] - hx
+                local az = cdr.Position[3] - hz
+                LOG('Distance to hold position '..(ax * ax + az * az))
+                if ax * ax + az * az < 2025 then
+                    cdr.AtHoldPosition = true
+                else
+                    cdr.AtHoldPosition = false
                 end
             end
         end
@@ -647,6 +663,9 @@ function CDRGetUnitClump(aiBrain, cdrPos, radius)
     for k, v in unitList do
         if v and not v.Dead then
             if v.Blueprint.CategoriesHash.STRUCTURE and v.Blueprint.CategoriesHash.DEFENSE and v.Blueprint.CategoriesHash.DIRECTFIRE then
+                return true, v
+            end
+            if (v.Blueprint.CategoriesHash.TECH2 or v.Blueprint.CategoriesHash.TECH3) and v.Blueprint.CategoriesHash.DIRECTFIRE and v.Blueprint.CategoriesHash.MOBILE then
                 return true, v
             end
             local unitPos = v:GetPosition()

@@ -82,6 +82,18 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                 self:ChangeState(self.Retreating)
                 return
             end
+            if brain.IntelManager.StrategyFlags.EnemyAirSnipeThreat then
+                if brain.BrainIntel.SelfThreat.AntiAirNow < brain.EnemyIntel.EnemyThreatCurrent.AntiAir then
+                    cdr.EnemyAirPresent = true
+                    if not cdr.AtHoldPosition then
+                        LOG('Retreating due to enemy air snipe possibility')
+                        self:ChangeState(self.Retreating)
+                        return
+                    end
+                end
+            elseif cdr.EnemyAirPresent then
+                cdr.EnemyAirPresent = false
+            end
             if self.BuilderData.Expansion then
                 if self.BuilderData.ExpansionBuilt then
                     local expansionPosition = self.BuilderData.ExpansionData.Expansion.Position
@@ -133,6 +145,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                 if self.BuilderData.ExtractorRetreat and VDist3Sq(cdr.Position, self.BuilderData.Position) <= self.BuilderData.CutOff and cdr.CurrentEnemyThreat < 15 then
                     --LOG('ACU close to position and threat is '..cdr.CurrentEnemyThreat)
                     self:ChangeState(self.EnhancementBuild)
+                    return
                 end
                 if brain.BuilderManagers then
                     local distSqAway = 2209
@@ -240,6 +253,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     --LOG('We are in hostile territory and should be retreating')
                     if cdr.CurrentEnemyThreat > 10 and cdr.CurrentEnemyThreat * 1.2 > cdr.CurrentFriendlyThreat then
                         self:ChangeState(self.Retreating)
+                        return
                     end
                 end
             end
@@ -524,6 +538,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                                 cdr.EnemyNavalPresent = nil
                             end
                             self:ChangeState(self.AttackTarget)
+                            return
                         else
                             cdr.EnemyCDRPresent = false
                             if target then
@@ -535,6 +550,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                                     cdr.EnemyNavalPresent = nil
                                 end
                                 self:ChangeState(self.AttackTarget)
+                                return
                             end
                         end
                     elseif cdr.Health > 6000 and builderData.Retreat and cdr.Phase < 3 and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < cdr.MaxBaseRange * cdr.MaxBaseRange and (not cdr.Caution) then
@@ -546,6 +562,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             if not IsDestroyed(supportPlatoon) and supportPlatoonPos and VDist3Sq(supportPlatoonPos, cdr.Position) < 3600 and cdr.CurrentEnemyInnerCircle * 1.2 < cdr.CurrentFriendlyInnerCircle then
                                 self.BuilderData = {}
                                 self:ChangeState(self.DecideWhatToDo)
+                                return
                             end
                         end
                     end
@@ -1004,7 +1021,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         local innerCircleEnemies = GetNumUnitsAroundPoint(brain, categories.MOBILE * categories.LAND + categories.STRUCTURE, cdr.Position, cdr.WeaponRange - 3, 'Enemy')
                         if innerCircleEnemies > 0 then
                             local result, newTarget = ACUFunc.CDRGetUnitClump(brain, cdr.Position, cdr.WeaponRange - 3)
-                            if newTarget and VDist3Sq(cdr.Position, newTarget:GetPosition()) < cdr.WeaponRange - 3 then
+                            if newTarget and VDist3Sq(cdr.Position, newTarget:GetPosition()) < (cdr.WeaponRange * cdr.WeaponRange) - 9 then
                                 IssueClearCommands({cdr})
                                 IssueOverCharge({cdr}, newTarget)
                                 overChargeFired = true
@@ -1055,6 +1072,25 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
             local distanceToHome = VDist3Sq(cdr.CDRHome, cdr.Position)
             --RNGLOG('Getting list of allied platoons close by')
             coroutine.yield( 2 )
+            if cdr.EnemyAirPresent and not cdr.AtHoldPosition then
+                local retreatKey
+                local acuHoldPosition
+                cdr.Retreat = true
+                cdr.BaseLocation = true
+                if brain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].PositionKey then
+                    retreatKey = brain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].PositionKey
+                end
+                if brain.BuilderManagers['MAIN'].DefensivePoints[2][retreatKey].Position then
+                    acuHoldPosition = brain.BuilderManagers['MAIN'].DefensivePoints[2][retreatKey].Position
+                end
+                self.BuilderData = {
+                    Position = acuHoldPosition,
+                    CutOff = 25,
+                    Retreat = true
+                }
+                self:ChangeState(self.Navigating)
+                return
+            end
             if distanceToHome > brain.ACUSupport.ACUMaxSearchRadius or cdr.Phase > 2 or brain.EnemyIntel.Phase > 2 then
                 baseRetreat = true
             end
@@ -1094,6 +1130,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             }
                             --LOG('Retreating to extractor')
                             self:ChangeState(self.Navigating)
+                            return
                         end
                     end
                 end
@@ -1529,6 +1566,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
             if gameTime < 300 then
                 coroutine.yield(30)
                 self:ChangeState(self.DecideWhatToDo)
+                return
             end
             
             local upgradeMode = 'Combat'

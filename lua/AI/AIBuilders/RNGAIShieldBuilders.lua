@@ -69,6 +69,7 @@ BuilderGroup {
                 BaseTemplate = 'DefenseTemplate',
                 DesiresAssist = true,
                 NumAssistees = 4,
+                NoPause = true,
                 BuildClose = false,
                 OrderedTemplate = true,
                 NearDefensivePoints = true,

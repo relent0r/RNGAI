@@ -62,6 +62,7 @@ IntelManager = Class {
         }
         self.StrategyFlags = {
             T3BomberRushActivated = false,
+            EnemyAirSnipeThreat = false
         }
         self.UnitStats = {
             Land = {
@@ -2326,6 +2327,14 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                 aiBrain.EnemyIntel.NavalPhase = 3
             end
         end
+    end
+    if aiBrain.EnemyIntel.AirPhase > 1 and aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface > 75 then
+        LOG('Enemy Air Snipe Threat high')
+        LOG('Current enemy air threat is '..aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface)
+        aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat = true
+    else
+        LOG('Enemy Air Snipe Threat low')
+        aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat = false
     end
 
     -- populate the director

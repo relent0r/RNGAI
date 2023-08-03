@@ -1043,6 +1043,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyThreatCurrent = {
             Air = 0,
             AntiAir = 0,
+            AirSurface = 0,
             Land = 0,
             Experimental = 0,
             Extractor = 0,
@@ -1102,7 +1103,7 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         self.BrainIntel.AllyCount = 0
         self.BrainIntel.AllyStartLocations = {}
-        
+        self.BrainIntel.ACUDefensivePositionKeyTable = {}
         self.BrainIntel.LandPhase = 1
         self.BrainIntel.AirPhase = 1
         self.BrainIntel.NavalPhase = 1
@@ -1579,7 +1580,7 @@ AIBrain = Class(RNGAIBrainClass) {
             FactoryManager = FactoryManager.CreateFactoryBuilderManager(self, baseName, position, radius, useCenter),
             PlatoonFormManager = PlatoonFormManager.CreatePlatoonFormManager(self, baseName, position, radius, useCenter),
             EngineerManager = EngineerManager.CreateEngineerManager(self, baseName, position, radius),
-            DefensivePoints = RUtils.GenerateDefensivePointTable(BaseRestrictedArea, position),
+            DefensivePoints = RUtils.GenerateDefensivePointTable(self, baseName, BaseRestrictedArea, position),
             BuilderHandles = {},
             Position = position,
             Layer = baseLayer,
@@ -3335,6 +3336,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local enemyBrains = {}
         local enemyAirThreat = 0
         local enemyAntiAirThreat = 0
+        local enemyAirSurfaceThreat = 0
         local enemyNavalThreat = 0
         local enemyLandThreat = 0
         local enemyNavalSubThreat = 0
@@ -3366,6 +3368,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         --RNGLOG('Unit blueprint id test only on dev branch:'..v.UnitId)
                         enemyAirThreat = enemyAirThreat + v.Blueprint.Defense.AirThreatLevel + v.Blueprint.Defense.SubThreatLevel + v.Blueprint.Defense.SurfaceThreatLevel
                         enemyAntiAirThreat = enemyAntiAirThreat + v.Blueprint.Defense.AirThreatLevel
+                        enemyAirSurfaceThreat = enemyAirSurfaceThreat + v.Blueprint.Defense.SurfaceThreatLevel
                     end
                     coroutine.yield(1)
                     local enemyExtractors = GetListOfUnits( enemy, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
@@ -3447,6 +3450,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades = enemyACUGun
         self.EnemyIntel.EnemyThreatCurrent.Air = enemyAirThreat
         self.EnemyIntel.EnemyThreatCurrent.AntiAir = enemyAntiAirThreat
+        self.EnemyIntel.EnemyThreatCurrent.AirSurface = enemyAirSurfaceThreat
         self.EnemyIntel.EnemyThreatCurrent.Extractor = enemyExtractorthreat
         self.EnemyIntel.EnemyThreatCurrent.ExtractorCount = enemyExtractorCount
         self.EnemyIntel.EnemyThreatCurrent.Naval = enemyNavalThreat

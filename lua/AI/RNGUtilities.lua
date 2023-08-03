@@ -4120,7 +4120,7 @@ function GetNumberUnitsBuilding(aiBrain, category)
     return catNumBuilding
 end
 
-GenerateDefensivePointTable = function (range, position)
+GenerateDefensivePointTable = function (aiBrain, baseName, range, position)
     local function DrawCirclePoints(points, radius, center)
         local circlePoints = {}
         local slice = 2 * math.pi / points
@@ -4138,7 +4138,6 @@ GenerateDefensivePointTable = function (range, position)
     }
     local defensivePointsT1 = DrawCirclePoints(8, range/3, position)
     --RNGLOG('DefensivePoints being generated')
-    
     for _, v in defensivePointsT1 do
         if v[1] <= 15 or v[1] >= ScenarioInfo.size[1] - 15 or v[3] <= 15 or v[3] >= ScenarioInfo.size[2] - 15 then
             continue
@@ -4155,7 +4154,9 @@ GenerateDefensivePointTable = function (range, position)
         end
     end
     local defensivePointsT2 = DrawCirclePoints(8, range/2, position)
-    for _, v in defensivePointsT2 do
+    local pointCheck = GetAngleToPosition(position, aiBrain.MapCenterPoint)
+    local acuHoldPoint = false
+    for k, v in defensivePointsT2 do
         if v[1] <= 15 or v[1] >= ScenarioInfo.size[1] - 15 or v[3] <= 15 or v[3] >= ScenarioInfo.size[2] - 15 then
             continue
         end
@@ -4165,10 +4166,21 @@ GenerateDefensivePointTable = function (range, position)
             continue
         end
         if GetTerrainHeight(v[1], v[3]) >= GetSurfaceHeight(v[1], v[3]) then
-            RNGINSERT(defensivePointTable[2], {Position = v, Radius = 15, Enabled = true, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}})
+            RNGINSERT(defensivePointTable[2], {Position = v, Radius = 15, Enabled = true, AcuHoldPosition = false, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}})
         else
-            RNGINSERT(defensivePointTable[2], {Position = v, Radius = 15, Enabled = false, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}})
+            RNGINSERT(defensivePointTable[2], {Position = v, Radius = 15, Enabled = false, AcuHoldPosition = false, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}})
         end
+        local pointAngle = GetAngleToPosition(position, v)
+        if not acuHoldPoint or (math.abs(pointCheck - pointAngle) < acuHoldPoint.Angle) then
+            acuHoldPoint = { Key = k, Angle = math.abs(pointCheck - pointAngle)}
+        end
+    end
+    if acuHoldPoint then
+        defensivePointTable[2][acuHoldPoint.Key].AcuHoldPosition = true
+        aiBrain.BrainIntel.ACUDefensivePositionKeyTable[baseName] = { PositionKey = acuHoldPoint.Key }
+        LOG('ACU Hold position set')
+        LOG('Key is '..repr(aiBrain.BrainIntel.ACUDefensivePositionKeyTable))
+        LOG('defensive point is '..repr(defensivePointTable[2][acuHoldPoint.Key]))
     end
     return defensivePointTable
 end
@@ -4294,31 +4306,53 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
         end
     elseif type == 'SHIELD' then
         local bestPoint = false
+        local acuShieldRequired = false
         --RNGLOG('Performing DirectFire Structure Check')
-        if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
-            for k, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
-                local unitCount = 0
-                for _, b in v.DirectFire do
-                    if b and not b.Dead then
-                        unitCount = unitCount + 1
+        if pointTier == 2 and aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat then
+            local positionKey = aiBrain.BrainIntel.ACUDefensivePositionKeyTable[baseLocation].PositionKey
+            if positionKey then
+                local shieldCovered
+                for k , v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier][positionKey].Shields do
+                    if v and not v.Dead then
+                        shieldCovered = true
+                        break
                     end
                 end
-                if unitCount > 1 then
-                    local shieldPresent = false
-                    for _, b in v.Shields do
+                if not shieldCovered then
+                    acuShieldRequired = true
+                end
+                bestPoint = aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier][positionKey].Position
+            end
+        end 
+        if not acuShieldRequired then
+            if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
+                for k, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
+                    local unitCount = 0
+                    for _, b in v.DirectFire do
                         if b and not b.Dead then
-                            shieldPresent = true
-                            break
+                            unitCount = unitCount + 1
                         end
                     end
-                    if not shieldPresent then
-                        bestPoint = v.Position
-                        break
+                    if unitCount > 1 then
+                        local shieldPresent = false
+                        for _, b in v.Shields do
+                            if b and not b.Dead then
+                                shieldPresent = true
+                                break
+                            end
+                        end
+                        if not shieldPresent then
+                            bestPoint = v.Position
+                            break
+                        end
                     end
                 end
             end
         end
         if bestPoint then
+            if acuShieldRequired then
+                LOG('ACU Shield required at position '..repr(bestPoint))
+            end
             defensivePoint = bestPoint
         end
     end
