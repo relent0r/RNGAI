@@ -7093,7 +7093,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         local mergePlatoon = false
                         if target and not target.Dead then
                             local unitPos = target:GetPosition() 
-                            RNGLOG('MoveWithZoneMicro - Attempt to run away from unit')
+                            --RNGLOG('MoveWithZoneMicro - Attempt to run away from unit')
                            --RNGLOG('MoveWithZoneMicro - before run away we are  '..VDist3(PlatoonPosition, target:GetPosition())..' from enemy')
                            --RNGLOG('The enemy unit is a '..target.UnitId)
                             local retreatPosition = RUtils.AvoidLocation(unitPos, PlatoonPosition, 50)
@@ -7104,15 +7104,15 @@ Platoon = Class(RNGAIPlatoonClass) {
                             PlatoonPosition = GetPlatoonPosition(self)
                            --RNGLOG('MoveWithZoneMicro - we are now '..VDist3(PlatoonPosition, target:GetPosition())..' from enemy')
                             if not self.Zone then
-                                RNGLOG('Why do we have no zone on the platoon?')
+                                --RNGLOG('Why do we have no zone on the platoon?')
                                 self:ConfigurePlatoon()
                             else
-                                RNGLOG('Current zone is '..self.Zone)
+                                --RNGLOG('Current zone is '..self.Zone)
                             end
                             if self.Zone and aiBrain.BuilderManagers['Main'].Zone and self.Zone ~= aiBrain.BuilderManagers['Main'].Zone then
                                 if aiBrain.Zones.Land.zones[self.Zone].edges then
                                     for k, v in aiBrain.Zones.Land.zones[self.Zone].edges do
-                                        RNGLOG('Look for zone to run to, angle for '..v.zone.id..' is '..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], unitPos[1], unitPos[3]))
+                                        --RNGLOG('Look for zone to run to, angle for '..v.zone.id..' is '..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], unitPos[1], unitPos[3]))
                                         if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], unitPos[1], unitPos[3]) > 0.6 then
                                             alternateZone = v.zone.id
                                             alternatePos = v.zone.pos

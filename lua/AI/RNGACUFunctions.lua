@@ -43,6 +43,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.movetopos = false
     cdr.Retreating = false
     cdr.AtHoldPosition = false
+    cdr.HoldPosition = {}
     cdr.SnipeMode = false
     cdr.SuicideMode = false
     cdr.AirScout = false
@@ -186,22 +187,39 @@ function CDRBrainThread(cdr)
                 end
             end
         end
+        --[[
+        if cdr.EnemyAirPresent then
+            LOG('Enemy Air Snipe Potential is high')
+        else
+            LOG('Enemy Air Snipe Potential is low')
+        end
+        ]]
         if cdr.EnemyAirPresent and not cdr.AtHoldPosition then
             if aiBrain.BuilderManagers['MAIN'] and aiBrain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].PositionKey then
                 local positionKey = aiBrain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].PositionKey
-                local hx = aiBrain.BuilderManagers['MAIN'].DefensivePoints[2][positionKey].Position[1]
-                local hz = aiBrain.BuilderManagers['MAIN'].DefensivePoints[2][positionKey].Position[3]
+                cdr.HoldPosition = aiBrain.BuilderManagers['MAIN'].DefensivePoints[2][positionKey].Position
+                local hx = cdr.HoldPosition[1]
+                local hz = cdr.HoldPosition[3]
                 local ax = cdr.Position[1] - hx
                 local az = cdr.Position[3] - hz
-                LOG('Distance to hold position '..(ax * ax + az * az))
+                --LOG('Distance to hold position '..(ax * ax + az * az))
                 if ax * ax + az * az < 2025 then
                     cdr.AtHoldPosition = true
                 else
                     cdr.AtHoldPosition = false
                 end
             end
-        elseif cdr.AtHoldPosition then
-            LOG('acu is at hold position')
+        elseif (not cdr.EnemyAirPresent) and cdr.AtHoldPosition then
+            local hx = cdr.HoldPosition[1]
+            local hz = cdr.HoldPosition[3]
+            local ax = cdr.Position[1] - hx
+            local az = cdr.Position[3] - hz
+            --LOG('acu is at hold position, distance '..(ax * ax + az * az))
+            if ax * ax + az * az < 2025 then
+                cdr.AtHoldPosition = true
+            else
+                cdr.AtHoldPosition = false
+            end
         end
         coroutine.yield(5)
     end
@@ -327,27 +345,27 @@ function CDRThreatAssessmentRNG(cdr)
            --RNGLOG('Enemy Bomber threat '..cdr.CurrentEnemyAirThreat)
            --RNGLOG('Friendly AA threat '..cdr.CurrentFriendlyAntiAirThreat)
             if cdr.EnemyNavalPresent then
-                RNGLOG('ACU Threat Assessment . Enemy unit is antinaval and hitting me')
+                --RNGLOG('ACU Threat Assessment . Enemy unit is antinaval and hitting me')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyNavalStriking'
             elseif enemyACUPresent and not cdr.SuicideMode and enemyUnitThreatInner > 30 and enemyUnitThreatInner > friendlyUnitThreatInner then
-                RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitInner > friendlyUnitInner')
+                --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitInner > friendlyUnitInner')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreatInnerACU'
             elseif enemyACUPresent and not cdr.SuicideMode and enemyUnitThreat > 30 and enemyUnitThreat * 0.8 > friendlyUnitThreat then
-                RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnit * 0.8 > friendlyUnit')
+                --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnit * 0.8 > friendlyUnit')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreatACU'
             elseif not cdr.SuicideMode and enemyUnitThreatInner > 45 and enemyUnitThreatInner > friendlyUnitThreatInner then
-                RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitThreatInner > friendlyUnitThreatInner')
+                --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitThreatInner > friendlyUnitThreatInner')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreatInner'
             elseif not cdr.SuicideMode and enemyUnitThreat > 45 and enemyUnitThreat * 0.8 > friendlyUnitThreat then
-               RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
+               --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreat'
             elseif enemyUnitThreat < friendlyUnitThreat and cdr.Health > 6000 and GetThreatAtPosition(aiBrain, cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
-                RNGLOG('ACU threat low and health up past 6000')
+                --RNGLOG('ACU threat low and health up past 6000')
                 cdr.Caution = false
                 cdr.CautionReason = 'none'
             end

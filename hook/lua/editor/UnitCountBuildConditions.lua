@@ -52,6 +52,37 @@ function LastKnownUnitDetection(aiBrain, locationType, type)
     return false
 end
 
+function EnemyAirSnipeIsRiskActive(aiBrain)
+    if aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat and aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
+        return true
+    end
+    return false
+end
+
+function EnemyAirSnipeDefenceRequired(aiBrain, locationType)
+    if aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat and aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
+        local positionKey = aiBrain.BrainIntel.ACUDefensivePositionKeyTable[locationType].PositionKey
+        if positionKey then
+            local aaCovered
+            local aaCount = 0
+            for k , v in aiBrain.BuilderManagers[locationType].DefensivePoints[2][positionKey].AntiAir do
+                if v and not v.Dead then
+                    aaCount = aaCount + 1
+                    if aaCount > 1 then
+                        aaCovered = true
+                        break
+                    end
+                end
+            end
+            if not aaCovered then
+                --LOG('EnemyAirSnipeDefenceRequired')
+                return true
+            end
+        end
+    end
+    return false
+end
+
 function UnitToThreatRatio(aiBrain, ratio, category, threatType, compareType)
     local numUnits = aiBrain:GetCurrentUnits(category)
     local threat
@@ -1285,6 +1316,22 @@ function CheckTargetInRangeRNG(aiBrain, locationType, unitType, category, factio
 end
 
 function DefensivePointShieldRequired(aiBrain, locationType)
+    local snipeCaution = aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat
+    if snipeCaution then
+        local positionKey = aiBrain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].PositionKey
+        if positionKey then
+            local shieldCovered
+            for k , v in aiBrain.BuilderManagers['MAIN'].DefensivePoints[2][positionKey].Shields do
+                if v and not v.Dead then
+                    shieldCovered = true
+                    break
+                end
+            end
+            if not shieldCovered then
+                return true
+            end
+        end
+    end
     for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[2] do
         local unitCount = 0
         for _, b in v.DirectFire do

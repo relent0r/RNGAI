@@ -1831,10 +1831,10 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
         for k, expansion in aiBrain.BrainIntel.ExpansionWatchTable do
             if expansion.Zone == label then
                 local expansionDistance = VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3])
-                RNGLOG('Distance to expansion '..expansionDistance)
-                RNGLOG('Expansion position is '..repr(expansion.Position))
+                --RNGLOG('Distance to expansion '..expansionDistance)
+                --RNGLOG('Expansion position is '..repr(expansion.Position))
                 -- Check if this expansion has been staged already in the last 30 seconds unless there is land threat present
-                RNGLOG('Expansion last visited timestamp is '..expansion.TimeStamp)
+                --RNGLOG('Expansion last visited timestamp is '..expansion.TimeStamp)
                 if currentGameTime - expansion.TimeStamp > 45 or expansion.Land > 0 or type == 'acu' then
                     if expansionDistance < radius * radius then
                        --RNGLOG('Expansion Zone is within radius')
@@ -2329,11 +2329,11 @@ TacticalThreatAnalysisRNG = function(aiBrain)
         end
     end
     if aiBrain.EnemyIntel.AirPhase > 1 and aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface > 75 then
-        LOG('Enemy Air Snipe Threat high')
-        LOG('Current enemy air threat is '..aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface)
+        --LOG('Enemy Air Snipe Threat high')
+        --LOG('Current enemy air threat is '..aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface)
         aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat = true
     else
-        LOG('Enemy Air Snipe Threat low')
+        --LOG('Enemy Air Snipe Threat low')
         aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat = false
     end
 

@@ -178,6 +178,41 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T2 Defence Engineer Snipe Air',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'EnemyAirSnipeIsRiskActive', { }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
+            { UCBC, 'EnemyAirSnipeDefenceRequired', { 'MAIN' }},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
+                BaseTemplate = 'DefenseTemplate',
+                DesiresAssist = true,
+                NumAssistees = 4,
+                NoPause = true,
+                BuildClose = false,
+                OrderedTemplate = true,
+                NearDefensivePoints = true,
+                Type = 'AntiAir',
+                Tier = 2,
+                LocationType = 'LocationType',
+                BuildStructures = {
+                    'T2AADefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T2 Defence Engineer ACUClose Artillery',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 800,
@@ -283,6 +318,7 @@ BuilderGroup {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
                 BaseTemplate = 'DefenseTemplate',
                 BuildClose = true,
+                NoPause = true,
                 NearDefensivePoints = true,
                 Type = 'TML',
                 Tier = 1,

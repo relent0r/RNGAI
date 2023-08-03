@@ -4178,9 +4178,9 @@ GenerateDefensivePointTable = function (aiBrain, baseName, range, position)
     if acuHoldPoint then
         defensivePointTable[2][acuHoldPoint.Key].AcuHoldPosition = true
         aiBrain.BrainIntel.ACUDefensivePositionKeyTable[baseName] = { PositionKey = acuHoldPoint.Key }
-        LOG('ACU Hold position set')
-        LOG('Key is '..repr(aiBrain.BrainIntel.ACUDefensivePositionKeyTable))
-        LOG('defensive point is '..repr(defensivePointTable[2][acuHoldPoint.Key]))
+        --LOG('ACU Hold position set')
+        --LOG('Key is '..repr(aiBrain.BrainIntel.ACUDefensivePositionKeyTable))
+        --LOG('defensive point is '..repr(defensivePointTable[2][acuHoldPoint.Key]))
     end
     return defensivePointTable
 end
@@ -4207,6 +4207,53 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
             end
         end
         if bestPoint then
+            defensivePoint = bestPoint.Position
+        end
+        --RNGLOG('defensivePoint being passed to engineer build platoon function'..repr(defensivePoint)..' bestpointangle is '..bestPoint.Angle)
+    elseif type == 'AntiAir' then
+        local bestPoint = false
+        local bestIndex = false
+        local acuDefenseRequired = false
+        --RNGLOG('Performing DirectFire Structure Check')
+        if pointTier == 2 and aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat then
+            local positionKey = aiBrain.BrainIntel.ACUDefensivePositionKeyTable[baseLocation].PositionKey
+            if positionKey then
+                local aaCovered
+                local aaCount = 0
+                for k , v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier][positionKey].AntiAir do
+                    if v and not v.Dead then
+                        aaCount = aaCount + 1
+                        if aaCount > 1 then
+                            aaCovered = true
+                            break
+                        end
+                    end
+                end
+                if not aaCovered then
+                    --LOG('ACU defense required during engineer build')
+                    acuDefenseRequired = true
+                end
+                bestPoint = aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier][positionKey]
+            end
+        end 
+        if not acuDefenseRequired then
+            if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
+                if aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle then
+                    local pointCheck = aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle
+                    for _, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
+                        local pointAngle = GetAngleToPosition(basePosition, v.Position)
+                        if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                            if bestPoint then
+                                --RNGLOG('Angle to find '..aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle..' bestPoint was '..bestPoint.Angle..' but is now '..repr({ Position = v, Angle = pointAngle}))
+                            end
+                            bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                        end
+                    end
+                end
+            end
+        end
+        if bestPoint then
+            --LOG('returning defensivePoint for aa defense '..repr(bestPoint.Position))
             defensivePoint = bestPoint.Position
         end
         --RNGLOG('defensivePoint being passed to engineer build platoon function'..repr(defensivePoint)..' bestpointangle is '..bestPoint.Angle)
@@ -4351,7 +4398,7 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
         end
         if bestPoint then
             if acuShieldRequired then
-                LOG('ACU Shield required at position '..repr(bestPoint))
+                --LOG('ACU Shield required at position '..repr(bestPoint))
             end
             defensivePoint = bestPoint
         end

@@ -86,7 +86,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                 if brain.BrainIntel.SelfThreat.AntiAirNow < brain.EnemyIntel.EnemyThreatCurrent.AntiAir then
                     cdr.EnemyAirPresent = true
                     if not cdr.AtHoldPosition then
-                        LOG('Retreating due to enemy air snipe possibility')
+                       --('Retreating due to enemy air snipe possibility')
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -343,13 +343,13 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             ACUTarget    = acuTarget,
                         }
                     end
-                    LOG('CDR Health '..cdr.Health)
-                    LOG('Current Inner Enemy Threat '..cdr.CurrentEnemyInnerCircle)
-                    LOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
-                    LOG('Current CurrentEnemyAirThreat '..cdr.CurrentEnemyAirThreat)
-                    LOG('Current CurrentFriendlyThreat '..cdr.CurrentFriendlyThreat)
-                    LOG('Current CurrentFriendlyAntiAirThreat '..cdr.CurrentFriendlyAntiAirThreat)
-                    LOG('Current CurrentFriendlyInnerCircle '..cdr.CurrentFriendlyInnerCircle)
+                    --LOG('CDR Health '..cdr.Health)
+                    --LOG('Current Inner Enemy Threat '..cdr.CurrentEnemyInnerCircle)
+                    --LOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
+                    --LOG('Current CurrentEnemyAirThreat '..cdr.CurrentEnemyAirThreat)
+                    --LOG('Current CurrentFriendlyThreat '..cdr.CurrentFriendlyThreat)
+                    --LOG('Current CurrentFriendlyAntiAirThreat '..cdr.CurrentFriendlyAntiAirThreat)
+                    --LOG('Current CurrentFriendlyInnerCircle '..cdr.CurrentFriendlyInnerCircle)
                     self:ChangeState(self.AttackTarget)
                     return
                 else
@@ -437,12 +437,13 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
             local navigateDistanceCutOff = builderData.CutOff or 400
             local destCutOff = math.sqrt(navigateDistanceCutOff) + 10
             if not destination then
-                --LOG('BuilderData '..repr(builderData))
+                --LOG('no destination BuilderData '..repr(builderData))
                 self:LogWarning(string.format('no destination to navigate to'))
                 coroutine.yield(10)
                 if cdr.EnemyNavalPresent then
                     cdr.EnemyNavalPresent = nil
                 end
+                --LOG('No destiantion break out of Navigating')
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
@@ -477,6 +478,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     if cdr.EnemyNavalPresent then
                         cdr.EnemyNavalPresent = nil
                     end
+                    --LOG('No waypoint break out of Navigating')
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
@@ -492,6 +494,8 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         if cdr.EnemyNavalPresent then
                             cdr.EnemyNavalPresent = nil
                         end
+                        --LOG('ACU at position '..repr(destination))
+                        --LOG('Cutoff distance was '..navigateDistanceCutOff)
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
@@ -553,7 +557,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                                 return
                             end
                         end
-                    elseif cdr.Health > 6000 and builderData.Retreat and cdr.Phase < 3 and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < cdr.MaxBaseRange * cdr.MaxBaseRange and (not cdr.Caution) then
+                    elseif cdr.Health > 6000 and builderData.Retreat and cdr.Phase < 3 and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < cdr.MaxBaseRange * cdr.MaxBaseRange and (not cdr.Caution) and (not cdr.EnemyAirPresent) then
                         --LOG('cdr is > 6000 and within max base range current range '..VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]))
                         --LOG('maxbaserange '..(cdr.MaxBaseRange * cdr.MaxBaseRange))
                         local supportPlatoon = brain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
@@ -561,6 +565,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             local supportPlatoonPos = supportPlatoon:GetPlatoonPosition()
                             if not IsDestroyed(supportPlatoon) and supportPlatoonPos and VDist3Sq(supportPlatoonPos, cdr.Position) < 3600 and cdr.CurrentEnemyInnerCircle * 1.2 < cdr.CurrentFriendlyInnerCircle then
                                 self.BuilderData = {}
+                                --LOG('acu close to support platoon, stopping retreat')
                                 self:ChangeState(self.DecideWhatToDo)
                                 return
                             end
@@ -1088,6 +1093,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     CutOff = 25,
                     Retreat = true
                 }
+                --LOG('Retreating due to air threat to position '..repr(acuHoldPosition))
                 self:ChangeState(self.Navigating)
                 return
             end
