@@ -7409,39 +7409,41 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     end
                                 end
                             end
-                            targetPosition = target:GetPosition()
-                            local microCap = 50
-                            for _, unit in attackSquad do
-                                microCap = microCap - 1
-                                if microCap <= 0 then break end
-                                if unit.Dead then continue end
-                                if not unit.MaxWeaponRange then
-                                    coroutine.yield(1)
-                                    continue
-                                end
-                                unitPos = unit:GetPosition()
-                                alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
-                                x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange - rangeModifier or self.MaxPlatoonWeaponRange)
-                                y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange - rangeModifier or self.MaxPlatoonWeaponRange)
-                                smartPos = { x, GetTerrainHeight( x, y), y }
-                                -- check if the move position is new or target has moved
-                                if VDist2( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.7 or unit.TargetPos ~= targetPosition then
-                                    -- clear move commands if we have queued more than 4
-                                    if RNGGETN(unit:GetCommandQueue()) > 2 then
-                                        IssueClearCommands({unit})
-                                        coroutine.yield(3)
+                            if not IsDestroyed(target) then
+                                targetPosition = target:GetPosition()
+                                local microCap = 50
+                                for _, unit in attackSquad do
+                                    microCap = microCap - 1
+                                    if microCap <= 0 then break end
+                                    if unit.Dead then continue end
+                                    if not unit.MaxWeaponRange then
+                                        coroutine.yield(1)
+                                        continue
                                     end
-                                    -- if our target is dead, jump out of the "for _, unit in self:GetPlatoonUnits() do" loop
-                                    IssueMove({unit}, smartPos )
-                                    if target.Dead then break end
-                                    IssueAttack({unit}, target)
-                                    unit.smartPos = smartPos
-                                    unit.TargetPos = targetPosition
-                                -- in case we don't move, check if we can fire at the target
-                                else
-                                    if unitPos and unit.WeaponArc then
-                                        if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit.WeaponArc) then
-                                            IssueMove({unit}, targetPosition )
+                                    unitPos = unit:GetPosition()
+                                    alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
+                                    x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange - rangeModifier or self.MaxPlatoonWeaponRange)
+                                    y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange - rangeModifier or self.MaxPlatoonWeaponRange)
+                                    smartPos = { x, GetTerrainHeight( x, y), y }
+                                    -- check if the move position is new or target has moved
+                                    if VDist2( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.7 or unit.TargetPos ~= targetPosition then
+                                        -- clear move commands if we have queued more than 4
+                                        if RNGGETN(unit:GetCommandQueue()) > 2 then
+                                            IssueClearCommands({unit})
+                                            coroutine.yield(3)
+                                        end
+                                        -- if our target is dead, jump out of the "for _, unit in self:GetPlatoonUnits() do" loop
+                                        IssueMove({unit}, smartPos )
+                                        if target.Dead then break end
+                                        IssueAttack({unit}, target)
+                                        unit.smartPos = smartPos
+                                        unit.TargetPos = targetPosition
+                                    -- in case we don't move, check if we can fire at the target
+                                    else
+                                        if unitPos and unit.WeaponArc then
+                                            if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit.WeaponArc) then
+                                                IssueMove({unit}, targetPosition )
+                                            end
                                         end
                                     end
                                 end

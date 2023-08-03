@@ -200,6 +200,8 @@ function CDRBrainThread(cdr)
                     cdr.AtHoldPosition = false
                 end
             end
+        elseif cdr.AtHoldPosition then
+            LOG('acu is at hold position')
         end
         coroutine.yield(5)
     end
