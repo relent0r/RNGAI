@@ -4137,6 +4137,7 @@ GenerateDefensivePointTable = function (aiBrain, baseName, range, position)
         [2] = {}
     }
     local defensivePointsT1 = DrawCirclePoints(8, range/3, position)
+    local defensivePointT1Key = 1
     --RNGLOG('DefensivePoints being generated')
     for _, v in defensivePointsT1 do
         if v[1] <= 15 or v[1] >= ScenarioInfo.size[1] - 15 or v[3] <= 15 or v[3] >= ScenarioInfo.size[2] - 15 then
@@ -4148,14 +4149,16 @@ GenerateDefensivePointTable = function (aiBrain, baseName, range, position)
             continue
         end
         if GetTerrainHeight(v[1], v[3]) >= GetSurfaceHeight(v[1], v[3]) then
-            RNGINSERT(defensivePointTable[1], {Position = v, Radius = 15, Enabled = true, Shields = {}, DirectFire = {}, AntiAir = {}, Indirectfire = {}, TMD = {}, TML = {}})
+            defensivePointTable[1][defensivePointT1Key] = {Position = v, Radius = 15, Enabled = true, Shields = {}, DirectFire = {}, AntiAir = {}, Indirectfire = {}, TMD = {}, TML = {}}
         else
-            RNGINSERT(defensivePointTable[1], {Position = v, Radius = 15, Enabled = false, Shields = {}, DirectFire = {}, AntiAir = {}, Indirectfire = {}, TMD = {}, TML = {}})
+            defensivePointTable[1][defensivePointT1Key] = {Position = v, Radius = 15, Enabled = false, Shields = {}, DirectFire = {}, AntiAir = {}, Indirectfire = {}, TMD = {}, TML = {}}
         end
+        defensivePointT1Key = defensivePointT1Key + 1
     end
     local defensivePointsT2 = DrawCirclePoints(8, range/2, position)
     local pointCheck = GetAngleToPosition(position, aiBrain.MapCenterPoint)
     local acuHoldPoint = false
+    local defensivePointT2Key = 1
     for k, v in defensivePointsT2 do
         if v[1] <= 15 or v[1] >= ScenarioInfo.size[1] - 15 or v[3] <= 15 or v[3] >= ScenarioInfo.size[2] - 15 then
             continue
@@ -4166,16 +4169,19 @@ GenerateDefensivePointTable = function (aiBrain, baseName, range, position)
             continue
         end
         if GetTerrainHeight(v[1], v[3]) >= GetSurfaceHeight(v[1], v[3]) then
-            RNGINSERT(defensivePointTable[2], {Position = v, Radius = 15, Enabled = true, AcuHoldPosition = false, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}})
+            defensivePointTable[2][defensivePointT2Key] = {Position = v, Radius = 15, Enabled = true, AcuHoldPosition = false, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}}
+            local pointAngle = GetAngleToPosition(position, v)
+            if not acuHoldPoint or (math.abs(pointCheck - pointAngle) < acuHoldPoint.Angle) then
+                acuHoldPoint = { Key = defensivePointT2Key, Angle = math.abs(pointCheck - pointAngle)}
+            end
         else
-            RNGINSERT(defensivePointTable[2], {Position = v, Radius = 15, Enabled = false, AcuHoldPosition = false, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}})
+            defensivePointTable[2][defensivePointT2Key] = {Position = v, Radius = 15, Enabled = false, AcuHoldPosition = false, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}}
         end
-        local pointAngle = GetAngleToPosition(position, v)
-        if not acuHoldPoint or (math.abs(pointCheck - pointAngle) < acuHoldPoint.Angle) then
-            acuHoldPoint = { Key = k, Angle = math.abs(pointCheck - pointAngle)}
-        end
+        defensivePointT2Key = defensivePointT2Key + 1
     end
     if acuHoldPoint then
+        LOG('holdpoint '..repr(defensivePointTable[2]))
+        LOG('acu hold point '..repr(acuHoldPoint))
         defensivePointTable[2][acuHoldPoint.Key].AcuHoldPosition = true
         aiBrain.BrainIntel.ACUDefensivePositionKeyTable[baseName] = { PositionKey = acuHoldPoint.Key }
         --LOG('ACU Hold position set')

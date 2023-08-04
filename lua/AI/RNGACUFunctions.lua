@@ -228,7 +228,7 @@ end
 function CDRThreatAssessmentRNG(cdr)
     coroutine.yield(20)
     local aiBrain = cdr:GetAIBrain()
-    local UnitCategories = (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT )
+    local UnitCategories = (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR + categories.NAVAL) - categories.SCOUT )
     while not cdr.Dead do
         if cdr.Active then
             if not cdr.Position then
