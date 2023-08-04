@@ -4180,8 +4180,6 @@ GenerateDefensivePointTable = function (aiBrain, baseName, range, position)
         defensivePointT2Key = defensivePointT2Key + 1
     end
     if acuHoldPoint then
-        LOG('holdpoint '..repr(defensivePointTable[2]))
-        LOG('acu hold point '..repr(acuHoldPoint))
         defensivePointTable[2][acuHoldPoint.Key].AcuHoldPosition = true
         aiBrain.BrainIntel.ACUDefensivePositionKeyTable[baseName] = { PositionKey = acuHoldPoint.Key }
         --LOG('ACU Hold position set')
