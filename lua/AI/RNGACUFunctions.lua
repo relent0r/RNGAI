@@ -36,6 +36,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.EnemyCDRPresent = false
     cdr.EnemyAirPresent = false
     cdr.Caution = false
+    cdr.EnemyFlanking = false
     cdr.HealthPercent = 0
     cdr.DistanceToHome = 0
     cdr.Health = 0
@@ -253,7 +254,7 @@ function CDRThreatAssessmentRNG(cdr)
                     local dz = cdr.Position[3] - unitPos[3]
                     local unitDist = dx * dx + dy * dy + dz * dz
                     if unitDist < 1225 then
-                        if EntityCategoryContains(categories.COMMAND, v) then
+                        if v.Blueprint.CategoriesHash.COMMAND then
                             friendlyUnitThreatInner = friendlyUnitThreatInner + v:EnhancementThreatReturn()
                         else
                             if EntityCategoryContains(categories.ANTIAIR, v) then
@@ -262,7 +263,7 @@ function CDRThreatAssessmentRNG(cdr)
                             friendlyUnitThreatInner = friendlyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel
                         end
                     else
-                        if EntityCategoryContains(categories.COMMAND, v) then
+                        if v.Blueprint.CategoriesHash.COMMAND then
                             friendlyUnitThreat = friendlyUnitThreat + v:EnhancementThreatReturn()
                         else
                             if EntityCategoryContains(categories.ANTIAIR, v) then
@@ -288,10 +289,19 @@ function CDRThreatAssessmentRNG(cdr)
                                 enemyUnitThreatInner = enemyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel * 1.5
                             end
                         end
-                        if EntityCategoryContains(categories.COMMAND, v) then
+                        if v.Blueprint.CategoriesHash.COMMAND then
                             enemyACUPresent = true
                             enemyUnitThreatInner = enemyUnitThreatInner + v:EnhancementThreatReturn()
                             enemyACUHealthModifier = enemyACUHealthModifier + (v:GetHealth() / cdr.Health)
+                            local ax = unitPos[1] - cdr.CDRHome[1]
+                            local az = unitPos[3] - cdr.CDRHome[3]
+                            local enemyDistanceToHome = ax * ax + az * az
+                            if enemyDistanceToHome < cdr.DistanceToHome then
+                                --LOG('ACU is being flanked by enemy acu')
+                                --LOG('enemyDistanceToHome is '..enemyDistanceToHome)
+                                --LOG('my distance to home is '..cdr.DistanceToHome)
+                                cdr.EnemyFlanking = true
+                            end
                         else
                             if EntityCategoryContains(categories.AIR, v) then
                                 enemyAirThreat = enemyAirThreat + v.Blueprint.Defense.SurfaceThreatLevel
@@ -304,7 +314,7 @@ function CDRThreatAssessmentRNG(cdr)
                                 enemyUnitThreatInner = enemyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel * 1.5
                             end
                         end
-                        if EntityCategoryContains(categories.COMMAND, v) then
+                        if v.Blueprint.CategoriesHash.COMMAND then
                             enemyACUPresent = true
                             enemyUnitThreat = enemyUnitThreat + v:EnhancementThreatReturn()
                         else
@@ -814,7 +824,7 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
     and GetEconomyStoredRatio(aiBrain, 'MASS') > 0.05 and GetEconomyStoredRatio(aiBrain, 'ENERGY') > 0.95 then
         return true
     end
-    RNGLOG('* RNGAI: Upgrade Eco Check False')
+    --RNGLOG('* RNGAI: Upgrade Eco Check False')
     return false
 end
 
@@ -913,7 +923,7 @@ function PerformACUReclaim(aiBrain, cdr, minimumReclaim, nextWaypoint)
         if reclaiming then
             coroutine.yield(3)
             local counter = 0
-            while (not cdr.Caution) and RNGGETN(cdr:GetCommandQueue()) > 1 do
+            while (not cdr.Caution) and (RNGGETN(cdr:GetCommandQueue()) > 1 or reclaiming) do
                 coroutine.yield(10)
                 if cdr:IsIdleState() then
                     reclaiming = false

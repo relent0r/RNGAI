@@ -1673,7 +1673,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
         --RNGLOG('ACUTARGETTING : Returning Target')
         return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition
     end
-    RNGLOG('No target being returned for ACU targeting')
+    --RNGLOG('No target being returned for ACU targeting')
     return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition
 end
 
