@@ -890,7 +890,6 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     --RNGLOG('ACU OverCharge Target Found '..target.UnitId)
                     local targetPos = target:GetPosition()
                     local cdrPos = cdr:GetPosition()
-                    local cdrNewPos = {}
                     local acuAdvantage = false
                     
                     cdr.TargetPosition = targetPos
@@ -1042,9 +1041,17 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         IssueMove({cdr}, movePos)
                         coroutine.yield(30)
                         if not snipeAttempt then
-                            if not target.Dead and not ACUFunc.CheckRetreat(cdrPos,targetPos,target) then
+                            if not IsDestroyed(target) and not ACUFunc.CheckRetreat(cdrPos,targetPos,target) then
                                 targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
-                                cdrNewPos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - cdr.WeaponRange})
+                                local direction = math.random(2) == 1 and 1 or -1
+                                local cdrNewPos = RUtils.GetLateralMovePos(cdrPos, targetPos, 6, direction)
+                                if brain:CheckBlockingTerrain(cdrNewPos, targetPos, 'none') then
+                                    if direction == 1 then
+                                        cdrNewPos = RUtils.GetLateralMovePos(cdrNewPos, targetPos, 6, -1)
+                                    else
+                                        cdrNewPos = RUtils.GetLateralMovePos(cdrNewPos, targetPos, 6, 1)
+                                    end
+                                end
                                 IssueMove({cdr}, cdrNewPos)
                                 coroutine.yield(30)
                             end

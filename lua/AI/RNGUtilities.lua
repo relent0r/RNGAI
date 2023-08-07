@@ -5427,6 +5427,40 @@ function GetOwnUnitsAroundLocationRNG(aiBrain, category, location, radius)
     return retUnits
 end
 
+function GetLateralMovePos(unit_position, enemy_position, offset_distance, is_on_right)
+    -- Step 1: Calculate the direction vector from the friendly unit to the enemy unit.
+    local direction_vector = {
+        enemy_position[1] - unit_position[1],
+        enemy_position[2] - unit_position[2],
+        enemy_position[3] - unit_position[3]
+    }
+
+    -- Step 2: Find a perpendicular vector to the direction vector.
+    local perpendicular_vector = {
+        -direction_vector[3],
+        direction_vector[2],
+        direction_vector[1]
+    }
+
+    -- Step 3: Normalize the perpendicular vector.
+    local perpendicular_magnitude = math.sqrt(perpendicular_vector[1] * perpendicular_vector[1] + perpendicular_vector[2] * perpendicular_vector[2] + perpendicular_vector[3] * perpendicular_vector[3])
+    if perpendicular_magnitude > 0 then
+        perpendicular_vector[1] = perpendicular_vector[1] / perpendicular_magnitude
+        perpendicular_vector[2] = perpendicular_vector[2] / perpendicular_magnitude
+        perpendicular_vector[3] = perpendicular_vector[3] / perpendicular_magnitude
+    end
+
+    -- Step 4: Multiply the normalized perpendicular vector by the fixed offset_distance.
+    local sign = is_on_right and 1 or 0 -- Use 1 for right, -1 for left
+    local lateral_move_position = {
+        unit_position[1] + sign * perpendicular_vector[1] * offset_distance,
+        unit_position[2] + sign * perpendicular_vector[2] * offset_distance,
+        unit_position[3] + sign * perpendicular_vector[3] * offset_distance
+    }
+
+    return lateral_move_position
+end
+
 --[[
 -- Calculate the distance ratio for a given position
 local function getDistanceRatio(position, startX, startZ, platLoc, mapSize)
