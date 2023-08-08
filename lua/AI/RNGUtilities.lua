@@ -757,7 +757,27 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos, pointRadius)
     return Reclaiming
 end
 
-
+function CheckReclaimSafety(aiBrain)
+    local candidates = cache or { }
+    local head = 1
+    local cells = aiBrain.ReclaimGrid.Cells
+    local gridPresence = aiBrain.GridPresence
+    for lx = -radius, radius do
+        local column = cells[bx + lx]
+        if column then
+            for lz = -radius, radius do
+                local cell = column[bz + lz]
+                if cell then
+                    if cell.TotalMass >= threshold and then
+                        candidates[head] = cell
+                        head = head + 1
+                    end
+                end
+            end
+        end
+    end
+    return candidates, head - 1
+end
 
 function EngineerTryRepair(aiBrain, eng, whatToBuild, pos)
     if not pos then
@@ -3597,6 +3617,20 @@ function GetEngineerFactionRNG(engineer)
     end
 end
 
+GetEngineerFactionIndexRNG = function(engineer)
+    if EntityCategoryContains(categories.UEF, engineer) then
+        return 1
+    elseif EntityCategoryContains(categories.AEON, engineer) then
+        return 2
+    elseif EntityCategoryContains(categories.CYBRAN, engineer) then
+        return 3
+    elseif EntityCategoryContains(categories.SERAPHIM, engineer) then
+        return 4
+    else
+        return 5
+    end
+end
+
 function GetTemplateReplacementRNG(aiBrain, building, faction, buildingTmpl)
     local retTemplate = false
     local templateData = aiBrain.CustomUnits[building]
@@ -5459,6 +5493,57 @@ function GetLateralMovePos(unit_position, enemy_position, offset_distance, is_on
     }
 
     return lateral_move_position
+end
+
+function GetCappingPosition(aiBrain, eng, pos, refunits, baseTemplate, buildingTemplate)
+    local closestUnit
+    local bestValue
+    local unitIds = {}
+    local engIndex = GetEngineerFactionIndexRNG(eng)
+    local buildingTmplFile = import('/lua/BuildingTemplates.lua')
+    local buildingTmpl = buildingTmplFile[('BuildingTemplates')][engIndex]
+    for _, v in refunits do
+        if not IsDestroyed(v) then
+            local distance = VDist3(pos, v:GetPosition())
+            local unitValue = closestUnit.Blueprint.Economy.BuildCostEnergy.BuildCostMass or 50
+            if not bestValue or unitValue / distance > bestValue then
+                local canBeCapped = false
+                for l,bType in baseTemplate do
+                    for m,bString in bType[1] do
+                        if aiBrain.CustomUnits and aiBrain.CustomUnits[bString] then
+                            local faction = GetEngineerFactionRNG(eng)
+                            buildingTemplate = GetTemplateReplacementRNG(aiBrain, bString, faction, buildingTemplate)
+                        end
+                        local whatToBuild = aiBrain:DecideWhatToBuild(eng, buildUnit, buildingTemplate)
+                        if whatToBuild then
+                            for n,position in bType do
+                                if n > 1 then
+                                    local reference = eng:CalculateWorldPositionFromRelative(position)
+                                    if aiBrain:CanBuildStructureAt(whatToBuild, reference) then
+                                        canBeCapped = true
+                                        closestUnit = v.Unit
+                                        closestDistance = distance
+                                    end
+                                end
+                                if canBeCapped then
+                                    break
+                                end
+                            end
+                        end
+                        if canBeCapped then
+                            break
+                        end
+                    end
+                    if canBeCapped then
+                        break
+                    end
+                end
+            end
+        end
+    end
+    if closestUnit and not IsDestroyed(closestUnit) then
+        return closestUnit:GetPosition()
+    end
 end
 
 --[[

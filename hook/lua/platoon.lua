@@ -3877,6 +3877,21 @@ Platoon = Class(RNGAIPlatoonClass) {
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
             RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
             --RNGLOG('baseTmpList is :'..repr(baseTmplList))
+        elseif cons.CappingTemplate then
+            local relativeTo = RNGCOPY(eng:GetPosition())
+            --RNGLOG('relativeTo is'..repr(relativeTo))
+            relative = true
+            local pos = aiBrain.BuilderManagers[cons.LocationType].Position
+            if not pos then
+                pos = relativeTo
+            end
+            local refunits=AIUtils.GetOwnUnitsAroundPoint(aiBrain, cons.Categories, pos, cons.Radius, cons.ThreatMin,cons.ThreatMax, cons.ThreatRings)
+            local reference = RUtils.GetCappingPosition(aiBrain, pos, refunits)
+            --RNGLOG('reference is '..repr(reference))
+            --RNGLOG('World Pos '..repr(tmpReference))
+            buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
+            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            --RNGLOG('baseTmpList is :'..repr(baseTmplList))
         elseif cons.NearPerimeterPoints then
             --RNGLOG('NearPerimeterPoints')
             reference = RUtils.GetBasePerimeterPoints(aiBrain, cons.Location or 'MAIN', cons.Radius or 60, cons.BasePerimeterOrientation or 'FRONT', cons.BasePerimeterSelection or false)

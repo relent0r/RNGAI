@@ -435,17 +435,19 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
-                AdjacencyDistance = 100,
-                AdjRequired = true,
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
+                BaseTemplate = 'CappedExtractorTemplate',
                 BuildClose = false,
-                NoPause = true,
-                ThreatMin = -3,
-                ThreatMax = 0,
-                ThreatRings = 0,
+                OrderedTemplate = true,
+                NearDefensivePoints = false,
                 BuildStructures = {
                     'MassStorage',
-                }
+                    'MassStorage',
+                    'MassStorage',
+                    'MassStorage',
+
+                },
+                Location = 'LocationType',
             }
         }
     },

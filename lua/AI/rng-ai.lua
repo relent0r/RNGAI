@@ -74,6 +74,7 @@ AIBrain = Class(RNGAIBrainClass) {
         --import("/lua/sim/MarkerUtilities.lua").GenerateRallyPointMarkers()
 
         -- requires these datastructures to understand the game
+        
         self.GridReclaim = import("/lua/ai/gridreclaim.lua").Setup(self)
         self.GridBrain = import("/lua/ai/gridbrain.lua").Setup()
         --self.GridRecon = import("/lua/ai/gridrecon.lua").Setup(self)
