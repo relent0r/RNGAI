@@ -1074,14 +1074,14 @@ BuilderGroup {
         BuilderConditions = {
                 { UCBC, 'GreaterThanGameTimeSecondsRNG', { 600 } },
                 { MIBC, 'CheckIfReclaimEnabled', {}},
-                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH1 }},
+                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 3, categories.ENGINEER * categories.TECH1 }},
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },
         BuilderData = {
             JobType = 'Reclaim',
             LocationType = 'LocationType',
             ReclaimTime = 80,
-            MinimumReclaim = 40
+            MinimumReclaim = 15
         },
         BuilderType = 'Any',
     },
