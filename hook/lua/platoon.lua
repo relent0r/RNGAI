@@ -3886,7 +3886,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                 pos = relativeTo
             end
             local refunits=AIUtils.GetOwnUnitsAroundPoint(aiBrain, cons.Categories, pos, cons.Radius, cons.ThreatMin,cons.ThreatMax, cons.ThreatRings)
-            local reference = RUtils.GetCappingPosition(aiBrain, pos, refunits)
+            LOG('regunits '..repr(refunits))
+            LOG('baseTmpl')
+            local reference = RUtils.GetCappingPosition(aiBrain, eng, pos, refunits, baseTmpl, buildingTmpl)
             --RNGLOG('reference is '..repr(reference))
             --RNGLOG('World Pos '..repr(tmpReference))
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
@@ -4891,6 +4893,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                    --RNGLOG('Build location is '..repr(buildLocation))
                     return
                 end]]
+                if whatToBuild == 'ueb1106' then
+                    LOG('Processing build command for mass storage, position is '..repr(buildLocation))
+                    LOG('Current build queue '..repr(eng.EngineerBuildQueue))
+                end
                 if borderWarning then
                     --RNGLOG('BorderWarning build')
                     IssueBuildMobile({eng}, buildLocation, whatToBuild, {})

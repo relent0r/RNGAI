@@ -35,16 +35,15 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToB
                 for m,bString in bType[1] do
                     if bString == buildingType then
                         for n,position in bType do
-                            if n > 1 then
+                            if n > 1 and CanBuildStructureAt(aiBrain, whatToBuild, {position[1], GetSurfaceHeight(position[1], position[2])}) then
+                                LOG('ordered template build position '..repr(position))
                                 AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false)
                                 table.remove(bType,n)
                                 return --DoHackyLogic(buildingType, builder)
                             else
-                                --[[
-                                if n > 1 and not aiBrain:CanBuildStructureAt(whatToBuild, BuildToNormalLocation(position)) then
-                                    RNGLOG('CanBuildStructureAt failed within Ordered Template Build')
-                                end]]
-                                
+                                if n > 1 and not CanBuildStructureAt(aiBrain, whatToBuild, {position[1], GetSurfaceHeight(position[1], position[2])}) then
+                                    RNGLOG('CanBuildStructureAt failed within Ordered Template Build for unit '..buildingType..' at position '..repr({position[1], GetSurfaceHeight(position[1], position[2])}))
+                                end
                             end
                         end 
                         break

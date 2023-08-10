@@ -768,7 +768,7 @@ function CheckReclaimSafety(aiBrain)
             for lz = -radius, radius do
                 local cell = column[bz + lz]
                 if cell then
-                    if cell.TotalMass >= threshold and then
+                    if cell.TotalMass >= threshold then
                         candidates[head] = cell
                         head = head + 1
                     end
@@ -5496,6 +5496,7 @@ function GetLateralMovePos(unit_position, enemy_position, offset_distance, is_on
 end
 
 function GetCappingPosition(aiBrain, eng, pos, refunits, baseTemplate, buildingTemplate)
+    LOG('Get capping position')
     local closestUnit
     local bestValue
     local unitIds = {}
@@ -5506,7 +5507,9 @@ function GetCappingPosition(aiBrain, eng, pos, refunits, baseTemplate, buildingT
         if not IsDestroyed(v) then
             local distance = VDist3(pos, v:GetPosition())
             local unitValue = closestUnit.Blueprint.Economy.BuildCostEnergy.BuildCostMass or 50
-            if not bestValue or unitValue / distance > bestValue then
+            local value = unitValue / distance
+            LOG('Value is '..value)
+            if (not bestValue or distance == 0) or value > bestValue then
                 local canBeCapped = false
                 for l,bType in baseTemplate do
                     for m,bString in bType[1] do
@@ -5514,15 +5517,20 @@ function GetCappingPosition(aiBrain, eng, pos, refunits, baseTemplate, buildingT
                             local faction = GetEngineerFactionRNG(eng)
                             buildingTemplate = GetTemplateReplacementRNG(aiBrain, bString, faction, buildingTemplate)
                         end
-                        local whatToBuild = aiBrain:DecideWhatToBuild(eng, buildUnit, buildingTemplate)
+                        LOG('bString '..bString)
+                        local whatToBuild = aiBrain:DecideWhatToBuild(eng, bString, buildingTemplate)
                         if whatToBuild then
+                            LOG('whatToBuild '..whatToBuild)
                             for n,position in bType do
                                 if n > 1 then
                                     local reference = eng:CalculateWorldPositionFromRelative(position)
+                                    LOG('reference '..repr(reference))
                                     if aiBrain:CanBuildStructureAt(whatToBuild, reference) then
                                         canBeCapped = true
-                                        closestUnit = v.Unit
-                                        closestDistance = distance
+                                        closestUnit = v
+                                        bestValue = value
+                                        LOG('better value found, value is '..bestValue)
+                                        LOG('distance was '..distance)
                                     end
                                 end
                                 if canBeCapped then
@@ -5542,6 +5550,7 @@ function GetCappingPosition(aiBrain, eng, pos, refunits, baseTemplate, buildingT
         end
     end
     if closestUnit and not IsDestroyed(closestUnit) then
+        LOG('Returning closestUnit Position '..repr(closestUnit:GetPosition()))
         return closestUnit:GetPosition()
     end
 end

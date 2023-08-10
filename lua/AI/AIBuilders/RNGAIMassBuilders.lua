@@ -438,8 +438,11 @@ BuilderGroup {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
                 BaseTemplate = 'CappedExtractorTemplate',
                 BuildClose = false,
-                OrderedTemplate = true,
+                CappingTemplate = true,
+                Categories = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
                 NearDefensivePoints = false,
+                NoPause = true,
+                Radius = 150,
                 BuildStructures = {
                     'MassStorage',
                     'MassStorage',
@@ -500,16 +503,21 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
-                AdjacencyDistance = 100,
-                AdjRequired = true,
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
+                BaseTemplate = 'CappedExtractorTemplate',
                 BuildClose = false,
-                ThreatMin = -3,
-                ThreatMax = 5,
-                ThreatRings = 0,
+                CappingTemplate = true,
+                Categories = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
+                Radius = 80,
+                NearDefensivePoints = false,
                 BuildStructures = {
                     'MassStorage',
-                }
+                    'MassStorage',
+                    'MassStorage',
+                    'MassStorage',
+
+                },
+                Location = 'LocationType',
             }
         }
     },
