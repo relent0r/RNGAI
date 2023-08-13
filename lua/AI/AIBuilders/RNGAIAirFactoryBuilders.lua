@@ -111,13 +111,12 @@ BuilderGroup {
         },
         BuilderType = 'Air',
     },
-    --[[
     Builder {
         BuilderName = 'RNGAI T2 Gunship',
         PlatoonTemplate = 'T2AirGunship',
-        Priority = 748,
+        Priority = 889,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Air', 'T2', 'gunship'} },
+            { UCBC, 'UnitBuildDemand', { 'Air', 'T2', 'gunship'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -125,7 +124,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 2
         },
-    },]]
+    },
 }
 
 BuilderGroup {

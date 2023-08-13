@@ -768,7 +768,7 @@ function CheckReclaimSafety(aiBrain)
             for lz = -radius, radius do
                 local cell = column[bz + lz]
                 if cell then
-                    if cell.TotalMass >= threshold and then
+                    if cell.TotalMass >= threshold then
                         candidates[head] = cell
                         head = head + 1
                     end
@@ -5264,6 +5264,10 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, defensiveBomber)
                     local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
                     if tempPoint > highestPriority then
                         if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
+                            LOG('Set higher priority')
+                            LOG('Distance '..targetDistance)
+                            LOG('Priority '..(v.priority + (v.danger or 0)))
+                            LOG('Point Calculation is '..(v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30))
                             highestPriority = tempPoint
                             closestTarget = v.unit
                         end
@@ -5271,6 +5275,9 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, defensiveBomber)
                 end
             end
             if closestTarget then
+                if platoon then
+                    LOG('High Priority target found distance is '..VDist3Sq(closestTarget:GetPosition(), platPos))
+                end
                 return closestTarget
             end
         end
@@ -5506,7 +5513,8 @@ function GetCappingPosition(aiBrain, eng, pos, refunits, baseTemplate, buildingT
         if not IsDestroyed(v) then
             local distance = VDist3(pos, v:GetPosition())
             local unitValue = closestUnit.Blueprint.Economy.BuildCostEnergy.BuildCostMass or 50
-            if not bestValue or unitValue / distance > bestValue then
+            local value = unitValue / distance
+            if (not bestValue or distance == 0) or value > bestValue then
                 local canBeCapped = false
                 for l,bType in baseTemplate do
                     for m,bString in bType[1] do
@@ -5514,15 +5522,15 @@ function GetCappingPosition(aiBrain, eng, pos, refunits, baseTemplate, buildingT
                             local faction = GetEngineerFactionRNG(eng)
                             buildingTemplate = GetTemplateReplacementRNG(aiBrain, bString, faction, buildingTemplate)
                         end
-                        local whatToBuild = aiBrain:DecideWhatToBuild(eng, buildUnit, buildingTemplate)
+                        local whatToBuild = aiBrain:DecideWhatToBuild(eng, bString, buildingTemplate)
                         if whatToBuild then
                             for n,position in bType do
                                 if n > 1 then
                                     local reference = eng:CalculateWorldPositionFromRelative(position)
                                     if aiBrain:CanBuildStructureAt(whatToBuild, reference) then
                                         canBeCapped = true
-                                        closestUnit = v.Unit
-                                        closestDistance = distance
+                                        closestUnit = v
+                                        bestValue = value
                                     end
                                 end
                                 if canBeCapped then
@@ -5542,7 +5550,27 @@ function GetCappingPosition(aiBrain, eng, pos, refunits, baseTemplate, buildingT
         end
     end
     if closestUnit and not IsDestroyed(closestUnit) then
+        LOG('Returning closestUnit Position '..repr(closestUnit:GetPosition()))
         return closestUnit:GetPosition()
+    end
+end
+
+function GetUnitIDFromTemplate(aiBrain, buildingType)
+    local factionIndex = aiBrain:GetFactionIndex()
+    local buildingTmplFile = import('/lua/BuildingTemplates.lua')
+    local buildingTmpl = buildingTmplFile[('BuildingTemplates')][factionIndex]
+
+    for _, bString in buildingTmpl do
+        if bString[1] == buildingType and bString[2] then
+            local unitId = bString[2]
+            if aiBrain.CustomUnits and aiBrain.CustomUnits[unitId] then
+                local factionString
+                local factionIndexToName = {[1] = 'UEF', [2] = 'AEON', [3] = 'CYBRAN', [4] = 'SERAPHIM', [5] = 'NOMADS', [6] = 'ARM', [7] = 'CORE' }
+                local factionString = factionIndexToName[factionIndex]
+                unitId = GetTemplateReplacementRNG(aiBrain, unitId, faction, buildingTmpl)
+            end
+            return unitId
+        end
     end
 end
 

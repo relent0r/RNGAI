@@ -1209,52 +1209,38 @@ function RatioToZones(aiBrain, zoneType, unitCat, ratio)
     return false
 end
 
-function AdjacencyCheckRNG(aiBrain, locationType, category, radius, testUnit)
-    local ALLBPS = __blueprints
+function AdjacencyMassCheckRNG(aiBrain, locationType, category, radius)
     local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
     if not factoryManager then
         WARN('*AI WARNING: AdjacencyCheck - Invalid location - ' .. locationType)
         return false
     end
-
-    local testCat = category
-    if type(category) == 'string' then
-        testCat = ParseEntityCategory(category)
-    end
-
-    local reference  = AIUtils.GetOwnUnitsAroundPoint(aiBrain, testCat, factoryManager:GetLocationCoords(), radius)
-    if not reference or table.empty(reference) then
+    local refunits  = AIUtils.GetOwnUnitsAroundPoint(aiBrain, category, factoryManager:GetLocationCoords(), radius)
+    if not refunits or table.empty(refunits) then
         return false
     end
-
-    local template = {}
-    local unitSize = ALLBPS[testUnit].Physics
-    for k,v in reference do
-        if not v.Dead then
-            local targetSize = v.Blueprint.Physics
-            local targetPos = v:GetPosition()
-            targetPos[1] = targetPos[1] - (targetSize.SkirtSizeX/2)
-            targetPos[3] = targetPos[3] - (targetSize.SkirtSizeZ/2)
-            # Top/bottom of unit
-            for i=0,((targetSize.SkirtSizeX/2)-1) do
-                local testPos = { targetPos[1] + 1 + (i * 2), targetPos[3]-(unitSize.SkirtSizeZ/2), 0 }
-                local testPos2 = { targetPos[1] + 1 + (i * 2), targetPos[3]+targetSize.SkirtSizeZ+(unitSize.SkirtSizeZ/2), 0 }
-                table.insert(template, testPos)
-                table.insert(template, testPos2)
+    local factionIndex = aiBrain:GetFactionIndex()
+    local BaseTemplateFile = import('/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua')
+    local baseTemplate = BaseTemplateFile['CappedExtractorTemplate'][factionIndex]
+    local unitId = RUtils.GetUnitIDFromTemplate(aiBrain, 'MassStorage')
+    for _, v in refunits do
+        local unitPosition = v:GetPosition()
+        if not IsDestroyed(v) then
+            for l,bType in baseTemplate do
+                for m,bString in bType[1] do
+                    if bString == 'MassStorage' then
+                        for n,position in bType do
+                            if n > 1 then
+                                local relativeLoc = {position[1], 0, position[2]}
+                                relativeLoc = {relativeLoc[1] + unitPosition[1], relativeLoc[2] + unitPosition[2], relativeLoc[3] + unitPosition[3]}
+                                if aiBrain:CanBuildStructureAt(unitId, relativeLoc) then
+                                    return true
+                                end
+                            end
+                        end
+                    end
+                end
             end
-            # Sides of unit
-            for i=0,((targetSize.SkirtSizeZ/2)-1) do
-                local testPos = { targetPos[1]+targetSize.SkirtSizeX + (unitSize.SkirtSizeX/2), targetPos[3] + 1 + (i * 2), 0 }
-                local testPos2 = { targetPos[1]-(unitSize.SkirtSizeX/2), targetPos[3] + 1 + (i*2), 0 }
-                table.insert(template, testPos)
-                table.insert(template, testPos2)
-            end
-        end
-    end
-
-    for k,v in template do
-        if aiBrain:CanBuildStructureAt(testUnit, { v[1], 0, v[2] }) then
-            return true
         end
     end
     return false

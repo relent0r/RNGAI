@@ -88,6 +88,19 @@ IntelManager = Class {
                 },
                 Kills = {}
             },
+            Gunship = {
+                Deaths = {
+                    Mass = 0
+                },
+                Kills = {
+                    Mass = 0
+                },
+                Built = {
+                    Mass = 0
+                },
+                Efficiency = 0
+
+            },
             Air = {
                 Deaths = {
                     Total = {
@@ -1348,6 +1361,18 @@ IntelManager = Class {
                     self.Brain.amanager.Demand.Air.T3.bomber = 0
                 end
             end
+            local disableGunship = true
+            if self.Brain.BrainIntel.AirPhase < 3 and self.Brain.EnemyIntel.AirPhase < 3 then
+                if self.Brain.BrainIntel.SelfThreat.AntiAirNow > 20 then
+                    if self.Brain.amanager.Current['Air']['T2']['gunship'] < 2 then
+                        self.Brain.amanager.Demand.Air.T2.gunship = 2
+                        disableGunship = false
+                    end
+                end
+            end
+            if disableGunship and self.Brain.amanager.Current['Air']['T2']['gunship'] > 1 then
+                self.Brain.amanager.Demand.Air.T2.gunship = 0
+            end
             if not table.empty(potentialStrikes) then
                 local count = math.ceil(desiredStrikeDamage / 1000)
                 local acuSnipe = false
@@ -1488,7 +1513,7 @@ function GetIntelManager(brain)
     return brain.IntelManager
 end
 
-function ProcessSourceOnKilled(targetUnit, sourceUnit, aiBrain)
+function ProcessSourceOnKilled(targetUnit, sourceUnit)
     --RNGLOG('We are going to do stuff here')
     --RNGLOG('Target '..targetUnit.UnitId)
     --RNGLOG('Source '..sourceUnit.UnitId)
@@ -1496,34 +1521,155 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit, aiBrain)
         targetcat = false,
         sourcecat = false
     }
-    local targetCat = targetUnit.Blueprint.CategoriesHash
-    local sourceCat = sourceUnit.Blueprint.CategoriesHash
-
-    if sourceCat.EXPERIMENTAL then
-        data.sourcecat = 'Experimental'
-    elseif sourceCat.AIR then
-        data.sourcecat = 'Air'
-    elseif sourceCat.LAND then
-        data.sourcecat = 'Land'
-    elseif sourceCat.STRUCTURE then
-        data.sourcecat = 'Structure'
-    end
-
-    if targetCat.EXPERIMENTAL then
-        data.targetcat = 'Experimental'
-    elseif targetCat.AIR then
-        if targetCat.SCOUT then
-            RecordUnitDeath(targetUnit, 'SCOUT')
+    
+    if sourceUnit.GetAIBrain then
+        local sourceBrain = sourceUnit:GetAIBrain()
+        if sourceBrain.RNG then
+            local valueGained
+            local sourceCat = sourceUnit.Blueprint.CategoriesHash
+            if sourceCat.EXPERIMENTAL then
+                data.sourcecat = 'Experimental'
+            elseif sourceCat.AIR then
+                if sourceCat.GROUNDATTACK then
+                    data.sourcecat = 'Gunship'
+                    if targetUnit.Blueprint.Economy.BuildCostMass then
+                        valueGained = targetUnit.Blueprint.Economy.BuildCostMass or 0
+                    end
+                else
+                    data.sourcecat = 'Air'
+                end
+            elseif sourceCat.LAND then
+                data.sourcecat = 'Land'
+            elseif sourceCat.STRUCTURE then
+                data.sourcecat = 'Structure'
+            end
+            if valueGained then
+                local unitStats = sourceBrain.IntelManager.UnitStats
+                unitStats[data.sourcecat].Kills.Mass = unitStats[data.sourcecat].Kills.Mass + valueGained
+                if valueGained then
+                    LOG('Gunship killed')
+                    LOG('Target Unit '..targetUnit.UnitId)
+                    local gained
+                    local built
+                    if unitStats[data.sourcecat].Kills.Mass > 0 then
+                        gained = unitStats[data.sourcecat].Kills.Mass
+                    else
+                        gained = 0.1
+                    end
+                    if unitStats[data.sourcecat].Built.Mass > 0 then
+                        built = unitStats[data.sourcecat].Built.Mass
+                    else
+                        built = 0.1
+                    end
+                    LOG('Current Gunship Efficiency '..(math.min(gained / built, 2)))
+                end
+            end
         end
-        data.targetcat = 'Air'
-    elseif targetCat.LAND then
-        data.targetcat = 'Land'
-    elseif targetCat.STRUCTURE then
-        data.targetcat = 'Structure'
     end
-      
-    if data.targetcat and data.sourcecat then
-        aiBrain.IntelManager.UnitStats[data.targetcat].Deaths.Total[data.sourcecat] = aiBrain.IntelManager.UnitStats[data.targetcat].Deaths.Total[data.sourcecat] + 1
+    --[[
+    if targetUnit.GetAIBrain then
+        LOG('lost unit')
+        local targetBrain = targetUnit:GetAIBrain()
+        if targetBrain.RNG then
+            LOG('rng lost unit')
+            local valueLost
+            local targetCat = targetUnit.Blueprint.CategoriesHash
+            if targetCat.EXPERIMENTAL then
+                data.targetcat = 'Experimental'
+            elseif targetCat.AIR then
+                if targetCat.SCOUT then
+                    RecordUnitDeath(targetUnit, 'SCOUT')
+                elseif targetCat.GROUNDATTACK then
+                    LOG('RNG gunship was lost')
+                    data.targetcat = 'Gunship'
+                    if targetUnit.Blueprint.Economy.BuildCostMass then
+                        valueLost = targetUnit.Blueprint.Economy.BuildCostMass
+                    end
+                else
+                    data.targetcat = 'Air'
+                end
+            elseif targetCat.LAND then
+                data.targetcat = 'Land'
+            elseif targetCat.STRUCTURE then
+                data.targetcat = 'Structure'
+            end
+            if valueLost then
+                local unitStats = targetBrain.IntelManager.UnitStats
+                unitStats[data.targetcat].Deaths.Mass = unitStats[data.targetcat].Deaths.Mass + valueLost
+                if valueLost then
+                    LOG('Gunship died')
+                    LOG('Target Unit '..targetUnit.UnitId)
+                    local gained
+                    local lost
+                    if unitStats[data.targetcat].Kills.Mass > 0 then
+                        gained = unitStats[data.targetcat].Kills.Mass
+                    else
+                        gained = 0.1
+                    end
+                    if unitStats[data.targetcat].Deaths.Mass > 0 then
+                        lost = unitStats[data.targetcat].Kills.Mass
+                    else
+                        lost = 0.1
+                    end
+                    LOG('Current Gunship Efficiency '..(math.min(gained / lost, 2)))
+                end
+            end
+        end
+    end
+    ]]
+end
+
+function ProcessSourceOnDeath(targetUnit)
+    local data = {
+        targetcat = false,
+        sourcecat = false
+    }
+
+    if targetUnit.GetAIBrain then
+        local targetBrain = targetUnit:GetAIBrain()
+        if targetBrain.RNG then
+            local valueLost
+            local targetCat = targetUnit.Blueprint.CategoriesHash
+            if targetCat.EXPERIMENTAL then
+                data.targetcat = 'Experimental'
+            elseif targetCat.AIR then
+                if targetCat.SCOUT then
+                    RecordUnitDeath(targetUnit, 'SCOUT')
+                elseif targetCat.GROUNDATTACK then
+                    data.targetcat = 'Gunship'
+                    if targetUnit.Blueprint.Economy.BuildCostMass then
+                        valueLost = targetUnit.Blueprint.Economy.BuildCostMass
+                    end
+                else
+                    data.targetcat = 'Air'
+                end
+            elseif targetCat.LAND then
+                data.targetcat = 'Land'
+            elseif targetCat.STRUCTURE then
+                data.targetcat = 'Structure'
+            end
+            if valueLost then
+                local unitStats = targetBrain.IntelManager.UnitStats
+                unitStats[data.targetcat].Deaths.Mass = unitStats[data.targetcat].Deaths.Mass + valueLost
+                if valueLost then
+                    LOG('Gunship died')
+                    LOG('Target Unit '..targetUnit.UnitId)
+                    local gained
+                    local lost
+                    if unitStats[data.targetcat].Kills.Mass > 0 then
+                        gained = unitStats[data.targetcat].Kills.Mass
+                    else
+                        gained = 0.1
+                    end
+                    if unitStats[data.targetcat].Deaths.Mass > 0 then
+                        lost = unitStats[data.targetcat].Deaths.Mass
+                    else
+                        lost = 0.1
+                    end
+                    LOG('Current Gunship Efficiency '..(math.min(gained / lost, 2)))
+                end
+            end
+        end
     end
 end
 
@@ -2435,13 +2581,6 @@ LastKnownThread = function(aiBrain)
                                     end
                                     im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='eng'
                                 elseif unitCat.COMMAND then
-                                    local acuIndex = v:GetAIBrain():GetArmyIndex()
-                                    if aiBrain.EnemyIntel.ACU[acuIndex].LastSpotted + 10 > time then
-                                        aiBrain.EnemyIntel.ACU[acuIndex].HP = v:GetHealth()
-                                        aiBrain.EnemyIntel.ACU[acuIndex].Threat = aiBrain:GetThreatAtPosition(unitPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
-                                        aiBrain.EnemyIntel.ACU[acuIndex].LastSpotted = time
-                                        aiBrain.EnemyIntel.ACU[acuIndex].Unit = v
-                                    end
                                     im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='acu'
                                 elseif unitCat.EXPERIMENTAL then
                                     if not aiBrain.EnemyIntel.Experimental[id] then
@@ -2586,7 +2725,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     --RNGLOG('Priority of angle and distance '..anglePriority)
                     im.MapIntelGrid[i][k].EnemyUnitDanger = RUtils.GrabPosDangerRNG(aiBrain,position,30).enemy
                     if aiBrain.GridPresence and aiBrain.GridPresence:GetInferredStatus(position) == 'Allied' then
-                        statusModifier = 1.5
+                        statusModifier = 1.8
                     end
                     for c, b in im.MapIntelGrid[i][k].EnemyUnits do
                         local priority = 0
