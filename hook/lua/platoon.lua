@@ -4976,38 +4976,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                     if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                         if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, PlatoonPos, 45, 'Enemy') > 0 then
-                            local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, PlatoonPos, 45, 'Enemy')
-                            for _, unit in enemyUnits do
-                                local enemyUnitPos = unit:GetPosition()
-                                if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, unit) then
-                                    if VDist3Sq(enemyUnitPos, PlatoonPos) < 144 then
-                                        --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
-                                        if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
-                                            if VDist2Sq(PlatoonPos[1], PlatoonPos[3], enemyUnitPos[1], enemyUnitPos[3]) < 156 then
-                                                IssueClearCommands({eng})
-                                                IssueReclaim({eng}, unit)
-                                                break
-                                            end
-                                        end
-                                    end
-                                elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, unit) then
-                                    --RNGLOG('MexBuild found enemy unit, try avoid it')
-                                    if VDist3Sq(enemyUnitPos, PlatoonPos) < 81 then
-                                        --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
-                                        if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
-                                            if VDist2Sq(PlatoonPos[1], PlatoonPos[3], enemyUnitPos[1], enemyUnitPos[3]) < 156 then
-                                                IssueClearCommands({eng})
-                                                IssueReclaim({eng}, unit)
-                                                break
-                                            end
-                                        end
-                                    else
-                                        IssueClearCommands({eng})
-                                        IssueMove({eng}, RUtils.AvoidLocation(enemyUnitPos, PlatoonPos, 50))
-                                        coroutine.yield(60)
-                                    end
-                                end
-                            end
+                            local actionTaken = RUtils.EngineerEnemyAction(aiBrain, eng)
                         end
                     end
                     if eng.Upgrading or eng.Combat or eng.Active then

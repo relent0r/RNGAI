@@ -5574,6 +5574,50 @@ function GetUnitIDFromTemplate(aiBrain, buildingType)
     end
 end
 
+function EngineerEnemyAction(aiBrain, eng)
+    if not IsDestroyed(eng) then
+        local actionTaken = false
+        local engPos = eng:GetPosition()
+        local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, engPos, 45, 'Enemy')
+        for _, unit in enemyUnits do
+            local enemyUnitPos = unit:GetPosition()
+            if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, unit) then
+                if VDist3Sq(enemyUnitPos, engPos) < 144 then
+                    --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
+                    if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
+                        local ex = engPos[1] - enemyUnitPos[1]
+                        local ez = engPos[3] - enemyUnitPos[3]
+                        if (ex * ex + ez * ez) < 156 then
+                            IssueClearCommands({eng})
+                            IssueReclaim({eng}, unit)
+                            actionTaken = true
+                            break
+                        end
+                    end
+                end
+            elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, unit) then
+                --RNGLOG('MexBuild found enemy unit, try avoid it')
+                local ex = engPos[1] - enemyUnitPos[1]
+                local ez = engPos[3] - enemyUnitPos[3]
+                if (ex * ex + ez * ez) < 81 then
+                    --RNGLOG('enemy unit too close, try reclaim')
+                    if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
+                        IssueClearCommands({eng})
+                        IssueReclaim({eng}, unit)
+                        actionTaken = true
+                        break
+                    end
+                else
+                    IssueClearCommands({eng})
+                    IssueMove({eng}, AvoidLocation(enemyUnitPos, PlatoonPos, 50))
+                    coroutine.yield(60)
+                    actionTaken = true
+                end
+            end
+        end
+    end
+end
+
 --[[
 -- Calculate the distance ratio for a given position
 local function getDistanceRatio(position, startX, startZ, platLoc, mapSize)
