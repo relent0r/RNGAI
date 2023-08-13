@@ -12,6 +12,11 @@ Unit = Class(RNGUnitClass) {
         RNGUnitClass.OnKilled(self, instigator, type, overkillRatio)
     end,
 
+    OnDestroy = function(self)
+        RNGEventCallbacks.OnDestroy(self)
+        RNGUnitClass.OnDestroy(self)
+    end,
+
     EnhancementThreatReturn = function(self)
         local unitEnh = SimUnitEnhancements[self.EntityId]
         local threatReturn = 25

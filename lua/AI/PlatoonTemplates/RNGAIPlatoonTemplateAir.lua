@@ -64,7 +64,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI GunShipAttack',
-    Plan = 'GunshipStrikeAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.AIR * categories.GROUNDATTACK - categories.EXPERIMENTAL - categories.ANTINAVY, 1, 100, 'Attack', 'GrowthFormation' },
         --Add an escort fighter squad?

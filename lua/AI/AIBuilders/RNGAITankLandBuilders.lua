@@ -804,7 +804,7 @@ BuilderGroup {
     },]]
     Builder {
         BuilderName = 'RNGAI Response BaseRestrictedArea',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNG TruePlatoon Combat',                          -- Template Name. 
+        PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         --PlatoonAddBehaviors = { 'ZoneUpdate' },
         Priority = 1000,                                                          -- Priority. 1000 is normal.
         InstanceCount = 3,                                                      -- Number of platoons that will be formed.
@@ -818,31 +818,7 @@ BuilderGroup {
             LocationType = 'LocationType',
             Defensive = true,
             SearchRadius = BaseEnemyArea,
-            --[[SearchRadius = BaseMilitaryArea,                                               -- Searchradius for new target.
-            DistressRange = BaseMilitaryArea,
-            GetTargetsFromBase = true,                                         -- Get targets from base position (true) or platoon position (false)
-            RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
-            AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
-            LocationType = 'LocationType',
-            Defensive = true,
-            PlatoonLimit = 12,
-            AttackEnemyStrength = 100,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchPriorities = {
-                categories.EXPERIMENTAL,
-                categories.MOBILE *categories.LAND,
-            },
-            PrioritizedCategories = {                                           -- Attack these targets.
-                categories.EXPERIMENTAL,
-                categories.MOBILE * categories.LAND * categories.INDIRECTFIRE,
-                categories.MOBILE * categories.LAND * categories.DIRECTFIRE,
-                categories.ENGINEER,
-                categories.STRUCTURE * categories.DEFENSE,
-                categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.STRUCTURE * categories.ANTIAIR,
-                categories.ALLUNITS - categories.AIR - categories.NAVAL,
-            },
-            UseFormation = 'None',
-            ThreatSupport = 1,]]
+            StateMachine = 'LandCombat'
         },
     },
     Builder {
@@ -983,7 +959,7 @@ BuilderGroup {
 
     Builder {
         BuilderName = 'RNGAI Trueplatoon',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNG TruePlatoon Combat',                          -- Template Name. 
+        PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 700,                                                          -- Priority. 1000 is normal.
         --PlatoonAddBehaviors = { 'ZoneUpdate' },
         InstanceCount = 4,                                                      -- Number of platoons that will be formed.
@@ -995,6 +971,7 @@ BuilderGroup {
         BuilderData = {
             UseFormation = 'None',
             LocationType = 'LocationType',
+            StateMachine = 'LandCombat'
             },
     },
     
@@ -1212,7 +1189,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Trueplatoon Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNG TruePlatoon Combat',                          -- Template Name. 
+        PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 690,                                                          -- Priority. 1000 is normal.
         --PlatoonAddBehaviors = { 'ZoneUpdate' },
         InstanceCount = 4,                                                      -- Number of platoons that will be formed.
@@ -1224,6 +1201,7 @@ BuilderGroup {
         BuilderData = {
             UseFormation = 'None',
             LocationType = 'LocationType',
+            StateMachine = 'LandCombat'
             },
     },
     Builder {

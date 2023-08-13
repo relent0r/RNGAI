@@ -429,7 +429,7 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.80, 0.85 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -466,21 +466,29 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.90 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
         },
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
-                AdjacencyDistance = 100,
-                AdjRequired = true,
-                BuildClose = false,
-                ThreatMin = -3,
-                ThreatMax = 0,
-                ThreatRings = 0,
-                BuildStructures = {
-                    'MassStorage',
+                Construction = {
+                    BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
+                    BaseTemplate = 'CappedExtractorTemplate',
+                    BuildClose = false,
+                    CappingTemplate = true,
+                    Categories = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
+                    NearDefensivePoints = false,
+                    NoPause = true,
+                    Radius = 150,
+                    BuildStructures = {
+                        'MassStorage',
+                        'MassStorage',
+                        'MassStorage',
+                        'MassStorage',
+    
+                    },
+                    Location = 'LocationType',
                 }
             }
         }
@@ -497,7 +505,7 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 80 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -533,22 +541,27 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 500 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 500, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 500, 'ueb1106' } },
         },
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
-                AdjacencyDistance = 500,
-                AdjRequired = true,
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
+                BaseTemplate = 'CappedExtractorTemplate',
                 BuildClose = false,
-                ThreatMin = -3,
-                ThreatMax = 0,
-                ThreatRings = 0,
+                CappingTemplate = true,
+                Categories = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
+                Radius = 80,
+                NearDefensivePoints = false,
                 BuildStructures = {
                     'MassStorage',
-                }
+                    'MassStorage',
+                    'MassStorage',
+                    'MassStorage',
+
+                },
+                Location = 'LocationType',
             }
         }
     },
@@ -562,21 +575,26 @@ BuilderGroup {
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 0, 0}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.20}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION, 150, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION, 150, 'ueb1106' } },
         },
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
-                AdjacencyDistance = 100,
-                AdjRequired = true,
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
+                BaseTemplate = 'CappedExtractorTemplate',
                 BuildClose = false,
-                ThreatMin = -3,
-                ThreatMax = 0,
-                ThreatRings = 0,
+                CappingTemplate = true,
+                Categories = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
+                Radius = 80,
+                NearDefensivePoints = false,
                 BuildStructures = {
                     'MassStorage',
-                }
+                    'MassStorage',
+                    'MassStorage',
+                    'MassStorage',
+
+                },
+                Location = 'LocationType',
             }
         }
     },
@@ -597,22 +615,27 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
         },
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
-                AdjacencyDistance = 100,
-                AdjRequired = true,
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
+                BaseTemplate = 'CappedExtractorTemplate',
                 BuildClose = false,
-                ThreatMin = -3,
-                ThreatMax = 0,
-                ThreatRings = 0,
+                CappingTemplate = true,
+                Categories = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
+                Radius = 80,
+                NearDefensivePoints = false,
                 BuildStructures = {
                     'MassStorage',
-                }
+                    'MassStorage',
+                    'MassStorage',
+                    'MassStorage',
+
+                },
+                Location = 'LocationType',
             }
         }
     },
@@ -628,22 +651,27 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 500 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 500, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 500, 'ueb1106' } },
         },
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                AdjacencyPriority = {categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)},
-                AdjacencyDistance = 500,
-                AdjRequired = true,
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
+                BaseTemplate = 'CappedExtractorTemplate',
                 BuildClose = false,
-                ThreatMin = -3,
-                ThreatMax = 0,
-                ThreatRings = 0,
+                CappingTemplate = true,
+                Categories = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
+                Radius = 80,
+                NearDefensivePoints = false,
                 BuildStructures = {
                     'MassStorage',
-                }
+                    'MassStorage',
+                    'MassStorage',
+                    'MassStorage',
+
+                },
+                Location = 'LocationType',
             }
         }
     },
@@ -664,7 +692,7 @@ BuilderGroup {
             { EBC, 'LessThanEconStorageRatioRNG', { 1, 1.1 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 200, categories.MASSEXTRACTION}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION, 100, 'ueb1103' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION, 100, 'ueb1103' } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -693,7 +721,7 @@ BuilderGroup {
             { EBC, 'LessThanEconStorageRatioRNG', { 0.2, 1.1 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 200, categories.MASSEXTRACTION}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyCheckRNG', { 'LocationType', categories.MASSEXTRACTION, 500, 'ueb1103' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION, 500, 'ueb1103' } },
         },
         BuilderType = 'Any',
         BuilderData = {

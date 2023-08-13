@@ -518,6 +518,8 @@ BuilderGroup {
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
+            LocationType = 'LocationType',
+            StateMachine = 'Gunship',
             AvoidBases = true,
             UnitType = 'GUNSHIP',
             PlatoonLimit = 18,
@@ -550,6 +552,8 @@ BuilderGroup {
         },
         BuilderData = {
             SearchRadius = BaseEnemyArea,
+            LocationType = 'LocationType',
+            StateMachine = 'Gunship',
             UnitType = 'GUNSHIP',
             PlatoonLimit = 18,
             TargetSearchPriorities = {
@@ -902,6 +906,8 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = BaseEnemyArea,
             AvoidBases = true,
+            LocationType = 'LocationType',
+            StateMachine = 'Gunship',
             UnitType = 'GUNSHIP',
             PlatoonLimit = 18,
             TargetSearchPriorities = {
@@ -936,6 +942,8 @@ BuilderGroup {
             SearchRadius = BaseEnemyArea,
             UnitType = 'GUNSHIP',
             PlatoonLimit = 18,
+            LocationType = 'LocationType',
+            StateMachine = 'Gunship',
             TargetSearchPriorities = {
                 categories.MOBILE * categories.LAND,
                 categories.MASSEXTRACTION,

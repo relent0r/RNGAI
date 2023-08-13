@@ -3886,8 +3886,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                 pos = relativeTo
             end
             local refunits=AIUtils.GetOwnUnitsAroundPoint(aiBrain, cons.Categories, pos, cons.Radius, cons.ThreatMin,cons.ThreatMax, cons.ThreatRings)
-            LOG('regunits '..repr(refunits))
-            LOG('baseTmpl')
             local reference = RUtils.GetCappingPosition(aiBrain, eng, pos, refunits, baseTmpl, buildingTmpl)
             --RNGLOG('reference is '..repr(reference))
             --RNGLOG('World Pos '..repr(tmpReference))
@@ -4642,12 +4640,12 @@ Platoon = Class(RNGAIPlatoonClass) {
             if closeMarkers > 0 then
                 if closeMarkers < 4 then
                     if closeMarkers < 4 and distantMarkers > 1 then
-                        energyCount = 3
-                    else
                         energyCount = 2
+                    else
+                        energyCount = 1
                     end
                 else
-                    energyCount = 3
+                    energyCount = 2
                 end
                 
             end
@@ -4694,6 +4692,54 @@ Platoon = Class(RNGAIPlatoonClass) {
                 WARN('No buildLocation or whatToBuild during ACU initialization')
             end
             --aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+        end
+        if not hydroPresent then
+            while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                coroutine.yield(5)
+            end
+        end
+        if not hydroPresent then
+            IssueClearCommands({eng})
+            --RNGLOG('CommanderInitializeAIRNG : No hydro present, we should be building a little more power')
+            if closeMarkers > 0 then
+                if closeMarkers < 4 then
+                    if closeMarkers < 4 and distantMarkers > 1 then
+                        energyCount = 2
+                    else
+                        energyCount = 1
+                    end
+                else
+                    energyCount = 2
+                end
+            end
+            for i=1, energyCount do
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)
+                if buildLocation and whatToBuild then
+                    --RNGLOG('CommanderInitializeAIRNG : Execute Build Structure with the following data')
+                    --RNGLOG('CommanderInitializeAIRNG : whatToBuild '..whatToBuild)
+                    --RNGLOG('CommanderInitializeAIRNG : Build Location '..repr(buildLocation))
+                    if borderWarning and buildLocation and whatToBuild then
+                        IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                        borderWarning = false
+                    elseif buildLocation and whatToBuild then
+                        aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                    else
+                        WARN('No buildLocation or whatToBuild during ACU initialization')
+                    end
+                else
+                    -- This is a backup to avoid a power stall
+                    buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, false, categories.STRUCTURE * categories.FACTORY, 12, true)
+                    if borderWarning and buildLocation and whatToBuild then
+                        IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                        borderWarning = false
+                    elseif buildLocation and whatToBuild then
+                        aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                    else
+                        WARN('No buildLocation or whatToBuild during ACU initialization')
+                    end
+                    --aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                end
+            end
         end
         if not hydroPresent then
             while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
@@ -4887,12 +4933,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if eng then eng.ProcessBuild = nil end
                     return
                 end
-                --[[if AIUtils.IsMex(whatToBuild) and (not aiBrain:CanBuildStructureAt(whatToBuild, buildLocation)) then
-                   --RNGLOG('Cant build at mass location')
-                   --RNGLOG('*AI DEBUG: EngineerBuild AI ' ..eng.EntityId)
-                   --RNGLOG('Build location is '..repr(buildLocation))
-                    return
-                end]]
                 if whatToBuild == 'ueb1106' then
                     LOG('Processing build command for mass storage, position is '..repr(buildLocation))
                     LOG('Current build queue '..repr(eng.EngineerBuildQueue))
@@ -11316,24 +11356,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                 IssueMove({v},midpoint(loc1,loc2,i/num))
             end
         end
-        local function GetAngleCCW(base, direction)
-            local newbase={x=base[1],y=base[2],z=base[3]}
-            local newdir={x=direction[1],y=direction[2],z=direction[3]}
-            local bn = Utils.NormalizeVector(newbase)
-            local dn = Utils.NormalizeVector(newdir)
-        
-            -- compute the orthogonal vector to determine if we need to take the inverse
-            local ort = { bn[3], 0, -bn[1] }
-        
-            -- compute the radians, correct it accordingly
-            local rads = math.acos(bn[1] * dn[1] + bn[3] * dn[3])
-            if ort[1] * dn[1] + ort[3] * dn[3] < 0 then
-                rads = 2 * math.pi - rads
-            end
-        
-            -- convert to degrees
-            return (180 / math.pi) * rads
-        end
         if self.rttaken then return end
         local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
@@ -11573,6 +11595,10 @@ Platoon = Class(RNGAIPlatoonClass) {
         if machineType == 'ACU' then
             --LOG('Starting ACU State')
             import("/mods/rngai/lua/ai/statemachines/platoon-acu.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+        elseif machineType == 'LandCombat' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+        elseif machineType == 'Gunship' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-air-gunship.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         end
         WaitTicks(50)
     end,
