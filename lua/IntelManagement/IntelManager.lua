@@ -2720,9 +2720,12 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     local position = im.MapIntelGrid[i][k].Position
                     local gridPointAngle = RUtils.GetAngleToPosition(aiBrain.BrainIntel.StartPos, position)
                     local angleOfEnemyUnits = math.abs(gridPointAngle - aiBrain.BrainIntel.CurrentIntelAngle)
-                    local anglePriority = math.ceil((angleOfEnemyUnits * 1000) / im.MapIntelGrid[i][k].DistanceToMain)
+                    local anglePriority = math.ceil((angleOfEnemyUnits * 100) / (im.MapIntelGrid[i][k].DistanceToMain / 2))
                     local statusModifier = 1
-                    --RNGLOG('Priority of angle and distance '..anglePriority)
+                    RNGLOG('angle of enemy units '..angleOfEnemyUnits)
+                    RNGLOG('angle of enemy units modified '..(angleOfEnemyUnits * 1000))
+                    RNGLOG('distance to main '..im.MapIntelGrid[i][k].DistanceToMain)
+                    RNGLOG('Priority of angle and distance '..anglePriority)
                     im.MapIntelGrid[i][k].EnemyUnitDanger = RUtils.GrabPosDangerRNG(aiBrain,position,30).enemy
                     if aiBrain.GridPresence and aiBrain.GridPresence:GetInferredStatus(position) == 'Allied' then
                         statusModifier = 1.8
@@ -2753,7 +2756,8 @@ TruePlatoonPriorityDirector = function(aiBrain)
                                 priority = priority + 100
                             end
                             aiBrain.prioritypointshighvalue[c]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object}
-                            --RNGLOG('HighPriority target added '..repr(aiBrain.prioritypointshighvalue[c]))
+                            RNGLOG('HighPriority target added '..repr(aiBrain.prioritypointshighvalue[c]))
+                            RNGLOG('Unit is '..b.object.UnitId)
                         end
                         --RNGLOG('Added prioritypoints entry of '..repr(aiBrain.prioritypoints[c]))
                         --RNGLOG('Angle Priority was '..anglePriority)
