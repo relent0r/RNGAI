@@ -2661,6 +2661,9 @@ TruePlatoonPriorityDirector = function(aiBrain)
     aiBrain.prioritypointshighvalue={}
     local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
     local im = GetIntelManager(aiBrain)
+    local playableSize = aiBrain.MapPlayableSize or aiBrain.MapSize
+    local distanceExponent = 20
+    local maxPriority = 1000
     while not im.MapIntelGrid do
         coroutine.yield(30)
     end
@@ -2717,19 +2720,26 @@ TruePlatoonPriorityDirector = function(aiBrain)
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
             for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
                 if next(im.MapIntelGrid[i][k].EnemyUnits) then
+                    local scaledPriority
+                    local anglePriority
                     local position = im.MapIntelGrid[i][k].Position
+                    local distanceToMain = im.MapIntelGrid[i][k].DistanceToMain
                     local gridPointAngle = RUtils.GetAngleToPosition(aiBrain.BrainIntel.StartPos, position)
                     local angleOfEnemyUnits = math.abs(gridPointAngle - aiBrain.BrainIntel.CurrentIntelAngle)
-                    local anglePriority = math.ceil((angleOfEnemyUnits * 100) / (im.MapIntelGrid[i][k].DistanceToMain / 2))
+                    local basePriority = math.ceil((angleOfEnemyUnits * 80) / (distanceToMain / 2))
+                    local normalizedDistance = distanceToMain / playableSize
+                    local distanceFactor = (1 - normalizedDistance) * 200
+                    scaledPriority = basePriority * (1 + distanceFactor * distanceExponent / maxPriority)
                     local statusModifier = 1
                     RNGLOG('angle of enemy units '..angleOfEnemyUnits)
-                    RNGLOG('angle of enemy units modified '..(angleOfEnemyUnits * 1000))
+                    RNGLOG('angle of enemy units modified '..(angleOfEnemyUnits * 80))
                     RNGLOG('distance to main '..im.MapIntelGrid[i][k].DistanceToMain)
-                    RNGLOG('Priority of angle and distance '..anglePriority)
                     im.MapIntelGrid[i][k].EnemyUnitDanger = RUtils.GrabPosDangerRNG(aiBrain,position,30).enemy
                     if aiBrain.GridPresence and aiBrain.GridPresence:GetInferredStatus(position) == 'Allied' then
                         statusModifier = 1.8
                     end
+                    anglePriority = scaledPriority * statusModifier
+                    RNGLOG('Priority of angle and distance '..anglePriority)
                     for c, b in im.MapIntelGrid[i][k].EnemyUnits do
                         local priority = 0
                         if not b.recent or aiBrain.prioritypoints[c] or b.object.Dead then continue end
@@ -2751,7 +2761,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                         priority = priority * statusModifier
                         unitAddedCount = unitAddedCount + 1
                         aiBrain.prioritypoints[c]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object}
-                        if im.MapIntelGrid[i][k].DistanceToMain < BaseRestrictedArea or priority > 200 then
+                        if im.MapIntelGrid[i][k].DistanceToMain < BaseRestrictedArea or priority > 300 then
                             if b.type == 'tank' or b.type == 'arty' then
                                 priority = priority + 100
                             end
