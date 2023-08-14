@@ -5574,6 +5574,50 @@ function GetUnitIDFromTemplate(aiBrain, buildingType)
     end
 end
 
+function EngineerEnemyAction(aiBrain, eng)
+    if not IsDestroyed(eng) then
+        local actionTaken = false
+        local engPos = eng:GetPosition()
+        local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, engPos, 45, 'Enemy')
+        for _, unit in enemyUnits do
+            local enemyUnitPos = unit:GetPosition()
+            if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, unit) then
+                if VDist3Sq(enemyUnitPos, engPos) < 144 then
+                    --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
+                    if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
+                        local ex = engPos[1] - enemyUnitPos[1]
+                        local ez = engPos[3] - enemyUnitPos[3]
+                        if (ex * ex + ez * ez) < 156 then
+                            IssueClearCommands({eng})
+                            IssueReclaim({eng}, unit)
+                            actionTaken = true
+                            break
+                        end
+                    end
+                end
+            elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, unit) then
+                --RNGLOG('MexBuild found enemy unit, try avoid it')
+                local ex = engPos[1] - enemyUnitPos[1]
+                local ez = engPos[3] - enemyUnitPos[3]
+                if (ex * ex + ez * ez) < 81 then
+                    --RNGLOG('enemy unit too close, try reclaim')
+                    if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
+                        IssueClearCommands({eng})
+                        IssueReclaim({eng}, unit)
+                        actionTaken = true
+                        break
+                    end
+                else
+                    IssueClearCommands({eng})
+                    IssueMove({eng}, AvoidLocation(enemyUnitPos, PlatoonPos, 50))
+                    coroutine.yield(60)
+                    actionTaken = true
+                end
+            end
+        end
+    end
+end
+
 --[[
 -- Calculate the distance ratio for a given position
 local function getDistanceRatio(position, startX, startZ, platLoc, mapSize)
@@ -5724,3 +5768,52 @@ function GenerateChokePointLines(aiBrain)
 
 end
 
+
+--[[
+    -- Calculate dot product between two 3D vectors (same as before)
+
+-- Algorithm function to calculate the second move position and determine left/right
+function calculate_second_move_position(lerped_position, enemy_position, offset_distance, is_on_right)
+    -- Step 1: Calculate the direction vector from the friendly unit to the enemy unit.
+    local direction_vector = {
+        x = enemy_position.x - lerped_position.x,
+        y = enemy_position.y - lerped_position.y,
+        z = enemy_position.z - lerped_position.z
+    }
+
+    -- Step 2: Find a perpendicular vector to the direction vector.
+    local perpendicular_vector = {
+        x = -direction_vector.z,
+        y = direction_vector.y,
+        z = direction_vector.x
+    }
+
+    -- Step 3: Normalize the perpendicular vector.
+    local perpendicular_magnitude = math.sqrt(perpendicular_vector.x * perpendicular_vector.x + perpendicular_vector.y * perpendicular_vector.y + perpendicular_vector.z * perpendicular_vector.z)
+    if perpendicular_magnitude > 0 then
+        perpendicular_vector.x = perpendicular_vector.x / perpendicular_magnitude
+        perpendicular_vector.y = perpendicular_vector.y / perpendicular_magnitude
+        perpendicular_vector.z = perpendicular_vector.z / perpendicular_magnitude
+    end
+
+    -- Step 4: Multiply the normalized perpendicular vector by the fixed offset_distance.
+    local sign = is_on_right and 1 or -1 -- Use 1 for right, -1 for left
+    local second_move_position = {
+        x = lerped_position.x + sign * perpendicular_vector.x * offset_distance,
+        y = lerped_position.y + sign * perpendicular_vector.y * offset_distance,
+        z = lerped_position.z + sign * perpendicular_vector.z * offset_distance
+    }
+
+    return second_move_position
+end
+
+-- Example usage
+local lerped_position = { x = 10, y = 0, z = 5 }
+local enemy_position = { x = 15, y = 0, z = 10 }
+local offset_distance = 2 -- Fixed distance of 2 units from the lerped position
+local is_on_right = true -- Set this to true for the second move position to be on the right side, false for left side
+
+local second_move_position = calculate_second_move_position(lerped_position, enemy_position, offset_distance, is_on_right)
+print(second_move_position.x, second_move_position.y, second_move_position.z)
+
+]]
