@@ -1082,7 +1082,7 @@ IntelManager = Class {
     end,
 
     CheckStrikePotential = function(self, type, desiredStrikeDamage, threatMax)
-        local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = RUtils.GetMOARadii()
+        local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = RUtils.GetOpAreaRNG()
         local Zones = {
             'Land',
         }
@@ -2659,7 +2659,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
     --RNGLOG('Starting TruePlatoonPriorityDirector')
     aiBrain.prioritypoints={}
     aiBrain.prioritypointshighvalue={}
-    local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
+    local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetOpAreaRNG()
     local im = GetIntelManager(aiBrain)
     local playableSize = aiBrain.MapPlayableSize or aiBrain.MapSize
     local distanceExponent = 20

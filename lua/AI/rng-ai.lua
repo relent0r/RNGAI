@@ -25,7 +25,7 @@ local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
 local CategoriesDummyUnit = categories.DUMMYUNIT
 local CoroutineYield = coroutine.yield
 
-local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
+local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetOpAreaRNG()
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
@@ -219,7 +219,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.MapSize = 10
         local mapSizeX, mapSizeZ = GetMapSize()
         self.MapDimension = math.max(mapSizeX, mapSizeZ)
-        if  mapSizeX > 1000 and mapSizeZ > 1000 then
+        if mapSizeX > 1000 and mapSizeZ > 1000 then
             if self.RNGEXP then
                 self.DefaultLandRatio = 0.2
                 self.DefaultAirRatio = 0.3

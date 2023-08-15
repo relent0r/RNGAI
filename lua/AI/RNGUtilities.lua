@@ -685,19 +685,30 @@ function EngFindReclaimCell(aiBrain, eng, movementLayer, searchType)
 end
 
 -- Get the military operational areas of the map. Credit to Uveso, this is based on his zones but a little more for small map sizes.
-function GetMOARadii(bool)
+function GetOpAreaRNG(bool)
     -- Military area is slightly less than half the map size (10x10map) or maximal 200.
-    local BaseMilitaryArea = math.max( ScenarioInfo.size[1]-50, ScenarioInfo.size[2]-50 ) / 2.2
+    -- We try to use playable area so that we take into account map gen maps.
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+    local playableMapSizes = { playableArea[3], playableArea[4] }
+    local mapSizes
+    if playableMapSizes[1] and playableMapSizes[2] then
+        LOG('Setting playable map sizes for GetOpAreaRNG')
+        mapSizes = playableMapSizes
+    else
+        LOG('Setting standard map sizes for GetOpAreaRNG')
+        mapSizes = { ScenarioInfo.size[1], ScenarioInfo.size[2] }
+    end
+    local BaseMilitaryArea = math.max( mapSizes[1]-50, mapSizes[2]-50 ) / 2.2
     BaseMilitaryArea = math.max( 180, BaseMilitaryArea )
     -- DMZ is half the map. Mainly used for air formers
-    local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
+    local BaseDMZArea = math.max( mapSizes[1]-40, mapSizes[2]-40 ) / 2
     -- Restricted Area is half the BaseMilitaryArea. That's a little less than 1/4 of a 10x10 map
     local BaseRestrictedArea = BaseMilitaryArea / 2
     -- Make sure the Restricted Area is not smaller than 50 or greater than 100
     BaseRestrictedArea = math.max( 60, BaseRestrictedArea )
     BaseRestrictedArea = math.min( 120, BaseRestrictedArea )
     -- The rest of the map is enemy area
-    local BaseEnemyArea = math.max( ScenarioInfo.size[1], ScenarioInfo.size[2] ) * 1.5
+    local BaseEnemyArea = math.max( mapSizes[1], mapSizes[2] ) * 1.5
     -- "bool" is only true if called from "AIBuilders/Mobile Land.lua", so we only print this once.
     if bool then
         --RNGLOG('* RNGAI: BaseRestrictedArea= '..math.floor( BaseRestrictedArea * 0.01953125 ) ..' Km - ('..BaseRestrictedArea..' units)' )
@@ -3451,7 +3462,7 @@ end
 PlatoonReclaimQueryRNGRNG = function(aiBrain,platoon)
     -- we need to figure a way to make sure we arn't to close to an existing tagged reclaim area
     if aiBrain.ReclaimEnabled then
-        local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetMOARadii()
+        local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetOpAreaRNG()
         local homeBaseLocation = aiBrain.BuilderManagers['MAIN'].Position
         local platoonPos = platoon:GetPosition()
         if VDist2Sq(platoonPos[1], platoonPos[3], homeBaseLocation[1], homeBaseLocation[3]) < (BaseDMZArea * BaseDMZArea) then
@@ -5765,9 +5776,11 @@ function GenerateChokePointLines(aiBrain)
         LOG('pos '..repr(v))
         aiBrain:ForkThread(DrawTargetRadius, v)
     end
-
 end
 
+BetweenNumber = function(number, lowerBound, upperBound)
+    return number >= lowerBound and number <= upperBound
+end
 
 --[[
     -- Calculate dot product between two 3D vectors (same as before)
