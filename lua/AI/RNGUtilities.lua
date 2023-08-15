@@ -5620,7 +5620,7 @@ function EngineerEnemyAction(aiBrain, eng)
                     end
                 else
                     IssueClearCommands({eng})
-                    IssueMove({eng}, AvoidLocation(enemyUnitPos, PlatoonPos, 50))
+                    IssueMove({eng}, AvoidLocation(enemyUnitPos, engPos, 50))
                     coroutine.yield(60)
                     actionTaken = true
                 end

@@ -255,8 +255,7 @@ AIBrain = Class(RNGAIBrainClass) {
             --RNGLOG('5 KM Map Check true')
             self.MapSize = 5
         end
-        local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
-        self.MapPlayableSize = math.max(playableArea[3], playableArea[4])
+
         self.MapCenterPoint = { (ScenarioInfo.size[1] / 2), GetSurfaceHeight((ScenarioInfo.size[1] / 2), (ScenarioInfo.size[2] / 2)) ,(ScenarioInfo.size[2] / 2) }
 
         -- Condition monitor for the whole brain
@@ -1231,6 +1230,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.DynamicExpansionRequiredRNG)
         self.ZonesInitialized = false
         self:ForkThread(self.ZoneSetup)
+        self:ForkThread(self.SetupPlayableArea)
         self.IntelManager = IntelManagerRNG.CreateIntelManager(self)
         self.IntelManager:Run()
         self.StructureManager = StructureManagerRNG.CreateStructureManager(self)
@@ -1326,6 +1326,17 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Tactical Missions '..repr(self.TacticalMonitor.TacticalMissions))
             RNGLOG('Enemy Build Power Table '..repr(im.EnemyBuildStrength))
             coroutine.yield(100)
+        end
+    end,
+
+    SetupPlayableArea = function(self)
+        local playableArea
+        while not playableArea do
+            coroutine.yield(3)
+            playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+            if playableArea then
+                self.MapPlayableSize = math.max(playableArea[3], playableArea[4])
+            end
         end
     end,
 

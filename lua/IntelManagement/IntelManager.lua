@@ -2727,8 +2727,11 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     local gridPointAngle = RUtils.GetAngleToPosition(aiBrain.BrainIntel.StartPos, position)
                     local angleOfEnemyUnits = math.abs(gridPointAngle - aiBrain.BrainIntel.CurrentIntelAngle)
                     local basePriority = math.ceil((angleOfEnemyUnits * 80) / (distanceToMain / 2))
+                    LOG('basePriority '..basePriority)
                     local normalizedDistance = distanceToMain / playableSize
                     local distanceFactor = (1 - normalizedDistance) * 200
+                    LOG('distanceFactor '..distanceFactor)
+                    LOG('basePriority * '..(1 + distanceFactor * distanceExponent / maxPriority))
                     scaledPriority = basePriority * (1 + distanceFactor * distanceExponent / maxPriority)
                     local statusModifier = 1
                     RNGLOG('angle of enemy units '..angleOfEnemyUnits)
