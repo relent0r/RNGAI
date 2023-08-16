@@ -1,7 +1,9 @@
 local AIPlatoon = import("/lua/aibrains/platoons/platoon-base.lua").AIPlatoon
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local NavUtils = import("/lua/sim/navutils.lua")
+local RNGMAX = math.max
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
+local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 
 ---@class AIPlatoonBehavior : AIPlatoon
 ---@field RetreatCount number 
@@ -84,6 +86,38 @@ AIPlatoonGunshipBehavior = Class(AIPlatoon) {
                     }
                     self:ChangeState(self.Navigating)
                     return
+                end
+            end
+            if not target then
+                if not table.empty(aiBrain.prioritypoints) then
+                    local pointHighest = 0
+                    local point = false
+                    for _, v in aiBrain.prioritypoints do
+                        if v.unit and not v.unit.Dead then
+                            local dx = self.Pos[1] - v.Position[1]
+                            local dz = self.Pos[3] - v.Position[3]
+                            local distance = dx * dx + dz * dz
+                            local tempPoint = v.priority/(RNGMAX(distance,30*30)+(v.danger or 0))
+                            if tempPoint > pointHighest and aiBrain.GridPresence:GetInferredStatus(v.Position) == 'Allied' then
+                                if GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') < 12 then
+                                    pointHighest = tempPoint
+                                    point = v
+                                end
+                            end
+                        end
+                    end
+                    if point then
+                    --RNGLOG('point pos '..repr(point.Position)..' with a priority of '..point.priority)
+                        if not self.retreat then
+                            self.BuilderData = {
+                                AttackTarget = point.unit,
+                                Position = point.position
+                            }
+                            --LOG('Retreating to platoon')
+                            self:ChangeState(self.Navigating)
+                            return
+                        end
+                    end
                 end
             end
             if not target and VDist3Sq(self:GetPlatoonPosition(), self.Home) > 900 then
