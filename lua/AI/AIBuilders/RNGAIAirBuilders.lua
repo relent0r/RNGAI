@@ -12,8 +12,6 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local AntiAirUnits = categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK
 
-local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetOpAreaRNG()
-
 local AirDefenseMode = function(self, aiBrain, builderManager, builderData)
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
@@ -306,7 +304,7 @@ BuilderGroup {
         BuilderData = {
             PlatoonPlan = 'MercyAIRNG',
             Location = 'LocationType',
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             PrioritizedCategories = {
                 categories.COMMAND,
                 categories.LAND * categories.EXPERIMENTAL,
@@ -324,7 +322,7 @@ BuilderGroup {
         InstanceCount = 4,
         BuilderType = 'Any',
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             UnitType = 'TORPEDO',
             PrioritizedCategories = {
                 categories.COMMAND,
@@ -355,7 +353,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             AvoidBases = true,
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             NeverGuardEngineers = true,
             PlatoonLimit = 25,
@@ -380,9 +378,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             PlatoonType = 'fighter',
-            PlatoonSearchRange = BaseDMZArea,
+            PlatoonSearchRange = 'BaseDMZArea',
             AvoidBases = true,
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             NeverGuardEngineers = true,
             PlatoonLimit = 18,
@@ -431,7 +429,7 @@ BuilderGroup {
             StaticCategories = true,
             AvoidBases = true,
             IgnoreCivilian = true,
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             UnitType = 'BOMBER',
             UnitTarget = 'ENGINEER',
             LocationType = 'LocationType',
@@ -460,7 +458,7 @@ BuilderGroup {
             StaticCategories = true,
             AvoidBases = true,
             IgnoreCivilian = true,
-            SearchRadius = BaseMilitaryArea,
+            SearchRadius = 'BaseMilitaryArea',
             UnitType = 'BOMBER',
             PlatoonLimit = 3,
             PrioritizedCategories = {
@@ -487,7 +485,7 @@ BuilderGroup {
         BuilderData = {
             AvoidBases = true,
             Defensive = false,
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             UnitType = 'BOMBER',
             IgnoreCivilian = true,
             PlatoonLimit = 5,
@@ -517,7 +515,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.MOBILE * categories.GROUNDATTACK * categories.TECH1 } },
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             StateMachine = 'Gunship',
             AvoidBases = true,
@@ -551,7 +549,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.MOBILE * categories.GROUNDATTACK * (categories.TECH2 + categories.TECH3) } },
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             StateMachine = 'Gunship',
             UnitType = 'GUNSHIP',
@@ -587,7 +585,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             IgnoreCivilian = true,
             UnitType = 'BOMBER',
             PlatoonLimit = 18,
@@ -615,7 +613,7 @@ BuilderGroup {
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             UnitType = 'BOMBER',
             PlatoonLimit = 18,
             PrioritizedCategories = {
@@ -824,9 +822,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             PlatoonType = 'fighter',
-            PlatoonSearchRange = BaseDMZArea,
+            PlatoonSearchRange = 'BaseDMZArea',
             AvoidBases = true,
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             NeverGuardEngineers = true,
             PlatoonLimit = 18,
@@ -874,7 +872,7 @@ BuilderGroup {
         },
         BuilderData = {
             AvoidBases = true,
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             UnitType = 'BOMBER',
             PlatoonLimit = 18,
             PrioritizedCategories = {
@@ -904,7 +902,7 @@ BuilderGroup {
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             AvoidBases = true,
             LocationType = 'LocationType',
             StateMachine = 'Gunship',
@@ -939,7 +937,7 @@ BuilderGroup {
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             UnitType = 'GUNSHIP',
             PlatoonLimit = 18,
             LocationType = 'LocationType',
@@ -975,7 +973,7 @@ BuilderGroup {
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             IgnoreCivilian = true,
             UnitType = 'BOMBER',
             PlatoonLimit = 18,
@@ -1002,7 +1000,7 @@ BuilderGroup {
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             UnitType = 'BOMBER',
             PlatoonLimit = 18,
             PrioritizedCategories = {

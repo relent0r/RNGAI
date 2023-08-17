@@ -1,4 +1,3 @@
-local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetOpAreaRNG()
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
@@ -41,7 +40,7 @@ BuilderGroup {
         },
         BuilderData = {
             AvoidBases = true,
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             PrioritizedCategories = {
                 'MASSEXTRACTION',
                 'ENGINEER',

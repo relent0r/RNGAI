@@ -94,8 +94,14 @@ AIPlatoonGunshipBehavior = Class(AIPlatoon) {
                     local point = false
                     for _, v in aiBrain.prioritypoints do
                         if v.unit and not v.unit.Dead then
-                            local dx = self.Pos[1] - v.Position[1]
-                            local dz = self.Pos[3] - v.Position[3]
+                            if not platPos[1] then
+                                LOG('self pos is nil '..repr(platPos))
+                            end
+                            if not v.Position[1] then
+                                LOG('v position is nil '..repr(v.Position))
+                            end
+                            local dx = platPos[1] - v.Position[1]
+                            local dz = platPos[3] - v.Position[3]
                             local distance = dx * dx + dz * dz
                             local tempPoint = v.priority/(RNGMAX(distance,30*30)+(v.danger or 0))
                             if tempPoint > pointHighest and aiBrain.GridPresence:GetInferredStatus(v.Position) == 'Allied' then
@@ -107,11 +113,11 @@ AIPlatoonGunshipBehavior = Class(AIPlatoon) {
                         end
                     end
                     if point then
-                    --RNGLOG('point pos '..repr(point.Position)..' with a priority of '..point.priority)
+                    LOG('Gunship point pos '..repr(point.Position)..' with a priority of '..point.priority)
                         if not self.retreat then
                             self.BuilderData = {
                                 AttackTarget = point.unit,
-                                Position = point.position
+                                Position = point.Position
                             }
                             --LOG('Retreating to platoon')
                             self:ChangeState(self.Navigating)
@@ -120,7 +126,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoon) {
                     end
                 end
             end
-            if not target and VDist3Sq(self:GetPlatoonPosition(), self.Home) > 900 then
+            if not target and VDist3Sq(platPos, self.Home) > 900 then
                 self.BuilderData = {
                     Position = self.Home
                 }
@@ -327,14 +333,15 @@ end
 ---@param aiBrain AIBrain
 ---@param platoon AIPlatoon
 GunshipThreatThreads = function(aiBrain, platoon)
-    coroutine.yield(10)
+    coroutine.yield(2)
     while aiBrain:PlatoonExists(platoon) do
+        platoon.Pos = platoon:GetPlatoonPosition()
         if not platoon.BuilderData.Retreat then
-            platoon.Pos = platoon:GetPlatoonPosition()
             local enemyAntiAirThreat = aiBrain:GetThreatsAroundPosition(platoon.Pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
             for _, v in enemyAntiAirThreat do
                 if v[3] > 0 and VDist3Sq({v[1],0,v[2]}, platoon.Pos) > 10000 then
                     platoon.CurrentEnemyAirThreat = v[3]
+                    LOG('Gunship DecideWhatToDo triggered due to threat')
                     platoon:ChangeState(platoon.DecideWhatToDo)
                 end
             end

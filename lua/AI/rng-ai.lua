@@ -25,7 +25,6 @@ local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
 local CategoriesDummyUnit = categories.DUMMYUNIT
 local CoroutineYield = coroutine.yield
 
-local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetOpAreaRNG()
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
@@ -207,6 +206,7 @@ AIBrain = Class(RNGAIBrainClass) {
             poolPlatoon.ArmyPool = true
             poolPlatoon:TurnOffPoolAI()
         end
+        self:ForkThread(self.SetupPlayableArea)
         --local mapSizeX, mapSizeZ = GetMapSize()
         --RNGLOG('Map X size is : '..mapSizeX..'Map Z size is : '..mapSizeZ)
         -- Stores handles to all builders for quick iteration and updates to all
@@ -1092,8 +1092,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.MapOwnership = 0
         self.BrainIntel.AirStagingRequired = false
         self.BrainIntel.CurrentIntelAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, self.MapCenterPoint)
-        self.BrainIntel.MilitaryRange = BaseMilitaryArea
-        self.BrainIntel.DMZRange = BaseDMZArea
         self.BrainIntel.ExpansionWatchTable = {}
         self.BrainIntel.DynamicExpansionPositions = {}
         self.BrainIntel.IMAPConfig = {
@@ -1230,7 +1228,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.DynamicExpansionRequiredRNG)
         self.ZonesInitialized = false
         self:ForkThread(self.ZoneSetup)
-        self:ForkThread(self.SetupPlayableArea)
         self.IntelManager = IntelManagerRNG.CreateIntelManager(self)
         self.IntelManager:Run()
         self.StructureManager = StructureManagerRNG.CreateStructureManager(self)
@@ -1332,11 +1329,20 @@ AIBrain = Class(RNGAIBrainClass) {
     SetupPlayableArea = function(self)
         local playableArea
         while not playableArea do
-            coroutine.yield(3)
             playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
             if playableArea then
+                LOG('SetPlayableArea game time is '..GetGameTick()..' playableArea is '..repr(playableArea))
+                local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetOpAreaRNG()
+                self.OperatingAreas = {
+                    BaseRestrictedArea = BaseRestrictedArea,
+                    BaseMilitaryArea = BaseMilitaryArea,
+                    BaseDMZArea = BaseDMZArea,
+                    BaseEnemyArea = BaseEnemyArea,
+                }
+                LOG('Operating Areas set '..repr(self.OperatingAreas))
                 self.MapPlayableSize = math.max(playableArea[3], playableArea[4])
             end
+            coroutine.yield(3)
         end
     end,
 
@@ -1578,6 +1584,8 @@ AIBrain = Class(RNGAIBrainClass) {
         if not self.RNG then
             return RNGAIBrainClass.AddBuilderManagers(self, position, radius, baseName, useCenter)
         end
+        local baseRestrictedArea = self.OperatingAreas['BaseRestrictedArea']
+        LOG('Create Builder Manager')
 
         -- Set the layer of the builder manager so that factory managers and platoon managers know if we should be graphing to land or naval production.
         -- Used for identifying if we can graph to an enemy factory for multi landmass situations
@@ -1587,14 +1595,11 @@ AIBrain = Class(RNGAIBrainClass) {
             position[2] = GetSurfaceHeight( position[1], position[3] )
 			baseLayer = 'Water'
         end
-        self:ForkThread(self.GetGraphArea, position, baseName, baseLayer)
-        self:ForkThread(self.GetBaseZone, position, baseName, baseLayer)
-
         self.BuilderManagers[baseName] = {
             FactoryManager = FactoryManager.CreateFactoryBuilderManager(self, baseName, position, radius, useCenter),
             PlatoonFormManager = PlatoonFormManager.CreatePlatoonFormManager(self, baseName, position, radius, useCenter),
             EngineerManager = EngineerManager.CreateEngineerManager(self, baseName, position, radius),
-            DefensivePoints = RUtils.GenerateDefensivePointTable(self, baseName, BaseRestrictedArea, position),
+            DefensivePoints = {},
             BuilderHandles = {},
             Position = position,
             Layer = baseLayer,
@@ -1602,6 +1607,11 @@ AIBrain = Class(RNGAIBrainClass) {
             BaseType = Scenario.MasterChain._MASTERCHAIN_.Markers[baseName].type or 'MAIN',
         }
         self.NumBases = self.NumBases + 1
+        LOG('Fork Threads')
+        self:ForkThread(self.GetGraphArea, position, baseName, baseLayer)
+        self:ForkThread(self.GetBaseZone, position, baseName, baseLayer)
+        LOG('GetDefensivePointTable')
+        self:ForkThread(self.GetDefensivePointTable, baseName, 'BaseRestrictedArea', position)
         if self.RNGDEBUG then
             RNGLOG('Defensive Point Table for buildermanager '..baseName..'  '..repr(self.BuilderManagers[baseName].DefensivePoints))
         end
@@ -1662,6 +1672,21 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    GetDefensivePointTable = function(self, baseName, area, position)
+        -- This will set the graph area of the factory manager so we don't need to look it up every time
+        local defensivePointTableSet = false
+        while not defensivePointTableSet do
+            if self.OperatingAreas[area] then
+                local range = self.OperatingAreas[area]
+                local DefensivePoints = RUtils.GenerateDefensivePointTable(self, baseName, range, position)
+                self.BuilderManagers[baseName].DefensivePoints = DefensivePoints
+                --LOG('Defensive Points set for base '..repr(self.BuilderManagers[baseName].DefensivePoints))
+                defensivePointTableSet = true
+            end
+            coroutine.yield(3)
+        end
+    end,
+
     GetBaseZone = function(self, position, baseName, baseLayer)
         -- This will set the zone of the factory manager so we don't need to look it up every time
         -- Needs to wait a while for the RNGArea properties to be populated
@@ -1698,6 +1723,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local graphCheck = false
         local coreMassMarkers = 0
         local massMarkers = GetMarkersRNG()
+        local baseRestrictedArea = self.OperatingAreas['BaseRestrictedArea']
         
         for _, v in massMarkers do
             if v.type == 'Mass' then
@@ -1716,7 +1742,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     if massPointDistance < 2500 then
                         coreMassMarkers = coreMassMarkers + 1
                     end
-                    if massPointDistance < BaseRestrictedArea * BaseRestrictedArea then
+                    if massPointDistance < baseRestrictedArea * baseRestrictedArea then
                         restrictedMarkers = restrictedMarkers + 1
                     end
                     
@@ -2001,7 +2027,8 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Waiting for MapIntelGrid to exist...')
             coroutine.yield(30)
         end
-
+        local baseRestrictedArea = self.OperatingAreas['BaseRestrictedArea']
+        local baseMilitaryArea = self.OperatingAreas['BaseMilitaryArea']
         local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
         --RNGLOG('playableArea '..repr(playableArea) )
         local opponentStarts = {}
@@ -2161,8 +2188,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 self.BrainIntel.AllyStartLocations = allyTempStarts
             end
             local perimeterMap = {
-                BaseRestrictedArea, 
-                BaseMilitaryArea
+                baseRestrictedArea, 
+                baseMilitaryArea
             }
             for i=1, 2 do
                 local tempPoints = DrawCirclePoints(8, perimeterMap[i], {self.BrainIntel.StartPos[1], 0 , self.BrainIntel.StartPos[3]})
@@ -2710,7 +2737,8 @@ AIBrain = Class(RNGAIBrainClass) {
             },
         ]]
         coroutine.yield(Random(5,20))
-        local perimeterMonitorRadius = BaseRestrictedArea * 1.2
+        local baseRestrictedArea = self.OperatingAreas['BaseRestrictedArea']
+        local perimeterMonitorRadius = baseRestrictedArea * 1.2
         self.BasePerimeterMonitor = {}
         if self.RNGDEBUG then
             self:ForkThread(self.drawMainRestricted)
@@ -3155,38 +3183,40 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             return false
         end
+        local dmzRange = self.OperatingAreas['BaseDMZArea']
+        local acuTable = self.EnemyIntel.ACU
         if not unit.Dead then
             local timeOut = 0
-            if not self.EnemyIntel.ACU[index].Unit then
-                self.EnemyIntel.ACU[index].Unit = unit
+            if not acuTable[index].Unit then
+                acuTable[index].Unit = unit
             end
             while timeOut < 3 do
                 local currentGameTime = GetGameTimeSeconds()
-                if RUtils.HaveUnitVisual(self, unit, true) then
+                if not IsDestroyed(unit) and RUtils.HaveUnitVisual(self, unit, true) then
                     local acuPos = unit:GetPosition()
-                    self.EnemyIntel.ACU[index].Position = acuPos
-                    self.EnemyIntel.ACU[index].DistanceToBase = VDist3Sq(acuPos, self.BrainIntel.StartPos)
-                    self.EnemyIntel.ACU[index].HP = unit:GetHealth()
-                    if not self.EnemyIntel.ACU[index].Range or self.EnemyIntel.ACU[index].LastSpotted + 30 < currentGameTime then
+                    acuTable[index].Position = acuPos
+                    acuTable[index].DistanceToBase = VDist3Sq(acuPos, self.BrainIntel.StartPos)
+                    acuTable[index].HP = unit:GetHealth()
+                    if not acuTable[index].Range or acuTable[index].LastSpotted + 30 < currentGameTime then
                         if CDRGunCheck(self, unit) then
-                            self.EnemyIntel.ACU[index].Range = unit.Blueprint.Weapon[1].MaxRadius + 8
-                            self.EnemyIntel.ACU[index].Gun = true
+                            acuTable[index].Range = unit.Blueprint.Weapon[1].MaxRadius + 8
+                            acuTable[index].Gun = true
                         else
-                            self.EnemyIntel.ACU[index].Range = unit.Blueprint.Weapon[1].MaxRadius
-                            self.EnemyIntel.ACU[index].Gun = false
+                            acuTable[index].Range = unit.Blueprint.Weapon[1].MaxRadius
+                            acuTable[index].Gun = false
                         end
                     end
-                    if self.EnemyIntel.ACU[index].DistanceToBase < (self.BrainIntel.DMZRange * self.BrainIntel.DMZRange) then
-                        self.EnemyIntel.ACU[index].OnField = true
+                    if acuTable[index].DistanceToBase < (dmzRange * dmzRange) then
+                        acuTable[index].OnField = true
                     else
-                        self.EnemyIntel.ACU[index].OnField = false
+                        acuTable[index].OnField = false
                     end
-                    if self.EnemyIntel.ACU[index].DistanceToBase < 19600 then
+                    if acuTable[index].DistanceToBase < 19600 then
                         self.EnemyIntel.ACUEnemyClose = true
                     else
                         self.EnemyIntel.ACUEnemyClose = false
                     end
-                    self.EnemyIntel.ACU[index].LastSpotted = currentGameTime
+                    acuTable[index].LastSpotted = currentGameTime
                 else
                     timeOut = timeOut + 1
                 end
@@ -3194,7 +3224,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG(repr(self.EnemyIntel.ACU[index]))
                 coroutine.yield(10)
             end
-            self.EnemyIntel.ACU[index].VisualThread = false
+            LOG('ACU off visual last table '..repr(acuTable[index]))
+            acuTable[index].VisualThread = false
             return
         end
     end,
@@ -5851,9 +5882,10 @@ AIBrain = Class(RNGAIBrainClass) {
             minimumRadius = self.EnemyIntel.ClosestEnemyBase * 0.8
         end
         local civUnits = {}
-        local searchRadius = math.min(BaseMilitaryArea, minimumRadius)
+        local searchRadius = math.min(self.OperatingAreas['BaseMilitaryArea'], minimumRadius)
+        local baseEnemyArea = self.OperatingAreas['BaseEnemyArea']
         --LOG('civ unit search radius '..searchRadius)
-        local allyUnits = GetUnitsAroundPoint(self, categories.MOBILE + (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.UNSELECTABLE - categories.UNTARGETABLE, self.BrainIntel.StartPos, BaseEnemyArea, 'Neutral')
+        local allyUnits = GetUnitsAroundPoint(self, categories.MOBILE + (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.UNSELECTABLE - categories.UNTARGETABLE, self.BrainIntel.StartPos, baseEnemyArea, 'Neutral')
         for _, v in allyUnits do
             local unitPos = v:GetPosition()
             --LOG('Unit found '..v.UnitId..' distance to base '..VDist3(unitPos, self.BrainIntel.StartPos))

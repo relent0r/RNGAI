@@ -506,6 +506,10 @@ function HaveEnemyUnitAtLocationRNG(aiBrain, radius, locationType, unitCount, ca
         WARN('*AI WARNING: HaveEnemyUnitAtLocationRNG - Invalid location - ' .. locationType)
         return false
     end
+    if type(radius) == 'string' then
+        radius = aiBrain.OperatingAreas[radius]
+        LOG('radius is string, radius is '..radius)
+    end
     local numEnemyUnits = aiBrain:GetNumUnitsAroundPoint(categoryEnemy, aiBrain.BuilderManagers[locationType].Position, radius , 'Enemy')
     --RNGLOG(aiBrain:GetArmyIndex()..' CompareBody {World} radius:['..radius..'] '..repr(DEBUG)..' ['..numEnemyUnits..'] '..compareType..' ['..unitCount..'] return '..repr(CompareBody(numEnemyUnits, unitCount, compareType)))
     return CompareBody(numEnemyUnits, unitCount, compareType)

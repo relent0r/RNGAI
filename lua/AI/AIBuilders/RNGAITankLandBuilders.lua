@@ -4,7 +4,6 @@
     Summary :
         Land Builders
 ]]
-local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetOpAreaRNG()
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
@@ -451,7 +450,7 @@ BuilderGroup {
             IncludeWater = false,
             IgnoreFriendlyBase = true,
             LocationType = 'LocationType',
-            MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
+            MaxPathDistance = 'BaseEnemyArea', -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             FindHighestThreat = false,			-- Don't find high threat targets
             MaxThreatThreshold = 650,			-- If threat is higher than this, do not attack
             MinThreatThreshold = 50,		    -- If threat is lower than this, do not attack
@@ -492,7 +491,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
             AggressiveMove = true,
@@ -537,7 +536,7 @@ BuilderGroup {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
             AggressiveMove = true,
@@ -579,7 +578,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
             AggressiveMove = true,
@@ -662,7 +661,7 @@ BuilderGroup {
             IncludeWater = false,
             IgnoreFriendlyBase = true,
             LocationType = 'LocationType',
-            MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
+            MaxPathDistance = 'BaseEnemyArea', -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             FindHighestThreat = true,			-- Don't find high threat targets
             MaxThreatThreshold = 6000,			-- If threat is higher than this, do not attack
             MinThreatThreshold = 50,		    -- If threat is lower than this, do not attack
@@ -704,7 +703,7 @@ BuilderGroup {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
             AggressiveMove = true,
@@ -744,7 +743,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
             AggressiveMove = true,
@@ -784,9 +783,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             PlatoonType = 'tank',
-            PlatoonSearchRange = BaseDMZArea,
+            PlatoonSearchRange = 'BaseDMZArea',
             Avoid = true,
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             NeverGuardEngineers = true,
             PlatoonLimit = 18,
@@ -817,7 +816,7 @@ BuilderGroup {
             UseFormation = 'None',
             LocationType = 'LocationType',
             Defensive = true,
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             StateMachine = 'LandCombat'
         },
     },
@@ -832,7 +831,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.ANTIAIR - categories.INDIRECTFIRE} },
         },
         BuilderData = {
-            SearchRadius = BaseMilitaryArea,
+            SearchRadius = 'BaseMilitaryArea',
             GetTargetsFromBase = true,
             RequireTransport = false,
             AggressiveMove = true,
@@ -864,7 +863,7 @@ BuilderGroup {
         BuilderData = {
             PlatoonPlan = 'MercyAIRNG',
             Location = 'LocationType',
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             PrioritizedCategories = {
                 categories.COMMAND,
                 categories.LAND * categories.EXPERIMENTAL,
@@ -986,7 +985,7 @@ BuilderGroup {
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
             PlatoonLimit = 18,
@@ -1029,7 +1028,7 @@ BuilderGroup {
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * ( categories.AMPHIBIOUS + categories.HOVER ) - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
             PlatoonLimit = 18,
@@ -1111,7 +1110,7 @@ BuilderGroup {
         },
         BuilderData = {
             RangedAttack = true,
-            SearchRadius = BaseEnemyArea,                                               -- Searchradius for new target.
+            SearchRadius = 'BaseEnemyArea',                                               -- Searchradius for new target.
             GetTargetsFromBase = false,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
             AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
@@ -1157,7 +1156,7 @@ BuilderGroup {
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER} },  	
             },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             MarkerType = 'Start Location',            
             MoveFirst = 'Threat',
@@ -1215,7 +1214,7 @@ BuilderGroup {
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
             PlatoonLimit = 18,
@@ -1257,7 +1256,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * ( categories.AMPHIBIOUS + categories.HOVER ) - categories.ENGINEER - categories.EXPERIMENTAL}},
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
             AggressiveMove = true,
@@ -1300,7 +1299,7 @@ BuilderGroup {
         },
         BuilderData = {
             RangedAttack = true,
-            SearchRadius = BaseEnemyArea,                                               -- Searchradius for new target.
+            SearchRadius = 'BaseEnemyArea',                                               -- Searchradius for new target.
             LocationType = 'LocationType',
             GetTargetsFromBase = false,                                         -- Get targets from base position (true) or platoon position (false)
             RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
@@ -1377,7 +1376,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.INDIRECTFIRE * categories.TECH1 - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
             AggressiveMove = true,
@@ -1420,7 +1419,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.DIRECTFIRE * categories.TECH1 - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
             AggressiveMove = true,
@@ -1468,11 +1467,11 @@ BuilderGroup {
         BuilderData = {
             Avoid        = true,
             ZoneType     = 'raid',
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             IncludeWater = false,
             IgnoreFriendlyBase = true,
-            MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
+            MaxPathDistance = 'BaseEnemyArea', -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             AggressiveMove = false,      
             UseFormation = 'AttackFormation',
             TargetSearchPriorities = {
@@ -1516,11 +1515,11 @@ BuilderGroup {
         BuilderData = {
             Avoid        = true,
             ZoneType     = 'raid',
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             IncludeWater = false,
             IgnoreFriendlyBase = true,
-            MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
+            MaxPathDistance = 'BaseEnemyArea', -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             AggressiveMove = false,      
             UseFormation = 'NoFormation',
             TargetSearchPriorities = {
@@ -1563,11 +1562,11 @@ BuilderGroup {
         },
         BuilderData = {
             ZoneType     = 'raid',
-            SearchRadius = BaseEnemyArea,
+            SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             IncludeWater = false,
             IgnoreFriendlyBase = true,
-            MaxPathDistance = BaseEnemyArea, -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
+            MaxPathDistance = 'BaseEnemyArea', -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
             AggressiveMove = true,      
             UseFormation = 'NoFormation',
             TargetSearchPriorities = {

@@ -3462,10 +3462,10 @@ end
 PlatoonReclaimQueryRNGRNG = function(aiBrain,platoon)
     -- we need to figure a way to make sure we arn't to close to an existing tagged reclaim area
     if aiBrain.ReclaimEnabled then
-        local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetOpAreaRNG()
+        local baseDMZArea = self.OperatingAreas['BaseDMZArea']
         local homeBaseLocation = aiBrain.BuilderManagers['MAIN'].Position
         local platoonPos = platoon:GetPosition()
-        if VDist2Sq(platoonPos[1], platoonPos[3], homeBaseLocation[1], homeBaseLocation[3]) < (BaseDMZArea * BaseDMZArea) then
+        if VDist2Sq(platoonPos[1], platoonPos[3], homeBaseLocation[1], homeBaseLocation[3]) < (baseDMZArea * baseDMZArea) then
             local valueTrigger = 200
             local currentValue = 0
             local x1 = platoonPos[1] - 20

@@ -1,6 +1,5 @@
 WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset platoon.lua' )
 
-local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetOpAreaRNG()
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
@@ -70,7 +69,10 @@ Platoon = Class(RNGAIPlatoonClass) {
         local avoidBases = data.AvoidBases or false
         local platoonLimit = self.PlatoonData.PlatoonLimit or 18
         local defensive = data.Defensive or false
-        local restrictedZone = BaseRestrictedArea * BaseRestrictedArea
+        local baseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
+        local baseMilitaryArea = aiBrain.OperatingAreas['BaseMilitaryArea']
+        local baseEnemyArea = aiBrain.OperatingAreas['BaseEnemyArea']
+        local restrictedZone = baseRestrictedArea * baseRestrictedArea
         self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Air', categories.ALLUNITS)
         self.HoldingPosition = aiBrain.BuilderManagers['MAIN'].Position
         if data.PrioritizedCategories then
@@ -92,7 +94,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                 v:SetScriptBit('RULEUTC_CloakToggle', false)
             end
         end
-        local maxRadius = data.SearchRadius or 1000
+        if type(data.SearchRadius) == 'string' then
+            maxRadius = aiBrain.OperatingAreas[data.SearchRadius]
+        else
+            maxRadius = data.SearchRadius or 1000
+        end
         local threatCountLimit = 0
         local acuCheck = false
         -- temp
@@ -109,11 +115,11 @@ Platoon = Class(RNGAIPlatoonClass) {
             platoonUnits = GetPlatoonUnits(self)
             self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Air', categories.ALLUNITS)
             if self.CurrentPlatoonThreat < 15 and aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
-                maxRadius = BaseRestrictedArea * 1.5
+                maxRadius = baseRestrictedArea * 1.5
             elseif aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
-                maxRadius = BaseMilitaryArea
+                maxRadius = baseMilitaryArea
             else
-                maxRadius = BaseEnemyArea
+                maxRadius = baseEnemyArea
             end
             if maxRadius then
                 self.MaxRadius = maxRadius
@@ -363,7 +369,8 @@ Platoon = Class(RNGAIPlatoonClass) {
         local avoidBases = data.AvoidBases or false
         local platoonLimit = self.PlatoonData.PlatoonLimit or 18
         local defensive = data.Defensive or false
-        local restrictedZone = BaseRestrictedArea * BaseRestrictedArea
+        local baseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
+        local restrictedZone = baseRestrictedArea * baseRestrictedArea
         self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
         self.HoldingPosition = aiBrain.BuilderManagers['MAIN'].Position
         if data.PrioritizedCategories then
@@ -385,7 +392,13 @@ Platoon = Class(RNGAIPlatoonClass) {
                 v:SetScriptBit('RULEUTC_CloakToggle', false)
             end
         end
-        local maxRadius = data.SearchRadius or 1000
+        if type(data.SearchRadius) == 'string' then
+            maxRadius = aiBrain.OperatingAreas[data.SearchRadius]
+        else
+            maxRadius = data.SearchRadius or 1000
+        end
+        local baseMilitaryArea = aiBrain.OperatingAreas['BaseMilitaryArea']
+        local baseEnemyArea = aiBrain.OperatingAreas['BaseEnemyArea']
         local threatCountLimit = 0
         local acuCheck = false
         while PlatoonExists(aiBrain, self) do
@@ -398,11 +411,11 @@ Platoon = Class(RNGAIPlatoonClass) {
             self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('AntiSub', categories.ALLUNITS)
 
             if aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
-                maxRadius = BaseRestrictedArea * 1.5
+                maxRadius = baseRestrictedArea * 1.5
             elseif aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir * 1.3 then
-                maxRadius = BaseMilitaryArea
+                maxRadius = baseMilitaryArea
             else
-                maxRadius = BaseEnemyArea
+                maxRadius = baseEnemyArea
             end
             if maxRadius then
                 self.MaxRadius = maxRadius
@@ -658,7 +671,11 @@ Platoon = Class(RNGAIPlatoonClass) {
         -- Ignore markers with friendly structure threatlevels
         local IgnoreFriendlyBase = self.PlatoonData.IgnoreFriendlyBase or false
 
-        local maxPathDistance = self.PlatoonData.MaxPathDistance or 200
+        if type(self.PlatoonData.MaxPathDistance) == 'string' then
+            maxPathDistance = aiBrain.OperatingAreas[self.PlatoonData.MaxPathDistance]
+        else
+            maxPathDistance = self.PlatoonData.MaxPathDistance or 250
+        end
 
         local safeZone = self.PlatoonData.SafeZone or false
 
@@ -1600,6 +1617,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         self.CurrentPlatoonThreat = false
         local unitPos
         self.ScoutUnit = false
+        local baseEnemyArea = aiBrain.OperatingAreas['BaseEnemyArea']
         self.atkPri = { categories.COMMAND, categories.MOBILE * categories.LAND * categories.DIRECTFIRE, categories.MOBILE * categories.LAND, categories.MASSEXTRACTION }
         local threatTimeout = 0
         self:ConfigurePlatoon()
@@ -1653,7 +1671,7 @@ Platoon = Class(RNGAIPlatoonClass) {
 
             if NavUtils.CanPathTo(self.MovementLayer, platoonPos, aiBrain.CDRUnit.Position) then
                 if ACUDistance > 14400 then
-                    path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(self.MovementLayer, platoonPos, aiBrain.CDRUnit.Position, 10 , BaseEnemyArea)
+                    path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(self.MovementLayer, platoonPos, aiBrain.CDRUnit.Position, 10 , baseEnemyArea)
                 end
             else
                 usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, aiBrain.CDRUnit.Position, 3, true)
@@ -1992,7 +2010,12 @@ Platoon = Class(RNGAIPlatoonClass) {
         local platoonLimit = self.PlatoonData.PlatoonLimit or 25
         local bAggroMove = self.PlatoonData.AggressiveMove
         local LocationType = self.PlatoonData.LocationType or 'MAIN'
-        local maxRadius = data.SearchRadius or 250
+        local maxRadius
+        if type(data.SearchRadius) == 'string' then
+            maxRadius = aiBrain.OperatingAreas[data.SearchRadius]
+        else
+            maxRadius = data.SearchRadius or 250
+        end
         local mainBasePos
         self.ScoutUnit = false
         if LocationType then
@@ -2229,7 +2252,12 @@ Platoon = Class(RNGAIPlatoonClass) {
         local data = self.PlatoonData
         local platoonLimit = self.PlatoonData.PlatoonLimit or 18
         local bAggroMove = self.PlatoonData.AggressiveMove
-        local maxRadius = data.SearchRadius or 200
+        local maxRadius
+        if type(data.SearchRadius) == 'string' then
+            maxRadius = aiBrain.OperatingAreas[data.SearchRadius]
+        else
+            maxRadius = data.SearchRadius or 250
+        end
         local mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
         local MaxPlatoonWeaponRange
         local unitPos
@@ -2571,7 +2599,12 @@ Platoon = Class(RNGAIPlatoonClass) {
         local data = self.PlatoonData
         local platoonLimit = self.PlatoonData.PlatoonLimit or 18
         local bAggroMove = self.PlatoonData.AggressiveMove
-        local maxRadius = data.SearchRadius or 200
+        local maxRadius
+        if type(data.SearchRadius) == 'string' then
+            maxRadius = aiBrain.OperatingAreas[data.SearchRadius]
+        else
+            maxRadius = data.SearchRadius or 200
+        end
         local mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
         local MaxPlatoonWeaponRange
         local unitPos
@@ -3136,7 +3169,12 @@ Platoon = Class(RNGAIPlatoonClass) {
         self.PlatoonStrikeDamage = 0
         local target, targetShieldHealth
         local blip = false
-        local maxRadius = data.SearchRadius or 50
+        local maxRadius
+        if type(data.SearchRadius) == 'string' then
+            maxRadius = aiBrain.OperatingAreas[data.SearchRadius]
+        else
+            maxRadius = data.SearchRadius or 50
+        end
         local movingToScout = false
         local ignoreCivilian
         local targetPosition
@@ -3521,7 +3559,12 @@ Platoon = Class(RNGAIPlatoonClass) {
         local target
         local acuTargeting = false
         local blip = false
-        local maxRadius = data.SearchRadius or 50
+        local maxRadius
+        if type(data.SearchRadius) == 'string' then
+            maxRadius = aiBrain.OperatingAreas[data.SearchRadius]
+        else
+            maxRadius = data.SearchRadius or 50
+        end
         local movingToScout = false
         local ignoreCivilian = self.PlatoonData.IgnoreCivilian or false
         local mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
@@ -5301,7 +5344,11 @@ Platoon = Class(RNGAIPlatoonClass) {
         if not PlatoonExists(aiBrain, self) or not platLoc then
             return
         end
-        local maxPathDistance = self.PlatoonData.MaxPathDistance or 200
+        if type(self.PlatoonData.MaxPathDistance) == 'string' then
+            maxPathDistance = aiBrain.OperatingAreas[self.PlatoonData.MaxPathDistance]
+        else
+            maxPathDistance = self.PlatoonData.MaxPathDistance or 200
+        end
         self.MaxPlatoonWeaponRange = false
         self.ScoutUnit = false
         self.atkPri = {}
@@ -5957,7 +6004,11 @@ Platoon = Class(RNGAIPlatoonClass) {
 
         local PlatoonFormation = self.PlatoonData.UseFormation or 'NoFormation'
 
-        local maxPathDistance = self.PlatoonData.MaxPathDistance or 200
+        if type(self.PlatoonData.MaxPathDistance) == 'string' then
+            maxPathDistance = aiBrain.OperatingAreas[self.PlatoonData.MaxPathDistance]
+        else
+            maxPathDistance = self.PlatoonData.MaxPathDistance or 200
+        end
 
         self.MassMarkerTable = self.planData.MassMarkerTable or false
         self.LoopCount = self.planData.LoopCount or 0
@@ -6704,6 +6755,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             WARN('No path passed to PlatoonMoveWithMicro')
             return false
         end
+        local baseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
 
         if maxMergeDistance then
             maxMergeDistance = maxMergeDistance * maxMergeDistance
@@ -6920,7 +6972,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 local dx = unitPos[1] - startPos[1]
                                 local dz = unitPos[3] - startPos[3]
                                 local startDist = dx * dx + dz * dz
-                                if target and startDist > BaseRestrictedArea * BaseRestrictedArea then
+                                if target and startDist > baseRestrictedArea * baseRestrictedArea then
                                     target = false
                                 end
                             end
@@ -7522,6 +7574,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local maxMergeDistance
         local path, reason
         local ignoreUnits = false
+        local baseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
         if targetPlatoon and PlatoonExists(aiBrain, targetPlatoon) then
             path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonUnits(self)[1]:GetPosition(), GetPlatoonPosition(targetPlatoon), 10)
             if not path then
@@ -7655,7 +7708,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                         end
                                     end
                                     unitPos = target:GetPosition()
-                                    if target and VDist3Sq(unitPos, aiBrain.BrainIntel.StartPos) > BaseRestrictedArea * BaseRestrictedArea then
+                                    if target and VDist3Sq(unitPos, aiBrain.BrainIntel.StartPos) > baseRestrictedArea * baseRestrictedArea then
                                         target = false
                                     end
                                 end
@@ -7978,6 +8031,12 @@ Platoon = Class(RNGAIPlatoonClass) {
         local aiBrain = self:GetBrain()
         local feederTimeout = 0
         self.EnemyRadius = 45
+        local maxRadius
+        if type(self.PlatoonData.SearchRadius) == 'string' then
+            maxRadius = aiBrain.OperatingAreas[self.PlatoonData.SearchRadius]
+        else
+            maxRadius = self.PlatoonData.SearchRadius or 250
+        end
         while PlatoonExists(aiBrain, self) do
             coroutine.yield(1)
             --RNGLOG('Feeder starting loop')
@@ -7992,7 +8051,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         local ventPlatoon = aiBrain:MakePlatoon('', 'AirHuntAIRNG')
                         ventPlatoon.PlanName = 'RNGAI Air Intercept'
                         ventPlatoon.PlatoonData.AvoidBases =  self.PlatoonData.AvoidBases
-                        ventPlatoon.PlatoonData.SearchRadius =  self.PlatoonData.SearchRadius
+                        ventPlatoon.PlatoonData.SearchRadius =  maxRadius
                         ventPlatoon.PlatoonData.LocationType = self.PlatoonData.LocationType
                         ventPlatoon.PlatoonData.PlatoonLimit = self.PlatoonData.PlatoonLimit
                         ventPlatoon.PlatoonData.PrioritizedCategories = self.PlatoonData.PrioritizedCategories
@@ -8881,7 +8940,12 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         local aiBrain = self:GetBrain()
         local bAggroMove = self.PlatoonData.AggressiveMove
-        local maxRadius = self.PlatoonData.SearchRadius
+        local maxRadius
+        if type(self.PlatoonData.SearchRadius) == 'string' then
+            maxRadius = aiBrain.OperatingAreas[self.PlatoonData.SearchRadius]
+        else
+            maxRadius = self.PlatoonData.SearchRadius or 250
+        end
         local platoonPos
         local requestTransport = self.PlatoonData.RequestTransport
         while PlatoonExists(aiBrain, self) do
@@ -9710,6 +9774,12 @@ Platoon = Class(RNGAIPlatoonClass) {
         RNGINSERT(atkPriTable, categories.ALLUNITS)
 
         local maxRadius = data.SearchRadius or 50
+        local maxRadius
+        if type(data.SearchRadius) == 'string' then
+            maxRadius = aiBrain.OperatingAreas[data.SearchRadius]
+        else
+            maxRadius = data.SearchRadius or 50
+        end
         local oldTarget = false
         local target = false
        --('Novax AI starting')

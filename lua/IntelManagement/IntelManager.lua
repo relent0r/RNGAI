@@ -1082,7 +1082,8 @@ IntelManager = Class {
     end,
 
     CheckStrikePotential = function(self, type, desiredStrikeDamage, threatMax)
-        local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = RUtils.GetOpAreaRNG()
+        local baseRestrictedArea = self.Brain.OperatingAreas['BaseRestrictedArea']
+        local baseMilitaryArea = self.Brain.OperatingAreas['BaseMilitaryArea']
         local Zones = {
             'Land',
         }
@@ -1169,7 +1170,7 @@ IntelManager = Class {
                                 if type == 'AirAntiSurface' then
                                     if minThreatRisk < 60 then
                                         for c, b in v1.enemystartdata do
-                                            if b.startdistance > BaseRestrictedArea * BaseRestrictedArea then
+                                            if b.startdistance > baseRestrictedArea * baseRestrictedArea then
                                                 abortZone = false
                                             end
                                         end
@@ -1336,7 +1337,7 @@ IntelManager = Class {
                                 -- position format as used by the engine
                                 local gridX, gridZ = self:GetIntelGrid(z.Position)
                                 --RNGLOG('Enemy Threat Locations distance to naval threat grid is '..self.MapIntelGrid[gridX][gridZ].DistanceToMain)
-                                if self.MapIntelGrid[gridX][gridZ].DistanceToMain < BaseMilitaryArea then
+                                if self.MapIntelGrid[gridX][gridZ].DistanceToMain < baseMilitaryArea then
                                     desiredStrikeDamage = desiredStrikeDamage + (z['Naval'] * 120)
                                     --RNGLOG('Strike Damage request is '..desiredStrikeDamage)
                                     table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'AntiNavy'} )
@@ -2663,7 +2664,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
     while not im.MapIntelGrid do
         coroutine.yield(30)
     end
-    local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetOpAreaRNG()
+    local baseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
     local playableSize = aiBrain.MapPlayableSize or math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
     local distanceExponent = 55
     local maxPriority = 1000
@@ -2762,7 +2763,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                         priority = priority * statusModifier
                         unitAddedCount = unitAddedCount + 1
                         aiBrain.prioritypoints[c]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object}
-                        if im.MapIntelGrid[i][k].DistanceToMain < BaseRestrictedArea or priority > 250 then
+                        if im.MapIntelGrid[i][k].DistanceToMain < baseRestrictedArea or priority > 250 then
                             if b.type == 'tank' or b.type == 'arty' then
                                 priority = priority + 100
                             end
