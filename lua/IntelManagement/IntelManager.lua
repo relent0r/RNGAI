@@ -2321,6 +2321,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
         for k, unit in defensiveUnits do
             if not aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount then
                 aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount = 0
+                aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureMaxRange = 0
             end
             if not aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount then
                 aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount = 0
@@ -2328,6 +2329,9 @@ TacticalThreatAnalysisRNG = function(aiBrain)
             if aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]]['StructuresNotMex'] then
                     if unit.Object.Blueprint.Defense.SurfaceThreatLevel > 0 then
                         aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount = aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount + 1
+                        if unit.Object.Blueprint.Weapon[1].MaxRadius and unit.Object.Blueprint.Weapon[1].MaxRadius > aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureMaxRange then
+                            aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureMaxRange = unit.Object.Blueprint.Weapon[1].MaxRadius
+                        end
                     elseif unit.Object.Blueprint.Defense.AirThreatLevel > 0 then
                         aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount = aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount + 1
                     end
@@ -2345,9 +2349,11 @@ TacticalThreatAnalysisRNG = function(aiBrain)
         for _, x in aiBrain.EnemyIntel.EnemyThreatLocations do
             for _, z in x do
                 if z.LandDefStructureCount > 0 or z.AirDefStructureCount > 0 then
-                    local tableEntry = { Position = z.Position, Land = { Count = 0 }, Air = { Count = 0 }, aggX = 0, aggZ = 0, weight = 0, validated = false}
+                    local tableEntry = { Position = z.Position, Land = { Count = 0 }, Air = { Count = 0 }, aggX = 0, aggZ = 0, weight = 0, maxRangeLand = 0, validated = false}
                     if z.LandDefStructureCount > 0 then
                         --LOG('Enemy Threat Location with ID '..q..' has '..threat.LandDefStructureCount..' at imap position '..repr(threat.Position))
+                        tableEntry.maxRangeLand = z.LandDefStructureMaxRange
+                        --LOG('Firebase max range set to '..tableEntry.maxRangeLand)
                         tableEntry.Land = { Count = z.LandDefStructureCount }
                     end
                     if z.AirDefStructureCount > 0 then
@@ -2387,7 +2393,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                     best = v
                 end
             end
-            local defenseGroup = {Land = best.Land.Count, Air = best.Air.Count}
+            local defenseGroup = {Land = best.Land.Count, Air = best.Air.Count, MaxLandRange = best.maxRangeLand or 0}
             best.validated = true
             local x = best.aggX/best.weight
             local z = best.aggZ/best.weight
@@ -2401,7 +2407,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                 end
             end
             firebaseaggregation = firebaseaggregation + 1
-            RNGINSERT(firebaseaggregationTable, {aggx = x, aggz = z, DefensiveCount = defenseGroup.Land + defenseGroup.Air})
+            RNGINSERT(firebaseaggregationTable, {aggx = x, aggz = z, DefensiveCount = defenseGroup.Land + defenseGroup.Air, MaxLandRange = defenseGroup.MaxLandRange})
         end
 
         --LOG('firebaseTable '..repr(firebaseTable))

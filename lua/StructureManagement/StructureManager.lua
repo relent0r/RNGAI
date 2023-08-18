@@ -594,7 +594,7 @@ StructureManager = Class {
             if self.Factories.LAND[1].UpgradingCount < 1 then
                 --RNGLOG('Factory T1 Upgrade Less than 1 Factory Upgrading')
                 if self.Brain.EconomyOverTimeCurrent.MassTrendOverTime >= 0.0 and self.Brain.EconomyOverTimeCurrent.EnergyTrendOverTime >= 0.0 then
-                    if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.0 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
+                    if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 0.95 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
                         --RNGLOG('Factory Upgrade efficiency over time check passed')
                         local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                         local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
@@ -629,7 +629,7 @@ StructureManager = Class {
             if self.Factories.AIR[2].UpgradingCount < 1 then
                 --RNGLOG('Factory Air T2 Upgrade Less than 1 Factory Upgrading')
                 if self.Brain.EconomyOverTimeCurrent.MassTrendOverTime >= 0.0 and self.Brain.EconomyOverTimeCurrent.EnergyTrendOverTime >= 0.0 then
-                    if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.0 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.2 then
+                    if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 0.95 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.2 then
                         --RNGLOG('Factory Upgrade efficiency over time check passed')
                         local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                         local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)

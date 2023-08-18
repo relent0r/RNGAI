@@ -671,6 +671,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         local platoonUnits = GetPlatoonUnits(platoon)
         if platoonUnits then
             for _, v in platoonUnits do
+                v.PlatoonHandle = platoon
                 if not platoon.chpdata then
                     platoon.chpdata = {name = 'CHPTruePlatoon',id=v.EntityId}
                 end

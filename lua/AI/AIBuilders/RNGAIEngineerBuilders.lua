@@ -391,6 +391,19 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
+        BuilderName = 'RNGAI Factory Engineer T2 Expansion Active',
+        PlatoonTemplate = 'T2BuildEngineer',
+        Priority = 800, -- low factory priority
+        BuilderConditions = {
+            { MIBC, 'ExpansionIsActive', {} },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9} },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.ENGINEER * categories.TECH2 } },
+            { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T3 Small Expansion',
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 500, -- Top factory priority

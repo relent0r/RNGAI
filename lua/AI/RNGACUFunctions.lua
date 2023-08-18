@@ -34,6 +34,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.ThreatLimit = 35
     cdr.Confidence = 1
     cdr.EnemyCDRPresent = false
+    cdr.InFirebaseRange = false
     cdr.EnemyAirPresent = false
     cdr.Caution = false
     cdr.EnemyFlanking = false
@@ -147,6 +148,7 @@ function CDRBrainThread(cdr)
                 cdr.HighThreatUpgradeRequired = true
             end
         elseif cdr.Health < 6500 and cdr.PositionStatus == 'Hostile' then
+            --RNGLOG('cdr caution is true due to health < 6500 and in hostile territory')
             cdr.Caution = true
             cdr.CautionReason = 'lowhealth and hostile'
             if (not cdr.GunUpgradePresent) then
@@ -378,6 +380,25 @@ function CDRThreatAssessmentRNG(cdr)
                 --RNGLOG('ACU threat low and health up past 6000')
                 cdr.Caution = false
                 cdr.CautionReason = 'none'
+            end
+            if aiBrain.EnemyIntel.EnemyFireBaseDetected then
+                local inFirebaseRange = false
+                --LOG('Firebase Detected ACU check range')
+                for _, v in aiBrain.EnemyIntel.DirectorData.DefenseCluster do
+                    if v.MaxLandRange and v.MaxLandRange > 0 and v.aggx and v.aggz then
+                        local ax = cdr.Position[1] - v.aggx
+                        local az = cdr.Position[3] - v.aggz
+                        if ax * ax + az * az < v.MaxLandRange * v.MaxLandRange then
+                            --LOG('ACU is within firebase range')
+                            inFirebaseRange = true
+                        end
+                    end
+                end
+                if inFirebaseRange then
+                    cdr.InFirebaseRange = true
+                else
+                    cdr.InFirebaseRange = false
+                end
             end
             if aiBrain.BrainIntel.SelfThreat.LandNow > 0 then
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + aiBrain.BrainIntel.SelfThreat.LandNow

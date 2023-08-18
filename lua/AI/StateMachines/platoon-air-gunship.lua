@@ -304,6 +304,7 @@ AssignToUnitsMachine = function(data, platoon, units)
                 if not v.Dead and v:TestToggleCaps('RULEUTC_CloakToggle') then
                     v:SetScriptBit('RULEUTC_CloakToggle', false)
                 end
+                v.PlatoonHandle = platoon
                 for i = 1, v:GetWeaponCount() do
                     local wep = v:GetWeapon(i)
                     local weaponBlueprint = wep:GetBlueprint()

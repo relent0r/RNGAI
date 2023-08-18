@@ -315,6 +315,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     --LOG('cdr phase is '..repr(cdr.Phase))
                 end
                 if target and cdr.Phase == 3 and brain.GridPresence:GetInferredStatus(target:GetPosition()) == 'Hostile' then
+                    --LOG('cdr phase is '..repr(cdr.Phase)..' and in hostile position')
                     target = false
                 end
                 if not target and closestThreatDistance < 1600 and closestThreatUnit and not IsDestroyed(closestThreatUnit) then
@@ -336,7 +337,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     end
                     target = closestThreatUnit
                 end
-                if cdr.Health < 4000 and cdr.DistanceToHome > 14400 then
+                if (cdr.Health < 4000 and cdr.DistanceToHome > 14400) or (cdr.Health < 6500 and cdr.Caution and not cdr.SuicideMode) or cdr.InFirebaseRange then
                     --LOG('Emergency Retreat')
                     self.BuilderData = {}
                     self:ChangeState(self.Retreating)
@@ -1819,6 +1820,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         local squadUnits = platoon:GetSquadUnits('Support')
         if squadUnits then
             for _, unit in squadUnits do
+                unit.PlatoonHandle = platoon
                 IssueClearCommands(unit)
             end
         end

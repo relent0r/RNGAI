@@ -262,6 +262,7 @@ AssignToUnitsMachine = function(data, platoon, units)
                 if not unit.Dead and v:TestToggleCaps('RULEUTC_CloakToggle') then
                     unit:SetScriptBit('RULEUTC_CloakToggle', false)
                 end
+                unit.PlatoonHandle = platoon
             end
         end
 

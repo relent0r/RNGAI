@@ -152,6 +152,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         if platoonUnits then
             for _, v in platoonUnits do
                 IssueClearCommands({v})
+                v.PlatoonHandle = platoon
                 v.PreviousStateMachine = 'Gunship'
             end
         end
