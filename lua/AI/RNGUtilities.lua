@@ -5266,10 +5266,10 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, defensiveBomber)
                     local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
                     if tempPoint > highestPriority then
                         if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
-                            LOG('Set higher priority')
-                            LOG('Distance '..targetDistance)
-                            LOG('Priority '..(v.priority + (v.danger or 0)))
-                            LOG('Point Calculation is '..(v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30))
+                            --LOG('Set higher priority')
+                            --LOG('Distance '..targetDistance)
+                            --LOG('Priority '..(v.priority + (v.danger or 0)))
+                            --LOG('Point Calculation is '..(v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30))
                             highestPriority = tempPoint
                             closestTarget = v.unit
                         end
@@ -5278,7 +5278,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, defensiveBomber)
             end
             if closestTarget then
                 if platoon then
-                    LOG('High Priority target found distance is '..VDist3Sq(closestTarget:GetPosition(), platPos))
+                    --LOG('High Priority target found distance is '..VDist3Sq(closestTarget:GetPosition(), platPos))
                 end
                 return closestTarget
             end

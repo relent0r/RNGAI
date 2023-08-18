@@ -4976,10 +4976,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if eng then eng.ProcessBuild = nil end
                     return
                 end
-                if whatToBuild == 'ueb1106' then
-                    LOG('Processing build command for mass storage, position is '..repr(buildLocation))
-                    LOG('Current build queue '..repr(eng.EngineerBuildQueue))
-                end
                 if borderWarning then
                     --RNGLOG('BorderWarning build')
                     IssueBuildMobile({eng}, buildLocation, whatToBuild, {})

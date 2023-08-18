@@ -93,7 +93,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
                 return
             end
             if VDist3Sq(self.Pos, aiBrain.BuilderManagers[self.LocationType].Position) < 14400 then
-                LOG('DecideWhatToDo HighPriority Targets')
+                --LOG('DecideWhatToDo HighPriority Targets')
                 local hiPriTargetPos
                 local hiPriTarget = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
                 if hiPriTarget and not IsDestroyed(hiPriTarget) then
@@ -131,7 +131,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
                 end
             end
             if VDist3Sq(self.Pos, self.Home) > 10000 then
-                LOG('DecideWhatToDo Look for priority points ')
+                --LOG('DecideWhatToDo Look for priority points ')
                 local acuSnipeUnit = RUtils.CheckACUSnipe(aiBrain, 'Land')
                 if acuSnipeUnit then
                     if not acuSnipeUnit.Dead then
@@ -215,7 +215,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
                 end
             end
             if 1 == 1 then
-                LOG('DecideWhatToDo GetMassMarkers ')
+                --LOG('DecideWhatToDo GetMassMarkers ')
                 local mex=RUtils.AIGetMassMarkerLocations(aiBrain, false)
                 local raidlocs={}
                 local platoon=self
@@ -243,9 +243,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
                     return
                 end
             end
-            LOG('DecideWhatToDo end of loop')
+            --LOG('DecideWhatToDo end of loop')
             coroutine.yield(5)
-            LOG('post yield')
+            --LOG('post yield')
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -535,7 +535,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
                     end
                 end
                 if closestBase then
-                    LOG('base only Closest base is '..closestBase)
+                    --LOG('base only Closest base is '..closestBase)
                     location = aiBrain.BuilderManagers[closestBase].Position
                 end
             end

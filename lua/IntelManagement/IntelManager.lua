@@ -1548,8 +1548,8 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit)
                 local unitStats = sourceBrain.IntelManager.UnitStats
                 unitStats[data.sourcecat].Kills.Mass = unitStats[data.sourcecat].Kills.Mass + valueGained
                 if valueGained then
-                    LOG('Gunship killed')
-                    LOG('Target Unit '..targetUnit.UnitId)
+                    --LOG('Gunship killed')
+                    --LOG('Target Unit '..targetUnit.UnitId)
                     local gained
                     local built
                     if unitStats[data.sourcecat].Kills.Mass > 0 then
@@ -1562,7 +1562,7 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit)
                     else
                         built = 0.1
                     end
-                    LOG('Current Gunship Efficiency '..(math.min(gained / built, 2)))
+                    --LOG('Current Gunship Efficiency '..(math.min(gained / built, 2)))
                 end
             end
         end

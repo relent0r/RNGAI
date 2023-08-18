@@ -50,18 +50,18 @@ AIPlatoonGunshipBehavior = Class(AIPlatoon) {
             local platPos = self:GetPlatoonPosition()
             local homeDist = VDist3Sq(platPos, self.Home)
             if aiBrain.BasePerimeterMonitor[self.LocationType].AirUnits > 0 and homeDist > 900 then
-                LOG('gunship retreating due to perimeter monitor at '..repr(self.LocationType))
+                --LOG('gunship retreating due to perimeter monitor at '..repr(self.LocationType))
                 self:ChangeState(self.Retreating)
                 return
             end
             if self.CurrentEnemyAirThreat > 0 and homeDist > 900 then
-                LOG('gunship retreating due to local air threat')
+                --LOG('gunship retreating due to local air threat')
                 self:ChangeState(self.Retreating)
                 return
             end
             if self.BuilderData.AttackTarget then 
                 if not self.BuilderData.AttackTarget.Dead then
-                    LOG('gunship attacking target ')
+                    --LOG('gunship attacking target ')
                     self:ChangeState(self.AttackTarget)
                     return
                 else
@@ -75,7 +75,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoon) {
                         AttackTarget = target,
                         Position = target:GetPosition()
                     }
-                    LOG('gunship sniping acu')
+                    --LOG('gunship sniping acu')
                     self:ChangeState(self.Navigating)
                     return
                 end
@@ -83,12 +83,12 @@ AIPlatoonGunshipBehavior = Class(AIPlatoon) {
             if not target then
                 local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
                 if target then
-                    LOG('Gunship high Priority Target Found '..target.UnitId)
+                    --LOG('Gunship high Priority Target Found '..target.UnitId)
                     self.BuilderData = {
                         AttackTarget = target,
                         Position = target:GetPosition()
                     }
-                    LOG('gunship navigating to target')
+                    --LOG('gunship navigating to target')
                     self:ChangeState(self.Navigating)
                     return
                 end
@@ -97,7 +97,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoon) {
                 if not table.empty(aiBrain.prioritypoints) then
                     local pointHighest = 0
                     local point = false
-                    LOG('Checking priority points')
+                    --LOG('Checking priority points')
                     for _, v in aiBrain.prioritypoints do
                         if v.unit and not v.unit.Dead then
                             local dx = platPos[1] - v.Position[1]
@@ -113,13 +113,13 @@ AIPlatoonGunshipBehavior = Class(AIPlatoon) {
                         end
                     end
                     if point then
-                    LOG('Gunship point pos '..repr(point.Position)..' with a priority of '..point.priority)
+                    --LOG('Gunship point pos '..repr(point.Position)..' with a priority of '..point.priority)
                         if not self.retreat then
                             self.BuilderData = {
                                 AttackTarget = point.unit,
                                 Position = point.Position
                             }
-                            LOG('gunship navigating to target')
+                            --LOG('gunship navigating to target')
                             --LOG('Retreating to platoon')
                             self:ChangeState(self.Navigating)
                             return
@@ -131,7 +131,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoon) {
                 self.BuilderData = {
                     Position = self.Home
                 }
-                LOG('gunship has not target and is navigating back home')
+                --LOG('gunship has not target and is navigating back home')
                 self:ChangeState(self.Navigating)
                 return
             end
@@ -275,7 +275,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoon) {
                 IssueAttack(platoonUnits, target)
                 coroutine.yield(35)
             else
-                LOG('No target to attack')
+                --LOG('No target to attack')
             end
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -343,7 +343,7 @@ GunshipThreatThreads = function(aiBrain, platoon)
             for _, v in enemyAntiAirThreat do
                 if v[3] > 0 and VDist3Sq({v[1],0,v[2]}, platoon.Pos) < 10000 then
                     platoon.CurrentEnemyAirThreat = v[3]
-                    LOG('Gunship DecideWhatToDo triggered due to threat')
+                    --LOG('Gunship DecideWhatToDo triggered due to threat')
                     platoon:ChangeState(platoon.DecideWhatToDo)
                 end
             end
@@ -352,11 +352,11 @@ GunshipThreatThreads = function(aiBrain, platoon)
             local fuel = unit:GetFuelRatio()
             local health = unit:GetHealthPercent()
             if not unit.Loading and (fuel < 0.2 or health < 0.4) then
-                LOG('Gunship needs refuel')
+                --LOG('Gunship needs refuel')
                 if not aiBrain.BrainIntel.AirStagingRequired and aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) < 1 then
                     aiBrain.BrainIntel.AirStagingRequired = true
                 elseif not platoon.BuilderData.AttackTarget or platoon.BuilderData.AttackTarget.Dead then
-                    LOG('Assigning unit to refuel platoon from refuel')
+                    --LOG('Assigning unit to refuel platoon from refuel')
                     local plat = aiBrain:MakePlatoon('', '')
                     aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'attack', 'None')
                     import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Gunship', LocationType = platoon.LocationType}, plat, {unit})

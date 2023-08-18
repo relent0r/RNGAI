@@ -3643,8 +3643,6 @@ function AirStagingThreadRNG(unit)
                             end
                             v.TimeStamp = nil
                             aiBrain:AssignUnitsToPlatoon(plat, {v}, 'Attack', 'GrowthFormation')
-                        else
-                            LOG('air refuel exiting for statemachine unit '..v.UnitId)
                         end
                     elseif v:IsUnitState('Attached') then
                         --RNGLOG('Air Unit Still attached, force unload')
@@ -3668,8 +3666,6 @@ function AirStagingThreadRNG(unit)
                                 plat.PlatoonData = v.PlatoonData
                             end
                             aiBrain:AssignUnitsToPlatoon(plat, {v}, 'Attack', 'GrowthFormation')
-                        else
-                            LOG('air refuel exiting for statemachine unit '..v.UnitId)
                         end
                     end
                 end
