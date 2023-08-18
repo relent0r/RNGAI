@@ -414,7 +414,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                 --LOG('Phase 3 and not close to base')
                 self:ChangeState(self.Retreating)
                 return
-            else
+            elseif cdr.CurrentEnemyInnerCircle < 15 then
                 local canBuild, massMarkers = ACUFunc.CanBuildOnCloseMass(brain, cdr.Position, 35)
                 if canBuild then
                     self.BuilderData = {

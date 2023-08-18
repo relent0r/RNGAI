@@ -26,7 +26,6 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoon) {
 
             local aiBrain = self:GetBrain()
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
-            LOG('Starting air refuel machine, previous state is '..repr(self.PreviousStateMachine))
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -45,7 +44,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoon) {
             for _, unit in self:GetPlatoonUnits() do
                 local fuel = unit:GetFuelRatio()
                 local health = unit:GetHealthPercent()
-                if not unit.Loading and (fuel < 0.3 or health < 0.5) then
+                if not IsDestroyed(unit) and not unit.Loading and (fuel < 0.3 or health < 0.5) then
                     if aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) > 0 then
                         local unitPos = unit:GetPosition()
                         local plats = AIUtils.GetOwnUnitsAroundPoint(aiBrain, categories.AIRSTAGINGPLATFORM, unitPos, 400)
@@ -80,11 +79,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoon) {
                                     closest.CarrierStaging = closest:ForkThread(behaviors.CarrierStagingThread)
                                     closest.Refueling = {}
                                 end
-                                LOG('Unit added to staging platform')
                                 refuel = true
-                                if not aiBrain:PlatoonExists(self) then
-                                    LOG('sending unit to refuel but platoon no longer exists')
-                                end
                                 RNGINSERT(closest.Refueling, unit)
                                 unit.Loading = true
                             end
@@ -93,9 +88,8 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoon) {
                         aiBrain.BrainIntel.AirStagingRequired = true
                     end
                 else
-                    if not unit.Loading then
+                    if not IsDestroyed(unit) and not unit.Loading then
                         if self.PreviousStateMachine == 'Gunship' then
-                            print('Assigning unit to gunship platoon from refuel')
                             local plat = aiBrain:MakePlatoon('', 'none')
                             aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
                             import("/mods/rngai/lua/ai/statemachines/platoon-air-gunship.lua").AssignToUnitsMachine({ }, plat, {unit})
@@ -104,9 +98,6 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoon) {
                 end
             end
             if refuel then
-                if not aiBrain:PlatoonExists(self) then
-                    LOG('setting refuel monitor but platoon no longer exists')
-                end
                 self:ChangeState(self.MonitorRefuel)
                 return
             end
@@ -114,36 +105,29 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoon) {
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
+    },
 
-        MonitorRefuel = State {
+    MonitorRefuel = State {
 
-            StateName = 'MonitorRefuel',
-    
-            ---@param self AIPlatoonAirRefuelBehavior
-            Main = function(self)
-                local aiBrain = self:GetBrain()
-                if not aiBrain:PlatoonExists(self) then
-                    LOG('refuel state machine set but platoon no longer exists')
-                end
-                LOG('Monitoring refuel started')
-                local refuelComplete = false
-                while not refuelComplete do
-                    LOG('Monitoring refuel')
-                    coroutine.yield(25)
-                    for _, unit in self:GetPlatoonUnits() do
-                        local fuel = unit:GetFuelRatio()
-                        local health = unit:GetHealthPercent()
-                        if (not unit.Loading or (fuel == 1.0 and health == 1.0)) and (not unit:IsUnitState('Attached')) then
-                            LOG('Refuel complte, exiting loop')
-                            refuelComplete = true
-                        end
+        StateName = 'MonitorRefuel',
+
+        ---@param self AIPlatoonAirRefuelBehavior
+        Main = function(self)
+            local aiBrain = self:GetBrain()
+            local refuelComplete = false
+            while not refuelComplete do
+                coroutine.yield(25)
+                for _, unit in self:GetPlatoonUnits() do
+                    local fuel = unit:GetFuelRatio()
+                    local health = unit:GetHealthPercent()
+                    if (not unit.Loading or (fuel == 1.0 and health == 1.0)) and (not unit:IsUnitState('Attached')) then
+                        refuelComplete = true
                     end
                 end
-                LOG('Refuel should be complte, deciding what to do')
-                self:ChangeState(self.DecideWhatToDo)
-                return
-            end,
-        },
+            end
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
     },
 }
 
