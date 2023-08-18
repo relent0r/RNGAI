@@ -6999,7 +6999,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             if retreatTrigger > 5 then
                                 retreatTimeout = retreatTimeout + 1
                             end
-                            coroutine.yield(15)
+                            coroutine.yield(20)
                             if retreatTimeout > 3 then
                                 --RNGLOG('platoon stopped chasing unit')
                                 break

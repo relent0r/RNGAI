@@ -2774,8 +2774,8 @@ TruePlatoonPriorityDirector = function(aiBrain)
                                     priority = priority + 100
                                 end
                                 aiBrain.prioritypointshighvalue[c..i..k]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object,time=b.time}
-                                RNGLOG('HighPriority target added '..repr(aiBrain.prioritypointshighvalue[c..i..k]))
-                                RNGLOG('Unit is '..b.object.UnitId)
+                                --RNGLOG('HighPriority target added '..repr(aiBrain.prioritypointshighvalue[c..i..k]))
+                                --RNGLOG('Unit is '..b.object.UnitId)
                             end
                         end
                         --RNGLOG('Added prioritypoints entry of '..repr(aiBrain.prioritypoints[c]))
