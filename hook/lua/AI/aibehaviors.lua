@@ -3628,20 +3628,24 @@ function AirStagingThreadRNG(unit)
                         --RNGLOG('Attempting to add to AirHuntAI Platoon')
                         v.Loading = false
                         local plat
-                        if not v.PlanName then
-                            --RNGLOG('Air Refuel unit has no plan, assigning AirHuntAIRNG ')
-                            plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
+                        if not v.PreviousStateMachine then
+                            if not v.PlanName then
+                                --RNGLOG('Air Refuel unit has no plan, assigning AirHuntAIRNG ')
+                                plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
+                            else
+                            --RNGLOG('Air Refuel unit has plan name of '..v.PlanName)
+                                plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
+                            end
+                            if v.PlatoonData then
+                            --RNGLOG('Air Refuel unit has platoon data, reassigning ')
+                                plat.PlatoonData = {}
+                                plat.PlatoonData = v.PlatoonData
+                            end
+                            v.TimeStamp = nil
+                            aiBrain:AssignUnitsToPlatoon(plat, {v}, 'Attack', 'GrowthFormation')
                         else
-                        --RNGLOG('Air Refuel unit has plan name of '..v.PlanName)
-                            plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
+                            LOG('air refuel exiting for statemachine unit '..v.UnitId)
                         end
-                        if v.PlatoonData then
-                        --RNGLOG('Air Refuel unit has platoon data, reassigning ')
-                            plat.PlatoonData = {}
-                            plat.PlatoonData = v.PlatoonData
-                        end
-                        v.TimeStamp = nil
-                        aiBrain:AssignUnitsToPlatoon(plat, {v}, 'Attack', 'GrowthFormation')
                     elseif v:IsUnitState('Attached') then
                         --RNGLOG('Air Unit Still attached, force unload')
                         IssueClearCommands({unit})
@@ -3649,20 +3653,24 @@ function AirStagingThreadRNG(unit)
                         coroutine.yield(20)
                         --RNGLOG('Attempting to add to AirHuntAI Platoon')
                         v.Loading = false
-                        local plat
-                        if not v.PlanName then
-                            --RNGLOG('Force Unload Air Refuel unit has no plan, assigning AirHuntAIRNG ')
-                            plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
+                        if not v.PreviousStateMachine then
+                            local plat
+                            if not v.PlanName then
+                                --RNGLOG('Force Unload Air Refuel unit has no plan, assigning AirHuntAIRNG ')
+                                plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
+                            else
+                            --RNGLOG('Force Unload Air Refuel unit has plan name of '..v.PlanName)
+                                plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
+                            end
+                            if v.PlatoonData then
+                            --RNGLOG('Air Refuel unit has platoon data, reassigning ')
+                                plat.PlatoonData = {}
+                                plat.PlatoonData = v.PlatoonData
+                            end
+                            aiBrain:AssignUnitsToPlatoon(plat, {v}, 'Attack', 'GrowthFormation')
                         else
-                        --RNGLOG('Force Unload Air Refuel unit has plan name of '..v.PlanName)
-                            plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
+                            LOG('air refuel exiting for statemachine unit '..v.UnitId)
                         end
-                        if v.PlatoonData then
-                        --RNGLOG('Air Refuel unit has platoon data, reassigning ')
-                            plat.PlatoonData = {}
-                            plat.PlatoonData = v.PlatoonData
-                        end
-                        aiBrain:AssignUnitsToPlatoon(plat, {v}, 'Attack', 'GrowthFormation')
                     end
                 end
             end

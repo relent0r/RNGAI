@@ -142,7 +142,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                 end
             end
             if (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) and GetEconomyIncome(brain, 'ENERGY') > 40 
-            or gameTime > 1500 and GetEconomyIncome(brain, 'ENERGY') > 40 then
+            or gameTime > 1500 and GetEconomyIncome(brain, 'ENERGY') > 40 and GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95 then
                 if cdr.GunUpgradeRequired then
                     if cdr and not cdr.Dead then
                         cdr:SetCustomName('cdr wants gun upgrade')

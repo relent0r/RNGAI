@@ -911,11 +911,11 @@ IntelManager = Class {
                     if self.MapIntelGrid[i][k].Perimeter == 'Restricted' and self.MapIntelGrid[i][k].TimeScouted > 180 and self.MapIntelGrid[i][k].Graphs['MAIN'].Land then
                         perimeterExpired = true
                     end
-                    if next(self.MapIntelGrid[i][k].EnemyUnits) then
+                    if not table.empty(self.MapIntelGrid[i][k].EnemyUnits) then
                         for c,b in self.MapIntelGrid[i][k].EnemyUnits do
                             if (b.object and b.object.Dead) then
                                 self.MapIntelGrid[i][k].EnemyUnits[c]=nil
-                            elseif time-b.time>120 or (b.object and b.object.Dead) or (time-b.time>15 and GetNumUnitsAroundPoint(aiBrain,categories.MOBILE,b.Position,20,'Ally')>3) then
+                            elseif time-b.time>120 or (time-b.time>15 and GetNumUnitsAroundPoint(aiBrain,categories.MOBILE,b.Position,20,'Ally')>3) then
                                 self.MapIntelGrid[i][k].EnemyUnits[c].recent=false
                             end
                         end
@@ -2510,7 +2510,8 @@ LastKnownThread = function(aiBrain)
 
     }
     aiBrain.lastknown={}
-    aiBrain:ForkThread(RUtils.ShowLastKnown)
+    --aiBrain:ForkThread(RUtils.ShowLastKnown)
+    --aiBrain:ForkThread(ShowPrirotyKnown)
     aiBrain:ForkThread(TruePlatoonPriorityDirector)
     while not im.MapIntelGrid do
         RNGLOG('Waiting for MapIntelGrid to exist...')
@@ -2533,6 +2534,9 @@ LastKnownThread = function(aiBrain)
                 local id=v.EntityId
                 local unitPosition = table.copy(v:GetPosition())
                 local gridXID, gridZID = im:GetIntelGrid(unitPosition)
+                if not gridXID or not gridZID then
+                    LOG('no grid id returned for a unit position')
+                end
                 if im.MapIntelGrid[gridXID][gridZID] then
                     if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits then
                         im.MapIntelGrid[gridXID][gridZID].EnemyUnits = {}
@@ -2567,7 +2571,7 @@ LastKnownThread = function(aiBrain)
                             enemyMexes[v.zoneid].T3 = enemyMexes[v.zoneid].T3 + 1
                         end
                     end
-                    if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id] or im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].time > 10 then
+                    if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id] or im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].time + 10 < time then
                         if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id] then
                             im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id]={}
                             if unitCat.MOBILE then
@@ -2674,6 +2678,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
     while aiBrain.Status ~= "Defeat" do
         local unitAddedCount = 0
         local needSort = false
+        local timeStamp = GetGameTimeSeconds()
         --RNGLOG('Check Expansion table in priority directo')
         if aiBrain.BrainIntel.ExpansionWatchTable then
             for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
@@ -2700,7 +2705,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                         acuPresent = true
                     end
                     unitAddedCount = unitAddedCount + 1
-                    aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=RUtils.GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object, ACUPresent=acuPresent}
+                    aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=RUtils.GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object, ACUPresent=acuPresent, time=timeStamp}
                 else
                     local acuPresent = false
                     local priority=0
@@ -2711,7 +2716,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                         acuPresent = true
                     end
                     unitAddedCount = unitAddedCount + 1
-                    aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=0,unit=v.object, ACUPresent=acuPresent}
+                    aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=0,unit=v.object, ACUPresent=acuPresent,time=timeStamp}
                 end
             end
             coroutine.yield(10)
@@ -2720,7 +2725,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
         
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
             for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
-                if next(im.MapIntelGrid[i][k].EnemyUnits) then
+                if not table.empty(im.MapIntelGrid[i][k].EnemyUnits) then
                     local scaledPriority
                     local anglePriority
                     local position = im.MapIntelGrid[i][k].Position
@@ -2744,32 +2749,34 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     --RNGLOG('Priority of angle and distance '..anglePriority)
                     for c, b in im.MapIntelGrid[i][k].EnemyUnits do
                         local priority = 0
-                        if not b.recent or aiBrain.prioritypoints[c] or b.object.Dead then continue end
-                        if b.type then
-                            if b.type=='eng' then
-                                priority=anglePriority + 50
-                            elseif b.type=='mex' then
-                                priority=anglePriority + 40
-                            elseif b.type=='radar' then
-                                priority=anglePriority + 100
-                            elseif b.type=='arty' then
-                                priority=anglePriority + 30
-                            elseif b.type=='tank' then
-                                priority=anglePriority + 30
-                            else
-                                priority=anglePriority + 20
+                        if b.recent and not b.object.Dead then
+                            if b.type then
+                                if b.type=='eng' then
+                                    priority=anglePriority + 50
+                                elseif b.type=='mex' then
+                                    priority=anglePriority + 40
+                                elseif b.type=='radar' then
+                                    priority=anglePriority + 100
+                                elseif b.type=='arty' then
+                                    priority=anglePriority + 30
+                                elseif b.type=='tank' then
+                                    priority=anglePriority + 30
+                                else
+                                    priority=anglePriority + 20
+                                end
                             end
-                        end
-                        priority = priority * statusModifier
-                        unitAddedCount = unitAddedCount + 1
-                        aiBrain.prioritypoints[c]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object}
-                        if im.MapIntelGrid[i][k].DistanceToMain < baseRestrictedArea or priority > 250 then
-                            if b.type == 'tank' or b.type == 'arty' then
-                                priority = priority + 100
+                            priority = priority * statusModifier
+                            unitAddedCount = unitAddedCount + 1
+                            aiBrain.prioritypoints[c..i..k]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object,time=b.time}
+                            --LOG('Added priority point of id '..c..i..k)
+                            if im.MapIntelGrid[i][k].DistanceToMain < baseRestrictedArea or priority > 250 then
+                                if b.type == 'tank' or b.type == 'arty' then
+                                    priority = priority + 100
+                                end
+                                aiBrain.prioritypointshighvalue[c..i..k]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object,time=b.time}
+                                RNGLOG('HighPriority target added '..repr(aiBrain.prioritypointshighvalue[c..i..k]))
+                                RNGLOG('Unit is '..b.object.UnitId)
                             end
-                            aiBrain.prioritypointshighvalue[c]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object}
-                            RNGLOG('HighPriority target added '..repr(aiBrain.prioritypointshighvalue[c]))
-                            RNGLOG('Unit is '..b.object.UnitId)
                         end
                         --RNGLOG('Added prioritypoints entry of '..repr(aiBrain.prioritypoints[c]))
                         --RNGLOG('Angle Priority was '..anglePriority)
@@ -2817,7 +2824,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
             aiBrain.prioritypoints['ACU']={type='raid',Position=aiBrain.CDRUnit.Position,priority=acuPriority,danger=RUtils.GrabPosDangerRNG(aiBrain,aiBrain.CDRUnit.Position,30).enemy,unit=nil}
         end
         for k, v in aiBrain.prioritypoints do
-            if v.unit.Dead then
+            if v.unit.Dead or (v.time and v.time + 60 < timeStamp) then
                 aiBrain.prioritypoints[k] = nil
                 needSort = true
             end
@@ -2856,5 +2863,21 @@ TruePlatoonPriorityDirector = function(aiBrain)
             needSort = false
         end
         coroutine.yield(40)
+    end
+end
+
+ShowPrirotyKnown = function(aiBrain)
+    while not aiBrain.prioritypoints do
+        coroutine.yield(2)
+    end
+    LOG('Start last known')
+    while aiBrain.result ~= "defeat" do
+        local prioritypoints=table.copy(aiBrain.prioritypoints)
+        for _,v in prioritypoints do
+            if v.unit and not v.unit.Dead then
+                DrawCircle(v.Position,3,'ff0000')
+            end
+        end
+        coroutine.yield(2)
     end
 end

@@ -3214,30 +3214,21 @@ end
 
 
 ShowLastKnown = function(aiBrain)
-    if ScenarioInfo.Options.AIDebugDisplay ~= 'displayOn' then
-        return
-    end
     coroutine.yield(50)
-    local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(self)
+    local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(aiBrain)
     while not im.MapIntelGrid do
         coroutine.yield(30)
     end
     while aiBrain.Status ~= "Defeat" do
         local time=GetGameTimeSeconds()
-        for i=self.MapIntelGridXMin, self.MapIntelGridXMax do
-            for k=self.MapIntelGridZMin, self.MapIntelGridZMax do
+        for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
+            for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
                 if im.MapIntelGrid[i][k].EnemyUnits then
                     for c, b in im.MapIntelGrid[i][k].EnemyUnits do
                         if b.recent then
-                            local ratio=(1-(time-b.time)/120)*(1-(time-b.time)/120)
-                            local ratio2=(1-(time-b.time)/120)
-                            local color=ToColorRNG(10,255,ratio2)
-                            local color1=ToColorRNG(10,255,ratio)
-                            local color2=ToColorRNG(10,100,math.random())
-                            local color3=ToColorRNG(10,100,math.random())
-                            DrawCircle(b.Position,3,color..color1..color2..color3)
+                            DrawCircle(b.Position,3,'aaffaa')
                         else
-                            DrawCircle(b.Position,2,ToColorRNG(120,200,math.random())..ToColorRNG(50,255,math.random())..ToColorRNG(50,255,math.random())..ToColorRNG(50,255,math.random()))
+                            DrawCircle(b.Position,2,'aa000000')
                         end
                     end
                 end

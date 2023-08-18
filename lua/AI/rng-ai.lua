@@ -3224,7 +3224,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG(repr(self.EnemyIntel.ACU[index]))
                 coroutine.yield(10)
             end
-            LOG('ACU off visual last table '..repr(acuTable[index]))
             acuTable[index].VisualThread = false
             return
         end
