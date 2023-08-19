@@ -54,6 +54,7 @@ local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local RNGINSERT = table.insert
 local RNGGETN = table.getn
+local RNGTableEmpty = table.empty
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local StandardBrain = import("/lua/aibrain.lua").AIBrain
 
@@ -1307,11 +1308,11 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
             RNGLOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
             RNGLOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
-            if next(self.EnemyIntel.SMD) then
+            if not RNGTableEmpty(self.EnemyIntel.SMD) then
                 RNGLOG('SMD Table')
                 RNGLOG(repr(self.EnemyIntel.SMD))
             end
-            if next(self.EnemyIntel.TML) then
+            if not RNGTableEmpty(self.EnemyIntel.TML) then
                 RNGLOG('TML Table')
                 RNGLOG(reprs(self.EnemyIntel.TML))
                 RNGLOG('Recent Angle '..self.BasePerimeterMonitor['MAIN'].RecentTMLAngle)
@@ -2757,7 +2758,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 local enemyAirAngle = false
                 local enemyNavalAngle = false
                 local unitCat
-                if v.FactoryManager.LocationActive and self.BuilderManagers[k].FactoryManager and next(self.BuilderManagers[k].FactoryManager.FactoryList) then
+                if v.FactoryManager.LocationActive and self.BuilderManagers[k].FactoryManager and not RNGTableEmpty(self.BuilderManagers[k].FactoryManager.FactoryList) then
                     if not self.BasePerimeterMonitor[k] then
                         self.BasePerimeterMonitor[k] = {}
                     end
@@ -3397,7 +3398,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 RNGINSERT(enemyBrains, brain)
             end
         end
-        if next(enemyBrains) then
+        if not RNGTableEmpty(enemyBrains) then
             for k, enemy in enemyBrains do
 
                 local gunBool = false
@@ -3527,7 +3528,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local unitCat
         --RNGLOG('Number of Allies '..RNGGETN(allyBrains))
         coroutine.yield(1)
-        if next(allyBrains) then
+        if not RNGTableEmpty(allyBrains) then
             for k, ally in allyBrains do
                 local allyExtractorList = GetListOfUnits( ally, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
                 for _,v in allyExtractorList do
@@ -3687,7 +3688,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Remove threats that are too close to the enemy base so we are focused on whats happening in the battlefield.
         -- Also set if the threat is on water or not
         -- Set the time the threat was identified so we can flush out old entries
-        if next(potentialThreats) then
+        if not RNGTableEmpty(potentialThreats) then
             local threatLocation = {}
             for _, x in potentialThreats do
                 for _, z in x do
@@ -3807,7 +3808,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
 
-            if next(enemyACUIndexes) then
+            if not RNGTableEmpty(enemyACUIndexes) then
                 for k, v in enemyACUIndexes do
                     if RUtils.HaveUnitVisual(self, self.EnemyIntel.ACU[v.Index].Unit, true) then
                         potentialTarget = self.EnemyIntel.ACU[v.Index].Unit
@@ -3823,7 +3824,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.RNGDEBUG then
                 RNGLOG('Director searching for EnemyIntel Target')
             end
-            if self.EnemyIntel.DirectorData.Intel and next(self.EnemyIntel.DirectorData.Intel) then
+            if self.EnemyIntel.DirectorData.Intel and not RNGTableEmpty(self.EnemyIntel.DirectorData.Intel) then
                 if self.RNGDEBUG then
                     RNGLOG('Director looking at intel table')
                     RNGLOG('Director number of intel items '..table.getn(self.EnemyIntel.DirectorData.Intel))
@@ -3863,7 +3864,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            if self.EnemyIntel.DirectorData.Energy and next(self.EnemyIntel.DirectorData.Energy) then
+            if self.EnemyIntel.DirectorData.Energy and not RNGTableEmpty(self.EnemyIntel.DirectorData.Energy) then
                 if self.RNGDEBUG then
                     RNGLOG('Director looking at energy table')
                     RNGLOG('Director number of energy items '..table.getn(self.EnemyIntel.DirectorData.Intel))
@@ -3904,7 +3905,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            if self.EnemyIntel.DirectorData.Factory and next(self.EnemyIntel.DirectorData.Factory) then
+            if self.EnemyIntel.DirectorData.Factory and not RNGTableEmpty(self.EnemyIntel.DirectorData.Factory) then
                 if self.RNGDEBUG then
                     RNGLOG('Director looking at factory table')
                     RNGLOG('Director number of factory items '..table.getn(self.EnemyIntel.DirectorData.Factory))
@@ -3946,7 +3947,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            if self.EnemyIntel.DirectorData.Strategic and next(self.EnemyIntel.DirectorData.Strategic) then
+            if self.EnemyIntel.DirectorData.Strategic and not RNGTableEmpty(self.EnemyIntel.DirectorData.Strategic) then
                 if self.RNGDEBUG then
                     RNGLOG('Director looking at strategic table')
                     RNGLOG('Director number of strategic items '..table.getn(self.EnemyIntel.DirectorData.Strategic))
@@ -3996,7 +3997,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local airThreat = false
             for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
                 for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
-                    if next(im.MapIntelGrid[i][k].EnemyUnits) then
+                    if not RNGTableEmpty(im.MapIntelGrid[i][k].EnemyUnits) then
                         for k, v in im.MapIntelGrid[i][k].EnemyUnits do
                             if v.type == 'mex' and not v.object.Dead then
                                 if EntityCategoryContains(categories.TECH2 + categories.TECH3, v.object) then

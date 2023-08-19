@@ -19,7 +19,7 @@ local Random = Random
 local IsDestroyed = IsDestroyed
 
 local RNGGETN = table.getn
-local TableEmpty = table.empty
+local RNGTableEmpty = table.empty
 local RNGINSERT = table.insert
 local RNGSORT = table.sort
 
@@ -220,7 +220,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                         local alreadyHaveExpansion = false
                         for k, manager in brain.BuilderManagers do
                         --RNGLOG('Checking through expansion '..k)
-                            if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and next(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
+                            if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and not RNGTableEmpty(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
                             --RNGLOG('We already have an expansion with a factory')
                                 alreadyHaveExpansion = true
                                 break
@@ -672,11 +672,11 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
             if self.BuilderData.Assist then
                 for _, cat in self.BuilderData.Assist.BeingBuiltCategories do
                     assistList = RUtils.GetAssisteesRNG(brain, 'MAIN', categories.ENGINEER, cat, categories.ALLUNITS)
-                    if not TableEmpty(assistList) then
+                    if not RNGTableEmpty(assistList) then
                         break
                     end
                 end
-                if not TableEmpty(assistList) then
+                if not RNGTableEmpty(assistList) then
                     local engPos = eng:GetPosition()
                     -- only have one unit in the list; assist it
                     local low = false
@@ -814,7 +814,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             end
                         end
                     end
-                    if not TableEmpty(eng.EngineerBuildQueue) then
+                    if not RNGTableEmpty(eng.EngineerBuildQueue) then
                         IssueClearCommands({eng})
                         for _, v in eng.EngineerBuildQueue do
                             if v[3] and v[2] and v[1] then
@@ -848,7 +848,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                             end
                         end
                     end
-                    if not TableEmpty(eng.EngineerBuildQueue) then
+                    if not RNGTableEmpty(eng.EngineerBuildQueue) then
                         IssueClearCommands({eng})
                         for _, v in eng.EngineerBuildQueue do
                             if v[3] and v[2] and v[1] then
@@ -1408,7 +1408,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     local alreadyHaveExpansion = false
                     for k, manager in brain.BuilderManagers do
                     --RNGLOG('Checking through expansion '..k)
-                        if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and next(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
+                        if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and not RNGTableEmpty(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
                         --RNGLOG('We already have an expansion with a factory')
                             alreadyHaveExpansion = true
                             break
@@ -1811,7 +1811,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
 ---@param data { Behavior: 'AIBehaviorACUSimple' }
 ---@param units Unit[]
 AssignToUnitsMachine = function(data, platoon, units)
-    if units and not TableEmpty(units) then
+    if units and not RNGTableEmpty(units) then
         -- meet platoon requirements
         import("/lua/sim/navutils.lua").Generate()
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()

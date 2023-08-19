@@ -30,6 +30,7 @@ local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
 local RNGSORT = table.sort
+local RNGTableEmpty = table.empty
 local CategoryT2Defense = categories.STRUCTURE * categories.DEFENSE * (categories.TECH2 + categories.TECH3)
 
 function CommanderBehaviorRNG(platoon)
@@ -463,7 +464,7 @@ function CDRBuildFunction(aiBrain, cdr, object)
             local alreadyHaveExpansion = false
             for k, manager in aiBrain.BuilderManagers do
                --RNGLOG('Checking through expansion '..k)
-                if manager.FactoryManager.LocationActive and next(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
+                if manager.FactoryManager.LocationActive and not RNGTableEmpty(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
                    --RNGLOG('We already have an expansion with a factory')
                     alreadyHaveExpansion = true
                     break

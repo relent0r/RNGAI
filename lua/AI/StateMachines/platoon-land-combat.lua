@@ -18,7 +18,7 @@ local Random = Random
 local IsDestroyed = IsDestroyed
 
 local RNGGETN = table.getn
-local TableEmpty = table.empty
+local RNGTableEmpty = table.empty
 local RNGINSERT = table.insert
 local RNGSORT = table.sort
 local RNGMAX = math.max
@@ -639,7 +639,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
 ---@param data { Behavior: 'AIBehaviorLandCombat' }
 ---@param units Unit[]
 AssignToUnitsMachine = function(data, platoon, units)
-    if units and not TableEmpty(units) then
+    if units and not RNGTableEmpty(units) then
         -- meet platoon requirements
         import("/lua/sim/navutils.lua").Generate()
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()

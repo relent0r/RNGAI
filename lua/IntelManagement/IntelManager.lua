@@ -39,6 +39,7 @@ local RNGCEIL = math.ceil
 local RNGPI = math.pi
 local RNGCAT = table.cat
 local RNGCOPY = table.copy
+local RNGTableEmpty = table.empty
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 IntelManager = Class {
@@ -810,8 +811,8 @@ IntelManager = Class {
         self:WaitForMarkerInfection()
         WaitTicks(100)
         self:SetTeamDistanceCheck()
-        if next(self.Brain.Zones.Land.zones) then
-            if next(self.Brain.EnemyIntel.EnemyStartLocations) then
+        if not RNGTableEmpty(self.Brain.Zones.Land.zones) then
+            if not RNGTableEmpty(self.Brain.EnemyIntel.EnemyStartLocations) then
                 for k, v in self.Brain.EnemyIntel.EnemyStartLocations do
                     for c, b in self.Brain.Zones.Land.zones do
                         b.enemystartdata[v.Index] = { }
@@ -821,7 +822,7 @@ IntelManager = Class {
                     end
                 end
             end
-            if next(self.Brain.BrainIntel.AllyStartLocations) then
+            if not RNGTableEmpty(self.Brain.BrainIntel.AllyStartLocations) then
                 for k, v in self.Brain.BrainIntel.AllyStartLocations do
                     for c, b in self.Brain.Zones.Land.zones do
                         b.allystartdata[v.Index] = { }
@@ -1196,7 +1197,7 @@ IntelManager = Class {
         elseif type == 'DefensiveAntiSurface' then
             local defensiveUnitsFound = false
             local defensiveUnitThreat = 0
-            if next(self.Brain.EnemyIntel.DirectorData.Defense) then
+            if not RNGTableEmpty(self.Brain.EnemyIntel.DirectorData.Defense) then
                 for k, v in self.Brain.EnemyIntel.DirectorData.Defense do
                     if v.Object and not v.Object.Dead then
                         --RNGLOG('Found Defensive unit in directordata defense table '..v.Object.UnitId)
@@ -2229,7 +2230,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
 
     local v = Vector(0, 0, 0)
 
-    if next(aiBrain.EnemyIntel.EnemyThreatLocations) then
+    if not RNGTableEmpty(aiBrain.EnemyIntel.EnemyThreatLocations) then
         for _, x in aiBrain.EnemyIntel.EnemyThreatLocations do
             for _, z in x do
                 if z['StructuresNotMex'] and (gameTime - z.UpdateTime) < 25 then
@@ -2317,7 +2318,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
             end
         end
     
-    if next(defensiveUnits) then
+    if not RNGTableEmpty(defensiveUnits) then
         for k, unit in defensiveUnits do
             if not aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount then
                 aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount = 0
@@ -2437,7 +2438,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
         
     end
 
-    if next(aiBrain.EnemyIntel.TML) then
+    if not RNGTableEmpty(aiBrain.EnemyIntel.TML) then
         local needSort = false
         for k, v in aiBrain.EnemyIntel.TML do
             if not v.object.Dead then 
@@ -2462,7 +2463,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
          end
     end
 
-    if next(factoryUnits) then
+    if not RNGTableEmpty(factoryUnits) then
         for k, unit in factoryUnits do
             if aiBrain.EnemyIntel.AirPhase < 2 and unit.Object.Blueprint.CategoriesHash.AIR and unit.Object.Blueprint.CategoriesHash.TECH2 then
                 aiBrain.EnemyIntel.AirPhase = 2

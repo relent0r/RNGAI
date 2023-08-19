@@ -27,6 +27,7 @@ local RNGGETN = table.getn
 local RNGINSERT = table.insert
 local RNGCOPY = table.copy
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
+local RNGTableEmpty = table.empty
 
 RNGAIPlatoonClass = Platoon
 Platoon = Class(RNGAIPlatoonClass) {
@@ -1419,7 +1420,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     coroutine.yield(2)
                                     scoutPos = scout:GetPosition()
                                     enemyUnitCheck = GetUnitsAroundPoint(aiBrain, categories.MOBILE * categories.LAND, scoutPos, intelRange, 'Enemy')
-                                    if next(enemyUnitCheck) then
+                                    if not RNGTableEmpty(enemyUnitCheck) then
                                         for _, v in enemyUnitCheck do
                                             if scout.UnitId == 'xsl0101' and not v.Dead and EntityCategoryContains(categories.ENGINEER + categories.SCOUT - categories.COMMAND, v) then
                                                 --LOG('Seraphim scout vs engineer')
@@ -2522,7 +2523,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             if attackUnits then
                                 --RNGLOG('Number of attack units is '..RNGGETN(attackUnits))
                             end
-                            if next(artillerySquad) and next(attackUnits) then
+                            if not RNGTableEmpty(artillerySquad) and not RNGTableEmpty(attackUnits) then
                                 --RNGLOG('Forking thread for artillery guard')
                                 self:ForkThread(self.GuardArtillerySquadRNG, aiBrain, target)
                             end
@@ -4455,7 +4456,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         --RNGLOG('CommanderInitializeAIRNG : Close Mass Point table has '..RNGGETN(buildMassPoints)..' items in it')
         --RNGLOG('CommanderInitializeAIRNG : Distant Mass Point table has '..RNGGETN(buildMassDistantPoints)..' items in it')
         --RNGLOG('CommanderInitializeAIRNG : Mex build stage 1')
-        if next(buildMassPoints) then
+        if not RNGTableEmpty(buildMassPoints) then
             whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
             for k, v in buildMassPoints do
                 --RNGLOG('CommanderInitializeAIRNG : MassPoint '..repr(v))
@@ -4476,7 +4477,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 break
             end
             buildMassPoints = aiBrain:RebuildTable(buildMassPoints)
-        elseif next(buildMassDistantPoints) then
+        elseif not RNGTableEmpty(buildMassDistantPoints) then
             --RNGLOG('CommanderInitializeAIRNG : Try build distant mass point marker')
             whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
             for k, v in buildMassDistantPoints do
@@ -4540,7 +4541,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
         end
         --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, false})
-        if next(buildMassPoints) then
+        if not RNGTableEmpty(buildMassPoints) then
             whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
             if RNGGETN(buildMassPoints) < 3 then
                 --RNGLOG('CommanderInitializeAIRNG : Less than 4 total mass points close')
@@ -4653,7 +4654,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
             coroutine.yield(5)
         end
-        if next(buildMassPoints) then
+        if not RNGTableEmpty(buildMassPoints) then
             whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
             for k, v in buildMassPoints do
                 if v.Position[1] - playableArea[1] <= 8 or v.Position[1] >= playableArea[3] - 8 or v.Position[3] - playableArea[2] <= 8 or v.Position[3] >= playableArea[4] - 8 then
@@ -4811,7 +4812,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local assistee = false
             --RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
             local assistListCount = 0
-            while not next(assistList) do
+            while not not RNGTableEmpty(assistList) do
                 coroutine.yield( 15 )
                 assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
                 assistListCount = assistListCount + 1
@@ -4821,7 +4822,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     break
                 end
             end
-            if next(assistList) then
+            if not RNGTableEmpty(assistList) then
                 -- only have one unit in the list; assist it
                 local low = false
                 local bestUnit = false
@@ -6729,7 +6730,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                 end
                 local enemyUnitCheck = GetUnitsAroundPoint(aiBrain, ScoutRiskCategory, PlatoonPosition, self.IntelRange, 'Enemy')
-                if next(enemyUnitCheck) then
+                if not RNGTableEmpty(enemyUnitCheck) then
                     for _, v in enemyUnitCheck do
                         if not v.Dead then
                             self:Stop()
@@ -8734,7 +8735,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         self.imapRangeConfig = aiBrain.BrainIntel.IMAPConfig.Rings
         if pos then
             for k, v in aiBrain.BuilderManagers do
-                if v.FactoryManager.LocationActive and aiBrain.BuilderManagers[k].FactoryManager and next(aiBrain.BuilderManagers[k].FactoryManager.FactoryList) then
+                if v.FactoryManager.LocationActive and aiBrain.BuilderManagers[k].FactoryManager and not RNGTableEmpty(aiBrain.BuilderManagers[k].FactoryManager.FactoryList) then
                     closestBase = VDist2Sq(pos[1], pos[3], aiBrain.BuilderManagers[k].FactoryManager.Location[1], aiBrain.BuilderManagers[k].FactoryManager.Location[3])
                     if closestBase < 400 then
                         coreExtractorLocation = k
@@ -10831,7 +10832,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     --RNGLOG('CheckPriority On Units '..repr(unit.chppriority))
                 end
             end
-            if next(platoon.targetcandidates) then
+            if not RNGTableEmpty(platoon.targetcandidates) then
                 table.sort(platoon.targetcandidates, function(a,b) return a.chppriority[id]>b.chppriority[id] end)
                 platoon.target=platoon.targetcandidates[1]
                 return true
@@ -11330,7 +11331,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             if self.navigating then
                 local enemies=GetUnitsAroundPoint(aiBrain, categories.LAND + categories.STRUCTURE, self.Pos, self.EnemyRadius, 'Enemy')
-                if enemies and next(enemies) then
+                if enemies and not RNGTableEmpty(enemies) then
                     local enemyThreat = 0
                     for _,enemy in enemies do
                         enemyThreat = enemyThreat + enemy.Blueprint.Defense.SurfaceThreatLevel

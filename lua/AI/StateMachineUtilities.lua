@@ -6,6 +6,7 @@ local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
 local RNGCOPY = table.copy
+local RNGTableEmpty = table.empty
 
 CrossP = function(vec1,vec2,n)--cross product
     local z = vec2[3] + n * (vec2[1] - vec1[1])
@@ -295,7 +296,7 @@ ExitConditions = function(self,aiBrain)
     end
     if self.navigating then
         local enemies=GetUnitsAroundPoint(aiBrain, categories.LAND + categories.STRUCTURE, self.Pos, self.EnemyRadius, 'Enemy')
-        if enemies and next(enemies) then
+        if enemies and not RNGTableEmpty(enemies) then
             local enemyThreat = 0
             for _,enemy in enemies do
                 enemyThreat = enemyThreat + enemy.Blueprint.Defense.SurfaceThreatLevel

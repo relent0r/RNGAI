@@ -31,6 +31,7 @@ local RNGGETN = table.getn
 local RNGINSERT = table.insert
 local RNGREMOVE = table.remove
 local RNGSORT = table.sort
+local RNGTableEmpty = table.empty
 local RNGFLOOR = math.floor
 local RNGCEIL = math.ceil
 local RNGPI = math.pi
@@ -1511,7 +1512,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             end
         end
     end
-    if next(enemyACUTargets) then
+    if not RNGTableEmpty(enemyACUTargets) then
         table.sort(enemyACUTargets, function(a,b) return a.distance < b.distance end)
         --RNGLOG('ACUTARGETTING : ACU Targets are within range')
         for k, v in enemyACUTargets do
@@ -1592,7 +1593,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
         end
     end
     if not returnTarget then
-        if next(mobileTargets) then
+        if not RNGTableEmpty(mobileTargets) then
             table.sort(mobileTargets, function(a,b) return a.distance < b.distance end)
             --RNGLOG('ACUTARGETTING : Mobile Targets are within range')
             for k, v in mobileTargets do
@@ -1645,7 +1646,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
         end
     end
     if not returnTarget then
-        if next(structureTargets) then
+        if not RNGTableEmpty(structureTargets) then
             table.sort(structureTargets, function(a,b) return a.distance < b.distance end)
             --RNGLOG('ACUTARGETTING : Mobile Targets are within range')
             for k, v in structureTargets do
@@ -4232,7 +4233,7 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
     if type == 'Land' then
         local bestPoint = false
         local bestIndex = false
-        if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
+        if not RNGTableEmpty(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
             if aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle then
                 local pointCheck = aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle
                 for _, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
@@ -4277,7 +4278,7 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
             end
         end 
         if not acuDefenseRequired then
-            if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
+            if not RNGTableEmpty(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
                 if aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle then
                     local pointCheck = aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle
                     for _, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
@@ -4300,7 +4301,7 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
     elseif type == 'TML' then
         local bestPoint = false
         local bestIndex = false
-        if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
+        if not RNGTableEmpty(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
             if aiBrain.BasePerimeterMonitor[baseLocation].RecentTMLAngle then
                 local pointCheck = aiBrain.BasePerimeterMonitor[baseLocation].RecentTMLAngle
                 for _, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
@@ -4362,7 +4363,7 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
         local bestPoint = false
         local bestIndex = false
         --RNGLOG('Performing TML Structure Check')
-        if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
+        if not RNGTableEmpty(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
             local bestTargetDistance
             local bestTargetPoint
             for k, v in aiBrain.EnemyIntel.EnemyStartLocations do
@@ -4412,7 +4413,7 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
             end
         end 
         if not acuShieldRequired then
-            if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
+            if not RNGTableEmpty(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
                 for k, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
                     local unitCount = 0
                     for _, b in v.DirectFire do
@@ -4459,7 +4460,7 @@ DefensivePointUnitCountRNG = function(aiBrain, baseLocation, pointTier, type, co
     if type == 'Land' then
         local bestPoint = false
         local bestIndex = false
-        if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
+        if not RNGTableEmpty(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
             if aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle then
                 local pointCheck = aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle
                 for k, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
@@ -4481,7 +4482,7 @@ DefensivePointUnitCountRNG = function(aiBrain, baseLocation, pointTier, type, co
     elseif type == 'TML' then
         local bestPoint = false
         local bestIndex = false
-        if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
+        if not RNGTableEmpty(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
             if aiBrain.BasePerimeterMonitor[baseLocation].RecentTMLAngle then
                 local pointCheck = aiBrain.BasePerimeterMonitor[baseLocation].RecentTMLAngle
                 for k, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
@@ -4502,7 +4503,7 @@ DefensivePointUnitCountRNG = function(aiBrain, baseLocation, pointTier, type, co
     elseif type == 'TMD' then
         local bestPoint = false
         local bestIndex = false
-        if next(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
+        if not RNGTableEmpty(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
             if aiBrain.BasePerimeterMonitor[baseLocation].RecentTMLAngle then
                 local pointCheck = aiBrain.BasePerimeterMonitor[baseLocation].RecentTMLAngle
                 for k, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
@@ -4706,7 +4707,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         --RNGLOG('Excess scout looking for expansion')
         scoutPos = scout:GetPosition()
         local scoutMarker
-        if next(im.ZoneIntel.Assignment) then
+        if not RNGTableEmpty(im.ZoneIntel.Assignment) then
             --RNGLOG('Scout ZoneIntel Assignment table is present')
             for k, v in im.ZoneIntel.Assignment do
                 if (not v.RadarCoverage) and (not v.ScoutUnit or v.ScoutUnit.Dead) and (not v.StartPosition) then
@@ -5110,7 +5111,7 @@ GetHoldingPosition = function(aiBrain, platoonPos, platoon, threatType, maxRadiu
         --RNGLOG('threatLocations for antiair platoon '..repr(threatLocations))
     end
 
-    if next(threatLocations) then
+    if not RNGTableEmpty(threatLocations) then
         for k, v in threatLocations do
             local locationDistance = VDist3Sq(aiBrain.BuilderManagers['MAIN'].Position, {v[1],0,v[2]})
             if not bestThreat or locationDistance < bestThreatDist then
