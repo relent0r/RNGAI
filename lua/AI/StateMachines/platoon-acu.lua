@@ -32,6 +32,24 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
 
     PlatoonName = 'ACUBehavior',
 
+    ---@param self AIPlatoon
+    OnDestroy = function(self)
+        if self.BuilderHandle then
+            self.BuilderHandle:RemoveHandle(self)
+        end
+        self.Trash:Destroy()
+    end,
+
+    PlatoonDisbandNoAssign = function(self)
+        if self.BuilderHandle then
+            self.BuilderHandle:RemoveHandle(self)
+        end
+        for k,v in self:GetPlatoonUnits() do
+            v.PlatoonHandle = nil
+        end
+        self:GetBrain():DisbandPlatoon(self)
+    end,
+
     Start = State {
 
         StateName = 'Start',
@@ -253,7 +271,7 @@ AIPlatoonACUBehavior = Class(AIPlatoon) {
                     end
                 end
             end
-            if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > cdr.MaxBaseRange * cdr.MaxBaseRange then
+            if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > cdr.MaxBaseRange * cdr.MaxBaseRange and not self.BuilderData.DefendExpansion then
                 --LOG('ACU is beyond maxRadius of '..(cdr.MaxBaseRange * cdr.MaxBaseRange))
                 self:ChangeState(self.Retreating)
                 return

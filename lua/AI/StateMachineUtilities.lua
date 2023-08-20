@@ -422,6 +422,9 @@ CHPMergePlatoon = function(self,radius)
                 end
                 aiBrain:AssignUnitsToPlatoon(self,validUnits,'Attack','NoFormation')
                 self.chpdata.merging=false
+                if not ps[1].PlatoonDisbandNoAssign then
+                    LOG('Platoon has no disband '..(ps[1].BuilderName))
+                end
                 ps[1]:PlatoonDisbandNoAssign()
                 return true
             end
@@ -449,6 +452,9 @@ CHPMergePlatoon = function(self,radius)
                     end
                     aiBrain:AssignUnitsToPlatoon(self,validUnits,'Attack','NoFormation')
                     self.chpdata.merging=false
+                    if not other.PlatoonDisbandNoAssign then
+                        LOG('Platoon has no disband '..(other.BuilderName))
+                    end
                     other:PlatoonDisbandNoAssign()
                     return true
                 end

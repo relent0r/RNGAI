@@ -1575,15 +1575,21 @@ Platoon = Class(RNGAIPlatoonClass) {
 
         local function VentToPlatoon(self, aiBrain, plan)
             --RNGLOG('Venting to new trueplatoon platoon')
+            local ventPlatoon
             local platoonUnits = GetPlatoonUnits(self)
-            local ventPlatoon = aiBrain:MakePlatoon('', plan)
-            ventPlatoon.PlanName = 'Vented Platoon'
-            for _, unit in platoonUnits do
-                if unit and not unit.Dead and not unit:BeenDestroyed() then
-                    --RNGLOG('Added unit to new platoon')
-                    aiBrain:AssignUnitsToPlatoon(ventPlatoon, {unit}, 'Attack', 'None')
-                else
-                    --RNGLOG('Unit was dead or destroyed')
+            if plan == 'TruePlatoonRNG' then
+                ventPlatoon = aiBrain:MakePlatoon('', '')
+                import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ }, ventPlatoon, platoonUnits)
+            else
+                ventPlatoon = aiBrain:MakePlatoon('', plan)
+                ventPlatoon.PlanName = 'Vented Platoon'
+                for _, unit in platoonUnits do
+                    if unit and not unit.Dead and not unit:BeenDestroyed() then
+                        --RNGLOG('Added unit to new platoon')
+                        aiBrain:AssignUnitsToPlatoon(ventPlatoon, {unit}, 'Attack', 'None')
+                    else
+                        --RNGLOG('Unit was dead or destroyed')
+                    end
                 end
             end
             --RNGLOG('Platoon has been vented')
@@ -1631,7 +1637,6 @@ Platoon = Class(RNGAIPlatoonClass) {
             if (not aiBrain.CDRUnit.Active and not aiBrain.CDRUnit.Retreating) or (VDist2Sq(aiBrain.CDRUnit.CDRHome[1], aiBrain.CDRUnit.CDRHome[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3]) < 14400) and aiBrain.CDRUnit.CurrentEnemyThreat < 5 then
                 --RNGLOG('CDR is not active, setting to trueplatoon')
                 coroutine.yield(20)
-                --return self:SetAIPlanRNG('TruePlatoonRNG')
                 VentToPlatoon(self, aiBrain, 'TruePlatoonRNG')
                 if PlatoonExists(aiBrain, self) then
                     aiBrain:DisbandPlatoon(self)
@@ -1643,7 +1648,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                 threatTimeout = threatTimeout + 1
                 if threatTimeout > 10 then
                     coroutine.yield(20)
-                    --return self:SetAIPlanRNG('TruePlatoonRNG')
                     VentToPlatoon(self, aiBrain, 'TruePlatoonRNG')
                     if PlatoonExists(aiBrain, self) then
                         aiBrain:DisbandPlatoon(self)
@@ -6486,7 +6490,14 @@ Platoon = Class(RNGAIPlatoonClass) {
             if self.MovementLayer == 'Land' then
                 --RNGLOG('Restarting MassRaid as trueplatoon')
                 coroutine.yield(10)
-                return self:SetAIPlanRNG('TruePlatoonRNG')
+                if not self.PlatoonData then
+                    self.PlatoonData = {}
+                    self.PlatoonData.StateMachine = 'LandCombat'
+                end
+                if not self.PlatoonData.StateMachine then
+                    self.PlatoonData.StateMachine = 'LandCombat'
+                end
+                return self:SetAIPlanRNG('StateMachineAIRNG')
             elseif self.MovementLayer == 'Water' then
                 --RNGLOG('Restarting MassRaid as navalhuntai')
                 coroutine.yield(10)
@@ -11589,6 +11600,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                     aiBrain:AssignUnitsToPlatoon(self,validUnits,'Attack','NoFormation')
                     self.chpdata.merging=false
+                    if not ps[1].PlatoonDisbandNoAssign then
+                        LOG('Platoon has no disband '..(ps[1].BuilderName))
+                    end
                     ps[1]:PlatoonDisbandNoAssign()
                     return true
                 end
@@ -11616,6 +11630,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                         aiBrain:AssignUnitsToPlatoon(self,validUnits,'Attack','NoFormation')
                         self.chpdata.merging=false
+                        if not other.PlatoonDisbandNoAssign then
+                            LOG('Platoon has no disband '..(other.BuilderName))
+                        end
                         other:PlatoonDisbandNoAssign()
                         return true
                     end

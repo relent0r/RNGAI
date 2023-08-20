@@ -31,6 +31,24 @@ AIPlatoonFighterBehavior = Class(AIPlatoon) {
 
     PlatoonName = 'FighterBehavior',
 
+    ---@param self AIPlatoon
+    OnDestroy = function(self)
+        if self.BuilderHandle then
+            self.BuilderHandle:RemoveHandle(self)
+        end
+        self.Trash:Destroy()
+    end,
+
+    PlatoonDisbandNoAssign = function(self)
+        if self.BuilderHandle then
+            self.BuilderHandle:RemoveHandle(self)
+        end
+        for k,v in self:GetPlatoonUnits() do
+            v.PlatoonHandle = nil
+        end
+        self:GetBrain():DisbandPlatoon(self)
+    end,
+
     Start = State {
 
         StateName = 'Start',

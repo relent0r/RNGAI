@@ -32,6 +32,24 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
 
     PlatoonName = 'LandCombatBehavior',
 
+    ---@param self AIPlatoon
+    OnDestroy = function(self)
+        if self.BuilderHandle then
+            self.BuilderHandle:RemoveHandle(self)
+        end
+        self.Trash:Destroy()
+    end,
+
+    PlatoonDisbandNoAssign = function(self)
+        if self.BuilderHandle then
+            self.BuilderHandle:RemoveHandle(self)
+        end
+        for k,v in self:GetPlatoonUnits() do
+            v.PlatoonHandle = nil
+        end
+        self:GetBrain():DisbandPlatoon(self)
+    end,
+
     Start = State {
 
         StateName = 'Start',
@@ -102,7 +120,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
                         if not self.combat and not self.retreat then
                             if self.path and VDist3Sq(self.path[RNGGETN(self.path)],hiPriTargetPos)>400 then
                                 self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
-                                --RNGLOG('platoon.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(self.path[RNGGETN(self.path)],point.Position))
+                                --RNGLOG('self.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(self.path[RNGGETN(self.path)],point.Position))
                                 self.BuilderData = {
                                     Position = hiPriTargetPos,
                                     CutOff = 400,
@@ -176,7 +194,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
                                     if self.raid then
                                         if self.path and VDist3Sq(self.path[RNGGETN(self.path)],point.Position)>400 then
                                             self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
-                                            --RNGLOG('platoon.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(self.path[RNGGETN(self.path)],point.Position))
+                                            --RNGLOG('self.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(self.path[RNGGETN(self.path)],point.Position))
                                             self.BuilderData = {
                                                 Position = point.Position,
                                                 CutOff = 400,
@@ -218,25 +236,24 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
                 --LOG('DecideWhatToDo GetMassMarkers ')
                 local mex=RUtils.AIGetMassMarkerLocations(aiBrain, false)
                 local raidlocs={}
-                local platoon=self
                 for _,v in mex do
                     if v.Position and GetSurfaceHeight(v.Position[1],v.Position[3])<=GetTerrainHeight(v.Position[1],v.Position[3]) 
-                    and VDist2Sq(v.Position[1],v.Position[3],platoon.Pos[1],platoon.Pos[3])>150*150 and NavUtils.CanPathTo(self.MovementLayer, self.Pos,v.Position) 
+                    and VDist2Sq(v.Position[1],v.Position[3],self.Pos[1],self.Pos[3])>150*150 and NavUtils.CanPathTo(self.MovementLayer, self.Pos,v.Position) 
                     and RUtils.GrabPosEconRNG(aiBrain,v.Position,50).ally < 1 then
                         RNGINSERT(raidlocs,v)
                     end
                 end
-                table.sort(raidlocs,function(k1,k2) return VDist2Sq(k1.Position[1],k1.Position[3],platoon.Pos[1],platoon.Pos[3])*VDist2Sq(k1.Position[1],k1.Position[3],self.Home[1],self.Home[3])/VDist2Sq(k1.Position[1],k1.Position[3],self.Home[1],self.Home[3])<VDist2Sq(k2.Position[1],k2.Position[3],platoon.Pos[1],platoon.Pos[3])*VDist2Sq(k2.Position[1],k2.Position[3],self.Home[1],self.Home[3])/VDist2Sq(k2.Position[1],k2.Position[3],self.Home[1],self.Home[3]) end)
-                platoon.dest=raidlocs[1].Position
-                --RNGLOG('platoon.Pos '..repr(platoon.Pos))
-                --RNGLOG('platoon.dest '..repr(platoon.dest))
-                if platoon.dest and platoon.Pos then
-                    platoon.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoon.Pos, platoon.dest, 0, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                table.sort(raidlocs,function(k1,k2) return VDist2Sq(k1.Position[1],k1.Position[3],self.Pos[1],self.Pos[3])*VDist2Sq(k1.Position[1],k1.Position[3],self.Home[1],self.Home[3])/VDist2Sq(k1.Position[1],k1.Position[3],self.Home[1],self.Home[3])<VDist2Sq(k2.Position[1],k2.Position[3],self.Pos[1],self.Pos[3])*VDist2Sq(k2.Position[1],k2.Position[3],self.Home[1],self.Home[3])/VDist2Sq(k2.Position[1],k2.Position[3],self.Home[1],self.Home[3]) end)
+                self.dest=raidlocs[1].Position
+                --RNGLOG('self.Pos '..repr(self.Pos))
+                --RNGLOG('self.dest '..repr(self.dest))
+                if self.dest and self.Pos then
+                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.dest, 0, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
                 end
-                if platoon.path then
-                    platoon.navigating=true
+                if self.path then
+                    self.navigating=true
                     self.BuilderData = {
-                        Position = platoon.dest,
+                        Position = self.dest,
                         CutOff = 400,
                     }
                     self:ChangeState(self.Navigating)
@@ -306,7 +323,6 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
             local aiBrain = self:GetBrain()
             local armyIndex = aiBrain:GetArmyIndex()
             local platoonUnits = GetPlatoonUnits(self)
-            local platoon=self
             local enemyunits=nil
             local pathmaxdist=0
             local lastfinalpoint=nil
@@ -314,37 +330,37 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
             while PlatoonExists(aiBrain, self) do
                 coroutine.yield(1)
                 if StateUtils.ExitConditions(self,aiBrain) then
-                    platoon.navigating=false
-                    platoon.path=false
+                    self.navigating=false
+                    self.path=false
                     coroutine.yield(20)
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 else
                     coroutine.yield(15)
                 end
-                local nodenum=RNGGETN(platoon.path)
-                if not (platoon.path[nodenum]==lastfinalpoint) and nodenum > 1 then
+                local nodenum=RNGGETN(self.path)
+                if not (self.path[nodenum]==lastfinalpoint) and nodenum > 1 then
                     pathmaxdist=0
-                    for i,v in platoon.path do
+                    for i,v in self.path do
                         if not v then continue end
                         if not type(i)=='number' then continue end
                         if i==nodenum then continue end
-                        --totaldist=totaldist+platoon.path[i+1].nodedist
-                        pathmaxdist=math.max(VDist3Sq(v,platoon.path[i+1]),pathmaxdist)
+                        --totaldist=totaldist+self.path[i+1].nodedist
+                        pathmaxdist=math.max(VDist3Sq(v,self.path[i+1]),pathmaxdist)
                     end
-                    lastfinalpoint=platoon.path[nodenum]
-                    lastfinaldist=VDist3Sq(platoon.path[nodenum],platoon.path[nodenum-1])
+                    lastfinalpoint=self.path[nodenum]
+                    lastfinaldist=VDist3Sq(self.path[nodenum],self.path[nodenum-1])
                 end
-                if platoon.path[nodenum-1] and VDist3Sq(platoon.path[nodenum],platoon.path[nodenum-1])>lastfinaldist*3 then
-                    if NavUtils.CanPathTo(self.MovementLayer, self.Pos,platoon.path[nodenum]) then
-                        platoon.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoon.Pos, platoon.path[nodenum], 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                if self.path[nodenum-1] and VDist3Sq(self.path[nodenum],self.path[nodenum-1])>lastfinaldist*3 then
+                    if NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.path[nodenum]) then
+                        self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.path[nodenum], 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
                         coroutine.yield(10)
                         continue
                     end
                 end
-                if (platoon.dest and not NavUtils.CanPathTo(self.MovementLayer, self.Pos,platoon.dest)) or (platoon.path and GetTerrainHeight(platoon.path[nodenum][1],platoon.path[nodenum][3])<GetSurfaceHeight(platoon.path[nodenum][1],platoon.path[nodenum][3])) then
-                    platoon.navigating=false
-                    platoon.path=nil
+                if (self.dest and not NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.dest)) or (self.path and GetTerrainHeight(self.path[nodenum][1],self.path[nodenum][3])<GetSurfaceHeight(self.path[nodenum][1],self.path[nodenum][3])) then
+                    self.navigating=false
+                    self.path=nil
                     coroutine.yield(20)
                     self:ChangeState(self.DecideWhatToDo)
                     return
@@ -356,11 +372,11 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
                 end
                 local spread=0
                 local snum=0
-                if GetTerrainHeight(platoon.Pos[1],platoon.Pos[3])<platoon.Pos[2]+3 then
+                if GetTerrainHeight(self.Pos[1],self.Pos[3])<self.Pos[2]+3 then
                     for _,v in platoonUnits do
                         if v and not v.Dead then
                             local unitPos = v:GetPosition()
-                            if VDist2Sq(unitPos[1],unitPos[3],platoon.Pos[1],platoon.Pos[3])>platoon.MaxWeaponRange*platoon.MaxWeaponRange+900 then
+                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>self.MaxWeaponRange*self.MaxWeaponRange+900 then
                                 local vec={}
                                 vec[1],vec[2],vec[3]=v:GetVelocity()
                                 if VDist3Sq({0,0,0},vec)<1 then
@@ -370,27 +386,27 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
                                     continue
                                 end
                             end
-                            if VDist2Sq(unitPos[1],unitPos[3],platoon.Pos[1],platoon.Pos[3])>v.MaxWeaponRange/3*v.MaxWeaponRange/3+platoonNum*platoonNum then
-                                --spread=spread+VDist3Sq(v:GetPosition(),platoon.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
+                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>v.MaxWeaponRange/3*v.MaxWeaponRange/3+platoonNum*platoonNum then
+                                --spread=spread+VDist3Sq(v:GetPosition(),self.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
                                 --snum=snum+1
                                 ---[[
-                                if platoon.dest then
+                                if self.dest then
                                     IssueClearCommands({v})
                                     if v.Sniper then
-                                        IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.dest,{VDist3(platoon.dest,platoon.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
+                                        IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
                                     else
-                                        IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.dest,{VDist3(platoon.dest,platoon.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
+                                        IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
                                     end
-                                    spread=spread+VDist3Sq(unitPos,platoon.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
+                                    spread=spread+VDist3Sq(unitPos,self.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
                                     snum=snum+1
                                 else
                                     IssueClearCommands({v})
                                     if v.Sniper or v.Support then
-                                        IssueMove({v},RUtils.lerpy(platoon.Pos,self.Home,{VDist3(self.Home,platoon.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
+                                        IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
                                     else
-                                        IssueMove({v},RUtils.lerpy(platoon.Pos,self.Home,{VDist3(self.Home,platoon.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
+                                        IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
                                     end
-                                    spread=spread+VDist3Sq(unitPos,platoon.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
+                                    spread=spread+VDist3Sq(unitPos,self.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
                                     snum=snum+1
                                 end--]]
                             end
@@ -416,27 +432,27 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
                     end
                 end
                 IssueClearCommands(platoonUnits)
-                if platoon.path then
-                    nodenum=RNGGETN(platoon.path)
+                if self.path then
+                    nodenum=RNGGETN(self.path)
                     if nodenum>=3 then
-                        --RNGLOG('platoon.path[3] '..repr(platoon.path[3]))
-                        platoon.dest={platoon.path[3][1]+math.random(-4,4),platoon.path[3][2],platoon.path[3][3]+math.random(-4,4)}
-                        self:MoveToLocation(platoon.dest,false)
+                        --RNGLOG('self.path[3] '..repr(self.path[3]))
+                        self.dest={self.path[3][1]+math.random(-4,4),self.path[3][2],self.path[3][3]+math.random(-4,4)}
+                        self:MoveToLocation(self.dest,false)
                         IssueClearCommands(supportsquad)
-                        StateUtils.SpreadMove(supportsquad,midpoint(platoon.path[1],platoon.path[2],0.2))
-                        StateUtils.SpreadMove(scouts,midpoint(platoon.path[1],platoon.path[2],0.15))
-                        StateUtils.SpreadMove(aa,midpoint(platoon.path[1],platoon.path[2],0.1))
+                        StateUtils.SpreadMove(supportsquad,midpoint(self.path[1],self.path[2],0.2))
+                        StateUtils.SpreadMove(scouts,midpoint(self.path[1],self.path[2],0.15))
+                        StateUtils.SpreadMove(aa,midpoint(self.path[1],self.path[2],0.1))
                     else
-                        platoon.dest={platoon.path[nodenum][1]+math.random(-4,4),platoon.path[nodenum][2],platoon.path[nodenum][3]+math.random(-4,4)}
-                        self:MoveToLocation(platoon.dest,false)
+                        self.dest={self.path[nodenum][1]+math.random(-4,4),self.path[nodenum][2],self.path[nodenum][3]+math.random(-4,4)}
+                        self:MoveToLocation(self.dest,false)
                     end
-                    for i,v in platoon.path do
-                        if not platoon.Pos then break end
+                    for i,v in self.path do
+                        if not self.Pos then break end
                         if (not v) then continue end
                         if not type(i)=='number' or type(v)=='number' then continue end
                         if i==nodenum then continue end
-                        if VDist2Sq(v[1],v[3],platoon.Pos[1],platoon.Pos[3])<1089 then
-                            table.remove(platoon.path,i)
+                        if VDist2Sq(v[1],v[3],self.Pos[1],self.Pos[3])<1089 then
+                            table.remove(self.path,i)
                         end
                     end
                 end
@@ -559,12 +575,12 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
             local supportUnits = self:GetSquadUnits('Support')
             if supportUnits then
                 for _, v in supportUnits do
-                    if not platoon.chpdata then
-                        platoon.chpdata = {name = 'CHPTruePlatoon',id=v.EntityId}
+                    if not self.chpdata then
+                        self.chpdata = {name = 'CHPTruePlatoon',id=v.EntityId}
                     end
                     IssueClearCommands(v)
                     if EntityCategoryContains(categories.SCOUT, v) then
-                        platoon.ScoutPresent = true
+                        self.ScoutPresent = true
                     end
                     platoonhealth=platoonhealth+StateUtils.GetTrueHealth(v)
                     platoonhealthtotal=platoonhealthtotal+StateUtils.GetTrueHealth(v,true)
@@ -622,8 +638,8 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
                         v:RemoveCommandCap('RULEUCC_Repair')
                         if v.MaxWeaponRange then
                             --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
-                            if not platoon.MaxWeaponRange or v.MaxWeaponRange>platoon.MaxWeaponRange then
-                                platoon.MaxWeaponRange=v.MaxWeaponRange
+                            if not self.MaxWeaponRange or v.MaxWeaponRange>self.MaxWeaponRange then
+                                self.MaxWeaponRange=v.MaxWeaponRange
                             end
                         end
                     end
@@ -784,10 +800,10 @@ LandCombatThreatThreads = function(aiBrain, platoon)
                     end
                 end
             end
-            platoon.CurrentEnemyThreat = enemyThreat
-            platoon.CurrentPlatoonThreat = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
-            if platoon.CurrentEnemyThreat > platoon.CurrentPlatoonThreat and not platoon.BuilderData.ProtectACU then
-                platoon:ChangeState(platoon.DecideWhatToDo)
+            self.CurrentEnemyThreat = enemyThreat
+            self.CurrentPlatoonThreat = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
+            if self.CurrentEnemyThreat > self.CurrentPlatoonThreat and not self.BuilderData.ProtectACU then
+                platoon:ChangeState(self.DecideWhatToDo)
             end
         end]]
         local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, platoon)

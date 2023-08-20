@@ -5774,6 +5774,148 @@ BetweenNumber = function(number, lowerBound, upperBound)
     return number >= lowerBound and number <= upperBound
 end
 
+ConfigurePlatoon = function(platoon)
+    local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
+    local function SetZone(pos, zoneIndex)
+        --RNGLOG('Set zone with the following params position '..repr(pos)..' zoneIndex '..zoneIndex)
+        if not pos then
+            --RNGLOG('No pos in configure platoon function')
+            return false
+        end
+        local zoneID = MAP:GetZoneID(pos,zoneIndex)
+        -- zoneID <= 0 => not in a zone
+        if zoneID > 0 then
+            platoon.Zone = zoneID
+        else
+            platoon.Zone = false
+        end
+    end
+    AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
+    platoon.CurrentPlatoonThreat = platoon:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+    if platoon.MovementLayer == 'Water' or platoon.MovementLayer == 'Amphibious' then
+        platoon.CurrentPlatoonThreatAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+        platoon.CurrentPlatoonThreatAntiNavy = platoon:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
+        platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
+    end
+    -- This is just to make the platoon functions a little easier to read
+    if not platoon.EnemyRadius then
+        platoon.EnemyRadius = 55
+    end
+    local aiBrain = platoon:GetBrain()
+    local platoonUnits = GetPlatoonUnits(platoon)
+    local maxPlatoonStrikeDamage = 0
+    local maxPlatoonDPS = 0
+    local maxPlatoonStrikeRadius = 20
+    local maxPlatoonStrikeRadiusDistance = 0
+    platoon.UnitRatios = {
+        DIRECTFIRE = 0,
+        INDIRECTFIRE = 0,
+        ANTIAIR = 0,
+    }
+    if platoonUnits > 0 then
+        for k, v in platoonUnits do
+            if not v.Dead then
+                if not v.PlatoonHandle then
+                    v.PlatoonHandle = platoon
+                end
+                if platoon.PlatoonData.SetWeaponPriorities or platoon.MovementLayer == 'Air' then
+                    for i = 1, v:GetWeaponCount() do
+                        local wep = v:GetWeapon(i)
+                        local weaponBlueprint = wep:GetBlueprint()
+                        if weaponBlueprint.CannotAttackGround then
+                            continue
+                        end
+                        if platoon.MovementLayer == 'Air' then
+                            --RNGLOG('Unit id is '..v.UnitId..' Configure Platoon Weapon Category'..weaponBlueprint.WeaponCategory..' Damage Radius '..weaponBlueprint.DamageRadius)
+                        end
+                        if v.Blueprint.CategoriesHash.BOMBER and (weaponBlueprint.WeaponCategory == 'Bomb' or weaponBlueprint.RangeCategory == 'UWRC_DirectFire') then
+                            v.DamageRadius = weaponBlueprint.DamageRadius
+                            v.StrikeDamage = weaponBlueprint.Damage * weaponBlueprint.MuzzleSalvoSize
+                            if weaponBlueprint.InitialDamage then
+                                v.StrikeDamage = v.StrikeDamage + (weaponBlueprint.InitialDamage * weaponBlueprint.MuzzleSalvoSize)
+                            end
+                            v.StrikeRadiusDistance = weaponBlueprint.MaxRadius
+                            maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + v.StrikeDamage
+                            if weaponBlueprint.DamageRadius > 0 or  weaponBlueprint.DamageRadius < maxPlatoonStrikeRadius then
+                                maxPlatoonStrikeRadius = weaponBlueprint.DamageRadius
+                            end
+                            if v.StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
+                                maxPlatoonStrikeRadiusDistance = v.StrikeRadiusDistance
+                            end
+                            --RNGLOG('Have set units DamageRadius to '..v.DamageRadius)
+                        end
+                        if v.Blueprint.CategoriesHash.GUNSHIP and weaponBlueprint.RangeCategory == 'UWRC_DirectFire' then
+                            v.ApproxDPS = RUtils.CalculatedDPSRNG(weaponBlueprint) --weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
+                            maxPlatoonDPS = maxPlatoonDPS + v.ApproxDPS
+                        end
+                    end
+                end
+                if EntityCategoryContains(categories.SCOUT, v) then
+                    platoon.ScoutPresent = true
+                    platoon.ScoutUnit = v
+                end
+                local callBacks = aiBrain:GetCallBackCheck(v)
+                local primaryWeaponDamage = 0
+                for _, weapon in v.Blueprint.Weapon or {} do
+                    -- unit can have MaxWeaponRange entry from the last platoon
+                    if weapon.Damage and weapon.Damage > primaryWeaponDamage then
+                        primaryWeaponDamage = weapon.Damage
+                        if not v.MaxWeaponRange or weapon.MaxRadius > v.MaxWeaponRange then
+                            -- save the weaponrange 
+                            v.MaxWeaponRange = weapon.MaxRadius * 0.9 -- maxrange minus 10%
+                            -- save the weapon balistic arc, we need this later to check if terrain is blocking the weapon line of sight
+                            if weapon.BallisticArc == 'RULEUBA_LowArc' then
+                                v.WeaponArc = 'low'
+                            elseif weapon.BallisticArc == 'RULEUBA_HighArc' then
+                                v.WeaponArc = 'high'
+                            else
+                                v.WeaponArc = 'none'
+                            end
+                        end
+                    end
+                    if not platoon.MaxPlatoonWeaponRange or platoon.MaxPlatoonWeaponRange < v.MaxWeaponRange then
+                        platoon.MaxPlatoonWeaponRange = v.MaxWeaponRange
+                    end
+                end
+                if v:TestToggleCaps('RULEUTC_StealthToggle') then
+                    v:SetScriptBit('RULEUTC_StealthToggle', false)
+                end
+                if v:TestToggleCaps('RULEUTC_CloakToggle') then
+                    v:SetScriptBit('RULEUTC_CloakToggle', false)
+                end
+                if v:TestToggleCaps('RULEUTC_JammingToggle') then
+                    v:SetScriptBit('RULEUTC_JammingToggle', false)
+                end
+                v.smartPos = {0,0,0}
+                if not v.MaxWeaponRange then
+                    --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(platoon.BuilderName))
+                end
+            end
+        end
+    end
+    if maxPlatoonStrikeDamage > 0 then
+        platoon.PlatoonStrikeDamage = maxPlatoonStrikeDamage
+    end
+    if maxPlatoonStrikeRadius > 0 then
+        platoon.PlatoonStrikeRadius = maxPlatoonStrikeRadius
+    end
+    if maxPlatoonStrikeRadiusDistance > 0 then
+        platoon.PlatoonStrikeRadiusDistance = maxPlatoonStrikeRadiusDistance
+    end
+    if maxPlatoonDPS > 0 then
+        platoon.MaxPlatoonDPS = maxPlatoonDPS
+    end
+    if not platoon.Zone then
+        if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
+           --RNGLOG('Set Zone on platoon during initial config')
+           --RNGLOG('Zone Index is '..aiBrain.Zones.Land.index)
+            SetZone(table.copy(GetPlatoonPosition(platoon)), aiBrain.Zones.Land.index)
+        elseif platoon.MovementLayer == 'Water' then
+            --SetZone(PlatoonPosition, aiBrain.Zones.Water.index)
+        end
+    end
+end
+
 --[[
     -- Calculate dot product between two 3D vectors (same as before)
 
