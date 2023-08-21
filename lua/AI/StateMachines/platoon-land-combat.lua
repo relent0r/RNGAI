@@ -1,4 +1,4 @@
-local AIPlatoon = import("/lua/aibrains/platoons/platoon-base.lua").AIPlatoon
+local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local NavUtils = import("/lua/sim/navutils.lua")
 local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
@@ -28,27 +28,9 @@ local RNGMAX = math.max
 ---@field ThreatToEvade Vector | nil
 ---@field LocationToRaid Vector | nil
 ---@field OpportunityToRaid Vector | nil
-AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
+AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
 
     PlatoonName = 'LandCombatBehavior',
-
-    ---@param self AIPlatoon
-    OnDestroy = function(self)
-        if self.BuilderHandle then
-            self.BuilderHandle:RemoveHandle(self)
-        end
-        self.Trash:Destroy()
-    end,
-
-    PlatoonDisbandNoAssign = function(self)
-        if self.BuilderHandle then
-            self.BuilderHandle:RemoveHandle(self)
-        end
-        for k,v in self:GetPlatoonUnits() do
-            v.PlatoonHandle = nil
-        end
-        self:GetBrain():DisbandPlatoon(self)
-    end,
 
     Start = State {
 
@@ -278,8 +260,8 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
         Main = function(self)
             local units=GetPlatoonUnits(self)
             for k,unit in self.targetcandidates do
-                if not unit or unit.Dead or not unit.chpworth then 
-                    --RNGLOG('Unit with no chpworth is '..unit.UnitId) 
+                if not unit or unit.Dead or not unit.machineworth then 
+                    --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
                     table.remove(self.targetcandidates,k) 
                 end
             end
@@ -290,7 +272,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
                     local unitPos = v:GetPosition()
                     for l, m in self.targetcandidates do
                         if m and not m.Dead then
-                            local tmpDistance = VDist3Sq(unitPos,m:GetPosition())*m.chpworth
+                            local tmpDistance = VDist3Sq(unitPos,m:GetPosition())*m.machineworth
                             if not closestTarget or tmpDistance < closestTarget then
                                 target = m
                                 closestTarget = tmpDistance
@@ -471,7 +453,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
             local aiBrain = self:GetBrain()
             local location = false
             local avoidTargetPos
-            local target = RUtils.GetClosestUnitRNG(aiBrain, self, self.Pos, (categories.MOBILE + categories.STRUCTURE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, 128, 'Enemy')
+            local target = StateUtils.GetClosestUnitRNG(aiBrain, self, self.Pos, (categories.MOBILE + categories.STRUCTURE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, 128, 'Enemy')
             if target and not target.Dead then
                 local targetRange = StateUtils.GetUnitMaxWeaponRange(target)
                 if targetRange then
@@ -490,12 +472,12 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
                 coroutine.yield(40)
             end
             if aiBrain.GridPresence:GetInferredStatus(self.Pos) == 'Hostile' then
-                location = RUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), true, 'Enemy')
+                location = StateUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), true, 'Enemy')
             else
-                location = RUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), 'Ally')
+                location = StateUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), 'Ally')
             end
             if (not location) then
-                local closestBase = RUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
+                local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
                 if closestBase then
                     --LOG('base only Closest base is '..closestBase)
                     location = aiBrain.BuilderManagers[closestBase].Position
@@ -521,8 +503,8 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
             local supportUnits = self:GetSquadUnits('Support')
             if supportUnits then
                 for _, v in supportUnits do
-                    if not self.chpdata then
-                        self.chpdata = {name = 'CHPTruePlatoon',id=v.EntityId}
+                    if not self.machinedata then
+                        self.machinedata = {name = 'TruePlatoon',id=v.EntityId}
                     end
                     IssueClearCommands(v)
                     if EntityCategoryContains(categories.SCOUT, v) then
@@ -634,8 +616,8 @@ AssignToUnitsMachine = function(data, platoon, units)
         if platoonUnits then
             for _, v in platoonUnits do
                 v.PlatoonHandle = platoon
-                if not platoon.chpdata then
-                    platoon.chpdata = {name = 'CHPTruePlatoon',id=v.EntityId}
+                if not platoon.machinedata then
+                    platoon.machinedata = {name = 'TruePlatoon',id=v.EntityId}
                 end
                 IssueClearCommands(v)
                 if EntityCategoryContains(categories.SCOUT, v) then
@@ -725,13 +707,13 @@ end
 ---@param data { Behavior: 'AIBehaviorLandCombat' }
 ---@param units Unit[]
 StartLandCombatThreads = function(brain, platoon)
-    brain:ForkThread(LandCombatThreatThreads, platoon)
+    brain:ForkThread(LandCombatPositionThread, platoon)
+    brain:ForkThread(StateUtils.ZoneUpdate, platoon)
 end
 
 ---@param aiBrain AIBrain
 ---@param platoon AIPlatoon
-LandCombatThreatThreads = function(aiBrain, platoon)
-    coroutine.yield(10)
+LandCombatPositionThread = function(aiBrain, platoon)
     local UnitCategories = categories.ANTIAIR
     while aiBrain:PlatoonExists(platoon) do
 

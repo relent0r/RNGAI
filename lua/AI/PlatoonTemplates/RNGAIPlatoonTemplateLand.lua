@@ -125,31 +125,6 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'RNGAI T1 Zone Raiders Small',
-    Plan = 'ZoneControlRNG',    
-    GlobalSquads = {
-        { landDirectFireCategoryNoSniper, 3, 8, 'Attack', 'none' },
-        { categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.TECH3 - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL - categories.SILO, 0, 1, 'Artillery', 'none' },
-        { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
-        { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'Attack', 'none' },
-        { categories.LAND * categories.SCOUT, 0, 1, 'Guard', 'none' },
-    }
-}
-
-PlatoonTemplate {
-    Name = 'RNGAI Zone Raiders Medium',
-    Plan = 'ZoneControlRNG',    
-    GlobalSquads = {
-        { categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL - categories.TECH3 - categories.xrl0302 , 4, 15, 'attack', 'none' },
-        { categories.LAND * categories.MOBILE * categories.DIRECTFIRE * categories.TECH3 - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL - categories.xrl0302  , 0, 4, 'attack', 'none' },
-        { categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.TECH3 - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL - categories.SILO, 0, 5, 'Artillery', 'none' },
-        { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
-        { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
-        { categories.LAND * categories.SCOUT, 0, 1, 'Guard', 'none' },
-    }
-}
-
-PlatoonTemplate {
     Name = 'RNGAI Antiair Small',
     Plan = 'GunshipStrikeAIRNG',    
     GlobalSquads = {

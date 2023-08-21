@@ -1,4 +1,4 @@
-local AIPlatoon = import("/lua/aibrains/platoons/platoon-base.lua").AIPlatoon
+local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local NavUtils = import("/lua/sim/navutils.lua")
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
@@ -27,27 +27,9 @@ local RNGSORT = table.sort
 ---@field ThreatToEvade Vector | nil
 ---@field LocationToRaid Vector | nil
 ---@field OpportunityToRaid Vector | nil
-AIPlatoonFighterBehavior = Class(AIPlatoon) {
+AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
 
     PlatoonName = 'FighterBehavior',
-
-    ---@param self AIPlatoon
-    OnDestroy = function(self)
-        if self.BuilderHandle then
-            self.BuilderHandle:RemoveHandle(self)
-        end
-        self.Trash:Destroy()
-    end,
-
-    PlatoonDisbandNoAssign = function(self)
-        if self.BuilderHandle then
-            self.BuilderHandle:RemoveHandle(self)
-        end
-        for k,v in self:GetPlatoonUnits() do
-            v.PlatoonHandle = nil
-        end
-        self:GetBrain():DisbandPlatoon(self)
-    end,
 
     Start = State {
 

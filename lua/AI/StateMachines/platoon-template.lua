@@ -1,4 +1,4 @@
-
+AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 
 ---@class AIPlatoonBehavior : AIPlatoon
 ---@field RetreatCount number 

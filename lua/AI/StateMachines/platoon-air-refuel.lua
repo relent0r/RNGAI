@@ -1,4 +1,4 @@
-local AIPlatoon = import("/lua/aibrains/platoons/platoon-base.lua").AIPlatoon
+local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local behaviors = import('/lua/ai/AIBehaviors.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIUtils = import('/lua/ai/aiutilities.lua')
@@ -12,27 +12,9 @@ local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 ---@class AIPlatoonBehavior : AIPlatoon
 ---@field RetreatCount number 
 ---@field ThreatToEvade Vector | nil
-AIPlatoonAirRefuelBehavior = Class(AIPlatoon) {
+AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
 
     PlatoonName = 'AirRefuelBehavior',
-
-    ---@param self AIPlatoon
-    OnDestroy = function(self)
-        if self.BuilderHandle then
-            self.BuilderHandle:RemoveHandle(self)
-        end
-        self.Trash:Destroy()
-    end,
-
-    PlatoonDisbandNoAssign = function(self)
-        if self.BuilderHandle then
-            self.BuilderHandle:RemoveHandle(self)
-        end
-        for k,v in self:GetPlatoonUnits() do
-            v.PlatoonHandle = nil
-        end
-        self:GetBrain():DisbandPlatoon(self)
-    end,
 
     Start = State {
 

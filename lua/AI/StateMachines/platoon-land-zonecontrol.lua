@@ -1,33 +1,20 @@
+local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local NavUtils = import('/lua/sim/NavUtils.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
+local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
+local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
+local PlatoonExists = moho.aibrain_methods.PlatoonExists
 
 ---@class AIPlatoonBehavior : AIPlatoon
 ---@field RetreatCount number 
 ---@field ThreatToEvade Vector | nil
 ---@field LocationToRaid Vector | nil
 ---@field OpportunityToRaid Vector | nil
-AIPlatoonBehavior = Class(AIPlatoon) {
+AIPlatoonBehavior = Class(AIPlatoonRNG) {
 
     PlatoonName = 'ZoneControlBehavior',
-
-    ---@param self AIPlatoon
-    OnDestroy = function(self)
-        if self.BuilderHandle then
-            self.BuilderHandle:RemoveHandle(self)
-        end
-        self.Trash:Destroy()
-    end,
-
-    PlatoonDisbandNoAssign = function(self)
-        if self.BuilderHandle then
-            self.BuilderHandle:RemoveHandle(self)
-        end
-        for k,v in self:GetPlatoonUnits() do
-            v.PlatoonHandle = nil
-        end
-        self:GetBrain():DisbandPlatoon(self)
-    end,
 
     Start = State {
 
@@ -38,6 +25,7 @@ AIPlatoonBehavior = Class(AIPlatoon) {
         Main = function(self)
 
             -- requires expansion markers
+            LOG('Starting zone control')
             if not import("/lua/sim/markerutilities/expansions.lua").IsGenerated() then
                 self:LogWarning('requires generated expansion markers')
                 self:ChangeState(self.Error)
@@ -70,7 +58,9 @@ AIPlatoonBehavior = Class(AIPlatoon) {
             self.CurrentPlatoonThreat = false
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
             RUtils.ConfigurePlatoon(self)
-
+            StartZoneControlThreads(aiBrain, self)
+            self:ChangeState(self.DecideWhatToDo)
+            return
         end,
     },
 
@@ -82,6 +72,9 @@ AIPlatoonBehavior = Class(AIPlatoon) {
         ---@param self AIPlatoonACUBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
+            if not PlatoonExists(aiBrain, self) then
+                return
+            end
             local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius)
             if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
                 self.retreat=true
@@ -100,7 +93,7 @@ AIPlatoonBehavior = Class(AIPlatoon) {
                 end
             end
             local target
-            if not target and not targetZone then
+            if not target then
                 if StateUtils.SimpleTarget(self,aiBrain) then
                     self:ChangeState(self.CombatLoop)
                     return
@@ -109,7 +102,7 @@ AIPlatoonBehavior = Class(AIPlatoon) {
             local targetZone
             if not target then
                 target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
-                if target and RUtils.HaveUnitVisual(aiBrain, highPriorityTarget, true) then
+                if target and RUtils.HaveUnitVisual(aiBrain, target, true) then
                     self.BuilderData = {
                         AttackTarget = target,
                         Position = target:GetPosition()
@@ -132,6 +125,50 @@ AIPlatoonBehavior = Class(AIPlatoon) {
         end,
     },
 
+    CombatLoop = State {
+
+        StateName = 'CombatLoop',
+
+        --- The platoon searches for a target
+        ---@param self AIPlatoonLandCombatBehavior
+        Main = function(self)
+            local units=GetPlatoonUnits(self)
+            for k,unit in self.targetcandidates do
+                if not unit or unit.Dead or not unit.machineworth then 
+                    --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
+                    table.remove(self.targetcandidates,k) 
+                end
+            end
+            local target
+            local closestTarget
+            for _,v in units do
+                if v and not v.Dead then
+                    local unitPos = v:GetPosition()
+                    for l, m in self.targetcandidates do
+                        if m and not m.Dead then
+                            local tmpDistance = VDist3Sq(unitPos,m:GetPosition())*m.machineworth
+                            if not closestTarget or tmpDistance < closestTarget then
+                                target = m
+                                closestTarget = tmpDistance
+                            end
+                        end
+                    end
+                    if target then
+                        if VDist3Sq(unitPos,target:GetPosition())>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
+                            IssueClearCommands({v}) 
+                            IssueMove({v},target:GetPosition())
+                            continue
+                        end
+                        StateUtils.VariableKite(self,v,target)
+                    end
+                end
+            end
+            coroutine.yield(25)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
     Retreating = State {
 
         StateName = "Retreating",
@@ -142,7 +179,7 @@ AIPlatoonBehavior = Class(AIPlatoon) {
             local aiBrain = self:GetBrain()
             local location = false
             local avoidTargetPos
-            local target = RUtils.GetClosestUnitRNG(aiBrain, self, self.Pos, (categories.MOBILE + categories.STRUCTURE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, 128, 'Enemy')
+            local target = StateUtils.GetClosestUnitRNG(aiBrain, self, self.Pos, (categories.MOBILE + categories.STRUCTURE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, 128, 'Enemy')
             if target and not target.Dead then
                 local targetRange = StateUtils.GetUnitMaxWeaponRange(target)
                 if targetRange then
@@ -161,12 +198,12 @@ AIPlatoonBehavior = Class(AIPlatoon) {
                 coroutine.yield(40)
             end
             if aiBrain.GridPresence:GetInferredStatus(self.Pos) == 'Hostile' then
-                location = RUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), true, 'Enemy')
+                location = StateUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), true, 'Enemy')
             else
-                location = RUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), 'Ally')
+                location = StateUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), 'Ally')
             end
             if (not location) then
-                local closestBase = RUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
+                local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
                 if closestBase then
                     --LOG('base only Closest base is '..closestBase)
                     location = aiBrain.BuilderManagers[closestBase].Position
@@ -337,6 +374,7 @@ AIPlatoonBehavior = Class(AIPlatoon) {
 AssignToUnitsMachine = function(data, platoon, units)
     if units and not table.empty(units) then
         -- meet platoon requirements
+        LOG('Assigning units to zone control')
         import("/lua/sim/navutils.lua").Generate()
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
@@ -351,6 +389,9 @@ AssignToUnitsMachine = function(data, platoon, units)
             for _, unit in platoonUnits do
                 IssueClearCommands(unit)
                 unit.PlatoonHandle = platoon
+                if not platoon.machinedata then
+                    platoon.machinedata = {name = 'ZoneControl',id=unit.EntityId}
+                end
                 if not unit.Dead and unit:TestToggleCaps('RULEUTC_StealthToggle') then
                     unit:SetScriptBit('RULEUTC_StealthToggle', false)
                 end
@@ -368,14 +409,13 @@ end
 ---@param data { Behavior: 'AIBehaviorZoneControl' }
 ---@param units Unit[]
 StartZoneControlThreads = function(brain, platoon)
-    brain:ForkThread(ZoneControlPositionThreads, platoon)
+    brain:ForkThread(ZoneControlPositionThread, platoon)
+    brain:ForkThread(StateUtils.ZoneUpdate, platoon)
 end
 
 ---@param aiBrain AIBrain
 ---@param platoon AIPlatoon
-ZoneControlPositionThreads = function(aiBrain, platoon)
-    coroutine.yield(10)
-    local UnitCategories = categories.ANTIAIR
+ZoneControlPositionThread = function(aiBrain, platoon)
     while aiBrain:PlatoonExists(platoon) do
         local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, platoon)
         if platBiasUnit and not platBiasUnit.Dead then

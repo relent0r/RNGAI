@@ -48,7 +48,7 @@ function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
     return markerList
 end
 
-function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath)
+function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGeneratePath)
     local ALLBPS = __blueprints
     if not destination then
         return false
@@ -60,8 +60,10 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
     end
     local jobType = unit.PlatoonHandle.PlatoonData.JobType or 'None'
     -- don't check a path if we are in build range
-    if not alwaysCheckPath and VDist3Sq(pos, destination) < 144 then
-        return true
+    if not alwaysGeneratePath and VDist3Sq(pos, destination) < 625 then
+        if NavUtils.CanPathTo('Amphibious', pos, destination) then
+            return true
+        end
     end
 
     -- first try to find a path with markers. 
@@ -76,13 +78,9 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysCheckPath
         -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
         if reason == 'NoGraph' then
             result = true
-        elseif VDist2(pos[1], pos[3], destination[1], destination[3]) < 200 then
+        elseif VDist2Sq(pos[1], pos[3], destination[1], destination[3]) < 40000 then
             --SPEW('* AI-RNG: EngineerMoveWithSafePath(): executing CanPathTo(). LUA GenerateSafePathTo returned: ('..repr(reason)..') '..VDist2(pos[1], pos[3], destination[1], destination[3]))
             -- be really sure we don't try a pathing with a destoryed c-object
-            if IsDestroyed(unit) then
-                --SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
-                return false
-            end
             result, navReason = NavUtils.CanPathTo('Amphibious', pos, destination)
         end 
     end

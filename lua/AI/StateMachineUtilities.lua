@@ -1,7 +1,10 @@
 local NavUtils = import('/lua/sim/NavUtils.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
+local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
+local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
@@ -32,8 +35,8 @@ SimpleTarget = function(platoon,aiBrain,guardee)--find enemies in a range and at
             end
         end
     end
-    local id=platoon.chpdata.id
-    --RNGLOG('chpdata.id '..repr(id))
+    local id=platoon.machinedata.id
+    --RNGLOG('machinedata.id '..repr(id))
     local position=platoon.Pos
     if not position then return false end
     if guardee and not guardee.Dead then
@@ -51,21 +54,21 @@ SimpleTarget = function(platoon,aiBrain,guardee)--find enemies in a range and at
     for _,unit in candidates do
         local unitPos = unit:GetPosition()
         if ViableTargetCheck(unit, unitPos) then
-            if not unit.chppriority then unit.chppriority={} unit.chpdistance={} end
+            if not unit.machinepriority then unit.machinepriority={} unit.machinedistance={} end
             if not unit.dangerupdate or gameTime-unit.dangerupdate>10 then
-                unit.chpdanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30).enemy)
+                unit.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30).enemy)
                 unit.dangerupdate=gameTime
             end
-            if not unit.chpvalue then unit.chpvalue=unit.Blueprint.Economy.BuildCostMass/GetTrueHealth(unit) end
-            unit.chpworth=unit.chpvalue/GetTrueHealth(unit)
-            unit.chpdistance[id]=VDist3(position,unitPos)
-            unit.chppriority[id]=unit.chpworth/math.max(30,unit.chpdistance[id])/unit.chpdanger
+            if not unit.machinevalue then unit.machinevalue=unit.Blueprint.Economy.BuildCostMass/GetTrueHealth(unit) end
+            unit.machineworth=unit.machinevalue/GetTrueHealth(unit)
+            unit.machinedistance[id]=VDist3(position,unitPos)
+            unit.machinepriority[id]=unit.machineworth/math.max(30,unit.machinedistance[id])/unit.machinedanger
             table.insert(platoon.targetcandidates,unit)
             --RNGLOG('CheckPriority On Units '..repr(unit.chppriority))
         end
     end
     if not table.empty(platoon.targetcandidates) then
-        table.sort(platoon.targetcandidates, function(a,b) return a.chppriority[id]>b.chppriority[id] end)
+        table.sort(platoon.targetcandidates, function(a,b) return a.machinepriority[id]>b.machinepriority[id] end)
         return true
     end
     return false
@@ -378,8 +381,8 @@ end
 CHPMergePlatoon = function(self,radius)
     local aiBrain = self:GetBrain()
     local VDist3Sq = VDist3Sq
-    if not self.chpdata then self.chpdata={} end
-    self.chpdata.merging=true
+    if not self.machinedata then self.machinedata={} end
+    self.machinedata.merging=true
     coroutine.yield(3)
     --local other
     local best = radius*radius
@@ -390,7 +393,7 @@ CHPMergePlatoon = function(self,radius)
     local platoonCount = RNGGETN(platoonUnits)
     if platoonCount<1 or platoonCount>30 then return end
     for i, p in ps1 do
-        if not p or p==self or not aiBrain:PlatoonExists(p) or not p.chpdata.name or not p.chpdata.name==self.chpdata.name or VDist3Sq(platoonPos,GetPlatoonPosition(p))>best or RNGGETN(p:GetPlatoonUnits())>30 then  
+        if not p or p==self or not aiBrain:PlatoonExists(p) or not p.machinedata.name or not p.machinedata.name==self.machinedata.name or VDist3Sq(platoonPos,GetPlatoonPosition(p))>best or RNGGETN(p:GetPlatoonUnits())>30 then  
             --RNGLOG('merge table removed '..repr(i)..' merge table now holds '..repr(RNGGETN(ps)))
         else
             RNGINSERT(ps,p)
@@ -398,17 +401,17 @@ CHPMergePlatoon = function(self,radius)
     end
     if RNGGETN(ps)<1 then 
         coroutine.yield(30)
-        self.chpdata.merging=false
+        self.machinedata.merging=false
         return 
     elseif RNGGETN(ps)==1 then
-        if ps[1].chpdata and self then
+        if ps[1].machinedata and self then
             -- actually merge
             if platoonCount<RNGGETN(ps[1]:GetPlatoonUnits()) then
-                self.chpdata.merging=false
+                self.machinedata.merging=false
                 return
             else
                 local units = ps[1]:GetPlatoonUnits()
-                --RNGLOG('ps=1 merging '..repr(ps[1].chpdata)..'into '..repr(self.chpdata))
+                --RNGLOG('ps=1 merging '..repr(ps[1].machinedata)..'into '..repr(self.machinedata))
                 local validUnits = {}
                 local bValidUnits = false
                 for _,u in units do
@@ -421,7 +424,7 @@ CHPMergePlatoon = function(self,radius)
                     return
                 end
                 aiBrain:AssignUnitsToPlatoon(self,validUnits,'Attack','NoFormation')
-                self.chpdata.merging=false
+                self.machinedata.merging=false
                 if not ps[1].PlatoonDisbandNoAssign then
                     LOG('Platoon has no disband '..(ps[1].BuilderName))
                 end
@@ -438,7 +441,7 @@ CHPMergePlatoon = function(self,radius)
                     continue
                 else
                     local units = other:GetPlatoonUnits()
-                    --RNGLOG('ps>1 merging '..repr(other.chpdata)..'into '..repr(self.chpdata))
+                    --RNGLOG('ps>1 merging '..repr(other.machinedata)..'into '..repr(self.machinedata))
                     local validUnits = {}
                     local bValidUnits = false
                     for _,u in units do
@@ -451,7 +454,7 @@ CHPMergePlatoon = function(self,radius)
                         continue
                     end
                     aiBrain:AssignUnitsToPlatoon(self,validUnits,'Attack','NoFormation')
-                    self.chpdata.merging=false
+                    self.machinedata.merging=false
                     if not other.PlatoonDisbandNoAssign then
                         LOG('Platoon has no disband '..(other.BuilderName))
                     end
@@ -460,7 +463,7 @@ CHPMergePlatoon = function(self,radius)
                 end
             end
         end
-        self.chpdata.merging=false
+        self.machinedata.merging=false
     end
 end
 
@@ -680,4 +683,70 @@ GetClosestPlatoonRNG = function(platoon, planName, distanceLimit, angleTargetPos
     end
     --RNGLOG('No platoon found within 250 units')
     return false, false
+end
+
+ZoneUpdate = function(aiBrain, platoon)
+    local function SetZone(pos, zoneIndex)
+        --RNGLOG('Set zone with the following params position '..repr(pos)..' zoneIndex '..zoneIndex)
+        if not pos then
+            --RNGLOG('No Pos in Zone Update function')
+            return false
+        end
+        local zoneID = MAP:GetZoneID(pos,zoneIndex)
+        -- zoneID <= 0 => not in a zone
+        if zoneID > 0 then
+            platoon.Zone = zoneID
+        else
+            local searchPoints = RUtils.DrawCirclePoints(4, 5, pos)
+            for k, v in searchPoints do
+                zoneID = MAP:GetZoneID(v,zoneIndex)
+                if zoneID > 0 then
+                    --RNGLOG('We found a zone when we couldnt before '..zoneID)
+                    platoon.Zone = zoneID
+                    break
+                end
+            end
+        end
+    end
+    if not platoon.MovementLayer then
+        AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
+    end
+    while aiBrain:PlatoonExists(platoon) do
+        if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
+            SetZone(GetPlatoonPosition(platoon), aiBrain.Zones.Land.index)
+        elseif platoon.MovementLayer == 'Water' then
+            --SetZone(PlatoonPosition, aiBrain.Zones.Water.index)
+        end
+        GetPlatoonRatios(platoon)
+        WaitTicks(30)
+    end
+end
+
+GetPlatoonRatios = function(platoon)
+    local directFire = 0
+    local indirectFire = 0
+    local antiAir = 0
+    local total = 0
+
+    for k, v in GetPlatoonUnits(platoon) do
+        if not v.Dead then
+            if v.Blueprint.CategoriesHash.DIRECTFIRE then
+                directFire = directFire + 1
+            elseif v.Blueprint.CategoriesHash.INDIRECTFIRE then
+                indirectFire = indirectFire + 1
+            elseif v.Blueprint.CategoriesHash.ANTIAIR then
+                antiAir = antiAir + 1
+            end
+            total = total + 1
+        end
+    end
+    if directFire > 0 then
+        platoon.UnitRatios.DIRECTFIRE = directFire / total * 100
+    end
+    if indirectFire > 0 then
+        platoon.UnitRatios.INDIRECTFIRE = indirectFire / total * 100
+    end
+    if antiAir > 0 then
+        platoon.UnitRatios.ANTIAIR = antiAir / total * 100
+    end
 end

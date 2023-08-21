@@ -3,9 +3,8 @@ local RNGINSERT = table.insert
 local RNGSORT = table.sort
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local NavUtils = import("/lua/sim/navutils.lua")
-local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
-local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
@@ -631,7 +630,7 @@ function CDRCallPlatoon(cdr, threatRequired)
         --RNGLOG('No Support Platoon, creating new one')
         supportPlatoonAvailable = aiBrain:MakePlatoon('ACUSupportPlatoon', 'ACUSupportRNG')
         supportPlatoonAvailable:UniquelyNamePlatoon('ACUSupportPlatoon')
-        supportPlatoonAvailable:ForkThread(ZoneUpdate)
+        supportPlatoonAvailable:ForkThread(StateUtils.ZoneUpdate)
         if not table.empty(validUnits.Attack) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Attack, 'Attack', 'None')
         end
@@ -760,44 +759,6 @@ function SetAcuSnipeMode(unit, bool)
     for i = 1, unit:GetWeaponCount() do
         local wep = unit:GetWeapon(i)
         wep:SetWeaponPriorities(targetPriorities)
-    end
-end
-
-ZoneUpdate = function(platoon)
-    local aiBrain = platoon:GetBrain()
-    local function SetZone(pos, zoneIndex)
-        --RNGLOG('Set zone with the following params position '..repr(pos)..' zoneIndex '..zoneIndex)
-        if not pos then
-            --RNGLOG('No Pos in Zone Update function')
-            return false
-        end
-        local zoneID = MAP:GetZoneID(pos,zoneIndex)
-        -- zoneID <= 0 => not in a zone
-        if zoneID > 0 then
-            platoon.Zone = zoneID
-        else
-            local searchPoints = RUtils.DrawCirclePoints(4, 5, pos)
-            for k, v in searchPoints do
-                zoneID = MAP:GetZoneID(v,zoneIndex)
-                if zoneID > 0 then
-                    --RNGLOG('We found a zone when we couldnt before '..zoneID)
-                    platoon.Zone = zoneID
-                    break
-                end
-            end
-        end
-    end
-    if not platoon.MovementLayer then
-        AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
-    end
-    while aiBrain:PlatoonExists(platoon) do
-        if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
-            SetZone(GetPlatoonPosition(platoon), aiBrain.Zones.Land.index)
-        elseif platoon.MovementLayer == 'Water' then
-            --SetZone(PlatoonPosition, aiBrain.Zones.Water.index)
-        end
-        platoon:GetPlatoonRatios()
-        WaitTicks(30)
     end
 end
 
