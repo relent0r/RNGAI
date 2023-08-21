@@ -321,9 +321,8 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
-            local armyIndex = aiBrain:GetArmyIndex()
             local platoonUnits = GetPlatoonUnits(self)
-            local enemyunits=nil
+            local currentPathNum=0
             local pathmaxdist=0
             local lastfinalpoint=nil
             local lastfinaldist=0
@@ -452,6 +451,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
                         if not type(i)=='number' or type(v)=='number' then continue end
                         if i==nodenum then continue end
                         if VDist2Sq(v[1],v[3],self.Pos[1],self.Pos[3])<1089 then
+                            currentPathNum = currentPathNum + 1
                             table.remove(self.path,i)
                         end
                     end
@@ -470,86 +470,32 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoon) {
         Main = function(self)
             local aiBrain = self:GetBrain()
             local location = false
-            local targetPos = {}
-            local RangeList = {
-                [1] = 30,
-                [2] = 64,
-                [3] = 128,
-                [4] = 192,
-            }
-            local target = self:FindClosestUnit('Attack', 'Enemy', true, categories.MOBILE * categories.DIRECTFIRE)
+            local avoidTargetPos
+            local target = RUtils.GetClosestUnitRNG(aiBrain, self, self.Pos, (categories.MOBILE + categories.STRUCTURE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, 128, 'Enemy')
             if target and not target.Dead then
                 local targetRange = StateUtils.GetUnitMaxWeaponRange(target)
                 if targetRange then
                     targetRange = targetRange + 10
                 end
                 local avoidRange = math.max(targetRange or 60)
-                targetPos = target:GetPosition()
+                local targetPos = target:GetPosition()
                 IssueClearCommands(GetPlatoonUnits(self))
-                self:MoveToLocation(RUtils.AvoidLocation(targetPos, self.Pos, avoidRange), false)
+                local rx = self.Pos[1] - targetPos[1]
+                local rz = self.Pos[3] - targetPos[3]
+                if rx * rx + rz * rz < targetRange * targetRange then
+                    self:MoveToLocation(RUtils.AvoidLocation(targetPos, self.Pos, avoidRange), false)
+                else
+                    self:MoveToLocation(self.Home, false)
+                end
                 coroutine.yield(40)
             end
             if aiBrain.GridPresence:GetInferredStatus(self.Pos) == 'Hostile' then
-                for _, range in RangeList do
-                    local targetUnits = GetUnitsAroundPoint(aiBrain, (categories.MASSEXTRACTION + categories.ENGINEER), self.Pos, range, 'Enemy')
-                    if targetUnits then
-                        for _, unit in targetUnits do
-                            local unitPos = unit:GetPosition()
-                            if target and not target.Dead and RUtils.GetAngleRNG(self.Pos[1], self.Pos[3], unitPos[1], unitPos[3], targetPos[1], targetPos[3]) > 0.6 then
-                                if NavUtils.CanPathTo(self.MovementLayer, self.Pos,unitPos) then
-                                    local threat = RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius)
-                                    if threat.enemy < self.Threat then
-                                        --RNGLOG('Trueplatoon is going to try retreat towards an enemy unit')
-                                        location = unitPos
-                                        --RNGLOG('Retreat Position found for mex or engineer')
-                                        break
-                                    end
-                                end
-                            end
-                        end
-                    end
-                    if location then
-                        break
-                    end
-                end
+                location = RUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), true, 'Enemy')
             else
-                for _, range in RangeList do
-                    local retreatUnits = GetUnitsAroundPoint(aiBrain, (categories.MASSEXTRACTION + categories.ENGINEER), self.Pos, range, 'Ally')
-                    if retreatUnits then
-                        for _, unit in retreatUnits do
-                            local unitPos = unit:GetPosition()
-                            if NavUtils.CanPathTo(self.MovementLayer, self.Pos,unitPos) then
-                                location = unitPos
-                                --RNGLOG('Retreat Position found for mex or engineer')
-                                break
-                            end
-                        end
-                    end
-                    if location then
-                        break
-                    end
-                end
+                location = RUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), 'Ally')
             end
             if (not location) then
-                local closestBase
-                local closestBaseDistance
-                if aiBrain.BuilderManagers then
-                    local distanceToHome = VDist3Sq(self.Pos, self.Home)
-                    for baseName, base in aiBrain.BuilderManagers do
-                        if not table.empty(base.FactoryManager.FactoryList) then
-                            local baseDistance = VDist3Sq(self.Pos, base.Position)
-                            if (not closestBase or distanceToHome > baseDistance) and NavUtils.CanPathTo(self.MovementLayer, self.Pos, base.Position) then
-                                if not closestBaseDistance then
-                                    closestBaseDistance = baseDistance
-                                end
-                                if baseDistance <= closestBaseDistance then
-                                    closestBase = baseName
-                                    closestBaseDistance = baseDistance
-                                end
-                            end
-                        end
-                    end
-                end
+                local closestBase = RUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
                 if closestBase then
                     --LOG('base only Closest base is '..closestBase)
                     location = aiBrain.BuilderManagers[closestBase].Position

@@ -479,3 +479,205 @@ GetUnitMaxWeaponRange = function(unit)
         return maxRange
     end
 end
+
+GetNearExtractorRNG = function(aiBrain, platoon, platoonPosition, enemyPosition, unitCat, threatCheck, alliance)
+    local RangeList = {
+        [1] = 30,
+        [2] = 64,
+        [3] = 128,
+        [4] = 192,
+    }
+    local location
+
+    for _, range in RangeList do
+        local targetUnits = GetUnitsAroundPoint(aiBrain, unitCat, platoonPosition, range, alliance)
+        if targetUnits then
+            for _, unit in targetUnits do
+                if unit and not unit.Dead then
+                    local unitPos = unit:GetPosition()
+                    if enemyPosition then
+                        if RUtils.GetAngleRNG(platoonPosition[1], platoonPosition[3], unitPos[1], unitPos[3], enemyPosition[1], enemyPosition[3]) > 0.6 then
+                            if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition,unitPos) then
+                                if threatCheck then
+                                    local threat = RUtils.GrabPosDangerRNG(aiBrain,unitPos,platoon.EnemyRadius)
+                                    if threat.enemy < threat.ally then
+                                        --RNGLOG('Trueplatoon is going to try retreat towards an enemy unit')
+                                        location = unitPos
+                                        --RNGLOG('Retreat Position found for mex or engineer')
+                                        break
+                                    end
+                                else
+                                    location = unitPos
+                                    break
+                                end
+                            end
+                        end
+                    else
+                        if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition,unitPos) then
+                            if threatCheck then
+                                local threat = RUtils.GrabPosDangerRNG(aiBrain,unitPos,platoon.EnemyRadius)
+                                if threat.enemy < threat.ally then
+                                    --RNGLOG('Trueplatoon is going to try retreat towards an enemy unit')
+                                    location = unitPos
+                                    --RNGLOG('Retreat Position found for mex or engineer')
+                                    break
+                                end
+                            else
+                                location = unitPos
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        if location then
+            return location
+        end
+    end
+end
+
+GetClosestUnitRNG = function(aiBrain, platoon, platoonPosition, unitCat, pathCheck, threatCheck, rangeCutOff, alliance)
+    local RangeList = {
+        [1] = 30,
+        [2] = 64,
+        [3] = 128,
+        [4] = 192,
+        [5] = 256,
+        [6] = 320,
+    }
+    local closestUnit
+    local closestDistance
+    for _, range in RangeList do
+        if range <= rangeCutOff then
+            local targetUnits = GetUnitsAroundPoint(aiBrain, unitCat, platoonPosition, range, alliance)
+            if targetUnits then
+                for _, unit in targetUnits do
+                    if unit and not unit.Dead then
+                        local pathable = true
+                        local threatable = true
+                        local unitPos = unit:GetPosition()
+                        local ux = platoonPosition[1] - unitPos[1]
+                        local uz = platoonPosition[3] - unitPos[3]
+                        local distance = ux * ux + uz * uz
+                        if not closestDistance or distance < closestDistance then
+                            if pathCheck then
+                                if not NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition,unitPos) then
+                                    pathable = false
+                                end
+                            end
+                            if threatCheck then
+                                local threat = RUtils.GrabPosDangerRNG(aiBrain,unitPos,platoon.EnemyRadius)
+                                if threat.enemy > threat.ally then
+                                    threatable = false
+                                end
+                            end
+                            if pathable and threatable then
+                                closestUnit = unit
+                                closestDistance = distance
+                            end
+                        end
+                    end
+                end
+            end
+            if closestUnit then
+                return closestUnit
+            end
+        end
+    end
+end
+
+GetClosestBaseRNG = function(aiBrain, platoon, platoonPosition)
+    local closestBase
+    local closestBaseDistance
+    if aiBrain.BuilderManagers then
+        local distanceToHome = VDist3Sq(platoonPosition, platoon.Home)
+        for baseName, base in aiBrain.BuilderManagers do
+            if not table.empty(base.FactoryManager.FactoryList) then
+                local baseDistance = VDist3Sq(platoonPosition, base.Position)
+                if (not closestBase or distanceToHome > baseDistance) and NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition, base.Position) then
+                    if not closestBaseDistance then
+                        closestBaseDistance = baseDistance
+                    end
+                    if baseDistance <= closestBaseDistance then
+                        closestBase = baseName
+                        closestBaseDistance = baseDistance
+                    end
+                end
+            end
+        end
+    end
+end
+
+
+GetClosestPlatoonRNG = function(platoon, planName, distanceLimit, angleTargetPos)
+    local aiBrain = platoon:GetBrain()
+    if not aiBrain then
+        return
+    end
+    if platoon.UsingTransport then
+        return
+    end
+    local platPos = GetPlatoonPosition(platoon)
+    if not platPos then
+        return
+    end
+    local closestPlatoon = false
+    local closestDistance = 62500
+    local closestAPlatPos = false
+    if distanceLimit then
+        closestDistance = distanceLimit
+    end
+    --RNGLOG('Getting list of allied platoons close by')
+    AlliedPlatoons = aiBrain:GetPlatoonsList()
+    for _,aPlat in AlliedPlatoons do
+        if aPlat.PlanName ~= planName then
+            continue
+        end
+        if aPlat == platoon then
+            continue
+        end
+
+        if aPlat.UsingTransport then
+            continue
+        end
+
+        if aPlat.PlatoonFull then
+            --RNGLOG('Remote platoon is full, skip')
+            continue
+        end
+        if not platoon.MovementLayer then
+            AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
+        end
+        if not aPlat.MovementLayer then
+            AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
+        end
+
+        -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
+        if platoon.MovementLayer ~= aPlat.MovementLayer then
+            continue
+        end
+        local aPlatPos = GetPlatoonPosition(aPlat)
+        local aPlatDistance = VDist2Sq(platPos[1],platPos[3],aPlatPos[1],aPlatPos[3])
+        if aPlatDistance < closestDistance then
+            if angleTargetPos then
+                if RUtils.GetAngleRNG(platPos[1], platPos[3], aPlatPos[1], aPlatPos[3], angleTargetPos[1], angleTargetPos[3]) > 0.6 then
+                    closestPlatoon = aPlat
+                    closestDistance = aPlatDistance
+                    closestAPlatPos = aPlatPos
+                end
+            else
+                closestPlatoon = aPlat
+                closestDistance = aPlatDistance
+                closestAPlatPos = aPlatPos
+            end
+        end
+    end
+    if closestPlatoon then
+        if NavUtils.CanPathTo(platoon.MovementLayer, platPos,closestAPlatPos) then
+            return closestPlatoon, closestAPlatPos
+        end
+    end
+    --RNGLOG('No platoon found within 250 units')
+    return false, false
+end
