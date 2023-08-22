@@ -1,6 +1,7 @@
 local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
+local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
@@ -232,12 +233,15 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local pathmaxdist=0
             local lastfinalpoint=nil
             local lastfinaldist=0
+            if not self.path and self.BuilderData.Position and self.BuilderData.CutOff then
+                self.path = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.BuilderData.Position, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+            end
             while PlatoonExists(aiBrain, self) do
                 coroutine.yield(1)
                 if StateUtils.ExitConditions(self,aiBrain) then
                     self.navigating=false
                     self.path=false
-                    coroutine.yield(20)
+                    coroutine.yield(10)
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 else
