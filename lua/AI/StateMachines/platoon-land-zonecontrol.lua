@@ -8,6 +8,15 @@ local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
 
+local Random = Random
+local IsDestroyed = IsDestroyed
+
+local RNGGETN = table.getn
+local RNGTableEmpty = table.empty
+local RNGINSERT = table.insert
+local RNGSORT = table.sort
+local RNGMAX = math.max
+
 ---@class AIPlatoonBehavior : AIPlatoon
 ---@field RetreatCount number 
 ---@field ThreatToEvade Vector | nil
@@ -53,6 +62,12 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             else
                 self.MaxPathDistance = self.PlatoonData.MaxPathDistance or 200
             end
+            if self.PlatoonData.LocationType then
+                self.LocationType = self.PlatoonData.LocationType
+            else
+                self.LocationType = 'MAIN'
+            end
+            self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             self.MaxPlatoonWeaponRange = false
             self.ScoutUnit = false
             self.atkPri = {}
@@ -106,7 +121,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 if target and RUtils.HaveUnitVisual(aiBrain, target, true) then
                     self.BuilderData = {
                         AttackTarget = target,
-                        Position = target:GetPosition()
+                        Position = target:GetPosition(),
+                        CutOff = 400
+
                     }
                     self:ChangeState(self.Navigating)
                     return
@@ -117,7 +134,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 if targetZone then
                     self.BuilderData = {
                         TargetZone = targetZone,
-                        Position = aiBrain.Zones.Land.zones[targetZone].pos
+                        Position = aiBrain.Zones.Land.zones[targetZone].pos,
+                        CutOff = 400
                     }
                     self:ChangeState(self.Navigating)
                     return
@@ -201,7 +219,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             if aiBrain.GridPresence:GetInferredStatus(self.Pos) == 'Hostile' then
                 location = StateUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), true, 'Enemy')
             else
-                location = StateUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), 'Ally')
+                location = StateUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), false, 'Ally')
             end
             if (not location) then
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
@@ -285,7 +303,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     for _,v in platoonUnits do
                         if v and not v.Dead then
                             local unitPos = v:GetPosition()
-                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>self.MaxWeaponRange*self.MaxWeaponRange+900 then
+                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>self.MaxPlatoonWeaponRange*self.MaxPlatoonWeaponRange+900 then
                                 local vec={}
                                 vec[1],vec[2],vec[3]=v:GetVelocity()
                                 if VDist3Sq({0,0,0},vec)<1 then
@@ -339,6 +357,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             RNGINSERT(aa,v)
                         end
                     end
+                end
+                if IsDestroyed(self) then
+                    return
                 end
                 IssueClearCommands(platoonUnits)
                 if self.path then

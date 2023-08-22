@@ -412,6 +412,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 end
+                if IsDestroyed(self) then
+                    return
+                end
                 IssueClearCommands(platoonUnits)
                 if self.path then
                     nodenum=RNGGETN(self.path)
@@ -474,7 +477,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             if aiBrain.GridPresence:GetInferredStatus(self.Pos) == 'Hostile' then
                 location = StateUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), true, 'Enemy')
             else
-                location = StateUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), 'Ally')
+                location = StateUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), false, 'Ally')
             end
             if (not location) then
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
