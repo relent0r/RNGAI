@@ -437,7 +437,6 @@ BuilderGroup {
         BuilderName = 'RNGAI Mass Raid Expansions',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name.
         Priority = 600,                                                          -- Priority. 1000 is normal.
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 1,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     
@@ -648,7 +647,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Mass Raid Expansions Large',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name.
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 600,                                                          -- Priority. 1000 is normal.
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -1453,7 +1451,6 @@ BuilderGroup {
         BuilderName = 'RNGAI Mass Raid Small',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 700,                                                          -- Priority. 1000 is normal.
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         PriorityFunction = NoSmallFrys,
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',

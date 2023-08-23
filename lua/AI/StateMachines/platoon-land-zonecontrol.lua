@@ -251,8 +251,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local pathmaxdist=0
             local lastfinalpoint=nil
             local lastfinaldist=0
+            self.navigating = true
             if not self.path and self.BuilderData.Position and self.BuilderData.CutOff then
-                self.path = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.BuilderData.Position, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                self.path = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.BuilderData.Position, 1, 150,80)
+                LOG('path generated, length is '..table.getn(self.path))
+                LOG('distance is '..VDist3(self.Pos, self.BuilderData.Position))
             end
             while PlatoonExists(aiBrain, self) do
                 coroutine.yield(1)
@@ -280,7 +283,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 end
                 if self.path[nodenum-1] and VDist3Sq(self.path[nodenum],self.path[nodenum-1])>lastfinaldist*3 then
                     if NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.path[nodenum]) then
-                        self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.path[nodenum], 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                        self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.path[nodenum], 1, 150,80)
                         coroutine.yield(10)
                         continue
                     end
@@ -364,14 +367,15 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 IssueClearCommands(platoonUnits)
                 if self.path then
                     nodenum=RNGGETN(self.path)
+                    LOG('nodenum while zone control is pathing is '..repr(nodenum))
                     if nodenum>=3 then
                         --RNGLOG('self.path[3] '..repr(self.path[3]))
                         self.dest={self.path[3][1]+math.random(-4,4),self.path[3][2],self.path[3][3]+math.random(-4,4)}
                         self:MoveToLocation(self.dest,false)
                         IssueClearCommands(supportsquad)
-                        StateUtils.SpreadMove(supportsquad,midpoint(self.path[1],self.path[2],0.2))
-                        StateUtils.SpreadMove(scouts,midpoint(self.path[1],self.path[2],0.15))
-                        StateUtils.SpreadMove(aa,midpoint(self.path[1],self.path[2],0.1))
+                        StateUtils.SpreadMove(supportsquad,StateUtils.Midpoint(self.path[1],self.path[2],0.2))
+                        StateUtils.SpreadMove(scouts,StateUtils.Midpoint(self.path[1],self.path[2],0.15))
+                        StateUtils.SpreadMove(aa,StateUtils.Midpoint(self.path[1],self.path[2],0.1))
                     else
                         self.dest={self.path[nodenum][1]+math.random(-4,4),self.path[nodenum][2],self.path[nodenum][3]+math.random(-4,4)}
                         self:MoveToLocation(self.dest,false)

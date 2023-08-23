@@ -5874,6 +5874,9 @@ ConfigurePlatoon = function(platoon)
                             end
                         end
                     end
+                    if not v.MaxWeaponRange then
+                        v.MaxWeaponRange = weapon.MaxRadius
+                    end
                     if not platoon.MaxPlatoonWeaponRange or platoon.MaxPlatoonWeaponRange < v.MaxWeaponRange then
                         platoon.MaxPlatoonWeaponRange = v.MaxWeaponRange
                     end

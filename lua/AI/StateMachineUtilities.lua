@@ -104,7 +104,7 @@ SimplePriority = function(self,aiBrain)--use the aibrain priority table to do th
             self.rdest=acuTargetPosition
             self.raidunit=acuSnipeUnit
             self.dest=acuTargetPosition
-            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
             self.navigating=true
             self.raid=true
             --SwitchState(self,'raid')
@@ -141,7 +141,7 @@ SimplePriority = function(self,aiBrain)--use the aibrain priority table to do th
         elseif point.type=='raid' then
             if self.raid then
                 if self.path and VDist3Sq(self.path[RNGGETN(self.path)],point.Position)>400 then
-                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
                     --RNGLOG('platoon.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(self.path[RNGGETN(self.path)],point.Position))
                     return true
                 end
@@ -149,7 +149,7 @@ SimplePriority = function(self,aiBrain)--use the aibrain priority table to do th
             self.rdest=point.Position
             self.raidunit=point.unit
             self.dest=point.Position
-            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
             self.navigating=true
             self.raid=true
             --SwitchState(self,'raid')
@@ -338,14 +338,14 @@ MainBaseCheck = function(self, aiBrain)
     if VDist2Sq(hiPriTargetPos[1],hiPriTargetPos[3],self.Pos[1],self.Pos[3])<(self.MaxWeaponRange+20)*(self.MaxWeaponRange+20) then return false end
     if not self.combat and not self.retreat then
         if self.path and VDist3Sq(self.path[RNGGETN(self.path)],hiPriTargetPos)>400 then
-            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
             --RNGLOG('platoon.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(self.path[RNGGETN(self.path)],point.Position))
             return true
         end
         self.rdest=hiPriTargetPos
         self.raidunit=hiPriTarget
         self.dest=hiPriTargetPos
-        self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+        self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
         self.navigating=true
         self.raid=true
         --SwitchState(self,'raid')

@@ -10878,7 +10878,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             --RNGLOG('platoon.Pos '..repr(platoon.Pos))
             --RNGLOG('platoon.dest '..repr(platoon.dest))
             if platoon.dest and platoon.Pos then
-                platoon.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoon.Pos, platoon.dest, 0, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                platoon.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoon.Pos, platoon.dest, 0, 150,80)
             end
             if platoon.path then
                 platoon.navigating=true
@@ -10959,7 +10959,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --RNGLOG('No retreat location found, retreat to home')
             end
             if self.path and VDist3Sq(self.path[RNGGETN(self.path)],location)<400 then return end
-            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, location, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, location, 1, 150,80)
         end
         local function VariableKite(self,unit,target)--basic kiting function.. complicated as heck
             local function KiteDist(pos1,pos2,distance,healthmod)
@@ -11062,14 +11062,14 @@ Platoon = Class(RNGAIPlatoonClass) {
             if VDist2Sq(hiPriTargetPos[1],hiPriTargetPos[3],self.Pos[1],self.Pos[3])<(self.MaxWeaponRange+20)*(self.MaxWeaponRange+20) then return false end
             if not self.combat and not self.retreat then
                 if self.path and VDist3Sq(self.path[RNGGETN(self.path)],hiPriTargetPos)>400 then
-                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
                     --RNGLOG('platoon.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(self.path[RNGGETN(self.path)],point.Position))
                     return true
                 end
                 self.rdest=hiPriTargetPos
                 self.raidunit=hiPriTarget
                 self.dest=hiPriTargetPos
-                self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
                 self.navigating=true
                 self.raid=true
                 --SwitchState(self,'raid')
@@ -11087,7 +11087,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     self.rdest=acuTargetPosition
                     self.raidunit=acuSnipeUnit
                     self.dest=acuTargetPosition
-                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
                     self.navigating=true
                     self.raid=true
                     --SwitchState(self,'raid')
@@ -11124,7 +11124,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 elseif point.type=='raid' then
                     if self.raid then
                         if self.path and VDist3Sq(self.path[RNGGETN(self.path)],point.Position)>400 then
-                            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
                             --RNGLOG('platoon.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(self.path[RNGGETN(self.path)],point.Position))
                             return true
                         end
@@ -11132,7 +11132,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     self.rdest=point.Position
                     self.raidunit=point.unit
                     self.dest=point.Position
-                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
                     self.navigating=true
                     self.raid=true
                     --SwitchState(self,'raid')
@@ -11178,7 +11178,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 SimpleCombat(self,aiBrain)
             elseif VDist3Sq(platoon.Pos,unit:GetPosition())>80*80 then
                 platoon.dest=unit:GetPosition()
-                platoon.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoon.Pos, platoon.dest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                platoon.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoon.Pos, platoon.dest, 1, 150,80)
                 platoon.navigating=true
             else
                 local pos=DistancePredict(unit,5)
@@ -11442,7 +11442,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             if platoon.path[nodenum-1] and VDist3Sq(platoon.path[nodenum],platoon.path[nodenum-1])>lastfinaldist*3 then
                 if NavUtils.CanPathTo(self.MovementLayer, self.Pos,platoon.path[nodenum]) then
-                    platoon.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoon.Pos, platoon.path[nodenum], 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                    platoon.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoon.Pos, platoon.path[nodenum], 1, 150,80)
                     coroutine.yield(10)
                     continue
                 end

@@ -447,6 +447,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
                     else
                         table.insert(queue, 'T1LandDFBot')
                         table.insert(queue, 'T1LandScout')
@@ -455,6 +456,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
                     end
                     if self.Brain.BrainIntel.RestrictedMassMarker > 6 then
                         for i=1, 2 do
@@ -519,6 +521,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
                     else
                         table.insert(queue, 'T1LandDFBot')
                         table.insert(queue, 'T1LandScout')
@@ -527,6 +530,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1LandDFTank')
                     end
                     if self.Brain.StartReclaimCurrent > 500 then
                         for i=1, 2 do

@@ -101,7 +101,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     if VDist2Sq(hiPriTargetPos[1],hiPriTargetPos[3],self.Pos[1],self.Pos[3])>(self.MaxWeaponRange+20)*(self.MaxWeaponRange+20) then  
                         if not self.combat and not self.retreat then
                             if self.path and VDist3Sq(self.path[RNGGETN(self.path)],hiPriTargetPos)>400 then
-                                self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                                self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
                                 --RNGLOG('self.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(self.path[RNGGETN(self.path)],point.Position))
                                 self.BuilderData = {
                                     Position = hiPriTargetPos,
@@ -114,7 +114,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             self.rdest=hiPriTargetPos
                             self.raidunit=hiPriTarget
                             self.dest=hiPriTargetPos
-                            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
                             self.navigating=true
                             self.raid=true
                             --SwitchState(self,'raid')
@@ -139,7 +139,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                         self.rdest=acuTargetPosition
                         self.raidunit=acuSnipeUnit
                         self.dest=acuTargetPosition
-                        self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                        self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
                         self.navigating=true
                         self.raid=true
                         self.BuilderData = {
@@ -175,7 +175,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                 elseif point.type=='raid' then
                                     if self.raid then
                                         if self.path and VDist3Sq(self.path[RNGGETN(self.path)],point.Position)>400 then
-                                            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                                            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
                                             --RNGLOG('self.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(self.path[RNGGETN(self.path)],point.Position))
                                             self.BuilderData = {
                                                 Position = point.Position,
@@ -189,7 +189,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                     self.rdest=point.Position
                                     self.raidunit=point.unit
                                     self.dest=point.Position
-                                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
                                     self.navigating=true
                                     self.raid=true
                                     self.BuilderData = {
@@ -230,7 +230,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 --RNGLOG('self.Pos '..repr(self.Pos))
                 --RNGLOG('self.dest '..repr(self.dest))
                 if self.dest and self.Pos then
-                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.dest, 0, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.dest, 0, 150,80)
                 end
                 if self.path then
                     self.navigating=true
@@ -334,7 +334,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 end
                 if self.path[nodenum-1] and VDist3Sq(self.path[nodenum],self.path[nodenum-1])>lastfinaldist*3 then
                     if NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.path[nodenum]) then
-                        self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.path[nodenum], 1, 150,ScenarioInfo.size[1]*ScenarioInfo.size[2])
+                        self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.path[nodenum], 1, 150,80)
                         coroutine.yield(10)
                         continue
                     end
@@ -423,9 +423,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                         self.dest={self.path[3][1]+math.random(-4,4),self.path[3][2],self.path[3][3]+math.random(-4,4)}
                         self:MoveToLocation(self.dest,false)
                         IssueClearCommands(supportsquad)
-                        StateUtils.SpreadMove(supportsquad,midpoint(self.path[1],self.path[2],0.2))
-                        StateUtils.SpreadMove(scouts,midpoint(self.path[1],self.path[2],0.15))
-                        StateUtils.SpreadMove(aa,midpoint(self.path[1],self.path[2],0.1))
+                        StateUtils.SpreadMove(supportsquad,StateUtils.Midpoint(self.path[1],self.path[2],0.2))
+                        StateUtils.SpreadMove(scouts,StateUtils.Midpoint(self.path[1],self.path[2],0.15))
+                        StateUtils.SpreadMove(aa,StateUtils.Midpoint(self.path[1],self.path[2],0.1))
                     else
                         self.dest={self.path[nodenum][1]+math.random(-4,4),self.path[nodenum][2],self.path[nodenum][3]+math.random(-4,4)}
                         self:MoveToLocation(self.dest,false)

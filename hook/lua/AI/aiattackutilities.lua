@@ -38,20 +38,20 @@ function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, 
     return path, 'PathOK', distance
 end
 
-function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination, optThreatWeight, optMaxMarkerDist, testPathDist, acuPath)
+function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination, optThreatWeight, optMaxMarkerDist, minPathDistance, acuPath)
     -- if we don't have markers for the platoonLayer, then we can't build a path.
     local NavUtils = import("/lua/sim/navutils.lua")
     optMaxMarkerDist = optMaxMarkerDist or 250
     optThreatWeight = optThreatWeight or 1
     local threatType = NavUtils.ThreatFunctions.AntiSurface
-    if testPathDist then
-        testPathDist = testPathDist * testPathDist
+    if minPathDistance then
+        minPathDistance = minPathDistance * minPathDistance
     else
-        testPathDist = 400
+        minPathDistance = 400
     end
 
     --If we are within 100 units of the destination, don't bother pathing. (Sorian and Duncan AI)
-    if (testPathDist and VDist2Sq(start[1], start[3], destination[1], destination[3]) <= testPathDist) then
+    if (minPathDistance and VDist2Sq(start[1], start[3], destination[1], destination[3]) <= minPathDistance) then
         return { destination }
     end
     if platoonLayer == 'Air' then
@@ -66,18 +66,18 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
     return path, false, path.totalThreat
 end
 
-function PlatoonGeneratePathToRNG(platoonLayer, start, destination, optMaxMarkerDist, testPathDist)
+function PlatoonGeneratePathToRNG(platoonLayer, start, destination, optMaxMarkerDist, minPathDistance)
     -- if we don't have markers for the platoonLayer, then we can't build a path.
     local NavUtils = import("/lua/sim/navutils.lua")
     optMaxMarkerDist = optMaxMarkerDist or 250
-    if testPathDist then
-        testPathDist = testPathDist * testPathDist
+    if minPathDistance then
+        minPathDistance = minPathDistance * minPathDistance
     else
-        testPathDist = 400
+        minPathDistance = 400
     end
 
     --If we are within 100 units of the destination, don't bother pathing. (Sorian and Duncan AI)
-    if (testPathDist and VDist2Sq(start[1], start[3], destination[1], destination[3]) <= testPathDist) then
+    if (minPathDistance and VDist2Sq(start[1], start[3], destination[1], destination[3]) <= minPathDistance) then
         return { destination }
     end
 

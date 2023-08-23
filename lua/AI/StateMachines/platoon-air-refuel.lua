@@ -67,7 +67,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                     end
                                 end
                             end
-                            if closest then
+                            if closest and not IsDestroyed(unit) then
                                 IssueClearCommands({unit})
                                 IssueTransportLoad({unit}, closest)
                                 --RNGLOG('Transport load issued')
