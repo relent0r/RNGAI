@@ -5554,7 +5554,7 @@ function GetCappingPosition(aiBrain, eng, pos, refunits, baseTemplate, buildingT
         end
     end
     if closestUnit and not IsDestroyed(closestUnit) then
-        LOG('Returning closestUnit Position '..repr(closestUnit:GetPosition()))
+        --LOG('Returning closestUnit Position '..repr(closestUnit:GetPosition()))
         return closestUnit:GetPosition()
     end
 end

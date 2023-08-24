@@ -254,8 +254,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             self.navigating = true
             if not self.path and self.BuilderData.Position and self.BuilderData.CutOff then
                 self.path = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.BuilderData.Position, 1, 150,80)
-                LOG('path generated, length is '..table.getn(self.path))
-                LOG('distance is '..VDist3(self.Pos, self.BuilderData.Position))
             end
             while PlatoonExists(aiBrain, self) do
                 coroutine.yield(1)

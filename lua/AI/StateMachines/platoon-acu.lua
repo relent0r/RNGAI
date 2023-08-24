@@ -76,10 +76,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local brain = self:GetBrain()
             local cdr = self.cdr
             local gameTime = GetGameTimeSeconds()
-            if cdr and not cdr.Dead then
-                cdr:SetCustomName('cdr deciding what to do')
-            end
             if cdr.Caution and cdr.EnemyNavalPresent and cdr:GetCurrentLayer() == 'Seabed' then
+                --LOG('retreating due to seabed')
                 self:ChangeState(self.Retreating)
                 return
             end
@@ -93,7 +91,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if brain.BrainIntel.SelfThreat.AntiAirNow < brain.EnemyIntel.EnemyThreatCurrent.AntiAir then
                     cdr.EnemyAirPresent = true
                     if not cdr.AtHoldPosition then
-                       --('Retreating due to enemy air snipe possibility')
+                       --LOG('Retreating due to enemy air snipe possibility')
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -144,16 +142,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             end
             if (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) and GetEconomyIncome(brain, 'ENERGY') > 40 
             or gameTime > 1500 and GetEconomyIncome(brain, 'ENERGY') > 40 and GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95 then
-                if cdr.GunUpgradeRequired then
-                    if cdr and not cdr.Dead then
-                        cdr:SetCustomName('cdr wants gun upgrade')
-                    end
-                end
-                if cdr.HighThreatUpgradeRequired then
-                    if cdr and not cdr.Dead then
-                        cdr:SetCustomName('cdr wants high threat health upgrade')
-                    end
-                end
                 local inRange = false
                 local highThreat = false
                 --RNGLOG('Enhancement Thread run at '..gameTime)
@@ -267,6 +255,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if brain.GridPresence:GetInferredStatus(cdr.Position) == 'Hostile' then
                     --LOG('We are in hostile territory and should be retreating')
                     if cdr.CurrentEnemyThreat > 10 and cdr.CurrentEnemyThreat * 1.2 > cdr.CurrentFriendlyThreat then
+                        --LOG('ACU is detecting high threat')
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -292,8 +281,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 local target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition
                 cdr.Combat = true
                 local acuDistanceToBase = VDist3Sq(cdr.Position, cdr.CDRHome)
-                if (not cdr.SuicideMode and acuDistanceToBase > cdr.MaxBaseRange * cdr.MaxBaseRange and (not cdr:IsUnitState('Building'))) or (cdr.PositionStatus == 'Hostile' and cdr.Caution) then
-                    --LOG('OverCharge running but ACU is beyond its MaxBaseRange property')
+                if (not cdr.SuicideMode and acuDistanceToBase > cdr.MaxBaseRange * cdr.MaxBaseRange and (not cdr:IsUnitState('Building'))) and not self.BuilderData.DefendExpansion or (cdr.PositionStatus == 'Hostile' and cdr.Caution) then
+                    --LOG('OverCharge running but ACU is beyond its MaxBaseRange property and high threat')
                     --LOG('cdr retreating due to beyond max range and not building '..(cdr.MaxBaseRange * cdr.MaxBaseRange)..' current distance '..acuDistanceToBase)
                     --LOG('Wipe BuilderData in numUnits > 1')
                     self.BuilderData = {}
@@ -445,9 +434,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
 
             -- sanity check
             local cdr = self.cdr
-            if cdr and not cdr.Dead then
-                cdr:SetCustomName('cdr is navigating')
-            end
             local builderData = self.BuilderData
             local destination = builderData.Position
             local navigateDistanceCutOff = builderData.CutOff or 400
@@ -881,9 +867,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local brain = self:GetBrain()
             local cdr = self.cdr
-            if cdr and not cdr.Dead then
-                cdr:SetCustomName('cdr is attacking a target')
-            end
             if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) then
                 local target = self.BuilderData.AttackTarget
                 local snipeAttempt = false
@@ -1000,9 +983,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         IssueClearCommands({cdr})
                         --RNGLOG('Target is '..target.UnitId)
                         targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
-                        if brain.RNGDEBUG then
-                            cdr:SetCustomName('CDR standard target pew pew logic')
-                        end
                         local movePos
                         if snipeAttempt then
                             --RNGLOG('Lets try snipe the target')
@@ -1101,9 +1081,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local cdr = self.cdr
             if cdr:IsUnitState('Attached') then
                  return false
-            end
-            if cdr and not cdr.Dead then
-                cdr:SetCustomName('cdr is retreating')
             end
             local brain = self:GetBrain()
             local closestPlatoon = false
@@ -1333,9 +1310,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local brain = self:GetBrain()
             local cdr = self.cdr
-            if cdr and not cdr.Dead then
-                cdr:SetCustomName('cdr is expanding')
-            end
             local acuPos = cdr:GetPosition()
             local buildingTmplFile = import(self.BuilderData.Construction.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
             local factionIndex = ACUFunc.GetEngineerFactionIndexRNG(cdr)
@@ -1610,9 +1584,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local brain = self:GetBrain()
             local cdr = self.cdr
-            if cdr and not cdr.Dead then
-                cdr:SetCustomName('cdr is enhancing')
-            end
             local gameTime = GetGameTimeSeconds()
             if gameTime < 300 then
                 coroutine.yield(30)

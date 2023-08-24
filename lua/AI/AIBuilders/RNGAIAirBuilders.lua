@@ -284,7 +284,7 @@ BuilderGroup {
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.80}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.85 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.90, 0.90 }},
         },
         BuilderData = {
             TechLevel = 3
