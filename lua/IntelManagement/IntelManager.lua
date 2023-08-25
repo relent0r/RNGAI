@@ -1394,7 +1394,8 @@ IntelManager = Class {
                     --RNGLOG('Set game time '..gameTime)
                     self.Brain.TacticalMonitor.TacticalMissions.ACUSnipe[acuIndex]['AIR'] = { GameTime = gameTime, CountRequired = count }
                     self.Brain.amanager.Demand.Air.T2.bomber = count
-                    self.Brain.amanager.Demand.Air.T2.mercy = count
+                    --maybe one day they'll put the Mercy back to a sniping unit, until then the build logic is disabled
+                    --self.Brain.amanager.Demand.Air.T2.mercy = count
                     self.Brain.EngineerAssistManagerFocusSnipe = true
                 end
                 if zoneAttack then

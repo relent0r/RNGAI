@@ -111,9 +111,11 @@ local BomberResponse = function(self, aiBrain, builderManager, builderData)
         --RNGLOG('Bomber Response for Perimeter Monitor is true')
         return 920
     end
-    if aiBrain.CDRUnit.SuicideMode then
+    if aiBrain.BrainIntel.SuicideModeActive then
+        --RNGLOG('Bomber Response for suicide mode')
         return 920
     end
+    --RNGLOG('Bomber Response return zero')
     return 0
 end
 

@@ -1010,6 +1010,8 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Intel Data
         self.EnemyIntel = {}
         self.BrainIntel = {}
+        self.BrainIntel.SuicideModeActive = false
+        self.BrainIntel.SuicideModeTarget = false
         self.BrainIntel.TeamCount = 0
         self.EnemyIntel.NavalRange = {
             Position = {},
@@ -3763,7 +3765,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                         end
                     elseif platoonType == 'BOMBER' and strikeDamage then
-                        if (self.CDRUnit.Caution and self.CDRUnit.EnemyCDRPresent and VDist3Sq(v.Position, self.BrainIntel.StartPos) < (self.EnemyIntel.ClosestEnemyBase /2)) or self.CDRUnit.SuicideMode then
+                        if (self.CDRUnit.Caution and self.CDRUnit.EnemyCDRPresent and VDist3Sq(v.Position, self.BrainIntel.StartPos) < (self.EnemyIntel.ClosestEnemyBase /2)) or self.BrainIntel.SuicideModeActive then
                             RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position })
                             local gridX, gridY = im:GetIntelGrid(v.Position)
                             local scoutRequired = true

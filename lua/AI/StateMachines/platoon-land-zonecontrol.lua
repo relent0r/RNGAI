@@ -35,7 +35,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
 
             -- requires expansion markers
-            LOG('Starting zone control')
+            --LOG('Starting zone control')
             if not import("/lua/sim/markerutilities/expansions.lua").IsGenerated() then
                 self:LogWarning('requires generated expansion markers')
                 self:ChangeState(self.Error)
@@ -90,6 +90,26 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             if not PlatoonExists(aiBrain, self) then
                 return
+            end
+            if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
+                local enemyAcuPosition = aiBrain.BrainIntel.SuicideModeTarget:GetPosition()
+                local rx = self.Pos[1] - enemyAcuPosition[1]
+                local rz = self.Pos[3] - enemyAcuPosition[3]
+                local acuDistance = rx * rx + rz * rz
+                if NavUtils.CanPathTo(self.MovementLayer, self.Pos, enemyAcuPosition) then
+                    if acuDistance > 6400 then
+                        self.BuilderData = {
+                            AttackTarget = aiBrain.BrainIntel.SuicideModeTarget,
+                            Position = aiBrain.BrainIntel.SuicideModeTarget:GetPosition(),
+                            CutOff = 400
+                        }
+                        self:ChangeState(self.Navigating)
+                        return
+                    else
+                        self:ChangeState(self.CombatLoop)
+                        return
+                    end
+                end
             end
             local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius)
             if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
@@ -151,32 +171,55 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
+            local aiBrain = self:GetBrain()
             local units=GetPlatoonUnits(self)
-            for k,unit in self.targetcandidates do
-                if not unit or unit.Dead or not unit.machineworth then 
-                    --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
-                    table.remove(self.targetcandidates,k) 
+            if not aiBrain.BrainIntel.SuicideModeActive then
+                for k,unit in self.targetcandidates do
+                    if not unit or unit.Dead or not unit.machineworth then 
+                        --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
+                        table.remove(self.targetcandidates,k) 
+                    end
                 end
             end
             local target
             local closestTarget
+            local approxThreat
             for _,v in units do
                 if v and not v.Dead then
                     local unitPos = v:GetPosition()
-                    for l, m in self.targetcandidates do
-                        if m and not m.Dead then
-                            local tmpDistance = VDist3Sq(unitPos,m:GetPosition())*m.machineworth
-                            if not closestTarget or tmpDistance < closestTarget then
-                                target = m
-                                closestTarget = tmpDistance
+                    if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
+                        target = aiBrain.BrainIntel.SuicideModeTarget
+                    else
+                        for l, m in self.targetcandidates do
+                            if m and not m.Dead then
+                                local enemyPos = m:GetPosition()
+                                local rx = unitPos[1] - enemyPos[1]
+                                local rz = unitPos[3] - enemyPos[3]
+                                local tmpDistance = rx * rx + rz * rz
+                                if v.Role ~= 'Artillery' and v.Role ~= 'Silo' and v.Role ~= 'Sniper' then
+                                    tmpDistance = tmpDistance*m.machineworth
+                                end
+                                if not closestTarget or tmpDistance < closestTarget then
+                                    target = m
+                                    closestTarget = tmpDistance
+                                end
+                                if not closestTarget or tmpDistance < closestTarget then
+                                    target = m
+                                    closestTarget = tmpDistance
+                                end
                             end
                         end
                     end
                     if target then
-                        if VDist3Sq(unitPos,target:GetPosition())>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
-                            IssueClearCommands({v}) 
-                            IssueMove({v},target:GetPosition())
-                            continue
+                        if not v.Sniper and VDist3Sq(unitPos,target:GetPosition())>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
+                            if not approxThreat then
+                                approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius)
+                            end
+                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.ally and approxThreat.enemy and approxThreat.ally > approxThreat.enemy then
+                                IssueClearCommands({v}) 
+                                IssueMove({v},target:GetPosition())
+                                continue
+                            end
                         end
                         StateUtils.VariableKite(self,v,target)
                     end
@@ -365,7 +408,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 IssueClearCommands(platoonUnits)
                 if self.path then
                     nodenum=RNGGETN(self.path)
-                    LOG('nodenum while zone control is pathing is '..repr(nodenum))
+                    --LOG('nodenum while zone control is pathing is '..repr(nodenum))
                     if nodenum>=3 then
                         --RNGLOG('self.path[3] '..repr(self.path[3]))
                         self.dest={self.path[3][1]+math.random(-4,4),self.path[3][2],self.path[3][3]+math.random(-4,4)}
@@ -401,7 +444,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
 AssignToUnitsMachine = function(data, platoon, units)
     if units and not table.empty(units) then
         -- meet platoon requirements
-        LOG('Assigning units to zone control')
+        --LOG('Assigning units to zone control')
         import("/lua/sim/navutils.lua").Generate()
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon

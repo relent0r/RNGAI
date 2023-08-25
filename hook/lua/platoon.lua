@@ -560,7 +560,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         local target
         local blip
         local holdPosition
-        local weaponDamage = ALLBPS['daa0206'].Weapon[1].Damage * 0.85
         local behindAngle = RUtils.GetAngleToPosition(aiBrain.BrainIntel.StartPos, aiBrain.MapCenterPoint)
         holdPosition = RUtils.MoveInDirection(aiBrain.BrainIntel.StartPos, behindAngle + 180, 30, true, false)
         if not holdPosition then
@@ -569,30 +568,47 @@ Platoon = Class(RNGAIPlatoonClass) {
         --RNGLOG('Hold Position is '..repr(holdPosition))
         self:ConfigurePlatoon()
         while PlatoonExists(aiBrain, self) do
+            local weaponDamage = 0
+            local platoonUnits = GetPlatoonUnits(self)
+            for k, v in platoonUnits do
+                if not v.Dead then
+                    if v.UnitId == 'daa0206' then
+                        local damage = v.Blueprint.Weapon[1].DoTPulses * v.Blueprint.Weapon[1].Damage * v.Blueprint.Weapon[1].MuzzleSalvoSize
+                        weaponDamage = weaponDamage + damage
+                    elseif v.UnitId == 'xrl0302' then
+                        local damage = v.Blueprint.Weapon[2].Damage
+                        weaponDamage = weaponDamage + damage
+                    end
+                end
+            end
+            weaponDamage = weaponDamage * 0.85
+            LOG('MercyStrike Damage output is '..weaponDamage)
             coroutine.yield(1)
             local platoonUnits = GetPlatoonUnits(self)
             local requiredCount = 0
             local acuIndex
-            --RNGLOG('Mercy strike : loop ACU Snipe table '..repr(aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe))
-            target, requiredCount, acuIndex = RUtils.CheckACUSnipe(aiBrain, self.MovementLayer)
-            if target then
-                local hp = aiBrain.EnemyIntel.ACU[acuIndex].HP
-                requiredCount = math.max(hp / weaponDamage)
-            end
+            RNGLOG('Mercy strike : loop ACU Snipe table '..repr(aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe))
             if not target then
-                --RNGLOG('Mercy strike : No ACU target')
-                if RNGGETN(platoonUnits) >= 2 then
-                    --RNGLOG('Mercy strike : No ACU found in TacticalMission loop, look for closest')
-                    target = self:FindClosestUnit('Attack', 'Enemy', true, categories.COMMAND )
-                    if target then
-                        local hp = target:GetHealth()
-                        requiredCount = math.max(hp / weaponDamage)
+                LOG('no target, searching ')
+                target, requiredCount, acuIndex = RUtils.CheckACUSnipe(aiBrain, self.MovementLayer)
+                if target then
+                    local hp = aiBrain.EnemyIntel.ACU[acuIndex].HP
+                    requiredCount = math.ceil(hp / weaponDamage)
+                end
+                if not target then
+                    RNGLOG('Mercy strike : No ACU target')
+                    if RNGGETN(platoonUnits) >= 2 then
+                        RNGLOG('Mercy strike : No ACU found in TacticalMission loop, look for closest')
+                        target = self:FindClosestUnit('Attack', 'Enemy', true, categories.COMMAND )
+                        if target then
+                            local hp = target:GetHealth()
+                            requiredCount = math.ceil(hp / weaponDamage)
+                        end
                     end
                 end
             end
             if target and RNGGETN(platoonUnits) >= requiredCount then
-                --RNGLOG('Mercy strike : required count available')
-                blip = target:GetBlip(armyIndex)
+                RNGLOG('Mercy strike : required count available')
                 self:Stop()
                 self:AttackTarget(target)
                 coroutine.yield(170)
@@ -601,7 +617,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             for k, v in platoonUnits do
                 if not v.Dead then
                     local unitPos = v:GetPosition()
-                    if VDist2Sq(unitPos[1], unitPos[3], holdPosition[1], holdPosition[3]) > 144 then
+                    if VDist2Sq(unitPos[1], unitPos[3], holdPosition[1], holdPosition[3]) > 225 then
                         --RNGLOG('Not in hold position distance is '..VDist2Sq(unitPos[1], unitPos[3], holdPosition[1], holdPosition[3]))
                         --RNGLOG('Hold position is '..repr(holdPosition))
                         --RNGLOG('Current Position '..repr(v:GetPosition()))
@@ -1716,17 +1732,17 @@ Platoon = Class(RNGAIPlatoonClass) {
                     platoonPos=GetPlatoonPosition(self)
                 end
                 ACUDistance = VDist2Sq(platoonPos[1], platoonPos[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3])
-                if aiBrain.CDRUnit.SuicideMode then
+                if aiBrain.BrainIntel.SuicideModeActive then
                     --RNGLOG('CDR is on suicide mode we need to engage NOW')
                     break
                 end
             end
             --RNGLOG('Looking for targets around the acu')
             
-            if aiBrain.CDRUnit.SuicideMode then
+            if aiBrain.BrainIntel.SuicideModeActive then
                 --RNGLOG('My ACU is in suicide mode, target enemy ACU')
-                if aiBrain.CDRUnit.Target and not aiBrain.CDRUnit.Target.Dead then
-                    target = aiBrain.CDRUnit.Target
+                if aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
+                    target = aiBrain.BrainIntel.SuicideModeTarget
                 end
             end
             if not target or target.Dead then
@@ -1804,7 +1820,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     snipeAttempt = true
                                 end
                             end
-                            if not snipeAttempt and aiBrain.CDRUnit.SuicideMode and target.Blueprint.CategoriesHash.COMMAND then
+                            if not snipeAttempt and aiBrain.BrainIntel.SuicideModeActive and target.Blueprint.CategoriesHash.COMMAND then
                                 snipeAttempt = true
                             end
                             targetPosition = target:GetPosition()
@@ -5603,7 +5619,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             for _, v in massPoints do
                                 if not v.Dead then
                                     massPointPos = v:GetPosition()
-                                    if RUtils.GetAngleRNG(platLoc[1], platLoc[3], massPointPos[1], massPointPos[3], targetPos[1], targetPos[3]) > 0.6 then
+                                    if RUtils.GetAngleRNG(platLoc[1], platLoc[3], massPointPos[1], massPointPos[3], targetPos[1], targetPos[3]) > 0.5 then
                                       --LOG('Found a masspoint to run to')
                                         alternatePos = massPointPos
                                     end
@@ -5762,7 +5778,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             for _, v in massPoints do
                                 if not v.Dead then
                                     massPointPos = v:GetPosition()
-                                    if RUtils.GetAngleRNG(platLoc[1], platLoc[3], massPointPos[1], massPointPos[3], targetPos[1], targetPos[3]) > 0.6 then
+                                    if RUtils.GetAngleRNG(platLoc[1], platLoc[3], massPointPos[1], massPointPos[3], targetPos[1], targetPos[3]) > 0.5 then
                                        --RNGLOG('Found a masspoint to run to')
                                         alternatePos = massPointPos
                                     end
@@ -6919,7 +6935,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     for _, v in massPoints do
                                         if not v.Dead then
                                             massPointPos = v:GetPosition()
-                                            if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]) > 0.6 then
+                                            if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]) > 0.5 then
                                                 --LOG('Mex angle valid run to mex'..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]))
                                                 alternatePos = massPointPos
                                             end
@@ -7129,7 +7145,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             if aiBrain.Zones.Land.zones[self.Zone].edges then
                                 for k, v in aiBrain.Zones.Land.zones[self.Zone].edges do
                                    --RNGLOG('Look for zone to run to, angle for '..v.zone.id..' is '..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], acuPos[1], acuPos[3]))
-                                    if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], acuPos[1], acuPos[3]) > 0.6 then
+                                    if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], acuPos[1], acuPos[3]) > 0.5 then
                                         alternateZone = v.zone.id
                                         alternatePos = v.zone.pos
                                     end
@@ -7203,7 +7219,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if aiBrain.Zones.Land.zones[self.Zone].edges then
                                     for k, v in aiBrain.Zones.Land.zones[self.Zone].edges do
                                         --RNGLOG('Look for zone to run to, angle for '..v.zone.id..' is '..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], unitPos[1], unitPos[3]))
-                                        if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], unitPos[1], unitPos[3]) > 0.6 then
+                                        if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], v.zone.pos[1], v.zone.pos[3], unitPos[1], unitPos[3]) > 0.5 then
                                             alternateZone = v.zone.id
                                             alternatePos = v.zone.pos
                                         end
@@ -7445,7 +7461,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                     for _, v in massPoints do
                                         if not v.Dead then
                                             massPointPos = v:GetPosition()
-                                            if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]) > 0.6 then
+                                            if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]) > 0.5 then
                                                 --RNGLOG('Mex angle valid run to mex'..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]))
                                                 alternatePos = massPointPos
                                             end
@@ -7666,7 +7682,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                         for _, v in massPoints do
                                             if not v.Dead then
                                                 massPointPos = v:GetPosition()
-                                                if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]) > 0.6 then
+                                                if RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]) > 0.5 then
                                                     --LOG('Mex angle valid run to mex'..RUtils.GetAngleRNG(PlatoonPosition[1], PlatoonPosition[3], massPointPos[1], massPointPos[3], unitPos[1], unitPos[3]))
                                                     alternatePos = massPointPos
                                                 end
@@ -7983,7 +7999,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local aPlatDistance = VDist2Sq(platPos[1],platPos[3],aPlatPos[1],aPlatPos[3])
             if aPlatDistance < closestDistance then
                 if angleTargetPos then
-                    if RUtils.GetAngleRNG(platPos[1], platPos[3], aPlatPos[1], aPlatPos[3], angleTargetPos[1], angleTargetPos[3]) > 0.6 then
+                    if RUtils.GetAngleRNG(platPos[1], platPos[3], aPlatPos[1], aPlatPos[3], angleTargetPos[1], angleTargetPos[3]) > 0.5 then
                         closestPlatoon = aPlat
                         closestDistance = aPlatDistance
                         closestAPlatPos = aPlatPos
@@ -8392,7 +8408,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             if aiBrain.Zones.Land.zones[self.Zone].edges then
                 for k, v in aiBrain.Zones.Land.zones[self.Zone].edges do
                     --RNGLOG('ConsolidatePlatoonPositionRNG Look for zone to run to, angle for '..v.zone.id..' is '..RUtils.GetAngleRNG(platPos[1], platPos[3], v.zone.pos[1], v.zone.pos[3], threatPosition[1], threatPosition[3]))
-                    if RUtils.GetAngleRNG(platPos[1], platPos[3], v.zone.pos[1], v.zone.pos[3], threatPosition[1], threatPosition[3]) > 0.6 then
+                    if RUtils.GetAngleRNG(platPos[1], platPos[3], v.zone.pos[1], v.zone.pos[3], threatPosition[1], threatPosition[3]) > 0.5 then
                         alternateZone = v.zone.id
                         alternatePos = v.zone.pos
                     end
@@ -11694,6 +11710,8 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         if target.Blueprint.CategoriesHash.COMMAND and avoidAcu then
             kiteRange = math.max(36, unit.MaxWeaponRange or self.MaxWeaponRange)
+        elseif unit.Sniper and unit.MaxWeaponRange and mod < 8 then
+            kiteRange = unit.MaxWeaponRange-math.random(1,3)
         elseif unit.MaxWeaponRange then
             kiteRange = unit.MaxWeaponRange-math.random(1,3)-mod
         else

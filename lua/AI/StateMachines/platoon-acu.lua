@@ -83,7 +83,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             end
             if cdr.EnemyFlanking and (cdr.CurrentEnemyThreat * 1.2 > cdr.CurrentFriendlyThreat or cdr.Health < 6500) then
                 cdr.EnemyFlanking = false
-                --LOG('ACU is being flanked by enemy, retreat')
+                LOG('ACU is being flanked by enemy, retreat')
                 self:ChangeState(self.Retreating)
                 return
             end
@@ -91,7 +91,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if brain.BrainIntel.SelfThreat.AntiAirNow < brain.EnemyIntel.EnemyThreatCurrent.AntiAir then
                     cdr.EnemyAirPresent = true
                     if not cdr.AtHoldPosition then
-                       --LOG('Retreating due to enemy air snipe possibility')
+                       LOG('Retreating due to enemy air snipe possibility')
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -243,7 +243,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > cdr.MaxBaseRange * cdr.MaxBaseRange and not self.BuilderData.DefendExpansion then
-                --LOG('ACU is beyond maxRadius of '..(cdr.MaxBaseRange * cdr.MaxBaseRange))
+                LOG('ACU is beyond maxRadius of '..(cdr.MaxBaseRange * cdr.MaxBaseRange))
                 self:ChangeState(self.Retreating)
                 return
             end
@@ -253,9 +253,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             end
             if brain.EnemyIntel.Phase > 2 then
                 if brain.GridPresence:GetInferredStatus(cdr.Position) == 'Hostile' then
-                    --LOG('We are in hostile territory and should be retreating')
+                    LOG('We are in hostile territory and should be retreating')
                     if cdr.CurrentEnemyThreat > 10 and cdr.CurrentEnemyThreat * 1.2 > cdr.CurrentFriendlyThreat then
-                        --LOG('ACU is detecting high threat')
+                        LOG('ACU is detecting high threat')
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -282,7 +282,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 cdr.Combat = true
                 local acuDistanceToBase = VDist3Sq(cdr.Position, cdr.CDRHome)
                 if (not cdr.SuicideMode and acuDistanceToBase > cdr.MaxBaseRange * cdr.MaxBaseRange and (not cdr:IsUnitState('Building'))) and not self.BuilderData.DefendExpansion or (cdr.PositionStatus == 'Hostile' and cdr.Caution) then
-                    --LOG('OverCharge running but ACU is beyond its MaxBaseRange property and high threat')
+                    LOG('OverCharge running but ACU is beyond its MaxBaseRange property and high threat')
                     --LOG('cdr retreating due to beyond max range and not building '..(cdr.MaxBaseRange * cdr.MaxBaseRange)..' current distance '..acuDistanceToBase)
                     --LOG('Wipe BuilderData in numUnits > 1')
                     self.BuilderData = {}
@@ -304,7 +304,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     --LOG('Target status is '..brain.GridPresence:GetInferredStatus(target:GetPosition()))
                     --LOG('cdr phase is '..repr(cdr.Phase))
                 end
-                if target and cdr.Phase == 3 and brain.GridPresence:GetInferredStatus(target:GetPosition()) == 'Hostile' then
+                if not cdr.SuicideMode and target and cdr.Phase == 3 and brain.GridPresence:GetInferredStatus(target:GetPosition()) == 'Hostile' then
                     --LOG('cdr phase is '..repr(cdr.Phase)..' and in hostile position')
                     target = false
                 end
@@ -401,8 +401,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < 6400 then
                 self:ChangeState(self.EngineerTask)
                 return
-            elseif VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 and cdr.Phase > 2 then
-                --LOG('Phase 3 and not close to base')
+            elseif not cdr.SuicideMode and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 and cdr.Phase > 2 then
+                LOG('Phase 3 and not close to base')
                 self:ChangeState(self.Retreating)
                 return
             elseif cdr.CurrentEnemyInnerCircle < 15 then
@@ -914,7 +914,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                --RNGLOG('Friendly threat was '..friendlyUnitThreat)
                                 cdr.Caution = true
                                 cdr.CautionReason = 'acuOverChargeTargetCheck'
-                                if RUtils.GetAngleRNG(cdrPos[1], cdrPos[3], cdr.CDRHome[1], cdr.CDRHome[3], targetPos[1], targetPos[3]) > 0.6 then
+                                if RUtils.GetAngleRNG(cdrPos[1], cdrPos[3], cdr.CDRHome[1], cdr.CDRHome[3], targetPos[1], targetPos[3]) > 0.5 then
                                     --RNGLOG('retreat towards home')
                                     IssueMove({cdr}, cdr.CDRHome)
                                     coroutine.yield(40)
@@ -943,6 +943,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             ACUFunc.SetAcuSnipeMode(cdr, false)
                             cdr.SnipeMode = false
                             cdr.SuicideMode = false
+                            brain.BrainIntel.SuicideModeActive = false
+                            brain.BrainIntel.SuicideModeTarget = false
                         end
                         if enemyACUHealth < 4500 and cdr.Health - enemyACUHealth < 3000 or cdr.CurrentFriendlyInnerCircle > cdr.CurrentEnemyInnerCircle * 1.3 then
                             if not cdr.SnipeMode then
@@ -972,12 +974,16 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             ACUFunc.SetAcuSnipeMode(cdr, false)
                             cdr.SnipeMode = false
                             cdr.SuicideMode = false
+                            brain.BrainIntel.SuicideModeActive = false
+                            brain.BrainIntel.SuicideModeTarget = false
                         end
                     elseif cdr.SnipeMode then
                         --RNGLOG('Target is not acu, setting default target priorities')
                         ACUFunc.SetAcuSnipeMode(cdr, false)
                         cdr.SnipeMode = false
                         cdr.SuicideMode = false
+                        brain.BrainIntel.SuicideModeActive = false
+                        brain.BrainIntel.SuicideModeTarget = false
                     end
                     if target and not target.Dead and not target:BeenDestroyed() then
                         IssueClearCommands({cdr})
@@ -1092,6 +1098,11 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local distanceToHome = cdr.DistanceToHome
             --RNGLOG('Getting list of allied platoons close by')
             coroutine.yield( 2 )
+            if cdr.SuicideMode then
+                cdr.SuicideMode = false
+                brain.BrainIntel.SuicideModeActive = false
+                brain.BrainIntel.SuicideModeTarget = false
+            end
             if cdr.EnemyAirPresent and not cdr.AtHoldPosition then
                 local retreatKey
                 local acuHoldPosition
@@ -1121,6 +1132,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             end
             if cdr.Health > 5000 and distanceToHome > 6400 and not baseRetreat then
                 if cdr.GunUpgradeRequired and cdr.CurrentEnemyThreat < 15 and not cdr.EnemyCDRPresent then
+                    LOG('Trying to retreat to extractor')
                     if brain.GridPresence:GetInferredStatus(cdr.Position) ~= 'Hostile' then
                         local extractors = brain:GetListOfUnits(categories.MASSEXTRACTION, true)
                         local closestDistance
@@ -1131,7 +1143,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 local distance = VDist3Sq(position, cdr.Position)
                                 if (not closestExtractor or distance < closestDistance ) then
                                     if currentTargetPosition then
-                                        if RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], position[1], position[3], currentTargetPosition[1], currentTargetPosition[3]) > 0.6 then
+                                        if RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], position[1], position[3], currentTargetPosition[1], currentTargetPosition[3]) > 0.4 then
                                             closestExtractor = v
                                             closestDistance = distance
                                         end
@@ -1202,23 +1214,45 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local closestBase = false
             local closestBaseDistance = false
             if brain.BuilderManagers then
+                local takeThreatIntoAccount = false
+                local threatLocations = brain:GetThreatsAroundPosition( cdr.Position, brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface' )
+                if table.getn(threatLocations) > 0 then
+                    takeThreatIntoAccount = true
+                end
+                
                 for baseName, base in brain.BuilderManagers do
                 --RNGLOG('Base Name '..baseName)
                 --RNGLOG('Base Position '..repr(base.Position))
                 --RNGLOG('Base Distance '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
                     if not table.empty(base.FactoryManager.FactoryList) then
+                        local bypass = false
                         --RNGLOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
                         local baseDistance = VDist3Sq(cdr.Position, base.Position)
+                        if takeThreatIntoAccount and baseName ~= 'MAIN' then
+                            for _, threat in threatLocations do
+                                LOG('Angle of threat compared to base position is '..RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3], threat[1], threat[2]))
+                                LOG('Threat amount '..threat[3])
+                                LOG('Position '..threat[1]..' '..threat[2])
+                                if threat[3] > 30 and RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3], threat[1], threat[2]) < 0.35 then
+                                    bypass = true
+                                end
+                            end
+                        end
                         --LOG('Distance distance is '..baseDistance)
                         --LOG('Number of factories is '..table.getn(base.FactoryManager.FactoryList))
-                        if distanceToHome > baseDistance and (baseDistance > 1225 or (table.getn(base.FactoryManager.FactoryList) > 1 and baseDistance > 612 and cdr.Health > 7000 )) or (cdr.GunUpgradeRequired and not cdr.Caution) or (cdr.HighThreatUpgradeRequired and not cdr.Caution) or baseName == 'MAIN' then
-                            if not closestBaseDistance then
-                                closestBaseDistance = baseDistance
+                        if not bypass then
+                            if distanceToHome > baseDistance and (baseDistance > 1225 or (table.getn(base.FactoryManager.FactoryList) > 1 and baseDistance > 612 and cdr.Health > 7000 )) or (cdr.GunUpgradeRequired and not cdr.Caution) or (cdr.HighThreatUpgradeRequired and not cdr.Caution) or baseName == 'MAIN' then
+                                if not closestBaseDistance then
+                                    closestBaseDistance = baseDistance
+                                end
+                                if baseDistance <= closestBaseDistance then
+                                    closestBase = baseName
+                                    closestBaseDistance = baseDistance
+                                end
                             end
-                            if baseDistance <= closestBaseDistance then
-                                closestBase = baseName
-                                closestBaseDistance = baseDistance
-                            end
+                        else
+                            LOG('base position bypassed due to threat angle position was '..repr(base.Position))
+                            LOG('base was '..baseName)
                         end
                     end
                 end

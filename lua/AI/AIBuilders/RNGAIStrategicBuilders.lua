@@ -50,7 +50,7 @@ BuilderGroup {
             
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.1 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 9.0, 800.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.40, 0.90 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.NUKE * categories.STRUCTURE}},
@@ -87,7 +87,6 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 10},
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            
             { UCBC, 'ValidateLateGameBuild', { }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 8.0, 700.0 }},
@@ -119,11 +118,10 @@ BuilderGroup {
         Priority = 600,
         DelayEqualBuildPlattons = {'HighValue', 10},
         BuilderConditions = {
-            
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { }},
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', true } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.1 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 10.0, 800.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.95 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 } },
@@ -156,14 +154,13 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', {1,4} }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            
             { UCBC, 'ValidateLateGameBuild', { }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE - categories.ORBITALSYSTEM}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', {40, 1500}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -196,7 +193,7 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', {40, 1500}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -229,7 +226,7 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', {40, 1500}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -259,7 +256,6 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 10},
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            
             { UCBC, 'ValidateLateGameBuild', { }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 8.0, 700.0 }},
@@ -293,9 +289,8 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', true } },
-            
             { UCBC, 'ValidateLateGameBuild', { }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.05 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 8.0, 700.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.95 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 } },
@@ -328,7 +323,6 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', {1,4} }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            
             { UCBC, 'ValidateLateGameBuild', { }},
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', false } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
@@ -336,7 +330,7 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE - categories.ORBITALSYSTEM}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', {40, 1500}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -362,7 +356,6 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            
             { UCBC, 'ValidateLateGameBuild', { }},
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', false } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
@@ -370,7 +363,7 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', {40, 1500}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -396,7 +389,6 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            
             { UCBC, 'ValidateLateGameBuild', { }},
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', false } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
@@ -404,7 +396,7 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', {40, 1500}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2}},
         },
         BuilderType = 'Any',
         BuilderData = {

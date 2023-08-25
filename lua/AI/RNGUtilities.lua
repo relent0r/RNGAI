@@ -5851,9 +5851,29 @@ ConfigurePlatoon = function(platoon)
                         end
                     end
                 end
-                if EntityCategoryContains(categories.SCOUT, v) then
+                if EntityCategoryContains(categories.ARTILLERY * categories.TECH3,v) then
+                    v.Role='Artillery'
+                elseif EntityCategoryContains(categories.EXPERIMENTAL,v) then
+                    v.Role='Experimental'
+                elseif EntityCategoryContains(categories.SILO,v) then
+                    v.Role='Silo'
+                elseif EntityCategoryContains(categories.xsl0202 + categories.xel0305 + categories.xrl0305,v) then
+                    v.Role='Heavy'
+                elseif EntityCategoryContains((categories.SNIPER + categories.INDIRECTFIRE) * categories.LAND + categories.ual0201 + categories.drl0204 + categories.del0204,v) then
+                    v.Role='Sniper'
+                    if EntityCategoryContains(categories.ual0201,v) then
+                        v.GlassCannon=true
+                    end
+                elseif EntityCategoryContains(categories.SCOUT,v) then
+                    v.Role='Scout'
                     platoon.ScoutPresent = true
                     platoon.ScoutUnit = v
+                elseif EntityCategoryContains(categories.ANTIAIR,v) then
+                    v.Role='AA'
+                elseif EntityCategoryContains(categories.DIRECTFIRE,v) then
+                    v.Role='Bruiser'
+                elseif EntityCategoryContains(categories.SHIELD,v) then
+                    v.Role='Shield'
                 end
                 local callBacks = aiBrain:GetCallBackCheck(v)
                 local primaryWeaponDamage = 0

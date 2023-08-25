@@ -499,7 +499,7 @@ GetNearExtractorRNG = function(aiBrain, platoon, platoonPosition, enemyPosition,
                 if unit and not unit.Dead then
                     local unitPos = unit:GetPosition()
                     if enemyPosition then
-                        if RUtils.GetAngleRNG(platoonPosition[1], platoonPosition[3], unitPos[1], unitPos[3], enemyPosition[1], enemyPosition[3]) > 0.6 then
+                        if RUtils.GetAngleRNG(platoonPosition[1], platoonPosition[3], unitPos[1], unitPos[3], enemyPosition[1], enemyPosition[3]) > 0.5 then
                             if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition,unitPos) then
                                 if threatCheck then
                                     local threat = RUtils.GrabPosDangerRNG(aiBrain,unitPos,platoon.EnemyRadius)
@@ -664,7 +664,7 @@ GetClosestPlatoonRNG = function(platoon, planName, distanceLimit, angleTargetPos
         local aPlatDistance = VDist2Sq(platPos[1],platPos[3],aPlatPos[1],aPlatPos[3])
         if aPlatDistance < closestDistance then
             if angleTargetPos then
-                if RUtils.GetAngleRNG(platPos[1], platPos[3], aPlatPos[1], aPlatPos[3], angleTargetPos[1], angleTargetPos[3]) > 0.6 then
+                if RUtils.GetAngleRNG(platPos[1], platPos[3], aPlatPos[1], aPlatPos[3], angleTargetPos[1], angleTargetPos[3]) > 0.5 then
                     closestPlatoon = aPlat
                     closestDistance = aPlatDistance
                     closestAPlatPos = aPlatPos

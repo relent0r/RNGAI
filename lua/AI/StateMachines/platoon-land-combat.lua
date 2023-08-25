@@ -79,6 +79,26 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonACUBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
+            if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
+                local enemyAcuPosition = aiBrain.BrainIntel.SuicideModeTarget:GetPosition()
+                local rx = self.Pos[1] - enemyAcuPosition[1]
+                local rz = self.Pos[3] - enemyAcuPosition[3]
+                local acuDistance = rx * rx + rz * rz
+                if NavUtils.CanPathTo(self.MovementLayer, self.Pos, enemyAcuPosition) then
+                    if acuDistance > 6400 then
+                        self.BuilderData = {
+                            AttackTarget = aiBrain.BrainIntel.SuicideModeTarget,
+                            Position = aiBrain.BrainIntel.SuicideModeTarget:GetPosition(),
+                            CutOff = 400
+                        }
+                        self:ChangeState(self.Navigating)
+                        return
+                    else
+                        self:ChangeState(self.CombatLoop)
+                        return
+                    end
+                end
+            end
             local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius)
             --RNGLOG('Simple Retreat Threat Stats '..repr(threat))
             if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
@@ -258,32 +278,55 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
+            local aiBrain = self:GetBrain()
             local units=GetPlatoonUnits(self)
-            for k,unit in self.targetcandidates do
-                if not unit or unit.Dead or not unit.machineworth then 
-                    --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
-                    table.remove(self.targetcandidates,k) 
+            if not aiBrain.BrainIntel.SuicideModeActive then
+                for k,unit in self.targetcandidates do
+                    if not unit or unit.Dead or not unit.machineworth then 
+                        --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
+                        table.remove(self.targetcandidates,k) 
+                    end
                 end
             end
             local target
             local closestTarget
+            local approxThreat
             for _,v in units do
                 if v and not v.Dead then
                     local unitPos = v:GetPosition()
-                    for l, m in self.targetcandidates do
-                        if m and not m.Dead then
-                            local tmpDistance = VDist3Sq(unitPos,m:GetPosition())*m.machineworth
-                            if not closestTarget or tmpDistance < closestTarget then
-                                target = m
-                                closestTarget = tmpDistance
+                    if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
+                        target = aiBrain.BrainIntel.SuicideModeTarget
+                    else
+                        for l, m in self.targetcandidates do
+                            if m and not m.Dead then
+                                local enemyPos = m:GetPosition()
+                                local rx = unitPos[1] - enemyPos[1]
+                                local rz = unitPos[3] - enemyPos[3]
+                                local tmpDistance = rx * rx + rz * rz
+                                if v.Role ~= 'Artillery' and v.Role ~= 'Silo' and v.Role ~= 'Sniper' then
+                                    tmpDistance = tmpDistance*m.machineworth
+                                end
+                                if not closestTarget or tmpDistance < closestTarget then
+                                    target = m
+                                    closestTarget = tmpDistance
+                                end
+                                if not closestTarget or tmpDistance < closestTarget then
+                                    target = m
+                                    closestTarget = tmpDistance
+                                end
                             end
                         end
                     end
                     if target then
-                        if VDist3Sq(unitPos,target:GetPosition())>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
-                            IssueClearCommands({v}) 
-                            IssueMove({v},target:GetPosition())
-                            continue
+                        if not v.Sniper and VDist3Sq(unitPos,target:GetPosition())>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
+                            if not approxThreat then
+                                approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius)
+                            end
+                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.ally and approxThreat.enemy and approxThreat.ally > approxThreat.enemy then
+                                IssueClearCommands({v}) 
+                                IssueMove({v},target:GetPosition())
+                                continue
+                            end
                         end
                         StateUtils.VariableKite(self,v,target)
                     end

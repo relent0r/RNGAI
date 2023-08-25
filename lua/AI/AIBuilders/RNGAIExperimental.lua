@@ -70,7 +70,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'ValidateLateGameBuild', { }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.2 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.40, 0.95 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
@@ -101,7 +101,7 @@ BuilderGroup {
             { UCBC, 'ValidateLateGameBuild', { }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 4, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.2 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2 }},
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.95 } },
         },
