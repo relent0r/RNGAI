@@ -173,14 +173,14 @@ EngineerManager = Class(RNGEngineerManager) {
             return RNGEngineerManager.AssignEngineerTask(self, unit)
         end
         --LOG('Engineer trying to have task assigned '..unit.EntityId)
-        if unit.Active or unit.Combat or unit.GoingHome or unit.UnitBeingBuiltBehavior or unit.Upgrading then
+        if unit.Active or unit.Combat or unit.UnitBeingBuiltBehavior or unit.Upgrading then
             --RNGLOG('Unit Still in combat or going home, delay')
             self.AssigningTask = false
             --RNGLOG('CDR Combat Delay')
             self:DelayAssign(unit, 50)
             return
         end
-        --LOG('Engineer passed active, combat, goinghome, unitbeingbuiltbehavior or upgrading '..unit.EntityId)
+        --LOG('Engineer passed active, combat, unitbeingbuiltbehavior or upgrading '..unit.EntityId)
         unit.LastActive = GetGameTimeSeconds()
         if unit.UnitBeingAssist or unit.UnitBeingBuilt then
             --RNGLOG('UnitBeingAssist Delay')
@@ -202,7 +202,7 @@ EngineerManager = Class(RNGEngineerManager) {
 
         local builder = self:GetHighestBuilder('Any', {unit})
 
-        if builder and ((not unit.Combat) or (not unit.GoingHome) or (not unit.Upgrading) or (not unit.Active)) then
+        if builder and ((not unit.Combat) or (not unit.Upgrading) or (not unit.Active)) then
             -- Fork off the platoon here
             local template = self:GetEngineerPlatoonTemplate(builder:GetPlatoonTemplate())
             local hndl = self.Brain:MakePlatoon(template[1], template[2])

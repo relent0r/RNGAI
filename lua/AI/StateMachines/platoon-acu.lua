@@ -1634,7 +1634,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
 
             if cdr:IsIdleState() or cdr.GunUpgradeRequired  or cdr.HighThreatUpgradeRequired then
                 if (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95) or cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired then
-                    cdr.GoingHome = false
                     cdr.Combat = false
                     cdr.Upgrading = false
 

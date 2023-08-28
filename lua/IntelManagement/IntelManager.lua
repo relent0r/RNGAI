@@ -1364,10 +1364,31 @@ IntelManager = Class {
                 end
             end
             local disableGunship = true
-            if self.Brain.BrainIntel.AirPhase < 3 and self.Brain.EnemyIntel.AirPhase < 3 then
+            
+            if self.Brain.BrainIntel.AirPhase < 3 then
                 if self.Brain.BrainIntel.SelfThreat.AntiAirNow > 20 then
+                    local gunshipMassKilled = self.Brain.IntelManager.UnitStats['Gunship'].Kills.Mass
+                    local gunshipMassBuilt = self.Brain.IntelManager.UnitStats['Gunship'].Built.Mass
                     if self.Brain.amanager.Current['Air']['T2']['gunship'] < 2 then
                         self.Brain.amanager.Demand.Air.T2.gunship = 2
+                        disableGunship = false
+                    end
+                    if gunshipMassKilled > 0 and gunshipMassBuilt > 0 and math.min(gunshipMassKilled / gunshipMassBuilt, 2) > 1.2 then
+                        self.Brain.amanager.Demand.Air.T2.gunship = self.Brain.amanager.Current['Air']['T2']['gunship'] + 1
+                        disableGunship = false
+                    end
+
+                end
+            elseif self.Brain.BrainIntel.AirPhase > 2 then
+                if self.Brain.BrainIntel.SelfThreat.AntiAirNow > 60 then
+                    local gunshipMassKilled = self.Brain.IntelManager.UnitStats['Gunship'].Kills.Mass
+                    local gunshipMassBuilt = self.Brain.IntelManager.UnitStats['Gunship'].Built.Mass
+                    if self.Brain.amanager.Current['Air']['T3']['gunship'] < 2 then
+                        self.Brain.amanager.Demand.Air.T3.gunship = 2
+                        disableGunship = false
+                    end
+                    if gunshipMassKilled > 0 and gunshipMassBuilt > 0 and math.min(gunshipMassKilled / gunshipMassBuilt, 2) > 1.2 then
+                        self.Brain.amanager.Demand.Air.T3.gunship = self.Brain.amanager.Current['Air']['T3']['gunship'] + 1
                         disableGunship = false
                     end
                 end
@@ -1375,6 +1396,11 @@ IntelManager = Class {
             if disableGunship and self.Brain.amanager.Current['Air']['T2']['gunship'] > 1 then
                 self.Brain.amanager.Demand.Air.T2.gunship = 0
             end
+            if disableGunship and self.Brain.amanager.Current['Air']['T3']['gunship'] > 2 then
+                self.Brain.amanager.Demand.Air.T3.gunship = 0
+            end
+            LOG('Current T2 Gunship demand '..self.Brain.amanager.Demand.Air.T2.gunship)
+            LOG('Current T3 Gunship demand '..self.Brain.amanager.Demand.Air.T3.gunship)
             if not table.empty(potentialStrikes) then
                 local count = math.ceil(desiredStrikeDamage / 1000)
                 local acuSnipe = false

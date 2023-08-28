@@ -1070,7 +1070,6 @@ StructureManager = Class {
     -- Keep track of how many extractors are currently upgrading
     -- Right now this is less about making the best decision to upgrade and more about managing the economy while that upgrade is happening.
         coroutine.yield(Random(5,20))
-        local ALLBPS = __blueprints
         while true do
             local upgradeTrigger = false
             local upgradeSpend = aiBrain.cmanager.income.r.m*aiBrain.EconomyUpgradeSpend
@@ -1142,25 +1141,24 @@ StructureManager = Class {
             if extractorsDetail.TECH1 > 0 and extractorsDetail.TECH2 > 0 then
                 --RNGLOG('Ratio is '..(extractorsDetail.TECH1 / extractorsDetail.TECH2))
             end
-            if extractorsDetail.TECH1Upgrading < 2 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger then
-                if totalSpend < upgradeSpend and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
+            if extractorsDetail.TECH1Upgrading < 2 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and
+                (totalSpend < upgradeSpend or massStorage > 600) and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                     --LOG('We Could upgrade an extractor now with over time')
                         --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
-                        if (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.2) and upgradeSpend - totalSpend > aiBrain.EcoManager.T3ExtractorSpend then
-                            --RNGLOG('Extractor Ratio of T1 to T2 is >= 1.1 and and upgradeSpend - totalSpend > aiBrain.EcoManager.T3ExtractorSpend')
-                            self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
-                        elseif (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7) or upgradeSpend < 15 then
-                            --RNGLOG('Extractor Ratio of T1 to T2 is >= 1.5 or upgrade spend under 15')
-                            self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
-                        else
-                            --RNGLOG('Else all tiers upgrade')
-                            self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
-                        end
+                    if totalSpend < upgradeSpend and (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.2) and upgradeSpend - totalSpend > aiBrain.EcoManager.T3ExtractorSpend then
+                        --RNGLOG('Extractor Ratio of T1 to T2 is >= 1.1 and and upgradeSpend - totalSpend > aiBrain.EcoManager.T3ExtractorSpend')
+                        self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         coroutine.yield(30)
-                    --end
+                    elseif (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7) or upgradeSpend < 15 then
+                        --RNGLOG('Extractor Ratio of T1 to T2 is >= 1.5 or upgrade spend under 15')
+                        self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
+                        coroutine.yield(30)
+                    elseif totalSpend < upgradeSpend then
+                        --RNGLOG('Else all tiers upgrade')
+                        self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
+                        coroutine.yield(30)
+                    end
                     coroutine.yield(30)
-                end
-                coroutine.yield(30)
             elseif extractorsDetail.TECH1Upgrading < 5 and massStorage > 150 and upgradeTrigger and totalSpend < upgradeSpend 
                 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                     --RNGLOG('We Could upgrade a non t2 extractor now with over time')

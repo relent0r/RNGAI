@@ -42,12 +42,12 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonGunshipBehavior
         Main = function(self)
-            if IsDestroyed(self) then
-                return
-            end
             local aiBrain = self:GetBrain()
             local target
             local platPos = self:GetPlatoonPosition()
+            if not platPos then
+                return
+            end
             local homeDist = VDist3Sq(platPos, self.Home)
             if aiBrain.BrainIntel.SuicideModeActive and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
                 self.BuilderData = {

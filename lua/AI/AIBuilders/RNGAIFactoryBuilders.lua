@@ -156,11 +156,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG Factory Builder Land T2 MainBase',
         PlatoonTemplate = 'EngineerBuilderT23RNG',
-        Priority = 1000,
+        Priority = 1015,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.95, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.90, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { MIBC, 'AirPlayerCheck', {'LocationType', 3, categories.FACTORY * categories.LAND }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
@@ -183,11 +183,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG Factory Builder Land T3 MainBase',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
-        Priority = 1000,
+        Priority = 1020,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.95, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.90, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { MIBC, 'AirPlayerCheck', {'LocationType', 3, categories.FACTORY * categories.LAND }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },

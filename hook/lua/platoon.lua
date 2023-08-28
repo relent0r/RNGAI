@@ -4945,7 +4945,7 @@ Platoon = Class(RNGAIPlatoonClass) {
     -------------------------------------------------------
     ProcessBuildCommandRNG = function(eng, removeLastBuild)
         --DUNCAN - Trying to stop commander leaving projects
-        if (not eng) or eng.Dead or (not eng.PlatoonHandle) or eng.Combat or eng.Active or eng.Upgrading or eng.GoingHome then
+        if (not eng) or eng.Dead or (not eng.PlatoonHandle) or eng.Combat or eng.Active or eng.Upgrading then
             return
         end
         local ALLBPS = __blueprints
@@ -5138,7 +5138,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local validateHighValue = false
 
         --DUNCAN - Trying to stop commander leaving projects, also added moving as well.
-        while not eng.Dead and not eng.PlatoonHandle.UsingTransport and (eng.GoingHome or eng.ProcessBuild ~= nil
+        while not eng.Dead and not eng.PlatoonHandle.UsingTransport and (eng.ProcessBuild ~= nil
                   or eng.UnitBeingBuiltBehavior or not eng:IsIdleState()
                  ) do
             coroutine.yield(30)
@@ -5158,6 +5158,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             if not eng.UnitBeingBuilt or eng.UnitBeingBuilt and eng.UnitBeingBuilt:GetFractionComplete() == 1 then
                 break
+            end
+            if eng:IsIdleState() then
+                LOG('Engineer is idle in watch for not building '..repr(eng))
             end
         end
         eng.NotBuildingThread = nil
