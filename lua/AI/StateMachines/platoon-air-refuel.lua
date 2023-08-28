@@ -93,6 +93,13 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                             local plat = aiBrain:MakePlatoon('', 'none')
                             aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
                             import("/mods/rngai/lua/ai/statemachines/platoon-air-gunship.lua").AssignToUnitsMachine({ }, plat, {unit})
+                        elseif self.PreviousStateMachine == 'Fighter' then
+                            local plat = GetClosestPlatoonRNG(self, planName, 350)
+                            if not plat then
+                                plat = aiBrain:MakePlatoon('', 'none')
+                            end
+                            aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
+                            import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, plat, {unit})
                         end
                     end
                 end
@@ -153,7 +160,7 @@ AssignToUnitsMachine = function(data, platoon, units)
             for _, v in platoonUnits do
                 IssueClearCommands({v})
                 v.PlatoonHandle = platoon
-                v.PreviousStateMachine = 'Gunship'
+                v.PreviousStateMachine = data.StateMachine
             end
         end
         -- start the behavior
