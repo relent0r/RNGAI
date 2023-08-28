@@ -8075,26 +8075,21 @@ Platoon = Class(RNGAIPlatoonClass) {
                         --RNGLOG('Feeder no target platoon found, starting new airhuntai')
                         --RNGLOG('Venting to new trueplatoon platoon')
                         local platoonUnits = GetPlatoonUnits(self)
-                        local ventPlatoon = aiBrain:MakePlatoon('', 'AirHuntAIRNG')
+                        local ventPlatoon = aiBrain:MakePlatoon('', '')
                         ventPlatoon.PlanName = 'RNGAI Air Intercept'
                         ventPlatoon.PlatoonData.AvoidBases =  self.PlatoonData.AvoidBases
                         ventPlatoon.PlatoonData.SearchRadius =  maxRadius
                         ventPlatoon.PlatoonData.LocationType = self.PlatoonData.LocationType
                         ventPlatoon.PlatoonData.PlatoonLimit = self.PlatoonData.PlatoonLimit
                         ventPlatoon.PlatoonData.PrioritizedCategories = self.PlatoonData.PrioritizedCategories
-                        for _, unit in platoonUnits do
-                            if unit and not unit:BeenDestroyed() then
-                                --RNGLOG('Added unit to new platoon')
-                                aiBrain:AssignUnitsToPlatoon(ventPlatoon, {unit}, 'Attack', 'None')
-                                return
-                            end
-                        end
+                        aiBrain:AssignUnitsToPlatoon(ventPlatoon, self:GetPlatoonUnits(), 'Attack', 'None')
+                        import("/mods/rngai/lua/ai/statemachines/platoon-fighter.lua").AssignToUnitsMachine({ }, targetPlatoon, self:GetPlatoonUnits())
                     end
                 else
                     --RNGLOG('Feeder target platoon found, trying to join')
                     if not IsDestroyed(targetPlatoon) then
                         if VDist3Sq(GetPlatoonPosition(self), GetPlatoonPosition(targetPlatoon)) < 900 then
-                            aiBrain:AssignUnitsToPlatoon(targetPlatoon, GetPlatoonUnits(self), 'Attack', 'None')
+                            import("/mods/rngai/lua/ai/statemachines/platoon-fighter.lua").AssignToUnitsMachine({ }, targetPlatoon, self:GetPlatoonUnits())
                         else
                             while PlatoonExists(aiBrain, self) do
                                 coroutine.yield(1)
@@ -8122,7 +8117,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                             IssueGuard(self:GetPlatoonUnits(), guardPos)
                                         end
                                     end
-                                    aiBrain:AssignUnitsToPlatoon(targetPlatoon, GetPlatoonUnits(self), 'Attack', 'None')
+                                    import("/mods/rngai/lua/ai/statemachines/platoon-fighter.lua").AssignToUnitsMachine({ }, targetPlatoon, self:GetPlatoonUnits())
                                     coroutine.yield(5)
                                     return
                                 end
@@ -11673,6 +11668,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             import("/mods/rngai/lua/ai/statemachines/platoon-air-gunship.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         elseif machineType == 'ZoneControl' then
             import("/mods/rngai/lua/ai/statemachines/platoon-land-zonecontrol.lua").AssignToUnitsMachine({ZoneType = self.PlatoonData.ZoneType}, self, self:GetPlatoonUnits())
+        elseif machineType == 'Fighter' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         end
         WaitTicks(50)
     end,

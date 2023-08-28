@@ -3,7 +3,6 @@ local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua
 local NavUtils = import("/lua/sim/navutils.lua")
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
-local ACUFunc = import('/mods/RNGAI/lua/AI/RNGACUFunctions.lua')
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
@@ -23,7 +22,7 @@ local RNGTableEmpty = table.empty
 local RNGINSERT = table.insert
 local RNGSORT = table.sort
 
----@class AIPlatoonACUBehavior : AIPlatoon
+---@class AIPlatoonFighterBehavior : AIPlatoon
 ---@field RetreatCount number 
 ---@field ThreatToEvade Vector | nil
 ---@field LocationToRaid Vector | nil
@@ -37,9 +36,10 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
         StateName = 'Start',
 
         --- Initial state of any state machine
-        ---@param self AIPlatoonACUBehavior
+        ---@param self AIPlatoonFighterBehavior
         Main = function(self)
             -- requires expansion markers
+            LOG('start Fighter platoon')
             if not import("/lua/sim/markerutilities/expansions.lua").IsGenerated() then
                 self:LogWarning('requires generated expansion markers')
                 self:ChangeState(self.Error)
@@ -53,7 +53,10 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 return
             end
             local aiBrain = self:GetBrain()
+            LOG('Starting Fighter threads')
             StartFighterThreads(aiBrain, self)
+            coroutine.yield(30)
+            LOG('Fighter threads should be started')
 
             if self.PlatoonData.LocationType then
                 self.LocationType = self.PlatoonData.LocationType
@@ -65,6 +68,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             self.BaseMilitaryArea = aiBrain.OperatingAreas['BaseMilitaryArea']
             self.BaseEnemyArea = aiBrain.OperatingAreas['BaseEnemyArea']
             self.HoldPosTimer = GetGameTimeSeconds()
+            LOG('Starting decide what to do from start')
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -75,14 +79,16 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
         StateName = 'DecideWhatToDo',
 
         --- The platoon searches for a target
-        ---@param self AIPlatoonACUBehavior
+        ---@param self AIPlatoonFighterBehavior
         Main = function(self)
             if IsDestroyed(self) then
                 return
             end
+            LOG('Fighter decidewhattodo')
             local aiBrain = self:GetBrain()
             local target
             if self.CurrentEnemyThreat > self.CurrentPlatoonThreat and not self.BuilderData.ProtectUnit then
+                LOG('Fighter decidewhattodo retreating')
                 self:ChangeState(self.Retreating)
                 return
             end
@@ -93,23 +99,27 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                         if pos then
                             local platoonUnits = GetPlatoonUnits(self)
                             self.HoldingPosition = pos
-                            IssueClearCommands(platoonUnits)
-                            IssueAggressiveMove(platoonUnits, self.HoldingPosition)
-                            IssueGuard(platoonUnits, self.HoldingPosition)
-                            self.HoldPosTimer = GetGameTimeSeconds()
+                            self.BuilderData = {
+                                Position = pos,
+                                HoldingPosition = true
+                            }
+                            LOG('Navigating to holding position')
+                            self:ChangeState(self.Navigating)
+                            return
                         end
                     end
                 end
             end
-            
-            
+            coroutine.yield(20)
+            self:ChangeState(self.DecideWhatToDo)
+            return
         end,
 
     },
 
-    MoveToPosition = State {
+    Navigating = State {
 
-        StateName = "MoveToPosition",
+        StateName = "Navigating",
 
         --- The platoon retreats from a threat
         ---@param self AIPlatoonFighterBehavior
@@ -119,13 +129,10 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Error)
             end
             if self.BuilderData.Retreat then
-                IssueMove(self:GetPlatoonUnits(), self.BuilderData.Position)
+                IssueMove(GetPlatoonUnits(self), self.BuilderData.Position)
             else
-                IssueAggressiveMove(self:GetPlatoonUnits(), self.BuilderData.Position)
+                IssueAggressiveMove(GetPlatoonUnits(self), self.BuilderData.Position)
             end
-            coroutine.yield(30)
-            self:ChangeState(self.DecideWhatToDo)
-            --[[
             local movePosition = self.BuilderData.Position
             while brain:PlatoonExists(self) do
                 coroutine.yield(15)
@@ -133,11 +140,50 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 local dx = platPos[1] - movePosition[1]
                 local dz = platPos[3] - movePosition[3]
                 local posDist = dx * dx + dz * dz
-                
-            end]]
-
+                if posDist < 1225 then
+                    if self.BuilderData.HoldingPosition then
+                        self.HoldPosTimer = GetGameTimeSeconds()
+                        IssueGuard(GetPlatoonUnits(self), self.BuilderData.Position)
+                        self:ChangeState(self.HoldPosition)
+                        return
+                    else
+                        coroutine.yield(5)
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
+                end
+            end
+            coroutine.yield(30)
+            self:ChangeState(self.DecideWhatToDo)
+            return
         end,
 
+    },
+
+    HoldPosition = State {
+
+        StateName = "HoldPosition",
+
+        --- The platoon retreats from a threat
+        ---@param self AIPlatoonFighterBehavior
+        Main = function(self)
+            local aiBrain = self:GetBrain()
+            while brain:PlatoonExists(self) do
+                if self.BuilderData.HoldingPosition then
+                    if self.HoldPosTimer + 120 < GetGameTimeSeconds() then
+                        coroutine.yield(10)
+                        self.BuilderData = {}
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
+                else
+                    coroutine.yield(10)
+                    self.BuilderData = {}
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
+            end
+        end,
     },
 
     Retreating = State {
@@ -203,7 +249,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                         Position = aiBrain.BuilderManagers[closestBase].Position,
                         Action = 'Loiter'
                     }
-                    self:ChangeState(self.MoveToPosition)
+                    self:ChangeState(self.Navigating)
                     return
                 else
                     --RNGLOG('Found platoon checking if can graph')
@@ -215,7 +261,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                             Position = aiBrain.BuilderManagers[closestBase].Position,
                             Action = 'Loiter'
                         }
-                        self:ChangeState(self.MoveToPosition)
+                        self:ChangeState(self.Navigating)
                         return
                     end
                 end
@@ -226,7 +272,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     Position = aiBrain.BuilderManagers[closestBase].Position,
                     Action = 'Loiter'
                 }
-                self:ChangeState(self.MoveToPosition)
+                self:ChangeState(self.Navigating)
                 return
             elseif closestPlatoon then
                 --RNGLOG('Found platoon checking if can graph')
@@ -236,7 +282,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                         Position = closestAPlatPos,
                         Action = 'Loiter'
                     }
-                    self:ChangeState(self.MoveToPosition)
+                    self:ChangeState(self.Navigating)
                     return
                 end
             end
@@ -250,14 +296,14 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
         local count = RNGGETN(units)
         local aiBrain = self:GetBrain()
         if count > 0 then
-            local supportUnits = self:GetSquadUnits('Support')
-            if supportUnits then
-                for _, unit in supportUnits do
-                    IssueClearCommands(unit)
-                    if not unit.Dead and v:TestToggleCaps('RULEUTC_StealthToggle') then
+            local attackUnits = self:GetSquadUnits('Attack')
+            if attackUnits then
+                for _, unit in attackUnits do
+                    IssueClearCommands({unit})
+                    if not unit.Dead and unit:TestToggleCaps('RULEUTC_StealthToggle') then
                         unit:SetScriptBit('RULEUTC_StealthToggle', false)
                     end
-                    if not unit.Dead and v:TestToggleCaps('RULEUTC_CloakToggle') then
+                    if not unit.Dead and unit:TestToggleCaps('RULEUTC_CloakToggle') then
                         unit:SetScriptBit('RULEUTC_CloakToggle', false)
                     end
                 end
@@ -273,19 +319,20 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
 ---@param units Unit[]
 AssignToUnitsMachine = function(data, platoon, units)
     if units and not RNGTableEmpty(units) then
+        LOG('Assign units to Fighter platoon')
         -- meet platoon requirements
         import("/lua/sim/navutils.lua").Generate()
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIPlatoonFighterBehavior)
-        local platoonUnits = platoon:GetPlatoonUnits()
+        local platoonUnits = GetPlatoonUnits(platoon)
         if platoonUnits then
             for _, unit in platoonUnits do
-                IssueClearCommands(unit)
-                if not unit.Dead and v:TestToggleCaps('RULEUTC_StealthToggle') then
+                IssueClearCommands({unit})
+                if not unit.Dead and unit:TestToggleCaps('RULEUTC_StealthToggle') then
                     unit:SetScriptBit('RULEUTC_StealthToggle', false)
                 end
-                if not unit.Dead and v:TestToggleCaps('RULEUTC_CloakToggle') then
+                if not unit.Dead and unit:TestToggleCaps('RULEUTC_CloakToggle') then
                     unit:SetScriptBit('RULEUTC_CloakToggle', false)
                 end
                 unit.PlatoonHandle = platoon
@@ -300,7 +347,7 @@ end
 ---@param data { Behavior: 'AIBehaviorFighterSimple' }
 ---@param units Unit[]
 StartFighterThreads = function(aiBrain, platoon)
-    aiBrain:ForkThread(StartFighterThreads, platoon)
+    aiBrain:ForkThread(FighterThreatThreads, platoon)
 end
 
 ---@param aiBrain AIBrain
@@ -309,8 +356,9 @@ FighterThreatThreads = function(aiBrain, platoon)
     coroutine.yield(10)
     local UnitCategories = categories.ANTIAIR
     while aiBrain:PlatoonExists(platoon) do
+        LOG('Running Fighter Threads')
         local platPos = platoon:GetPlatoonPosition()
-        local enemyThreat
+        local enemyThreat = 0
         if GetNumUnitsAroundPoint(aiBrain, UnitCategories, platPos, 80, 'Enemy') > 0 then
             local enemyUnits = GetUnitsAroundPoint(aiBrain, UnitCategories, platoon:GetPlatoonPosition(), 80, 'Enemy')
             for _, v in enemyUnits do
@@ -322,12 +370,13 @@ FighterThreatThreads = function(aiBrain, platoon)
             end
             platoon.CurrentEnemyThreat = enemyThreat
             platoon.CurrentPlatoonThreat = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
-            if platoon.CurrentEnemyThreat > platoon.CurrentPlatoonThreat and not platoon.BuilderData.ProtectACU then
+            if not platoon.BuilderData.Retreat and platoon.CurrentEnemyThreat > platoon.CurrentPlatoonThreat and not platoon.BuilderData.ProtectACU then
+                LOG('Running Fighter Threads')
                 platoon:ChangeState(platoon.DecideWhatToDo)
             end
         end
         if not aiBrain.BrainIntel.SuicideModeActive then
-            for _, unit in platoon:GetPlatoonUnits() do
+            for _, unit in GetPlatoonUnits(platoon) do
                 local fuel = unit:GetFuelRatio()
                 local health = unit:GetHealthPercent()
                 if not unit.Loading and (fuel < 0.3 or health < 0.5) then

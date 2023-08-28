@@ -349,11 +349,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Air Intercept',
         PlatoonTemplate = 'RNGAI AntiAirHunt',
-        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 800,
         InstanceCount = 2,
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'Fighter',
             AvoidBases = true,
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
@@ -375,7 +375,6 @@ BuilderGroup {
         BuilderName = 'RNGAI Air Feeder',
         PlatoonTemplate = 'RNGAI AntiAirFeeder',
         Priority = 750,
-        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         InstanceCount = 30,
         BuilderType = 'Any',
         BuilderData = {

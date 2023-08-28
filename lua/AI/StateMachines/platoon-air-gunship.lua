@@ -219,6 +219,9 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 local wz = waypoint[3]
                 while not IsDestroyed(self) do
                     WaitTicks(20)
+                    if IsDestroyed(self) then
+                        return
+                    end
                     local position = self:GetPlatoonPosition()
                     -- check if we're near our current waypoint
                     local dx = position[1] - wx
