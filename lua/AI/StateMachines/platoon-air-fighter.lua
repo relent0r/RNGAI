@@ -53,10 +53,8 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 return
             end
             local aiBrain = self:GetBrain()
-            LOG('Starting Fighter threads')
             StartFighterThreads(aiBrain, self)
             coroutine.yield(30)
-            LOG('Fighter threads should be started')
 
             if self.PlatoonData.LocationType then
                 self.LocationType = self.PlatoonData.LocationType
@@ -68,7 +66,6 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             self.BaseMilitaryArea = aiBrain.OperatingAreas['BaseMilitaryArea']
             self.BaseEnemyArea = aiBrain.OperatingAreas['BaseEnemyArea']
             self.HoldPosTimer = GetGameTimeSeconds()
-            LOG('Starting decide what to do from start')
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -91,6 +88,15 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 LOG('Fighter decidewhattodo retreating')
                 self:ChangeState(self.Retreating)
                 return
+            end
+            if not target then
+                if aiBrain.CDRUnit.Active and (aiBrain.BrainIntel.SelfThreat.AirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.Air or aiBrain.CDRUnit.CurrentEnemyAirThreat > 0) then
+                    local acuDistance = VDist2(currentPlatPos[1], currentPlatPos[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3])
+                    if acuDistance > maxRadius or aiBrain.CDRUnit.CurrentEnemyAirThreat > 0 then
+                        --RNGLOG('ACU is active and further than our max distance, lets increase it to cover him better')
+                        acuCheck = true
+                    end
+                end
             end
             if not target then
                 if self.HoldPosTimer + 120 < GetGameTimeSeconds() and VDist3Sq(self.Pos, aiBrain.BrainIntel.StartPos) < 22500 then
@@ -146,6 +152,11 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                         IssueGuard(GetPlatoonUnits(self), self.BuilderData.Position)
                         self:ChangeState(self.HoldPosition)
                         return
+                    elseif self.BuilderData.Loiter then
+                        self.HoldPosTimer = GetGameTimeSeconds()
+                        IssueGuard(GetPlatoonUnits(self), self.BuilderData.Position)
+                        self:ChangeState(self.HoldPosition)
+                        return
                     else
                         coroutine.yield(5)
                         self:ChangeState(self.DecideWhatToDo)
@@ -168,19 +179,31 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonFighterBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
-            while brain:PlatoonExists(self) do
-                if self.BuilderData.HoldingPosition then
-                    if self.HoldPosTimer + 120 < GetGameTimeSeconds() then
-                        coroutine.yield(10)
+            local timer = 120
+            if self.BuilderData.Loiter then
+                timer = 15
+            end
+            while aiBrain:PlatoonExists(self) do
+                coroutine.yield(30)
+                if self.BuilderData.HoldingPosition or self.BuilderData.Loiter then
+                    if self.HoldPosTimer + timer < GetGameTimeSeconds() then
+                        coroutine.yield(5)
                         self.BuilderData = {}
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
                 else
-                    coroutine.yield(10)
+                    coroutine.yield(5)
                     self.BuilderData = {}
                     self:ChangeState(self.DecideWhatToDo)
                     return
+                end
+                for _, unit in GetPlatoonUnits(self) do
+                    if unit and not unit.Dead then
+                        if not unit:IsUnitState('Guarding') then
+                            IssueGuard({unit}, self.BuilderData.Position)
+                        end
+                    end
                 end
             end
         end,
@@ -196,32 +219,34 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local position = self:GetPlatoonPosition()
             local AlliedPlatoons = aiBrain:GetPlatoonsList()
-            local closestPlatoon = false
-            local closestPlatoonDistance = false
-            local closestAPlatPos = false
+            local closestPlatoon
+            local closestPlatoonValue
+            local closestPlatoonDistance
+            local closestAPlatPos
+            local distanceToHome = VDist2Sq(self.Pos[1], self.Pos[3], self.Home[1], self.Home[3])
             for _,aPlat in AlliedPlatoons do
-                if aPlat.SyncId == self.SyncId then
-                    continue
-                end
-                local aPlatAirThreat = self:CalculatePlatoonThreat('Air', categories.ALLUNITS)
-                if aPlatAirThreat > self.CurrentEnemyThreat / 2 then
-                    local aPlatPos = GetPlatoonPosition(aPlat)
-                    local aPlatDistance = VDist2Sq(position[1],position[3],aPlatPos[1],aPlatPos[3])
-                    local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],self.Home[1],self.Home[3])
-                    if aPlatToHomeDistance < distanceToHome then
-                        local platoonValue = aPlatDistance * aPlatDistance / aPlatAirThreat
-                        --RNGLOG('Platoon Distance '..aPlatDistance)
-                        --RNGLOG('Weighting is '..platoonValue)
-                        if not closestPlatoonDistance or platoonValue <= closestPlatoonDistance then
-                            closestPlatoon = aPlat
-                            closestPlatoonDistance = platoonValue
-                            closestAPlatPos = aPlatPos
+                if aPlat.SyncId ~= self.SyncId then
+                    local aPlatAirThreat = aPlat:CalculatePlatoonThreat('Air', categories.ALLUNITS)
+                    if aPlatAirThreat > self.CurrentEnemyThreat / 2 then
+                        local aPlatPos = GetPlatoonPosition(aPlat)
+                        local aPlatDistance = VDist2Sq(position[1],position[3],aPlatPos[1],aPlatPos[3])
+                        local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],self.Home[1],self.Home[3])
+                        if aPlatToHomeDistance < distanceToHome then
+                            local platoonValue = aPlatDistance * aPlatDistance / aPlatAirThreat
+                            --RNGLOG('Platoon Distance '..aPlatDistance)
+                            --RNGLOG('Weighting is '..platoonValue)
+                            if not closestPlatoonValue or platoonValue <= closestPlatoonValue then
+                                closestPlatoon = aPlat
+                                closestPlatoonValue = platoonValue
+                                closestPlatoonDistance = aPlatDistance
+                                closestAPlatPos = aPlatPos
+                            end
                         end
                     end
                 end
             end
-            local closestBase = false
-            local closestBaseDistance = false
+            local closestBase
+            local closestBaseDistance
             if aiBrain.BuilderManagers then
                 for baseName, base in aiBrain.BuilderManagers do
                 --RNGLOG('Base Name '..baseName)
@@ -247,7 +272,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     self.BuilderData = {
                         Retreat = true,
                         Position = aiBrain.BuilderManagers[closestBase].Position,
-                        Action = 'Loiter'
+                        Loiter = true
                     }
                     self:ChangeState(self.Navigating)
                     return
@@ -258,8 +283,8 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                         --RNGLOG('Closest base is '..closestBase)
                         self.BuilderData = {
                             Retreat = true,
-                            Position = aiBrain.BuilderManagers[closestBase].Position,
-                            Action = 'Loiter'
+                            Position = closestAPlatPos,
+                            Loiter = true
                         }
                         self:ChangeState(self.Navigating)
                         return
@@ -270,7 +295,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 self.BuilderData = {
                     Retreat = true,
                     Position = aiBrain.BuilderManagers[closestBase].Position,
-                    Action = 'Loiter'
+                    Loiter = true
                 }
                 self:ChangeState(self.Navigating)
                 return
@@ -280,7 +305,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     self.BuilderData = {
                         Retreat = true,
                         Position = closestAPlatPos,
-                        Action = 'Loiter'
+                        Loiter = true
                     }
                     self:ChangeState(self.Navigating)
                     return

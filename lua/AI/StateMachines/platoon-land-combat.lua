@@ -37,7 +37,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         StateName = 'Start',
 
         --- Initial state of any state machine
-        ---@param self AIPlatoonACUBehavior
+        ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
             -- requires expansion markers
             if not import("/lua/sim/markerutilities/expansions.lua").IsGenerated() then
@@ -76,7 +76,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         StateName = 'DecideWhatToDo',
 
         --- The platoon searches for a target
-        ---@param self AIPlatoonACUBehavior
+        ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
             if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then

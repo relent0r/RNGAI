@@ -38,7 +38,6 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Small',
-        --PlatoonAddBehaviors = {'CommanderBehaviorRNG'},
         PlatoonTemplate = 'CommanderInitializeRNG',
         Priority = 2000,
         PriorityFunction = function(self, aiBrain)
@@ -59,7 +58,6 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Small',
-        --PlatoonAddBehaviors = {'CommanderBehaviorRNG'},
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 2000,
         PriorityFunction = function(self, aiBrain)
@@ -102,7 +100,6 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Large',
-        --PlatoonAddBehaviors = {'CommanderBehaviorRNG'},
         PlatoonTemplate = 'CommanderInitializeRNG',
         Priority = 2000,
         PriorityFunction = function(self, aiBrain)
@@ -123,7 +120,6 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Large',
-        --PlatoonAddBehaviors = {'CommanderBehaviorRNG'},
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 2000,
         PriorityFunction = function(self, aiBrain)

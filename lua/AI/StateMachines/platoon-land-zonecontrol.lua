@@ -85,7 +85,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         StateName = 'DecideWhatToDo',
 
         --- The platoon searches for a target
-        ---@param self AIPlatoonACUBehavior
+        ---@param self AIPlatoonZoneControlBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
             if not PlatoonExists(aiBrain, self) then
