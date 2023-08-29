@@ -8083,13 +8083,13 @@ Platoon = Class(RNGAIPlatoonClass) {
                         ventPlatoon.PlatoonData.PlatoonLimit = self.PlatoonData.PlatoonLimit
                         ventPlatoon.PlatoonData.PrioritizedCategories = self.PlatoonData.PrioritizedCategories
                         aiBrain:AssignUnitsToPlatoon(ventPlatoon, self:GetPlatoonUnits(), 'Attack', 'None')
-                        import("/mods/rngai/lua/ai/statemachines/platoon-fighter.lua").AssignToUnitsMachine({ }, targetPlatoon, self:GetPlatoonUnits())
+                        import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, targetPlatoon, self:GetPlatoonUnits())
                     end
                 else
                     --RNGLOG('Feeder target platoon found, trying to join')
                     if not IsDestroyed(targetPlatoon) then
                         if VDist3Sq(GetPlatoonPosition(self), GetPlatoonPosition(targetPlatoon)) < 900 then
-                            import("/mods/rngai/lua/ai/statemachines/platoon-fighter.lua").AssignToUnitsMachine({ }, targetPlatoon, self:GetPlatoonUnits())
+                            import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, targetPlatoon, self:GetPlatoonUnits())
                         else
                             while PlatoonExists(aiBrain, self) do
                                 coroutine.yield(1)
@@ -8117,7 +8117,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                             IssueGuard(self:GetPlatoonUnits(), guardPos)
                                         end
                                     end
-                                    import("/mods/rngai/lua/ai/statemachines/platoon-fighter.lua").AssignToUnitsMachine({ }, targetPlatoon, self:GetPlatoonUnits())
+                                    import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, targetPlatoon, self:GetPlatoonUnits())
                                     coroutine.yield(5)
                                     return
                                 end

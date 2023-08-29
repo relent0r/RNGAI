@@ -677,8 +677,12 @@ GetClosestPlatoonRNG = function(platoon, planName, distanceLimit, angleTargetPos
         end
     end
     if closestPlatoon then
-        if NavUtils.CanPathTo(platoon.MovementLayer, platPos,closestAPlatPos) then
+        if platoon.MovementLayer == 'Air' then
             return closestPlatoon, closestAPlatPos
+        else
+            if NavUtils.CanPathTo(platoon.MovementLayer, platPos,closestAPlatPos) then
+                return closestPlatoon, closestAPlatPos
+            end
         end
     end
     --RNGLOG('No platoon found within 250 units')

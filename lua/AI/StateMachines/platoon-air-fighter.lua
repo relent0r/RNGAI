@@ -61,11 +61,13 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             else
                 self.LocationType = 'MAIN'
             end
+            self.CurrentEnemyThreat = 0
+            self.CurrentPlatoonThreat = 0
+
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             self.BaseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
             self.BaseMilitaryArea = aiBrain.OperatingAreas['BaseMilitaryArea']
             self.BaseEnemyArea = aiBrain.OperatingAreas['BaseEnemyArea']
-            self.HoldPosTimer = GetGameTimeSeconds()
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -84,26 +86,33 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             LOG('Fighter decidewhattodo')
             local aiBrain = self:GetBrain()
             local target
+            local platPos = self:GetPlatoonPosition()
             if self.CurrentEnemyThreat > self.CurrentPlatoonThreat and not self.BuilderData.ProtectUnit then
                 LOG('Fighter decidewhattodo retreating')
                 self:ChangeState(self.Retreating)
                 return
             end
+            LOG('post check enemy threat')
+            local maxRadius = 400
             if not target then
+                LOG('post target check')
                 if aiBrain.CDRUnit.Active and (aiBrain.BrainIntel.SelfThreat.AirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.Air or aiBrain.CDRUnit.CurrentEnemyAirThreat > 0) then
-                    local acuDistance = VDist2(currentPlatPos[1], currentPlatPos[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3])
+                    local acuDistance = VDist2(platPos[1], platPos[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3])
                     if acuDistance > maxRadius or aiBrain.CDRUnit.CurrentEnemyAirThreat > 0 then
                         --RNGLOG('ACU is active and further than our max distance, lets increase it to cover him better')
                         acuCheck = true
                     end
                 end
             end
+            LOG('2nd target check')
             if not target then
-                if self.HoldPosTimer + 120 < GetGameTimeSeconds() and VDist3Sq(self.Pos, aiBrain.BrainIntel.StartPos) < 22500 then
-                    if GetThreatAtPosition(aiBrain, self.Pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') < 1 then
-                        local pos = RUtils.GetHoldingPosition(aiBrain, self.Pos, self, 'Air', maxRadius)
+                if not self.HoldPosTimer or self.HoldPosTimer + 120 < GetGameTimeSeconds() and VDist3Sq(platPos, aiBrain.BrainIntel.StartPos) < 22500 then
+                    LOG('first check of holdpos')
+                    if GetThreatAtPosition(aiBrain, platPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') < 1 then
+                        LOG('2nd check of holdpos')
+                        local pos = RUtils.GetHoldingPosition(aiBrain, platPos, self, 'Air', maxRadius)
                         if pos then
-                            local platoonUnits = GetPlatoonUnits(self)
+                            LOG('3rd check of holdpos')
                             self.HoldingPosition = pos
                             self.BuilderData = {
                                 Position = pos,
@@ -125,7 +134,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
 
     Navigating = State {
 
-        StateName = "Navigating",
+        StateName = 'Navigating',
 
         --- The platoon retreats from a threat
         ---@param self AIPlatoonFighterBehavior
@@ -140,7 +149,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 IssueAggressiveMove(GetPlatoonUnits(self), self.BuilderData.Position)
             end
             local movePosition = self.BuilderData.Position
-            while brain:PlatoonExists(self) do
+            while aiBrain:PlatoonExists(self) do
                 coroutine.yield(15)
                 local platPos = self:GetPlatoonPosition()
                 local dx = platPos[1] - movePosition[1]
@@ -173,7 +182,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
 
     HoldPosition = State {
 
-        StateName = "HoldPosition",
+        StateName = 'HoldPosition',
 
         --- The platoon retreats from a threat
         ---@param self AIPlatoonFighterBehavior
@@ -211,25 +220,25 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
 
     Retreating = State {
 
-        StateName = "Retreating",
+        StateName = 'Retreating',
 
         --- The platoon retreats from a threat
         ---@param self AIPlatoonFighterBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
-            local position = self:GetPlatoonPosition()
+            local platPos = self:GetPlatoonPosition()
             local AlliedPlatoons = aiBrain:GetPlatoonsList()
             local closestPlatoon
             local closestPlatoonValue
             local closestPlatoonDistance
             local closestAPlatPos
-            local distanceToHome = VDist2Sq(self.Pos[1], self.Pos[3], self.Home[1], self.Home[3])
+            local distanceToHome = VDist2Sq(platPos[1], platPos[3], self.Home[1], self.Home[3])
             for _,aPlat in AlliedPlatoons do
                 if aPlat.SyncId ~= self.SyncId then
                     local aPlatAirThreat = aPlat:CalculatePlatoonThreat('Air', categories.ALLUNITS)
                     if aPlatAirThreat > self.CurrentEnemyThreat / 2 then
                         local aPlatPos = GetPlatoonPosition(aPlat)
-                        local aPlatDistance = VDist2Sq(position[1],position[3],aPlatPos[1],aPlatPos[3])
+                        local aPlatDistance = VDist2Sq(platPos[1],platPos[3],aPlatPos[1],aPlatPos[3])
                         local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],self.Home[1],self.Home[3])
                         if aPlatToHomeDistance < distanceToHome then
                             local platoonValue = aPlatDistance * aPlatDistance / aPlatAirThreat
@@ -254,7 +263,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 --RNGLOG('Base Distance '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
                     if not table.empty(base.FactoryManager.FactoryList) then
                         --RNGLOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
-                        local baseDistance = VDist3Sq(position, base.Position)
+                        local baseDistance = VDist3Sq(platPos, base.Position)
                         local homeDistance = VDist3Sq(self.Home, base.Position)
                         if homeDistance < distanceToHome or baseName == 'MAIN' then
                             if not closestBaseDistance or baseDistance <= closestBaseDistance then
@@ -311,7 +320,6 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-
         end,
     },
 
@@ -394,7 +402,9 @@ FighterThreatThreads = function(aiBrain, platoon)
                 end
             end
             platoon.CurrentEnemyThreat = enemyThreat
+            LOG('CurrentEnemyThreat '..platoon.CurrentEnemyThreat)
             platoon.CurrentPlatoonThreat = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
+            LOG('CurrentPlatoonThreat '..platoon.CurrentPlatoonThreat)
             if not platoon.BuilderData.Retreat and platoon.CurrentEnemyThreat > platoon.CurrentPlatoonThreat and not platoon.BuilderData.ProtectACU then
                 LOG('Running Fighter Threads')
                 platoon:ChangeState(platoon.DecideWhatToDo)
