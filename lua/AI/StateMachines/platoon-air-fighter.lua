@@ -63,7 +63,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             end
             self.CurrentEnemyThreat = 0
             self.CurrentPlatoonThreat = 0
-
+            self.AttackPriorities = self.PlatoonData.PrioritizedCategories or {categories.AIR}
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             self.BaseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
             self.BaseMilitaryArea = aiBrain.OperatingAreas['BaseMilitaryArea']
@@ -92,6 +92,10 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Retreating)
                 return
             end
+            if self.BuilderData.AttackTarget then
+                self:ChangeState(self.AttackTarget)
+                return
+            end
             LOG('post check enemy threat')
             local maxRadius = 400
             if not target then
@@ -100,8 +104,37 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     local acuDistance = VDist2(platPos[1], platPos[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3])
                     if acuDistance > maxRadius or aiBrain.CDRUnit.CurrentEnemyAirThreat > 0 then
                         --RNGLOG('ACU is active and further than our max distance, lets increase it to cover him better')
-                        acuCheck = true
+                        target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, aiBrain.CDRUnit.Position, self, 'Attack', 80, {categories.AIR * (categories.BOMBER + categories.GROUNDATTACK + categories.ANTINAVY)}, false)
+                        if target then
+                            self.BuilderData = {
+                                AttackTarget = target,
+                                Position = target:GetPosition()
+                            }
+                            self:ChangeState(self.AttackTarget)
+                            return
+                        end
                     end
+                end
+            end
+            if not target or target.Dead then
+                --RNGLOG('Looking for target at radius '..maxRadius)
+                for _, v in aiBrain.EnemyIntel.Experimental do
+                    if v.object and not v.object.Dead and v.object.Blueprint.CategoriesHash.AIR then
+                        target = v.object
+                        break
+                    end
+                end
+                if not target or target.Dead then
+                -- Params aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted
+                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, platPos, self, 'Attack', maxRadius, self.AttackPriorities, true, self.CurrentPlatoonThreat, false, false, true)
+                end
+                if target then
+                    self.BuilderData = {
+                        AttackTarget = target,
+                        Position = target:GetPosition()
+                    }
+                    self:ChangeState(self.AttackTarget)
+                    return
                 end
             end
             LOG('2nd target check')
@@ -180,6 +213,32 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
 
     },
 
+    AttackTarget = State {
+
+        StateName = 'AttackTarget',
+
+        --- The platoon retreats from a threat
+        ---@param self AIPlatoonFighterBehavior
+        Main = function(self)
+            local aiBrain = self:GetBrain()
+            if not self.BuilderData.Position then
+                self:ChangeState(self.Error)
+            end
+            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) then
+                local target = self.BuilderData.AttackTarget
+                if target.Blueprint.CategoriesHash.BOMBER or target.Blueprint.CategoriesHash.GROUNDATTACK or target.Blueprint.CategoriesHash.TRANSPORTFOCUS then
+                    IssueAttack(GetPlatoonUnits(self), target:GetPosition())
+                else
+                    IssueAggressiveMove(GetPlatoonUnits(self), target:GetPosition())
+                end
+            end
+            coroutine.yield(30)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+
+    },
+
     HoldPosition = State {
 
         StateName = 'HoldPosition',
@@ -190,7 +249,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local timer = 120
             if self.BuilderData.Loiter then
-                timer = 15
+                timer = 5
             end
             while aiBrain:PlatoonExists(self) do
                 coroutine.yield(30)
