@@ -83,23 +83,24 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             if IsDestroyed(self) then
                 return
             end
-            LOG('Fighter decidewhattodo')
+            LOG('FighterBehavior decidewhattodo')
             local aiBrain = self:GetBrain()
             local target
             local platPos = self:GetPlatoonPosition()
             if self.CurrentEnemyThreat > self.CurrentPlatoonThreat and not self.BuilderData.ProtectUnit then
-                LOG('Fighter decidewhattodo retreating')
+                LOG('FighterBehavior decidewhattodo retreating')
                 self:ChangeState(self.Retreating)
                 return
             end
             if self.BuilderData.AttackTarget then
+                LOG('FighterBehavior already has target, attacking')
                 self:ChangeState(self.AttackTarget)
                 return
             end
-            LOG('post check enemy threat')
-            local maxRadius = 400
+            LOG('FighterBehavior post check enemy threat')
+            local maxRadius = self.BaseEnemyArea
             if not target then
-                LOG('post target check')
+                LOG('FighterBehavior acu target check')
                 if aiBrain.CDRUnit.Active and (aiBrain.BrainIntel.SelfThreat.AirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.Air or aiBrain.CDRUnit.CurrentEnemyAirThreat > 0) then
                     local acuDistance = VDist2(platPos[1], platPos[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3])
                     if acuDistance > maxRadius or aiBrain.CDRUnit.CurrentEnemyAirThreat > 0 then
@@ -110,6 +111,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                                 AttackTarget = target,
                                 Position = target:GetPosition()
                             }
+                            LOG('FighterBehavior found acu target AttackTarget')
                             self:ChangeState(self.AttackTarget)
                             return
                         end
@@ -117,7 +119,8 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if not target or target.Dead then
-                --RNGLOG('Looking for target at radius '..maxRadius)
+                RNGLOG('FighterBehavior Looking for target at radius '..maxRadius)
+                RNGLOG('FighterBehavior Check experimentals')
                 for _, v in aiBrain.EnemyIntel.Experimental do
                     if v.object and not v.object.Dead and v.object.Blueprint.CategoriesHash.AIR then
                         target = v.object
@@ -125,6 +128,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 if not target or target.Dead then
+                    RNGLOG('FighterBehavior Check targets at max radius')
                 -- Params aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted
                     target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, platPos, self, 'Attack', maxRadius, self.AttackPriorities, true, self.CurrentPlatoonThreat, false, false, true)
                 end
@@ -133,25 +137,26 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                         AttackTarget = target,
                         Position = target:GetPosition()
                     }
+                    LOG('FighterBehavior found normal target AttackTarget')
                     self:ChangeState(self.AttackTarget)
                     return
                 end
             end
-            LOG('2nd target check')
             if not target then
+                LOG('FighterBehavior has no target, check for hold position')
                 if not self.HoldPosTimer or self.HoldPosTimer + 120 < GetGameTimeSeconds() and VDist3Sq(platPos, aiBrain.BrainIntel.StartPos) < 22500 then
-                    LOG('first check of holdpos')
+                    LOG('FighterBehavior first check of holdpos')
                     if GetThreatAtPosition(aiBrain, platPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') < 1 then
-                        LOG('2nd check of holdpos')
+                        LOG('FighterBehavior 2nd check of holdpos')
                         local pos = RUtils.GetHoldingPosition(aiBrain, platPos, self, 'Air', maxRadius)
                         if pos then
-                            LOG('3rd check of holdpos')
+                            LOG('FighterBehavior 3rd check of holdpos')
                             self.HoldingPosition = pos
                             self.BuilderData = {
                                 Position = pos,
                                 HoldingPosition = true
                             }
-                            LOG('Navigating to holding position')
+                            LOG('FighterBehavior Navigating to holding position')
                             self:ChangeState(self.Navigating)
                             return
                         end
@@ -176,6 +181,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             if not self.BuilderData.Position then
                 self:ChangeState(self.Error)
             end
+            IssueClearCommands(GetPlatoonUnits(self))
             if self.BuilderData.Retreat then
                 IssueMove(GetPlatoonUnits(self), self.BuilderData.Position)
             else
@@ -184,6 +190,9 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             local movePosition = self.BuilderData.Position
             while aiBrain:PlatoonExists(self) do
                 coroutine.yield(15)
+                if IsDestroyed(self) then
+                    return
+                end
                 local platPos = self:GetPlatoonPosition()
                 local dx = platPos[1] - movePosition[1]
                 local dz = platPos[3] - movePosition[3]
@@ -224,6 +233,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             if not self.BuilderData.Position then
                 self:ChangeState(self.Error)
             end
+            IssueClearCommands(GetPlatoonUnits(self))
             if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) then
                 local target = self.BuilderData.AttackTarget
                 if target.Blueprint.CategoriesHash.BOMBER or target.Blueprint.CategoriesHash.GROUNDATTACK or target.Blueprint.CategoriesHash.TRANSPORTFOCUS then
@@ -231,8 +241,14 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 else
                     IssueAggressiveMove(GetPlatoonUnits(self), target:GetPosition())
                 end
+                coroutine.yield(20)
+                if not IsDestroyed(target) then
+                    coroutine.yield(20)
+                end
+            else
+                self.BuilderData = {}
             end
-            coroutine.yield(30)
+            coroutine.yield(5)
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -291,6 +307,9 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             local closestPlatoonValue
             local closestPlatoonDistance
             local closestAPlatPos
+            if IsDestroyed(self) then
+                return
+            end
             local distanceToHome = VDist2Sq(platPos[1], platPos[3], self.Home[1], self.Home[3])
             for _,aPlat in AlliedPlatoons do
                 if aPlat.SyncId ~= self.SyncId then
@@ -386,12 +405,12 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
     ---@param units Unit[]
     OnUnitsAddedToAttackSquad = function(self, units)
         local count = RNGGETN(units)
-        local aiBrain = self:GetBrain()
         if count > 0 then
             local attackUnits = self:GetSquadUnits('Attack')
             if attackUnits then
                 for _, unit in attackUnits do
                     IssueClearCommands({unit})
+                    unit.PlatoonHandle.BuilderName = 'RNGAI Air Intercept'
                     if not unit.Dead and unit:TestToggleCaps('RULEUTC_StealthToggle') then
                         unit:SetScriptBit('RULEUTC_StealthToggle', false)
                     end
@@ -448,7 +467,6 @@ FighterThreatThreads = function(aiBrain, platoon)
     coroutine.yield(10)
     local UnitCategories = categories.ANTIAIR
     while aiBrain:PlatoonExists(platoon) do
-        LOG('Running Fighter Threads')
         local platPos = platoon:GetPlatoonPosition()
         local enemyThreat = 0
         if GetNumUnitsAroundPoint(aiBrain, UnitCategories, platPos, 80, 'Enemy') > 0 then
@@ -465,23 +483,25 @@ FighterThreatThreads = function(aiBrain, platoon)
             platoon.CurrentPlatoonThreat = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
             LOG('CurrentPlatoonThreat '..platoon.CurrentPlatoonThreat)
             if not platoon.BuilderData.Retreat and platoon.CurrentEnemyThreat > platoon.CurrentPlatoonThreat and not platoon.BuilderData.ProtectACU then
-                LOG('Running Fighter Threads')
+                LOG('Fighter Thread decide what to do')
                 platoon:ChangeState(platoon.DecideWhatToDo)
             end
         end
         if not aiBrain.BrainIntel.SuicideModeActive then
             for _, unit in GetPlatoonUnits(platoon) do
-                local fuel = unit:GetFuelRatio()
-                local health = unit:GetHealthPercent()
-                if not unit.Loading and (fuel < 0.3 or health < 0.5) then
-                    --LOG('Fighter needs refuel')
-                    if not aiBrain.BrainIntel.AirStagingRequired and aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) < 1 then
-                        aiBrain.BrainIntel.AirStagingRequired = true
-                    elseif not platoon.BuilderData.AttackTarget or platoon.BuilderData.AttackTarget.Dead then
-                        --LOG('Assigning unit to refuel platoon from refuel')
-                        local plat = aiBrain:MakePlatoon('', '')
-                        aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'attack', 'None')
-                        import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Fighter', LocationType = platoon.LocationType}, plat, {unit})
+                if unit and not IsDestroyed(unit) then
+                    local fuel = unit:GetFuelRatio()
+                    local health = unit:GetHealthPercent()
+                    if not unit.Loading and (fuel < 0.3 or health < 0.5) then
+                        --LOG('Fighter needs refuel')
+                        if not aiBrain.BrainIntel.AirStagingRequired and aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) < 1 then
+                            aiBrain.BrainIntel.AirStagingRequired = true
+                        elseif not platoon.BuilderData.AttackTarget or platoon.BuilderData.AttackTarget.Dead then
+                            --LOG('Assigning unit to refuel platoon from refuel')
+                            local plat = aiBrain:MakePlatoon('', '')
+                            aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'attack', 'None')
+                            import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Fighter', LocationType = platoon.LocationType}, plat, {unit})
+                        end
                     end
                 end
             end

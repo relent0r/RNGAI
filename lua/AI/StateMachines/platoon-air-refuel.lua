@@ -3,6 +3,7 @@ local behaviors = import('/lua/ai/AIBehaviors.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIUtils = import('/lua/ai/aiutilities.lua')
 local NavUtils = import("/lua/sim/navutils.lua")
+local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local RNGMAX = math.max
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
@@ -94,12 +95,11 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                             aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
                             import("/mods/rngai/lua/ai/statemachines/platoon-air-gunship.lua").AssignToUnitsMachine({ }, plat, {unit})
                         elseif self.PreviousStateMachine == 'Fighter' then
-                            local plat = GetClosestPlatoonRNG(self, planName, 350)
+                            local plat = StateUtils.GetClosestPlatoonRNG(self, 'FighterBehavior', 350)
                             if not plat then
                                 plat = aiBrain:MakePlatoon('', 'none')
                             end
                             aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
-                            import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, plat, {unit})
                         end
                     end
                 end

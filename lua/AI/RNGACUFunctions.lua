@@ -630,7 +630,7 @@ function CDRCallPlatoon(cdr, threatRequired)
         --RNGLOG('No Support Platoon, creating new one')
         supportPlatoonAvailable = aiBrain:MakePlatoon('ACUSupportPlatoon', 'ACUSupportRNG')
         supportPlatoonAvailable:UniquelyNamePlatoon('ACUSupportPlatoon')
-        supportPlatoonAvailable:ForkThread(StateUtils.ZoneUpdate)
+        aiBrain:ForkThread(StateUtils.ZoneUpdate)
         if not table.empty(validUnits.Attack) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Attack, 'Attack', 'None')
         end

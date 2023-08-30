@@ -8052,7 +8052,7 @@ Platoon = Class(RNGAIPlatoonClass) {
     end,
 
     FeederPlatoon = function(self)
-
+        local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
         local platoonType = self.PlatoonData.PlatoonType
         --local platoonSearchRange = self.PlatoonData.PlatoonSearchRange * self.PlatoonData.PlatoonSearchRange or 250000
         local aiBrain = self:GetBrain()
@@ -8068,8 +8068,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             coroutine.yield(1)
             --RNGLOG('Feeder starting loop')
             if platoonType == 'fighter' then
-                local targetPlatoon = self:GetClosestPlatoonRNG('AirHuntAIRNG', 62500)
+                local targetPlatoon = StateUtils.GetClosestPlatoonRNG(self, 'FighterBehavior', 62500)
                 if not targetPlatoon then
+                    LOG('Feeder No FighterBehavior platoon found, make new platoon')
                     feederTimeout = feederTimeout + 1
                     if feederTimeout > 5 then
                         --RNGLOG('Feeder no target platoon found, starting new airhuntai')
@@ -8086,10 +8087,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                         import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, targetPlatoon, self:GetPlatoonUnits())
                     end
                 else
-                    --RNGLOG('Feeder target platoon found, trying to join')
+                    RNGLOG('Feeder target platoon found, trying to join')
                     if not IsDestroyed(targetPlatoon) then
                         if VDist3Sq(GetPlatoonPosition(self), GetPlatoonPosition(targetPlatoon)) < 900 then
-                            import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, targetPlatoon, self:GetPlatoonUnits())
+                            aiBrain:AssignUnitsToPlatoon(targetPlatoon, self:GetPlatoonUnits(), 'Attack', 'None')
                         else
                             while PlatoonExists(aiBrain, self) do
                                 coroutine.yield(1)
@@ -8117,7 +8118,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                             IssueGuard(self:GetPlatoonUnits(), guardPos)
                                         end
                                     end
-                                    import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, targetPlatoon, self:GetPlatoonUnits())
+                                    aiBrain:AssignUnitsToPlatoon(targetPlatoon, self:GetPlatoonUnits(), 'Attack', 'None')
                                     coroutine.yield(5)
                                     return
                                 end
