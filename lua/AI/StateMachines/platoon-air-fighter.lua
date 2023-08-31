@@ -92,13 +92,19 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Retreating)
                 return
             end
-            if self.BuilderData.AttackTarget then
+            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) then
                 LOG('FighterBehavior already has target, attacking')
                 self:ChangeState(self.AttackTarget)
                 return
             end
+            if self.CurrentPlatoonThreat < 15 and aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
+                self.MaxRadius = self.BaseRestrictedArea * 1.5
+            elseif aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
+                self.MaxRadius = self.BaseMilitaryArea
+            else
+                self.MaxRadius = self.BaseEnemyArea
+            end
             LOG('FighterBehavior post check enemy threat')
-            local maxRadius = self.BaseEnemyArea
             if not target then
                 LOG('FighterBehavior acu target check')
                 if aiBrain.CDRUnit.Active and (aiBrain.BrainIntel.SelfThreat.AirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.Air or aiBrain.CDRUnit.CurrentEnemyAirThreat > 0) then
@@ -161,6 +167,19 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                     end
+                end
+            end
+            if not target then
+                local dx = platPos[1] - self.Home[1]
+                local dz = platPos[3] - self.Home[3]
+                local posDist = dx * dx + dz * dz
+                if posDist > 3600 then
+                    self.BuilderData = {
+                        Position = self.Home,
+                    }
+                    LOG('FighterBehavior move back home')
+                    self:ChangeState(self.Navigating)
+                    return
                 end
             end
             coroutine.yield(20)
@@ -268,27 +287,43 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 timer = 5
             end
             while aiBrain:PlatoonExists(self) do
-                coroutine.yield(30)
+                local platPos = self:GetPlatoonPosition()
                 if self.BuilderData.HoldingPosition or self.BuilderData.Loiter then
                     if self.HoldPosTimer + timer < GetGameTimeSeconds() then
                         coroutine.yield(5)
                         self.BuilderData = {}
+                        self.HoldPosTimer = nil
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
                 else
                     coroutine.yield(5)
                     self.BuilderData = {}
+                    self.HoldPosTimer = nil
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
                 for _, unit in GetPlatoonUnits(self) do
                     if unit and not unit.Dead then
                         if not unit:IsUnitState('Guarding') then
+                            LOG('Unit is not guarding, tell it to guard')
                             IssueGuard({unit}, self.BuilderData.Position)
                         end
                     end
                 end
+                local airThreats = aiBrain:GetThreatsAroundPosition(self.BuilderData.HoldingPosition, 16, true, 'Air')
+                for _, threat in airThreats do
+                    local dx = platPos[1] - threat[1]
+                    local dz = platPos[3] - threat[2]
+                    local posDist = dx * dx + dz * dz
+                    if threat[3] > 0 and posDist < self.MaxRadius * self.MaxRadius then
+                        self.BuilderData = {}
+                        self.HoldPosTimer = nil
+                        self:ChangeState(self.DecideWhatToDo)
+                        return  
+                    end
+                end
+                coroutine.yield(30)
             end
         end,
     },
