@@ -205,7 +205,7 @@ IntelManager = Class {
     end,
 
     Run = function(self)
-        LOG('RNGAI : IntelManager Starting')
+        --LOG('RNGAI : IntelManager Starting')
         self:ForkThread(self.ZoneEnemyIntelMonitorRNG)
         self:ForkThread(self.ZoneAlertThreadRNG)
         self:ForkThread(self.ZoneFriendlyIntelMonitorRNG)
@@ -219,7 +219,7 @@ IntelManager = Class {
             self:ForkThread(self.IntelDebugThread)
         end
 
-        LOG('RNGAI : IntelManager Started')
+        --LOG('RNGAI : IntelManager Started')
         self.Initialized = true
     end,
 
@@ -1399,8 +1399,8 @@ IntelManager = Class {
             if disableGunship and self.Brain.amanager.Current['Air']['T3']['gunship'] > 2 then
                 self.Brain.amanager.Demand.Air.T3.gunship = 0
             end
-            LOG('Current T2 Gunship demand '..self.Brain.amanager.Demand.Air.T2.gunship)
-            LOG('Current T3 Gunship demand '..self.Brain.amanager.Demand.Air.T3.gunship)
+            --LOG('Current T2 Gunship demand '..self.Brain.amanager.Demand.Air.T2.gunship)
+            --LOG('Current T3 Gunship demand '..self.Brain.amanager.Demand.Air.T3.gunship)
             if not table.empty(potentialStrikes) then
                 local count = math.ceil(desiredStrikeDamage / 1000)
                 local acuSnipe = false
@@ -1597,10 +1597,10 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit)
     end
     --[[
     if targetUnit.GetAIBrain then
-        LOG('lost unit')
+        --LOG('lost unit')
         local targetBrain = targetUnit:GetAIBrain()
         if targetBrain.RNG then
-            LOG('rng lost unit')
+            --LOG('rng lost unit')
             local valueLost
             local targetCat = targetUnit.Blueprint.CategoriesHash
             if targetCat.EXPERIMENTAL then
@@ -1609,7 +1609,7 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit)
                 if targetCat.SCOUT then
                     RecordUnitDeath(targetUnit, 'SCOUT')
                 elseif targetCat.GROUNDATTACK then
-                    LOG('RNG gunship was lost')
+                    --LOG('RNG gunship was lost')
                     data.targetcat = 'Gunship'
                     if targetUnit.Blueprint.Economy.BuildCostMass then
                         valueLost = targetUnit.Blueprint.Economy.BuildCostMass
@@ -1626,8 +1626,8 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit)
                 local unitStats = targetBrain.IntelManager.UnitStats
                 unitStats[data.targetcat].Deaths.Mass = unitStats[data.targetcat].Deaths.Mass + valueLost
                 if valueLost then
-                    LOG('Gunship died')
-                    LOG('Target Unit '..targetUnit.UnitId)
+                    --LOG('Gunship died')
+                    --LOG('Target Unit '..targetUnit.UnitId)
                     local gained
                     local lost
                     if unitStats[data.targetcat].Kills.Mass > 0 then
@@ -1640,7 +1640,7 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit)
                     else
                         lost = 0.1
                     end
-                    LOG('Current Gunship Efficiency '..(math.min(gained / lost, 2)))
+                    --LOG('Current Gunship Efficiency '..(math.min(gained / lost, 2)))
                 end
             end
         end
@@ -1681,8 +1681,8 @@ function ProcessSourceOnDeath(targetUnit)
                 local unitStats = targetBrain.IntelManager.UnitStats
                 unitStats[data.targetcat].Deaths.Mass = unitStats[data.targetcat].Deaths.Mass + valueLost
                 if valueLost then
-                    LOG('Gunship died')
-                    LOG('Target Unit '..targetUnit.UnitId)
+                    --LOG('Gunship died')
+                    --LOG('Target Unit '..targetUnit.UnitId)
                     local gained
                     local lost
                     if unitStats[data.targetcat].Kills.Mass > 0 then
@@ -1695,7 +1695,7 @@ function ProcessSourceOnDeath(targetUnit)
                     else
                         lost = 0.1
                     end
-                    LOG('Current Gunship Efficiency '..(math.min(gained / lost, 2)))
+                    --LOG('Current Gunship Efficiency '..(math.min(gained / lost, 2)))
                 end
             end
         end
@@ -1928,7 +1928,7 @@ function InitialNavalAttackCheck(aiBrain)
                         if not aiBrain:CheckBlockingTerrain({m[1], pointSurfaceHeight, m[3]}, v.position, 'low') then
                            --RNGLOG('This marker is not blocked '..repr(v.position))
                             markerCountNotBlocked = markerCountNotBlocked + 1
-                            table.insert( frigateRaidMarkers, { Position=v.position, Name=v.name } )
+                            table.insert( frigateRaidMarkers, { Position=v.position, Name=v.name, RaidPosition={m[1], pointSurfaceHeight, m[3]} } )
                         else
                            --RNGLOG('This marker is blocked '..repr(v.position))
                             markerCountBlocked = markerCountBlocked + 1
@@ -2569,7 +2569,7 @@ LastKnownThread = function(aiBrain)
                 local unitPosition = table.copy(v:GetPosition())
                 local gridXID, gridZID = im:GetIntelGrid(unitPosition)
                 if not gridXID or not gridZID then
-                    LOG('no grid id returned for a unit position')
+                    --LOG('no grid id returned for a unit position')
                 end
                 if im.MapIntelGrid[gridXID][gridZID] then
                     if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits then
@@ -2904,7 +2904,7 @@ ShowPrirotyKnown = function(aiBrain)
     while not aiBrain.prioritypoints do
         coroutine.yield(2)
     end
-    LOG('Start last known')
+    --LOG('Start last known')
     while aiBrain.result ~= "defeat" do
         local prioritypoints=table.copy(aiBrain.prioritypoints)
         for _,v in prioritypoints do

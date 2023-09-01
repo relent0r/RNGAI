@@ -11,16 +11,10 @@ EngineerManager = Class(RNGEngineerManager) {
         end
         if finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() and finishedUnit:GetFractionComplete() == 1 then
             if EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit) then
-                self.Brain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
-            end
-            if EntityCategoryContains(categories.MASSEXTRACTION * categories.STRUCTURE, finishedUnit) then
-                if not self.Brain.StructurePool then
-                    RUtils.CheckCustomPlatoons(self.Brain)
+                if finishedUnit.LocationType and finishedUnit.LocationType ~= self.LocationType then
+                    return
                 end
-                local unitBp = finishedUnit:GetBlueprint()
-                local StructurePool = self.Brain.StructurePool
-                --RNGLOG('* AI-RNG: Assigning built extractor to StructurePool')
-                self.Brain:AssignUnitsToPlatoon(StructurePool, {finishedUnit}, 'Support', 'none' )
+                self.Brain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
             end
             self:AddUnitRNG(finishedUnit)
         end
@@ -104,7 +98,16 @@ EngineerManager = Class(RNGEngineerManager) {
                                     engManager:UnitConstructionFinished(unit, finishedUnit)
                                 end
                         end
+
+                        local unitConstructionStarted = function(unit, startedUnit)
+                            local aiBrain = unit:GetAIBrain()
+                            local engManager = aiBrain.BuilderManagers[unit.BuilderManagerData.LocationType].EngineerManager
+                            if engManager and not startedUnit.LocationType then
+                                startedUnit.LocationType = unit.BuilderManagerData.LocationType
+                            end
+                        end
                         import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(unitConstructionFinished, unit, categories.ALLUNITS)
+                        import('/lua/ScenarioTriggers.lua').CreateStartBuildTrigger(unitConstructionStarted, unit, categories.ALLUNITS)
 
                     end
                 end

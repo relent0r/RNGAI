@@ -95,6 +95,9 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         IssueClearFactoryCommands({factory})
         IssueFactoryRallyPoint({factory}, rally)
         self.RallyPoint = rally
+        if self.Layer == 'Water' then
+            --LOG('Water created rally point at position '..repr(rally))
+        end
         return true
     end,
 
@@ -142,6 +145,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
             elseif EntityCategoryContains(categories.AIR, unit) then
                 self:SetupNewFactory(unit, 'Air')
             elseif EntityCategoryContains(categories.NAVAL, unit) then
+                --LOG('New naval factory setup for base '..self.LocationType)
                 self:SetupNewFactory(unit, 'Sea')
             else
                 self:SetupNewFactory(unit, 'Gate')

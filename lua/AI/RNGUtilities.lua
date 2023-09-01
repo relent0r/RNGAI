@@ -694,10 +694,8 @@ function GetOpAreaRNG(bool)
     local playableMapSizes = { playableArea[3], playableArea[4] }
     local mapSizes
     if playableMapSizes[1] and playableMapSizes[2] then
-        LOG('Setting playable map sizes for GetOpAreaRNG')
         mapSizes = playableMapSizes
     else
-        LOG('Setting standard map sizes for GetOpAreaRNG')
         mapSizes = { ScenarioInfo.size[1], ScenarioInfo.size[2] }
     end
     local BaseMilitaryArea = math.max( mapSizes[1]-50, mapSizes[2]-50 ) / 2.2
@@ -1033,16 +1031,6 @@ function AvoidLocation(pos,target,dist)
     x = math.min(ScenarioInfo.size[1]-5,math.max(5,x))
     z = math.min(ScenarioInfo.size[2]-5,math.max(5,z))
     return {x,GetTerrainHeight(x,z),z}
-end
-
-function CheckCustomPlatoons(aiBrain)
-    if not aiBrain.StructurePool then
-        --RNGLOG('* AI-RNG: Creating Structure Pool Platoon')
-        local structurepool = aiBrain:MakePlatoon('StructurePool', 'none')
-        structurepool:UniquelyNamePlatoon('StructurePool')
-        structurepool.BuilderName = 'Structure Pool'
-        aiBrain.StructurePool = structurepool
-    end
 end
 
 function HaveUnitVisual(aiBrain, unit, checkBlipOnly)
@@ -5101,7 +5089,7 @@ CanPathToCurrentEnemyRNG = function(aiBrain) -- Uveso's function modified to run
     end
 end
 
-GetHoldingPosition = function(aiBrain, platoonPos, platoon, threatType, maxRadius)
+GetHoldingPosition = function(aiBrain, platoon, threatType, maxRadius)
     local holdingPos = false
     local threatLocations = aiBrain:GetThreatsAroundPosition( aiBrain.BuilderManagers['MAIN'].Position, 16, true, threatType )
     local bestThreat
@@ -5115,14 +5103,14 @@ GetHoldingPosition = function(aiBrain, platoonPos, platoon, threatType, maxRadiu
     if not RNGTableEmpty(threatLocations) then
         for k, v in threatLocations do
             local locationDistance = VDist3Sq(aiBrain.BuilderManagers['MAIN'].Position, {v[1],0,v[2]})
-            if not bestThreat or locationDistance < bestThreatDist then
+            if locationDistance > 625 and (not bestThreat or locationDistance < bestThreatDist) then
                 bestThreat = v[3]
                 bestThreatPos = {v[1],0,v[2]}
                 bestThreatDist = locationDistance
             end
         end
     end
-    if bestThreatPos and platoonPos then
+    if bestThreatPos then
         local distance = VDist3(aiBrain.BuilderManagers['MAIN'].Position, bestThreatPos)
         local distanceSplit
         if distance / 2 > maxRadius then
@@ -5762,11 +5750,11 @@ function GenerateChokePointLines(aiBrain)
         {aiBrain.BrainIntel.StartPos[1], aiBrain.BrainIntel.StartPos[3]},   -- Player 1 starting position
         {enemyx, enemyz}, -- Player 2 starting position
     }
-    LOG('Player Start Positions '..repr(player_start_positions))
+    --LOG('Player Start Positions '..repr(player_start_positions))
     local step_size = 5
     local line_positions = get_straight_line_at_step(player_start_positions)
     for _, v in line_positions do
-        LOG('pos '..repr(v))
+        --LOG('pos '..repr(v))
         aiBrain:ForkThread(DrawTargetRadius, v)
     end
 end

@@ -70,6 +70,9 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                             end
                             if closest and not IsDestroyed(unit) then
                                 IssueClearCommands({unit})
+                                if table.getn({unit}) == 0 then
+                                    --LOG('unit table is zero '..repr(unit))
+                                end
                                 IssueTransportLoad({unit}, closest)
                                 --RNGLOG('Transport load issued')
                                 if EntityCategoryContains(categories.AIRSTAGINGPLATFORM, closest) and not closest.AirStaging then
@@ -90,16 +93,30 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                     end
                 else
                     if not IsDestroyed(unit) and not unit.Loading then
+                        if (fuel < 0.3 or health < 0.5) then
+                            --LOG('Fighter fuel or health is low but its going to move back into a fighter state machine')
+                        end
                         if self.PreviousStateMachine == 'Gunship' then
                             local plat = aiBrain:MakePlatoon('', 'none')
                             aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
                             import("/mods/rngai/lua/ai/statemachines/platoon-air-gunship.lua").AssignToUnitsMachine({ }, plat, {unit})
                         elseif self.PreviousStateMachine == 'Fighter' then
-                            local plat = StateUtils.GetClosestPlatoonRNG(self, 'FighterBehavior', 350)
+                            local plat = StateUtils.GetClosestPlatoonRNG(self, 'FighterBehavior', 450)
                             if not plat then
                                 plat = aiBrain:MakePlatoon('', 'none')
+                                --LOG('Moving refueled fighter back into new state machine')
+                                aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
+                                import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, plat, {unit})
+                            else
+                                --LOG('Moving refueled fighter back into existing state machine')
+                                aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
                             end
-                            aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
+                        end
+                    end
+                    if unit.Loading then
+                        --LOG('Unit is still in a loading state so is it still attached or has the platform not released the fighter')
+                        if unit:IsUnitState('Attached') then
+                            --LOG('Unit is still attached to something')
                         end
                     end
                 end

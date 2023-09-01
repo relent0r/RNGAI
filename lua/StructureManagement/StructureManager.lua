@@ -1512,7 +1512,7 @@ StructureManager = Class {
                 end
             end
             self.ShieldCoverage = shieldCoverage
-            LOG('Shield Coverage '..repr(shieldCoverage))
+            --LOG('Shield Coverage '..repr(shieldCoverage))
         end
     end,
 }

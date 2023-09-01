@@ -582,14 +582,14 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
             weaponDamage = weaponDamage * 0.85
-            LOG('MercyStrike Damage output is '..weaponDamage)
+            --LOG('MercyStrike Damage output is '..weaponDamage)
             coroutine.yield(1)
             local platoonUnits = GetPlatoonUnits(self)
             local requiredCount = 0
             local acuIndex
             RNGLOG('Mercy strike : loop ACU Snipe table '..repr(aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe))
             if not target then
-                LOG('no target, searching ')
+                --LOG('no target, searching ')
                 target, requiredCount, acuIndex = RUtils.CheckACUSnipe(aiBrain, self.MovementLayer)
                 if target then
                     local hp = aiBrain.EnemyIntel.ACU[acuIndex].HP
@@ -5160,7 +5160,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 break
             end
             if eng:IsIdleState() then
-                LOG('Engineer is idle in watch for not building '..repr(eng))
+                --LOG('Engineer is idle in watch for not building '..repr(eng))
             end
         end
         eng.NotBuildingThread = nil
@@ -6242,19 +6242,26 @@ Platoon = Class(RNGAIPlatoonClass) {
         local usedTransports = false
 
         if bestMarker then
+            local raidPosition
+            if self.PlatoonData.FrigateRaid then
+                raidPosition = bestMarker.RaidPosition
+            else
+                raidPosition = bestMarker.Position
+            end
             self.LastMarker[2] = self.LastMarker[1]
             self.LastMarker[1] = bestMarker.Position
             --RNGLOG("MassRaid: Attacking " .. bestMarker.Name)
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), bestMarker.Position, 10 , maxPathDistance)
-            local success = NavUtils.CanPathTo(self.MovementLayer, platLoc, bestMarker.Position)
+            
+            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), raidPosition, 10 , maxPathDistance)
+            local success = NavUtils.CanPathTo(self.MovementLayer, platLoc, raidPosition)
             IssueClearCommands(GetPlatoonUnits(self))
             if path then
                 platLoc = GetPlatoonPosition(self)
                 if self.MovementLayer ~= 'Water' and  self.MovementLayer ~= 'Air' then
-                    if not success or VDist2Sq(platLoc[1], platLoc[3], bestMarker.Position[1], bestMarker.Position[3]) > 262144 then
-                        usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, bestMarker.Position, 2, true)
-                    elseif VDist2Sq(platLoc[1], platLoc[3], bestMarker.Position[1], bestMarker.Position[3]) > 67600 and (not self.PlatoonData.EarlyRaid) then
-                        usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, bestMarker.Position, 1, true)
+                    if not success or VDist2Sq(platLoc[1], platLoc[3], raidPosition[1], raidPosition[3]) > 262144 then
+                        usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, raidPosition, 2, true)
+                    elseif VDist2Sq(platLoc[1], platLoc[3], raidPosition[1], raidPosition[3]) > 67600 and (not self.PlatoonData.EarlyRaid) then
+                        usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, raidPosition, 1, true)
                     end
                 end
                 if not usedTransports then
@@ -6264,7 +6271,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             elseif (not path and reason == 'NoPath') then
                 --RNGLOG('MassRaid requesting transports')
                 if not self.PlatoonData.EarlyRaid then
-                    usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, bestMarker.Position, 3, true)
+                    usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, raidPosition, 3, true)
                 end
                 --DUNCAN - if we need a transport and we cant get one the disband
                 if not usedTransports then
@@ -6303,20 +6310,20 @@ Platoon = Class(RNGAIPlatoonClass) {
             if not platLoc then
                 return
             end
-            if aiBrain:CheckBlockingTerrain(platLoc, bestMarker.Position, 'none') then
-                self:MoveToLocation(bestMarker.Position, false)
+            if aiBrain:CheckBlockingTerrain(platLoc, raidPosition, 'none') then
+                self:MoveToLocation(raidPosition, false)
                 coroutine.yield(10)
             else
-                self:AggressiveMoveToLocation(bestMarker.Position)
+                self:AggressiveMoveToLocation(raidPosition)
                 if self.ScoutUnit and (not self.ScoutUnit.Dead) then
                     IssueClearCommands({self.ScoutUnit})
-                    --IssueMove({self.ScoutUnit}, bestMarker.Position)
+                    --IssueMove({self.ScoutUnit}, raidPosition)
                 end
                 coroutine.yield(15)
             end
 
             -- we're there... wait here until we're done
-            local numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
+            local numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), raidPosition, 15, 'Enemy')
             while numGround > 0 and PlatoonExists(aiBrain, self) do
                 --RNGLOG('At mass marker and checking for enemy units/structures')
                 coroutine.yield(1)
@@ -6466,7 +6473,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
                 coroutine.yield(Random(20,60))
                 --RNGLOG('Still enemy stuff around marker position')
-                numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), bestMarker.Position, 15, 'Enemy')
+                numGround = GetNumUnitsAroundPoint(aiBrain, (categories.LAND + categories.NAVAL + categories.STRUCTURE), raidPosition, 15, 'Enemy')
             end
 
             if not PlatoonExists(aiBrain, self) then
@@ -8070,7 +8077,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             if platoonType == 'fighter' then
                 local targetPlatoon = StateUtils.GetClosestPlatoonRNG(self, 'FighterBehavior', 62500)
                 if not targetPlatoon then
-                    LOG('Feeder No FighterBehavior platoon found, make new platoon')
+                    --LOG('Feeder No FighterBehavior platoon found, make new platoon')
                     feederTimeout = feederTimeout + 1
                     if feederTimeout > 5 then
                         --RNGLOG('Feeder no target platoon found, starting new airhuntai')
@@ -9365,6 +9372,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local unfinishedUnits = aiBrain:GetUnitsAroundPoint(assistData.BeingBuiltCategories, engineerManager.Location, engineerManager.Radius, 'Ally')
         for k,v in unfinishedUnits do
             if v:GetFractionComplete() < 1 and RNGGETN(v:GetGuards()) < 1 then
+                --LOG('No Guards for strucutre '..repr(v:GetGuards()))
                 self:Stop()
                 if not v.Dead and not v:BeenDestroyed() then
                     unitBeingFinished = v
@@ -11616,7 +11624,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     aiBrain:AssignUnitsToPlatoon(self,validUnits,'Attack','NoFormation')
                     self.chpdata.merging=false
                     if not ps[1].PlatoonDisbandNoAssign then
-                        LOG('Platoon has no disband '..(ps[1].BuilderName))
+                        --LOG('Platoon has no disband '..(ps[1].BuilderName))
                     end
                     ps[1]:PlatoonDisbandNoAssign()
                     return true
@@ -11646,7 +11654,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         aiBrain:AssignUnitsToPlatoon(self,validUnits,'Attack','NoFormation')
                         self.chpdata.merging=false
                         if not other.PlatoonDisbandNoAssign then
-                            LOG('Platoon has no disband '..(other.BuilderName))
+                            --LOG('Platoon has no disband '..(other.BuilderName))
                         end
                         other:PlatoonDisbandNoAssign()
                         return true

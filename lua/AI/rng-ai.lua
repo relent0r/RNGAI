@@ -113,8 +113,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 ScenarioInfo.ArmySetup[self.Name].AIPersonality = string.sub(per, 1, cheatPos - 1)
             end
 
-            LOG('* OnCreateAI: AIPersonality: ('..per..')')
-
             self.CurrentPlan = self.AIPlansList[self:GetFactionIndex()][1]
             self:ForkThread(self.InitialAIThread)
 
@@ -167,13 +165,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 local unitBp = unit:GetBlueprint()
                 if unit ~= nil and unitBp.Physics.FlattenSkirt then
                     unit:CreateTarmac(true, true, true, false, false)
-                end
-                if unit ~= nil then
-                    if not self.StructurePool then
-                        RUtils.CheckCustomPlatoons(self)
-                    end
-                    local StructurePool = self.StructurePool
-                    self:AssignUnitsToPlatoon(StructurePool, {unit}, 'Support', 'none' )
                 end
             end
         end
@@ -1156,7 +1147,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         self.MapWaterRatio = self:GetMapWaterRatio()
         if self.RNGDEBUG then
-            LOG('Water Ratio is '..self.MapWaterRatio)
+            --LOG('Water Ratio is '..self.MapWaterRatio)
         end
 
         -- Table to holding the starting reclaim
@@ -1334,7 +1325,6 @@ AIBrain = Class(RNGAIBrainClass) {
         while not playableArea do
             playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
             if playableArea then
-                LOG('SetPlayableArea game time is '..GetGameTick()..' playableArea is '..repr(playableArea))
                 local BaseRestrictedArea, BaseMilitaryArea, BaseDMZArea, BaseEnemyArea = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetOpAreaRNG()
                 self.OperatingAreas = {
                     BaseRestrictedArea = BaseRestrictedArea,
@@ -1342,7 +1332,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     BaseDMZArea = BaseDMZArea,
                     BaseEnemyArea = BaseEnemyArea,
                 }
-                LOG('Operating Areas set '..repr(self.OperatingAreas))
+                --LOG('Operating Areas set '..repr(self.OperatingAreas))
                 self.MapPlayableSize = math.max(playableArea[3], playableArea[4])
             end
             coroutine.yield(3)
@@ -1588,13 +1578,14 @@ AIBrain = Class(RNGAIBrainClass) {
             return RNGAIBrainClass.AddBuilderManagers(self, position, radius, baseName, useCenter)
         end
         local baseRestrictedArea = self.OperatingAreas['BaseRestrictedArea']
-        LOG('Create Builder Manager')
+        --LOG('Create Builder Manager')
 
         -- Set the layer of the builder manager so that factory managers and platoon managers know if we should be graphing to land or naval production.
         -- Used for identifying if we can graph to an enemy factory for multi landmass situations
         local baseLayer = 'Land'
 		position[2] = GetTerrainHeight( position[1], position[3] )
         if GetSurfaceHeight( position[1], position[3] ) > position[2] then
+            --LOG('Created water builder manager')
             position[2] = GetSurfaceHeight( position[1], position[3] )
 			baseLayer = 'Water'
         end
@@ -1610,10 +1601,11 @@ AIBrain = Class(RNGAIBrainClass) {
             BaseType = Scenario.MasterChain._MASTERCHAIN_.Markers[baseName].type or 'MAIN',
         }
         self.NumBases = self.NumBases + 1
-        LOG('Fork Threads')
+        if baseLayer == 'Water' then
+            --LOG('Created Water base of name '..baseName)
+        end
         self:ForkThread(self.GetGraphArea, position, baseName, baseLayer)
         self:ForkThread(self.GetBaseZone, position, baseName, baseLayer)
-        LOG('GetDefensivePointTable')
         self:ForkThread(self.GetDefensivePointTable, baseName, 'BaseRestrictedArea', position)
         if self.RNGDEBUG then
             RNGLOG('Defensive Point Table for buildermanager '..baseName..'  '..repr(self.BuilderManagers[baseName].DefensivePoints))

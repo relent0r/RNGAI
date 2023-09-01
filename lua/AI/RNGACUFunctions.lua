@@ -191,9 +191,9 @@ function CDRBrainThread(cdr)
         end
         --[[
         if cdr.EnemyAirPresent then
-            LOG('Enemy Air Snipe Potential is high')
+            --LOG('Enemy Air Snipe Potential is high')
         else
-            LOG('Enemy Air Snipe Potential is low')
+            --LOG('Enemy Air Snipe Potential is low')
         end
         ]]
         if cdr.EnemyAirPresent and not cdr.AtHoldPosition then
