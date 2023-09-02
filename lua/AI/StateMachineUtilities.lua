@@ -55,7 +55,7 @@ SimpleTarget = function(platoon,aiBrain,guardee)--find enemies in a range and at
         local unitPos = unit:GetPosition()
         if ViableTargetCheck(unit, unitPos) then
             if not unit.machinepriority then unit.machinepriority={} unit.machinedistance={} end
-            if not unit.dangerupdate or gameTime-unit.dangerupdate>10 then
+            if not unit.dangerupdate or not unit.machinedanger or gameTime-unit.dangerupdate>10 then
                 unit.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30).enemy)
                 unit.dangerupdate=gameTime
             end

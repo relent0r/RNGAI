@@ -73,7 +73,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                 if table.getn({unit}) == 0 then
                                     --LOG('unit table is zero '..repr(unit))
                                 end
-                                IssueTransportLoad({unit}, closest)
+                                safecall("Unable to IssueTransportLoad units are "..repr(unit), IssueTransportLoad, {unit}, closest )
                                 --RNGLOG('Transport load issued')
                                 if EntityCategoryContains(categories.AIRSTAGINGPLATFORM, closest) and not closest.AirStaging then
                                     --RNGLOG('Air Refuel Forking AirStaging Thread for fighter')

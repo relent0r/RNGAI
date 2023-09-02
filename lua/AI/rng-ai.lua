@@ -936,6 +936,7 @@ AIBrain = Class(RNGAIBrainClass) {
             EcoManagerTime = 30,
             EcoManagerStatus = 'ACTIVE',
             ExtractorsUpgrading = {TECH1 = 0, TECH2 = 0},
+            ExtractorsUpgradingDistanceTable = {},
             CoreMassMarkerCount = 0,
             TotalCoreExtractors = 0,
             CoreExtractorT3Percentage = 0,

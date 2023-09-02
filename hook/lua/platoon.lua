@@ -1082,9 +1082,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                             end
                         end
                         if unit and not IsDestroyed(unit) then
-                            local capturedPlatoon = aiBrain:MakePlatoon('', 'TruePlatoonRNG')
+                            local capturedPlatoon = aiBrain:MakePlatoon('', '')
                             capturedPlatoon.PlanName = 'Captured Platoon'
                             aiBrain:AssignUnitsToPlatoon(capturedPlatoon, {unit}, 'Attack', 'None')
+                            import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ }, capturedPlatoon, unit)
                         end
                     end
                     captor.CaptureComplete = true

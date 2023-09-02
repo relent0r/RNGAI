@@ -524,9 +524,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Spam Common Expansion Quick Small',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
+        PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 600,                                                          -- Priority. 1000 is normal.
         InstanceCount = 5,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -535,35 +533,9 @@ BuilderGroup {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
         },
         BuilderData = {
-            SearchRadius = 'BaseEnemyArea',
-            LocationType = 'LocationType',
             UseFormation = 'None',
-            AggressiveMove = true,
-            ThreatSupport = 0,
-            PlatoonLimit = 18,
-            TargetSearchPriorities = {
-                categories.EXPERIMENTAL,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                categories.ENERGYSTORAGE,
-                categories.FACTORY,
-                categories.MASSEXTRACTION,
-                categories.MASSFABRICATION,
-                categories.ALLUNITS - categories.NAVAL - categories.AIR,
-            },
-            PrioritizedCategories = {
-                categories.COMMAND,
-                categories.EXPERIMENTAL,
-                categories.STRUCTURE * categories.MASSEXTRACTION,
-                categories.STRUCTURE * categories.DEFENSE,
-                categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.MOBILE * categories.LAND,
-                categories.ENGINEER,
-                categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.MASSEXTRACTION,
-                categories.ALLUNITS - categories.NAVAL - categories.AIR,
-            },
-            DistressRange = 120,
-            DistressReactionTime = 6,
+            LocationType = 'LocationType',
+            StateMachine = 'LandCombat'
         },
     },
     Builder {
