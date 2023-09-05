@@ -564,15 +564,15 @@ end
 
 function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructionData)
     local radius = constructionData.ExpansionRadius or 100
-    # PBM Style expansion bases here
+    -- PBM Style expansion bases here
     if aiBrain.HasPlatoonList then
-        # Figure out what type of builders to import
+        -- Figure out what type of builders to import
             local expansionTypes = constructionData.ExpansionTypes
         if not expansionTypes then
             expansionTypes = { 'Air', 'Land', 'Sea', 'Gate' }
         end
 
-        # Check if it already exists
+        -- Check if it already exists
         for k,v in aiBrain.PBM.Locations do
             if v.LocationType == baseName then
                 return
@@ -611,11 +611,11 @@ function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructio
 
         aiBrain:AddBuilderManagers(position, radius, baseName, true)
 
-        # Move the engineer to the new base managers
+        -- Move the engineer to the new base managers
         builder.BuilderManagerData.EngineerManager:RemoveUnitRNG(builder)
         aiBrain.BuilderManagers[baseName].EngineerManager:AddUnitRNG(builder, true)
 
-        # Iterate through bases finding the value of each expansion
+        -- Iterate through bases finding the value of each expansion
         local baseValues = {}
         local highPri = false
         for templateName, baseData in BaseBuilderTemplates do
@@ -628,7 +628,7 @@ function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructio
             end
         end
 
-        # Random to get any picks of same value
+        -- Random to get any picks of same value
         local validNames = {}
         for k,v in baseValues do
             if v.Value == highPri then
@@ -638,20 +638,17 @@ function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructio
         --SPEW('*AI DEBUG: AINewExpansionBase(): validNames for Expansions ' .. repr(validNames))
         local pick = validNames[ Random(1, table.getn(validNames)) ]
 
-        # Error if no pick
+        -- Error if no pick
         if not pick then
             RNGLOG('*AI DEBUG: ARMY ' .. aiBrain:GetArmyIndex() .. ': Layer Preference - ' .. per .. ' - yielded no base types at - ' .. locationType)
         end
 
-        # Setup base
+        -- Setup base
         --SPEW('*AI DEBUG: AINewExpansionBase(): ARMY ' .. aiBrain:GetArmyIndex() .. ': Expanding using - ' .. pick .. ' at location ' .. baseName)
         import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(aiBrain, baseName, pick)
 
-        # If air base switch to building an air factory rather than land
+        -- If air base switch to building an air factory rather than land
         if (string.find(pick, 'Air') or string.find(pick, 'Water')) then
-            #if constructionData.BuildStructures[1] == 'T1LandFactory' then
-            #    constructionData.BuildStructures[1] = 'T1AirFactory'
-            #end
             local numToChange = BaseBuilderTemplates[pick].BaseSettings.FactoryCount.Land
             for k,v in constructionData.BuildStructures do
                 if constructionData.BuildStructures[k] == 'T1LandFactory' and numToChange <= 0 then
@@ -669,7 +666,7 @@ function AIBuildBaseTemplateFromDefensivePointRNG(baseTemplate, location)
     if location and baseTemplate then
         for templateNum, template in baseTemplate do
             baseT[templateNum] = {}
-            for rowNum,rowData in template do # rowNum, rowData in template do
+            for rowNum,rowData in template do
                 if type(rowData[1]) == 'number' then
                     baseT[templateNum][rowNum] = {}
                     baseT[templateNum][rowNum][1] = math.floor(rowData[1] + location[1]) + 0.5

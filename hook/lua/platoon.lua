@@ -4332,6 +4332,9 @@ Platoon = Class(RNGAIPlatoonClass) {
         if not unit.PlatoonHandle then return end
         if not unit.PlatoonHandle.PlanName == 'EngineerBuildAIRNG' then return end
         --RNGLOG("*AI DEBUG: Build done " .. unit.EntityId)
+        if unit.buildingUnit == 'urb1106' then
+            LOG('Engineer Just built mass storage, in EngineerBuildDoneRNG')
+        end
         if not unit.ProcessBuild then
             unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, true)
             unit.ProcessBuildDone = true
@@ -4949,6 +4952,11 @@ Platoon = Class(RNGAIPlatoonClass) {
         if (not eng) or eng.Dead or (not eng.PlatoonHandle) or eng.Combat or eng.Active or eng.Upgrading then
             return
         end
+        --[[
+        if eng.EngineerBuildQueue[1][1] == 'urb1106' or eng.EngineerBuildQueue[2][1] == 'urb1106' or eng.EngineerBuildQueue[3][1] == 'urb1106' or eng.EngineerBuildQueue[4][1] == 'urb1106' then
+            LOG('Engineer Just built mass storage, engineer has mass storage in queue')
+            LOG('Queue '..repr(eng.EngineerBuildQueue))
+        end]]
         local ALLBPS = __blueprints
         local aiBrain = eng.PlatoonHandle:GetBrain()
         if not aiBrain or eng.Dead or not eng.EngineerBuildQueue or RNGGETN(eng.EngineerBuildQueue) == 0 then
@@ -4957,6 +4965,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --if eng.CDRHome then --RNGLOG('*AI DEBUG: Commander process build platoon disband...') end
                 if not eng.AssistSet and not eng.AssistPlatoon and not eng.UnitBeingAssist then
                     --RNGLOG('Disband engineer platoon start of process')
+                    if eng.EngineerBuildQueue[1][1] == 'urb1106' or eng.EngineerBuildQueue[2][1] == 'urb1106' or eng.EngineerBuildQueue[3][1] == 'urb1106' or eng.EngineerBuildQueue[4][1] == 'urb1106' then
+                        LOG('Engineer Just built mass storage, processbuildcommand disband because queue is zero')
+                        LOG('Queue '..repr(eng.EngineerBuildQueue))
+                    end
                     eng.PlatoonHandle:PlatoonDisband()
                 end
             end
@@ -4966,7 +4978,6 @@ Platoon = Class(RNGAIPlatoonClass) {
 
         -- it wasn't a failed build, so we just finished something
         if removeLastBuild then
-
             table.remove(eng.EngineerBuildQueue, 1)
         end
 
@@ -5130,6 +5141,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             return
         end
         if eng then eng.ProcessBuild = nil end
+        if removeLastBuild and RNGGETN(eng.EngineerBuildQueue) > 0 then
+            eng.ProcessBuild = eng:ForkThread(eng.PlatoonHandle.ProcessBuildCommandRNG)
+        end
     end,
 
     WatchForNotBuildingRNG = function(eng)
@@ -5137,10 +5151,11 @@ Platoon = Class(RNGAIPlatoonClass) {
         local aiBrain = eng:GetAIBrain()
         local engPos = eng:GetPosition()
         local validateHighValue = false
+        local buildingUnit
 
         --DUNCAN - Trying to stop commander leaving projects, also added moving as well.
         while not eng.Dead and not eng.PlatoonHandle.UsingTransport and (eng.ProcessBuild ~= nil
-                  or eng.UnitBeingBuiltBehavior or not eng:IsIdleState()
+                  or not eng:IsIdleState()
                  ) do
             coroutine.yield(30)
             if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
@@ -5159,9 +5174,6 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             if not eng.UnitBeingBuilt or eng.UnitBeingBuilt and eng.UnitBeingBuilt:GetFractionComplete() == 1 then
                 break
-            end
-            if eng:IsIdleState() then
-                --LOG('Engineer is idle in watch for not building '..repr(eng))
             end
         end
         eng.NotBuildingThread = nil

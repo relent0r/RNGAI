@@ -23,7 +23,6 @@ function SetCDRDefaults(aiBrain, cdr)
     aiBrain.ACUSupport.ACUMaxSearchRadius = 80
     cdr.Initialized = false
     cdr.MovementLayer = 'Amphibious'
-    cdr.UnitBeingBuiltBehavior = false
     cdr.GunUpgradeRequired = false
     cdr.GunUpgradePresent = false
     cdr.WeaponRange = false
