@@ -2824,7 +2824,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                         self.CurrentPlatoonThreatAntiSurface = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                                         self.CurrentPlatoonThreatAntiNavy = self:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
                                         self.CurrentPlatoonThreatAntiAir = self:CalculatePlatoonThreat('Air', categories.ALLUNITS)
-                                        target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPos, 'Attack', self.EnemyRadius, categories.MOBILE * (categories.NAVAL + categories.AMPHIBIOUS) - categories.AIR - categories.SCOUT - categories.WALL, categoryList, false)
+                                        target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPos, 'Attack', self.EnemyRadius, (categories.MOBILE * (categories.NAVAL + categories.AMPHIBIOUS) + categories.STRUCTURE * categories.ANTINAVY) - categories.AIR - categories.SCOUT - categories.WALL, categoryList, false)
                                         IssueClearCommands(self:GetSquadUnits('Attack'))
                                         --RNGLOG('* NavalAttackAIRNG while pathing platoon threat is '..self.CurrentPlatoonThreatAntiSurface..' total antisurface threat of enemy'..totalThreat['AntiSurface']..'total antinaval threat is '..totalThreat['AntiNaval'])
                                         if (self.CurrentPlatoonThreatAntiSurface < totalThreat['AntiSurface'] or self.CurrentPlatoonThreatAntiNavy < totalThreat['AntiNaval']) and (target and not target.Dead or acuUnit) then
@@ -3901,24 +3901,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             self:PlatoonDisband()
             return
         end
-        if cons.NearUnitCategory then
-            self:SetPrioritizedTargetList('support', {ParseEntityCategory(cons.NearUnitCategory)})
-            local unitNearBy = self:FindPrioritizedUnit('support', 'Ally', false, GetPlatoonPosition(self), cons.NearUnitRadius or 50)
-            --RNGLOG("ENGINEER BUILD: " .. cons.BuildStructures[1] .." attempt near: ", cons.NearUnitCategory)
-            if unitNearBy then
-                reference = RNGCOPY(unitNearBy:GetPosition())
-                -- get commander home position
-                --RNGLOG("ENGINEER BUILD: " .. cons.BuildStructures[1] .." Near unit: ", cons.NearUnitCategory)
-                if cons.NearUnitCategory == 'COMMAND' and unitNearBy.CDRHome then
-                    reference = unitNearBy.CDRHome
-                end
-            else
-                reference = RNGCOPY(eng:GetPosition())
-            end
-            relative = false
-            buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
-            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
-        elseif cons.NearDefensivePoints then
+        if cons.NearDefensivePoints then
             relative = false
             reference = RUtils.GetDefensivePointRNG(aiBrain, cons.Location or 'MAIN', cons.Tier or 2, cons.Type)
             --RNGLOG('reference for defensivepoint is '..repr(reference))
@@ -4309,9 +4292,9 @@ Platoon = Class(RNGAIPlatoonClass) {
     end,
 
     SetupMexBuildAICallbacksRNG = function(eng)
-        if eng and not eng.Dead and not eng.BuildDoneCallbackSet and eng.PlatoonHandle and PlatoonExists(eng:GetAIBrain(), eng.PlatoonHandle) then
+        if eng and not eng.Dead and not eng.MexBuildDoneCallbackSet and eng.PlatoonHandle and PlatoonExists(eng:GetAIBrain(), eng.PlatoonHandle) then
             import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(eng.PlatoonHandle.MexBuildAIDoneRNG, eng, categories.ALLUNITS)
-            eng.BuildDoneCallbackSet = true
+            eng.MexBuildDoneCallbackSet = true
         end
     end,
 
@@ -4331,11 +4314,9 @@ Platoon = Class(RNGAIPlatoonClass) {
         if unit.Active then return end
         if not unit.PlatoonHandle then return end
         if not unit.PlatoonHandle.PlanName == 'EngineerBuildAIRNG' then return end
-        --RNGLOG("*AI DEBUG: Build done " .. unit.EntityId)
-        if unit.buildingUnit == 'urb1106' then
-            LOG('Engineer Just built mass storage, in EngineerBuildDoneRNG')
-        end
+        --LOG("*AI DEBUG: Build done " .. unit.EntityId)
         if not unit.ProcessBuild then
+            --LOG("*AI DEBUG: not ProcessBuild " .. unit.EntityId)
             unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, true)
             unit.ProcessBuildDone = true
         end
@@ -4953,8 +4934,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             return
         end
         --[[
-        if eng.EngineerBuildQueue[1][1] == 'urb1106' or eng.EngineerBuildQueue[2][1] == 'urb1106' or eng.EngineerBuildQueue[3][1] == 'urb1106' or eng.EngineerBuildQueue[4][1] == 'urb1106' then
-            LOG('Engineer Just built mass storage, engineer has mass storage in queue')
+        if eng.EngineerBuildQueue[1][1] == 'ueb1106' or eng.EngineerBuildQueue[2][1] == 'ueb1106' or eng.EngineerBuildQueue[3][1] == 'ueb1106' or eng.EngineerBuildQueue[4][1] == 'ueb1106' then
+            LOG('Engineer Just built mass storage, start of procesbuildcommand')
             LOG('Queue '..repr(eng.EngineerBuildQueue))
         end]]
         local ALLBPS = __blueprints
@@ -4965,10 +4946,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --if eng.CDRHome then --RNGLOG('*AI DEBUG: Commander process build platoon disband...') end
                 if not eng.AssistSet and not eng.AssistPlatoon and not eng.UnitBeingAssist then
                     --RNGLOG('Disband engineer platoon start of process')
-                    if eng.EngineerBuildQueue[1][1] == 'urb1106' or eng.EngineerBuildQueue[2][1] == 'urb1106' or eng.EngineerBuildQueue[3][1] == 'urb1106' or eng.EngineerBuildQueue[4][1] == 'urb1106' then
-                        LOG('Engineer Just built mass storage, processbuildcommand disband because queue is zero')
-                        LOG('Queue '..repr(eng.EngineerBuildQueue))
-                    end
                     eng.PlatoonHandle:PlatoonDisband()
                 end
             end
@@ -5172,7 +5149,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             if eng.Combat or eng.Active then
                 return
             end
-            if not eng.UnitBeingBuilt or eng.UnitBeingBuilt and eng.UnitBeingBuilt:GetFractionComplete() == 1 then
+            if eng.UnitBeingBuilt.Dead or eng.UnitBeingBuilt and eng.UnitBeingBuilt:GetFractionComplete() == 1 then
                 break
             end
         end

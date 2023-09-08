@@ -120,9 +120,13 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             if not target or target.Dead then
                 for _, v in aiBrain.EnemyIntel.Experimental do
                     if v.object and not v.object.Dead and v.object.Blueprint.CategoriesHash.AIR then
-                        RNGLOG('FighterBehavior DecideWhatToDo Found experimental')
-                        target = v.object
-                        break
+                        local expPos = v.object:GetPosition()
+                        if expPos and GetThreatAtPosition(aiBrain, expPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') < self.CurrentPlatoonThreat
+                        or VDist2(expPos[1], expPos[3], self.Home[1], self.Home[3]) < self.BaseMilitaryArea then
+                            RNGLOG('FighterBehavior DecideWhatToDo Found experimental')
+                            target = v.object
+                            break
+                        end
                     end
                 end
                 if not target or target.Dead then
@@ -143,7 +147,8 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             if not target then
                 --LOG('FighterBehavior DecideWhatToDo check for hold position')
                 if not self.HoldPosTimer or self.HoldPosTimer + 120 < GetGameTimeSeconds() and VDist3Sq(platPos, aiBrain.BrainIntel.StartPos) < 22500 then
-                    if GetThreatAtPosition(aiBrain, platPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') < 1 then
+                    LOG('Platpos for GetThreatAtPosition '..repr(platPos))
+                    if platPos and GetThreatAtPosition(aiBrain, platPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') < 1 then
                         local pos = RUtils.GetHoldingPosition(aiBrain, self, 'Air', self.MaxRadius)
                         if pos and VDist3Sq(pos, self.Home) > 6400 then
                             self.BuilderData = {
@@ -241,8 +246,9 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonFighterBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
-            if not self.BuilderData.Position then
-                self:ChangeState(self.Error)
+            if not self.BuilderData.AttackTarget or IsDestroyed(self.BuilderData.AttackTarget) then
+                coroutine.yield(5)
+                self:ChangeState(self.DecideWhatToDo)
                 return
             end
             IssueClearCommands(GetPlatoonUnits(self))

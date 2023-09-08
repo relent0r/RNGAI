@@ -2557,7 +2557,7 @@ LastKnownThread = function(aiBrain)
         for _=0,10 do
             local enemyMexes = {}
             local mexcount = 0
-            local eunits=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE, {0,0,0}, math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])*1.5, 'Enemy')
+            local eunits=aiBrain:GetUnitsAroundPoint((categories.AIR + categories.LAND + categories.STRUCTURE) - categories.INSIGNIFICANTUNIT, {0,0,0}, math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])*1.5, 'Enemy')
             for _,v in eunits do
                 if not v or v.Dead then continue end
                 if ArmyIsCivilian(v:GetArmy()) then continue end
@@ -2609,28 +2609,37 @@ LastKnownThread = function(aiBrain)
                         if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id] then
                             im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id]={}
                             if unitCat.MOBILE then
-                                if unitCat.ENGINEER and not unitCat.COMMAND then
-                                    if v.Army and v.Blueprint.Economy.BuildRate then
-                                        local buildPower = v.Blueprint.Economy.BuildRate
-                                        enemyBuildStrength.Total.EngineerBuildPower = enemyBuildStrength.Total.EngineerBuildPower + buildPower
-                                        if not enemyBuildStrength[v.Army].EngineerBuildPower then
-                                            enemyBuildStrength[v.Army].EngineerBuildPower = 0
-                                        end
-                                        enemyBuildStrength[v.Army].EngineerBuildPower = enemyBuildStrength[v.Army].EngineerBuildPower + buildPower
-                                    end
-                                    im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='eng'
-                                elseif unitCat.COMMAND then
+                                if unitCat.COMMAND then
                                     im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='acu'
-                                elseif unitCat.EXPERIMENTAL then
-                                    if not aiBrain.EnemyIntel.Experimental[id] then
-                                        aiBrain.EnemyIntel.Experimental[id] = {object = v, position=unitPosition }
+                                end
+                                if unitCat.LAND then
+                                    if unitCat.ENGINEER and not unitCat.COMMAND then
+                                        if v.Army and v.Blueprint.Economy.BuildRate then
+                                            local buildPower = v.Blueprint.Economy.BuildRate
+                                            enemyBuildStrength.Total.EngineerBuildPower = enemyBuildStrength.Total.EngineerBuildPower + buildPower
+                                            if not enemyBuildStrength[v.Army].EngineerBuildPower then
+                                                enemyBuildStrength[v.Army].EngineerBuildPower = 0
+                                            end
+                                            enemyBuildStrength[v.Army].EngineerBuildPower = enemyBuildStrength[v.Army].EngineerBuildPower + buildPower
+                                        end
+                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='eng'
+                                    elseif unitCat.EXPERIMENTAL then
+                                        if not aiBrain.EnemyIntel.Experimental[id] then
+                                            aiBrain.EnemyIntel.Experimental[id] = {object = v, position=unitPosition }
+                                        end
+                                    elseif unitCat.ANTIAIR then
+                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='aa'
+                                    elseif unitCat.DIRECTFIRE then
+                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='tank'
+                                    elseif unitCat.INDIRECTFIRE then
+                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='arty'
                                     end
-                                elseif unitCat.ANTIAIR then
-                                    im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='aa'
-                                elseif unitCat.DIRECTFIRE then
-                                    im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='tank'
-                                elseif unitCat.INDIRECTFIRE then
-                                    im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='arty'
+                                elseif unitCat.AIR then
+                                    if unitCat.EXPERIMENTAL then
+                                        if not aiBrain.EnemyIntel.Experimental[id] then
+                                            aiBrain.EnemyIntel.Experimental[id] = {object = v, position=unitPosition }
+                                        end
+                                    end
                                 end
                             elseif unitCat.STRUCTURE then
                                 if unitCat.RADAR then
