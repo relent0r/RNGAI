@@ -164,7 +164,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            if not target then
+            if platPos and not target then
                 local dx = platPos[1] - self.Home[1]
                 local dz = platPos[3] - self.Home[3]
                 local posDist = dx * dx + dz * dz

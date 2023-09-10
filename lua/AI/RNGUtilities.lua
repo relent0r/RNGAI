@@ -2915,14 +2915,22 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
     local targetStartPosition = false
     --We look for the closest
     for k, v in startPositions do
-        local waterNodePos, waterNodeName, waterNodeDist = AIUtils.AIGetClosestMarkerPathCheckRNG(aiBrain, 'Water Path Node', v.Position, platoonPosition, 'Water')
-        if waterNodeDist and waterNodeDist < (MaxPlatoonWeaponRange * MaxPlatoonWeaponRange + 900) then
-            --RNGLOG('Start position is '..waterNodeDist..' from water node, weapon range on platoon is '..MaxPlatoonWeaponRange..' we are going to attack from this position')
-            --RNGLOG('This position is '..repr(waterNodePos))
-            if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition, waterNodePos) then
-                attackPosition = waterNodePos
-                targetStartPosition = v.Position
-                break
+        local positionTable = NavUtils.GetPositionsInRadius('Water', v.Position, (MaxPlatoonWeaponRange + 30), 9)
+        --LOG('ranged positions table for position '..repr(v)..' '..repr(positionTable))
+        for _, v in positionTable do
+            local dx = v.position[1] - m[1]
+            local dz = v.position[3] - m[3]
+            local posDist = dx * dx + dz * dz
+            if posDist <= (MaxPlatoonWeaponRange * MaxPlatoonWeaponRange + 900) then
+                if not aiBrain:CheckBlockingTerrain({v[1], v[2], v[3]}, v.Position, 'low') then
+                    LOG('Nothing is blocking this position to the enemy unit position')
+                    if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition, {v[1], v[2], v[3]}) then
+                        LOG('Can path to ranged attack position')
+                        attackPosition = {v[1], v[2], v[3]}
+                        targetStartPosition = v.Position
+                        break
+                    end
+                end
             end
         end
     end

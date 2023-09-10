@@ -630,7 +630,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
 ---@param data { Behavior: 'AIBehaviorLandCombat' }
 ---@param units Unit[]
 AssignToUnitsMachine = function(data, platoon, units)
-    if units and not RNGTableEmpty(units) then
+    if not IsDestroyed(platoon) and units and not RNGTableEmpty(units) then
         -- meet platoon requirements
         import("/lua/sim/navutils.lua").Generate()
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()

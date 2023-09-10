@@ -1029,26 +1029,6 @@ function AIGetClosestMarkerLocationRNG(aiBrain, markerType, startX, startZ, extr
     return loc, name, lowest
 end
 
-function AIGetClosestMarkerPathCheckRNG(aiBrain, markerType, targetPosition, platoonPosition, movementLayer)
-    local markerList = AIGetMarkerLocations(aiBrain, markerType)
-
-    local loc, distance, lowest, name = nil
-    for _, v in markerList do
-        local x = v.Position[1]
-        local y = v.Position[2]
-        local z = v.Position[3]
-        distance = VDist2Sq(targetPosition[1], targetPosition[3], x, z)
-        if not lowest or distance < lowest then
-            if NavUtils.CanPathTo(movementLayer, platoonPosition, v.Position) then
-                loc = v.Position
-                name = v.Name
-                lowest = distance
-            end
-        end
-    end
-    return loc, name, lowest
-end
-
 function AIFindAggressiveBaseLocationRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType)
     -- Get location of commander
     if not aiBrain:GetCurrentEnemy() then

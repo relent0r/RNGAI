@@ -1090,13 +1090,15 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                     captor.CaptureComplete = true
                 end
-                import('/lua/scenariotriggers.lua').CreateUnitCapturedTrigger(nil, captureUnitCallback, captureUnit)
-                IssueClearCommands({eng})
-                IssueCapture({eng}, captureUnit)
-                while aiBrain:PlatoonExists(self) and not eng.CaptureComplete do
-                    coroutine.yield(30)
+                if captureUnit and not IsDestroyed(captureUnit) then
+                    import('/lua/scenariotriggers.lua').CreateUnitCapturedTrigger(nil, captureUnitCallback, captureUnit)
+                    IssueClearCommands({eng})
+                    IssueCapture({eng}, captureUnit)
+                    while aiBrain:PlatoonExists(self) and not eng.CaptureComplete do
+                        coroutine.yield(30)
+                    end
+                    eng.CaptureComplete = nil
                 end
-                eng.CaptureComplete = nil
             end
         end
         self:PlatoonDisband()
@@ -6506,14 +6508,16 @@ Platoon = Class(RNGAIPlatoonClass) {
             if self.MovementLayer == 'Land' then
                 --RNGLOG('Restarting MassRaid as trueplatoon')
                 coroutine.yield(10)
-                if not self.PlatoonData then
-                    self.PlatoonData = {}
-                    self.PlatoonData.StateMachine = 'LandCombat'
+                if not IsDestroyed(self) then
+                    if not self.PlatoonData then
+                        self.PlatoonData = {}
+                        self.PlatoonData.StateMachine = 'LandCombat'
+                    end
+                    if not self.PlatoonData.StateMachine then
+                        self.PlatoonData.StateMachine = 'LandCombat'
+                    end
+                    return self:SetAIPlanRNG('StateMachineAIRNG')
                 end
-                if not self.PlatoonData.StateMachine then
-                    self.PlatoonData.StateMachine = 'LandCombat'
-                end
-                return self:SetAIPlanRNG('StateMachineAIRNG')
             elseif self.MovementLayer == 'Water' then
                 --RNGLOG('Restarting MassRaid as navalhuntai')
                 coroutine.yield(10)

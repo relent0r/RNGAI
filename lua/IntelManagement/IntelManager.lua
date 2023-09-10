@@ -1895,17 +1895,6 @@ function InitialNavalAttackCheck(aiBrain)
     -- points = number of points around the extractor, doesn't need to have too many.
     -- radius = the radius that the points will be, be set this a little lower than a frigates max weapon range
     -- center = the x,y values for the position of the mass extractor. e.g {x = 0, y = 0} 
-    local function DrawCirclePoints(points, radius, center)
-        local extractorPoints = {}
-        local slice = 2 * math.pi / points
-        for i=1, points do
-            local angle = slice * i
-            local newX = center[1] + radius * math.cos(angle)
-            local newY = center[3] + radius * math.sin(angle)
-            table.insert(extractorPoints, { newX, 0 , newY})
-        end
-        return extractorPoints
-    end
     local frigateRaidMarkers = {}
     local markers = GetMarkersRNG()
     if markers then
@@ -1913,24 +1902,20 @@ function InitialNavalAttackCheck(aiBrain)
         local markerCountNotBlocked = 0
         local markerCountBlocked = 0
         for _, v in markers do 
-            local checkPoints = DrawCirclePoints(6, 26, v.position)
+            local checkPoints = NavUtils.GetPositionsInRadius('Water', v.position, 30, 6)
             if checkPoints then
                 for _, m in checkPoints do
-                    local terrainHeight = GetTerrainHeight(m[1], m[3])
-                    local surfaceHeight = GetSurfaceHeight(m[1], m[3])
-                    if terrainHeight < surfaceHeight and (surfaceHeight - terrainHeight > 1) then
-                       --RNGLOG('Location '..repr({m[1], m[3]})..' is in water for extractor'..repr({v.position[1], v.position[3]}))
-                       --RNGLOG('Surface Height at extractor '..GetSurfaceHeight(v.position[1], v.position[3]))
-                       --RNGLOG('Surface height at position '..GetSurfaceHeight(m[1], m[3]))
-                        local pointSurfaceHeight = GetSurfaceHeight(m[1], m[3]) + 0.36
-                       --RNGLOG('Adjusted checkpoint surface height '..pointSurfaceHeight)
+                    local dx = v.position[1] - m[1]
+                    local dz = v.position[3] - m[3]
+                    local posDist = dx * dx + dz * dz
+                    if posDist <= 900 then
                         markerCount = markerCount + 1
-                        if not aiBrain:CheckBlockingTerrain({m[1], pointSurfaceHeight, m[3]}, v.position, 'low') then
-                           --RNGLOG('This marker is not blocked '..repr(v.position))
+                        if not aiBrain:CheckBlockingTerrain({m[1], GetSurfaceHeight(m[1], m[3]), m[3]}, v.position, 'low') then
+                            RNGLOG('This marker is not blocked '..repr(v.position))
                             markerCountNotBlocked = markerCountNotBlocked + 1
-                            table.insert( frigateRaidMarkers, { Position=v.position, Name=v.name, RaidPosition={m[1], pointSurfaceHeight, m[3]} } )
+                            table.insert( frigateRaidMarkers, { Position=v.position, Name=v.name, RaidPosition={m[1], m[2], m[3]} } )
                         else
-                           --RNGLOG('This marker is blocked '..repr(v.position))
+                            RNGLOG('This marker is blocked '..repr(v.position))
                             markerCountBlocked = markerCountBlocked + 1
                         end
                         break
@@ -1938,12 +1923,12 @@ function InitialNavalAttackCheck(aiBrain)
                 end
             end
         end
-        if aiBrain.RNGDEBUG then
+        --if aiBrain.RNGDEBUG then
             RNGLOG('There are potentially '..markerCount..' markers that are in range for frigates')
             RNGLOG('There are '..markerCountNotBlocked..' markers NOT blocked by terrain')
             RNGLOG('There are '..markerCountBlocked..' markers that ARE blocked')
             RNGLOG('Markers that frigates can try and raid '..repr(frigateRaidMarkers))
-        end
+        --end
         if markerCountNotBlocked > 8 then
             aiBrain.EnemyIntel.FrigateRaid = true
             aiBrain.EnemyIntel.FrigateRaidMarkers = frigateRaidMarkers
