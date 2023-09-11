@@ -1266,80 +1266,90 @@ end
 
 function AirStagingThreadRNG(unit)
     local aiBrain = unit:GetAIBrain()
+    LOG('Starting Air Staging thread')
 
     while not unit.Dead do
         local numUnits = 0
         local refueledUnits = {}
         local currentTime = GetGameTimeSeconds()
-        for _, v in unit.Refueling do
-            if not v.TimeStamp then
-                v.TimeStamp = currentTime
-            elseif not v.Dead and v:GetFuelRatio() > 0.9 and v:GetHealthPercent() > 0.9 then
+        for k, v in unit.Refueling do
+            if not v.Dead and v:GetFuelRatio() > 0.9 and v:GetHealthPercent() > 0.9 then
                 --RNGLOG('Unit not dead and fuel + health is above 0.9 '..v.EntityId)
                 --RNGLOG('Fueld Ratio is '..v:GetFuelRatio())
                 --RNGLOG('Health Percent is '..v:GetHealthPercent())
                 numUnits = numUnits + 1
-                RNGINSERT(refueledUnits, v)
-            elseif not v.Dead and currentTime > (v.TimeStamp + 30) then
-                if v:IsUnitState('Attacking') and (not v:IsUnitState('Attached')) and (v:GetFuelRatio() < 0.7 or v:GetHealthPercent() < 0.7) then
-                    IssueClearCommands({v})
-                    IssueTransportLoad({v}, unit)
-                end
+                RNGINSERT(refueledUnits, {Unit = v, Key = k})
             end
         end
         
         if numUnits > 0 then
-            --RNGLOG('platform has refueled units but ready was set to false, attempting to depart them anyway')
+            RNGLOG('platform has refueled units but ready was set to false, attempting to depart them anyway')
             --RNGLOG('Number of units in refueldedUnits '..table.getn(refueledUnits))
             local tableRebuild = false
             for k, v in refueledUnits do
-                if not v.Dead then
+                if not v.Unit.Dead then
                     local pos = unit:GetPosition()
-                    if v:IsIdleState() and not v:IsUnitState('Attached') then
+                    if v.Unit:IsIdleState() and not v.Unit:IsUnitState('Attached') then
                         --RNGLOG('Attempting to add to AirHuntAI Platoon')
-                        v.Loading = false
+                        v.Unit.Loading = false
                         local plat
-                        if not v.PreviousStateMachine then
-                            if not v.PlanName then
+                        if not v.Unit.PreviousStateMachine then
+                            if not v.Unit.PlanName then
                                 --RNGLOG('Air Refuel unit has no plan, assigning AirHuntAIRNG ')
                                 plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
                             else
-                            --RNGLOG('Air Refuel unit has plan name of '..v.PlanName)
+                            --RNGLOG('Air Refuel unit has plan name of '..v.Unit.PlanName)
                                 plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
                             end
-                            if v.PlatoonData then
+                            if v.Unit.PlatoonData then
                             --RNGLOG('Air Refuel unit has platoon data, reassigning ')
                                 plat.PlatoonData = {}
-                                plat.PlatoonData = v.PlatoonData
+                                plat.PlatoonData = v.Unit.PlatoonData
                             end
-                            v.TimeStamp = nil
-                            aiBrain:AssignUnitsToPlatoon(plat, {v}, 'Attack', 'GrowthFormation')
+                            v.Unit.TimeStamp = nil
+                            aiBrain:AssignUnitsToPlatoon(plat, {v.Unit}, 'Attack', 'GrowthFormation')
+                            table.remove(unit.Refueling, v.Key)
+                            tableRebuild = true
+                            LOG('table removed from refueling not state machine')
+                        else
+                            table.remove(unit.Refueling, v.Key)
+                            tableRebuild = true
+                            LOG('table removed from refueling')
                         end
-                    elseif v:IsUnitState('Attached') then
+                    elseif v.Unit:IsUnitState('Attached') then
                         --RNGLOG('Air Unit Still attached, force unload')
                         IssueClearCommands({unit})
                         IssueTransportUnload({unit}, {pos[1] + 5, pos[2], pos[3] + 5})
                         coroutine.yield(20)
                         --RNGLOG('Attempting to add to AirHuntAI Platoon')
-                        v.Loading = false
-                        if not v.PreviousStateMachine then
+                        v.Unit.Loading = false
+                        if not v.Unit.PreviousStateMachine then
                             local plat
-                            if not v.PlanName then
+                            if not v.Unit.PlanName then
                                 --RNGLOG('Force Unload Air Refuel unit has no plan, assigning AirHuntAIRNG ')
                                 plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
                             else
-                            --RNGLOG('Force Unload Air Refuel unit has plan name of '..v.PlanName)
+                            --RNGLOG('Force Unload Air Refuel unit has plan name of '..v.Unit.PlanName)
                                 plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
                             end
-                            if v.PlatoonData then
+                            if v.Unit.PlatoonData then
                             --RNGLOG('Air Refuel unit has platoon data, reassigning ')
                                 plat.PlatoonData = {}
                                 plat.PlatoonData = v.PlatoonData
                             end
-                            aiBrain:AssignUnitsToPlatoon(plat, {v}, 'Attack', 'GrowthFormation')
+                            aiBrain:AssignUnitsToPlatoon(plat, {v.Unit}, 'Attack', 'GrowthFormation')
+                            table.remove(unit.Refueling, v.Key)
+                            LOG('table removed from refueling not state machine')
+                        else
+                            table.remove(unit.Refueling, v.Key)
+                            tableRebuild = true
+                            LOG('table removed from refueling')
                         end
                     end
                 end
+            end
+            if tableRebuild then
+                LOG('Refueling table after removal '..repr(unit.Refueling))
             end
         end
         coroutine.yield(100)

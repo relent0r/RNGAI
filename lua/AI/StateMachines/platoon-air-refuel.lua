@@ -68,7 +68,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                     end
                                 end
                             end
-                            if closest and not IsDestroyed(unit) then
+                            if closest and not IsDestroyed(unit) and not unit.Dead then
                                 IssueClearCommands({unit})
                                 if table.getn({unit}) == 0 then
                                     --LOG('unit table is zero '..repr(unit))
@@ -76,7 +76,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                 safecall("Unable to IssueTransportLoad units are "..repr(unit), IssueTransportLoad, {unit}, closest )
                                 --RNGLOG('Transport load issued')
                                 if EntityCategoryContains(categories.AIRSTAGINGPLATFORM, closest) and not closest.AirStaging then
-                                    --RNGLOG('Air Refuel Forking AirStaging Thread for fighter')
+                                    LOG('Air Refuel Forking AirStaging Thread for fighter')
                                     closest.AirStaging = closest:ForkThread(behaviors.AirStagingThreadRNG)
                                     closest.Refueling = {}
                                 elseif EntityCategoryContains(categories.CARRIER, closest) and not closest.CarrierStaging then
