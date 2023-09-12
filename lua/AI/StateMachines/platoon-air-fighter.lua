@@ -214,14 +214,18 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 local dx = platPos[1] - movePosition[1]
                 local dz = platPos[3] - movePosition[3]
                 local posDist = dx * dx + dz * dz
-                if posDist < 1225 then
+                if posDist < 2025 then
                     if self.BuilderData.HoldingPosition then
                         self.HoldPosTimer = GetGameTimeSeconds()
+                        IssueClearCommands(GetPlatoonUnits(self))
+                        IssueMove(GetPlatoonUnits(self), self.BuilderData.Position)
                         IssueGuard(GetPlatoonUnits(self), self.BuilderData.Position)
                         self:ChangeState(self.HoldPosition)
                         return
                     elseif self.BuilderData.Loiter then
                         self.HoldPosTimer = GetGameTimeSeconds()
+                        IssueClearCommands(GetPlatoonUnits(self))
+                        IssueMove(GetPlatoonUnits(self), self.BuilderData.Position)
                         IssueGuard(GetPlatoonUnits(self), self.BuilderData.Position)
                         self:ChangeState(self.HoldPosition)
                         return
@@ -289,7 +293,31 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             while aiBrain:PlatoonExists(self) do
                 local platPos = self:GetPlatoonPosition()
                 if self.BuilderData.HoldingPosition or self.BuilderData.Loiter then
-                    if self.HoldPosTimer + timer < GetGameTimeSeconds() then
+                    if self.HoldPosTimer + timer > GetGameTimeSeconds() then
+                        for _, unit in GetPlatoonUnits(self) do
+                            if unit and not unit.Dead then
+                                if table.empty(unit:GetCommandQueue()) and not unit:IsUnitState('Guarding') then
+                                    --LOG('FighterBehavior Unit is not guarding, tell it to guard')
+                                    IssueMove({unit}, self.BuilderData.Position)
+                                    IssueGuard({unit}, self.BuilderData.Position)
+                                end
+                            end
+                        end
+                        local airThreats = aiBrain:GetThreatsAroundPosition(platPos, 16, true, 'Air')
+                        for _, threat in airThreats do
+                            local dx = platPos[1] - threat[1]
+                            local dz = platPos[3] - threat[2]
+                            local posDist = dx * dx + dz * dz
+                            if threat[3] > 0 and posDist < self.MaxRadius * self.MaxRadius then
+                                self.BuilderData = {}
+                                self.HoldPosTimer = nil
+                                --LOG('FighterBehavior Threat found exit hold position')
+                                self:ChangeState(self.DecideWhatToDo)
+                                return  
+                            end
+                        end
+                        coroutine.yield(30)
+                    else
                         coroutine.yield(5)
                         self.BuilderData = {}
                         self.HoldPosTimer = nil
@@ -305,28 +333,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
-                for _, unit in GetPlatoonUnits(self) do
-                    if unit and not unit.Dead then
-                        if table.empty(unit:GetCommandQueue()) and not unit:IsUnitState('Guarding') then
-                            --LOG('FighterBehavior Unit is not guarding, tell it to guard')
-                            IssueGuard({unit}, self.BuilderData.Position)
-                        end
-                    end
-                end
-                local airThreats = aiBrain:GetThreatsAroundPosition(platPos, 16, true, 'Air')
-                for _, threat in airThreats do
-                    local dx = platPos[1] - threat[1]
-                    local dz = platPos[3] - threat[2]
-                    local posDist = dx * dx + dz * dz
-                    if threat[3] > 0 and posDist < self.MaxRadius * self.MaxRadius then
-                        self.BuilderData = {}
-                        self.HoldPosTimer = nil
-                        --LOG('FighterBehavior Threat found exit hold position')
-                        self:ChangeState(self.DecideWhatToDo)
-                        return  
-                    end
-                end
-                coroutine.yield(30)
+                
             end
         end,
     },
