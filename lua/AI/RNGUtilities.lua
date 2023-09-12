@@ -2914,20 +2914,20 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
     local attackPosition = false
     local targetStartPosition = false
     --We look for the closest
-    for k, v in startPositions do
-        local positionTable = NavUtils.GetPositionsInRadius('Water', v.Position, (MaxPlatoonWeaponRange + 30), 9)
+    for k, s in startPositions do
+        local positionTable = NavUtils.GetPositionsInRadius('Water', s.Position, (MaxPlatoonWeaponRange + 30), 9)
         --LOG('ranged positions table for position '..repr(v)..' '..repr(positionTable))
         for _, v in positionTable do
-            local dx = v.position[1] - m[1]
-            local dz = v.position[3] - m[3]
+            local dx = s.Position[1] - v[1]
+            local dz = s.Position[3] - v[3]
             local posDist = dx * dx + dz * dz
             if posDist <= (MaxPlatoonWeaponRange * MaxPlatoonWeaponRange + 900) then
-                if not aiBrain:CheckBlockingTerrain({v[1], v[2], v[3]}, v.Position, 'low') then
+                if not aiBrain:CheckBlockingTerrain({v[1], v[2], v[3]}, s.Position, 'low') then
                     LOG('Nothing is blocking this position to the enemy unit position')
                     if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition, {v[1], v[2], v[3]}) then
                         LOG('Can path to ranged attack position')
                         attackPosition = {v[1], v[2], v[3]}
-                        targetStartPosition = v.Position
+                        targetStartPosition = s.Position
                         break
                     end
                 end

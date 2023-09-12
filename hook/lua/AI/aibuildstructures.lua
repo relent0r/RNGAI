@@ -558,6 +558,9 @@ end
 
 function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructionData)
     local radius = constructionData.ExpansionRadius or 100
+    if position[4] then
+        position = {position[1], position[2], position[3]}
+    end
     -- PBM Style expansion bases here
     if aiBrain.HasPlatoonList then
         -- Figure out what type of builders to import

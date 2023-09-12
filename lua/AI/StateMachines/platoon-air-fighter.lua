@@ -199,6 +199,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             end
             IssueClearCommands(GetPlatoonUnits(self))
             if self.BuilderData.Retreat then
+                LOG(repr(self.BuilderData))
                 IssueMove(GetPlatoonUnits(self), self.BuilderData.Position)
             else
                 IssueAggressiveMove(GetPlatoonUnits(self), self.BuilderData.Position)
@@ -392,7 +393,6 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             if closestBase and closestPlatoon then
                 if closestBaseDistance < closestPlatoonDistance then
                     --RNGLOG('Closest base is '..closestBase)
-                    --RNGLOG('Closest base is '..closestBase)
                     if closestBase == 'MAIN' then
                         self.BuilderData = {
                             Retreat = true,
@@ -400,7 +400,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                         }
                         self:ChangeState(self.Navigating)
                         return
-                    else
+                    elseif closestBase then
                         self.BuilderData = {
                             Retreat = true,
                             Position = aiBrain.BuilderManagers[closestBase].Position,
@@ -409,19 +409,16 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.Navigating)
                         return
                     end
-                else
+                elseif closestAPlatPos then
                     --RNGLOG('Found platoon checking if can graph')
-                    if closestAPlatPos then
-                        --RNGLOG('Closest base is '..closestBase)
-                        --RNGLOG('Closest base is '..closestBase)
-                        self.BuilderData = {
-                            Retreat = true,
-                            Position = closestAPlatPos,
-                            Loiter = true
-                        }
-                        self:ChangeState(self.Navigating)
-                        return
-                    end
+                    --RNGLOG('Closest base is '..closestBase)
+                    self.BuilderData = {
+                        Retreat = true,
+                        Position = closestAPlatPos,
+                        Loiter = true
+                    }
+                    self:ChangeState(self.Navigating)
+                    return
                 end
             elseif closestBase then
                 --RNGLOG('Closest base is '..closestBase)
@@ -432,7 +429,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     }
                     self:ChangeState(self.Navigating)
                     return
-                else
+                elseif closestBase then
                     self.BuilderData = {
                         Retreat = true,
                         Position = aiBrain.BuilderManagers[closestBase].Position,
@@ -441,17 +438,15 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.Navigating)
                     return
                 end
-            elseif closestPlatoon then
+            elseif closestPlatoon and closestAPlatPos then
                 --RNGLOG('Found platoon checking if can graph')
-                if closestAPlatPos then
-                    self.BuilderData = {
-                        Retreat = true,
-                        Position = closestAPlatPos,
-                        Loiter = true
-                    }
-                    self:ChangeState(self.Navigating)
-                    return
-                end
+                self.BuilderData = {
+                    Retreat = true,
+                    Position = closestAPlatPos,
+                    Loiter = true
+                }
+                self:ChangeState(self.Navigating)
+                return
             end
         end,
     },
