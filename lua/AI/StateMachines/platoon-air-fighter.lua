@@ -205,7 +205,10 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 IssueAggressiveMove(GetPlatoonUnits(self), self.BuilderData.Position)
             end
             local movePosition = self.BuilderData.Position
+            local lastDist
+            local timeout = 0
             while aiBrain:PlatoonExists(self) do
+                LOG('FighterBehavior movement loop')
                 coroutine.yield(15)
                 if IsDestroyed(self) then
                     return
@@ -214,6 +217,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 local dx = platPos[1] - movePosition[1]
                 local dz = platPos[3] - movePosition[3]
                 local posDist = dx * dx + dz * dz
+
                 if posDist < 2025 then
                     if self.BuilderData.HoldingPosition then
                         self.HoldPosTimer = GetGameTimeSeconds()
@@ -233,6 +237,14 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                         coroutine.yield(5)
                         self:ChangeState(self.DecideWhatToDo)
                         return
+                    end
+                    if not lastDist or posDist == lastDist then
+                        timeout = timeout + 1
+                        lastDist = posDist
+                        if timeout > 15 then
+                            LOG('Fighter platoon movement loop just broke')
+                            break
+                        end
                     end
                 end
             end
@@ -311,7 +323,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                             if threat[3] > 0 and posDist < self.MaxRadius * self.MaxRadius then
                                 self.BuilderData = {}
                                 self.HoldPosTimer = nil
-                                --LOG('FighterBehavior Threat found exit hold position')
+                                LOG('FighterBehavior Threat found exit hold position')
                                 self:ChangeState(self.DecideWhatToDo)
                                 return  
                             end
@@ -321,7 +333,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                         coroutine.yield(5)
                         self.BuilderData = {}
                         self.HoldPosTimer = nil
-                        --LOG('FighterBehavior hold position timer has expired')
+                        LOG('FighterBehavior hold position timer has expired')
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
@@ -329,7 +341,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     coroutine.yield(5)
                     self.BuilderData = {}
                     self.HoldPosTimer = nil
-                    --LOG('FighterBehavior platoon is in hold position but doesnt have the properties for it')
+                    LOG('FighterBehavior platoon is in hold position but doesnt have the properties for it')
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end

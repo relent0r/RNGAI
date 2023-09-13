@@ -1308,11 +1308,11 @@ function AirStagingThreadRNG(unit)
                             end
                             v.Unit.TimeStamp = nil
                             aiBrain:AssignUnitsToPlatoon(plat, {v.Unit}, 'Attack', 'GrowthFormation')
-                            table.remove(unit.Refueling, v.Key)
+                            unit.Refueling[v.Key] = nil
                             tableRebuild = true
                             LOG('table removed from refueling not state machine')
                         else
-                            table.remove(unit.Refueling, v.Key)
+                            unit.Refueling[v.Key] = nil
                             tableRebuild = true
                             LOG('table removed from refueling')
                         end
@@ -1320,7 +1320,6 @@ function AirStagingThreadRNG(unit)
                         --RNGLOG('Air Unit Still attached, force unload')
                         IssueClearCommands({unit})
                         IssueTransportUnload({unit}, {pos[1] + 5, pos[2], pos[3] + 5})
-                        coroutine.yield(20)
                         --RNGLOG('Attempting to add to AirHuntAI Platoon')
                         v.Unit.Loading = false
                         if not v.Unit.PreviousStateMachine then
@@ -1338,10 +1337,11 @@ function AirStagingThreadRNG(unit)
                                 plat.PlatoonData = v.PlatoonData
                             end
                             aiBrain:AssignUnitsToPlatoon(plat, {v.Unit}, 'Attack', 'GrowthFormation')
-                            table.remove(unit.Refueling, v.Key)
+                            unit.Refueling[v.Key] = nil
+                            tableRebuild = true
                             LOG('table removed from refueling not state machine')
                         else
-                            table.remove(unit.Refueling, v.Key)
+                            unit.Refueling[v.Key] = nil
                             tableRebuild = true
                             LOG('table removed from refueling')
                         end
@@ -1349,10 +1349,11 @@ function AirStagingThreadRNG(unit)
                 end
             end
             if tableRebuild then
+                unit.Refueling = aiBrain:RebuildTable(unit.Refueling)
                 LOG('Refueling table after removal '..repr(unit.Refueling))
             end
         end
-        coroutine.yield(100)
+        coroutine.yield(60)
     end
 end
 

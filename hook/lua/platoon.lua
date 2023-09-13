@@ -8095,7 +8095,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         else
                             while PlatoonExists(aiBrain, self) do
                                 coroutine.yield(1)
-                                --RNGLOG('Feeder target moving to found platoon')
+                                RNGLOG('Feeder target moving to found platoon')
                                 if IsDestroyed(targetPlatoon) then
                                     break
                                 end
