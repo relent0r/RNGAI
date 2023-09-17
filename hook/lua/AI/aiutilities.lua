@@ -18,7 +18,7 @@ function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
     local markerList = {}
     --RNGLOG('* AI-RNG: Marker Type for AIGetMarkerLocationsNotFriendly is '..markerType)
     if markerType == 'Start Location' then
-        local tempMarkers = AIGetMarkerLocationsRNG(aiBrain, 'Blank Marker')
+        local tempMarkers = AIGetMarkerLocationsRNG(aiBrain, 'Spawn')
         for k, v in tempMarkers do
             if string.sub(v.Name, 1, 5) == 'ARMY_' then
                 local ecoStructures = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSPRODUCTION), v.Position, 30, 'Ally')
@@ -848,7 +848,7 @@ function AIGetMarkersAroundLocationRNG(aiBrain, markerType, pos, radius, threatM
     local markers = AIGetMarkerLocationsRNG(aiBrain, markerType)
     local returnMarkers = {}
     for _, v in markers do
-        if markerType == 'Blank Marker' then
+        if markerType == 'Spawn' then
             if VDist2Sq(aiBrain.BuilderManagers['MAIN'].Position[1], aiBrain.BuilderManagers['MAIN'].Position[3], v.Position[1], v.Position[3]) < 10000 then
                 --RNGLOG('Start Location too close to main base skip, location is '..VDist2Sq(aiBrain.BuilderManagers['MAIN'].Position[1], aiBrain.BuilderManagers['MAIN'].Position[3], v.Position[1], v.Position[3])..' from main base pos')
                 continue
@@ -881,6 +881,15 @@ function AIGetMarkerLocationsRNG(aiBrain, markerType)
                 end
             end
         end
+    --[[elseif markerType == 'Blank Marker' then
+        local markers = Scenario.MasterChain._MASTERCHAIN_.Markers
+        if markers then
+            for k, v in markers do
+                if v.Name and string.sub(v.Name, 1, 5) == 'ARMY_' then
+                    table.insert(markerList, {Position = v.position, Name = k })
+                end
+            end
+        end]]
     elseif markerType == 'Large Expansion Area' or markerType == 'Expansion Area' then
         local markers = MarkerUtils.GetMarkersByType(markerType)
         for k, v in markers do

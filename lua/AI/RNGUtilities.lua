@@ -852,8 +852,9 @@ function AIFindStartLocationNeedsEngineerRNG(aiBrain, locationType, radius, tMin
 
     local validPos = {}
 
-    local positions = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Blank Marker', pos, radius, tMin, tMax, tRings, tType)
+    local positions = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Spawn', pos, radius, tMin, tMax, tRings, tType)
     local startX, startZ = aiBrain:GetArmyStartPos()
+    LOG('positions '..repr(positions))
     for _, v in positions do
         if string.sub(v.Name, 1, 5) == 'ARMY_' then
             if startX ~= v.Position[1] and startZ ~= v.Position[3] then
@@ -861,7 +862,7 @@ function AIFindStartLocationNeedsEngineerRNG(aiBrain, locationType, radius, tMin
             end
         end
     end
-    --RNGLOG('Valid Pos table '..repr(validPos))
+    RNGLOG('Valid Pos table '..repr(validPos))
 
     local retPos, retName
     if eng then

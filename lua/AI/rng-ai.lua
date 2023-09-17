@@ -3635,6 +3635,9 @@ AIBrain = Class(RNGAIBrainClass) {
             self.amanager.Ratios[factionIndex].Land.T1.aa = 12
             self.earlyFlag = false
         end
+        LOG('My total air '..self.BrainIntel.SelfThreat.AirNow)
+        LOG('Total enemy air '..(self.EnemyIntel.EnemyThreatCurrent.Air / self.EnemyIntel.EnemyCount))
+        LOG('Raw enemy antiair '..self.EnemyIntel.EnemyThreatCurrent.Air)
         if self.BrainIntel.SelfThreat.AirNow < (self.EnemyIntel.EnemyThreatCurrent.Air / self.EnemyIntel.EnemyCount) then
             --RNGLOG('Less than enemy air threat, increase mobile aa numbers')
             self.amanager.Ratios[factionIndex].Land.T1.aa = 30
@@ -5825,24 +5828,23 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
---[[
+
     GetManagerCount = function(self, type)
-        if not self.RNG then
-            return RNGAIBrainClass.GetManagerCount(self, type)
-        end
         local count = 0
         for k, v in self.BuilderManagers do
             if type then
                --RNGLOG('BuilderManager Type is '..k)
-                if type == 'Start Location' and not (string.find(k, 'ARMY_') or string.find(k, 'Large Expansion')) then
+                if type == 'Start Location' and not (string.find(k, 'ARMY_') or string.find(k, 'Large Expansion') or k ~= 'FLOATING') then
                     continue
-                elseif type == 'Naval Area' and not (string.find(k, 'Naval Area')) then
+                elseif type == 'Naval Area' and not (string.find(k, 'Naval Area') or k ~= 'FLOATING') then
                     continue
-                elseif type == 'Expansion Area' and (not (string.find(k, 'Expansion Area') or string.find(k, 'EXPANSION_AREA')) or string.find(k, 'Large Expansion')) then
+                elseif type == 'Expansion Area' and (not (string.find(k, 'Expansion Area') or string.find(k, 'EXPANSION_AREA')) or string.find(k, 'Large Expansion') or k ~= 'FLOATING') then
                     continue
                 end
             end
-
+            if not v.FactoryManager then
+                LOG('No factory manager, base is '..k)
+            end
             if v.EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) <= 0 and v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) <= 0 then
                 continue
             end
@@ -5851,7 +5853,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
        --RNGLOG('Type is '..type..' Count is '..count)
         return count
-    end,]]
+    end,
 
     
 

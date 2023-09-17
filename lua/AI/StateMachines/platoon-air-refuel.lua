@@ -156,6 +156,9 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                         refuelComplete = true
                     end
                 end
+                if IsDestroyed(self) then
+                    return
+                end
             end
             self:ChangeState(self.DecideWhatToDo)
             return

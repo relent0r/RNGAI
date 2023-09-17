@@ -1245,11 +1245,18 @@ IntelManager = Class {
                     self.Brain.amanager.Demand.Land.T2.mml = numberRequired
                     --RNGLOG('Directordata Increasing mml production count by '..numberRequired)
                 end
+                --[[
+                -- need to figure out how to get t3 arty to fire correctly
+                if self.Brain.amanager.Demand.Land.T3.arty < numberRequired / 2 then
+                    self.Brain.amanager.Demand.Land.T3.arty = numberRequired / 2
+                    --RNGLOG('Directordata Increasing mml production count by '..numberRequired)
+                end]]
                 self.Brain.amanager.Ratios[factionIndex]['Land']['T1']['arty'] = 20
             end
 
             if not defensiveUnitsFound then
                 self.Brain.amanager.Demand.Land.T2.mml = 0
+                self.Brain.amanager.Demand.Land.T3.arty = 0
                 self.Brain.amanager.Ratios[factionIndex]['Land']['T1']['arty'] = 5
             end
             --RNGLOG('Directordata current mml production count '..self.Brain.amanager.Demand.Land.T2.mml)
@@ -1730,45 +1737,30 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
     
     local VDist2Sq = VDist2Sq
     local markerList = {}
-    local armyStarts = {}
-    local markerTypes = {'Expansion Area', 'Large Expansion Area', 'Blank Marker'}
+    local markerTypes = {'Expansion Area', 'Large Expansion Area', 'Spawn'}
     local MarkerUtils = import("/lua/sim/MarkerUtilities.lua")
-    local massPointValidated = false
-    local myArmy = ScenarioInfo.ArmySetup[aiBrain.Name]
-    --RNGLOG('Run ExpansionWatchTable Config')
-    
-    for i = 1, 16 do
-        local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
-        local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
-        if army and startPos then
-            table.insert(armyStarts, startPos)
-        end
-    end
+    local massPointsNeedsValidation = false
     --RNGLOG(' Army Starts'..repr(armyStarts))
     for c, t in markerTypes do
         local markers = MarkerUtils.GetMarkersByType(t)
         for _, b in markers do
             if b.type == 'Expansion Area' or b.type == 'Large Expansion Area' or b.type == 'Blank Marker' then
                 local startPosUsed = false
-                for _, p in armyStarts do
-                    if p == b.position then
-                        --RNGLOG('Position Taken '..repr(v)..' and '..repr(v.position))
-                        startPosUsed = true
-                        break
-                    end
+                if b.type == 'Blank Marker' and b.IsOccupied then
+                    startPosUsed = true
                 end
                 if not startPosUsed then
                     if b.Extractors then
-                        massPointValidated = true
                         table.insert(markerList, {Name = b.Name, Position = b.position, Type = b.type, TimeStamp = 0, MassPoints = RNGGETN(b.Extractors), Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false, Zone = false, Radar = false})
                     else
+                        massPointsNeedsValidation = true
                         table.insert(markerList, {Name = b.Name, Position = b.position, Type = b.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false, Zone = false, Radar = false})
                     end
                 end
             end
         end
     end
-    if not massPointValidated then
+    if massPointsNeedsValidation then
         markerList = CalculateMassValue(markerList)
     end
     --RNGLOG('Army Setup '..repr(ScenarioInfo.ArmySetup))
@@ -1958,7 +1950,7 @@ function CalculateMassValue(expansionMarkers)
         end        
         -- insert mexcount into marker
         v.MassPoints = masscount
-        --SPEW('* AI-RNG: CreateMassCount: Node: '..v.Type..' - MassSpotsInRange: '..v.MassPoints)
+        SPEW('* AI-RNG: CreateMassCount: Node: '..v.Type..' - MassSpotsInRange: '..v.MassPoints)
     end
     return expansionMarkers
 end
@@ -2025,7 +2017,6 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                 end
             end
         end
-       --RNGLOG('Number of options from first cycle '..table.getn(options))
         local optionCount = 0
         
         for k, withinRadius in options do

@@ -388,14 +388,14 @@ function FatBoyGuardsRNG(self)
     local buildUnits = {'uel0205', 'delk002'}
     local unitToBuild = buildUnits[Random(1, RNGGETN(buildUnits))]
     
-    aiBrain:BuildUnit(experimental, unitToBuild, 1)
+    aiBrain:BuildUnit(experimental.ExternalFactory, unitToBuild, 1)
     --RNGLOG('Guard loop pass')
     coroutine.yield(1)
 
     local unitBeingBuilt = false
     local buildTimeout = 0
     repeat
-        unitBeingBuilt = unitBeingBuilt or experimental.UnitBeingBuilt
+        unitBeingBuilt = unitBeingBuilt or experimental.ExternalFactory.UnitBeingBuilt
         coroutine.yield(20)
         local enemyUnitCount = aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND - categories.SCOUT - categories.ENGINEER - categories.TECH1, experimental:GetPosition(), 30, 'Enemy')
         if enemyUnitCount > 5 then

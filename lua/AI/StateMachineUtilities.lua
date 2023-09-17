@@ -1,4 +1,5 @@
 local NavUtils = import('/lua/sim/NavUtils.lua')
+local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
@@ -860,4 +861,198 @@ MergeWithNearbyPlatoonsRNG = function(self, stateMachine, radius, maxMergeNumber
         IssueClearCommands(GetPlatoonUnits(self))
     end
     return bMergedPlatoons
+end
+
+function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, ignoreNotCompleted)
+    if not position then
+        position = platoon:GetPlatoonPosition()
+    end
+    if not aiBrain or not position or not maxRange then
+        WARN('Missing Required parameters for ExperimentalTargetLocalCheckRNG')
+        return false
+    end
+    if not platoon.MovementLayer then
+        AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
+    end
+    local unitTable = {
+        TotalSuroundingThreat = 0,
+        AirSurfaceThreat = {
+            TotalThreat = 0,
+            Units = {}
+        },
+        RangedUnitThreat = {
+            TotalThreat = 0,
+            Units = {}
+        },
+        CloseUnitThreat = {
+            TotalThreat = 0,
+            Units = {}
+        },
+        NavalUnitThreat = {
+            TotalThreat = 0,
+            Units = {}
+        },
+        DefenseThreat = {
+            TotalThreat = 0,
+            Units = {}
+        },
+        ArtilleryThreat = {
+            TotalThreat = 0,
+            Units = {}
+        },
+    }
+    local targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS - categories.INSIGNIFICANTUNIT, position, maxRange, 'Enemy')
+    for _, unit in targetUnits do
+        if not unit.Dead then
+            if ignoreNotCompleted then
+                if unit:GetFractionComplete() ~= 1 then
+                    continue
+                end
+            end
+            local unitPos = unit:GetPosition()
+            local dx = unitPos[1] - position[1]
+            local dz = unitPos[3] - position[3]
+            local distance = dx * dx + dz * dz
+            local unitThreat = unit.Blueprint.Defense.SurfaceThreatLevel or 0
+            if unit.Blueprint.CategoriesHash.AIR and (unit.Blueprint.CategoriesHash.BOMBER or unit.Blueprint.CategoriesHash.GROUNDATTACK) then
+                unitTable.AirSurfaceThreat.TotalThreat = unitTable.AirSurfaceThreat.TotalThreat + unitThreat
+                unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
+                RNGINSERT(unitTable.AirSurfaceThreat.Units, {Object = unit, Distance = distance})
+            elseif unit.Blueprint.CategoriesHash.LAND and (unit.Blueprint.CategoriesHash.DIRECTFIRE or unit.Blueprint.CategoriesHash.INDIRECTFIRE) then
+                local unitRange = GetUnitMaxWeaponRange(unit)
+                if unitRange > 35 then
+                    unitTable.RangedUnitThreat.TotalThreat = unitTable.RangedUnitThreat.TotalThreat + unitThreat
+                    unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
+                    RNGINSERT(unitTable.RangedUnitThreat.Units, {Object = unit, Distance = distance})
+                else
+                    unitTable.CloseUnitThreat.TotalThreat = unitTable.CloseUnitThreat.TotalThreat + unitThreat
+                    unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
+                    RNGINSERT(unitTable.CloseUnitThreat.Units, {Object = unit, Distance = distance})
+                end
+            elseif unit.Blueprint.CategoriesHash.STRUCTURE and (unit.Blueprint.CategoriesHash.DIRECTFIRE or unit.Blueprint.CategoriesHash.INDIRECTFIRE) then
+                if unit.Blueprint.CategoriesHash.ARTILLERY then
+                    unitTable.ArtilleryThreat.TotalThreat = unitTable.ArtilleryThreat.TotalThreat + unitThreat
+                    unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
+                    RNGINSERT(unitTable.ArtilleryThreat.Units, {Object = unit, Distance = distance})
+                else
+                    unitTable.DefenseThreat.TotalThreat = unitTable.DefenseThreat.TotalThreat + unitThreat
+                    unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
+                    RNGINSERT(unitTable.DefenseThreat.Units, {Object = unit, Distance = distance})
+                end
+            elseif unit.Blueprint.CategoriesHash.NAVAL and (unit.Blueprint.CategoriesHash.DIRECTFIRE or unit.Blueprint.CategoriesHash.INDIRECTFIRE) then
+                local unitRange = GetUnitMaxWeaponRange(unit)
+                if unitRange > 35 or distance < 1225 then
+                    unitTable.NavalUnitThreat.TotalThreat = unitTable.NavalUnitThreat.TotalThreat + unitThreat
+                    unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
+                    RNGINSERT(unitTable.NavalUnitThreat.Units, {Object = unit, Distance = distance})
+                end
+            end
+        end
+    end
+    return unitTable
+end
+
+FindExperimentalTargetRNG = function(aiBrain, platoon, experimentalPosition)
+    local im = IntelManagerRNG.GetIntelManager(aiBrain)
+    if not im.MapIntelStats.ScoutLocationsBuilt then
+        -- No target
+        return
+    end
+
+    local bestUnit = false
+    local bestBase = false
+    -- If we haven't found a target check the main bases radius for any units, 
+    -- Check if there are any high priority units from the main base position. But only if we came online around that position.
+    if experimentalPosition and VDist3Sq(experimentalPosition, aiBrain.BuilderManagers['MAIN'].Position) < 22500 then
+        if not bestUnit then
+            bestUnit = RUtils.CheckHighPriorityTarget(aiBrain, nil, platoon)
+            if bestUnit and not bestUnit.Dead then
+                bestBase = {}
+                bestBase.Position = bestUnit:GetPosition()
+                return bestUnit, bestBase
+            end
+        end
+    end
+
+    -- First we look for an acu snipe mission.
+    -- Needs more logic for ACU's that are in bases or firebases.
+    for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
+        if v.LAND.GameTime and v.LAND.GameTime + 650 > GetGameTimeSeconds() then
+            --RNGLOG('ACU Table for index '..k..' table '..repr(aiBrain.EnemyIntel.ACU))
+            if RUtils.HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
+                if not RUtils.PositionInWater(aiBrain.EnemyIntel.ACU[k].Position) then
+                    bestUnit = aiBrain.EnemyIntel.ACU[k].Unit
+                    --RNGLOG('Experimental strike : ACU Target mission found and target set')
+                end
+                break
+            else
+                --RNGLOG('Experimental strike : ACU Target mission found but target not visible')
+            end
+        end
+    end
+    if bestUnit and not bestUnit.Dead then
+        bestBase = {}
+        bestBase.Position = bestUnit:GetPosition()
+        return bestUnit, bestBase
+    end
+
+    local enemyBases = aiBrain.EnemyIntel.EnemyThreatLocations
+    
+    local mostUnits = 0
+    local highestMassValue = 0
+    -- Now we look at bases of any sort and find the highest mass worth then selecting the most valuable unit in that base.
+        
+    for _, x in enemyBases do
+        for _, z in x do
+            if z.StructuresNotMex then
+                --RNGLOG('Base Position with '..base.Threat..' threat')
+                local unitsAtBase = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, z.Position, 100, 'Enemy')
+                local massValue = 0
+                local highestValueUnit = 0
+                local notDeadUnit = false
+
+                for _, unit in unitsAtBase do
+                    if not unit.Dead then
+                        if unit.Blueprint.Economy.BuildCostMass then
+                            if unit.Blueprint.CategoriesHash.DEFENSE then
+                                massValue = massValue + (unit.Blueprint.Economy.BuildCostMass * 1.5)
+                            elseif unit.Blueprint.CategoriesHash.TECH3 and unit.Blueprint.CategoriesHash.ANTIMISSILE and unit.Blueprint.CategoriesHash.SILO then
+                                massValue = massValue + (unit.Blueprint.Economy.BuildCostMass * 2)
+                            else
+                                massValue = massValue + unit.Blueprint.Economy.BuildCostMass
+                            end
+                        end
+                        if massValue > highestValueUnit then
+                            highestValueUnit = massValue
+                            notDeadUnit = unit
+                        end
+                        if not notDeadUnit then
+                            notDeadUnit = unit
+                        end
+                    end
+                end
+
+                if massValue > 0 then
+                    if massValue > highestMassValue then
+                        bestBase = z
+                        highestMassValue = massValue
+                        bestUnit = notDeadUnit
+                    elseif massValue == highestMassValue then
+                        local dist1 = VDist2Sq(experimentalPosition[1], experimentalPosition[3], z.Position[1], z.Position[3])
+                        local dist2 = VDist2Sq(experimentalPosition[1], experimentalPosition[3], bestBase.Position[1], bestBase.Position[3])
+                        if dist1 < dist2 then
+                            bestBase = z
+                            bestUnit = notDeadUnit
+                        end
+                    end
+                end
+            end
+        end
+    end
+    if bestBase and bestUnit then
+        --RNGLOG('Best base '..bestBase.Threat..' threat '..' at '..repr(bestBase.Position))
+        return bestUnit, bestBase
+    end
+
+    return false, false
 end

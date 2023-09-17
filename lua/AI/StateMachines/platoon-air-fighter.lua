@@ -217,6 +217,9 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 local dx = platPos[1] - movePosition[1]
                 local dz = platPos[3] - movePosition[3]
                 local posDist = dx * dx + dz * dz
+                if lastDist and posDist then
+                    LOG('lastDist '..lastDist..' posDist '..posDist)
+                end
 
                 if posDist < 2025 then
                     if self.BuilderData.HoldingPosition then
@@ -238,15 +241,15 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
-                    if not lastDist or posDist == lastDist then
-                        timeout = timeout + 1
-                        lastDist = posDist
-                        if timeout > 15 then
-                            LOG('Fighter platoon movement loop just broke')
-                            break
-                        end
+                end
+                if not lastDist or lastDist == posDist then
+                    timeout = timeout + 1
+                    if timeout > 15 then
+                        LOG('Fighter platoon movement loop just broke')
+                        break
                     end
                 end
+                lastDist = posDist
             end
             coroutine.yield(30)
             self:ChangeState(self.DecideWhatToDo)

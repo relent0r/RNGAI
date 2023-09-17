@@ -169,16 +169,16 @@ function LessThanLandExpansions(aiBrain, expansionCount)
         if not v.BaseType then
             continue
         end
-        if v.BaseType ~= 'MAIN' and v.BaseType ~= 'Naval Area' then
+        if v.BaseType ~= 'MAIN' and v.BaseType ~= 'Naval Area' and v.BaseType ~= 'FLOATING' and not string.find(v.BaseType, 'DYNAMIC_') then
             count = count + 1
         end
         if count >= expansionCount then
-            --RNGLOG('We have 1 expansion called '..v.BaseType)
+            RNGLOG('We have 1 expansion called '..v.BaseType)
             return false
         end
         --RNGLOG('Expansion Base Type is '..v.BaseType)
     end
-    --RNGLOG('We have no expansions')
+    RNGLOG('We have no expansions count '..count..' expansion max '..expansionCount)
     return true
 end
 
@@ -353,10 +353,10 @@ end
 function StartLocationNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
     local pos, name = RUtils.AIFindStartLocationNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
-        --RNGLOG('StartLocationNeedsEngineer is True at pos '..repr(pos)..' for radius '..locationRadius)
+        RNGLOG('StartLocationNeedsEngineer is True at pos '..repr(pos)..' for radius '..locationRadius)
         return true
     end
-    --RNGLOG('StartLocationNeedsEngineer is False for radius '..locationRadius)
+    RNGLOG('StartLocationNeedsEngineer is False for radius '..locationRadius)
     return false
 end
 
@@ -1416,6 +1416,23 @@ function MinimumFactoryCheckRNG(aiBrain, locationType, structureType)
     end
     return true
 end
+
+function ExpansionBaseCheckRNG(aiBrain)
+    -- Removed automatic setting of Land-Expasions-allowed. We have a Game-Option for this.
+    local checkNum = tonumber(ScenarioInfo.Options.LandExpansionsAllowed) or 3
+    return ExpansionBaseCountRNG(aiBrain, '<', checkNum)
+end
+
+function ExpansionBaseCountRNG(aiBrain, compareType, checkNum)
+    local expBaseCount = aiBrain:GetManagerCount('Start Location')
+    expBaseCount = expBaseCount + aiBrain:GetManagerCount('Expansion Area')
+    LOG('*AI DEBUG: Expansion base count is ' .. expBaseCount .. ' checkNum is ' .. checkNum)
+    if expBaseCount > checkNum + 1 then
+         LOG('*AI DEBUG: Expansion base count is true ' .. expBaseCount .. ' checkNum is ' .. checkNum)
+    end
+    return CompareBody(expBaseCount, checkNum, compareType)
+end
+
 --[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.

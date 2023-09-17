@@ -67,6 +67,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             else
                 self.LocationType = 'MAIN'
             end
+            self.BaseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
+            self.BaseMilitaryArea = aiBrain.OperatingAreas['BaseMilitaryArea']
+            self.BaseEnemyArea = aiBrain.OperatingAreas['BaseEnemyArea']
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             self.MaxPlatoonWeaponRange = false
             self.ScoutUnit = false
@@ -75,8 +78,69 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
             RUtils.ConfigurePlatoon(self)
             StartZoneControlThreads(aiBrain, self)
+            if self.PlatoonData.TargetSearchPriorities then
+                --RNGLOG('TargetSearch present for '..self.BuilderName)
+                for k,v in self.PlatoonData.TargetSearchPriorities do
+                    RNGINSERT(self.atkPri, v)
+                end
+            else
+                if self.PlatoonData.PrioritizedCategories then
+                    for k,v in self.PlatoonData.PrioritizedCategories do
+                        RNGINSERT(self.atkPri, v)
+                    end
+                end
+            end
+            RNGINSERT(self.atkPri, categories.ALLUNITS)
             self:ChangeState(self.DecideWhatToDo)
             return
+        end,
+    },
+
+    DecideWhatToDo = State {
+
+        StateName = 'DecideWhatToDo',
+
+        --- Initial state of any state machine
+        ---@param self AIPlatoonBehavior
+        Main = function(self)
+            if IsDestroyed(self) then
+                return
+            end
+            local aiBrain = self:GetBrain()
+            local target
+            if not target then
+                target = RUtils.CheckACUSnipe(aiBrain, 'Land')
+            end
+            if not target then
+                target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
+            end
+            if not target or target.Dead then
+                if self.PlatoonData.RangedAttack and aiBrain.EnemyIntel.EnemyFireBaseDetected then
+                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, false, self, 'Attack', self.BaseEnemyArea, {categories.STRUCTURE * categories.DEFENSE, categories.STRUCTURE})
+                else
+                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, false, self, 'Attack', self.BaseEnemyArea, self.atkPri)
+                end
+            end
+            if target and not IsDestroyed(target) then
+                self.BuilderData = {
+                    AttackTarget = target,
+                    Position = target:GetPosition()
+                }
+                self:ChangeState(self.Navigating)
+                return
+            end
+
+        end,
+    },
+
+    Navigating = State {
+
+        StateName = "Navigating",
+
+        --- The platoon retreats from a threat
+        ---@param self AIPlatoonLandCombatBehavior
+        Main = function(self)
+
         end,
     },
 }
@@ -121,13 +185,13 @@ end
 ---@param data { Behavior: 'AIBehaviorZoneControl' }
 ---@param units Unit[]
 StartZoneControlThreads = function(brain, platoon)
-    brain:ForkThread(ZoneControlPositionThread, platoon)
+    brain:ForkThread(AssaultThread, platoon)
     brain:ForkThread(StateUtils.ZoneUpdate, platoon)
 end
 
 ---@param aiBrain AIBrain
 ---@param platoon AIPlatoon
-ZoneControlPositionThread = function(aiBrain, platoon)
+AssaultPositionThread = function(aiBrain, platoon)
     while aiBrain:PlatoonExists(platoon) do
         local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, platoon)
         if platBiasUnit and not platBiasUnit.Dead then
@@ -136,5 +200,12 @@ ZoneControlPositionThread = function(aiBrain, platoon)
             platoon.Pos=GetPlatoonPosition(platoon)
         end
         coroutine.yield(5)
+    end
+end
+
+AssaultCombatThread = function (aiBrain, platoon)
+    while aiBrain:PlatoonExists(platoon) do
+        platoon.CurrentPlatoonThreat = platoon:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+        coroutine.yield(35)
     end
 end
