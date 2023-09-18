@@ -42,7 +42,7 @@ local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 ---@field ThreatToEvade Vector | nil
 ---@field LocationToRaid Vector | nil
 ---@field OpportunityToRaid Vector | nil
-AIPlatoonBehavior = Class(AIPlatoon) {
+AIPlatoonBehavior = Class(AIPlatoonRNG) {
 
     PlatoonName = 'Behavior',
 
@@ -53,16 +53,9 @@ AIPlatoonBehavior = Class(AIPlatoon) {
         --- Initial state of any state machine
         ---@param self AIPlatoonBehavior
         Main = function(self)
-
-            if mainWeapon.BallisticArc == 'RULEUBA_LowArc' then
-                unit.WeaponArc = 'low'
-            elseif mainWeapon.BallisticArc == 'RULEUBA_HighArc' then
-                unit.WeaponArc = 'high'
-            else
-                unit.WeaponArc = 'none'
-            end
+            local aiBrain = self:GetBrain()
             if not self.MovementLayer then
-                AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
+                AIAttackUtils.GetMostRestrictiveLayerRNG(self)
             end
             self.LocationType = self.PlatoonData.LocationType or 'MAIN'
             self.ExperimentalUnit = self:GetSquadUnits('Attack')[1]
@@ -72,6 +65,7 @@ AIPlatoonBehavior = Class(AIPlatoon) {
                 WARN('No Experimental in FatBoy state machine, exiting')
                 return
             end
+            self.UnitRatios = {}
             StartFatBoyThreads(aiBrain, self)
 
         end,
@@ -87,6 +81,7 @@ AIPlatoonBehavior = Class(AIPlatoon) {
             if IsDestroyed(self.ExperimentalUnit) then
                 return
             end
+            local aiBrain = self:GetBrain()
             local threatTable = self.EnemyThreatTable
             if threatTable then
                 WARN('FatBoy has no enemy threat table, attempting to wait')
@@ -337,35 +332,37 @@ GuardThread = function(aiBrain, platoon)
         local currentShieldCount = 0
         local currentLandCount = 0
         local currentLandThreat = 0
-        local guardUnits = platoon:GetSquadUnits('Guard')
-        if IsDestroyed(experimental) then
-            -- Return Home
-            IssueClearCommands(guardUnits)
-            local plat = aiBrain:MakePlatoon('', '')
-            aiBrain:AssignUnitsToPlatoon(plat, guardUnits, 'attack', 'None')
-            import("/mods/rngai/lua/ai/statemachines/platoon-land-zonecontrol.lua").AssignToUnitsMachine({ {ZoneType = 'control'}, LocationType = platoon.LocationType}, plat, {unit})
+        local guardUnits = platoon:GetSquadUnits('guard')
+        if guardUnits then
+            if IsDestroyed(experimental) then
+                -- Return Home
+                IssueClearCommands(guardUnits)
+                local plat = aiBrain:MakePlatoon('', '')
+                aiBrain:AssignUnitsToPlatoon(plat, guardUnits, 'attack', 'None')
+                import("/mods/rngai/lua/ai/statemachines/platoon-land-zonecontrol.lua").AssignToUnitsMachine({ {ZoneType = 'control'}, LocationType = platoon.LocationType}, plat, {unit})
 
-        end
-        local experimentalPos = experimental:GetPosition()
-        for _, v in guardUnits do
-            if v and not v.Dead then
-                if v.Blueprint.CategoriesHash.ANTIAIR then
-                    currentAntiAirThreat = currentAntiAirThreat + v.Blueprint.Defense.AirThreatLevel
-                    currentAntiAirCount = currentAntiAirCount + 1
-                elseif v.Blueprint.CategoriesHash.SHIELD and v.Blueprint.CategoriesHash.DEFENSE and v.Blueprint.CategoriesHash.MOBILE then
-                    currentShieldCount = currentShieldCount + 1
-                elseif v.Blueprint.CategoriesHash.DIRECTFIRE and v.Blueprint.CategoriesHash.LAND then
-                    currentLandThreat = currentLandThreat + v.Blueprint.CategoriesHash.SurfaceThreatLevel
-                    currentLandCount = currentLandCount + 1
-                end
             end
-            local unitPos = v:GetPosition()
-            local dx = unitPos[1] - experimentalPos[1]
-            local dz = unitPos[3] - experimentalPos[3]
-            if dx * dx + dz * dz > guardCutOff then
-                IssueClearCommands(v)
-                IssueMove({v}, experimental)
-                IssueGuard({v}, experimental)
+            local experimentalPos = experimental:GetPosition()
+            for _, v in guardUnits do
+                if v and not v.Dead then
+                    if v.Blueprint.CategoriesHash.ANTIAIR then
+                        currentAntiAirThreat = currentAntiAirThreat + v.Blueprint.Defense.AirThreatLevel
+                        currentAntiAirCount = currentAntiAirCount + 1
+                    elseif v.Blueprint.CategoriesHash.SHIELD and v.Blueprint.CategoriesHash.DEFENSE and v.Blueprint.CategoriesHash.MOBILE then
+                        currentShieldCount = currentShieldCount + 1
+                    elseif v.Blueprint.CategoriesHash.DIRECTFIRE and v.Blueprint.CategoriesHash.LAND then
+                        currentLandThreat = currentLandThreat + v.Blueprint.CategoriesHash.SurfaceThreatLevel
+                        currentLandCount = currentLandCount + 1
+                    end
+                end
+                local unitPos = v:GetPosition()
+                local dx = unitPos[1] - experimentalPos[1]
+                local dz = unitPos[3] - experimentalPos[3]
+                if dx * dx + dz * dz > guardCutOff then
+                    IssueClearCommands(v)
+                    IssueMove({v}, experimental)
+                    IssueGuard({v}, experimental)
+                end
             end
         end
         if not platoon.BuildThread then
@@ -379,8 +376,9 @@ GuardThread = function(aiBrain, platoon)
     end
 end
 
-ThreatThread = function (aiBrain, platoon)
+ThreatThread = function(aiBrain, platoon)
     local imapRings = aiBrain.BrainIntel.IMAPConfig.Rings
+    local shieldEnabled = true
     while aiBrain:PlatoonExists(platoon) do
         local experimental = platoon.ExperimentalUnit
         if IsDestroyed(experimental) then
@@ -388,10 +386,17 @@ ThreatThread = function (aiBrain, platoon)
         end
         local experimentalPos = experimental:GetPosition()
         platoon.CurrentPlatoonSurfaceThreat = platoon:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
-        platoon.CurrentPlatoonAirThreat = platoon:CalculatePlatoonThreat('Air', categories.AntiAir)
+        platoon.CurrentPlatoonAirThreat = platoon:CalculatePlatoonThreat('Air', categories.ANTIAIR)
         local imapThreat = GetThreatAtPosition(aiBrain, experimentalPos, imapRings, true, 'AntiSurface')
         if imapThreat > 0 then
             platoon.EnemyThreatTable = StateUtils.ExperimentalTargetLocalCheckRNG(aiBrain, experimentalPos, platoon, 135, false)
+        end
+        if shieldEnabled and experimental.MyShield.DepletedByEnergy and platoon.EnemyThreatTable.TotalSuroundingThreat < 1 and aiBrain:GetEconomyStoredRatio( 'ENERGY') < 0.20 then
+            experimental:DisableShield()
+            shieldEnabled = false
+        elseif not shieldEnabled and not experimental:ShieldIsOn() and aiBrain:GetEconomyStoredRatio( 'ENERGY') > 0.50 then
+            experimental:EnableShield()
+            shieldEnabled = true
         end
         coroutine.yield(35)
     end

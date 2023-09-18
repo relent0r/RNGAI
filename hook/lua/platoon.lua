@@ -9754,7 +9754,8 @@ Platoon = Class(RNGAIPlatoonClass) {
         --RNGLOG('Starting experimental behaviour...' .. ID)
         if ID == 'uel0401' then
             --RNGLOG('FATBOY Behavior')
-            return behaviors.FatBoyBehaviorRNG(self)
+            self.PlatoonData.StateMachine = 'FatBoy'
+            return self.StateMachineAIRNG(self)
         elseif ID == 'uaa0310' then
             --RNGLOG('CZAR Behavior')
             return behaviors.CzarBehaviorRNG(self)
@@ -11673,6 +11674,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             import("/mods/rngai/lua/ai/statemachines/platoon-land-zonecontrol.lua").AssignToUnitsMachine({ZoneType = self.PlatoonData.ZoneType}, self, self:GetPlatoonUnits())
         elseif machineType == 'Fighter' then
             import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+        elseif machineType == 'FatBoy' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-experimental-fatboy.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         end
         WaitTicks(50)
     end,
