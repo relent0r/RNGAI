@@ -306,15 +306,15 @@ GuardThread = function(aiBrain, platoon)
     local function BuildUnit(aiBrain, experimental, unitToBuild)
         local factory = experimental.ExternalFactory
         local unitBeingBuilt
-        if not experimental.ExternalFactory.UnitBeingBuilt and not experimental.ExternalFactory:IsUnitState('Building') then
-            aiBrain:BuildUnit(experimental.ExternalFactory, unitToBuild, 1)
+        if not factory.UnitBeingBuilt and not factory:IsUnitState('Building') then
+            aiBrain:BuildUnit(factory, unitToBuild, 1)
             coroutine.yield(5)
-            unitBeingBuilt = experimental.ExternalFactory.UnitBeingBuilt
-            while not experimental.Dead and not experimental.ExternalFactory:IsIdleState() do
+            unitBeingBuilt = factory.UnitBeingBuilt
+            while not experimental.Dead and not factory:IsIdleState() do
                 coroutine.yield(25)
             end
-            if not unitBeingBuilt.Dead and unitBeingBuilt:GetFractionComplete() >= 1.0 then
-                IssueGuard(unitBeingBuilt, experimental)
+            if not unitBeingBuilt.Dead and unitBeingBuilt:GetFractionComplete() == 1.0 then
+                IssueGuard({unitBeingBuilt}, experimental)
                 aiBrain:AssignUnitsToPlatoon(experimental.PlatoonHandle, {unitBeingBuilt}, 'guard', 'none')
             end
             experimental.PlatoonHandle.BuildThread = nil
@@ -367,7 +367,7 @@ GuardThread = function(aiBrain, platoon)
         end
         if not platoon.BuildThread then
             if currentAntiAirCount < 3 then
-                platoon.BuildThread = platoon:ForkThread(BuildUnit, aiBrain, experimental, UnitTable['T2LandAA1'])
+                platoon.BuildThread = aiBrain:ForkThread(BuildUnit, experimental, UnitTable['T2LandAA1'])
             end
         end
         platoon.CurrentAntiAirThreat = currentAntiAirThreat
