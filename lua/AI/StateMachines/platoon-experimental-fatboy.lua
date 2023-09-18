@@ -37,21 +37,21 @@ local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 ]]
 
 
----@class AIPlatoonBehavior : AIPlatoon
+---@class AIExperimentalFatBoyBehavior : AIPlatoon
 ---@field RetreatCount number 
 ---@field ThreatToEvade Vector | nil
 ---@field LocationToRaid Vector | nil
 ---@field OpportunityToRaid Vector | nil
-AIPlatoonBehavior = Class(AIPlatoonRNG) {
+AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
 
-    PlatoonName = 'Behavior',
+    PlatoonName = 'ExperimentalFatBoyBehavior',
 
     Start = State {
 
         StateName = 'Start',
 
         --- Initial state of any state machine
-        ---@param self AIPlatoonBehavior
+        ---@param self AIExperimentalFatBoyBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
             if not self.MovementLayer then
@@ -67,7 +67,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             end
             self.UnitRatios = {}
             StartFatBoyThreads(aiBrain, self)
-
+            self:ChangeState(self.DecideWhatToDo)
+            return
         end,
     },
 
@@ -257,7 +258,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/navutils.lua").Generate()
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
-        setmetatable(platoon, AIPlatoonBehavior)
+        setmetatable(platoon, AIExperimentalFatBoyBehavior)
         local platoonUnits = platoon:GetPlatoonUnits()
         if platoonUnits then
             for _, unit in platoonUnits do
