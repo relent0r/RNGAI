@@ -9,6 +9,7 @@ local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
     -- Note the self.EnemyThreatTable has the following design.
     Used to quickly understand local threats (up to T2 Static arty in range) and contains the units that it can locally target
     local unitTable = {
+        TotalSuroundingThreat = 0,
         AirSurfaceThreat = {
             TotalThreat = 0,
             Units = {}
@@ -84,7 +85,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
             end
             local aiBrain = self:GetBrain()
             local threatTable = self.EnemyThreatTable
-            if threatTable then
+            if not threatTable then
                 WARN('FatBoy has no enemy threat table, attempting to wait')
                 coroutine.yield(50)
                 self:ChangeState(self.DecideWhatToDo)
