@@ -365,7 +365,7 @@ GuardThread = function(aiBrain, platoon)
                 end
             end
         end
-        if not platoon.BuildThread then
+        if not platoon.BuildThread and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.7 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 0.8 then
             if currentAntiAirCount < 3 then
                 platoon.BuildThread = aiBrain:ForkThread(BuildUnit, experimental, UnitTable['T2LandAA1'])
             end
