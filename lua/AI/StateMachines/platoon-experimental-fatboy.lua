@@ -3,6 +3,7 @@ local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 
 AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
+local NavUtils = import("/lua/sim/navutils.lua")
 local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 
 --[[
@@ -61,7 +62,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
             self.LocationType = self.PlatoonData.LocationType or 'MAIN'
             self.ExperimentalUnit = self:GetSquadUnits('Attack')[1]
             if self.ExperimentalUnit and not self.ExperimentalUnit.Dead then
-                self.MaxPlatoonWeaponRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit)
+                self.MaxPlatoonWeaponRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Indirect Fire')
             else
                 WARN('No Experimental in FatBoy state machine, exiting')
                 return
@@ -85,134 +86,131 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
             end
             local aiBrain = self:GetBrain()
             local threatTable = self.EnemyThreatTable
-            if not threatTable then
-                WARN('FatBoy has no enemy threat table, attempting to wait')
-                coroutine.yield(50)
-                self:ChangeState(self.DecideWhatToDo)
-                return
-            end
             local experimentalPosition = self.ExperimentalUnit:GetPosition()
-            if self.ExperimentalUnit.MyShield then
-                if self.ExperimentalUnit.MyShield.DepletedByEnergy or self.ExperimentalUnit.MyShield.DepletedByDamage and threatTable.TotalSuroundingThreat > 0 then
-                    if threatTable.AirSurfaceThreat.TotalThreat > 10 and self.CurrentPlatoonAirThreat < 20 and not self.HoldPosition then
-                        self.BuilderData = {
-                            Retreat = true,
-                            Reason = 'NoShield'
-                        }
-                        self:ChangeState(self.Retreating)
-                        return
-                    end
-                    if (threatTable.ArtilleryThreat.TotalThreat > 0 or threatTable.RangedUnitThreat.TotalThreat > 0 
-                    or threatTable.CloseUnitThreat.TotalThreat > 0 or threatTable.NavalUnitThreat.TotalThreat > 0) and not self.HoldPosition then
-                        self.BuilderData = {
-                            Retreat = true,
-                            Reason = 'NoShield'
-                        }
-                        self:ChangeState(self.Retreating)
-                        return
-                    end
-                end
-            end
             local target
-            if threatTable.TotalSuroundingThreat > 15 then
-                if threatTable.AirSurfaceThreat.TotalThreat > 10 and self.CurrentAntiAirThreat < 10 and not self.HoldPosition then
-                    local localFriendlyAirThreat = self:CalculatePlatoonThreatAroundPosition('Air', categories.ANTIAIR, experimentalPosition, 35)
-                    if localFriendlyAirThreat < 10 then
-                        self.BuilderData = {
-                            Retreat = true,
-                            Reason = 'AirThreat'
-                        }
-                        self:ChangeState(self.Retreating)
-                        return
-                    end
-                end
-                local closestUnit
-                local closestUnitDistance
-                if threatTable.RangedUnitThreat.TotalThreat > 0 or threatTable.ArtilleryThreat.TotalThreat > 0 then
-                    local overRangedCount = 0
-                    for _, enemyUnit in threatTable.ArtilleryThreat.Units do
-                        if not IsDestroyed(enemyUnit) then
-                            local unitRange = GetUnitMaxWeaponRange(enemyUnit)
-                            if unitRange > self.MaxPlatoonWeaponRange then
-                                overRangedCount = overRangedCount + 1
-                            end
-                            if overRangedCount > 1 then
-                                self.BuilderData = {
-                                    Retreat = true,
-                                    Reason = 'ArtilleryThreat',
-                                    Target = enemyUnit
-                                }
-                                self:ChangeState(self.Retreating)
-                            end
-                            if not closestUnit or enemyUnit.Distance < closestUnitDistance then
-                                closestUnit = enemyUnit
-                                closestUnitDistance = enemyUnit.Distance
-                            end
+            if threatTable then
+                if self.ExperimentalUnit.MyShield then
+                    if self.ExperimentalUnit.MyShield.DepletedByEnergy or self.ExperimentalUnit.MyShield.DepletedByDamage and threatTable.TotalSuroundingThreat > 0 then
+                        if threatTable.AirSurfaceThreat.TotalThreat > 10 and self.CurrentPlatoonAirThreat < 20 and not self.HoldPosition then
+                            self.BuilderData = {
+                                Retreat = true,
+                                Reason = 'NoShield'
+                            }
+                            self:ChangeState(self.Retreating)
+                            return
                         end
-                    end
-                    for _, enemyUnit in threatTable.RangedUnitThreat.Units do
-                        if not IsDestroyed(enemyUnit) then
-                            local unitRange = GetUnitMaxWeaponRange(enemyUnit)
-                            if unitRange > self.MaxPlatoonWeaponRange then
-                                overRangedCount = overRangedCount + 1
-                            end
-                            if overRangedCount > 3 then
-                                self.BuilderData = {
-                                    Retreat = true,
-                                    Reason = 'ArtilleryThreat',
-                                    Target = enemyUnit
-                                }
-                                self:ChangeState(self.Retreating)
-                            end
-                            if not closestUnit or enemyUnit.Distance < closestUnitDistance then
-                                closestUnit = enemyUnit
-                                closestUnitDistance = enemyUnit.Distance
-                            end
+                        if (threatTable.ArtilleryThreat.TotalThreat > 0 or threatTable.RangedUnitThreat.TotalThreat > 0 
+                        or threatTable.CloseUnitThreat.TotalThreat > 0 or threatTable.NavalUnitThreat.TotalThreat > 0) and not self.HoldPosition then
+                            self.BuilderData = {
+                                Retreat = true,
+                                Reason = 'NoShield'
+                            }
+                            self:ChangeState(self.Retreating)
+                            return
                         end
                     end
                 end
-                if threatTable.DefenseThreat.TotalThreat > 0 or threatTable.CloseUnitThreat.TotalThreat > 15 then
-                    for _, enemyUnit in threatTable.DefenseThreat.Units do
-                        if not IsDestroyed(enemyUnit) then
-                            if not closestUnit or enemyUnit.Distance < closestUnitDistance then
-                                closestUnit = enemyUnit
-                                closestUnitDistance = enemyUnit.Distance
+            
+                if threatTable.TotalSuroundingThreat > 15 then
+                    if threatTable.AirSurfaceThreat.TotalThreat > 10 and self.CurrentAntiAirThreat < 10 and not self.HoldPosition then
+                        local localFriendlyAirThreat = self:CalculatePlatoonThreatAroundPosition('Air', categories.ANTIAIR, experimentalPosition, 35)
+                        if localFriendlyAirThreat < 10 then
+                            self.BuilderData = {
+                                Retreat = true,
+                                Reason = 'AirThreat'
+                            }
+                            self:ChangeState(self.Retreating)
+                            return
+                        end
+                    end
+                    local closestUnit
+                    local closestUnitDistance
+                    if threatTable.RangedUnitThreat.TotalThreat > 0 or threatTable.ArtilleryThreat.TotalThreat > 0 then
+                        local overRangedCount = 0
+                        for _, enemyUnit in threatTable.ArtilleryThreat.Units do
+                            if not IsDestroyed(enemyUnit) then
+                                local unitRange = GetUnitMaxWeaponRange(enemyUnit)
+                                if unitRange > self.MaxPlatoonWeaponRange then
+                                    overRangedCount = overRangedCount + 1
+                                end
+                                if overRangedCount > 1 then
+                                    self.BuilderData = {
+                                        Retreat = true,
+                                        Reason = 'ArtilleryThreat',
+                                        Target = enemyUnit
+                                    }
+                                    self:ChangeState(self.Retreating)
+                                end
+                                if not closestUnit or enemyUnit.Distance < closestUnitDistance then
+                                    closestUnit = enemyUnit
+                                    closestUnitDistance = enemyUnit.Distance
+                                end
+                            end
+                        end
+                        for _, enemyUnit in threatTable.RangedUnitThreat.Units do
+                            if not IsDestroyed(enemyUnit) then
+                                local unitRange = GetUnitMaxWeaponRange(enemyUnit)
+                                if unitRange > self.MaxPlatoonWeaponRange then
+                                    overRangedCount = overRangedCount + 1
+                                end
+                                if overRangedCount > 3 then
+                                    self.BuilderData = {
+                                        Retreat = true,
+                                        Reason = 'ArtilleryThreat',
+                                        Target = enemyUnit
+                                    }
+                                    self:ChangeState(self.Retreating)
+                                end
+                                if not closestUnit or enemyUnit.Distance < closestUnitDistance then
+                                    closestUnit = enemyUnit
+                                    closestUnitDistance = enemyUnit.Distance
+                                end
                             end
                         end
                     end
-                    for _, enemyUnit in threatTable.CloseUnitThreat.Units do
-                        if not IsDestroyed(enemyUnit) then
-                            if not closestUnit or enemyUnit.Distance < closestUnitDistance then
-                                closestUnit = enemyUnit
-                                closestUnitDistance = enemyUnit.Distance
+                    if threatTable.DefenseThreat.TotalThreat > 0 or threatTable.CloseUnitThreat.TotalThreat > 15 then
+                        for _, enemyUnit in threatTable.DefenseThreat.Units do
+                            if not IsDestroyed(enemyUnit) then
+                                if not closestUnit or enemyUnit.Distance < closestUnitDistance then
+                                    closestUnit = enemyUnit
+                                    closestUnitDistance = enemyUnit.Distance
+                                end
+                            end
+                        end
+                        for _, enemyUnit in threatTable.CloseUnitThreat.Units do
+                            if not IsDestroyed(enemyUnit) then
+                                if not closestUnit or enemyUnit.Distance < closestUnitDistance then
+                                    closestUnit = enemyUnit
+                                    closestUnitDistance = enemyUnit.Distance
+                                end
                             end
                         end
                     end
-                end
-                if threatTable.NavalUnitThreat.TotalThreat > 0 then
-                    for _, enemyUnit in threatTable.NavalUnitThreat.Units do
-                        if not IsDestroyed(enemyUnit) then
-                            local unitRange = GetUnitMaxWeaponRange(enemyUnit)
-                            if unitRange > self.MaxPlatoonWeaponRange then
-                                overRangedCount = overRangedCount + 1
-                            end
-                            if overRangedCount > 0 then
-                                self.BuilderData = {
-                                    Retreat = true,
-                                    Reason = 'NavalThreat',
-                                    Target = enemyUnit
-                                }
-                                self:ChangeState(self.Retreating)
-                            end
-                            if not closestUnit or enemyUnit.Distance < closestUnitDistance then
-                                closestUnit = enemyUnit
-                                closestUnitDistance = enemyUnit.Distance
+                    if threatTable.NavalUnitThreat.TotalThreat > 0 then
+                        for _, enemyUnit in threatTable.NavalUnitThreat.Units do
+                            if not IsDestroyed(enemyUnit) then
+                                local unitRange = GetUnitMaxWeaponRange(enemyUnit)
+                                if unitRange > self.MaxPlatoonWeaponRange then
+                                    overRangedCount = overRangedCount + 1
+                                end
+                                if overRangedCount > 0 then
+                                    self.BuilderData = {
+                                        Retreat = true,
+                                        Reason = 'NavalThreat',
+                                        Target = enemyUnit
+                                    }
+                                    self:ChangeState(self.Retreating)
+                                end
+                                if not closestUnit or enemyUnit.Distance < closestUnitDistance then
+                                    closestUnit = enemyUnit
+                                    closestUnitDistance = enemyUnit.Distance
+                                end
                             end
                         end
                     end
-                end
-                if closestUnit and not IsDestroyed(closestUnit) then
-                    target = closestUnit
+                    if closestUnit and not IsDestroyed(closestUnit) then
+                        target = closestUnit
+                    end
                 end
             end
             if target and not IsDestroyed(target) then
@@ -245,7 +243,89 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
+    },
 
+    Navigating = State {
+
+        StateName = "Navigating",
+
+        --- The platoon retreats from a threat
+        ---@param self AIPlatoonLandCombatBehavior
+        Main = function(self)
+            local aiBrain = self:GetBrain()
+            local builderData = self.BuilderData
+            local destination = builderData.Position
+            local navigateDistanceCutOff = builderData.CutOff or 3600
+            if not destination then
+                --LOG('no destination BuilderData '..repr(builderData))
+                self:LogWarning(string.format('no destination to navigate to'))
+                coroutine.yield(10)
+                --LOG('No destiantion break out of Navigating')
+                self:ChangeState(self.DecideWhatToDo)
+                return
+            end
+            local waypoint, length
+            local endPoint = false
+            IssueClearCommands({self.ExperimentalUnit})
+
+            local cache = { 0, 0, 0 }
+
+            while not IsDestroyed(self.ExperimentalUnit) do
+                local origin = self.ExperimentalUnit:GetPosition()
+                waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 50)
+                if StateUtils.PositionInWater(origin) then
+                    self.VentGuardPlatoon = true
+                elseif self.VentGuardPlatoon then
+                    self.VentGuardPlatoon = false
+                end
+                if waypoint == destination then
+                    local dx = origin[1] - destination[1]
+                    local dz = origin[3] - destination[3]
+                    endPoint = true
+                    if dx * dx + dz * dz < navigateDistanceCutOff then
+                    IssueMove({self.ExperimentalUnit}, destination)
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
+                    
+                end
+                -- navigate towards waypoint 
+                if not waypoint then
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
+                IssueMove({self.ExperimentalUnit}, waypoint)
+                -- check for opportunities
+                local wx = waypoint[1]
+                local wz = waypoint[3]
+                while not IsDestroyed(self.ExperimentalUnit) do
+                    WaitTicks(20)
+                    if IsDestroyed(self.ExperimentalUnit) then
+                        return
+                    end
+                    local position = self.ExperimentalUnit:GetPosition()
+                    -- check if we're near our current waypoint
+                    local dx = position[1] - wx
+                    local dz = position[3] - wz
+                    if dx * dx + dz * dz < navigateDistanceCutOff then
+                        --LOG('close to waypoint position in second loop')
+                        --LOG('distance is '..(dx * dx + dz * dz))
+                        --LOG('CutOff is '..navigateDistanceCutOff)
+                        if not endPoint then
+                            IssueClearCommands({self.ExperimentalUnit})
+                        end
+                        break
+                    end
+                    if self.EnemyThreatTable.TotalSuroundingThreat > 15 then
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
+                    -- check for threats
+                    WaitTicks(10)
+                end
+                WaitTicks(1)
+            end
+        end,
     },
 
 
@@ -328,7 +408,6 @@ GuardThread = function(aiBrain, platoon)
     platoon.BuildThread = nil
     local guardCutOff = 400
     while aiBrain:PlatoonExists(platoon) do
-
         local currentAntiAirThreat = 0
         local currentAntiAirCount = 0
         local currentShieldCount = 0
@@ -336,13 +415,12 @@ GuardThread = function(aiBrain, platoon)
         local currentLandThreat = 0
         local guardUnits = platoon:GetSquadUnits('guard')
         if guardUnits then
-            if IsDestroyed(experimental) then
+            if IsDestroyed(experimental) or platoon.VentGuardPlatoon then
                 -- Return Home
                 IssueClearCommands(guardUnits)
                 local plat = aiBrain:MakePlatoon('', '')
                 aiBrain:AssignUnitsToPlatoon(plat, guardUnits, 'attack', 'None')
                 import("/mods/rngai/lua/ai/statemachines/platoon-land-zonecontrol.lua").AssignToUnitsMachine({ {ZoneType = 'control'}, LocationType = platoon.LocationType}, plat, {unit})
-
             end
             local experimentalPos = experimental:GetPosition()
             for _, v in guardUnits do

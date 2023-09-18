@@ -462,12 +462,16 @@ CHPMergePlatoon = function(self,radius)
     end
 end
 
-GetUnitMaxWeaponRange = function(unit)
+GetUnitMaxWeaponRange = function(unit, filterType)
     local maxRange
     if unit and not unit.Dead then
         for _, weapon in unit.Blueprint.Weapon or {} do
             -- unit can have MaxWeaponRange entry from the last platoon
-            if not unit.MaxWeaponRange or weapon.MaxRadius > unit.MaxWeaponRange then
+            if filterType and weapon.WeaponCategory == filterType then
+                if not maxRange or weapon.MaxRadius > maxRange then
+                    maxRange = weapon.MaxRadius
+                end
+            elseif not maxRange or weapon.MaxRadius > maxRange then
                 -- save the weaponrange 
                 if not maxRange or weapon.MaxRadius > maxRange then
                     maxRange = weapon.MaxRadius
@@ -1055,4 +1059,9 @@ FindExperimentalTargetRNG = function(aiBrain, platoon, experimentalPosition)
     end
 
     return false, false
+end
+
+function PositionInWater(position)
+    local inWater = GetTerrainHeight(position[1], position[3]) < GetSurfaceHeight(position[1], position[3])
+    return inWater
 end
