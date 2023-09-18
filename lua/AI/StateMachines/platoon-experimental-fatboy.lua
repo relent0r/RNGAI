@@ -4,6 +4,7 @@ local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local NavUtils = import("/lua/sim/navutils.lua")
+local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 
 --[[
@@ -383,6 +384,7 @@ end
 ---@param platoon AIPlatoon
 GuardThread = function(aiBrain, platoon)
     local UnitTable = {
+        T1LandScout = 'uel0101',
         T2LandAA1 = 'uel0205',
     }
     local function BuildUnit(aiBrain, experimental, unitToBuild)
@@ -402,6 +404,7 @@ GuardThread = function(aiBrain, platoon)
             experimental.PlatoonHandle.BuildThread = nil
         end
     end
+    local im = IntelManagerRNG.GetIntelManager(aiBrain)
     local experimental = platoon.ExperimentalUnit
     platoon.CurrentAntiAirThreat = 0
     platoon.CurrentLandThreat = 0
@@ -413,7 +416,9 @@ GuardThread = function(aiBrain, platoon)
         local currentShieldCount = 0
         local currentLandCount = 0
         local currentLandThreat = 0
+        local currentLandScoutCount = 0
         local guardUnits = platoon:GetSquadUnits('guard')
+        local intelCoverage = true
         if guardUnits then
             if IsDestroyed(experimental) or platoon.VentGuardPlatoon then
                 -- Return Home
@@ -423,9 +428,15 @@ GuardThread = function(aiBrain, platoon)
                 import("/mods/rngai/lua/ai/statemachines/platoon-land-zonecontrol.lua").AssignToUnitsMachine({ {ZoneType = 'control'}, LocationType = platoon.LocationType}, plat, {unit})
             end
             local experimentalPos = experimental:GetPosition()
+            local gridXID, gridZID = im:GetIntelGrid(experimentalPos)
+            if not im.MapIntelGrid[gridXID][gridZID].IntelCoverage then
+                intelCoverage = false
+            end
             for _, v in guardUnits do
                 if v and not v.Dead then
-                    if v.Blueprint.CategoriesHash.ANTIAIR then
+                    if v.Blueprint.CategoriesHash.SCOUT then
+                        currentLandScoutCount = currentLandScoutCount + 1
+                    elseif v.Blueprint.CategoriesHash.ANTIAIR then
                         currentAntiAirThreat = currentAntiAirThreat + v.Blueprint.Defense.AirThreatLevel
                         currentAntiAirCount = currentAntiAirCount + 1
                     elseif v.Blueprint.CategoriesHash.SHIELD and v.Blueprint.CategoriesHash.DEFENSE and v.Blueprint.CategoriesHash.MOBILE then
@@ -438,16 +449,21 @@ GuardThread = function(aiBrain, platoon)
                 local unitPos = v:GetPosition()
                 local dx = unitPos[1] - experimentalPos[1]
                 local dz = unitPos[3] - experimentalPos[3]
-                if dx * dx + dz * dz > guardCutOff then
-                    IssueClearCommands(v)
-                    IssueMove({v}, experimental)
-                    IssueGuard({v}, experimental)
+                if v.Blueprint.CategoriesHash.ANTIAIR then
+                    if dx * dx + dz * dz > guardCutOff then
+                        IssueClearCommands(v)
+                        IssueMove({v}, experimental)
+                        IssueGuard({v}, experimental)
+                    end
                 end
             end
         end
         if not platoon.BuildThread and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.7 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 0.8 then
             if currentAntiAirCount < 3 then
                 platoon.BuildThread = aiBrain:ForkThread(BuildUnit, experimental, UnitTable['T2LandAA1'])
+            end
+            if not intelCoverage and currentLandScoutCount < 3 then
+                platoon.BuildThread = aiBrain:ForkThread(BuildUnit, experimental, UnitTable['T1LandScout'])
             end
         end
         platoon.CurrentAntiAirThreat = currentAntiAirThreat
