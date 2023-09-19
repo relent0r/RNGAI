@@ -934,7 +934,15 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                     RNGINSERT(unitTable.CloseUnitThreat.Units, {Object = unit, Distance = distance})
                 end
             elseif unit.Blueprint.CategoriesHash.STRUCTURE and (unit.Blueprint.CategoriesHash.DIRECTFIRE or unit.Blueprint.CategoriesHash.INDIRECTFIRE) then
-                if unit.Blueprint.CategoriesHash.ARTILLERY then
+                if unit.Blueprint.CategoriesHash.ARTILLERY and unit.Blueprint.CategoriesHash.TECH2 then
+                    if unitThreat == 0 and unit.Blueprint.Weapon then
+                        for _, weapon in unit.Blueprint.Weapon do
+                            if weapon.RangeCategory == 'UWRC_IndirectFire' or StringFind(weapon.WeaponCategory or 'nope', 'Artillery') then
+                                local unitDps = RUtils.CalculatedDPSRNG(weapon)
+                                unitThreat = unitDps * 0.3
+                            end
+                        end
+                    end
                     unitTable.ArtilleryThreat.TotalThreat = unitTable.ArtilleryThreat.TotalThreat + unitThreat
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                     RNGINSERT(unitTable.ArtilleryThreat.Units, {Object = unit, Distance = distance})

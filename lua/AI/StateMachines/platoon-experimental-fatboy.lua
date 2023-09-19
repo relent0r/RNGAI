@@ -1,5 +1,7 @@
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
+local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
+local RNGGETN = table.getn
 
 AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
@@ -53,7 +55,6 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
 
         StateName = 'Start',
 
-        --- Initial state of any state machine
         ---@param self AIExperimentalFatBoyBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
@@ -61,6 +62,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                 AIAttackUtils.GetMostRestrictiveLayerRNG(self)
             end
             self.LocationType = self.PlatoonData.LocationType or 'MAIN'
+            self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             self.ExperimentalUnit = self:GetSquadUnits('Attack')[1]
             if self.ExperimentalUnit and not self.ExperimentalUnit.Dead then
                 self.MaxPlatoonWeaponRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Indirect Fire')
@@ -69,6 +71,8 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                 return
             end
             self.UnitRatios = {}
+            self.SupportT2MobileAA = 3
+            self.SupportT3MobileAA = 0
             StartFatBoyThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -79,7 +83,6 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
 
         StateName = 'DecideWhatToDo',
 
-        --- The platoon searches for a target
         ---@param self AIPlatoonACUBehavior
         Main = function(self)
             if IsDestroyed(self.ExperimentalUnit) then
@@ -91,7 +94,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
             local target
             if threatTable then
                 if self.ExperimentalUnit.MyShield then
-                    if self.ExperimentalUnit.MyShield.DepletedByEnergy or self.ExperimentalUnit.MyShield.DepletedByDamage and threatTable.TotalSuroundingThreat > 0 then
+                    if self.ExperimentalUnit.ShieldCaution and threatTable.TotalSuroundingThreat > 0 then
                         if threatTable.AirSurfaceThreat.TotalThreat > 10 and self.CurrentPlatoonAirThreat < 20 and not self.HoldPosition then
                             self.BuilderData = {
                                 Retreat = true,
@@ -101,7 +104,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                         if (threatTable.ArtilleryThreat.TotalThreat > 0 or threatTable.RangedUnitThreat.TotalThreat > 0 
-                        or threatTable.CloseUnitThreat.TotalThreat > 0 or threatTable.NavalUnitThreat.TotalThreat > 0) and not self.HoldPosition then
+                        or threatTable.CloseUnitThreat.TotalThreat > 25 or threatTable.NavalUnitThreat.TotalThreat > 0) and not self.HoldPosition then
                             self.BuilderData = {
                                 Retreat = true,
                                 Reason = 'NoShield'
@@ -113,6 +116,28 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                 end
             
                 if threatTable.TotalSuroundingThreat > 15 then
+                    if threatTable.AirSurfaceThreat.TotalThreat > 80 and self.CurrentAntiAirThreat < 30 and not self.HoldPosition then
+                        local localFriendlyAirThreat = self:CalculatePlatoonThreatAroundPosition('Air', categories.ANTIAIR, experimentalPosition, 35)
+                        if localFriendlyAirThreat < 30 then
+                            self.BuilderData = {
+                                Retreat = true,
+                                Reason = 'AirThreat'
+                            }
+                            self:ChangeState(self.Retreating)
+                            return
+                        end
+                    end
+                    if threatTable.AirSurfaceThreat.TotalThreat > 25 and self.CurrentAntiAirThreat < 15 and not self.HoldPosition then
+                        local localFriendlyAirThreat = self:CalculatePlatoonThreatAroundPosition('Air', categories.ANTIAIR, experimentalPosition, 35)
+                        if localFriendlyAirThreat < 15 then
+                            self.BuilderData = {
+                                Retreat = true,
+                                Reason = 'AirThreat'
+                            }
+                            self:ChangeState(self.Retreating)
+                            return
+                        end
+                    end
                     if threatTable.AirSurfaceThreat.TotalThreat > 10 and self.CurrentAntiAirThreat < 10 and not self.HoldPosition then
                         local localFriendlyAirThreat = self:CalculatePlatoonThreatAroundPosition('Air', categories.ANTIAIR, experimentalPosition, 35)
                         if localFriendlyAirThreat < 10 then
@@ -127,10 +152,12 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     local closestUnit
                     local closestUnitDistance
                     if threatTable.RangedUnitThreat.TotalThreat > 0 or threatTable.ArtilleryThreat.TotalThreat > 0 then
+                        LOG('We have Artillery or Ranged unit threat around us')
                         local overRangedCount = 0
                         for _, enemyUnit in threatTable.ArtilleryThreat.Units do
-                            if not IsDestroyed(enemyUnit) then
-                                local unitRange = GetUnitMaxWeaponRange(enemyUnit)
+                            if not IsDestroyed(enemyUnit.Object) then
+                                local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object)
+                                LOG('Artillery Range is greater than FATBOY')
                                 if unitRange > self.MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
                                 end
@@ -138,19 +165,19 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                                     self.BuilderData = {
                                         Retreat = true,
                                         Reason = 'ArtilleryThreat',
-                                        Target = enemyUnit
+                                        AttackTarget = enemyUnit.Object
                                     }
                                     self:ChangeState(self.Retreating)
                                 end
                                 if not closestUnit or enemyUnit.Distance < closestUnitDistance then
-                                    closestUnit = enemyUnit
+                                    closestUnit = enemyUnit.Object
                                     closestUnitDistance = enemyUnit.Distance
                                 end
                             end
                         end
                         for _, enemyUnit in threatTable.RangedUnitThreat.Units do
-                            if not IsDestroyed(enemyUnit) then
-                                local unitRange = GetUnitMaxWeaponRange(enemyUnit)
+                            if not IsDestroyed(enemyUnit.Object) then
+                                local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object)
                                 if unitRange > self.MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
                                 end
@@ -158,12 +185,12 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                                     self.BuilderData = {
                                         Retreat = true,
                                         Reason = 'ArtilleryThreat',
-                                        Target = enemyUnit
+                                        AttackTarget = enemyUnit.Object
                                     }
                                     self:ChangeState(self.Retreating)
                                 end
                                 if not closestUnit or enemyUnit.Distance < closestUnitDistance then
-                                    closestUnit = enemyUnit
+                                    closestUnit = enemyUnit.Object
                                     closestUnitDistance = enemyUnit.Distance
                                 end
                             end
@@ -171,17 +198,17 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     end
                     if threatTable.DefenseThreat.TotalThreat > 0 or threatTable.CloseUnitThreat.TotalThreat > 15 then
                         for _, enemyUnit in threatTable.DefenseThreat.Units do
-                            if not IsDestroyed(enemyUnit) then
+                            if not IsDestroyed(enemyUnit.Object) then
                                 if not closestUnit or enemyUnit.Distance < closestUnitDistance then
-                                    closestUnit = enemyUnit
+                                    closestUnit = enemyUnit.Object
                                     closestUnitDistance = enemyUnit.Distance
                                 end
                             end
                         end
                         for _, enemyUnit in threatTable.CloseUnitThreat.Units do
-                            if not IsDestroyed(enemyUnit) then
+                            if not IsDestroyed(enemyUnit.Object) then
                                 if not closestUnit or enemyUnit.Distance < closestUnitDistance then
-                                    closestUnit = enemyUnit
+                                    closestUnit = enemyUnit.Object
                                     closestUnitDistance = enemyUnit.Distance
                                 end
                             end
@@ -189,8 +216,8 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     end
                     if threatTable.NavalUnitThreat.TotalThreat > 0 then
                         for _, enemyUnit in threatTable.NavalUnitThreat.Units do
-                            if not IsDestroyed(enemyUnit) then
-                                local unitRange = GetUnitMaxWeaponRange(enemyUnit)
+                            if not IsDestroyed(enemyUnit.Object) then
+                                local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object)
                                 if unitRange > self.MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
                                 end
@@ -198,12 +225,12 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                                     self.BuilderData = {
                                         Retreat = true,
                                         Reason = 'NavalThreat',
-                                        Target = enemyUnit
+                                        AttackTarget = enemyUnit.Object
                                     }
                                     self:ChangeState(self.Retreating)
                                 end
                                 if not closestUnit or enemyUnit.Distance < closestUnitDistance then
-                                    closestUnit = enemyUnit
+                                    closestUnit = enemyUnit.Object
                                     closestUnitDistance = enemyUnit.Distance
                                 end
                             end
@@ -211,12 +238,13 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     end
                     if closestUnit and not IsDestroyed(closestUnit) then
                         target = closestUnit
+                        LOG('We have a target from threattable')
                     end
                 end
             end
             if target and not IsDestroyed(target) then
                 self.BuilderData = {
-                    Target = target,
+                    AttackTarget = target,
                     Position = target:GetPosition()
                 }
                 self:ChangeState(self.AttackTarget)
@@ -226,6 +254,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                 target, _ = StateUtils.FindExperimentalTargetRNG(aiBrain, self, experimentalPosition)
             end
             if target and not IsDestroyed(target) then
+                LOG('We have a target from FindExperimentalTargetRNG')
                 local targetPos = target:GetPosition()
                 local dx = targetPos[1] - experimentalPosition[1]
                 local dz = targetPos[3] - experimentalPosition[3]
@@ -237,8 +266,14 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     }
                     self:ChangeState(self.Navigating)
                     return
+                else
+                    self.BuilderData = {
+                        AttackTarget = target,
+                        Position = target:GetPosition()
+                    }
+                    self:ChangeState(self.AttackTarget)
+                    return
                 end
-
             end
             coroutine.yield(30)
             self:ChangeState(self.DecideWhatToDo)
@@ -246,12 +281,25 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
+    SeigeMode = State {
+
+        StateName = 'SeigeMode',
+
+        --- This will be used for performing seiges on firebases and the like
+        ---@param self AIExperimentalFatBoyBehavior
+        Main = function(self)
+            local aiBrain = self:GetBrain()
+            local builderData = self.BuilderData
+
+        end,
+
+    },
+
     Navigating = State {
 
-        StateName = "Navigating",
+        StateName = 'Navigating',
 
-        --- The platoon retreats from a threat
-        ---@param self AIPlatoonLandCombatBehavior
+        ---@param self AIExperimentalFatBoyBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
             local builderData = self.BuilderData
@@ -329,6 +377,206 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
+    AttackTarget = State {
+
+        StateName = 'AttackTarget',
+
+        ---@param self AIExperimentalFatBoyBehavior
+        Main = function(self)
+            local aiBrain = self:GetBrain()
+            local experimental = self.ExperimentalUnit
+            local target = self.BuilderData.AttackTarget
+            local maxPlatoonRange = self.MaxPlatoonWeaponRange
+            local threatTable = self.EnemyThreatTable
+            local unitPos
+            local alpha
+            local x, y
+            local smartPos
+            while experimental and not IsDestroyed(experimental) do
+                if (experimental.ShieldCaution or threatTable.ArtilleryThreat.TotalThreat > 0)and not experimental.HoldPosition then
+                    self:ChangeState(self.DecideWhatToDo)
+                    return 
+                end
+                if target and not target.Dead then
+                    IssueClearCommands({experimental})
+                    local targetPosition = target:GetPosition()
+                    if not maxPlatoonRange then
+                        coroutine.yield(3)
+                        WARN('Warning : Experimental has no max weapon range')
+                        continue
+                    end
+                    unitPos = experimental:GetPosition()
+                    alpha = math.atan2(targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
+                    x = targetPosition[1] - math.cos(alpha) * (maxPlatoonRange - 10)
+                    y = targetPosition[3] - math.sin(alpha) * (maxPlatoonRange - 10)
+                    smartPos = { x, GetTerrainHeight( x, y), y }
+                    -- check if the move position is new or target has moved
+                    if VDist2Sq( smartPos[1], smartPos[3], experimental.smartPos[1], experimental.smartPos[3] ) > 4 or experimental.TargetPos ~= targetPosition then
+                        -- clear move commands if we have queued more than 4
+                        if RNGGETN(experimental:GetCommandQueue()) > 2 then
+                            IssueClearCommands({experimental})
+                            coroutine.yield(3)
+                        end
+                        IssueMove({experimental}, smartPos )
+                        if target.Dead then 
+                            coroutine.yield(10)
+                            self:ChangeState(self.DecideWhatToDo)
+                            return 
+                        end
+                        IssueAttack({experimental}, target)
+                        experimental.smartPos = smartPos
+                        experimental.TargetPos = targetPosition
+                    -- in case we don't move, check if we can fire at the target
+                    else
+                        local dist = VDist2( experimental.smartPos[1], experimental.smartPos[3], experimental.TargetPos[1], experimental.TargetPos[3] )
+                        if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental.WeaponArc) then
+                            --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
+                            IssueMove({experimental}, targetPosition )
+                            coroutine.yield(30)
+                        else
+                            --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
+                        end
+                    end
+                else
+                    coroutine.yield(10)
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
+            coroutine.yield(20)
+            end
+        end,
+    },
+
+    Retreating = State {
+
+        StateName = 'Retreating',
+
+        ---@param self AIPlatoonFighterBehavior
+        Main = function(self)
+            if IsDestroyed(self.ExperimentalUnit) then
+                return
+            end
+            local retreatReason = self.BuilderData.Reason
+            local retreatTarget = self.BuilderData.AttackTarget or false
+            if retreatReason then
+                if retreatReason == 'AirThreat' then
+                    if self.CurrentAntiAirThreat > 80 then
+                        self.SupportT3MobileAA = 5
+                    elseif self.CurrentAntiAirThreat > 25 then
+                        self.SupportT3MobileAA = 2
+                    end
+                end
+            end
+            local experimentalPosition = self.ExperimentalUnit:GetPosition()
+            local aiBrain = self:GetBrain()
+            local distanceToHome = VDist2Sq(experimentalPosition[1], experimentalPosition[3], self.Home[1], self.Home[3])
+            local closestPlatoon
+            local closestPlatoonValue
+            local closestPlatoonDistance
+            local closestAPlatPos
+            local AlliedPlatoons = aiBrain:GetPlatoonsList()
+            for _,aPlat in AlliedPlatoons do
+                if aPlat.EntityId ~= self.EntityId then
+                    local aPlatAirThreat = aPlat:CalculatePlatoonThreat('Air', categories.ALLUNITS)
+                    if aPlatAirThreat > self.CurrentEnemyThreat / 2 then
+                        local aPlatPos = GetPlatoonPosition(aPlat)
+                        local aPlatDistance = VDist2Sq(experimentalPosition[1],experimentalPosition[3],aPlatPos[1],aPlatPos[3])
+                        local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],self.Home[1],self.Home[3])
+                        if aPlatToHomeDistance < distanceToHome then
+                            local platoonValue = aPlatDistance * aPlatDistance / aPlatAirThreat
+                            if not closestPlatoonValue or platoonValue <= closestPlatoonValue then
+                                if NavUtils.CanPathTo(self.MovementLayer, experimentalPosition, aPlatPos) then
+                                    closestPlatoon = aPlat
+                                    closestPlatoonValue = platoonValue
+                                    closestPlatoonDistance = aPlatDistance
+                                    closestAPlatPos = aPlatPos
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            local closestBase
+            local closestBaseDistance
+            if aiBrain.BuilderManagers then
+                for baseName, base in aiBrain.BuilderManagers do
+                    if not table.empty(base.FactoryManager.FactoryList) then
+                        local baseDistance = VDist3Sq(experimentalPosition, base.Position)
+                        local homeDistance = VDist3Sq(self.Home, base.Position)
+                        if homeDistance < distanceToHome or baseName == 'MAIN' then
+                            if not closestBaseDistance or baseDistance <= closestBaseDistance then
+                                if NavUtils.CanPathTo(self.MovementLayer, experimentalPosition, base.Position) then
+                                    closestBase = baseName
+                                    closestBaseDistance = baseDistance
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            if closestBase and closestPlatoon then
+                if closestBaseDistance < closestPlatoonDistance then
+                    if closestBase == 'MAIN' then
+                        self.BuilderData = {
+                            Retreat = true,
+                            RetreatReason = retreatReason,
+                            RetreatUnit = retreatTarget,
+                            Position = aiBrain.BuilderManagers[closestBase].Position,
+                        }
+                        self:ChangeState(self.Navigating)
+                        return
+                    elseif closestBase then
+                        self.BuilderData = {
+                            Retreat = true,
+                            RetreatReason = retreatReason,
+                            RetreatUnit = retreatTarget,
+                            Position = aiBrain.BuilderManagers[closestBase].Position,
+                        }
+                        self:ChangeState(self.Navigating)
+                        return
+                    end
+                elseif closestAPlatPos then
+                    self.BuilderData = {
+                        Retreat = true,
+                        RetreatReason = retreatReason,
+                        RetreatUnit = retreatTarget,
+                        Position = closestAPlatPos,
+                    }
+                    self:ChangeState(self.Navigating)
+                    return
+                end
+            elseif closestBase then
+                if closestBase == 'MAIN' then
+                    self.BuilderData = {
+                        Retreat = true,
+                        RetreatReason = retreatReason,
+                        RetreatUnit = retreatTarget,
+                        Position = aiBrain.BuilderManagers[closestBase].Position,
+                    }
+                    self:ChangeState(self.Navigating)
+                    return
+                elseif closestBase then
+                    self.BuilderData = {
+                        Retreat = true,
+                        RetreatReason = retreatReason,
+                        RetreatUnit = retreatTarget,
+                        Position = aiBrain.BuilderManagers[closestBase].Position,
+                    }
+                    self:ChangeState(self.Navigating)
+                    return
+                end
+            elseif closestPlatoon and closestAPlatPos then
+                self.BuilderData = {
+                    Retreat = true,
+                    RetreatReason = retreatReason,
+                    RetreatUnit = retreatTarget,
+                    Position = closestAPlatPos,
+                }
+                self:ChangeState(self.Navigating)
+                return
+            end
+        end,
+    },
 
 }
 
@@ -385,19 +633,24 @@ end
 GuardThread = function(aiBrain, platoon)
     local UnitTable = {
         T1LandScout = 'uel0101',
-        T2LandAA1 = 'uel0205',
+        T2LandAA = 'uel0205',
+        T3LandAA = 'delk002',
     }
     local function BuildUnit(aiBrain, experimental, unitToBuild)
         local factory = experimental.ExternalFactory
+        local experimentalPosition = experimental:GetPosition()
         local unitBeingBuilt
         if not factory.UnitBeingBuilt and not factory:IsUnitState('Building') then
             aiBrain:BuildUnit(factory, unitToBuild, 1)
             coroutine.yield(5)
             unitBeingBuilt = factory.UnitBeingBuilt
+            IssueClearFactoryCommands({factory})
+            IssueFactoryRallyPoint({factory}, experimentalPosition)
             while not experimental.Dead and not factory:IsIdleState() do
                 coroutine.yield(25)
             end
             if not unitBeingBuilt.Dead and unitBeingBuilt:GetFractionComplete() == 1.0 then
+                IssueClearCommands({unitBeingBuilt})
                 IssueGuard({unitBeingBuilt}, experimental)
                 aiBrain:AssignUnitsToPlatoon(experimental.PlatoonHandle, {unitBeingBuilt}, 'guard', 'none')
             end
@@ -412,7 +665,9 @@ GuardThread = function(aiBrain, platoon)
     local guardCutOff = 400
     while aiBrain:PlatoonExists(platoon) do
         local currentAntiAirThreat = 0
-        local currentAntiAirCount = 0
+        local currentT1AntiAirCount = 0
+        local currentT2AntiAirCount = 0
+        local currentT3AntiAirCount = 0
         local currentShieldCount = 0
         local currentLandCount = 0
         local currentLandThreat = 0
@@ -425,7 +680,7 @@ GuardThread = function(aiBrain, platoon)
                 IssueClearCommands(guardUnits)
                 local plat = aiBrain:MakePlatoon('', '')
                 aiBrain:AssignUnitsToPlatoon(plat, guardUnits, 'attack', 'None')
-                import("/mods/rngai/lua/ai/statemachines/platoon-land-zonecontrol.lua").AssignToUnitsMachine({ {ZoneType = 'control'}, LocationType = platoon.LocationType}, plat, {unit})
+                import("/mods/rngai/lua/ai/statemachines/platoon-land-zonecontrol.lua").AssignToUnitsMachine({ {ZoneType = 'control'}, LocationType = platoon.LocationType}, plat, guardUnits)
             end
             local experimentalPos = experimental:GetPosition()
             local gridXID, gridZID = im:GetIntelGrid(experimentalPos)
@@ -438,7 +693,13 @@ GuardThread = function(aiBrain, platoon)
                         currentLandScoutCount = currentLandScoutCount + 1
                     elseif v.Blueprint.CategoriesHash.ANTIAIR then
                         currentAntiAirThreat = currentAntiAirThreat + v.Blueprint.Defense.AirThreatLevel
-                        currentAntiAirCount = currentAntiAirCount + 1
+                        if v.Blueprint.CategoriesHash.TECH1 then
+                            currentT1AntiAirCount = currentT1AntiAirCount + 1
+                        elseif v.Blueprint.CategoriesHash.TECH2 then
+                            currentT2AntiAirCount = currentT2AntiAirCount + 1
+                        elseif v.Blueprint.CategoriesHash.TECH3 then
+                            currentT3AntiAirCount = currentT3AntiAirCount + 1
+                        end
                     elseif v.Blueprint.CategoriesHash.SHIELD and v.Blueprint.CategoriesHash.DEFENSE and v.Blueprint.CategoriesHash.MOBILE then
                         currentShieldCount = currentShieldCount + 1
                     elseif v.Blueprint.CategoriesHash.DIRECTFIRE and v.Blueprint.CategoriesHash.LAND then
@@ -459,8 +720,10 @@ GuardThread = function(aiBrain, platoon)
             end
         end
         if not platoon.BuildThread and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.7 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 0.8 then
-            if currentAntiAirCount < 3 then
-                platoon.BuildThread = aiBrain:ForkThread(BuildUnit, experimental, UnitTable['T2LandAA1'])
+            if currentT2AntiAirCount < platoon.SupportT2MobileAA then
+                platoon.BuildThread = aiBrain:ForkThread(BuildUnit, experimental, UnitTable['T2LandAA'])
+            elseif currentT3AntiAirCount < platoon.SupportT3MobileAA then
+                platoon.BuildThread = aiBrain:ForkThread(BuildUnit, experimental, UnitTable['T3LandAA'])
             end
             if not intelCoverage and currentLandScoutCount < 3 then
                 platoon.BuildThread = aiBrain:ForkThread(BuildUnit, experimental, UnitTable['T1LandScout'])
@@ -493,6 +756,11 @@ ThreatThread = function(aiBrain, platoon)
         elseif not shieldEnabled and not experimental:ShieldIsOn() and aiBrain:GetEconomyStoredRatio( 'ENERGY') > 0.50 then
             experimental:EnableShield()
             shieldEnabled = true
+        end
+        if experimental.MyShield.DepletedByEnergy or  experimental.MyShield.DepletedByDamage then
+            experimental.ShieldCaution = true
+        elseif experimental.ShieldCaution then
+            experimental.ShieldCaution = false
         end
         coroutine.yield(35)
     end
