@@ -880,6 +880,7 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
     end
     local unitTable = {
         TotalSuroundingThreat = 0,
+        ClosestUnitDistance = 0,
         AirSurfaceThreat = {
             TotalThreat = 0,
             Units = {}
@@ -918,6 +919,9 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
             local dz = unitPos[3] - position[3]
             local distance = dx * dx + dz * dz
             local unitThreat = unit.Blueprint.Defense.SurfaceThreatLevel or 0
+            if unitTable.ClosestUnitDistance == 0 or unitTable.ClosestUnitDistance > distance then
+                unitTable.ClosestUnitDistance = distance
+            end
             if unit.Blueprint.CategoriesHash.AIR and (unit.Blueprint.CategoriesHash.BOMBER or unit.Blueprint.CategoriesHash.GROUNDATTACK) then
                 unitTable.AirSurfaceThreat.TotalThreat = unitTable.AirSurfaceThreat.TotalThreat + unitThreat
                 unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
