@@ -8068,6 +8068,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         while PlatoonExists(aiBrain, self) do
             coroutine.yield(1)
             --RNGLOG('Feeder starting loop')
+            IssueClearCommands(self:GetPlatoonUnits())
             if platoonType == 'fighter' then
                 local targetPlatoon = StateUtils.GetClosestPlatoonRNG(self, 'FighterBehavior', 62500)
                 if not targetPlatoon then

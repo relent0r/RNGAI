@@ -155,11 +155,29 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                                 Position = pos,
                                 HoldingPosition = true
                             }
-                            --LOG('FighterBehavior DecideWhatToDo Navigating to holding position')
-                            self:ChangeState(self.Navigating)
-                            return
+                            local hx = platPos[1] - pos[1]
+                            local hz = platPos[3] - pos[3]
+                            if hx * hx + hz * hz < 1225 then
+                                local platUnits = GetPlatoonUnits(self)
+                                for _, unit in platUnits do
+                                    if not unit:IsUnitState('Guarding') then
+                                        LOG('Fighter is not in guarding state')
+                                        IssueClearCommands({unit})
+                                        IssueGuard({unit}, self.BuilderData.Position)
+                                    else
+                                        LOG('Fighter is already in guarding state')
+                                    end
+                                end
+                                LOG('Fighter going straight into hold position status')
+                                self:ChangeState(self.HoldPosition)
+                                return
+                            else
+                                LOG('FighterBehavior DecideWhatToDo Navigating to holding position')
+                                self:ChangeState(self.Navigating)
+                                return
+                            end
                         else
-                            --LOG('FighterBehavior DecideWhatToDo cant find hold position')
+                            LOG('FighterBehavior DecideWhatToDo cant find hold position')
                         end
                     end
                 end
@@ -208,7 +226,6 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             local lastDist
             local timeout = 0
             while aiBrain:PlatoonExists(self) do
-                LOG('FighterBehavior movement loop')
                 coroutine.yield(15)
                 if IsDestroyed(self) then
                     return
@@ -217,9 +234,6 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 local dx = platPos[1] - movePosition[1]
                 local dz = platPos[3] - movePosition[3]
                 local posDist = dx * dx + dz * dz
-                if lastDist and posDist then
-                    LOG('lastDist '..lastDist..' posDist '..posDist)
-                end
 
                 if posDist < 2025 then
                     if self.BuilderData.HoldingPosition then
@@ -245,7 +259,6 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 if not lastDist or lastDist == posDist then
                     timeout = timeout + 1
                     if timeout > 15 then
-                        LOG('Fighter platoon movement loop just broke')
                         break
                     end
                 end
@@ -348,7 +361,6 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
-                
             end
         end,
     },

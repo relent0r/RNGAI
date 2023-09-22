@@ -346,6 +346,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                 waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 50)
                 if StateUtils.PositionInWater(origin) then
                     self.VentGuardPlatoon = true
+                    LOG('GuardPlatoon Vent has gone true')
                 elseif self.VentGuardPlatoon then
                     self.VentGuardPlatoon = false
                 end
@@ -387,7 +388,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                         end
                         break
                     end
-                    if self.EnemyThreatTable.TotalSuroundingThreat > 15 then
+                    if self.EnemyThreatTable.TotalSuroundingThreat > 15 and not StateUtils.PositionInWater(position) then
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
@@ -797,7 +798,7 @@ GuardThread = function(aiBrain, platoon)
             while not experimental.Dead and not factory:IsIdleState() do
                 coroutine.yield(25)
             end
-            if not unitBeingBuilt.Dead and unitBeingBuilt:GetFractionComplete() == 1.0 then
+            if unitBeingBuilt and not unitBeingBuilt.Dead and unitBeingBuilt:GetFractionComplete() == 1.0 then
                 IssueClearCommands({unitBeingBuilt})
                 IssueGuard({unitBeingBuilt}, experimental)
                 aiBrain:AssignUnitsToPlatoon(experimental.PlatoonHandle, {unitBeingBuilt}, 'guard', 'none')
@@ -810,7 +811,7 @@ GuardThread = function(aiBrain, platoon)
     platoon.CurrentAntiAirThreat = 0
     platoon.CurrentLandThreat = 0
     platoon.BuildThread = nil
-    local guardCutOff = 400
+    local guardCutOff = 225
     while aiBrain:PlatoonExists(platoon) do
         local currentAntiAirThreat = 0
         local currentT1AntiAirCount = 0
@@ -824,6 +825,8 @@ GuardThread = function(aiBrain, platoon)
         local intelCoverage = true
         if guardUnits then
             if IsDestroyed(experimental) or platoon.VentGuardPlatoon then
+                LOG('Guardplatoon is being disbanded')
+                LOG('Current Guard units '..repr(guardUnits))
                 -- Return Home
                 IssueClearCommands(guardUnits)
                 local plat = aiBrain:MakePlatoon('', '')
@@ -867,7 +870,7 @@ GuardThread = function(aiBrain, platoon)
                 end
             end
         end
-        if not platoon.BuildThread and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.7 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 0.8 then
+        if not StateUtils.PositionInWater(experimental:GetPosition()) and not platoon.BuildThread and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.7 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 0.8 then
             if currentT2AntiAirCount < platoon.SupportT2MobileAA then
                 platoon.BuildThread = aiBrain:ForkThread(BuildUnit, experimental, UnitTable['T2LandAA'])
             elseif currentT3AntiAirCount < platoon.SupportT3MobileAA then

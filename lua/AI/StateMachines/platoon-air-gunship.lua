@@ -257,7 +257,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             }
             local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.ANTIAIR, self:GetPlatoonPosition(), 100, 'Enemy')
             local enemyAirThreat = 0
-            local platoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+            local platoonThreat = self:CalculatePlatoonThreatAroundPosition('Surface', categories.GROUNDATTACK, self:GetPlatoonPosition(), 35)
             for _, v in enemyUnits do
                 if v and not v.Dead then
                     local cats = v.Blueprint.CategoriesHash

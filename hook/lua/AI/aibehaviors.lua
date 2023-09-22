@@ -1271,19 +1271,16 @@ function AirStagingThreadRNG(unit)
     while not unit.Dead do
         local numUnits = 0
         local refueledUnits = {}
-        local currentTime = GetGameTimeSeconds()
         for k, v in unit.Refueling do
-            if not v.Dead and v:GetFuelRatio() > 0.9 and v:GetHealthPercent() > 0.9 then
-                --RNGLOG('Unit not dead and fuel + health is above 0.9 '..v.EntityId)
-                --RNGLOG('Fueld Ratio is '..v:GetFuelRatio())
-                --RNGLOG('Health Percent is '..v:GetHealthPercent())
-                numUnits = numUnits + 1
-                RNGINSERT(refueledUnits, {Unit = v, Key = k})
+            if not v.Dead then
+                if (not v:GetFuelRatio() < 1) and (not v:GetHealthPercent() < 1) then
+                    numUnits = numUnits + 1
+                    RNGINSERT(refueledUnits, {Unit = v, Key = k})
+                end
             end
         end
         
         if numUnits > 0 then
-            RNGLOG('platform has refueled units but ready was set to false, attempting to depart them anyway')
             --RNGLOG('Number of units in refueldedUnits '..table.getn(refueledUnits))
             local tableRebuild = false
             for k, v in refueledUnits do
