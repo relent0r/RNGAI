@@ -715,11 +715,11 @@ ZoneUpdate = function(aiBrain, platoon)
         AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
     end
     if not platoon then
-        LOG('No platoon for zoneupdate')
+        --LOG('No platoon for zoneupdate')
         LOG(platoon.PlanName)
     end
     if not aiBrain then
-        LOG('no brain passed to zoneupdate')
+        --LOG('no brain passed to zoneupdate')
         LOG(platoon.PlanName)
     end
     while not IsDestroyed(platoon) do

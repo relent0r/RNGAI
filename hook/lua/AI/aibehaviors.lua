@@ -1266,7 +1266,7 @@ end
 
 function AirStagingThreadRNG(unit)
     local aiBrain = unit:GetAIBrain()
-    LOG('Starting Air Staging thread')
+    --LOG('Starting Air Staging thread')
 
     while not unit.Dead do
         local numUnits = 0
@@ -1292,7 +1292,7 @@ function AirStagingThreadRNG(unit)
                         local plat
                         if not v.Unit.PreviousStateMachine then
                             if not v.Unit.PlanName then
-                                --RNGLOG('Air Refuel unit has no plan, assigning AirHuntAIRNG ')
+                                --RNGLOG('Air Refuel unit has no plan, assigning ')
                                 plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
                             else
                             --RNGLOG('Air Refuel unit has plan name of '..v.Unit.PlanName)
@@ -1307,11 +1307,11 @@ function AirStagingThreadRNG(unit)
                             aiBrain:AssignUnitsToPlatoon(plat, {v.Unit}, 'Attack', 'GrowthFormation')
                             unit.Refueling[v.Key] = nil
                             tableRebuild = true
-                            LOG('table removed from refueling not state machine')
+                            --LOG('table removed from refueling not state machine')
                         else
                             unit.Refueling[v.Key] = nil
                             tableRebuild = true
-                            LOG('table removed from refueling')
+                            --LOG('table removed from refueling')
                         end
                     elseif v.Unit:IsUnitState('Attached') then
                         --RNGLOG('Air Unit Still attached, force unload')
@@ -1322,7 +1322,7 @@ function AirStagingThreadRNG(unit)
                         if not v.Unit.PreviousStateMachine then
                             local plat
                             if not v.Unit.PlanName then
-                                --RNGLOG('Force Unload Air Refuel unit has no plan, assigning AirHuntAIRNG ')
+                                --RNGLOG('Force Unload Air Refuel unit has no plan, assigning ')
                                 plat = aiBrain:MakePlatoon('', 'FeederPlatoon')
                             else
                             --RNGLOG('Force Unload Air Refuel unit has plan name of '..v.Unit.PlanName)
@@ -1336,18 +1336,18 @@ function AirStagingThreadRNG(unit)
                             aiBrain:AssignUnitsToPlatoon(plat, {v.Unit}, 'Attack', 'GrowthFormation')
                             unit.Refueling[v.Key] = nil
                             tableRebuild = true
-                            LOG('table removed from refueling not state machine')
+                            --LOG('table removed from refueling not state machine')
                         else
                             unit.Refueling[v.Key] = nil
                             tableRebuild = true
-                            LOG('table removed from refueling')
+                            --LOG('table removed from refueling')
                         end
                     end
                 end
             end
             if tableRebuild then
                 unit.Refueling = aiBrain:RebuildTable(unit.Refueling)
-                LOG('Refueling table after removal '..repr(unit.Refueling))
+                --LOG('Refueling table after removal '..repr(unit.Refueling))
             end
         end
         coroutine.yield(60)

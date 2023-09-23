@@ -5869,9 +5869,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     continue
                 end
             end
-            if not v.FactoryManager then
-                LOG('No factory manager, base is '..k)
-            end
             if v.EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) <= 0 and v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) <= 0 then
                 continue
             end

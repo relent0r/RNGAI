@@ -76,7 +76,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                 safecall("Unable to IssueTransportLoad units are "..repr(unit), IssueTransportLoad, {unit}, closest )
                                 --RNGLOG('Transport load issued')
                                 if EntityCategoryContains(categories.AIRSTAGINGPLATFORM, closest) and not closest.AirStaging then
-                                    LOG('Air Refuel Forking AirStaging Thread for fighter')
+                                    --LOG('Air Refuel Forking AirStaging Thread for fighter')
                                     closest.AirStaging = closest:ForkThread(behaviors.AirStagingThreadRNG)
                                     closest.Refueling = {}
                                 elseif EntityCategoryContains(categories.CARRIER, closest) and not closest.CarrierStaging then
@@ -141,17 +141,11 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
             local refuelComplete = false
             while not refuelComplete do
                 coroutine.yield(25)
-                LOG('AirRefuel waiting for refuel to complete number of units in platoon is '..table.getn(self:GetPlatoonUnits()))
+                --LOG('AirRefuel waiting for refuel to complete number of units in platoon is '..table.getn(self:GetPlatoonUnits()))
                 for _, unit in self:GetPlatoonUnits() do
                     local fuel = unit:GetFuelRatio()
                     local health = unit:GetHealthPercent()
-                    LOG('Fuel '..fuel..' health '..health)
-                    if unit.Loading then
-                        LOG('Unit is still in loading state')
-                    end
-                    if unit:IsUnitState('Attached') then
-                        LOG('Unit is in attached state')
-                    end
+                    --LOG('Fuel '..fuel..' health '..health)
                     if (not unit.Loading or (fuel >= 1.0 and health >= 1.0)) and (not unit:IsUnitState('Attached')) then
                         refuelComplete = true
                     end

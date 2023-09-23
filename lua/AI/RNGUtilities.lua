@@ -854,7 +854,7 @@ function AIFindStartLocationNeedsEngineerRNG(aiBrain, locationType, radius, tMin
 
     local positions = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Spawn', pos, radius, tMin, tMax, tRings, tType)
     local startX, startZ = aiBrain:GetArmyStartPos()
-    LOG('positions '..repr(positions))
+    --LOG('positions '..repr(positions))
     for _, v in positions do
         if string.sub(v.Name, 1, 5) == 'ARMY_' then
             if startX ~= v.Position[1] and startZ ~= v.Position[3] then
@@ -862,7 +862,7 @@ function AIFindStartLocationNeedsEngineerRNG(aiBrain, locationType, radius, tMin
             end
         end
     end
-    RNGLOG('Valid Pos table '..repr(validPos))
+    --LOG('Valid Pos table '..repr(validPos))
 
     local retPos, retName
     if eng then
@@ -2924,9 +2924,9 @@ function AIFindRangedAttackPositionRNG(aiBrain, platoon, MaxPlatoonWeaponRange)
             local posDist = dx * dx + dz * dz
             if posDist <= (MaxPlatoonWeaponRange * MaxPlatoonWeaponRange + 900) then
                 if not aiBrain:CheckBlockingTerrain({v[1], v[2], v[3]}, s.Position, 'low') then
-                    LOG('Nothing is blocking this position to the enemy unit position')
+                    --LOG('Nothing is blocking this position to the enemy unit position')
                     if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition, {v[1], v[2], v[3]}) then
-                        LOG('Can path to ranged attack position')
+                        --LOG('Can path to ranged attack position')
                         attackPosition = {v[1], v[2], v[3]}
                         targetStartPosition = s.Position
                         break
@@ -5957,7 +5957,7 @@ function AIFindNavalAreaNeedsEngineer(aiBrain, locationType, enemyLabelCheck, ra
     end
     local positions = AIUtils.AIGetMarkersAroundLocation(aiBrain, 'Naval Area', pos, radius, tMin, tMax, tRings, tType)
     if enemyLabelCheck then
-        LOG('Checking based on enemy label')
+        --LOG('Checking based on enemy label')
     end
 
     local retPos, retName
@@ -5969,12 +5969,12 @@ function AIFindNavalAreaNeedsEngineer(aiBrain, locationType, enemyLabelCheck, ra
         local distance = VDist3Sq(pos, v.Position)
         if enemyLabelCheck then
             local label= NavUtils.GetLabel('Water', {v.Position[1], v.Position[2], v.Position[3]})
-            LOG('Label is '..label)
+            --LOG('Label is '..label)
             if label and aiBrain.BrainIntel.NavalBaseLabels[label] ~= 'Confirmed' then
-                LOG('Label Rejected')
+                --LOG('Label Rejected')
                 labelRejected = true
             else
-                LOG('Label accepted')
+                --LOG('Label accepted')
             end
         end
         if not labelRejected and not aiBrain.BuilderManagers[v.Name] then

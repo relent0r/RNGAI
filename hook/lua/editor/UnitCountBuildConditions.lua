@@ -1426,10 +1426,7 @@ end
 function ExpansionBaseCountRNG(aiBrain, compareType, checkNum)
     local expBaseCount = aiBrain:GetManagerCount('Start Location')
     expBaseCount = expBaseCount + aiBrain:GetManagerCount('Expansion Area')
-    LOG('*AI DEBUG: Expansion base count is ' .. expBaseCount .. ' checkNum is ' .. checkNum)
-    if expBaseCount > checkNum + 1 then
-         LOG('*AI DEBUG: Expansion base count is true ' .. expBaseCount .. ' checkNum is ' .. checkNum)
-    end
+    --LOG('*AI DEBUG: Expansion base count is ' .. expBaseCount .. ' checkNum is ' .. checkNum)
     return CompareBody(expBaseCount, checkNum, compareType)
 end
 
