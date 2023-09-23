@@ -370,8 +370,8 @@ function LargeExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadius, 
     return false
 end
 
-function NavalAreaNeedsEngineerRNG(aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
-    local pos, name = AIUtils.AIFindNavalAreaNeedsEngineer(aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
+function NavalAreaNeedsEngineerRNG(aiBrain, locationType, validateLabel, locationRadius, threatMin, threatMax, threatRings, threatType)
+    local pos, name = RUtils.AIFindNavalAreaNeedsEngineer(aiBrain, locationType, validateLabel, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
         --RNGLOG('NavalAreaNeedsEngineerRNG is TRUE at range'..locationRadius)
         return true

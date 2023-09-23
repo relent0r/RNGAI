@@ -194,7 +194,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'NavalBaseLimitRNG', { 2 } }, -- Forces limit to the number of naval expansions
             { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 'Naval Area', 3,  categories.FACTORY * categories.STRUCTURE }},
-            { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', 250, -1000, 100, 1, 'AntiSurface' } },
+            { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', true, 250, -1000, 100, 1, 'AntiSurface' } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -204,6 +204,7 @@ BuilderGroup {
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
+                ValidateLabel = true,
                 ExpansionBase = true,
                 NearMarkerType = 'Naval Area',
                 ExpansionRadius = 70,
@@ -399,7 +400,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'NavalBaseLimitRNG', { 3 } }, -- Forces limit to the number of naval expansions
-            { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', 650, -1000, 100, 1, 'AntiSurface' } },
+            { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', true, 650, -1000, 100, 1, 'AntiSurface' } },
             { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 'Naval Area', 3, categories.FACTORY * categories.STRUCTURE }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -410,6 +411,7 @@ BuilderGroup {
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
+                ValidateLabel = true,
                 ExpansionBase = true,
                 NearMarkerType = 'Naval Area',
                 ExpansionRadius = 60,

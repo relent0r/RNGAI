@@ -4002,7 +4002,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     return
                 end
             elseif cons.NearMarkerType == 'Naval Area' then
-                reference, refName = AIUtils.AIFindNavalAreaNeedsEngineer(aiBrain, cons.LocationType,
+                reference, refName = RUtils.AIFindNavalAreaNeedsEngineer(aiBrain, cons.LocationType, cons.ValidateLabel,
                         (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
                 -- didn't find a location to build at
                 if not reference or not refName then

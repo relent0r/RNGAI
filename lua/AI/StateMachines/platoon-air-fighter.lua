@@ -161,14 +161,13 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                                 local platUnits = GetPlatoonUnits(self)
                                 for _, unit in platUnits do
                                     if not unit:IsUnitState('Guarding') then
-                                        LOG('Fighter is not in guarding state')
+                                        LOG('Fighter is not in guarding state, guard pos '..repr(self.BuilderData.Position))
                                         IssueClearCommands({unit})
                                         IssueGuard({unit}, self.BuilderData.Position)
-                                    else
-                                        LOG('Fighter is already in guarding state')
                                     end
                                 end
                                 LOG('Fighter going straight into hold position status')
+                                self.HoldPosTimer = GetGameTimeSeconds()
                                 self:ChangeState(self.HoldPosition)
                                 return
                             else

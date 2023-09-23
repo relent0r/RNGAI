@@ -71,6 +71,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         -- requires these markers to exist
         import("/lua/sim/MarkerUtilities.lua").GenerateExpansionMarkers()
+        import("/lua/sim/markerutilities.lua").GenerateNavalAreaMarkers()
         --import("/lua/sim/MarkerUtilities.lua").GenerateRallyPointMarkers()
 
         -- requires these datastructures to understand the game
@@ -1102,6 +1103,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.LandPhase = 1
         self.BrainIntel.AirPhase = 1
         self.BrainIntel.NavalPhase = 1
+        self.BrainIntel.NavalBaseLabels = {}
         self.BrainIntel.MassMarker = 0
         self.BrainIntel.RestrictedMassMarker = 0
         self.BrainIntel.MassSharePerPlayer = 0
@@ -2268,7 +2270,35 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
+            if not table.empty(self.EnemyIntel.EnemyStartLocations) then
+                local validNavalLabels = {}
+                local selfNavalPositions = NavUtils.GetPositionsInRadius('Water', self.BrainIntel.StartPos, 256, 10)
+                if selfNavalPositions then
+                    for _, v in selfNavalPositions do
+                        local label = NavUtils.GetLabel('Water', {v[1], v[2], v[3]})
+                        if label and not validNavalLabels[label] then
+                            validNavalLabels[label] = 'Unconfirmed'
+                        end
+                    end
+                    for _, b in self.EnemyIntel.EnemyStartLocations do
+                        local enemyNavalPositions = NavUtils.GetPositionsInRadius('Water', b.Position, 256, 10)
+                        if enemyNavalPositions then
+                            for _, v in enemyNavalPositions do
+                                local label = NavUtils.GetLabel('Water', {v[1], v[2], v[3]})
+                                if label and validNavalLabels[label] then
+                                    validNavalLabels[label] = 'Confirmed'
+                                end
+                            end
+                        end
+                    end
+                end
+                if not table.empty(validNavalLabels) then
+                    self.BrainIntel.NavalBaseLabels = validNavalLabels
+                    LOG('Label Table '..repr(validNavalLabels))
+                end
+            end
             im.MapIntelStats.ScoutLocationsBuilt = true
+
             if self.RNGDEBUG then
                 RNGLOG('* AI-RNG: EnemyStartLocations : '..repr(self.EnemyIntel.EnemyStartLocations))
             end

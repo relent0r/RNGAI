@@ -5937,6 +5937,67 @@ ConfigurePlatoon = function(platoon)
     end
 end
 
+---@param aiBrain AIBrain
+---@param locationType string
+---@param radius number
+---@param tMin number
+---@param tMax number
+---@param tRings number
+---@param tType string
+---@param eng Unit
+---@return boolean
+---@return string
+function AIFindNavalAreaNeedsEngineer(aiBrain, locationType, enemyLabelCheck, radius, tMin, tMax, tRings, tType, eng)
+    local pos = aiBrain.BuilderManagers[locationType].Position
+    if not pos then
+        return false
+    end
+    if eng then
+        pos = eng:GetPosition()
+    end
+    local positions = AIUtils.AIGetMarkersAroundLocation(aiBrain, 'Naval Area', pos, radius, tMin, tMax, tRings, tType)
+    if enemyLabelCheck then
+        LOG('Checking based on enemy label')
+    end
+
+    local retPos, retName
+    local closest = false
+    local retPos, retName
+    local positions = AIUtils.AIFilterAlliedBasesRNG(aiBrain, positions)
+    local labelRejected = false
+    for _, v in positions do
+        local distance = VDist3Sq(pos, v.Position)
+        if enemyLabelCheck then
+            local label= NavUtils.GetLabel('Water', {v.Position[1], v.Position[2], v.Position[3]})
+            LOG('Label is '..label)
+            if label and aiBrain.BrainIntel.NavalBaseLabels[label] ~= 'Confirmed' then
+                LOG('Label Rejected')
+                labelRejected = true
+            else
+                LOG('Label accepted')
+            end
+        end
+        if not labelRejected and not aiBrain.BuilderManagers[v.Name] then
+            if not closest or distance < closest then
+                closest = distance
+                retPos = v.Position
+                retName = v.Name
+            end
+        elseif not labelRejected then
+            local managers = aiBrain.BuilderManagers[v.Name]
+            if managers.EngineerManager:GetNumUnits('Engineers') == 0 and managers.FactoryManager:GetNumFactories() == 0 then
+                if not closest or distance < closest then
+                    closest = distance
+                    retPos = v.Position
+                    retName = v.Name
+                end
+            end
+        end
+    end
+
+    return retPos, retName
+end
+
 --[[
     -- Calculate dot product between two 3D vectors (same as before)
 
