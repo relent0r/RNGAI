@@ -360,7 +360,7 @@ BuilderGroup {
             NeverGuardEngineers = true,
             PlatoonLimit = 25,
             PrioritizedCategories = {
-                categories.EXPERIMENTAL * categories.AIR,
+                categories.EXPERIMENTAL * categories.AIR - categories.UNTARGETABLE,
                 categories.GROUNDATTACK * categories.AIR,
                 categories.BOMBER * categories.AIR,
                 categories.ANTIAIR * categories.AIR,
@@ -386,7 +386,7 @@ BuilderGroup {
             NeverGuardEngineers = true,
             PlatoonLimit = 18,
             PrioritizedCategories = {
-                categories.EXPERIMENTAL * categories.AIR,
+                categories.EXPERIMENTAL * categories.AIR - categories.UNTARGETABLE,
                 categories.GROUNDATTACK * categories.AIR,
                 categories.BOMBER * categories.AIR,
                 categories.ANTIAIR * categories.AIR,
@@ -406,7 +406,7 @@ BuilderGroup {
         BuilderData = {
             NeverGuardEngineers = true,
             PrioritizedCategories = {
-                categories.EXPERIMENTAL * categories.AIR,
+                categories.EXPERIMENTAL * categories.AIR - categories.UNTARGETABLE,
                 categories.BOMBER * categories.AIR,
                 categories.GROUNDATTACK * categories.AIR,
                 categories.ANTIAIR * categories.AIR,
@@ -803,7 +803,7 @@ BuilderGroup {
             NeverGuardEngineers = true,
             PlatoonLimit = 25,
             PrioritizedCategories = {
-                categories.EXPERIMENTAL * categories.AIR,
+                categories.EXPERIMENTAL * categories.AIR - categories.UNTARGETABLE,
                 categories.GROUNDATTACK * categories.AIR,
                 categories.BOMBER * categories.AIR,
                 categories.ANTIAIR * categories.AIR,
@@ -830,7 +830,7 @@ BuilderGroup {
             NeverGuardEngineers = true,
             PlatoonLimit = 18,
             PrioritizedCategories = {
-                categories.EXPERIMENTAL * categories.AIR,
+                categories.EXPERIMENTAL * categories.AIR - categories.UNTARGETABLE,
                 categories.GROUNDATTACK * categories.AIR,
                 categories.BOMBER * categories.AIR,
                 categories.ANTIAIR * categories.AIR,
@@ -850,7 +850,7 @@ BuilderGroup {
         BuilderData = {
             NeverGuardEngineers = true,
             PrioritizedCategories = {
-                categories.EXPERIMENTAL * categories.AIR,
+                categories.EXPERIMENTAL * categories.AIR - categories.UNTARGETABLE,
                 categories.BOMBER * categories.AIR,
                 categories.GROUNDATTACK * categories.AIR,
                 categories.ANTIAIR * categories.AIR,

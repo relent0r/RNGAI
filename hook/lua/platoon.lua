@@ -3333,7 +3333,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 if self.CurrentPlatoonThreat > 0 then
                     newtarget = self:FindClosestUnit('Attack', 'Enemy', true, categories.EXPERIMENTAL * (categories.LAND + categories.NAVAL + categories.STRUCTURE))
                 elseif self.CurrentPlatoonThreat > 0 then
-                    newtarget = self:FindClosestUnit('Attack', 'Enemy', true, categories.EXPERIMENTAL * categories.AIR)
+                    newtarget = self:FindClosestUnit('Attack', 'Enemy', true, categories.EXPERIMENTAL * categories.AIR - categories.UNTARGETABLE)
                 end
 
                 if newtarget then
@@ -4077,6 +4077,8 @@ Platoon = Class(RNGAIPlatoonClass) {
         local massMarkers = RUtils.AIGetMassMarkerLocations(aiBrain, false, false)
         local closeMarkers = 0
         local distantMarkers = 0
+        LOG('Close Markers '..closeMarkers)
+        LOG('Distance Markers '..distantMarkers)
         local closestMarker = false
         for k, marker in massMarkers do
             local dx = engPos[1] - marker.Position[1]
@@ -4361,20 +4363,17 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         local energyCount = 3
         --RNGLOG('CommanderInitializeAIRNG : Energy Production stage 2')
-        if not hydroPresent then
+        if not hydroPresent and (closeMarkers > 0 or distantMarkers > 0) then
             IssueClearCommands({eng})
             --RNGLOG('CommanderInitializeAIRNG : No hydro present, we should be building a little more power')
-            if closeMarkers > 0 then
-                if closeMarkers < 4 then
-                    if closeMarkers < 4 and distantMarkers > 1 then
-                        energyCount = 2
-                    else
-                        energyCount = 1
-                    end
-                else
+            if closeMarkers < 4 then
+                if closeMarkers < 4 and distantMarkers > 1 then
                     energyCount = 2
+                else
+                    energyCount = 1
                 end
-                
+            else
+                energyCount = 2
             end
             for i=1, energyCount do
                 buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)

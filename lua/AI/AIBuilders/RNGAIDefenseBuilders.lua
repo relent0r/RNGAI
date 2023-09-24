@@ -240,6 +240,33 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T3 Defence Single',
+        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        Priority = 970,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.DEFENSE * categories.TECH3 * categories.ANTIAIR}},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                maxUnits = 1,
+                maxRadius = 5,
+                BuildClose = true,
+                NearDefensivePoints = false,
+                BuildStructures = {
+                    'T3AADefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T3 Defence Engineer Restricted Breach Air',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 950,

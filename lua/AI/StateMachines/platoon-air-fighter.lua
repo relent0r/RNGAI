@@ -63,7 +63,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             end
             self.CurrentEnemyThreat = 0
             self.CurrentPlatoonThreat = 0
-            self.AttackPriorities = self.PlatoonData.PrioritizedCategories or {categories.AIR}
+            self.AttackPriorities = self.PlatoonData.PrioritizedCategories or {categories.AIR - categories.UNTARGETABLE}
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             StartFighterThreads(aiBrain, self)
             coroutine.yield(30)

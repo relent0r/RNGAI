@@ -2599,7 +2599,7 @@ LastKnownThread = function(aiBrain)
                                             enemyBuildStrength[v.Army].EngineerBuildPower = enemyBuildStrength[v.Army].EngineerBuildPower + buildPower
                                         end
                                         im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='eng'
-                                    elseif unitCat.EXPERIMENTAL then
+                                    elseif unitCat.EXPERIMENTAL and not unitCat.UNTARGETABLE then
                                         if not aiBrain.EnemyIntel.Experimental[id] then
                                             aiBrain.EnemyIntel.Experimental[id] = {object = v, position=unitPosition }
                                         end
@@ -2611,7 +2611,7 @@ LastKnownThread = function(aiBrain)
                                         im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='arty'
                                     end
                                 elseif unitCat.AIR then
-                                    if unitCat.EXPERIMENTAL then
+                                    if unitCat.EXPERIMENTAL and not unitCat.UNTARGETABLE then
                                         if not aiBrain.EnemyIntel.Experimental[id] then
                                             aiBrain.EnemyIntel.Experimental[id] = {object = v, position=unitPosition }
                                         end

@@ -53,29 +53,6 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
-    --[[
-    Builder {
-        BuilderName = 'RNGAI Factory Initial Queue 10km Small',
-        PlatoonTemplate = 'RNGAIT1InitialAttackBuild10k',
-        Priority = 820, -- After Second Engie Group
-        BuilderConditions = {
-            { MIBC, 'MapSizeLessThan', { 1000 } },
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 120 } }, -- don't build after 6 minutes
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory Initial Queue 5km Small',
-        PlatoonTemplate = 'RNGAIT1InitialAttackBuild5k',
-        Priority = 820, -- After Second Engie Group
-        BuilderConditions = {
-            { MIBC, 'MapSizeLessThan', { 500 } },
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 120 } }, -- don't build after 6 minutes
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },]]
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Small',
         PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
@@ -808,11 +785,11 @@ BuilderGroup {
             Defensive = true,
             AttackEnemyStrength = 200,                              
             TargetSearchPriorities = { 
-                categories.EXPERIMENTAL * categories.AIR,
+                categories.EXPERIMENTAL * categories.AIR - categories.UNTARGETABLE,
                 categories.MOBILE * categories.AIR
             },
             PrioritizedCategories = {   
-                categories.EXPERIMENTAL * categories.AIR,
+                categories.EXPERIMENTAL * categories.AIR - categories.UNTARGETABLE,
                 categories.MOBILE * categories.AIR * categories.GROUNDATTACK,
                 categories.MOBILE * categories.AIR * categories.BOMBER,
                 categories.MOBILE * categories.AIR,
