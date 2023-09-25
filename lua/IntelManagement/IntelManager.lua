@@ -2533,6 +2533,8 @@ LastKnownThread = function(aiBrain)
         for _=0,10 do
             local enemyMexes = {}
             local mexcount = 0
+            local enemyGunshipThreat = 0
+            local enemyBomberThreat = 0
             local eunits=aiBrain:GetUnitsAroundPoint((categories.AIR + categories.LAND + categories.STRUCTURE) - categories.INSIGNIFICANTUNIT, {0,0,0}, math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])*1.5, 'Enemy')
             for _,v in eunits do
                 if not v or v.Dead then continue end
@@ -2552,122 +2554,124 @@ LastKnownThread = function(aiBrain)
                         im.MapIntelGrid[gridXID][gridZID].EnemyUnits = {}
                         im.MapIntelGrid[gridXID][gridZID].EnemyUnitsDanger = 0
                     end
-                    if unitCat.MASSEXTRACTION then
-                        if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id] or im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].time > 10 then
-                            im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id]={}
+                    if not unitCat.UNTARGETABLE then
+                        if unitCat.MASSEXTRACTION then
+                            if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id] or im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].time > 10 then
+                                im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id]={}
+                                im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].object=v
+                                im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].Position=unitPosition
+                                im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].time=time
+                                im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].recent=true
+                                im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='mex'
+                            end
+                            mexcount = mexcount + 1
+                            if not v.zoneid and aiBrain.ZonesInitialized then
+                                if RUtils.PositionOnWater(unitPosition[1], unitPosition[3]) then
+                                    -- tbd define water based zones
+                                    v.zoneid = MAP:GetZoneID(unitPosition,aiBrain.Zones.Naval.index)
+                                else
+                                    v.zoneid = MAP:GetZoneID(unitPosition,aiBrain.Zones.Land.index)
+                                end
+                            end
+                            if not enemyMexes[v.zoneid] then
+                                enemyMexes[v.zoneid] = {T1 = 0,T2 = 0,T3 = 0,}
+                            end
+                            if unitCat.TECH1 then
+                                enemyMexes[v.zoneid].T1 = enemyMexes[v.zoneid].T1 + 1
+                            elseif unitCat.TECH2 then
+                                enemyMexes[v.zoneid].T2 = enemyMexes[v.zoneid].T2 + 1
+                            else
+                                enemyMexes[v.zoneid].T3 = enemyMexes[v.zoneid].T3 + 1
+                            end
+                        end
+                        if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id] or im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].time + 10 < time then
+                            if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id] then
+                                im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id]={}
+                                if unitCat.MOBILE then
+                                    if unitCat.COMMAND then
+                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='acu'
+                                    end
+                                    if unitCat.LAND then
+                                        if unitCat.ENGINEER and not unitCat.COMMAND then
+                                            if v.Army and v.Blueprint.Economy.BuildRate then
+                                                local buildPower = v.Blueprint.Economy.BuildRate
+                                                enemyBuildStrength.Total.EngineerBuildPower = enemyBuildStrength.Total.EngineerBuildPower + buildPower
+                                                if not enemyBuildStrength[v.Army].EngineerBuildPower then
+                                                    enemyBuildStrength[v.Army].EngineerBuildPower = 0
+                                                end
+                                                enemyBuildStrength[v.Army].EngineerBuildPower = enemyBuildStrength[v.Army].EngineerBuildPower + buildPower
+                                            end
+                                            im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='eng'
+                                        elseif unitCat.EXPERIMENTAL and not unitCat.UNTARGETABLE then
+                                            if not aiBrain.EnemyIntel.Experimental[id] then
+                                                aiBrain.EnemyIntel.Experimental[id] = {object = v, position=unitPosition }
+                                            end
+                                        elseif unitCat.ANTIAIR then
+                                            im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='aa'
+                                        elseif unitCat.DIRECTFIRE then
+                                            im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='tank'
+                                        elseif unitCat.INDIRECTFIRE then
+                                            im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='arty'
+                                        end
+                                    elseif unitCat.AIR then
+                                        if unitCat.EXPERIMENTAL then
+                                            if not aiBrain.EnemyIntel.Experimental[id] then
+                                                aiBrain.EnemyIntel.Experimental[id] = {object = v, position=unitPosition }
+                                            end
+                                        end
+                                    end
+                                elseif unitCat.STRUCTURE then
+                                    if unitCat.RADAR then
+                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='radar'
+                                    elseif unitCat.TACTICALMISSILEPLATFORM then
+                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='tml'
+                                        if not aiBrain.EnemyIntel.TML[id] then
+                                            local angle = RUtils.GetAngleToPosition(aiBrain.BuilderManagers['MAIN'].Position, unitPosition)
+                                            aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=v.Blueprint.Weapon[1].MaxRadius }
+                                            aiBrain.BasePerimeterMonitor['MAIN'].RecentTMLAngle = angle
+                                        end
+                                    elseif unitCat.TECH3 and unitCat.ANTIMISSILE and unitCat.SILO then
+                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='smd'
+                                        if not aiBrain.EnemyIntel.SMD[id] then
+                                            aiBrain.EnemyIntel.SMD[id] = {object = v, Position=unitPosition, Detected=GetGameTimeSeconds() }
+                                        end
+                                    elseif unitCat.FACTORY then
+                                        if unitCat.LAND then
+                                            if v.Army and v.Blueprint.Economy.BuildRate then
+                                                local buildPower = v.Blueprint.Economy.BuildRate
+                                                enemyBuildStrength.Total.LandBuildPower = enemyBuildStrength.Total.LandBuildPower + buildPower
+                                                if not enemyBuildStrength[v.Army].LandBuildPower then
+                                                    enemyBuildStrength[v.Army].LandBuildPower = 0
+                                                end
+                                                enemyBuildStrength[v.Army].LandBuildPower = enemyBuildStrength[v.Army].LandBuildPower + buildPower
+                                            end
+                                        elseif unitCat.AIR then
+                                            if v.Army and v.Blueprint.Economy.BuildRate then
+                                                local buildPower = v.Blueprint.Economy.BuildRate
+                                                enemyBuildStrength.Total.AirBuildPower = enemyBuildStrength.Total.AirBuildPower + buildPower
+                                                if not enemyBuildStrength[v.Army].AirBuildPower then
+                                                    enemyBuildStrength[v.Army].AirBuildPower = 0
+                                                end
+                                                enemyBuildStrength[v.Army].AirBuildPower = enemyBuildStrength[v.Army].AirBuildPower + buildPower
+                                            end
+                                        elseif unitCat.NAVAL then
+                                            if v.Army and v.Blueprint.Economy.BuildRate then
+                                                local buildPower = v.Blueprint.Economy.BuildRate
+                                                enemyBuildStrength.Total.NavalBuildPower = enemyBuildStrength.Total.NavalBuildPower + buildPower
+                                                if not enemyBuildStrength[v.Army].NavalBuildPower then
+                                                    enemyBuildStrength[v.Army].NavalBuildPower = 0
+                                                end
+                                                enemyBuildStrength[v.Army].NavalBuildPower = enemyBuildStrength[v.Army].NavalBuildPower + buildPower
+                                            end
+                                        end
+                                    end
+                                end
+                            end
                             im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].object=v
                             im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].Position=unitPosition
                             im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].time=time
                             im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].recent=true
-                            im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='mex'
                         end
-                        mexcount = mexcount + 1
-                        if not v.zoneid and aiBrain.ZonesInitialized then
-                            if RUtils.PositionOnWater(unitPosition[1], unitPosition[3]) then
-                                -- tbd define water based zones
-                                v.zoneid = MAP:GetZoneID(unitPosition,aiBrain.Zones.Naval.index)
-                            else
-                                v.zoneid = MAP:GetZoneID(unitPosition,aiBrain.Zones.Land.index)
-                            end
-                        end
-                        if not enemyMexes[v.zoneid] then
-                            enemyMexes[v.zoneid] = {T1 = 0,T2 = 0,T3 = 0,}
-                        end
-                        if unitCat.TECH1 then
-                            enemyMexes[v.zoneid].T1 = enemyMexes[v.zoneid].T1 + 1
-                        elseif unitCat.TECH2 then
-                            enemyMexes[v.zoneid].T2 = enemyMexes[v.zoneid].T2 + 1
-                        else
-                            enemyMexes[v.zoneid].T3 = enemyMexes[v.zoneid].T3 + 1
-                        end
-                    end
-                    if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id] or im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].time + 10 < time then
-                        if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id] then
-                            im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id]={}
-                            if unitCat.MOBILE then
-                                if unitCat.COMMAND then
-                                    im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='acu'
-                                end
-                                if unitCat.LAND then
-                                    if unitCat.ENGINEER and not unitCat.COMMAND then
-                                        if v.Army and v.Blueprint.Economy.BuildRate then
-                                            local buildPower = v.Blueprint.Economy.BuildRate
-                                            enemyBuildStrength.Total.EngineerBuildPower = enemyBuildStrength.Total.EngineerBuildPower + buildPower
-                                            if not enemyBuildStrength[v.Army].EngineerBuildPower then
-                                                enemyBuildStrength[v.Army].EngineerBuildPower = 0
-                                            end
-                                            enemyBuildStrength[v.Army].EngineerBuildPower = enemyBuildStrength[v.Army].EngineerBuildPower + buildPower
-                                        end
-                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='eng'
-                                    elseif unitCat.EXPERIMENTAL and not unitCat.UNTARGETABLE then
-                                        if not aiBrain.EnemyIntel.Experimental[id] then
-                                            aiBrain.EnemyIntel.Experimental[id] = {object = v, position=unitPosition }
-                                        end
-                                    elseif unitCat.ANTIAIR then
-                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='aa'
-                                    elseif unitCat.DIRECTFIRE then
-                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='tank'
-                                    elseif unitCat.INDIRECTFIRE then
-                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='arty'
-                                    end
-                                elseif unitCat.AIR then
-                                    if unitCat.EXPERIMENTAL and not unitCat.UNTARGETABLE then
-                                        if not aiBrain.EnemyIntel.Experimental[id] then
-                                            aiBrain.EnemyIntel.Experimental[id] = {object = v, position=unitPosition }
-                                        end
-                                    end
-                                end
-                            elseif unitCat.STRUCTURE then
-                                if unitCat.RADAR then
-                                    im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='radar'
-                                elseif unitCat.TACTICALMISSILEPLATFORM then
-                                    im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='tml'
-                                    if not aiBrain.EnemyIntel.TML[id] then
-                                        local angle = RUtils.GetAngleToPosition(aiBrain.BuilderManagers['MAIN'].Position, unitPosition)
-                                        aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=v.Blueprint.Weapon[1].MaxRadius }
-                                        aiBrain.BasePerimeterMonitor['MAIN'].RecentTMLAngle = angle
-                                    end
-                                elseif unitCat.TECH3 and unitCat.ANTIMISSILE and unitCat.SILO then
-                                    im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='smd'
-                                    if not aiBrain.EnemyIntel.SMD[id] then
-                                        aiBrain.EnemyIntel.SMD[id] = {object = v, Position=unitPosition, Detected=GetGameTimeSeconds() }
-                                    end
-                                elseif unitCat.FACTORY then
-                                    if unitCat.LAND then
-                                        if v.Army and v.Blueprint.Economy.BuildRate then
-                                            local buildPower = v.Blueprint.Economy.BuildRate
-                                            enemyBuildStrength.Total.LandBuildPower = enemyBuildStrength.Total.LandBuildPower + buildPower
-                                            if not enemyBuildStrength[v.Army].LandBuildPower then
-                                                enemyBuildStrength[v.Army].LandBuildPower = 0
-                                            end
-                                            enemyBuildStrength[v.Army].LandBuildPower = enemyBuildStrength[v.Army].LandBuildPower + buildPower
-                                        end
-                                    elseif unitCat.AIR then
-                                        if v.Army and v.Blueprint.Economy.BuildRate then
-                                            local buildPower = v.Blueprint.Economy.BuildRate
-                                            enemyBuildStrength.Total.AirBuildPower = enemyBuildStrength.Total.AirBuildPower + buildPower
-                                            if not enemyBuildStrength[v.Army].AirBuildPower then
-                                                enemyBuildStrength[v.Army].AirBuildPower = 0
-                                            end
-                                            enemyBuildStrength[v.Army].AirBuildPower = enemyBuildStrength[v.Army].AirBuildPower + buildPower
-                                        end
-                                    elseif unitCat.NAVAL then
-                                        if v.Army and v.Blueprint.Economy.BuildRate then
-                                            local buildPower = v.Blueprint.Economy.BuildRate
-                                            enemyBuildStrength.Total.NavalBuildPower = enemyBuildStrength.Total.NavalBuildPower + buildPower
-                                            if not enemyBuildStrength[v.Army].NavalBuildPower then
-                                                enemyBuildStrength[v.Army].NavalBuildPower = 0
-                                            end
-                                            enemyBuildStrength[v.Army].NavalBuildPower = enemyBuildStrength[v.Army].NavalBuildPower + buildPower
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].object=v
-                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].Position=unitPosition
-                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].time=time
-                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].recent=true
                     end
                 end
             end
