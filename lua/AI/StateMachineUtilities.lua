@@ -1077,3 +1077,21 @@ function PositionInWater(position)
     local inWater = GetTerrainHeight(position[1], position[3]) < GetSurfaceHeight(position[1], position[3])
     return inWater
 end
+
+function SetupEngineerStateCallbacksRNG(eng)
+    if eng and not eng.Dead and not eng.StateBuildDoneCallbackSet and eng.PlatoonHandle and PlatoonExists(eng:GetAIBrain(), eng.PlatoonHandle) then
+        import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(eng.PlatoonHandle.MexBuildAIDoneRNG, eng, categories.ALLUNITS)
+        eng.StateBuildDoneCallbackSet = true
+    end
+end
+
+function MexBuildAIDoneRNG(unit, params)
+    if not unit.PlatoonHandle then return end
+    if not unit.PlatoonHandle.PlanName == 'MexBuildAIRNG' then return end
+    --RNGLOG("*AI DEBUG: MexBuildAIRNG removing queue item")
+    --RNGLOG('Queue Size is '..RNGGETN(unit.EngineerBuildQueue))
+    if unit.EngineerBuildQueue and not table.empty(unit.EngineerBuildQueue) then
+        table.remove(unit.EngineerBuildQueue, 1)
+    end
+    --RNGLOG('Queue size after remove '..RNGGETN(unit.EngineerBuildQueue))
+end
