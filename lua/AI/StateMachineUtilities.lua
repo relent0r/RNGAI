@@ -903,6 +903,7 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
         },
         ArtilleryThreat = {
             TotalThreat = 0,
+            TotalCount = 0,
             Units = {}
         },
     }

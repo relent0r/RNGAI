@@ -86,6 +86,44 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                 WARN('No Experimental in FatBoy state machine, exiting')
                 return
             end
+            if self.ExperimentalUnit.ExternalFactory then
+                LOG('Factory ID is '..self.ExperimentalUnit.ExternalFactory.UnitId)
+                local factoryWorkFinish = function(experimentalFactory, finishedUnit)
+                    if finishedUnit then
+                        LOG('fatboy factory work finished ')
+                        LOG('Fraction complete '..finishedUnit:GetFractionComplete())
+                    end
+                    
+                    if finishedUnit and not finishedUnit.Dead and finishedUnit:GetFractionComplete() == 1.0 then
+                        local aiBrain = finishedUnit:GetAIBrain()
+                        if finishedUnit.Blueprint.CategoriesHash.ENGINEER and finishedUnit.Blueprint.CategoriesHash.TECH3 then
+                            local plat = aiBrain:MakePlatoon('', '')
+                            aiBrain:AssignUnitsToPlatoon(plat, {finishedUnit}, 'attack', 'None')
+                            import("/mods/rngai/lua/ai/statemachines/platoon-engineer-task.lua").AssignToUnitsMachine({ 
+                                StateMachine = 'Engineer',
+                                LocationType = 'FLOATING',
+                                BuilderData = {
+                                    PreAllocatedTask = true,
+                                    Task = 'Firebase',
+                                    BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
+                                    BaseTemplate = 'DefenseTemplate',
+                                }
+                            }, plat, {finishedUnit})
+                        else
+                            finishedUnit.FatBoyGuardAdded = true
+                            LOG('Platoon Handle '..repr(experimentalFactory.FatboyPlatoon))
+                            aiBrain:AssignUnitsToPlatoon(experimentalFactory.FatboyPlatoon, {finishedUnit}, 'guard', 'none')
+                            LOG('Unit added to guard squad '..finishedUnit.UnitId)
+                        end
+                    end
+                end
+                import("/lua/scenariotriggers.lua").CreateUnitBuiltTrigger(factoryWorkFinish, self.ExperimentalUnit.ExternalFactory, categories.ALLUNITS)
+            end
+            self.ExperimentalUnit.ExternalFactory.EngineerManager = {
+                Task = nil,
+                Engineers = {}
+            }
+            
             self.UnitRatios = {}
             self.SupportT1MobileScout = 0
             self.SupportT2MobileAA = 3
@@ -745,6 +783,9 @@ AssignToUnitsMachine = function(data, platoon, units)
                 if not unit.Dead then
                     IssueClearCommands(unit)
                     unit.PlatoonHandle = platoon
+                    if unit.ExternalFactory then
+                        unit.ExternalFactory.FatboyPlatoon = platoon
+                    end
                     if not unit.Dead and unit:TestToggleCaps('RULEUTC_StealthToggle') then
                         unit:SetScriptBit('RULEUTC_StealthToggle', false)
                     end
@@ -785,24 +826,24 @@ GuardThread = function(aiBrain, platoon)
         T1LandScout = 'uel0101',
         T2LandAA = 'uel0205',
         T3LandAA = 'delk002',
+        T3Engineer = 'uel0309'
     }
-    local function BuildUnit(aiBrain, experimental, unitToBuild)
+    local function BuildUnit(aiBrain, experimental, unitBuildQueue)
         local factory = experimental.ExternalFactory
+        if factory.FatboyPlatoon.ArmyPool then
+            LOG('Factory army pool is back in the ArmyPool, check fatboy')
+            LOG('Fatboy platoon handle '..repr(experimental))
+        end
         local experimentalPosition = experimental:GetPosition()
-        local unitBeingBuilt
         if not factory.UnitBeingBuilt and not factory:IsUnitState('Building') then
-            aiBrain:BuildUnit(factory, unitToBuild, 1)
+            for _, v in unitBuildQueue do
+                aiBrain:BuildUnit(factory, v, 1)
+            end
             coroutine.yield(5)
-            unitBeingBuilt = factory.UnitBeingBuilt
             IssueClearFactoryCommands({factory})
             IssueFactoryRallyPoint({factory}, experimentalPosition)
             while not experimental.Dead and not factory:IsIdleState() do
                 coroutine.yield(25)
-            end
-            if unitBeingBuilt and not unitBeingBuilt.Dead and unitBeingBuilt:GetFractionComplete() == 1.0 then
-                IssueClearCommands({unitBeingBuilt})
-                IssueGuard({unitBeingBuilt}, experimental)
-                aiBrain:AssignUnitsToPlatoon(experimental.PlatoonHandle, {unitBeingBuilt}, 'guard', 'none')
             end
             experimental.PlatoonHandle.BuildThread = nil
         end
@@ -823,6 +864,7 @@ GuardThread = function(aiBrain, platoon)
         local currentLandThreat = 0
         local currentLandScoutCount = 0
         local guardUnits = platoon:GetSquadUnits('guard')
+        local platoonUnits = platoon:GetPlatoonUnits()
         local intelCoverage = true
         if guardUnits then
             if IsDestroyed(experimental) or platoon.VentGuardPlatoon then
@@ -833,6 +875,7 @@ GuardThread = function(aiBrain, platoon)
                 local plat = aiBrain:MakePlatoon('', '')
                 aiBrain:AssignUnitsToPlatoon(plat, guardUnits, 'attack', 'None')
                 import("/mods/rngai/lua/ai/statemachines/platoon-land-zonecontrol.lua").AssignToUnitsMachine({ {ZoneType = 'control'}, LocationType = platoon.LocationType}, plat, guardUnits)
+                return
             end
             local experimentalPos = experimental:GetPosition()
             local gridXID, gridZID = im:GetIntelGrid(experimentalPos)
@@ -863,7 +906,16 @@ GuardThread = function(aiBrain, platoon)
                 local dx = unitPos[1] - experimentalPos[1]
                 local dz = unitPos[3] - experimentalPos[3]
                 if v.Blueprint.CategoriesHash.ANTIAIR then
-                    if dx * dx + dz * dz > guardCutOff then
+                    if dx * dx + dz * dz > guardCutOff or v.FatBoyGuardAdded then
+                        v.FatBoyGuardAdded = nil
+                        IssueClearCommands(v)
+                        IssueMove({v}, experimental)
+                        IssueGuard({v}, experimental)
+                    end
+                end
+                if v.Blueprint.CategoriesHash.SCOUT then
+                    if dx * dx + dz * dz > guardCutOff or v.FatBoyGuardAdded then
+                        v.FatBoyGuardAdded = nil
                         IssueClearCommands(v)
                         IssueMove({v}, experimental)
                         IssueGuard({v}, experimental)
@@ -872,14 +924,24 @@ GuardThread = function(aiBrain, platoon)
             end
         end
         if not StateUtils.PositionInWater(experimental:GetPosition()) and not platoon.BuildThread and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.7 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 0.8 then
+            local buildQueue = {}
+            LOG('currentT2AntiAirCount '..currentT2AntiAirCount)
+            LOG('currentT3AntiAirCount '..currentT3AntiAirCount)
+            LOG('currentLandScoutCount '..currentLandScoutCount)
             if currentT2AntiAirCount < platoon.SupportT2MobileAA then
-                platoon.BuildThread = aiBrain:ForkThread(BuildUnit, experimental, UnitTable['T2LandAA'])
+                table.insert(buildQueue, UnitTable['T2LandAA'])
             elseif currentT3AntiAirCount < platoon.SupportT3MobileAA then
-                platoon.BuildThread = aiBrain:ForkThread(BuildUnit, experimental, UnitTable['T3LandAA'])
+                table.insert(buildQueue, UnitTable['T3LandAA'])
             end
             if not intelCoverage and currentLandScoutCount < 3 then
-                platoon.BuildThread = aiBrain:ForkThread(BuildUnit, experimental, UnitTable['T1LandScout'])
+                table.insert(buildQueue, UnitTable['T1LandScout'])
             end
+            if not experimental.ExternalFactory.EngineerManager.Task and platoon.EnemyThreatTable.ArtilleryThreat.TotalThreat > 60 then
+                experimental.ExternalFactory.EngineerManager.Task = 'Firebase'
+                table.insert(buildQueue, UnitTable['T3Engineer'])
+            end
+            LOG('Current FatBoy build queue '..repr(buildQueue))
+            platoon.BuildThread = aiBrain:ForkThread(BuildUnit, experimental, buildQueue)
         end
         platoon.CurrentAntiAirThreat = currentAntiAirThreat
         platoon.CurrentLandThreat = currentLandThreat

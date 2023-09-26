@@ -5,7 +5,7 @@ AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").A
 ---@field ThreatToEvade Vector | nil
 ---@field LocationToRaid Vector | nil
 ---@field OpportunityToRaid Vector | nil
-AIPlatoonEngineerBehavior = Class(AIPlatoon) {
+AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
 
     PlatoonName = 'EngineerBehavior',
 
@@ -16,8 +16,23 @@ AIPlatoonEngineerBehavior = Class(AIPlatoon) {
         --- Initial state of any state machine
         ---@param self AIPlatoonEngineerBehavior
         Main = function(self)
-
+            local aiBrain = self:GetBrain()
             self.LocationType = self.BuilderData.LocationType
+            self.MovementLayer = self:GetNavigationalLayer()
+            LOG('Welcome to the engineer state machine')
+            local platoonUnits = self:GetPlatoonUnits()
+            for _, v in platoonUnits do
+                if not v.BuilderManagerData then
+                    v.BuilderManagerData = {}
+                end
+                if not v.BuilderManagerData.EngineerManager and aiBrain.BuilderManagers['FLOATING'].EngineerManager then
+                    v.BuilderManagerData.EngineerManager = aiBrain.BuilderManagers['FLOATING'].EngineerManager
+                end
+            end
+
+
+            self:ChangeState(self.DecideWhatToDo)
+            return
 
         end,
     },
@@ -46,6 +61,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoon) {
                     aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'support', 'None')
                     import("/mods/rngai/lua/ai/statemachines/platoon-engineer-reclaim.lua").AssignToUnitsMachine({ StateMachine = 'Reclaim', LocationType = 'FLOATING' }, plat, {unit})
                     return
+                elseif builderData.Task == 'Firebase' then
+                    
                 end
             else
                 local engineerManager = unit.BuilderManagerData.EngineerManager
@@ -105,6 +122,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIPlatoonEngineerBehavior)
+        platoon.BuilderData = data.BuilderData
         local platoonUnits = platoon:GetPlatoonUnits()
         if platoonUnits then
             for _, unit in platoonUnits do
