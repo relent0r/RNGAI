@@ -353,10 +353,8 @@ end
 function StartLocationNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
     local pos, name = RUtils.AIFindStartLocationNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
-        RNGLOG('StartLocationNeedsEngineer is True at pos '..repr(pos)..' for radius '..locationRadius)
         return true
     end
-    RNGLOG('StartLocationNeedsEngineer is False for radius '..locationRadius)
     return false
 end
 
@@ -373,10 +371,8 @@ end
 function NavalAreaNeedsEngineerRNG(aiBrain, locationType, validateLabel, locationRadius, threatMin, threatMax, threatRings, threatType)
     local pos, name = RUtils.AIFindNavalAreaNeedsEngineer(aiBrain, locationType, validateLabel, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
-        --RNGLOG('NavalAreaNeedsEngineerRNG is TRUE at range'..locationRadius)
         return true
     end
-    --RNGLOG('NavalAreaNeedsEngineerRNG is FALSE at range'..locationRadius)
     return false
 end
 

@@ -457,7 +457,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Spam Common Expansion Small',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
+        PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 600,                                                          -- Priority. 1000 is normal.
@@ -467,6 +467,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
+            StateMachine = 'LandAssault',
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
@@ -517,7 +518,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Spam Aeon Expansion',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Aeon Intelli',                          -- Template Name. 
+        PlatoonTemplate = 'LandCombatHoverStateMachineRNG',                          -- Template Name. 
         Priority = 650,                                                          -- Priority. 1000 is normal.
         InstanceCount = 30,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -526,6 +527,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
+            StateMachine = 'LandAssault',
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
@@ -639,9 +641,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Spam Common Expansion Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
+        PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 600,                                                          -- Priority. 1000 is normal.
         InstanceCount = 30,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -650,6 +650,7 @@ BuilderGroup {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
         },
         BuilderData = {
+            StateMachine = 'LandAssault',
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
@@ -681,7 +682,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Spam Aeon Expansion Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Aeon Intelli',                          -- Template Name. 
+        PlatoonTemplate = 'LandCombatHoverStateMachineRNG',                          -- Template Name. 
         Priority = 650,                                                          -- Priority. 1000 is normal.
         InstanceCount = 30,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -690,6 +691,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
+            StateMachine = 'LandAssault',
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
@@ -920,8 +922,8 @@ BuilderGroup {
     },
     
     Builder {
-        BuilderName = 'RNGAI Spam Intelli',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
+        BuilderName = 'RNGAI Spam Assault',                              -- Random Builder Name.
+        PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 550,                                                          -- Priority. 1000 is normal.
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 20,                                                      -- Number of platoons that will be formed.
@@ -930,6 +932,7 @@ BuilderGroup {
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
+            StateMachine = 'LandAssault',
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
@@ -962,7 +965,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Spam Intelli Amphib',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli Amphib',                          -- Template Name. 
+        PlatoonTemplate = 'LandCombatAmphibStateMachineRNG',                          -- Template Name. 
         Priority = 710,                                                          -- Priority. 1000 is normal.
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
@@ -973,6 +976,7 @@ BuilderGroup {
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * ( categories.AMPHIBIOUS + categories.HOVER ) - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
+            StateMachine = 'LandAssault',
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
@@ -1148,8 +1152,8 @@ BuilderGroup {
             },
     },
     Builder {
-        BuilderName = 'RNGAI Spam Intelli Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. 
+        BuilderName = 'RNGAI Spam Assault Large',                              -- Random Builder Name.
+        PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 550,                                                          -- Priority. 1000 is normal.
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 30,                                                      -- Number of platoons that will be formed.
@@ -1158,6 +1162,7 @@ BuilderGroup {
             { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
+            StateMachine = 'LandAssault',
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
@@ -1189,7 +1194,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Spam Intelli Amphib Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli Amphib',                          -- Template Name. 
+        PlatoonTemplate = 'LandCombatAmphibStateMachineRNG',                          -- Template Name. 
         Priority = 710,                                                          -- Priority. 1000 is normal.
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         PlatoonAddPlans = { 'DistressResponseAIRNG' },
@@ -1200,6 +1205,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * ( categories.AMPHIBIOUS + categories.HOVER ) - categories.ENGINEER - categories.EXPERIMENTAL}},
         },
         BuilderData = {
+            StateMachine = 'LandAssault',
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',

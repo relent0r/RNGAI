@@ -856,10 +856,8 @@ function AIFindStartLocationNeedsEngineerRNG(aiBrain, locationType, radius, tMin
     local startX, startZ = aiBrain:GetArmyStartPos()
     --LOG('positions '..repr(positions))
     for _, v in positions do
-        if string.sub(v.Name, 1, 5) == 'ARMY_' then
-            if startX ~= v.Position[1] and startZ ~= v.Position[3] then
-                table.insert(validPos, v)
-            end
+        if startX ~= v.Position[1] and startZ ~= v.Position[3] then
+            table.insert(validPos, v)
         end
     end
     --LOG('Valid Pos table '..repr(validPos))
@@ -2845,7 +2843,7 @@ function LeadTargetRNG(LauncherPos, target, minRadius, maxRadius)
     -- Adjust for targets CollisionOffsetY. If the hitbox of the unit is above the ground
     -- we nedd to fire "behind" the target, so we hit the unit in midair.
     local TargetCollisionBoxAdjust = 0
-    local TargetBluePrint = __blueprints[target.UnitId]
+    local TargetBluePrint = target.Blueprint
     if TargetBluePrint.CollisionOffsetY and TargetBluePrint.CollisionOffsetY > 0 then
         -- if the unit is far away we need to target farther behind the target because of the projectile flight angel
         local DistanceOffset = (100 / 256 * dist2) * 0.06

@@ -1749,12 +1749,38 @@ function AIConfigureExpansionWatchTableRNG(aiBrain)
                 if b.type == 'Blank Marker' and b.IsOccupied then
                     startPosUsed = true
                 end
-                if not startPosUsed then
+                local expansionZone
+                local expansionLayer
+                if b.position[1] > 0 and b.position[3] > 0 then
+                    local label, reason
+                    if RUtils.PositionInWater(b.position) then
+                        label, reason = NavUtils.GetLabel('Water', b.position)
+                        if not label then
+                            WARN('No expansion water label returned reason '..reason)
+                            WARN('Water label failure position was '..repr(b.position))
+                        else
+                            expansionZone = label
+                            expansionLayer = 'Water'
+                            --RNGLOG('Expansion Marker has had label added '..repr(b))
+                        end
+                    else
+                        label, reason = NavUtils.GetLabel('Land', b.position)
+                        if not label then
+                            WARN('No expansion land label returned reason '..reason)
+                            WARN('Land label failure position was '..repr(b.position))
+                        else
+                            expansionZone = label
+                            expansionLayer = 'Land'
+                            --RNGLOG('Expansion Marker has had label added '..repr(b))
+                        end
+                    end
+                end
+                if expansionZone and not startPosUsed then
                     if b.Extractors then
-                        table.insert(markerList, {Name = b.Name, Position = b.position, Type = b.type, TimeStamp = 0, MassPoints = RNGGETN(b.Extractors), Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false, Zone = false, Radar = false})
+                        table.insert(markerList, {Name = b.Name, Position = b.position, Type = b.type, TimeStamp = 0, MassPoints = RNGGETN(b.Extractors), Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false, Zone = expansionZone, Radar = false, RNGLayer = expansionLayer})
                     else
                         massPointsNeedsValidation = true
-                        table.insert(markerList, {Name = b.Name, Position = b.position, Type = b.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false, Zone = false, Radar = false})
+                        table.insert(markerList, {Name = b.Name, Position = b.position, Type = b.type, TimeStamp = 0, MassPoints = 0, Land = 0, Structures = 0, Commander = 0, PlatoonAssigned = false, ScoutAssigned = false, Zone = expansionZone, Radar = false, RNGLayer = expansionLayer})
                     end
                 end
             end
@@ -1796,60 +1822,6 @@ ExpansionIntelScanRNG = function(aiBrain)
             end
             if v.ScoutAssigned.Dead then
                 v.ScoutAssigned = false
-            end
-            if not v.Zone then
-                --[[
-                    This is the information available in the Path Node currently. subject to change 7/13/2021
-                    info: Check for position {
-                    info:   GraphArea="LandArea_133",
-                    info:   RNGArea="Land15-24",
-                    info:   adjacentTo="Land19-11 Land20-11 Land20-12 Land20-13 Land18-11",
-                    info:   bestexpand="Expansion Area 6",
-                    info:   color="fff4a460",
-                    info:   expanddists={
-                    info:     ARMY_1=209.15859985352,
-                    info:     ARMY_2=218.62866210938,
-                    info:     ARMY_3=118.64562988281,
-                    info:     ARMY_4=290.41003417969,
-                    info:     ARMY_5=270.42752075195,
-                    info:     ARMY_6=125.28052520752,
-                    info:     Expansion Area 1=354.38958740234,
-                    info:     Expansion Area 2=354.2922668457,
-                    info:     Expansion Area 5=222.54640197754,
-                    info:     Expansion Area 6=0
-                    info:   },
-                    info:   graph="DefaultLand",
-                    info:   hint=true,
-                    info:   orientation={ 0, 0, 0 },
-                    info:   position={ 312, 16.21875, 200, type="VECTOR3" },
-                    info:   prop="/env/common/props/markers/M_Path_prop.bp",
-                    info:   type="Land Path Node"
-                    info: }
-                ]]
-                if v.Position[1] > 0 and v.Position[3] > 0 then
-                    local label, reason
-                    if RUtils.PositionInWater(v.Position) then
-                        label, reason = NavUtils.GetLabel('Water', v.Position)
-                        if not label then
-                            WARN('No expansion water label returned reason '..reason)
-                            WARN('Water label failure position was '..repr(v.Position))
-                        else
-                            aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
-                            aiBrain.BrainIntel.ExpansionWatchTable[k].RNGLayer = 'Water'
-                            --RNGLOG('Expansion Marker has had label added '..repr(v))
-                        end
-                    else
-                        label, reason = NavUtils.GetLabel('Land', v.Position)
-                        if not label then
-                            WARN('No expansion land label returned reason '..reason)
-                            WARN('Land label failure position was '..repr(v.Position))
-                        else
-                            aiBrain.BrainIntel.ExpansionWatchTable[k].Zone = label
-                            aiBrain.BrainIntel.ExpansionWatchTable[k].RNGLayer = 'Land'
-                            --RNGLOG('Expansion Marker has had label added '..repr(v))
-                        end
-                    end
-                end
             end
             if v.MassPoints > 2 then
                 for _, t in threatTypes do
@@ -1903,11 +1875,9 @@ function InitialNavalAttackCheck(aiBrain)
                     if posDist <= 900 then
                         markerCount = markerCount + 1
                         if not aiBrain:CheckBlockingTerrain({m[1], GetSurfaceHeight(m[1], m[3]), m[3]}, v.position, 'low') then
-                            RNGLOG('This marker is not blocked '..repr(v.position))
                             markerCountNotBlocked = markerCountNotBlocked + 1
                             table.insert( frigateRaidMarkers, { Position=v.position, Name=v.name, RaidPosition={m[1], m[2], m[3]} } )
                         else
-                            RNGLOG('This marker is blocked '..repr(v.position))
                             markerCountBlocked = markerCountBlocked + 1
                         end
                         break
@@ -1915,12 +1885,12 @@ function InitialNavalAttackCheck(aiBrain)
                 end
             end
         end
-        --if aiBrain.RNGDEBUG then
+        if aiBrain.RNGDEBUG then
             RNGLOG('There are potentially '..markerCount..' markers that are in range for frigates')
             RNGLOG('There are '..markerCountNotBlocked..' markers NOT blocked by terrain')
             RNGLOG('There are '..markerCountBlocked..' markers that ARE blocked')
             RNGLOG('Markers that frigates can try and raid '..repr(frigateRaidMarkers))
-        --end
+        end
         if markerCountNotBlocked > 8 then
             aiBrain.EnemyIntel.FrigateRaid = true
             aiBrain.EnemyIntel.FrigateRaidMarkers = frigateRaidMarkers

@@ -7,6 +7,7 @@ local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
+local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 
 local Random = Random
 local IsDestroyed = IsDestroyed
@@ -17,21 +18,24 @@ local RNGINSERT = table.insert
 local RNGSORT = table.sort
 local RNGMAX = math.max
 
----@class AIPlatoonBehavior : AIPlatoon
+local LandRadiusDetectionCategory = (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * categories.LAND - categories.SCOUT)
+local LandRadiusScanCategory = categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL - categories.INSIGNIFICANTUNIT
+
+---@class AIPlatoonLandAssaultBehavior : AIPlatoon
 ---@field RetreatCount number 
 ---@field ThreatToEvade Vector | nil
 ---@field LocationToRaid Vector | nil
 ---@field OpportunityToRaid Vector | nil
-AIPlatoonBehavior = Class(AIPlatoonRNG) {
+AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
 
-    PlatoonName = 'ZoneControlBehavior',
+    PlatoonName = 'LandAssaultBehavior',
 
     Start = State {
 
         StateName = 'Start',
 
         --- Initial state of any state machine
-        ---@param self AIPlatoonBehavior
+        ---@param self AIPlatoonLandAssaultBehavior
         Main = function(self)
 
             -- requires expansion markers
@@ -48,6 +52,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Error)
                 return
             end
+            LOG('Starting LandAssault')
             local aiBrain = self:GetBrain()
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
             if aiBrain.EnemyIntel.Phase > 1 then
@@ -91,6 +96,12 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 end
             end
             RNGINSERT(self.atkPri, categories.ALLUNITS)
+            local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, self)
+            if platBiasUnit and not platBiasUnit.Dead then
+                self.Pos=platBiasUnit:GetPosition()
+            else
+                self.Pos=GetPlatoonPosition(self)
+            end
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -101,12 +112,19 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         StateName = 'DecideWhatToDo',
 
         --- Initial state of any state machine
-        ---@param self AIPlatoonBehavior
+        ---@param self AIPlatoonLandAssaultBehavior
         Main = function(self)
             if IsDestroyed(self) then
                 return
             end
+            LOG('DecideWhatToDo LandAssault')
             local aiBrain = self:GetBrain()
+            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius)
+            if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
+                self.retreat=true
+                self:ChangeState(self.Retreating)
+                return
+            end
             local target
             if not target then
                 target = RUtils.CheckACUSnipe(aiBrain, 'Land')
@@ -138,9 +156,243 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         StateName = "Navigating",
 
         --- The platoon retreats from a threat
+        ---@param self AIPlatoonLandAssaultBehavior
+        Main = function(self)
+            local builderData = self.BuilderData
+            if not builderData.Position then
+                WARN('No position passed to LandAssault')
+                return false
+            end
+            LOG('Navigating LandAssault')
+            if not self.CurrentPlatoonThreat then
+                self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+            end
+            local aiBrain = self:GetBrain()
+            local maxPathDistance = 250
+            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), builderData.Position, 10 , maxPathDistance)
+            local bAggroMove = self.PlatoonData.AggressiveMove
+            local pathNodesCount = RNGGETN(path)
+            local platoonUnits = GetPlatoonUnits(self)
+            local attackUnits =  self:GetSquadUnits('Attack')
+            local attackFormation = false
+            for i=1, pathNodesCount do
+                local distEnd = false
+                local currentLayerSeaBed = false
+                for _, v in attackUnits do
+                    if v and not v.Dead then
+                        if v:GetCurrentLayer() ~= 'Seabed' then
+                            currentLayerSeaBed = false
+                            break
+                        else
+                            currentLayerSeaBed = true
+                            break
+                        end
+                    end
+                end
+                if bAggroMove and attackUnits and (not currentLayerSeaBed) then
+                    --RNGLOG('HUNTAIPATH Attack and Guard moving Aggro')
+                    if distEnd and distEnd > 6400 then
+                        self:SetPlatoonFormationOverride('NoFormation')
+                        attackFormation = false
+                    end
+                    self:AggressiveMoveToLocation(path[i], 'Attack')
+                    self:AggressiveMoveToLocation(path[i], 'Guard')
+                elseif attackUnits then
+                    --RNGLOG('HUNTAIPATH Attack and Guard moving non aggro')
+                    if distEnd and distEnd > 6400 then
+                        self:SetPlatoonFormationOverride('NoFormation')
+                        attackFormation = false
+                    end
+                    self:MoveToLocation(path[i], false, 'Attack')
+                    self:MoveToLocation(path[i], false, 'Guard')
+                end
+                local Lastdist
+                local dist
+                local Stuck = 0
+                while PlatoonExists(aiBrain, self) do
+                    coroutine.yield(1)
+                    if self.ScoutUnit and (not self.ScoutUnit.Dead) then
+                        IssueClearCommands({self.ScoutUnit})
+                        IssueMove({self.ScoutUnit}, self.Pos)
+                    end
+                    local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, LandRadiusDetectionCategory, self.Pos, self.EnemyRadius, 'Enemy')
+                    if enemyUnitCount > 0 and (not currentLayerSeaBed) then
+                        local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, self.Pos, 'Attack', self.EnemyRadius, LandRadiusScanCategory, self.atkPri, false)
+                        local attackSquad = self:GetSquadUnits('Attack')
+                        IssueClearCommands(attackSquad)
+                        while PlatoonExists(aiBrain, self) do
+                            coroutine.yield(1)
+                            self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+                            if target and not IsDestroyed(target) or acuUnit then
+                                if acuUnit and self.CurrentPlatoonThreat > 30 then
+                                    target = acuUnit
+                                    rangeModifier = 5
+                                elseif acuUnit and self.CurrentPlatoonThreat < totalThreat['AntiSurface'] then
+                                    self:ChangeState(self.DecideWhatToDo)
+                                    return
+                                end
+                                if not IsDestroyed(target) then
+                                    self:ChangeState(self.CombatLoop)
+                                    return
+                                end
+                            else
+                                self:MoveToLocation(path[i], false)
+                                break
+                            end
+                            coroutine.yield(15)
+                        end
+                    end
+                    distEnd = VDist2Sq(path[pathNodesCount][1], path[pathNodesCount][3], self.Pos[1], self.Pos[3] )
+                    if not attackFormation and distEnd < 6400 and enemyUnitCount == 0 then
+                        attackFormation = true
+                        self:SetPlatoonFormationOverride('AttackFormation')
+                    end
+                    dist = VDist2Sq(path[i][1], path[i][3], self.Pos[1], self.Pos[3])
+                    -- are we closer then 15 units from the next marker ? Then break and move to the next marker
+                    if dist < 400 then
+                        -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
+                        --RNGLOG('HUNTAIPATH issuing clear commands due to close dist')
+                        IssueClearCommands(GetPlatoonUnits(self))
+                        break
+                    end
+                    
+                    if Lastdist ~= dist then
+                        Stuck = 0
+                        Lastdist = dist
+                    -- No, we are not moving, wait 100 ticks then break and use the next weaypoint
+                    else
+                        Stuck = Stuck + 1
+                        if Stuck > 15 then
+                            --RNGLOG('HUNTAIPATH issue stop and break')
+                            self:Stop()
+                            break
+                        end
+                    end
+                    --RNGLOG('Lastdist '..Lastdist..' dist '..dist)
+                    coroutine.yield(15)
+                end
+            end
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
+    Retreating = State {
+
+        StateName = "Retreating",
+
+        --- The platoon retreats from a threat
+        ---@param self AIPlatoonZoneControlBehavior
+        Main = function(self)
+            LOG('Retreating LandAssault')
+            local aiBrain = self:GetBrain()
+            local location = false
+            local avoidTargetPos
+            local target = StateUtils.GetClosestUnitRNG(aiBrain, self, self.Pos, (categories.MOBILE + categories.STRUCTURE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, 128, 'Enemy')
+            if target and not target.Dead then
+                local targetRange = StateUtils.GetUnitMaxWeaponRange(target)
+                if targetRange then
+                    targetRange = targetRange + 10
+                end
+                local avoidRange = math.max(targetRange or 60)
+                local targetPos = target:GetPosition()
+                IssueClearCommands(GetPlatoonUnits(self))
+                local rx = self.Pos[1] - targetPos[1]
+                local rz = self.Pos[3] - targetPos[3]
+                if rx * rx + rz * rz < targetRange * targetRange then
+                    self:MoveToLocation(RUtils.AvoidLocation(targetPos, self.Pos, avoidRange), false)
+                else
+                    self:MoveToLocation(self.Home, false)
+                end
+                coroutine.yield(40)
+            end
+            if aiBrain.GridPresence:GetInferredStatus(self.Pos) == 'Hostile' then
+                location = StateUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), true, 'Enemy')
+            else
+                location = StateUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), false, 'Ally')
+            end
+            if (not location) then
+                local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
+                if closestBase then
+                    --LOG('base only Closest base is '..closestBase)
+                    location = aiBrain.BuilderManagers[closestBase].Position
+                end
+            end
+            StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandAssaultBehavior', 80, 25, false)
+            self.Retreat = true
+            self.BuilderData = {
+                Position = location,
+                CutOff = 400,
+            }
+            --LOG('Retreating to platoon')
+            self:ChangeState(self.Navigating)
+            return
+        end,
+    },
+
+    CombatLoop = State {
+
+        StateName = 'CombatLoop',
+
+        --- The platoon searches for a target
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
-
+            LOG('CombatLoop LandAssault')
+            local builderData = self.BuilderData
+            if not builderData.Target or builderData.Target.Dead then
+                coroutine.yield(10)
+                self:ChangeState(self.DecideWhatToDo)
+                return
+            end
+            local aiBrain = self:GetBrain()
+            local unitPos
+            local alpha
+            local x
+            local y
+            local smartPos
+            local rangeModifier = 0
+            local target = builderData.Target
+            local attackSquad =  self:GetSquadUnits('Attack')
+            local targetPosition = target:GetPosition()
+            local microCap = 50
+            for _, unit in attackSquad do
+                microCap = microCap - 1
+                if microCap <= 0 then break end
+                if unit.Dead then continue end
+                if not unit.MaxWeaponRange then
+                    coroutine.yield(1)
+                    continue
+                end
+                unitPos = unit:GetPosition()
+                alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
+                x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange - rangeModifier or self.MaxPlatoonWeaponRange)
+                y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange - rangeModifier or self.MaxPlatoonWeaponRange)
+                smartPos = { x, GetTerrainHeight( x, y), y }
+                -- check if the move position is new or target has moved
+                if VDist2( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.7 or unit.TargetPos ~= targetPosition then
+                    -- clear move commands if we have queued more than 4
+                    if RNGGETN(unit:GetCommandQueue()) > 2 then
+                        IssueClearCommands({unit})
+                        coroutine.yield(3)
+                    end
+                    -- if our target is dead, jump out of the "for _, unit in self:GetPlatoonUnits() do" loop
+                    IssueMove({unit}, smartPos )
+                    if target.Dead then break end
+                    IssueAttack({unit}, target)
+                    unit.smartPos = smartPos
+                    unit.TargetPos = targetPosition
+                -- in case we don't move, check if we can fire at the target
+                else
+                    if unitPos and unit.WeaponArc then
+                        if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit.WeaponArc) then
+                            IssueMove({unit}, targetPosition )
+                        end
+                    end
+                end
+            end
+            coroutine.yield(25)
+            self:ChangeState(self.DecideWhatToDo)
+            return
         end,
     },
 }
@@ -154,7 +406,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/navutils.lua").Generate()
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
-        setmetatable(platoon, AIPlatoonBehavior)
+        setmetatable(platoon, AIPlatoonLandAssaultBehavior)
         if data.ZoneType then
             platoon.ZoneType = data.ZoneType
         else
@@ -182,10 +434,11 @@ AssignToUnitsMachine = function(data, platoon, units)
     end
 end
 
----@param data { Behavior: 'AIBehaviorZoneControl' }
+---@param data { Behavior: 'AIBehaviorLandAssault' }
 ---@param units Unit[]
 StartZoneControlThreads = function(brain, platoon)
-    brain:ForkThread(AssaultThread, platoon)
+    brain:ForkThread(AssaultPositionThread, platoon)
+    brain:ForkThread(AssaultCombatThread, platoon)
     brain:ForkThread(StateUtils.ZoneUpdate, platoon)
 end
 

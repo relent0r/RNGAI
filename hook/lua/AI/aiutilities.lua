@@ -20,19 +20,17 @@ function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
     if markerType == 'Start Location' then
         local tempMarkers = AIGetMarkerLocationsRNG(aiBrain, 'Spawn')
         for k, v in tempMarkers do
-            if string.sub(v.Name, 1, 5) == 'ARMY_' then
-                local ecoStructures = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSPRODUCTION), v.Position, 30, 'Ally')
-                local GetBlueprint = moho.entity_methods.GetBlueprint
-                local ecoThreat = 0
-                for _, v in ecoStructures do
-                    local bp = v:GetBlueprint()
-                    local ecoStructThreat = bp.Defense.EconomyThreatLevel
-                    --RNGLOG('* AI-RNG: Eco Structure'..ecoStructThreat)
-                    ecoThreat = ecoThreat + ecoStructThreat
-                end
-                if ecoThreat < 10 then
-                    table.insert(markerList, {Position = v.Position, Name = v.Name})
-                end
+            local ecoStructures = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSPRODUCTION), v.Position, 30, 'Ally')
+            local GetBlueprint = moho.entity_methods.GetBlueprint
+            local ecoThreat = 0
+            for _, v in ecoStructures do
+                local bp = v:GetBlueprint()
+                local ecoStructThreat = bp.Defense.EconomyThreatLevel
+                --RNGLOG('* AI-RNG: Eco Structure'..ecoStructThreat)
+                ecoThreat = ecoThreat + ecoStructThreat
+            end
+            if ecoThreat < 10 then
+                table.insert(markerList, {Position = v.Position, Name = v.Name})
             end
         end
     else
@@ -881,27 +879,20 @@ function AIGetMarkerLocationsRNG(aiBrain, markerType)
                 end
             end
         end
-    --[[elseif markerType == 'Blank Marker' then
-        local markers = Scenario.MasterChain._MASTERCHAIN_.Markers
-        if markers then
-            for k, v in markers do
-                if v.Name and string.sub(v.Name, 1, 5) == 'ARMY_' then
-                    table.insert(markerList, {Position = v.position, Name = k })
-                end
-            end
-        end]]
     elseif markerType == 'Large Expansion Area' or markerType == 'Expansion Area' then
         local markers = MarkerUtils.GetMarkersByType(markerType)
         for k, v in markers do
             if v.type == markerType then
-                table.insert(markerList, {Position = v.position, Name = v.Name, MassSpotsInRange = RNGGETN(v.Extractors)})
+                table.insert(markerList, {Position = v.position or v.Position, Name = v.Name, MassSpotsInRange = RNGGETN(v.Extractors)})
             end
         end
     else
         local markers = MarkerUtils.GetMarkersByType(markerType)
         for k, v in markers do
-            if v.type == markerType then
-                table.insert(markerList, {Position = v.position, Name = k })
+            if v.Extractors then
+                table.insert(markerList, {Position = v.position or v.Position, Name = v.Name, MassSpotsInRange = RNGGETN(v.Extractors)})
+            else
+                table.insert(markerList, {Position = v.position or v.Position, Name = k })
             end
         end
     end

@@ -9409,7 +9409,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                 else
                     IssueTactical(inRangeTmlLaunchers, target)
                 end
-
             end
             coroutine.yield(30)
             if not PlatoonExists(aiBrain, self) then
@@ -11344,6 +11343,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             import("/mods/rngai/lua/ai/statemachines/platoon-acu.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         elseif machineType == 'LandCombat' then
             import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+        elseif machineType == 'LandAssault' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         elseif machineType == 'Gunship' then
             import("/mods/rngai/lua/ai/statemachines/platoon-air-gunship.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         elseif machineType == 'ZoneControl' then
