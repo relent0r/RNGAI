@@ -458,8 +458,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Spam Common Expansion Small',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 600,                                                          -- Priority. 1000 is normal.
         InstanceCount = 30,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -925,7 +923,6 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Assault',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 550,                                                          -- Priority. 1000 is normal.
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 20,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -967,8 +964,6 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Intelli Amphib',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatAmphibStateMachineRNG',                          -- Template Name. 
         Priority = 710,                                                          -- Priority. 1000 is normal.
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 15,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -1155,7 +1150,6 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Assault Large',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 550,                                                          -- Priority. 1000 is normal.
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 30,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {

@@ -11,6 +11,7 @@ local FactoryManager = import("/lua/sim/factorybuildermanager.lua")
 local PlatoonFormManager = import("/lua/sim/platoonformmanager.lua")
 local BrainConditionsMonitor = import("/lua/sim/brainconditionsmonitor.lua")
 local EngineerManager = import("/lua/sim/engineermanager.lua")
+local EconomyComponent = import("/lua/aibrains/components/economy.lua").AIBrainEconomyComponent
 
 local SUtils = import("/lua/ai/sorianutilities.lua")
 local TransferUnitsOwnership = import("/lua/simutils.lua").TransferUnitsOwnership
@@ -57,21 +58,27 @@ local RNGGETN = table.getn
 local RNGTableEmpty = table.empty
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local StandardBrain = import("/lua/aibrain.lua").AIBrain
+local CampaignMapFlag = false
 
 local RNGAIBrainClass = import("/lua/aibrains/base-ai.lua").AIBrain
-AIBrain = Class(RNGAIBrainClass) {
+AIBrain = Class(RNGAIBrainClass, EconomyComponent) {
 
     --- Called after `BeginSession`, at this point all props, resources and initial units exist in the map
     ---@param self AIBrainAdaptive
     OnBeginSession = function(self)
         StandardBrain.OnBeginSession(self)
+        if not(ScenarioInfo.type == "skirmish") then
+            CampaignMapFlag = true
+        end
 
         -- requires navigational mesh
         import("/lua/sim/NavUtils.lua").Generate()
 
         -- requires these markers to exist
-        import("/lua/sim/MarkerUtilities.lua").GenerateExpansionMarkers()
-        import("/lua/sim/markerutilities.lua").GenerateNavalAreaMarkers()
+        if not CampaignMapFlag then
+            import("/lua/sim/MarkerUtilities.lua").GenerateExpansionMarkers()
+            import("/lua/sim/markerutilities.lua").GenerateNavalAreaMarkers()
+        end
         --import("/lua/sim/MarkerUtilities.lua").GenerateRallyPointMarkers()
 
         -- requires these datastructures to understand the game
@@ -84,6 +91,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     OnCreateAI = function(self, planName)
         LOG('Oncreate AI from RNG code')
+        EconomyComponent.OnCreateAI(self)
         StandardBrain.OnCreateAI(self, planName)
         local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
         if string.find(per, 'RNG') then
@@ -184,6 +192,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     InitializeSkirmishSystems = function(self)
+        LOG('Initialize Skirmish Systems')
         if not self.RNG then
             return RNGAIBrainClass.InitializeSkirmishSystems(self)
         end
@@ -1182,6 +1191,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         self.BuilderManagers = {}
         SUtils.AddCustomUnitSupport(self)
+        LOG('Adding builder managers at '..repr(self:GetStartVector3f()))
         self:AddBuilderManagers(self:GetStartVector3f(), 100, 'MAIN', false)
         -- Generates the zones and updates the resource marker table with Zone IDs
         --IntelManagerRNG.GenerateMapZonesRNG(self)
@@ -1592,12 +1602,14 @@ AIBrain = Class(RNGAIBrainClass) {
             position[2] = GetSurfaceHeight( position[1], position[3] )
 			baseLayer = 'Water'
         end
+        LOG('AddBuilderManager '..baseName)
         self.BuilderManagers[baseName] = {
             FactoryManager = FactoryManager.CreateFactoryBuilderManager(self, baseName, position, radius, useCenter),
             PlatoonFormManager = PlatoonFormManager.CreatePlatoonFormManager(self, baseName, position, radius, useCenter),
             EngineerManager = EngineerManager.CreateEngineerManager(self, baseName, position, radius),
             DefensivePoints = {},
             BuilderHandles = {},
+            CoreResources = {},
             Position = position,
             Layer = baseLayer,
             GraphArea = false,
@@ -1607,6 +1619,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if baseLayer == 'Water' then
             --LOG('Created Water base of name '..baseName)
         end
+        self:ForkThread(RUtils.SetCoreResources, position, baseName)
         self:ForkThread(self.GetGraphArea, position, baseName, baseLayer)
         self:ForkThread(self.GetBaseZone, position, baseName, baseLayer)
         self:ForkThread(self.GetDefensivePointTable, baseName, 'BaseRestrictedArea', position)

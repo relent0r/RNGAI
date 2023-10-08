@@ -77,13 +77,13 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local cdr = self.cdr
             local gameTime = GetGameTimeSeconds()
             if cdr.Caution and cdr.EnemyNavalPresent and cdr:GetCurrentLayer() == 'Seabed' then
-                --LOG('retreating due to seabed')
+                LOG('retreating due to seabed')
                 self:ChangeState(self.Retreating)
                 return
             end
             if cdr.EnemyFlanking and (cdr.CurrentEnemyThreat * 1.2 > cdr.CurrentFriendlyThreat or cdr.Health < 6500) then
                 cdr.EnemyFlanking = false
-                --LOG('ACU is being flanked by enemy, retreat')
+                LOG('ACU is being flanked by enemy, retreat')
                 self:ChangeState(self.Retreating)
                 return
             end
@@ -91,7 +91,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if brain.BrainIntel.SelfThreat.AntiAirNow < brain.EnemyIntel.EnemyThreatCurrent.AntiAir then
                     cdr.EnemyAirPresent = true
                     if not cdr.AtHoldPosition then
-                       --LOG('Retreating due to enemy air snipe possibility')
+                       LOG('Retreating due to enemy air snipe possibility')
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -136,7 +136,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.Expand)
                     return
                 else
-                    --LOG('Wipe BuilderData in Expansion check')
+                    LOG('Wipe BuilderData in Expansion check')
                     self.BuilderData = {}
                 end
             end
@@ -146,7 +146,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 local highThreat = false
                 --RNGLOG('Enhancement Thread run at '..gameTime)
                 if self.BuilderData.ExtractorRetreat and VDist3Sq(cdr.Position, self.BuilderData.Position) <= self.BuilderData.CutOff and cdr.CurrentEnemyThreat < 15 then
-                    --LOG('ACU close to position and threat is '..cdr.CurrentEnemyThreat)
+                    LOG('ACU close to position and threat is '..cdr.CurrentEnemyThreat)
                     self:ChangeState(self.EnhancementBuild)
                     return
                 end
@@ -167,6 +167,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 if inRange and not highThreat and ((cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)) then
+                    LOG('ACU enhancement build')
                     self:ChangeState(self.EnhancementBuild)
                     return
                 elseif not highThreat and ((cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)) then
@@ -233,7 +234,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     ExpansionData = stageExpansion,
                                     CutOff = 225
                                     }
-                                --LOG('Move to base for expansion')
+                                LOG('Move to base for expansion')
                                 self:ChangeState(self.Navigating)
                                 return
                             end
@@ -242,9 +243,46 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > cdr.MaxBaseRange * cdr.MaxBaseRange and not self.BuilderData.DefendExpansion then
-                --LOG('ACU is beyond maxRadius of '..(cdr.MaxBaseRange * cdr.MaxBaseRange))
-                self:ChangeState(self.Retreating)
-                return
+                LOG('ACU is beyond maxRadius of '..(cdr.MaxBaseRange * cdr.MaxBaseRange))
+                if not cdr.Caution then
+                    LOG('Not in caution, check if base closer than 6400')
+                    local closestBaseDistance
+                    local closestPos
+                    local threat = 0
+                    for baseName, base in brain.BuilderManagers do
+                        if not table.empty(base.FactoryManager.FactoryList) then
+                            --RNGLOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
+                            local baseDistance = VDist3Sq(cdr.Position, base.Position)
+                            local distanceToHome = cdr.DistanceToHome
+                            if distanceToHome > baseDistance and baseDistance < 6400 and baseName ~= 'MAIN' and cdr.Health > 7000 and (not cdr.GunUpgradeRequired and not cdr.HighThreatUpgradeRequired) then
+                                if not closestBaseDistance then
+                                    closestBaseDistance = baseDistance
+                                end
+                                if baseDistance <= closestBaseDistance then
+                                    closestPos = base.Position
+                                    closestBaseDistance = baseDistance
+                                end
+                            end
+                        end
+                    end
+                    if closestPos then
+                        LOG('Found close base')
+                        threat = brain:GetThreatAtPosition( closestPos, brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface' )
+                        LOG('Threat at base is '..threat)
+                    end
+                    if not closestPos or threat > 30 then
+                        LOG('No base or high threat, retreat')
+                        self.BuilderData = {}
+                        self:ChangeState(self.Retreating)
+                        return
+                    end
+                else
+                    --LOG('cdr retreating due to beyond max range and not building '..(cdr.MaxBaseRange * cdr.MaxBaseRange)..' current distance '..acuDistanceToBase)
+                    --LOG('Wipe BuilderData in numUnits > 1')
+                    self.BuilderData = {}
+                    self:ChangeState(self.Retreating)
+                    return
+                end
             end
             local numUnits
             if self.BuilderData.DefendExpansion then
@@ -254,7 +292,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if brain.GridPresence:GetInferredStatus(cdr.Position) == 'Hostile' then
                     --LOG('We are in hostile territory and should be retreating')
                     if cdr.CurrentEnemyThreat > 10 and cdr.CurrentEnemyThreat * 1.2 > cdr.CurrentFriendlyThreat then
-                        --LOG('ACU is detecting high threat')
+                        LOG('ACU is detecting high threat')
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -281,12 +319,46 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 cdr.Combat = true
                 local acuDistanceToBase = VDist3Sq(cdr.Position, cdr.CDRHome)
                 if (not cdr.SuicideMode and acuDistanceToBase > cdr.MaxBaseRange * cdr.MaxBaseRange and (not cdr:IsUnitState('Building'))) and not self.BuilderData.DefendExpansion or (cdr.PositionStatus == 'Hostile' and cdr.Caution) then
-                    --LOG('OverCharge running but ACU is beyond its MaxBaseRange property and high threat')
-                    --LOG('cdr retreating due to beyond max range and not building '..(cdr.MaxBaseRange * cdr.MaxBaseRange)..' current distance '..acuDistanceToBase)
-                    --LOG('Wipe BuilderData in numUnits > 1')
-                    self.BuilderData = {}
-                    self:ChangeState(self.Retreating)
-                    return
+                    LOG('OverCharge running but ACU is beyond its MaxBaseRange property and high threat')
+                    if not cdr.Caution then
+                        LOG('Not in caution, check if base closer than 6400')
+                        local closestBaseDistance
+                        local closestPos
+                        local threat = 0
+                        for baseName, base in brain.BuilderManagers do
+                            if not table.empty(base.FactoryManager.FactoryList) then
+                                --RNGLOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
+                                local baseDistance = VDist3Sq(cdr.Position, base.Position)
+                                local distanceToHome = cdr.DistanceToHome
+                                if distanceToHome > baseDistance and baseDistance < 6400 and baseName ~= 'MAIN' and cdr.Health > 7000 and (not cdr.GunUpgradeRequired and not cdr.HighThreatUpgradeRequired) then
+                                    if not closestBaseDistance then
+                                        closestBaseDistance = baseDistance
+                                    end
+                                    if baseDistance <= closestBaseDistance then
+                                        closestPos = base.Position
+                                        closestBaseDistance = baseDistance
+                                    end
+                                end
+                            end
+                        end
+                        if closestPos then
+                            LOG('Found close base')
+                            threat = brain:GetThreatAtPosition( closestPos, brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface' )
+                            LOG('Threat at base is '..threat)
+                        end
+                        if not closestPos or threat > 30 then
+                            LOG('No base or high threat, retreat')
+                            self.BuilderData = {}
+                            self:ChangeState(self.Retreating)
+                            return
+                        end
+                    else
+                        --LOG('cdr retreating due to beyond max range and not building '..(cdr.MaxBaseRange * cdr.MaxBaseRange)..' current distance '..acuDistanceToBase)
+                        --LOG('Wipe BuilderData in numUnits > 1')
+                        self.BuilderData = {}
+                        self:ChangeState(self.Retreating)
+                        return
+                    end
                 end
                 if not cdr.SuicideMode then
                     if self.BuilderData.DefendExpansion then
@@ -327,7 +399,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     target = closestThreatUnit
                 end
                 if (cdr.Health < 4000 and cdr.DistanceToHome > 14400) or (cdr.Health < 6500 and cdr.Caution and not cdr.SuicideMode) or cdr.InFirebaseRange then
-                    --LOG('Emergency Retreat')
+                    LOG('Emergency Retreat')
                     self.BuilderData = {}
                     self:ChangeState(self.Retreating)
                     return
@@ -401,7 +473,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.EngineerTask)
                 return
             elseif not cdr.SuicideMode and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 and cdr.Phase > 2 then
-                --LOG('Phase 3 and not close to base')
+                LOG('Phase 3 and not close to base')
                 self:ChangeState(self.Retreating)
                 return
             elseif cdr.CurrentEnemyInnerCircle < 15 then

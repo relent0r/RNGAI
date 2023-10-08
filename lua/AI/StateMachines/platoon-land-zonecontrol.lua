@@ -4,6 +4,7 @@ local NavUtils = import('/lua/sim/NavUtils.lua')
 local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
+local TransportUtils = import("/lua/ai/transportutilities.lua")
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
@@ -283,6 +284,34 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
+    Transporting = State {
+
+        StateName = 'Transporting',
+
+        --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
+        ---@param self AIPlatoonAdaptiveReclaimBehavior
+        Main = function(self)
+            LOG('ZoneControl trying to use transport')
+            local brain = self:GetBrain()
+            local builderData = self.BuilderData
+            if not builderData.Position then
+                WARN('No position passed to LandAssault')
+                return false
+            end
+            local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
+            if usedTransports then
+                self:LogDebug(string.format('platoon used transports'))
+                self:ChangeState(self.Navigating)
+                return
+            else
+                self:LogDebug(string.format('platoon tried but didnt use transports'))
+                self:ChangeState(self.DecideWhatToDo)
+                return
+            end
+            return
+        end,
+    },
+
     Navigating = State {
 
         StateName = "Navigating",
@@ -298,6 +327,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             self.navigating = true
             if not self.path and self.BuilderData.Position and self.BuilderData.CutOff then
                 self.path = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.BuilderData.Position, 1, 150,80)
+            end
+            if not self.path then
+                self:LogDebug(string.format('platoon is going to use transport'))
+                self:ChangeState(self.Transporting)
+                return
             end
             while PlatoonExists(aiBrain, self) do
                 coroutine.yield(1)

@@ -5996,6 +5996,62 @@ function AIFindNavalAreaNeedsEngineer(aiBrain, locationType, enemyLabelCheck, ra
     return retPos, retName
 end
 
+function GetMarkerFromPosition(refPosition, markerType)
+    local markers
+    if markerType == 'Mass' or markerType == 'Hydrocarbon'then
+        markers = GetMarkersRNG()
+    else
+        markers = import("/lua/sim/markerutilities.lua").GetMarkersByType(markerType)
+    end
+    for _, v in markers do
+        local position = v.Position or v.Position
+        if position and position[1] == refPosition[1] and position[3] == refPosition[3] then
+            marker =v
+            break
+        end
+    end
+    if not marker then
+        WARN('No Marker returned from GetMarkerFromPosition')
+    end
+    return marker
+end
+
+function GetResourcesFromMarker(marker)
+    local resourceTable = {
+        Extractors = {},
+        HydroCarbons = {}
+    }
+    if marker then
+        if marker.Extractors then
+            for k, extractor in marker.Extractors do
+                table.insert(resourceTable.Extractors, extractor)
+            end
+        end
+        if marker.HydroCarbons then
+            for k, hydro in marker.HydroCarbons do
+                table.insert(resourceTable.HydroCarbons, hydro)
+            end
+        end
+    else
+        WARN('No marker table passed to GetResourcesFromMarker')
+    end
+   return resourceTable
+end
+
+function SetCoreResources(aiBrain, position, baseName)
+    coroutine.yield(50)
+    local resources = {}
+    local refMarker = GetMarkerFromPosition(position, 'Spawn')
+    local resourceTable = GetResourcesFromMarker(refMarker)
+    if resourceTable then
+        if aiBrain.BuilderManagers[baseName] then
+            aiBrain.BuilderManagers[baseName].CoreResources = resourceTable
+        end
+    else
+        WARN('No resource table found in GetCoreResources')
+    end
+end
+
 --[[
     -- Calculate dot product between two 3D vectors (same as before)
 

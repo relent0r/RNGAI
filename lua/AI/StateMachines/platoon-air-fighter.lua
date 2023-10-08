@@ -130,7 +130,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 if not target or target.Dead then
-                    RNGLOG('FighterBehavior DecideWhatToDo Check targets at max radius')
+                    --RNGLOG('FighterBehavior DecideWhatToDo Check targets at max radius')
                 -- Params aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted
                     target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, platPos, self, 'Attack', self.MaxRadius, self.AttackPriorities, true, self.CurrentPlatoonThreat, false, false, true)
                 end

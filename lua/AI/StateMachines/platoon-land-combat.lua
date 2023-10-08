@@ -5,6 +5,7 @@ local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
+local TransportUtils = import("/lua/ai/transportutilities.lua")
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
@@ -338,6 +339,33 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
+    Transporting = State {
+
+        StateName = 'Transporting',
+
+        --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
+        ---@param self AIPlatoonAdaptiveReclaimBehavior
+        Main = function(self)
+            LOG('LandCombat trying to use transport')
+            local brain = self:GetBrain()
+            if not self.dest then
+                WARN('No position passed to LandAssault')
+                return false
+            end
+            local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, self.dest, 3, false)
+            if usedTransports then
+                self:LogDebug(string.format('Platoon used transports'))
+                self:ChangeState(self.Navigating)
+                return
+            else
+                self:LogDebug(string.format('Platoon tried but didnt use transports'))
+                self:ChangeState(self.DecideWhatToDo)
+                return
+            end
+            return
+        end,
+    },
+
     Navigating = State {
 
         StateName = "Navigating",
@@ -382,7 +410,15 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                         continue
                     end
                 end
-                if (self.dest and not NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.dest)) or (self.path and GetTerrainHeight(self.path[nodenum][1],self.path[nodenum][3])<GetSurfaceHeight(self.path[nodenum][1],self.path[nodenum][3])) then
+                if self.dest and not NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.dest) then
+                    self.navigating=false
+                    self.path=nil
+                    coroutine.yield(10)
+                    self:LogDebug(string.format('platoon is going to use transport'))
+                    self:ChangeState(self.Transporting)
+                    return
+                end
+                if self.path and GetTerrainHeight(self.path[nodenum][1],self.path[nodenum][3])<GetSurfaceHeight(self.path[nodenum][1],self.path[nodenum][3]) then
                     self.navigating=false
                     self.path=nil
                     coroutine.yield(20)

@@ -9803,6 +9803,17 @@ Platoon = Class(RNGAIPlatoonClass) {
 
             aiBrain.EngineerAssistManagerBuildPower = totalBuildRate
             aiBrain.EngineerAssistManagerEngineerCount = platoonCount
+            if aiBrain.EngineerAssistManagerBuildPower <= 0 then
+                --RNGLOG('No Engineers in platoon, disbanding for '..aiBrain.Nickname)
+                coroutine.yield(5)
+                for _, eng in GetPlatoonUnits(self) do
+                    if eng and not eng.Dead then
+                        self:EngineerAssistRemoveRNG(aiBrain, eng)
+                    end
+                end
+                self:PlatoonDisband()
+                return
+            end
             --RNGLOG('EngineerAssistPlatoon total build rate is '..totalBuildRate)
 
             local assistDesc = false
@@ -9820,7 +9831,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         local bestUnit = false
                         local numBuilding = 0
                         for _, unit in assistDesc do
-                            if not unit.Dead and not unit:BeenDestroyed() and unit:IsUnitState('Upgrading') and unit:GetAIBrain():GetArmyIndex() == armyIndex then
+                            if not IsDestroyed(unit) and unit:IsUnitState('Upgrading') and unit:GetAIBrain():GetArmyIndex() == armyIndex then
                                 numBuilding = numBuilding + 1
                                 local unitPos = unit:GetPosition()
                                 local NumAssist = RNGGETN(unit:GetGuards())
@@ -9833,8 +9844,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                         if bestUnit then
                             for _, eng in GetPlatoonUnits(self) do
-                                if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
-                                    if not eng.UnitBeingAssist and (not bestUnit:BeenDestroyed()) then
+                                if eng and not IsDestroyed(eng) then
+                                    if not eng.UnitBeingAssist and not IsDestroyed(bestUnit) then
                                         eng.UnitBeingAssist = bestUnit
                                         --if aiBrain.RNGDEBUG then
                                         --    RNGLOG('Unit being asked to assist is '..eng.UnitBeingAssist.UnitId..' at position '..repr(eng.UnitBeingAssist:GetPosition()))
@@ -9877,8 +9888,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                         if bestUnit then
                            --RNGLOG('Factory Assist Best unit is true looking through platoon units')
                             for _, eng in GetPlatoonUnits(self) do
-                                if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
-                                    if not eng.UnitBeingAssist and (not bestUnit:BeenDestroyed()) then
+                                if eng and not IsDestroyed(eng) then
+                                    if not eng.UnitBeingAssist and not IsDestroyed(bestUnit) then
                                         eng.UnitBeingAssist = bestUnit
                                         --RNGLOG('Engineer Assist issuing guard')
                                         IssueClearCommands({eng})
@@ -9922,8 +9933,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                             --RNGLOG('Completion Assist Best unit is true looking through platoon units '..bestUnit.UnitId)
                             --RNGLOG('Number of platoon units is '..RNGGETN(platoonUnits))
                             for _, eng in GetPlatoonUnits(self) do
-                                if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
-                                    if not eng.UnitBeingAssist and (not bestUnit:BeenDestroyed()) then
+                                if eng and not IsDestroyed(eng) then
+                                    if not eng.UnitBeingAssist and not IsDestroyed(bestUnit) then
                                         eng.UnitBeingAssist = bestUnit
                                         --RNGLOG('Engineer Assist issuing guard')
                                         IssueClearCommands({eng})
@@ -9946,17 +9957,6 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             --RNGLOG('Engineer Assist Manager Priority Table loop completed for '..aiBrain.Nickname)
             coroutine.yield(40)
-            if aiBrain.EngineerAssistManagerBuildPower <= 0 then
-                --RNGLOG('No Engineers in platoon, disbanding for '..aiBrain.Nickname)
-                coroutine.yield(5)
-                for _, eng in GetPlatoonUnits(self) do
-                    if eng and not eng.Dead then
-                        self:EngineerAssistRemoveRNG(aiBrain, eng)
-                    end
-                end
-                self:PlatoonDisband()
-                return
-            end
         end
     end,
 
@@ -9968,16 +9968,11 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             --RNGLOG('EngineerAssistLoop runing for '..aiBrain.Nickname)
             coroutine.yield(1)
-            if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
+            if not eng.UnitBeingAssist or IsDestroyed(eng.UnitBeingAssist) then
                 --eng:SetCustomName('assist function break due to no UnitBeingAssist')
                 eng.UnitBeingAssist = nil
                 break
             end
-            --[[
-            if aiBrain.EngineerAssistManagerBuildPower > aiBrain.EngineerAssistManagerBuildPowerRequired then
-                self:EngineerAssistRemoveRNG(aiBrain, eng)
-                return
-            end]]
             if not aiBrain.EngineerAssistManagerActive then
                 --eng:SetCustomName('Got asked to remove myself due to assist manager being false')
                 self:EngineerAssistRemoveRNG(aiBrain, eng)

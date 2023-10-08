@@ -173,12 +173,12 @@ function LessThanLandExpansions(aiBrain, expansionCount)
             count = count + 1
         end
         if count >= expansionCount then
-            RNGLOG('We have 1 expansion called '..v.BaseType)
+            --RNGLOG('We have 1 expansion called '..v.BaseType)
             return false
         end
         --RNGLOG('Expansion Base Type is '..v.BaseType)
     end
-    RNGLOG('We have no expansions count '..count..' expansion max '..expansionCount)
+    --RNGLOG('We have no expansions count '..count..' expansion max '..expansionCount)
     return true
 end
 

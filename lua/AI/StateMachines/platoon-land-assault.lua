@@ -4,6 +4,7 @@ local NavUtils = import('/lua/sim/NavUtils.lua')
 local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
+local TransportUtils = import("/lua/ai/transportutilities.lua")
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
@@ -52,7 +53,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Error)
                 return
             end
-            LOG('Starting LandAssault')
+            self:LogDebug('Starting Land Assault')
             local aiBrain = self:GetBrain()
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
             if aiBrain.EnemyIntel.Phase > 1 then
@@ -117,10 +118,11 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             if IsDestroyed(self) then
                 return
             end
-            LOG('DecideWhatToDo LandAssault')
+            self:LogDebug('DecideWhatToDo')
             local aiBrain = self:GetBrain()
             local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius)
             if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
+                self:LogDebug('Threat too high in DecideWhatToDo, retreating')
                 self.retreat=true
                 self:ChangeState(self.Retreating)
                 return
@@ -140,14 +142,54 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if target and not IsDestroyed(target) then
+                local targetPos = target:GetPosition()
                 self.BuilderData = {
                     AttackTarget = target,
-                    Position = target:GetPosition()
+                    Position = targetPos
                 }
+                local rx = self.Pos[1] - targetPos[1]
+                local rz = self.Pos[3] - targetPos[3]
+                if rx * rx + rz * rz < self.EnemyRadiusSq and NavUtils.CanPathTo(self.MovementLayer, self.Pos, targetPos) then
+                    self:LogDebug('target close in DecideWhatToDo, CombatLoop')
+                    self:ChangeState(self.CombatLoop)
+                    return
+                else
+                    self:LogDebug('target distance in DecideWhatToDo, Navigating')
+                    self:ChangeState(self.Navigating)
+                    return
+                end
+            end
+            coroutine.yield(10)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
+    Transporting = State {
+
+        StateName = 'Transporting',
+
+        --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
+        ---@param self AIPlatoonAdaptiveReclaimBehavior
+        Main = function(self)
+            LOG('LandAssault trying to use transport')
+            local brain = self:GetBrain()
+            local builderData = self.BuilderData
+            if not builderData.Position then
+                WARN('No position passed to LandAssault')
+                return false
+            end
+            local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
+            if usedTransports then
+                self:LogDebug(string.format('Platoon used transports'))
                 self:ChangeState(self.Navigating)
                 return
+            else
+                self:LogDebug(string.format('Platoon tried but didnt use transports'))
+                self:ChangeState(self.DecideWhatToDo)
+                return
             end
-
+            return
         end,
     },
 
@@ -158,6 +200,10 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
         --- The platoon retreats from a threat
         ---@param self AIPlatoonLandAssaultBehavior
         Main = function(self)
+            self:LogDebug('Navigating')
+            if IsDestroyed(self) then
+                return
+            end
             local builderData = self.BuilderData
             if not builderData.Position then
                 WARN('No position passed to LandAssault')
@@ -170,6 +216,12 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local maxPathDistance = 250
             local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), builderData.Position, 10 , maxPathDistance)
+            if not path then
+                LOG('LandAssault trying to take transport')
+                self:LogDebug(string.format('platoon is going to use transport'))
+                self:ChangeState(self.Transporting)
+                return
+            end
             local bAggroMove = self.PlatoonData.AggressiveMove
             local pathNodesCount = RNGGETN(path)
             local platoonUnits = GetPlatoonUnits(self)
@@ -211,6 +263,9 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 local Stuck = 0
                 while PlatoonExists(aiBrain, self) do
                     coroutine.yield(1)
+                    if self.Dead then
+                        return
+                    end
                     if self.ScoutUnit and (not self.ScoutUnit.Dead) then
                         IssueClearCommands({self.ScoutUnit})
                         IssueMove({self.ScoutUnit}, self.Pos)
@@ -222,16 +277,23 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                         IssueClearCommands(attackSquad)
                         while PlatoonExists(aiBrain, self) do
                             coroutine.yield(1)
+                            if self.Dead then
+                                return
+                            end
                             self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                             if target and not IsDestroyed(target) or acuUnit then
                                 if acuUnit and self.CurrentPlatoonThreat > 30 then
                                     target = acuUnit
                                     rangeModifier = 5
                                 elseif acuUnit and self.CurrentPlatoonThreat < totalThreat['AntiSurface'] then
+                                    self:LogDebug('ACU present in Navigating, DecideWhatToDo')
+                                    LOG('ACU present in Navigating, DecideWhatToDo')
                                     self:ChangeState(self.DecideWhatToDo)
                                     return
                                 end
                                 if not IsDestroyed(target) then
+                                    self:LogDebug('target found in Navigating, CombatLoop')
+                                    LOG('target found in Navigating, CombatLoop')
                                     self:ChangeState(self.CombatLoop)
                                     return
                                 end
@@ -272,6 +334,8 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                     coroutine.yield(15)
                 end
             end
+            self:LogDebug('end of Navigating, DecideWhatToDo')
+            LOG('end of Navigating, DecideWhatToDo')
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -284,7 +348,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
         --- The platoon retreats from a threat
         ---@param self AIPlatoonZoneControlBehavior
         Main = function(self)
-            LOG('Retreating LandAssault')
+            self:LogDebug('Retreating')
             local aiBrain = self:GetBrain()
             local location = false
             local avoidTargetPos
@@ -324,7 +388,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 Position = location,
                 CutOff = 400,
             }
-            --LOG('Retreating to platoon')
+            self:LogDebug('Retreat back to navigating')
             self:ChangeState(self.Navigating)
             return
         end,
@@ -337,7 +401,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
-            LOG('CombatLoop LandAssault')
+            self:LogDebug('CombatLoop')
             local builderData = self.BuilderData
             if not builderData.Target or builderData.Target.Dead then
                 coroutine.yield(10)

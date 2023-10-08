@@ -1081,10 +1081,14 @@ StructureManager = Class {
                 end
                 if hq == 'LAND' then
                     self.Brain.EngineerAssistManagerFocusLandUpgrade = false
-                    self.Brain.EngineerAssistManagerFocusCategory = false
+                    if self.Brain.EngineerAssistManagerFocusCategory == categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY then
+                        self.Brain.EngineerAssistManagerFocusCategory = false
+                    end
                 elseif hq =='AIR' then
                     self.Brain.EngineerAssistManagerFocusAirUpgrade = false
-                    self.Brain.EngineerAssistManagerFocusCategory = false
+                    if self.Brain.EngineerAssistManagerFocusCategory == categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY then
+                        self.Brain.EngineerAssistManagerFocusCategory = false
+                    end
                 end
                 unit.Upgrading = false
                 unit.Offline = false
@@ -1132,7 +1136,9 @@ StructureManager = Class {
             elseif aiBrain.EcoManager.CoreMassPush then
                 aiBrain.EcoManager.CoreMassPush = false
                 --RNGLOG('Assist Focus is set to false from Extractor upgrade manager')
-                aiBrain.EngineerAssistManagerFocusCategory = false
+                if aiBrain.EngineerAssistManagerFocusCategory == categories.MASSEXTRACTION then
+                    aiBrain.EngineerAssistManagerFocusCategory = false
+                end
             end
             --RNGLOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
             --RNGLOG('Current number of T1 mexes upgrading '..extractorsDetail.TECH1Upgrading)
@@ -1261,6 +1267,7 @@ StructureManager = Class {
         local DistanceToBase
         local LowestDistanceToBase
         local lowestUnit = false
+        local base = aiBrain.BuilderManagers['MAIN']
         local BasePosition = aiBrain.BuilderManagers['MAIN'].Position
         --LOG('BasePosition is '..repr(BasePosition))
         if extractorTable then
@@ -1271,8 +1278,16 @@ StructureManager = Class {
                         if c.InitialDelayCompleted then
                             UnitPos = c:GetPosition()
                             DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                            if DistanceToBase < 6400 then
-                                c.MAINBASE = true
+                            if not c.InitialPosCompleted then
+                                for _, v in base.CoreResources.Extractors do
+                                    local pos = v.Position or v.position
+                                    if UnitPos[1] == pos[1] and UnitPos[3] == pos[3] then
+                                        LOG('Found Main Base Extractor '..repr(v))
+                                        c.MAINBASE = true
+                                        break
+                                    end
+                                end
+                                c.InitialPosCompleted = true
                             end
                             if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
                                 LowestDistanceToBase = DistanceToBase
@@ -1288,8 +1303,16 @@ StructureManager = Class {
                         if c.InitialDelayCompleted then
                             UnitPos = c:GetPosition()
                             DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                            if DistanceToBase < 6400 then
-                                c.MAINBASE = true
+                            if not c.InitialPosCompleted then
+                                for _, v in base.CoreResources.Extractors do
+                                    local pos = v.Position or v.position
+                                    if UnitPos[1] == pos[1] and UnitPos[3] == pos[3] then
+                                        LOG('Found Main Base Extractor '..repr(v))
+                                        c.MAINBASE = true
+                                        break
+                                    end
+                                end
+                                c.InitialPosCompleted = true
                             end
                             if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
                                 LowestDistanceToBase = DistanceToBase
@@ -1304,8 +1327,16 @@ StructureManager = Class {
                         if c.InitialDelayCompleted then
                             UnitPos = c:GetPosition()
                             DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                            if DistanceToBase < 6400 then
-                                c.MAINBASE = true
+                            if not c.InitialPosCompleted then
+                                for _, v in base.CoreResources.Extractors do
+                                    local pos = v.Position or v.position
+                                    if UnitPos[1] == pos[1] and UnitPos[3] == pos[3] then
+                                        LOG('Found Main Base Extractor '..repr(v))
+                                        c.MAINBASE = true
+                                        break
+                                    end
+                                end
+                                c.InitialPosCompleted = true
                             end
                             if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
                                 LowestDistanceToBase = DistanceToBase
