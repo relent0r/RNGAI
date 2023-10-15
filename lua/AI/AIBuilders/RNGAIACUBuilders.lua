@@ -161,6 +161,31 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI ACU Structure Builders',
     BuildersType = 'EngineerBuilder',
     Builder {
+        BuilderName = 'RNG ACU Factory Builder Land T1 Primary Small',
+        PlatoonTemplate = 'CommanderBuilderRNG',
+        Priority = 1050,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { EBC, 'GreaterThanEconStorageCurrentRNG', { 240, 1050 } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH1 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    'T1LandFactory',
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI ACU T1 Land Factory Higher Pri',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 1005,
@@ -451,6 +476,31 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI ACU Structure Builders Large',
     BuildersType = 'EngineerBuilder',
     Builder {
+        BuilderName = 'RNG ACU Factory Builder Land T1 Primary Large',
+        PlatoonTemplate = 'CommanderBuilderRNG',
+        Priority = 1050,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { EBC, 'GreaterThanEconStorageCurrentRNG', { 240, 1050 } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH1 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            Construction = {
+                Location = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    'T1LandFactory',
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI ACU T1 Land Factory Higher Pri Large',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 1005,
@@ -720,6 +770,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'ACUAssist', 3},
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.2}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENGINEER * categories.MOBILE - categories.COMMAND } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -760,6 +811,7 @@ BuilderGroup {
         Priority = 700,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 0.9}},
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY + categories.STRUCTURE }},
         },
         BuilderType = 'Any',
         BuilderData = {

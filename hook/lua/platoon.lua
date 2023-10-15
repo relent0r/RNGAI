@@ -789,6 +789,10 @@ Platoon = Class(RNGAIPlatoonClass) {
         local eng = self:GetPlatoonUnits()[1]
         local repairingUnit = false
         local engineerManager = aiBrain.BuilderManagers[self.PlatoonData.LocationType].EngineerManager
+        if not engineerManager then
+            self:PlatoonDisband()
+            return
+        end
         local Structures = AIUtils.GetOwnUnitsAroundPoint(aiBrain, categories.STRUCTURE - (categories.TECH1 - categories.FACTORY), engineerManager:GetLocationCoords(), engineerManager:GetLocationRadius())
         for k,v in Structures do
             -- prevent repairing a unit while reclaim is in progress (see ReclaimStructuresAI)
@@ -4050,6 +4054,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local factionIndex = aiBrain:GetFactionIndex()
         local platoonUnits = GetPlatoonUnits(self)
         local eng
+        LOG('CommanderInitialize')
         if not aiBrain.ACUData[eng.EntityId].CDRBrainThread then
             aiBrain:CDRDataThreads(eng)
         end

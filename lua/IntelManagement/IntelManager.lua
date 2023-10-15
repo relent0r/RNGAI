@@ -869,8 +869,7 @@ IntelManager = Class {
                     furtherestPlayerDistance = VDist3Sq(v.Position, self.Brain.EnemyIntel.EnemyStartLocations[closestIndex].Position)
                 end
             end
-            --RNGLOG('Furtherest ally from enemy is index '..closestIndex..' is '..furtherestPlayerDistance)
-            if closestDistance > furtherestPlayerDistance then
+            if closestDistance and furtherestPlayerDistance and closestDistance > furtherestPlayerDistance then
                 if math.sqrt(closestDistance) - math.sqrt(furtherestPlayerDistance) > 50 then
                     --RNGLOG('We are the futherest') 
                     --RNGLOG('The difference between positions is '..(math.sqrt(closestDistance) - math.sqrt(furtherestPlayerDistance)))

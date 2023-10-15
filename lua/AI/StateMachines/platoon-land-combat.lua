@@ -702,7 +702,7 @@ AssignToUnitsMachine = function(data, platoon, units)
                 if not platoon.machinedata then
                     platoon.machinedata = {name = 'TruePlatoon',id=v.EntityId}
                 end
-                IssueClearCommands(v)
+                IssueClearCommands({v})
                 if EntityCategoryContains(categories.SCOUT, v) then
                     platoon.ScoutPresent = true
                 end

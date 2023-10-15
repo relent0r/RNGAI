@@ -1282,7 +1282,7 @@ StructureManager = Class {
                                 for _, v in base.CoreResources.Extractors do
                                     local pos = v.Position or v.position
                                     if UnitPos[1] == pos[1] and UnitPos[3] == pos[3] then
-                                        LOG('Found Main Base Extractor '..repr(v))
+                                        --LOG('Found Main Base Extractor '..repr(v))
                                         c.MAINBASE = true
                                         break
                                     end
@@ -1307,7 +1307,7 @@ StructureManager = Class {
                                 for _, v in base.CoreResources.Extractors do
                                     local pos = v.Position or v.position
                                     if UnitPos[1] == pos[1] and UnitPos[3] == pos[3] then
-                                        LOG('Found Main Base Extractor '..repr(v))
+                                        --LOG('Found Main Base Extractor '..repr(v))
                                         c.MAINBASE = true
                                         break
                                     end
@@ -1331,7 +1331,7 @@ StructureManager = Class {
                                 for _, v in base.CoreResources.Extractors do
                                     local pos = v.Position or v.position
                                     if UnitPos[1] == pos[1] and UnitPos[3] == pos[3] then
-                                        LOG('Found Main Base Extractor '..repr(v))
+                                        --LOG('Found Main Base Extractor '..repr(v))
                                         c.MAINBASE = true
                                         break
                                     end

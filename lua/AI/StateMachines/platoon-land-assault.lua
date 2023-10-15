@@ -144,7 +144,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             if target and not IsDestroyed(target) then
                 local targetPos = target:GetPosition()
                 self.BuilderData = {
-                    AttackTarget = target,
+                    Target = target,
                     Position = targetPos
                 }
                 local rx = self.Pos[1] - targetPos[1]
@@ -292,6 +292,9 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                                     return
                                 end
                                 if not IsDestroyed(target) then
+                                    self.BuilderData = {
+                                        Target = target
+                                    }
                                     self:LogDebug('target found in Navigating, CombatLoop')
                                     LOG('target found in Navigating, CombatLoop')
                                     self:ChangeState(self.CombatLoop)
@@ -404,6 +407,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             self:LogDebug('CombatLoop')
             local builderData = self.BuilderData
             if not builderData.Target or builderData.Target.Dead then
+                LOG('Not target for target dead at start of CombatLoop')
                 coroutine.yield(10)
                 self:ChangeState(self.DecideWhatToDo)
                 return
@@ -454,7 +458,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            coroutine.yield(25)
+            coroutine.yield(35)
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -479,7 +483,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         local platoonUnits = platoon:GetPlatoonUnits()
         if platoonUnits then
             for _, unit in platoonUnits do
-                IssueClearCommands(unit)
+                IssueClearCommands({unit})
                 unit.PlatoonHandle = platoon
                 if not platoon.machinedata then
                     platoon.machinedata = {name = 'ZoneControl',id=unit.EntityId}

@@ -295,7 +295,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local brain = self:GetBrain()
             local builderData = self.BuilderData
             if not builderData.Position then
-                WARN('No position passed to LandAssault')
+                LOG('BuilderData '..repr(self.BuilderData))
+                WARN('No position passed to ZoneControl')
                 return false
             end
             local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
@@ -492,7 +493,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         local platoonUnits = platoon:GetPlatoonUnits()
         if platoonUnits then
             for _, unit in platoonUnits do
-                IssueClearCommands(unit)
+                IssueClearCommands({unit})
                 unit.PlatoonHandle = platoon
                 if not platoon.machinedata then
                     platoon.machinedata = {name = 'ZoneControl',id=unit.EntityId}

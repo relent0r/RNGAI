@@ -3115,7 +3115,7 @@ CountSoonMassSpotsRNG = function(aiBrain)
         for k, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
                 table.sort(aiBrain.emanager.expands,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],v.position[1],v.position[3])<VDist2Sq(b.Position[1],b.Position[3],v.position[1],v.position[3]) end)
-                if VDist3Sq(aiBrain.emanager.expands[1].Position,v.position)<25*25 then
+                if aiBrain.emanager.expands[1].Position and VDist3Sq(aiBrain.emanager.expands[1].Position,v.position)<25*25 then
                     table.insert(aiBrain.emanager.expands[1].mextable,{v,Position = v.position, Name = k})
                     aiBrain.emanager.expands[1].mexnum=aiBrain.emanager.expands[1].mexnum+1
                     table.insert(aiBrain.expansionMex, {v,Position = v.position, Name = k,ExpandMex=true})
@@ -3126,8 +3126,10 @@ CountSoonMassSpotsRNG = function(aiBrain)
         end
         for _,v in aiBrain.expansionMex do
             table.sort(aiBrain.emanager.expands,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],v.Position[1],v.Position[3])<VDist2Sq(b.Position[1],b.Position[3],v.Position[1],v.Position[3]) end)
-            v.distsq=VDist2Sq(aiBrain.emanager.expands[1].Position[1],aiBrain.emanager.expands[1].Position[2],v.Position[1],v.Position[3])
-            if v.ExpandMex then
+            if aiBrain.emanager.expands[1].Position then
+                v.distsq=VDist2Sq(aiBrain.emanager.expands[1].Position[1],aiBrain.emanager.expands[1].Position[2],v.Position[1],v.Position[3])
+            end
+            if aiBrain.emanager.expands[1] and v.ExpandMex then
                 v.priority=aiBrain.emanager.expands[1].mexnum
                 v.expand=aiBrain.emanager.expands[1]
                 v.expand.taken=0
@@ -5998,6 +6000,7 @@ end
 
 function GetMarkerFromPosition(refPosition, markerType)
     local markers
+    local marker
     if markerType == 'Mass' or markerType == 'Hydrocarbon'then
         markers = GetMarkersRNG()
     else

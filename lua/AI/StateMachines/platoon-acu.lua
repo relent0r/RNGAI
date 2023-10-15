@@ -41,6 +41,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonACUBehavior
         Main = function(self)
             -- requires expansion markers
+            LOG('ACU State machine is starting')
             if not import("/lua/sim/markerutilities/expansions.lua").IsGenerated() then
                 self:LogWarning('requires generated expansion markers')
                 self:ChangeState(self.Error)
@@ -53,12 +54,21 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Error)
                 return
             end
+            local brain = self:GetBrain()
             self.cdr = self:GetPlatoonUnits()[1]
             self.cdr.Active = true
             if self.PlatoonData.LocationType then
                 self.LocationType = self.PlatoonData.LocationType
             else
                 self.LocationType = 'MAIN'
+            end
+            if brain:GetCurrentUnits(categories.FACTORY) < 1 then
+                LOG('ACU Has no factory so is requesting a new builder')
+                if brain.BuilderManagers[self.LocationType].FactoryManager and not brain.BuilderManagers[self.LocationType].FactoryManager.LocationActive then
+                    brain.BuilderManagers[self.LocationType].FactoryManager.LocationActive = true
+                end
+                self:ChangeState(self.EngineerTask)
+                return
             end
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -398,7 +408,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                     target = closestThreatUnit
                 end
-                if (cdr.Health < 4000 and cdr.DistanceToHome > 14400) or (cdr.Health < 6500 and cdr.Caution and not cdr.SuicideMode) or cdr.InFirebaseRange then
+                if (cdr.Health < 4000 and cdr.DistanceToHome > 14400) or (cdr.Health < 6500 and cdr.Caution and not cdr.SuicideModeand and cdr.DistanceToHome > 3600 ) or cdr.InFirebaseRange then
                     LOG('Emergency Retreat')
                     self.BuilderData = {}
                     self:ChangeState(self.Retreating)
@@ -693,6 +703,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 local builderData
                 local engManager = brain.BuilderManagers[self.LocationType].EngineerManager
                 local builder = engManager:GetHighestBuilder('Any', {self.cdr})
+                LOG('Builder recieved '..repr(builder))
                 if builder then
                     builderData = builder:GetBuilderData(self.LocationType)
                     if builderData.Assist then
@@ -700,7 +711,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.AssistEngineers)
                         return
                     elseif builderData.Construction then
-                        --LOG('Builder Data '..repr(builderData))
+                        LOG('Builder Data for acu'..repr(builderData))
                         self.BuilderData = builderData
                         self:ChangeState(self.StructureBuild)
                         return
@@ -1862,7 +1873,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
     -----------------------------------------------------------------
     -- brain events
 
-    ---@param self AIPlatoon
+    --[[---@param self AIPlatoon
     ---@param units Unit[]
     OnUnitsAddedToSupportSquad = function(self, units)
         local cache = { false }
@@ -1880,7 +1891,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
             end
         end
-    end,
+    end,]]
 
 }
 
@@ -1893,10 +1904,14 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIPlatoonACUBehavior)
+        local brain = platoon:GetBrain()
         local squadUnits = platoon:GetSquadUnits('Support')
         if squadUnits then
             for _, unit in squadUnits do
                 unit.PlatoonHandle = platoon
+                if not brain.ACUData[unit.EntityId].CDRBrainThread then
+                    brain:CDRDataThreads(unit)
+                end
                 IssueClearCommands(unit)
             end
         end

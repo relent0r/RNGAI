@@ -13,7 +13,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 15, categories.SUBCOMMANDER } },
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.75}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.9}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.SUBCOMMANDER }},
         },
         BuilderType = 'Gate',
@@ -54,7 +54,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 15, categories.SUBCOMMANDER } },
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.75}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.9}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.SUBCOMMANDER }},
         },
         BuilderType = 'Gate',
@@ -66,7 +66,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 6, categories.SUBCOMMANDER } },
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.75}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.9}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.SUBCOMMANDER }},
         },
         BuilderType = 'Gate',

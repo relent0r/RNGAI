@@ -144,6 +144,21 @@ AIBrain = Class(RNGAIBrainClass, EconomyComponent) {
         self.DelayEqualBuildPlattons = {}
     end,
 
+        --- Called after `SetupSession` but before `BeginSession` - no initial units, props or resources exist at this point
+    ---@param self AIBrainAdaptive
+    ---@param planName string
+    CreateBrainShared = function(self, planName)
+        StandardBrain.CreateBrainShared(self, planName)
+
+        local aiScenarioPlans = self:ImportScenarioArmyPlans(planName)
+
+        self.DefaultPlan = true
+        self.AIPlansList = import("/lua/aibrainplans.lua").AIPlansList
+
+        self.RepeatExecution = false
+        self.ConstantEval = true
+    end,
+
     OnSpawnPreBuiltUnits = function(self)
         if not self.RNG then
             return RNGAIBrainClass.OnSpawnPreBuiltUnits(self)
@@ -6085,6 +6100,1085 @@ AIBrain = Class(RNGAIBrainClass, EconomyComponent) {
             end
         end
         --RUtils.GenerateChokePointLines(self)
+    end,
+
+        ---@deprecated
+    ---@param self AIBrain
+    InitializePlatoonBuildManager = function(self)
+        LOG('Starting PlatoonBuildManager')
+        LOG('Initialize Skirmish Systems')
+        if not self.RNG then
+            return RNGAIBrainClass.InitializeSkirmishSystems(self)
+        end
+        --RNGLOG('* AI-RNG: Custom Skirmish System for '..ScenarioInfo.ArmySetup[self.Name].AIPersonality)
+        -- Make sure we don't do anything for the human player!!!
+        if self.BrainType == 'Human' then
+            return
+        end
+
+        -- TURNING OFF AI POOL PLATOON, I MAY JUST REMOVE THAT PLATOON FUNCTIONALITY LATER
+        local poolPlatoon = self:GetPlatoonUniquelyNamed('ArmyPool')
+        if poolPlatoon then
+            poolPlatoon.ArmyPool = true
+            poolPlatoon:TurnOffPoolAI()
+        end
+        self:ForkThread(self.SetupPlayableArea)
+        --local mapSizeX, mapSizeZ = GetMapSize()
+        --RNGLOG('Map X size is : '..mapSizeX..'Map Z size is : '..mapSizeZ)
+        -- Stores handles to all builders for quick iteration and updates to all
+        self.BuilderHandles = {}
+        self.NoRush = {
+            Active = false,
+            Radius = 0
+            }
+
+        self.MapSize = 10
+        local mapSizeX, mapSizeZ = GetMapSize()
+        self.MapDimension = math.max(mapSizeX, mapSizeZ)
+        if mapSizeX > 1000 and mapSizeZ > 1000 then
+            if self.RNGEXP then
+                self.DefaultLandRatio = 0.2
+                self.DefaultAirRatio = 0.3
+                self.DefaultNavalRatio = 0.2
+            else
+                self.DefaultLandRatio = 0.5
+                self.DefaultAirRatio = 0.4
+                self.DefaultNavalRatio = 0.4
+            end
+            self.MapSize = 20
+        elseif mapSizeX > 500 and mapSizeZ > 500 then
+            if self.RNGEXP then
+                self.DefaultLandRatio = 0.2
+                self.DefaultAirRatio = 0.3
+                self.DefaultNavalRatio = 0.2
+            else
+                self.DefaultLandRatio = 0.6
+                self.DefaultAirRatio = 0.4
+                self.DefaultNavalRatio = 0.4
+            end
+            --RNGLOG('10 KM Map Check true')
+            self.MapSize = 10
+        elseif mapSizeX > 200 and mapSizeZ > 200 then
+            if self.RNGEXP then
+                self.DefaultLandRatio = 0.2
+                self.DefaultAirRatio = 0.3
+                self.DefaultNavalRatio = 0.2
+            else
+                self.DefaultLandRatio = 0.7
+                self.DefaultAirRatio = 0.3
+                self.DefaultNavalRatio = 0.3
+            end
+            --RNGLOG('5 KM Map Check true')
+            self.MapSize = 5
+        end
+
+        self.MapCenterPoint = { (ScenarioInfo.size[1] / 2), GetSurfaceHeight((ScenarioInfo.size[1] / 2), (ScenarioInfo.size[2] / 2)) ,(ScenarioInfo.size[2] / 2) }
+
+        -- Condition monitor for the whole brain
+        self.ConditionsMonitor = BrainConditionsMonitor.CreateConditionsMonitor(self)
+
+        -- Economy monitor for new skirmish - stores out econ over time to get trend over 10 seconds
+        self.EconomyData = {}
+        self.GraphZones = { 
+            FirstRun = true,
+            HasRun = false
+        }
+        if self.MapSize <= 10 and self.RNGEXP then
+            self.EconomyUpgradeSpendDefault = 0.35
+            self.EconomyUpgradeSpend = 0.35
+        elseif self.MapSize <= 10 then
+            self.EconomyUpgradeSpendDefault = 0.25
+            self.EconomyUpgradeSpend = 0.25
+        elseif self.RNGEXP then
+            self.EconomyUpgradeSpendDefault = 0.35
+            self.EconomyUpgradeSpend = 0.35
+        else
+            self.EconomyUpgradeSpendDefault = 0.30
+            self.EconomyUpgradeSpend = 0.30
+        end
+        self.EconomyTicksMonitor = 80
+        self.EconomyCurrentTick = 1
+        self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
+        self.EconomyOverTimeCurrent = {}
+        self.ACUData = {}
+        --self.EconomyOverTimeThread = self:ForkThread(self.EconomyOverTimeRNG)
+        self.EngineerAssistManagerActive = false
+        self.EngineerAssistManagerEngineerCount = 0
+        self.EngineerAssistManagerEngineerCountDesired = 0
+        self.EngineerAssistManagerBuildPowerDesired = 5
+        self.EngineerAssistManagerBuildPowerRequired = 0
+        self.EngineerAssistManagerBuildPower = 0
+        self.EngineerAssistManagerFocusCategory = false
+        self.EngineerAssistManagerFocusAirUpgrade = false
+        self.EngineerAssistManagerFocusExperimental = false
+        self.EngineerAssistManagerFocusLandUpgrade = false
+        self.EngineerAssistManagerPriorityTable = {}
+        self.EngineerDistributionTable = {
+            BuildPower = 0,
+            BuildStructure = 0,
+            Assist = 0,
+            Reclaim = 0,
+            ReclaimStructure = 0,
+            Expansion = 0,
+            Repair = 0,
+            Mass = 0,
+            Total = 0
+        }
+        self.ProductionRatios = {
+            Land = self.DefaultLandRatio,
+            Air = self.DefaultAirRatio,
+            Naval = self.DefaultNavalRatio,
+        }
+        self.earlyFlag = true
+        self.CanPathToEnemyRNG = {}
+        self.cmanager = {
+            income = {
+                r  = {
+                    m = 0,
+                    e = 0,
+                },
+                t = {
+                    m = 0,
+                    e = 0,
+                },
+            },
+            spend = {
+                m = 0,
+                e = 0,
+            },
+            buildpower = {
+                eng = {
+                    T1 = 0,
+                    T2 = 0,
+                    T3 = 0,
+                    com = 0,
+                    sacu = 0
+                }
+            },
+            categoryspend = {
+                eng = 0,
+                fact = {
+                    Land = 0,
+                    Air = 0,
+                    Naval = 0
+                },
+                silo = 0,
+                mex = {
+                      T1 = 0,
+                      T2 = 0,
+                      T3 = 0
+                      },
+            },
+            storage = {
+                current = {
+                    m = 0,
+                    e = 0,
+                },
+                max = {
+                    m = 0,
+                    e = 0,
+                },
+            },
+        }
+        self.amanager = {
+            Current = {
+                Land = {
+                    T1 = {
+                        scout=0,
+                        tank=0,
+                        arty=0,
+                        aa=0
+                    },
+                    T2 = {
+                        tank=0,
+                        mml=0,
+                        aa=0,
+                        shield=0,
+                        stealth=0,
+                        mobilebomb=0,
+                        bot=0
+                    },
+                    T3 = {
+                        tank=0,
+                        sniper=0,
+                        arty=0,
+                        mml=0,
+                        aa=0,
+                        shield=0,
+                        armoured=0
+                    }
+                },
+                Air = {
+                    T1 = {
+                        scout=0,
+                        interceptor=0,
+                        bomber=0,
+                        gunship=0
+                    },
+                    T2 = {
+                        bomber=0,
+                        gunship=0,
+                        fighter=0,
+                        mercy=0,
+                        torpedo=0,
+                    },
+                    T3 = {
+                        scout=0,
+                        asf=0,
+                        bomber=0,
+                        gunship=0,
+                        torpedo=0,
+                        transport=0
+                    }
+                },
+                Naval = {
+                    T1 = {
+                        frigate=0,
+                        sub=0,
+                        shard=0
+                    },
+                    T2 = {
+                        tank=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    },
+                    T3 = {
+                        tank=0,
+                        sniper=0,
+                        arty=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    }
+                },
+            },
+            Total = {
+                Land = {
+                    T1 = 0,
+                    T2 = 0,
+                    T3 = 0,
+                },
+                Air = {
+                    T1 = 0,
+                    T2 = 0,
+                    T3 = 0,
+                },
+                Naval = {
+                    T1 = 0,
+                    T2 = 0,
+                    T3 = 0,
+                }
+            },
+            Type = {
+                Land = {
+                    scout=0,
+                    tank=0,
+                    sniper=0,
+                    arty=0,
+                    mml=0,
+                    aa=0,
+                    shield=0,
+                    bot=0,
+                    mobilebomb=0,
+                    armoured=0
+                },
+                Air = {
+                    scout=0,
+                    interceptor=0,
+                    bomber=0,
+                    gunship=0,
+                    fighter=0,
+                    mercy=0,
+                    torpedo=0,
+                    asf=0,
+                    transport=0,
+                },
+                Naval = {
+                    frigate=0,
+                    sub=0,
+                    cruiser=0,
+                    destroyer=0,
+                    battleship=0,
+                    shard=0,
+                    shield=0
+                },
+            },
+            Ratios = {
+                [1] = {
+                    Land = {
+                        T1 = {
+                            scout=15,
+                            tank=65,
+                            arty=15,
+                            aa=12,
+                            total=0
+                        },
+                        T2 = {
+                            tank=55,
+                            mml=0,
+                            bot=25,
+                            aa=10,
+                            shield=10,
+                            total=0
+                        },
+                        T3 = {
+                            tank=40,
+                            armoured=50,
+                            mml=0,
+                            arty=0,
+                            aa=10,
+                            total=0
+                        }
+                    },
+                    Air = {
+                        T1 = {
+                            scout=0,
+                            interceptor=80,
+                            bomber=20,
+                            total=0
+                        },
+                        T2 = {
+                            bomber=0,
+                            gunship=0,
+                            torpedo=0,
+                            total=0
+                        },
+                        T3 = {
+                            scout=0,
+                            asf=70,
+                            bomber=15,
+                            gunship=10,
+                            transport=5,
+                            total=0
+                        }
+                    },
+                    Naval = {
+                        T1 = {
+                            frigate=70,
+                            sub=30,
+                            total=0
+                        },
+                        T2 = {
+                            destroyer=70,
+                            cruiser=30,
+                            subhunter=10,
+                            total=0
+                        },
+                        T3 = {
+                            battleship=80,
+                            total=0
+                        }
+                    },
+                },
+                [2] = {
+                    Land = {
+                        T1 = {
+                            scout=15,
+                            tank=65,
+                            arty=15,
+                            aa=12,
+                            total=0
+                        },
+                        T2 = {
+                            tank=75,
+                            mml=0,
+                            aa=10,
+                            shield=15,
+                            total=0
+                        },
+                        T3 = {
+                            tank=50,
+                            arty=0,
+                            aa=10,
+                            sniper=40,
+                            total=0
+                        }
+                    },
+                    Air = {
+                        T1 = {
+                            scout=0,
+                            interceptor=80,
+                            bomber=20,
+                            total=0
+                        },
+                        T2 = {
+                            fighter=100,
+                            gunship=0,
+                            torpedo=0,
+                            total=0
+                        },
+                        T3 = {
+                            scout=0,
+                            asf=75,
+                            bomber=15,
+                            gunship=10,
+                            torpedo=0,
+                            total=0
+                        }
+                    },
+                    Naval = {
+                        T1 = {
+                            frigate=70,
+                            shard= 0,
+                            sub=30,
+                            total=0
+                        },
+                        T2 = {
+                            destroyer=70,
+                            cruiser=30,
+                            subhunter=10,
+                            total=0
+                        },
+                        T3 = {
+                            battleship=80,
+                            total=0
+                        }
+                    },
+                },
+                [3] = {
+                    Land = {
+                        T1 = {
+                            scout=15,
+                            tank=65,
+                            arty=15,
+                            aa=12,
+                            total=0
+                        },
+                        T2 = {
+                            tank=55,
+                            mml=0,
+                            bot=30,
+                            aa=10,
+                            stealth=5,
+                            mobilebomb=0,
+                            total=0
+                        },
+                        T3 = {
+                            tank=40,
+                            armoured=45,
+                            arty=0,
+                            aa=10,
+                            total=0
+                        }
+                    },
+                    Air = {
+                        T1 = {
+                            scout=0,
+                            interceptor=70,
+                            bomber=20,
+                            gunship=10,
+                            total=0
+                        },
+                        T2 = {
+                            bomber=0,
+                            gunship=0,
+                            torpedo=0,
+                            total=0
+                        },
+                        T3 = {
+                            scout=0,
+                            asf=75,
+                            bomber=15,
+                            gunship=10,
+                            total=0
+                        }
+                    },
+                    Naval = {
+                        T1 = {
+                            frigate=70,
+                            sub=30,
+                            total=0
+                        },
+                        T2 = {
+                            destroyer=70,
+                            cruiser=30,
+                            subhunter=10,
+                            total=0
+                        },
+                        T3 = {
+                            battleship=80,
+                            total=0
+                        }
+                    },
+                },
+                [4] = {
+                    Land = {
+                        T1 = {
+                            scout=15,
+                            tank=65,
+                            arty=15,
+                            aa=12,
+                            total=0
+                        },
+                        T2 = {
+                            tank=80,
+                            mml=0,
+                            aa=15,
+                            total=0
+                        },
+                        T3 = {
+                            tank=45,
+                            arty=0,
+                            aa=10,
+                            sniper=40,
+                            shield=5,
+                            total=0
+                        }
+                    },
+                    Air = {
+                        T1 = {
+                            scout=0,
+                            interceptor=80,
+                            bomber=20,
+                            total=0
+                        },
+                        T2 = {
+                            bomber=0,
+                            gunship=0,
+                            torpedo=0,
+                            total=0
+                        },
+                        T3 = {
+                            scout=0,
+                            asf=85,
+                            bomber=15,
+                            torpedo=0,
+                            total=0
+                        }
+                    },
+                    Naval = {
+                        T1 = {
+                            frigate=70,
+                            sub=30,
+                            total=0
+                        },
+                        T2 = {
+                            destroyer=70,
+                            cruiser=30,
+                            subhunter=10,
+                            total=0
+                        },
+                        T3 = {
+                            battleship=80,
+                            total=0
+                        }
+                    },
+                },
+                [5] = {
+                    Land = {
+                        T1 = {
+                            scout=15,
+                            tank=65,
+                            arty=15,
+                            aa=12,
+                            total=0
+                        },
+                        T2 = {
+                            tank=55,
+                            mml=0,
+                            bot=25,
+                            aa=10,
+                            shield=10,
+                            total=0
+                        },
+                        T3 = {
+                            tank=40,
+                            armoured=45,
+                            mml=0,
+                            arty=0,
+                            aa=10,
+                            total=0
+                        }
+                    },
+                    Air = {
+                        T1 = {
+                            scout=0,
+                            interceptor=75,
+                            bomber=25,
+                            total=0
+                        },
+                        T2 = {
+                            bomber=0,
+                            gunship=0,
+                            torpedo=0,
+                            total=0
+                        },
+                        T3 = {
+                            scout=0,
+                            asf=75,
+                            bomber=15,
+                            gunship=10,
+                            total=0
+                        }
+                    },
+                    Naval = {
+                        T1 = {
+                            frigate=15,
+                            sub=60,
+                            total=0
+                        },
+                        T2 = {
+                            destroyer=70,
+                            cruiser=30,
+                            subhunter=10,
+                            total=0
+                        },
+                        T3 = {
+                            scout=11,
+                            asf=55,
+                            bomber=15,
+                            gunship=10,
+                            transport=5,
+                            total=0
+                        }
+                    },
+                },
+            },
+            Demand = {
+                Land = {
+                    T1 = {
+                        scout=0,
+                        tank=0,
+                        arty=0,
+                        aa=0
+                    },
+                    T2 = {
+                        tank=0,
+                        mml=0,
+                        aa=0,
+                        shield=0,
+                        stealth=0,
+                        mobilebomb=0,
+                        bot=0
+                    },
+                    T3 = {
+                        tank=0,
+                        sniper=0,
+                        arty=0,
+                        mml=0,
+                        aa=0,
+                        shield=0,
+                        armoured=0
+                    }
+                },
+                Air = {
+                    T1 = {
+                        scout=0,
+                        interceptor=0,
+                        bomber=0,
+                        gunship=0
+                    },
+                    T2 = {
+                        bomber=0,
+                        gunship=0,
+                        fighter=0,
+                        mercy=0,
+                        torpedo=0,
+                    },
+                    T3 = {
+                        scout=0,
+                        asf=0,
+                        bomber=0,
+                        gunship=0,
+                        torpedo=0,
+                        transport=0
+                    }
+                },
+                Naval = {
+                    T1 = {
+                        frigate=0,
+                        sub=0,
+                        shard=0
+                    },
+                    T2 = {
+                        tank=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    },
+                    T3 = {
+                        tank=0,
+                        sniper=0,
+                        arty=0,
+                        mml=0,
+                        aa=0,
+                        shield=0
+                    }
+                },
+            },
+        }
+        self.smanager = {
+            fact = {
+                Land =
+                {
+                    T1 = 0,
+                    T2 = 0,
+                    T3 = 0
+                },
+                Air = {
+                    T1=0,
+                    T2=0,
+                    T3=0
+                },
+                Naval= {
+                    T1=0,
+                    T2=0,
+                    T3=0
+                }
+            },
+            --The mex list is indexed by zone so the AI can easily calculate how many mexes it has per zone.
+            mex = {
+                
+            },
+            pgen = {
+                T1=0,
+                T2=0,
+                T3=0
+            },
+            hydro = {
+
+            },
+            silo = {
+                T2=0,
+                T3=0
+            },
+            fabs= {
+                T2=0,
+                T3=0
+            }
+        }
+        self.emanager = {
+            mex = {
+
+            }
+        }
+
+        self.LowEnergyMode = false
+        self.EcoManager = {
+            ApproxFactoryMassConsumption = 0,
+            EcoManagerTime = 30,
+            EcoManagerStatus = 'ACTIVE',
+            ExtractorsUpgrading = {TECH1 = 0, TECH2 = 0},
+            ExtractorsUpgradingDistanceTable = {},
+            CoreMassMarkerCount = 0,
+            TotalCoreExtractors = 0,
+            CoreExtractorT3Percentage = 0,
+            CoreExtractorT2Count = 0,
+            CoreExtractorT3Count = 0,
+            EcoMultiplier = 1,
+            T3ExtractorSpend = false,
+            T2ExtractorSpend = false,
+            EcoMassUpgradeTimeout = 120,
+            EcoPowerPreemptive = false,
+        }
+        self.EcoManager.PowerPriorityTable = {
+            ENGINEER = 12,
+            STATIONPODS = 11,
+            TML = 10,
+            SHIELD = 8,
+            AIR = 9,
+            NAVAL = 5,
+            RADAR = 3,
+            MASSEXTRACTION = 4,
+            MASSFABRICATION = 7,
+            NUKE = 6,
+            LAND = 2,
+        }
+        self.EcoManager.MassPriorityTable = {
+            Advantage = {
+                --MASSEXTRACTION = 5,
+                TML = 12,
+                STATIONPODS = 10,
+                ENGINEER = 11,
+                AIR = 7,
+                NAVAL = 8,
+                LAND = 6,
+                NUKE = 9,
+                },
+            Disadvantage = {
+                --MASSEXTRACTION = 8,
+                TML = 12,
+                STATIONPODS = 10,
+                ENGINEER = 11,
+                NAVAL = 8,
+                NUKE = 9,
+            }
+        }
+
+        self.DefensiveSupport = {}
+
+        --Tactical Monitor
+        self.TacticalMonitor = {
+            TacticalMonitorStatus = 'ACTIVE',
+            TacticalLocationFound = false,
+            TacticalLocations = {},
+            TacticalTimeout = 37,
+            TacticalMonitorTime = 180,
+            TacticalMassLocations = {},
+            TacticalUnmarkedMassGroups = {},
+            TacticalSACUMode = false,
+            TacticalMissions = {
+                ACUSnipe = {},
+                MassStrike = {}
+            }
+        }
+        -- Intel Data
+        self.EnemyIntel = {}
+        self.BrainIntel = {}
+        self.BrainIntel.SuicideModeActive = false
+        self.BrainIntel.SuicideModeTarget = false
+        self.BrainIntel.TeamCount = 0
+        self.EnemyIntel.NavalRange = {
+            Position = {},
+            Range = 0,
+        }
+        self.EnemyIntel.FrigateRaid = false
+        self.EnemyIntel.FrigateRaidMarkers = {}
+        self.EnemyIntel.EnemyCount = 0
+        self.EnemyIntel.ClosestEnemyBase = 0
+        self.EnemyIntel.ACUEnemyClose = false
+        self.EnemyIntel.HighPriorityTargetAvailable = false
+        self.EnemyIntel.ACU = {}
+        self.EnemyIntel.Phase = 1
+        self.EnemyIntel.TML = {}
+        self.EnemyIntel.SMD = {}
+        self.EnemyIntel.Experimental = {}
+        self.EnemyIntel.DirectorData = {
+            Strategic = {},
+            Energy = {},
+            Intel = {},
+            Defense = {},
+            Mass = {},
+            Factory = {},
+            Combat = {},
+        }
+        --RNGLOG('Director Data'..repr(self.EnemyIntel.DirectorData))
+        --RNGLOG('Director Energy Table '..repr(self.EnemyIntel.DirectorData.Energy))
+        self.EnemyIntel.EnemyStartLocations = {}
+        self.EnemyIntel.EnemyThreatLocations = {}
+        self.EnemyIntel.ChokeFlag = false
+        self.EnemyIntel.EnemyFireBaseDetected = false
+        self.EnemyIntel.EnemyAirFireBaseDetected = false
+        self.EnemyIntel.ChokePoints = {}
+        self.EnemyIntel.EnemyThreatCurrent = {
+            Air = 0,
+            AntiAir = 0,
+            AirSurface = 0,
+            Land = 0,
+            Experimental = 0,
+            Extractor = 0,
+            ExtractorCount = 0,
+            Naval = 0,
+            NavalSub = 0,
+            DefenseAir = 0,
+            DefenseSurface = 0,
+            DefenseSub = 0,
+            ACUGunUpgrades = 0,
+        }
+        self.EnemyIntel.CivilianCaptureUnits = {}
+        local selfIndex = self:GetArmyIndex()
+        for _, v in ArmyBrains do
+            local armyIndex = v:GetArmyIndex()
+            self.TacticalMonitor.TacticalMissions.ACUSnipe[armyIndex] = {
+                LAND = {},
+                AIR = {}
+            }
+            self.EnemyIntel.ACU[armyIndex] = {
+                Position = {},
+                DistanceToBase = 0,
+                LastSpotted = 0,
+                Threat = 0,
+                HP = 0,
+                OnField = false,
+                CloseCombat = false,
+                Unit = {},
+                Gun = false,
+                Ally = IsAlly(selfIndex, armyIndex),
+                IntelGrid = {}
+            }
+            self.EnemyIntel.DirectorData[armyIndex] = {
+                Strategic = {},
+                Energy = {},
+                Mass = {},
+                Factory = {},
+                Combat = {},
+            }
+        end
+
+        local selfStartPosX, selfStartPosY = self:GetArmyStartPos()
+        self.BrainIntel.StartPos = { selfStartPosX, GetSurfaceHeight(selfStartPosX, selfStartPosY), selfStartPosY }
+        self.BrainIntel.MapOwnership = 0
+        self.BrainIntel.AirStagingRequired = false
+        self.BrainIntel.CurrentIntelAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, self.MapCenterPoint)
+        self.BrainIntel.ExpansionWatchTable = {}
+        self.BrainIntel.DynamicExpansionPositions = {}
+        self.BrainIntel.IMAPConfig = {
+            OgridRadius = 0,
+            IMAPSize = 0,
+            ResolveBlocks = 0,
+            ThresholdMult = 0,
+            Rings = 0,
+        }
+        self.BrainIntel.AllyCount = 0
+        self.BrainIntel.AllyStartLocations = {}
+        self.BrainIntel.ACUDefensivePositionKeyTable = {}
+        self.BrainIntel.LandPhase = 1
+        self.BrainIntel.AirPhase = 1
+        self.BrainIntel.NavalPhase = 1
+        self.BrainIntel.NavalBaseLabels = {}
+        self.BrainIntel.MassMarker = 0
+        self.BrainIntel.RestrictedMassMarker = 0
+        self.BrainIntel.MassSharePerPlayer = 0
+        self.BrainIntel.MassMarkerTeamShare = 0
+        self.BrainIntel.AirAttackMode = false
+        self.BrainIntel.SelfThreat = {}
+        self.BrainIntel.Average = {
+            Air = 0,
+            Land = 0,
+            Experimental = 0,
+        }
+        self.BrainIntel.SelfThreat = {
+            Air = {},
+            Extractor = 0,
+            ExtractorCount = 0,
+            MassMarker = 0,
+            MassMarkerBuildable = 0,
+            MassMarkerBuildableTable = {},
+            AllyExtractorTable = {},
+            AllyExtractorCount = 0,
+            AllyExtractor = 0,
+            AllyLandThreat = 0,
+            AllyAirThreat = 0,
+            AntiAirNow = 0,
+            AirNow = 0,
+            LandNow = 0,
+            NavalNow = 0,
+            NavalSubNow = 0,
+        }
+        self.BrainIntel.ActiveExpansion = false
+        -- Structure Upgrade properties
+        self.UpgradeIssued = 0
+        self.EarlyQueueCompleted = false
+        self.IntelTriggerList = {}
+        
+        self.UpgradeIssuedPeriod = 100
+
+        if self.CheatEnabled then
+            self.EcoManager.EcoMultiplier = tonumber(ScenarioInfo.Options.BuildMult)
+        end
+        --This coin flip is done for aggressive expansion chances
+        self.coinFlip = math.random(1,3)
+       --LOG('Build Multiplier now set, this impacts many economy checks that look at income '..self.EcoManager.EcoMultiplier)
+
+        self.MapWaterRatio = self:GetMapWaterRatio()
+        if self.RNGDEBUG then
+            --LOG('Water Ratio is '..self.MapWaterRatio)
+        end
+
+        -- Table to holding the starting reclaim
+        self.StartReclaimTable = {}
+        self.StartMassReclaimTotal = 0
+        self.StartReclaimCurrent = 0
+        self.StartReclaimTaken = false
+        self.Zones = { }
+
+        self.UpgradeMode = 'Normal'
+
+        -- ACU Support Data
+        self.ACUSupport = {}
+        self.ACUSupport.EnemyACUClose = 0
+        self.ACUSupport.ACUMaxSearchRadius = 0
+        self.ACUSupport.Supported = false
+        self.ACUSupport.PlatoonCount = 0
+        self.ACUSupport.Platoons = {}
+        self.ACUSupport.Position = {}
+        self.ACUSupport.TargetPosition = false
+        self.ACUSupport.ReturnHome = true
+
+        -- Misc
+        self.ReclaimEnabled = true
+        self.ReclaimLastCheck = 0
+        
+        -- Add default main location and setup the builder managers
+        self.NumBases = 0 -- AddBuilderManagers will increase the number
+
+        self.BuilderManagers = {}
+        SUtils.AddCustomUnitSupport(self)
+        LOG('Adding builder managers at '..repr(self:GetStartVector3f()))
+        self:AddBuilderManagers(self:GetStartVector3f(), 100, 'MAIN', false)
+        -- Generates the zones and updates the resource marker table with Zone IDs
+        --IntelManagerRNG.GenerateMapZonesRNG(self)
+
+        if RUtils.InitialMassMarkersInWater(self) then
+            --RNGLOG('* AI-RNG: Map has mass markers in water')
+            self.MassMarkersInWater = true
+        else
+            --RNGLOG('* AI-RNG: Map does not have mass markers in water')
+            self.MassMarkersInWater = false
+        end
+       
+        self:IMAPConfigurationRNG()
+        -- Begin the base monitor process
+        self:NoRushCheck()
+
+        self:BaseMonitorInitializationRNG()
+
+        local plat = self:GetPlatoonUniquelyNamed('ArmyPool')
+        plat:ForkThread(plat.BaseManagersDistressAIRNG)
+        self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitorRNG)
+        self.EnemyPickerThread = self:ForkThread(self.PickEnemyRNG)
+        self:ForkThread(self.CivilianUnitCheckRNG)
+        self:ForkThread(self.EcoPowerManagerRNG)
+        self:ForkThread(self.EcoPowerPreemptiveRNG)
+        self:ForkThread(self.EcoMassManagerRNG)
+        self:ForkThread(self.BasePerimeterMonitorRNG)
+        self:ForkThread(self.EnemyChokePointTestRNG)
+        self:ForkThread(self.EngineerAssistManagerBrainRNG)
+        self:ForkThread(self.AllyEconomyHelpThread)
+        self:ForkThread(self.HeavyEconomyRNG)
+        self:ForkThread(self.FactoryEcoManagerRNG)
+        self:ForkThread(RUtils.CountSoonMassSpotsRNG)
+        self:ForkThread(IntelManagerRNG.LastKnownThread)
+        self:ForkThread(RUtils.CanPathToCurrentEnemyRNG)
+        self:ForkThread(Mapping.SetMarkerInformation)
+        self:CalculateMassMarkersRNG()
+        self:ForkThread(self.SetupIntelTriggersRNG)
+        self:ForkThread(IntelManagerRNG.ExpansionIntelScanRNG)
+        self:ForkThread(IntelManagerRNG.InitialNavalAttackCheck)
+        self:ForkThread(self.DynamicExpansionRequiredRNG)
+        self.ZonesInitialized = false
+        self:ForkThread(self.ZoneSetup)
+        self.IntelManager = IntelManagerRNG.CreateIntelManager(self)
+        self.IntelManager:Run()
+        self.StructureManager = StructureManagerRNG.CreateStructureManager(self)
+        self.StructureManager:Run()
+        self:ForkThread(IntelManagerRNG.CreateIntelGrid, self.IntelManager)
+        self:ForkThread(self.CreateFloatingEngineerBase, self.BrainIntel.StartPos)
+        if self.RNGDEBUG then
+            self:ForkThread(self.LogDataThreadRNG)
+        end
+        self:ForkThread(self.WatchForCampaignStart)
+    end,
+
+    WatchForCampaignStart = function(self)
+        local hasRun = false
+        while not hasRun do
+            coroutine.yield(30)
+            local mainManagers = self.BuilderManagers.MAIN
+            local pool = self:GetPlatoonUniquelyNamed('ArmyPool')
+            LOG('ArmyPool current has '..table.getn(pool:GetPlatoonUnits())..' in it')
+            for k,v in pool:GetPlatoonUnits() do
+                if EntityCategoryContains(categories.ENGINEER, v) then
+                    hasRun = true
+                    mainManagers.EngineerManager:AddUnit(v)
+                elseif EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, v) then
+                    hasRun = true
+                    mainManagers.FactoryManager:AddFactory(v)
+                end
+            end
+        end
+        LOG('ACU Should be present now')
     end,
 
 }
