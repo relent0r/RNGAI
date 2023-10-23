@@ -58,7 +58,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
     end
     local jobType = unit.PlatoonHandle.PlatoonData.JobType or 'None'
     -- don't check a path if we are in build range
-    if not alwaysGeneratePath and VDist3Sq(pos, destination) < 625 then
+    if not alwaysGeneratePath and VDist3Sq(pos, destination) < 1225 then
         if NavUtils.CanPathTo('Amphibious', pos, destination) then
             return true
         end

@@ -158,6 +158,7 @@ end
 
 function NavalBaseLimitRNG(aiBrain, limit)
     local expBaseCount = aiBrain:GetManagerCount('Naval Area')
+    LOG('Naval base count is '..expBaseCount)
     return CompareBody(expBaseCount, limit, '<')
 end
 
@@ -371,8 +372,10 @@ end
 function NavalAreaNeedsEngineerRNG(aiBrain, locationType, validateLabel, locationRadius, threatMin, threatMax, threatRings, threatType)
     local pos, name = RUtils.AIFindNavalAreaNeedsEngineer(aiBrain, locationType, validateLabel, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
+        LOG('Naval Area Needs Engineer TRUE')
         return true
     end
+    LOG('Naval Area Needs Engineer FALSE')
     return false
 end
 

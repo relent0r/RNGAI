@@ -1199,7 +1199,12 @@ StructureManager = Class {
                         coroutine.yield(30)
                     end
                     coroutine.yield(30)
-            elseif extractorsDetail.TECH1Upgrading < 5 and massStorage > 150 and upgradeTrigger and totalSpend < upgradeSpend 
+            elseif extractorsDetail.TECH1 > 0 and extractorsDetail.TECH1Upgrading < 1 and extractorsDetail.TECH2Upgrading > 0 and upgradeTrigger and totalSpend < upgradeSpend 
+                and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
+                    --RNGLOG('We Could upgrade a non t2 extractor now with over time')
+                    self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
+                    coroutine.yield(60)
+            elseif extractorsDetail.TECH1 > 0 and extractorsDetail.TECH1Upgrading < 5 and massStorage > 150 and upgradeTrigger and totalSpend < upgradeSpend 
                 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                     --RNGLOG('We Could upgrade a non t2 extractor now with over time')
                     self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)

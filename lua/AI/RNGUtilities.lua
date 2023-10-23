@@ -1158,7 +1158,7 @@ function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxR
     end
 
     for _, range in RangeList do
-        local targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS, position, maxRange, 'Enemy')
+        local targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS - categories.INSIGNIFICANTUNIT, position, maxRange, 'Enemy')
         for _, v in atkPri do
             local category = v
             if type(category) == 'string' then
@@ -1472,7 +1472,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
     --RNGLOG('ACUTARGETTING : MaxRange on target search '..maxRange)
     for _, range in RangeList do
         if maxRange > range then
-            targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS - categories.AIR - categories.SCOUT, cdrPos, range, 'Enemy')
+            targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.INSIGNIFICANTUNIT, cdrPos, range, 'Enemy')
             for _, target in targetUnits do
                 if not target.Dead then
                     local targetPos = target:GetPosition()
@@ -1746,7 +1746,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
     end
 
     for _, range in RangeList do
-        targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS, position, range, 'Enemy')
+        targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS - categories.INSIGNIFICANTUNIT, position, range, 'Enemy')
         for _, v in atkPri do
             category = v
             if type(category) == 'string' then
@@ -1928,7 +1928,7 @@ function AIFindBrainTargetInACURangeRNG(aiBrain, position, platoon, squad, maxRa
     }
 
     for _, range in RangeList do
-        targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS, position, range, 'Enemy')
+        targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS - categories.INSIGNIFICANTUNIT, position, range, 'Enemy')
         for _, category in atkPri do
             local retUnit = false
             local distance = false
@@ -5370,7 +5370,7 @@ function SetAcuSnipeMode(unit, bool)
                 categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE,
                 (categories.STRUCTURE * categories.DEFENSE - categories.ANTIMISSILE),
                 categories.MOBILE * categories.TECH1,
-                (categories.ALLUNITS - categories.SPECIALLOWPRI),
+                (categories.ALLUNITS - categories.SPECIALLOWPRI - categories.INSIGNIFICANTUNIT),
             }
         --RNGLOG('Setting to snipe mode')
     else
@@ -5381,7 +5381,7 @@ function SetAcuSnipeMode(unit, bool)
                 categories.MOBILE * categories.TECH1,
                 categories.COMMAND,
                 (categories.STRUCTURE * categories.DEFENSE - categories.ANTIMISSILE),
-                (categories.ALLUNITS - categories.SPECIALLOWPRI),
+                (categories.ALLUNITS - categories.SPECIALLOWPRI - categories.INSIGNIFICANTUNIT),
             }
         --RNGLOG('Setting to default weapon mode')
     end

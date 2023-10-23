@@ -177,7 +177,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 if inRange and not highThreat and ((cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)) then
-                    LOG('ACU enhancement build')
+                    --LOG('ACU enhancement build')
                     self:ChangeState(self.EnhancementBuild)
                     return
                 elseif not highThreat and ((cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)) then
@@ -479,7 +479,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             elseif self.BuilderData.DefendExpansion then
                 coroutine.yield(10)
             end
-            if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < 6400 then
+            if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < 6400 and not cdr.Caution then
                 self:ChangeState(self.EngineerTask)
                 return
             elseif not cdr.SuicideMode and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 and cdr.Phase > 2 then
@@ -703,7 +703,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 local builderData
                 local engManager = brain.BuilderManagers[self.LocationType].EngineerManager
                 local builder = engManager:GetHighestBuilder('Any', {self.cdr})
-                LOG('Builder recieved '..repr(builder))
                 if builder then
                     builderData = builder:GetBuilderData(self.LocationType)
                     if builderData.Assist then
@@ -711,7 +710,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.AssistEngineers)
                         return
                     elseif builderData.Construction then
-                        LOG('Builder Data for acu'..repr(builderData))
                         self.BuilderData = builderData
                         self:ChangeState(self.StructureBuild)
                         return

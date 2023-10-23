@@ -58,9 +58,9 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Gunship',
         PlatoonTemplate = 'T1Gunship',
-        Priority = 742,
+        Priority = 779,
         BuilderConditions = {
-            { UCBC, 'ArmyManagerBuild', { 'Air', 'T1', 'gunship'} },
+            { UCBC, 'UnitBuildDemand', {'Air', 'T1', 'gunship'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

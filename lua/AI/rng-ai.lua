@@ -1276,6 +1276,10 @@ AIBrain = Class(RNGAIBrainClass, EconomyComponent) {
             RNGLOG('MassEfficiencyOverTime --'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime)
             RNGLOG('EnergyTrendOverTime --'..self.EconomyOverTimeCurrent.EnergyTrendOverTime)
             RNGLOG('MassTrendOverTime --'..self.EconomyOverTimeCurrent.MassTrendOverTime)
+            RNGLOG('Mass Storage --'..GetEconomyStored(self, 'MASS'))
+            RNGLOG('Energy Storage --'..GetEconomyStored(self, 'ENERGY'))
+            RNGLOG('Mass Storage Ratio --'..GetEconomyStoredRatio(self, 'MASS'))
+            RNGLOG('Energy Storage Ratio --'..GetEconomyStoredRatio(self, 'MASS'))
             RNGLOG('---------------')
             RNGLOG('Current Land Factory Spend '..self.cmanager.categoryspend.fact['Land'])
             RNGLOG('Ratio Land Spend Target '..(self.cmanager.income.r.m * self.ProductionRatios['Land']))
@@ -5887,21 +5891,22 @@ AIBrain = Class(RNGAIBrainClass, EconomyComponent) {
     GetManagerCount = function(self, type)
         local count = 0
         for k, v in self.BuilderManagers do
-            if type then
-               --RNGLOG('BuilderManager Type is '..k)
-                if type == 'Start Location' and not (string.find(k, 'ARMY_') or string.find(k, 'Large Expansion') or k ~= 'FLOATING') then
-                    continue
-                elseif type == 'Naval Area' and not (string.find(k, 'Naval Area') or k ~= 'FLOATING') then
-                    continue
-                elseif type == 'Expansion Area' and (not (string.find(k, 'Expansion Area') or string.find(k, 'EXPANSION_AREA')) or string.find(k, 'Large Expansion') or k ~= 'FLOATING') then
+            if k ~= 'FLOATING' then
+                if type then
+                --RNGLOG('BuilderManager Type is '..k)
+                    if type == 'Start Location' and not (string.find(k, 'ARMY_') or string.find(k, 'Large Expansion')) then
+                        continue
+                    elseif type == 'Naval Area' and not (string.find(k, 'Naval Area')) then
+                        continue
+                    elseif type == 'Expansion Area' and (not (string.find(k, 'Expansion Area') or string.find(k, 'EXPANSION_AREA')) or string.find(k, 'Large Expansion')) then
+                        continue
+                    end
+                end
+                if v.EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) <= 0 and v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) <= 0 then
                     continue
                 end
+                count = count + 1
             end
-            if v.EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) <= 0 and v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) <= 0 then
-                continue
-            end
-
-            count = count + 1
         end
        --RNGLOG('Type is '..type..' Count is '..count)
         return count
@@ -6108,7 +6113,7 @@ AIBrain = Class(RNGAIBrainClass, EconomyComponent) {
         LOG('Starting PlatoonBuildManager')
         LOG('Initialize Skirmish Systems')
         if not self.RNG then
-            return RNGAIBrainClass.InitializeSkirmishSystems(self)
+            return RNGAIBrainClass.InitializePlatoonBuildManager(self)
         end
         --RNGLOG('* AI-RNG: Custom Skirmish System for '..ScenarioInfo.ArmySetup[self.Name].AIPersonality)
         -- Make sure we don't do anything for the human player!!!
@@ -7155,7 +7160,7 @@ AIBrain = Class(RNGAIBrainClass, EconomyComponent) {
         self.StructureManager:Run()
         self:ForkThread(IntelManagerRNG.CreateIntelGrid, self.IntelManager)
         self:ForkThread(self.CreateFloatingEngineerBase, self.BrainIntel.StartPos)
-        if self.RNGDEBUG then
+        if true then
             self:ForkThread(self.LogDataThreadRNG)
         end
         self:ForkThread(self.WatchForCampaignStart)

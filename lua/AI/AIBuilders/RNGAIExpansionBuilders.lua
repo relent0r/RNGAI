@@ -23,7 +23,7 @@ end
 
 local NavalExpansionAdjust = function(self, aiBrain, builderManager)
     if aiBrain.BrainIntel.AirPlayer then
-        --RNGLOG('Air Player')
+        RNGLOG('Air Player')
         return 0
     elseif aiBrain.MapWaterRatio < 0.20 and not aiBrain.MassMarkersInWater then
         --RNGLOG('NavalExpansionAdjust return 0')
@@ -38,7 +38,7 @@ local NavalExpansionAdjust = function(self, aiBrain, builderManager)
         --RNGLOG('NavalExpansionAdjust return 650')
         return 675
     else
-        --RNGLOG('NavalExpansionAdjust return 750')
+        --RNGLOG('NavalExpansionAdjust return 910')
         return 910
     end
 end
@@ -195,7 +195,7 @@ BuilderGroup {
             { UCBC, 'NavalBaseLimitRNG', { 2 } }, -- Forces limit to the number of naval expansions
             { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 'Naval Area', 3,  categories.FACTORY * categories.STRUCTURE }},
             { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', true, 250, -1000, 100, 1, 'AntiSurface' } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.0}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Any',
@@ -402,7 +402,7 @@ BuilderGroup {
             { UCBC, 'NavalBaseLimitRNG', { 3 } }, -- Forces limit to the number of naval expansions
             { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', true, 650, -1000, 100, 1, 'AntiSurface' } },
             { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 'Naval Area', 3, categories.FACTORY * categories.STRUCTURE }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.1}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.0}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Any',

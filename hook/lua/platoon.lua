@@ -6535,6 +6535,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 self:MoveToLocation(RUtils.AvoidLocation(acuPos, PlatoonPosition, 60), false)
                                 coroutine.yield(40)
                                 PlatoonPosition = GetPlatoonPosition(self)
+                                acuPos = acuUnit:GetPosition()
                                 if not PlatoonPosition then return end
                                 local massPoints = GetUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, PlatoonPosition, 120, 'Enemy')
                                 if massPoints then
@@ -6613,6 +6614,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if not PlatoonPosition then return end
                                 --LOG('MoveWithMicro - we are now '..VDist3(PlatoonPosition, target:GetPosition())..' from enemy')
                                 local massPoints = GetUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, PlatoonPosition, 120, 'Enemy')
+                                unitPos = target:GetPosition() 
                                 if massPoints then
                                     --LOG('MoveWithMicro - Try to find mass extractor')
                                     local massPointPos
@@ -7769,14 +7771,14 @@ Platoon = Class(RNGAIPlatoonClass) {
                         import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, targetPlatoon, self:GetPlatoonUnits())
                     end
                 else
-                    RNGLOG('Feeder target platoon found, trying to join')
+                    --RNGLOG('Feeder target platoon found, trying to join')
                     if not IsDestroyed(targetPlatoon) then
                         if VDist3Sq(GetPlatoonPosition(self), GetPlatoonPosition(targetPlatoon)) < 900 then
                             aiBrain:AssignUnitsToPlatoon(targetPlatoon, self:GetPlatoonUnits(), 'Attack', 'None')
                         else
                             while PlatoonExists(aiBrain, self) do
                                 coroutine.yield(1)
-                                RNGLOG('Feeder target moving to found platoon')
+                                --RNGLOG('Feeder target moving to found platoon')
                                 if IsDestroyed(targetPlatoon) then
                                     break
                                 end
