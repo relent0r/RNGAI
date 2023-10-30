@@ -21,10 +21,9 @@ function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
         local tempMarkers = AIGetMarkerLocationsRNG(aiBrain, 'Spawn')
         for k, v in tempMarkers do
             local ecoStructures = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSPRODUCTION), v.Position, 30, 'Ally')
-            local GetBlueprint = moho.entity_methods.GetBlueprint
             local ecoThreat = 0
             for _, v in ecoStructures do
-                local bp = v:GetBlueprint()
+                local bp = v.Blueprint
                 local ecoStructThreat = bp.Defense.EconomyThreatLevel
                 --RNGLOG('* AI-RNG: Eco Structure'..ecoStructThreat)
                 ecoThreat = ecoThreat + ecoStructThreat
@@ -869,26 +868,11 @@ function AIGetMarkersAroundLocationRNG(aiBrain, markerType, pos, radius, threatM
 end
 
 function AIGetMarkerLocationsRNG(aiBrain, markerType)
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     local markerList = {}
-    if markerType == 'Naval Area' then
-        local markers = Scenario.MasterChain._MASTERCHAIN_.Markers
-        if markers then
-            for k, v in markers do
-                if v.type == markerType then
-                    table.insert(markerList, {Position = v.position, Name = k, MassSpotsInRange = v.MassSpotsInRange})
-                end
-            end
-        end
-    elseif markerType == 'Large Expansion Area' or markerType == 'Expansion Area' then
-        local markers = MarkerUtils.GetMarkersByType(markerType)
-        for k, v in markers do
-            if v.type == markerType then
-                table.insert(markerList, {Position = v.position or v.Position, Name = v.Name, MassSpotsInRange = RNGGETN(v.Extractors)})
-            end
-        end
-    else
-        local markers = MarkerUtils.GetMarkersByType(markerType)
-        for k, v in markers do
+    local markers = MarkerUtils.GetMarkersByType(markerType)
+    for k, v in markers do
+        if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
             if v.Extractors then
                 table.insert(markerList, {Position = v.position or v.Position, Name = v.Name, MassSpotsInRange = RNGGETN(v.Extractors)})
             else
@@ -1002,10 +986,10 @@ function AIFindMarkerNeedsEngineerThreatRNG(aiBrain, pos, radius, tMin, tMax, tR
 end
 
 function AIGetClosestMarkerLocationRNG(aiBrain, markerType, startX, startZ, extraTypes)
-    local markerList = AIGetMarkerLocations(aiBrain, markerType)
+    local markerList = AIGetMarkerLocationsRNG(aiBrain, markerType)
     if extraTypes then
         for num, pType in extraTypes do
-            local moreMarkers = AIGetMarkerLocations(aiBrain, pType)
+            local moreMarkers = AIGetMarkerLocationsRNG(aiBrain, pType)
             if not table.empty(moreMarkers) then
                 for _, v in moreMarkers do
                     table.insert(markerList, {Position = v.Position, Name = v.Name})
@@ -1038,8 +1022,8 @@ function AIFindAggressiveBaseLocationRNG(aiBrain, locationType, radius, tMin, tM
     local threatPos = {estartX, 0, estartZ}
 
     -- Get markers
-    local markerList = AIGetMarkerLocations(aiBrain, 'Expansion Area')
-    local largeMarkerList = AIGetMarkerLocations(aiBrain, 'Large Expansion Area')
+    local markerList = AIGetMarkerLocationsRNG(aiBrain, 'Expansion Area')
+    local largeMarkerList = AIGetMarkerLocationsRNG(aiBrain, 'Large Expansion Area')
     for k, v in largeMarkerList do
         table.insert(markerList, v)
     end

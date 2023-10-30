@@ -70,6 +70,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             end
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             self.MaxPlatoonWeaponRange = false
+            self.ScoutSupported = true
             self.ScoutUnit = false
             self.atkPri = {}
             self.CurrentPlatoonThreat = false
@@ -104,6 +105,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             Position = aiBrain.BrainIntel.SuicideModeTarget:GetPosition(),
                             CutOff = 400
                         }
+                        if not self.BuilderData.Position then
+                            LOG('No self.BuilderData.Position in DecideWhatToDo suicide')
+                        end
                         self:ChangeState(self.Navigating)
                         return
                     else
@@ -146,6 +150,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         CutOff = 400
 
                     }
+                    if not self.BuilderData.Position then
+                        LOG('No self.BuilderData.Position in DecideWhatToDo HiPriority')
+                    end
                     self:ChangeState(self.Navigating)
                     return
                 end
@@ -158,6 +165,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         Position = aiBrain.Zones.Land.zones[targetZone].pos,
                         CutOff = 400
                     }
+                    if not self.BuilderData.Position then
+                        LOG('No self.BuilderData.Position in DecideWhatToDo targetzone')
+                    end
                     self:ChangeState(self.Navigating)
                     return
                 end
@@ -278,6 +288,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 Position = location,
                 CutOff = 400,
             }
+            if not self.BuilderData.Position then
+                LOG('No self.BuilderData.Position in retreat')
+            end
             --LOG('Retreating to platoon')
             self:ChangeState(self.Navigating)
             return
@@ -302,6 +315,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
             if usedTransports then
                 self:LogDebug(string.format('platoon used transports'))
+                if not self.BuilderData.Position then
+                    LOG('No self.BuilderData.Position in Transporting')
+                end
                 self:ChangeState(self.Navigating)
                 return
             else

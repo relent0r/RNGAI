@@ -890,19 +890,22 @@ function AIFindExpansionAreaNeedsEngineerRNG(aiBrain, locationType, radius, tMin
 end
 
 function AIGetMassMarkerLocations(aiBrain, includeWater, waterOnly)
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     local adaptiveResourceMarkers = GetMarkersRNG()
     local markerList = {}
     for k, v in adaptiveResourceMarkers do
         if v.type == 'Mass' then
-            if waterOnly then
-                if v.Water then
+            if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
+                if waterOnly then
+                    if v.Water then
+                        table.insert(markerList, {Position = v.position, Name = k})
+                    end
+                elseif includeWater then
                     table.insert(markerList, {Position = v.position, Name = k})
-                end
-            elseif includeWater then
-                table.insert(markerList, {Position = v.position, Name = k})
-            else
-                if not v.Water then
-                    table.insert(markerList, {Position = v.position, Name = k})
+                else
+                    if not v.Water then
+                        table.insert(markerList, {Position = v.position, Name = k})
+                    end
                 end
             end
         end
@@ -916,11 +919,14 @@ function PositionInWater(pos)
 end
 
 function GetClosestMassMarkerToPos(aiBrain, pos)
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     local adaptiveResourceMarkers = GetMarkersRNG()
     local markerList = {}
         for k, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
-                table.insert(markerList, {Position = v.position, Name = k})
+                if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
+                    table.insert(markerList, {Position = v.position, Name = k})
+                end
             end
         end
     local loc, distance, lowest, name = nil
@@ -944,11 +950,14 @@ function GetClosestMassMarkerToPos(aiBrain, pos)
 end
 
 function GetClosestMassMarker(aiBrain, unit)
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     local adaptiveResourceMarkers = GetMarkersRNG()
     local markerList = {}
     for k, v in adaptiveResourceMarkers do
         if v.type == 'Mass' then
-            table.insert(markerList, {Position = v.position, Name = k})
+            if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
+                table.insert(markerList, {Position = v.position, Name = k})
+            end
         end
     end
 
@@ -3041,7 +3050,7 @@ function GetDirectorTarget(aiBrain, platoon, threatType, platoonThreat)
 end
 
 DisplayBaseMexAllocationRNG = function(aiBrain)
-    local starts = AIUtils.AIGetMarkerLocations(aiBrain, 'Start Location')
+    local starts = AIUtils.AIGetMarkerLocationsRNG(aiBrain, 'Start Location')
     local adaptiveResourceMarkers = GetMarkersRNG()
     local MassMarker = {}
     for _, v in adaptiveResourceMarkers do
@@ -3079,9 +3088,9 @@ CountSoonMassSpotsRNG = function(aiBrain)
     while not aiBrain.cmanager do coroutine.yield(20) end
     if not aiBrain.expansionMex or not aiBrain.expansionMex[1].priority then
         --initialize expansion priority
-        local starts = AIUtils.AIGetMarkerLocations(aiBrain, 'Start Location')
-        local Expands = AIUtils.AIGetMarkerLocations(aiBrain, 'Expansion Area')
-        local BigExpands = AIUtils.AIGetMarkerLocations(aiBrain, 'Large Expansion Area')
+        local starts = AIUtils.AIGetMarkerLocationsRNG(aiBrain, 'Start Location')
+        local Expands = AIUtils.AIGetMarkerLocationsRNG(aiBrain, 'Expansion Area')
+        local BigExpands = AIUtils.AIGetMarkerLocationsRNG(aiBrain, 'Large Expansion Area')
         if not aiBrain.emanager then aiBrain.emanager={} end
         aiBrain.emanager.expands = {}
         aiBrain.emanager.enemies=enemies
@@ -3808,12 +3817,15 @@ function GetAngleRNG(myX, myZ, myDestX, myDestZ, theirX, theirZ)
 end
 
 function ClosestResourceMarkersWithinRadius(aiBrain, pos, markerType, radius, canBuild, maxThreat, threatType)
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     local adaptiveResourceMarkers = GetMarkersRNG()
     local markerTable = {}
     local radiusLimit = radius * radius
     for k, v in adaptiveResourceMarkers do
         if v.type == markerType then
-            RNGINSERT(markerTable, {Position = v.position, Name = k, Distance = VDist2Sq(pos[1], pos[3], v.position[1], v.position[3])})
+            if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
+                RNGINSERT(markerTable, {Position = v.position, Name = k, Distance = VDist2Sq(pos[1], pos[3], v.position[1], v.position[3])})
+            end
         end
     end
     table.sort(markerTable, function(a,b) return a.Distance < b.Distance end)
@@ -4679,7 +4691,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
 
     if aiBrain.CDRUnit.Active then
         if not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead then
-            --RNGLOG('Scout Has active ACU without Scout')
+            RNGLOG('Scout Assignment assist acu')
             if NavUtils.CanPathTo(platoon.MovementLayer, scoutPos, aiBrain.CDRUnit.Position) then
                 aiBrain.CDRUnit.Scout = scout
                 scoutType = 'AssistUnit'
@@ -4696,6 +4708,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     end
     if platoonNeedScout then
         if supportPlatoon and PlatoonExists(aiBrain, supportPlatoon) then
+            RNGLOG('Scout Assignment assist platoon')
             scoutType = 'AssistPlatoon'
             --RNGLOG('ScoutDest is assist platoon')
             return supportPlatoon, scoutType
@@ -4706,7 +4719,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         scoutPos = scout:GetPosition()
         local scoutMarker
         if not RNGTableEmpty(im.ZoneIntel.Assignment) then
-            --RNGLOG('Scout ZoneIntel Assignment table is present')
+            RNGLOG('Scout Assignment ZoneIntel Assignment table')
             for k, v in im.ZoneIntel.Assignment do
                 if (not v.RadarCoverage) and (not v.ScoutUnit or v.ScoutUnit.Dead) and (not v.StartPosition) then
                     --RNGLOG('Scout ZoneIntel Assignment has found a zone with no radar and no scout')
@@ -4726,6 +4739,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         end
 
         if scoutMarker then
+            RNGLOG('Scout Assignment found zone intel assignment')
             --RNGLOG('Scout Marker Found, moving to position')
             scoutType = 'ZoneLocation'
             --RNGLOG('ScoutDest is zone location')
@@ -4738,6 +4752,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     --RNGLOG(repr(aiBrain.IntelData.HiPriScouts))
     --RNGLOG(repr(aiBrain.NumOpponents))
     if aiBrain.IntelData.HiPriScouts < aiBrain.NumOpponents then
+        RNGLOG('Scout Assignment intelgrid hi')
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
@@ -4780,6 +4795,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         end
         aiBrain.IntelData.HiPriScouts = aiBrain.IntelData.HiPriScouts + 1
     elseif aiBrain.IntelData.LowPriScouts < 2 then
+        RNGLOG('Scout Assignment intelgrid low')
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
@@ -4833,6 +4849,8 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             aiBrain:ForkThread(drawScoutMarker, scoutingData.Position)
         end
     end
+    RNGLOG('Scout Assignment return '..repr(scoutingData))
+    RNGLOG('Scout Assignment return type '..repr(scoutType))
     return scoutingData, scoutType
 end
 

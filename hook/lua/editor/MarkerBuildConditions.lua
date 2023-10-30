@@ -6,53 +6,24 @@ local NavUtils = import('/lua/sim/NavUtils.lua')
 local LastMassBOOLRNG = false
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
---[[function CanBuildOnMassDistanceRNG(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum )
-    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
-    if not engineerManager then
-        --WARN('*AI WARNING: Invalid location - ' .. locationType)
-        return false
-    end
-    local position = engineerManager.Location
-    
-    local markerTable = AIUtils.AIGetSortedMassLocations(aiBrain, maxNum, threatMin, threatMax, threatRings, threatType, position)
-    return VDist2Sq( markerTable[1][1], markerTable[1][3], position[1], position[3] ) < distance * distance
-end]]
-
-function CanBuildOnMassEng2(aiBrain, engPos, distance)
-    distance = distance * distance
-    local adaptiveResourceMarkers = GetMarkersRNG()
-    local MassMarker = {}
-    for _, v in adaptiveResourceMarkers do
-        if v.type == 'Mass' then
-            local mexDistance = VDist2Sq( v.position[1],v.position[3], engPos[1], engPos[3] )
-            if mexDistance < distance and CanBuildStructureAt(aiBrain, 'ueb1103', v.position) then
-                --RNGLOG('mexDistance '..mexDistance)
-                table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v})
-            end
-        end
-    end
-    table.sort(MassMarker, function(a,b) return a.Distance < b.Distance end)
-    if not table.empty(MassMarker) then
-        return true, MassMarker
-    else
-        return false
-    end
-end
 
 function CanBuildOnMassMexPlatoon(aiBrain, engPos, distance)
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     distance = distance * distance
     local adaptiveResourceMarkers = GetMarkersRNG()
     local MassMarker = {}
     for _, v in adaptiveResourceMarkers do
         if v.type == 'Mass' then
-            local mexBorderWarn = false
-            if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                mexBorderWarn = true
-            end 
-            local mexDistance = VDist2Sq( v.position[1],v.position[3], engPos[1], engPos[3] )
-            if mexDistance < distance and CanBuildStructureAt(aiBrain, 'ueb1103', v.position) and NavUtils.CanPathTo('Amphibious', engPos, v.position) then
-                --RNGLOG('mexDistance '..mexDistance)
-                table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v, BorderWarning = mexBorderWarn})
+            if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
+                local mexBorderWarn = false
+                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
+                    mexBorderWarn = true
+                end 
+                local mexDistance = VDist2Sq( v.position[1],v.position[3], engPos[1], engPos[3] )
+                if mexDistance < distance and CanBuildStructureAt(aiBrain, 'ueb1103', v.position) and NavUtils.CanPathTo('Amphibious', engPos, v.position) then
+                    --RNGLOG('mexDistance '..mexDistance)
+                    table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v, BorderWarning = mexBorderWarn})
+                end
             end
         end
     end
@@ -65,14 +36,17 @@ function CanBuildOnMassMexPlatoon(aiBrain, engPos, distance)
 end
 
 function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, threatRings, threatType, maxNum )
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     local gameTime = GetGameTimeSeconds()
     if LastGetMassMarkerRNG < gameTime then
         LastGetMassMarkerRNG = gameTime+10
         local adaptiveResourceMarkers = GetMarkersRNG()
         MassMarkerRNG = {}
         for _, v in adaptiveResourceMarkers do
-            if v.type == 'Mass' then
-                table.insert(MassMarkerRNG, {Position = v.position, Distance = VDist3( v.position, engPos ) })
+            if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
+                if v.type == 'Mass' then
+                    table.insert(MassMarkerRNG, {Position = v.position, Distance = VDist3( v.position, engPos ) })
+                end
             end
         end
         table.sort(MassMarkerRNG, function(a,b) return a.Distance < b.Distance end)
@@ -105,6 +79,7 @@ function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, thre
 end
 
 function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistance, threatMin, threatMax, threatRings, threatType, maxNum )
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     local gameTime = GetGameTimeSeconds()
     if LastGetMassMarkerRNG < gameTime then
         LastGetMassMarkerRNG = gameTime+5
@@ -118,7 +93,9 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
         MassMarkerRNG = {}
         for _, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
-                table.insert(MassMarkerRNG, {Position = v.position, Distance = VDist3( v.position, position ) })
+                if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
+                    table.insert(MassMarkerRNG, {Position = v.position, Distance = VDist3( v.position, position ) })
+                end
             end
         end
         table.sort(MassMarkerRNG, function(a,b) return a.Distance < b.Distance end)
@@ -154,13 +131,16 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
 end
 
 function MassMarkerLessThanDistanceRNG(aiBrain, distance)
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     local adaptiveResourceMarkers = GetMarkersRNG()
     local startX, startZ = aiBrain:GetArmyStartPos()
     for k, v in adaptiveResourceMarkers do
         if v.type == 'Mass' then
-            if VDist2Sq(startX, startZ, v.position[1], v.position[3]) < distance * distance then
-                --RNGLOG('Mass marker less than '..distance)
-                return true
+            if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
+                if VDist2Sq(startX, startZ, v.position[1], v.position[3]) < distance * distance then
+                    --RNGLOG('Mass marker less than '..distance)
+                    return true
+                end
             end
         end
     end

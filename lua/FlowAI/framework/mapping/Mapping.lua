@@ -1138,7 +1138,7 @@ end
 function SetValidNavalMarkers(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
     local closest = false
     local retPos, retName
-    local positions = AIFilterAlliedBases(aiBrain, positions)
+    local positions = AIFilterAlliedBasesRNG(aiBrain, positions)
     local graphZones = {}
     for _, v in aiBrain.GraphZones do
         for _, c in aiBrain.BrainIntel.EnemyStartLocations do

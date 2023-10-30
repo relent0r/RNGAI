@@ -11,7 +11,6 @@ local FactoryManager = import("/lua/sim/factorybuildermanager.lua")
 local PlatoonFormManager = import("/lua/sim/platoonformmanager.lua")
 local BrainConditionsMonitor = import("/lua/sim/brainconditionsmonitor.lua")
 local EngineerManager = import("/lua/sim/engineermanager.lua")
-local EconomyComponent = import("/lua/aibrains/components/economy.lua").AIBrainEconomyComponent
 
 local SUtils = import("/lua/ai/sorianutilities.lua")
 local TransferUnitsOwnership = import("/lua/simutils.lua").TransferUnitsOwnership
@@ -61,7 +60,7 @@ local StandardBrain = import("/lua/aibrain.lua").AIBrain
 local CampaignMapFlag = false
 
 local RNGAIBrainClass = import("/lua/aibrains/base-ai.lua").AIBrain
-AIBrain = Class(RNGAIBrainClass, EconomyComponent) {
+AIBrain = Class(RNGAIBrainClass) {
 
     --- Called after `BeginSession`, at this point all props, resources and initial units exist in the map
     ---@param self AIBrainAdaptive
@@ -91,7 +90,6 @@ AIBrain = Class(RNGAIBrainClass, EconomyComponent) {
 
     OnCreateAI = function(self, planName)
         LOG('Oncreate AI from RNG code')
-        EconomyComponent.OnCreateAI(self)
         StandardBrain.OnCreateAI(self, planName)
         local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
         if string.find(per, 'RNG') then
@@ -2137,7 +2135,7 @@ AIBrain = Class(RNGAIBrainClass, EconomyComponent) {
 
                 -- For each vacant starting location, check if it is closer to allied or enemy start locations (within 100 ogrids)
                 -- If it is closer to enemy territory, flag it as high priority to scout.
-                local starts = AIUtils.AIGetMarkerLocations(self, 'Start Location')
+                local starts = AIUtils.AIGetMarkerLocationsRNG(self, 'Start Location')
                 for _, loc in starts do
                     -- If vacant
                     if not opponentStarts[loc.Name] and not allyStarts[loc.Name] then
@@ -2200,7 +2198,7 @@ AIBrain = Class(RNGAIBrainClass, EconomyComponent) {
                 self.NumOpponents = numOpponents
 
                 -- If the start location is not ours or an ally's, it is suspicious
-                local starts = AIUtils.AIGetMarkerLocations(self, 'Start Location')
+                local starts = AIUtils.AIGetMarkerLocationsRNG(self, 'Start Location')
                 for _, loc in starts do
                     -- If vacant
                     if not allyStarts[loc.Name] then

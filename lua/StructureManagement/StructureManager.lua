@@ -1117,13 +1117,13 @@ StructureManager = Class {
             local extractorsDetail, extractorTable, totalSpend = self.ExtractorsBeingUpgraded(self, aiBrain)
             aiBrain.EcoManager.ExtractorsUpgrading.TECH1 = extractorsDetail.TECH1Upgrading
             aiBrain.EcoManager.ExtractorsUpgrading.TECH2 = extractorsDetail.TECH2Upgrading
-            --RNGLOG('Core Extractor T3 Count needs to be less than 3 '..aiBrain.EcoManager.CoreExtractorT3Count)
-            --RNGLOG('Total Core Extractors needs to be greater than 2 '..aiBrain.EcoManager.TotalCoreExtractors)
-            --RNGLOG('Mex Income '..aiBrain.cmanager.income.r.m..' needs to be greater than '..(140 * aiBrain.EcoManager.EcoMultiplier))
-            --RNGLOG('T3 Land Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Land.T3)
-            --RNGLOG('or T3 Air Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Air.T3)
-            --RNGLOG('Efficiency over time needs to be greater than 1.0 '..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
-            --RNGLOG('upgradespend - totalSpend '..(upgradeSpend - totalSpend))
+            RNGLOG('Core Extractor T3 Count needs to be less than 3 '..aiBrain.EcoManager.CoreExtractorT3Count)
+            RNGLOG('Total Core Extractors needs to be greater than 2 '..aiBrain.EcoManager.TotalCoreExtractors)
+            RNGLOG('Mex Income '..aiBrain.cmanager.income.r.m..' needs to be greater than '..(140 * aiBrain.EcoManager.EcoMultiplier))
+            RNGLOG('T3 Land Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Land.T3)
+            RNGLOG('or T3 Air Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Air.T3)
+            RNGLOG('Efficiency over time needs to be greater than 1.0 '..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+            RNGLOG('upgradespend - totalSpend '..(upgradeSpend - totalSpend))
             if aiBrain.EcoManager.T3ExtractorSpend then
                 --RNGLOG('aiBrain.EcoManager.T3ExtractorSpend '..aiBrain.EcoManager.T3ExtractorSpend)
                 --RNGLOG('Is upgradeSpend minus total spend greater than T3ExtractorSpend?')
@@ -1140,9 +1140,9 @@ StructureManager = Class {
                     aiBrain.EngineerAssistManagerFocusCategory = false
                 end
             end
-            --RNGLOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
-            --RNGLOG('Current number of T1 mexes upgrading '..extractorsDetail.TECH1Upgrading)
-            --RNGLOG('Current number of T2 mexes upgrading '..extractorsDetail.TECH2Upgrading)
+            RNGLOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
+            RNGLOG('Current number of T1 mexes upgrading '..extractorsDetail.TECH1Upgrading)
+            RNGLOG('Current number of T2 mexes upgrading '..extractorsDetail.TECH2Upgrading)
             local massStorage = GetEconomyStored( aiBrain, 'MASS')
             local energyStorage = GetEconomyStored( aiBrain, 'ENERGY')
             if aiBrain.EcoManager.CoreExtractorT3Count then
@@ -1179,7 +1179,7 @@ StructureManager = Class {
             end
             --RNGLOG(' extractorsDetail.TECH1'..extractorsDetail.TECH1..'extractorsDetail.TECH2 '..extractorsDetail.TECH2)
             if extractorsDetail.TECH1 > 0 and extractorsDetail.TECH2 > 0 then
-                --RNGLOG('Ratio is '..(extractorsDetail.TECH1 / extractorsDetail.TECH2))
+                RNGLOG('T2 Mex Ratio is '..(extractorsDetail.TECH1 / extractorsDetail.TECH2))
             end
             if extractorsDetail.TECH1Upgrading < 2 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and
                 (totalSpend < upgradeSpend or massStorage > 600) and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
@@ -1204,7 +1204,7 @@ StructureManager = Class {
                     --RNGLOG('We Could upgrade a non t2 extractor now with over time')
                     self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                     coroutine.yield(60)
-            elseif extractorsDetail.TECH1 > 0 and extractorsDetail.TECH1Upgrading < 5 and massStorage > 150 and upgradeTrigger and totalSpend < upgradeSpend 
+            elseif extractorsDetail.TECH1 > 0 and extractorsDetail.TECH1Upgrading < 5 and upgradeTrigger and (totalSpend < upgradeSpend or massStorage > 450) 
                 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                     --RNGLOG('We Could upgrade a non t2 extractor now with over time')
                     self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)

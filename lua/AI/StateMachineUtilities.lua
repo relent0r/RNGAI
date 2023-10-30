@@ -608,6 +608,9 @@ GetClosestBaseRNG = function(aiBrain, platoon, platoonPosition)
                 end
             end
         end
+        if closestBase then
+            return closestBase
+        end
     end
 end
 

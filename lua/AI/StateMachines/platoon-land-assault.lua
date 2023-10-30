@@ -73,6 +73,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             else
                 self.LocationType = 'MAIN'
             end
+            self.ScoutSupported = true
             self.BaseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
             self.BaseMilitaryArea = aiBrain.OperatingAreas['BaseMilitaryArea']
             self.BaseEnemyArea = aiBrain.OperatingAreas['BaseEnemyArea']

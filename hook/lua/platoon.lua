@@ -370,6 +370,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             maxPathDistance = self.PlatoonData.MaxPathDistance or 250
         end
 
+        self.ScoutSupported = true
+
         local safeZone = self.PlatoonData.SafeZone or false
 
         -----------------------------------------------------------------------
@@ -403,7 +405,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             markerLocations = markerPos
         else
             --RNGLOG('* AI-RNG: ignore friendlybase false')
-            local markerPos = AIUtils.AIGetMarkerLocations(aiBrain, markerType)
+            local markerPos = AIUtils.AIGetMarkerLocationsRNG(aiBrain, markerType)
             markerLocations = markerPos
         end
         
@@ -1179,6 +1181,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         --RNGLOG('Starting ACUSupportRNG')
         self.BuilderName = 'ACUSupportRNG'
         self.PlanName = 'ACUSupportRNG'
+        self.ScoutSupported = true
         local enemyACUPresent
         local function MaintainSafeDistance(platoon,unit,target, artyUnit)
             local function KiteDist(pos1,pos2,distance)
@@ -1708,6 +1711,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local blip
         local categoryList = {}
         self.atkPri = {}
+        self.ScoutSupported = true
         local platoonUnits = GetPlatoonUnits(self)
         local maxPathDistance = 250
         local data = self.PlatoonData
@@ -5042,6 +5046,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             maxPathDistance = self.PlatoonData.MaxPathDistance or 200
         end
         self.MaxPlatoonWeaponRange = false
+        self.ScoutSupported = true
         self.ScoutUnit = false
         self.atkPri = {}
         self.CurrentPlatoonThreat = false
@@ -5664,6 +5669,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         if not PlatoonExists(aiBrain, self) or not platLoc then
             return
         end
+        local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
 
         -----------------------------------------------------------------------
         -- Platoon Data
@@ -5709,6 +5715,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local markerLocations
         self.EnemyRadius = 55
         self.MaxPlatoonWeaponRange = false
+        self.ScoutSupported = true
         self.ScoutUnit = false
         self.atkPri = {}
         local categoryList = {}
@@ -5872,9 +5879,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local startX, startZ = aiBrain:GetArmyStartPos()
                 --RNGLOG('Marker table is before sort '..RNGGETN(self.MassMarkerTable))
                 --RNGLOG('MassRaidRNG Location is '..repr(platLoc))
-                --RNGLOG('Map size is '..ScenarioInfo.size[1])
+                --RNGLOG('Map size is '..playableArea[1])
 
-                table.sort(self.MassMarkerTable,function(a,b) return VDist2Sq(a.Position[1], a.Position[3],startX, startZ) / (VDist2Sq(a.Position[1], a.Position[3], platLoc[1], platLoc[3]) + RUtils.EdgeDistance(a.Position[1],a.Position[3],ScenarioInfo.size[1])) > VDist2Sq(b.Position[1], b.Position[3], startX, startZ) / (VDist2Sq(b.Position[1], b.Position[3], platLoc[1], platLoc[3]) + RUtils.EdgeDistance(b.Position[1],b.Position[3],ScenarioInfo.size[1])) end)
+                table.sort(self.MassMarkerTable,function(a,b) return VDist2Sq(a.Position[1], a.Position[3],startX, startZ) / (VDist2Sq(a.Position[1], a.Position[3], platLoc[1], platLoc[3]) + RUtils.EdgeDistance(a.Position[1],a.Position[3],playableArea[1])) > VDist2Sq(b.Position[1], b.Position[3], startX, startZ) / (VDist2Sq(b.Position[1], b.Position[3], platLoc[1], platLoc[3]) + RUtils.EdgeDistance(b.Position[1],b.Position[3],playableArea[1])) end)
                 --RNGLOG('Sorted table '..repr(markerLocations))
                 --RNGLOG('Marker table is before loop is '..RNGGETN(self.MassMarkerTable))
 
@@ -6227,7 +6234,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local numberOfUnitsInPlatoon = RNGGETN(platoonUnits)
         local oldNumberOfUnitsInPlatoon = numberOfUnitsInPlatoon
         local stuckCount = 0
-
+        self.ScoutSupported = true
         self.PlatoonAttackForce = true
         -- formations have penalty for taking time to form up... not worth it here
         -- maybe worth it if we micro
@@ -6407,6 +6414,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local Lastdist
             local dist
             local Stuck = 0
+            local interupted = false
             while PlatoonExists(aiBrain, self) do
                 coroutine.yield(1)
                 if not self.PlatoonAttached and aiBrain.CDRUnit.Active then
@@ -6440,6 +6448,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         break
                     end
                 end
+                
                 local enemyUnitCheck = GetUnitsAroundPoint(aiBrain, ScoutRiskCategory, PlatoonPosition, self.IntelRange, 'Enemy')
                 if not RNGTableEmpty(enemyUnitCheck) then
                     for _, v in enemyUnitCheck do
@@ -6447,9 +6456,14 @@ Platoon = Class(RNGAIPlatoonClass) {
                             self:Stop()
                             self:MoveToLocation(RUtils.AvoidLocation(v:GetPosition(), PlatoonPosition, self.IntelRange - 1), false)
                             coroutine.yield(30)
+                            interupted = true
                             break
                         end
                     end
+                elseif interupted then
+                    --LOG('Scout interupted movement')
+                    self:MoveToLocation(path[i], false)
+                    interupted = false
                 end
                 coroutine.yield(15)
             end
@@ -7607,7 +7621,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local platRequiresScout = false
         for _,aPlat in AlliedPlatoons do
             if aPlat == self then continue end
-            if aPlat.PlanName == 'MassRaidRNG' or aPlat.PlanName == 'ZoneControlRNG' or aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' or aPlat.PlanName == 'GuardMarkerRNG' then
+            if aPlat.ScoutSupported then
                 if aPlat.UsingTransport then continue end
                 if aPlat.ScoutPresent then continue end
                 allyPlatPos = GetPlatoonPosition(aPlat)
@@ -10930,6 +10944,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         self:ForkThread(self.HighlightTruePlatoon)
         self:ForkThread(self.OptimalTargetingRNG)
         self:ForkThread(self.PathNavigationRNG)
+        self.ScoutSupported = true
         self.chpdata = {name = 'CHPTruePlatoon',id=platoonUnits[1].EntityId}
         local LocationType = self.PlatoonData.LocationType or 'MAIN'
         local homepos = aiBrain.BuilderManagers[LocationType].Position

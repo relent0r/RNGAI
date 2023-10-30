@@ -158,7 +158,7 @@ end
 
 function NavalBaseLimitRNG(aiBrain, limit)
     local expBaseCount = aiBrain:GetManagerCount('Naval Area')
-    LOG('Naval base count is '..expBaseCount)
+    --LOG('Naval base count is '..expBaseCount)
     return CompareBody(expBaseCount, limit, '<')
 end
 
@@ -372,10 +372,10 @@ end
 function NavalAreaNeedsEngineerRNG(aiBrain, locationType, validateLabel, locationRadius, threatMin, threatMax, threatRings, threatType)
     local pos, name = RUtils.AIFindNavalAreaNeedsEngineer(aiBrain, locationType, validateLabel, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
-        LOG('Naval Area Needs Engineer TRUE')
+        --LOG('Naval Area Needs Engineer TRUE')
         return true
     end
-    LOG('Naval Area Needs Engineer FALSE')
+    --LOG('Naval Area Needs Engineer FALSE')
     return false
 end
 
@@ -674,7 +674,7 @@ end
 --end
 
 function NavalBaseWithLeastUnitsRNG(aiBrain, radius, locationType, unitCategory)
-    local navalMarkers = AIUtils.AIGetMarkerLocations(aiBrain, 'Naval Area')
+    local navalMarkers = AIUtils.AIGetMarkerLocationsRNG(aiBrain, 'Naval Area')
     local lowloc
     local lownum
     for baseLocation, managers in aiBrain.BuilderManagers do

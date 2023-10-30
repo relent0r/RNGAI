@@ -947,6 +947,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local brain = self:GetBrain()
             local cdr = self.cdr
+            local realEnemyThreat
+            local enemyThreat
             if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) then
                 local target = self.BuilderData.AttackTarget
                 local snipeAttempt = false
@@ -960,48 +962,42 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     cdr.TargetPosition = targetPos
                     local targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                    --RNGLOG('Target Distance is '..targetDistance..' from acu to target')
-                    -- If inside base dont check threat, just shoot!
                     if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdrPos[1], cdrPos[3]) > 2025 then
-                        enemyThreat = GetThreatAtPosition(brain, targetPos, 1, true, 'AntiSurface')
-                       --RNGLOG('ACU OverCharge Enemy Threat is '..enemyThreat)
-                        local enemyCdrThreat = GetThreatAtPosition(brain, targetPos, 1, true, 'Commander')
-                        if enemyCdrThreat > 0 then
-                            realEnemyThreat = enemyThreat - (enemyCdrThreat - 5)
-                        else
-                            realEnemyThreat = enemyThreat
-                        end
-                       --RNGLOG('ACU OverCharge EnemyCDR is '..enemyCdrThreat)
-                        local friendlyUnits = GetUnitsAroundPoint(brain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), targetPos, 45, 'Ally')
-                        local friendlyUnitThreat = 0
-                        for k,v in friendlyUnits do
-                            if v and not v.Dead then
-                                if EntityCategoryContains(categories.COMMAND, v) then
-                                    friendlyUnitThreat = v:EnhancementThreatReturn()
-                                    --RNGLOG('Friendly ACU enhancement threat '..friendlyUnitThreat)
-                                else
-                                    if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
-                                        friendlyUnitThreat = friendlyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel
+                        enemyThreat = GetThreatAtPosition(brain, targetPos, brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+                        if enemyThreat > 0 then
+                            realEnemyThreat = RUtils.GrabPosDangerRNG(brain,targetPos, 45).enemy
+                            local friendlyUnits = GetUnitsAroundPoint(brain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), targetPos, 45, 'Ally')
+                            local friendlyUnitThreat = 0
+                            for k,v in friendlyUnits do
+                                if v and not v.Dead then
+                                    if EntityCategoryContains(categories.COMMAND, v) then
+                                        friendlyUnitThreat = v:EnhancementThreatReturn()
+                                    else
+                                        if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                                            friendlyUnitThreat = friendlyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel
+                                        end
                                     end
                                 end
                             end
-                        end
-                       --RNGLOG('ACU OverCharge Friendly Threat is '..friendlyUnitThreat)
-                        if realEnemyThreat >= friendlyUnitThreat and not cdr.SuicideMode then
-                            --RNGLOG('Enemy Threat too high')
-                            if VDist2Sq(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < 2025 then
-                               --RNGLOG('Threat high and cdr close, retreat')
-                               --RNGLOG('Enemy Threat number '..realEnemyThreat)
-                               --RNGLOG('Friendly threat was '..friendlyUnitThreat)
-                                cdr.Caution = true
-                                cdr.CautionReason = 'acuOverChargeTargetCheck'
-                                if RUtils.GetAngleRNG(cdrPos[1], cdrPos[3], cdr.CDRHome[1], cdr.CDRHome[3], targetPos[1], targetPos[3]) > 0.5 then
-                                    --RNGLOG('retreat towards home')
-                                    IssueMove({cdr}, cdr.CDRHome)
-                                    coroutine.yield(40)
+                            RNGLOG('ACU OverCharge Friendly Threat is '..friendlyUnitThreat)
+                            RNGLOG('ACU OverCharge Enemy Threat is '..realEnemyThreat)
+                            if realEnemyThreat >= friendlyUnitThreat and not cdr.SuicideMode then
+                                --RNGLOG('Enemy Threat too high')
+                                if VDist2Sq(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < 2025 then
+                                --RNGLOG('Threat high and cdr close, retreat')
+                                --RNGLOG('Enemy Threat number '..realEnemyThreat)
+                                --RNGLOG('Friendly threat was '..friendlyUnitThreat)
+                                    cdr.Caution = true
+                                    cdr.CautionReason = 'acuOverChargeTargetCheck'
+                                    if RUtils.GetAngleRNG(cdrPos[1], cdrPos[3], cdr.CDRHome[1], cdr.CDRHome[3], targetPos[1], targetPos[3]) > 0.5 then
+                                        --RNGLOG('retreat towards home')
+                                        IssueMove({cdr}, cdr.CDRHome)
+                                        coroutine.yield(40)
+                                    end
+                                    RNGLOG('cdr retreating due to enemy threat within attacktarget')
+                                    self:ChangeState(self.Retreating)
+                                    return
                                 end
-                                RNGLOG('cdr retreating due to enemy threat within attacktarget')
-                                self:ChangeState(self.Retreating)
-                                return
                             end
                         end
                     end
@@ -1212,8 +1208,10 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             end
             if cdr.Health > 5000 and distanceToHome > 6400 and not baseRetreat then
                 if cdr.GunUpgradeRequired and cdr.CurrentEnemyThreat < 15 and not cdr.EnemyCDRPresent then
-                    --LOG('Trying to retreat to extractor')
+                    LOG('Trying to retreat to extractor')
+                    LOG('Current status '..repr(brain.GridPresence:GetInferredStatus(cdr.Position)))
                     if brain.GridPresence:GetInferredStatus(cdr.Position) ~= 'Hostile' then
+                        LOG('GunUpgrade checking for extractor pos')
                         local extractors = brain:GetListOfUnits(categories.MASSEXTRACTION, true)
                         local closestDistance
                         local closestExtractor
@@ -1233,6 +1231,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     end
                                 end
                             end
+                        end
+                        if closestDistance then
+                            LOG('Closest extractor is '..VDist3Sq(cdr.Position, cdr.Home))
                         end
                         if closestDistance < VDist3Sq(cdr.Position, cdr.Home) then
                             cdr.Retreat = false

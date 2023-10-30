@@ -822,7 +822,7 @@ CanBuildOnCloseMass = function(aiBrain, engPos, distance)
             local dx = engPos[1] - v.position[1]
             local dz = engPos[3] - v.position[3]
             local mexDistance = dx * dx + dz * dz
-            if mexDistance < distance and CanBuildStructureAt(aiBrain, 'ueb1103', v.position) then
+            if mexDistance < distance and CanBuildStructureAt(aiBrain, 'ueb1103', v.position) and NavUtils.CanPathTo('Amphibious', engPos, v.position) then
                 table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v, BorderWarning = mexBorderWarn})
             end
         end
