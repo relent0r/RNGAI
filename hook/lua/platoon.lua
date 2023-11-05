@@ -3572,6 +3572,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         if self.PlatoonData.NeedGuard then
             eng.NeedGuard = true
         end
+        eng.FailedCount = 0
 
         -------- CHOOSE APPROPRIATE BUILD FUNCTION AND SETUP BUILD VARIABLES --------
         local reference = false
@@ -4026,6 +4027,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
     end,
     EngineerFailedToBuildRNG = function(unit, params)
+        LOG('Failed to build')
         if unit.Active then return end
         if not unit.PlatoonHandle then return end
         if not unit.PlatoonHandle.PlanName == 'EngineerBuildAIRNG' then return end
@@ -4034,7 +4036,17 @@ Platoon = Class(RNGAIPlatoonClass) {
             unit.ProcessBuild = nil
         end
         if not unit.ProcessBuild then
-            unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, true)  --DUNCAN - changed to true
+            LOG('Failed to build process build command')
+            if not unit.FailedCount then
+                unit.FailedCount = 0
+            end
+            unit.FailedCount = unit.FailedCount + 1
+            LOG('Current fail count is '..unit.FailedCount)
+            if unit.FailedCount > 2 then
+                unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, true)  --DUNCAN - changed to true
+            else
+                unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, false)
+            end
         end
     end,
 
@@ -4086,8 +4098,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         local massMarkers = RUtils.AIGetMassMarkerLocations(aiBrain, false, false)
         local closeMarkers = 0
         local distantMarkers = 0
-        LOG('Close Markers '..closeMarkers)
-        LOG('Distance Markers '..distantMarkers)
         local closestMarker = false
         for k, marker in massMarkers do
             local dx = engPos[1] - marker.Position[1]
@@ -4135,6 +4145,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         if aiBrain.RNGDEBUG then
             RNGLOG('RNG ACU wants to build '..whatToBuild)
         end
+        LOG('BuildLocation '..repr(buildLocation))
         if borderWarning and buildLocation and whatToBuild then
             IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
             borderWarning = false
@@ -7606,46 +7617,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
         end
-    end,
-
-    ScoutFindNearbyPlatoonsRNG = function(self, radius)
-        local aiBrain = self:GetBrain()
-        if not aiBrain then return end
-        local platPos = GetPlatoonPosition(self)
-        local allyPlatPos = false
-        if not platPos then
-            return
-        end
-        local radiusSq = radius*radius
-        AlliedPlatoons = aiBrain:GetPlatoonsList()
-        local platRequiresScout = false
-        for _,aPlat in AlliedPlatoons do
-            if aPlat == self then continue end
-            if aPlat.ScoutSupported then
-                if aPlat.UsingTransport then continue end
-                if aPlat.ScoutPresent then continue end
-                allyPlatPos = GetPlatoonPosition(aPlat)
-                if not allyPlatPos or not PlatoonExists(aiBrain, aPlat) then
-                    allyPlatPos = false
-                    continue
-                end
-                if not aPlat.MovementLayer then
-                    AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
-                end
-                -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
-                if self.MovementLayer ~= 'Amphibious' and self.MovementLayer ~= aPlat.MovementLayer then
-                    continue
-                end
-                if  VDist3Sq(platPos, allyPlatPos) <= radiusSq then
-                    if not NavUtils.CanPathTo(self.MovementLayer, platPos, allyPlatPos) then continue end
-                    if aiBrain.RNGDEBUG then
-                        RNGLOG("*AI DEBUG: Scout moving to allied platoon position for plan "..aPlat.PlanName)
-                    end
-                    return true, aPlat
-                end
-            end
-        end
-        return false
     end,
 
     GetClosestPlatoonRNG = function(self, planName, distanceLimit, angleTargetPos)
@@ -11362,6 +11333,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         elseif machineType == 'LandAssault' then
             import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+        elseif machineType == 'LandScout' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-land-scout.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         elseif machineType == 'Gunship' then
             import("/mods/rngai/lua/ai/statemachines/platoon-air-gunship.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         elseif machineType == 'ZoneControl' then

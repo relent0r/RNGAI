@@ -44,6 +44,14 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'RNGAILandScoutStateMachine',
+    Plan = 'StateMachineAIRNG',
+    GlobalSquads = {
+        { categories.LAND * categories.SCOUT * categories.TECH1, 1, 1, 'scout', 'None' },
+    }
+}
+
+PlatoonTemplate {
     Name = 'RNGAI T1EngineerReclaimer',
     Plan = 'ReclaimAIRNG',
     GlobalSquads = {

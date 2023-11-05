@@ -111,7 +111,6 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                             }, plat, {finishedUnit})
                         else
                             finishedUnit.FatBoyGuardAdded = true
-                            LOG('Platoon Handle '..repr(experimentalFactory.FatboyPlatoon))
                             aiBrain:AssignUnitsToPlatoon(experimentalFactory.FatboyPlatoon, {finishedUnit}, 'guard', 'none')
                             LOG('Unit added to guard squad '..finishedUnit.UnitId)
                         end

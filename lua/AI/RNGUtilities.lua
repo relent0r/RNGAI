@@ -4695,7 +4695,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             if NavUtils.CanPathTo(platoon.MovementLayer, scoutPos, aiBrain.CDRUnit.Position) then
                 aiBrain.CDRUnit.Scout = scout
                 scoutType = 'AssistUnit'
-                --RNGLOG('ScoutDest is acu support')
+                RNGLOG('ScoutDest is acu support')
                 return aiBrain.CDRUnit, scoutType
             end
         end
@@ -4703,19 +4703,19 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     if (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
         --RNGLOG('Look for platoon that needs a scout')
         coroutine.yield(10)
-        platoonNeedScout, supportPlatoon = platoon:ScoutFindNearbyPlatoonsRNG(250)
+        platoonNeedScout, supportPlatoon = ScoutFindNearbyPlatoonsRNG(platoon, 250)
         platoon.FindPlatoonCounter = platoon.FindPlatoonCounter + 1
     end
     if platoonNeedScout then
         if supportPlatoon and PlatoonExists(aiBrain, supportPlatoon) then
             RNGLOG('Scout Assignment assist platoon')
             scoutType = 'AssistPlatoon'
-            --RNGLOG('ScoutDest is assist platoon')
+            RNGLOG('ScoutDest is assist platoon')
             return supportPlatoon, scoutType
         end
     end
     if (not platoonNeedScout) and (not platoon.ZonesValidated) then
-        --RNGLOG('Excess scout looking for expansion')
+        RNGLOG('Excess scout looking for zone')
         scoutPos = scout:GetPosition()
         local scoutMarker
         if not RNGTableEmpty(im.ZoneIntel.Assignment) then
@@ -4849,9 +4849,50 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             aiBrain:ForkThread(drawScoutMarker, scoutingData.Position)
         end
     end
-    RNGLOG('Scout Assignment return '..repr(scoutingData))
-    RNGLOG('Scout Assignment return type '..repr(scoutType))
+    if not scoutingData then
+        RNGLOG('Scout Assignment returned nothing')
+    end
     return scoutingData, scoutType
+end
+
+ScoutFindNearbyPlatoonsRNG = function(platoon, radius)
+    local aiBrain = platoon:GetBrain()
+    if not aiBrain then return end
+    local platPos = GetPlatoonPosition(platoon)
+    local allyPlatPos = false
+    if not platPos then
+        return
+    end
+    local radiusSq = radius*radius
+    AlliedPlatoons = aiBrain:GetPlatoonsList()
+    local platRequiresScout = false
+    for _,aPlat in AlliedPlatoons do
+        if aPlat == platoon then continue end
+        if aPlat.ScoutSupported then
+            if aPlat.UsingTransport then continue end
+            if aPlat.ScoutPresent then continue end
+            allyPlatPos = GetPlatoonPosition(aPlat)
+            if not allyPlatPos or not PlatoonExists(aiBrain, aPlat) then
+                allyPlatPos = false
+                continue
+            end
+            if not aPlat.MovementLayer then
+                AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
+            end
+            -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
+            if platoon.MovementLayer ~= 'Amphibious' and platoon.MovementLayer ~= aPlat.MovementLayer then
+                continue
+            end
+            if  VDist3Sq(platPos, allyPlatPos) <= radiusSq then
+                if not NavUtils.CanPathTo(platoon.MovementLayer, platPos, allyPlatPos) then continue end
+                if aiBrain.RNGDEBUG then
+                    RNGLOG("*AI DEBUG: Scout moving to allied platoon position for plan "..aPlat.PlanName)
+                end
+                return true, aPlat
+            end
+        end
+    end
+    return false
 end
 
 GetAirScoutLocationRNG = function(platoon, aiBrain, scout)

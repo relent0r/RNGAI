@@ -35,8 +35,7 @@ BuilderGroup {
     -- Opening Scout Form --
     Builder {
         BuilderName = 'RNGAI Former Scout',
-        PlatoonTemplate = 'RNGAI T1LandScoutForm',
-        PlatoonAddBehaviors = { 'ZoneUpdate' },
+        PlatoonTemplate = 'RNGAILandScoutStateMachine',
         Priority = 1000,
         InstanceCount = 30,
         BuilderType = 'Any',
@@ -45,6 +44,7 @@ BuilderGroup {
         },
         BuilderData = {
             LocationType = 'LocationType',
+            StateMachine = 'LandScout'
         },
     },
 }

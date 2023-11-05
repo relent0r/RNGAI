@@ -16,6 +16,38 @@ EngineerManager = Class(RNGEngineerManager) {
                 end
                 self.Brain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
             end
+            if EntityCategoryContains(categories.ANTIMISSILE * categories.STRUCTURE * categories.TECH2, finishedUnit) then
+                local deathFunction = function(unit)
+                    if unit.UnitsDefended then
+                        for _, v in unit.UnitsDefended do
+                            if v and not v.Dead then
+                                if v.TMDInRange then
+                                    if v.TMDInRange[unit.EntityId] then
+                                        v.TMDInRange[unit.EntityId] = nil
+                                        LOG('TMD has been destroyed, removed from '..v.UnitId)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, unit)
+                finishedUnit.UnitsDefended = {}
+                LOG('TMD Built, looking for units to defend')
+                local defenseRadius = finishedUnit.Blueprint.Weapon[1].MaxRadius - 2
+                local units = self.Brain:GetUnitsAroundPoint(categories.STRUCTURE, finishedUnit:GetPosition(), defenseRadius, 'Ally')
+                LOG('Number of units around TMD '..table.getn(units))
+                if not table.empty(units) then
+                    for _, v in units do
+                        if not v.TMDInRange then
+                            v.TMDInRange = {}
+                        end
+                        v.TMDInRange[finishedUnit.EntityId] = finishedUnit
+                        table.insert(finishedUnit.UnitsDefended, v)
+                        LOG('TMD is defending the current unit '..v.UnitId)
+                    end
+                end
+            end
             self:AddUnitRNG(finishedUnit)
         end
         local guards = unit:GetGuards()

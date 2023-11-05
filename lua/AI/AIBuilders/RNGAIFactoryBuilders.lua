@@ -75,7 +75,6 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         InstanceCount = 1,
         BuilderConditions = {
-
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.75 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
@@ -132,7 +131,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'GreaterThanEconStorageCurrentRNG', { 240, 1050 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.70, 0.70 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.70, 0.85 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { MIBC, 'AirPlayerCheck', {'LocationType', 3, categories.FACTORY * categories.LAND } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
@@ -160,7 +159,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.80 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.85 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { MIBC, 'AirPlayerCheck', {'LocationType', 3, categories.FACTORY * categories.LAND }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
@@ -214,7 +213,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.80 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.85 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { MIBC, 'AirPlayerCheck', {'LocationType', 3, categories.FACTORY * categories.LAND }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },

@@ -257,7 +257,7 @@ function CDRThreatAssessmentRNG(cdr)
                         if v.Blueprint.CategoriesHash.COMMAND then
                             friendlyUnitThreatInner = friendlyUnitThreatInner + v:EnhancementThreatReturn()
                         else
-                            if EntityCategoryContains(categories.ANTIAIR, v) then
+                            if v.Blueprint.CategoriesHash.ANTIAIR then
                                 friendAntiAirThreat = friendAntiAirThreat + v.Blueprint.Defense.AirThreatLevel
                             end
                             friendlyUnitThreatInner = friendlyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel
@@ -266,7 +266,7 @@ function CDRThreatAssessmentRNG(cdr)
                         if v.Blueprint.CategoriesHash.COMMAND then
                             friendlyUnitThreat = friendlyUnitThreat + v:EnhancementThreatReturn()
                         else
-                            if EntityCategoryContains(categories.ANTIAIR, v) then
+                            if v.Blueprint.CategoriesHash.ANTIAIR then
                                 friendAntiAirThreat = friendAntiAirThreat + v.Blueprint.Defense.AirThreatLevel
                             end
                             friendlyUnitThreat = friendlyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel
@@ -303,7 +303,7 @@ function CDRThreatAssessmentRNG(cdr)
                                 cdr.EnemyFlanking = true
                             end
                         else
-                            if EntityCategoryContains(categories.AIR, v) then
+                            if v.Blueprint.CategoriesHash.AIR then
                                 enemyAirThreat = enemyAirThreat + v.Blueprint.Defense.SurfaceThreatLevel
                             end
                             enemyUnitThreatInner = enemyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel
@@ -318,7 +318,7 @@ function CDRThreatAssessmentRNG(cdr)
                             enemyACUPresent = true
                             enemyUnitThreat = enemyUnitThreat + v:EnhancementThreatReturn()
                         else
-                            if EntityCategoryContains(categories.AIR, v) then
+                            if v.Blueprint.CategoriesHash.AIR then
                                 enemyAirThreat = enemyAirThreat + v.Blueprint.Defense.SurfaceThreatLevel
                             end
                             enemyUnitThreat = enemyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel
@@ -374,6 +374,9 @@ function CDRThreatAssessmentRNG(cdr)
                --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreat'
+            elseif not cdr.SuicideMode and enemyAirThreat > 8 and friendAntiAirThreat < 8 then
+                cdr.Caution = true
+                cdr.CautionReason = 'enemyAirThreat'
             elseif enemyUnitThreat < friendlyUnitThreat and cdr.Health > 6000 and GetThreatAtPosition(aiBrain, cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < cdr.ThreatLimit then
                 --RNGLOG('ACU threat low and health up past 6000')
                 cdr.Caution = false

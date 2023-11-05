@@ -519,13 +519,13 @@ StructureManager = Class {
         local t2LandPass = false
         if totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 then
             --RNGLOG('Factory T1 Upgrade HQ Check passed')
-            if (not self.Brain.RNGEXP and actualMexIncome > (25 * self.Brain.EcoManager.EcoMultiplier) or self.Brain.RNGEXP and actualMexIncome > (18 * self.Brain.EcoManager.EcoMultiplier)) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 20.0 then
+            if (not self.Brain.RNGEXP and actualMexIncome > (23 * self.Brain.EcoManager.EcoMultiplier) or self.Brain.RNGEXP and actualMexIncome > (18 * self.Brain.EcoManager.EcoMultiplier)) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 20.0 then
                 --RNGLOG('Factory Upgrade actual mex income is '..actualMexIncome)
-                if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.025 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
+                if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.015 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                     --RNGLOG('Factory Upgrade efficiency over time check passed')
                     local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                     local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
-                    if MassEfficiency >= 1.025 and EnergyEfficiency >= 0.8 then
+                    if MassEfficiency >= 1.015 and EnergyEfficiency >= 0.8 then
                         --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
                         local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH1')
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
@@ -539,7 +539,7 @@ StructureManager = Class {
             end
         end
         if not t2LandPass and totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 then
-            if GetEconomyStored(self.Brain, 'MASS') >= 1100 and (GetEconomyStored(self.Brain, 'ENERGY') >= 3990 or self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8) then
+            if GetEconomyStored(self.Brain, 'MASS') >= 1100 and (GetEconomyStored(self.Brain, 'ENERGY') >= 2990 or self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8) then
                 --RNGLOG('Factory T2 Upgrade HQ Excess Check passed')
                 local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH1')
                 if factoryToUpgrade and not factoryToUpgrade.Dead then
@@ -1117,13 +1117,13 @@ StructureManager = Class {
             local extractorsDetail, extractorTable, totalSpend = self.ExtractorsBeingUpgraded(self, aiBrain)
             aiBrain.EcoManager.ExtractorsUpgrading.TECH1 = extractorsDetail.TECH1Upgrading
             aiBrain.EcoManager.ExtractorsUpgrading.TECH2 = extractorsDetail.TECH2Upgrading
-            RNGLOG('Core Extractor T3 Count needs to be less than 3 '..aiBrain.EcoManager.CoreExtractorT3Count)
-            RNGLOG('Total Core Extractors needs to be greater than 2 '..aiBrain.EcoManager.TotalCoreExtractors)
-            RNGLOG('Mex Income '..aiBrain.cmanager.income.r.m..' needs to be greater than '..(140 * aiBrain.EcoManager.EcoMultiplier))
-            RNGLOG('T3 Land Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Land.T3)
-            RNGLOG('or T3 Air Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Air.T3)
-            RNGLOG('Efficiency over time needs to be greater than 1.0 '..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
-            RNGLOG('upgradespend - totalSpend '..(upgradeSpend - totalSpend))
+            --RNGLOG('Core Extractor T3 Count needs to be less than 3 '..aiBrain.EcoManager.CoreExtractorT3Count)
+            --RNGLOG('Total Core Extractors needs to be greater than 2 '..aiBrain.EcoManager.TotalCoreExtractors)
+            --RNGLOG('Mex Income '..aiBrain.cmanager.income.r.m..' needs to be greater than '..(140 * aiBrain.EcoManager.EcoMultiplier))
+            --RNGLOG('T3 Land Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Land.T3)
+            --RNGLOG('or T3 Air Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Air.T3)
+            --RNGLOG('Efficiency over time needs to be greater than 1.0 '..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
+            --RNGLOG('upgradespend - totalSpend '..(upgradeSpend - totalSpend))
             if aiBrain.EcoManager.T3ExtractorSpend then
                 --RNGLOG('aiBrain.EcoManager.T3ExtractorSpend '..aiBrain.EcoManager.T3ExtractorSpend)
                 --RNGLOG('Is upgradeSpend minus total spend greater than T3ExtractorSpend?')
@@ -1140,9 +1140,9 @@ StructureManager = Class {
                     aiBrain.EngineerAssistManagerFocusCategory = false
                 end
             end
-            RNGLOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
-            RNGLOG('Current number of T1 mexes upgrading '..extractorsDetail.TECH1Upgrading)
-            RNGLOG('Current number of T2 mexes upgrading '..extractorsDetail.TECH2Upgrading)
+            --RNGLOG('Total Spend is '..totalSpend..' income with ratio is '..upgradeSpend)
+            --RNGLOG('Current number of T1 mexes upgrading '..extractorsDetail.TECH1Upgrading)
+            --RNGLOG('Current number of T2 mexes upgrading '..extractorsDetail.TECH2Upgrading)
             local massStorage = GetEconomyStored( aiBrain, 'MASS')
             local energyStorage = GetEconomyStored( aiBrain, 'ENERGY')
             if aiBrain.EcoManager.CoreExtractorT3Count then
@@ -1178,9 +1178,9 @@ StructureManager = Class {
                 continue
             end
             --RNGLOG(' extractorsDetail.TECH1'..extractorsDetail.TECH1..'extractorsDetail.TECH2 '..extractorsDetail.TECH2)
-            if extractorsDetail.TECH1 > 0 and extractorsDetail.TECH2 > 0 then
-                RNGLOG('T2 Mex Ratio is '..(extractorsDetail.TECH1 / extractorsDetail.TECH2))
-            end
+            --if extractorsDetail.TECH1 > 0 and extractorsDetail.TECH2 > 0 then
+            --    RNGLOG('T2 Mex Ratio is '..(extractorsDetail.TECH1 / extractorsDetail.TECH2))
+            --end
             if extractorsDetail.TECH1Upgrading < 2 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and
                 (totalSpend < upgradeSpend or massStorage > 600) and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                     --LOG('We Could upgrade an extractor now with over time')

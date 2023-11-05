@@ -799,11 +799,11 @@ IntelManager = Class {
         }
         for k, v in Zones do
             for k1, v1 in self.Brain.Zones[v].zones do
-                RNGINSERT(self.ZoneIntel.Assignment, { Zone = k1, Position = v1.pos, RadarCoverage = false, RadarUnits = { }, ScoutUnit = false, StartPosition = v1.startpositionclose})
+                self.ZoneIntel.Assignment[k1] = { Zone = k1, Position = v1.pos, RadarCoverage = false, RadarUnits = { }, ScoutUnit = false, StartPosition = v1.startpositionclose}
             end
         end
-        --RNGLOG('Zone Intel Assignment Complete')
-        --RNGLOG('Initial Zone Assignment Table '..repr(self.ZoneIntel.Assignment))
+        RNGLOG('Zone Intel Assignment Complete')
+        RNGLOG('Initial Zone Assignment Table '..repr(self.ZoneIntel.Assignment))
     end,
 
     EnemyPositionAngleAssignment = function(self)
@@ -2437,13 +2437,14 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                             if not b.TMLInRange then
                                 b.TMLInRange = {}
                             end
-                            b.TMLInRange[v.object.EntityId] = true
+                            b.TMLInRange[v.object.EntityId] = v
                         end
                     end
                     v.validated = true
                 end
             else
                 aiBrain.EnemyIntel.TML[k] = nil
+                needSort = true
             end
         end
         if needSort then
