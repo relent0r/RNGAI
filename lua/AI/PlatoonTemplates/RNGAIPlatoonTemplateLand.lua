@@ -104,6 +104,15 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'LandAntiAirStateMachineRNG',
+    Plan = 'StateMachineAIRNG',
+    GlobalSquads = {
+        { categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL, 1, 2, 'attack', 'none' },
+        { categories.LAND * categories.SCOUT - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
+    },
+}
+
+PlatoonTemplate {
     Name = 'LandCombatHoverStateMachineRNG',
     Plan = 'StateMachineAIRNG', -- The platoon function to use.
     GlobalSquads = {
@@ -128,18 +137,6 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'RNGAI Guard Marker Small',
-    Plan = 'GuardMarkerRNG',    
-    GlobalSquads = {
-        { landDirectFireCategoryNoSniper, 4, 10, 'Attack', 'none' },
-        { categories.LAND * categories.MOBILE * categories.INDIRECTFIRE - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 1, 10, 'Artillery', 'none' },
-        { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'Attack', 'none' },
-        { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'Attack', 'none' },
-        { categories.LAND * categories.SCOUT, 0, 1, 'Attack', 'none' },
-    }
-}
-
-PlatoonTemplate {
     Name = 'RNGAI MobileBombAttack',
     Plan = 'PlatoonMergeRNG',
     GlobalSquads = {
@@ -153,15 +150,6 @@ PlatoonTemplate {
     GlobalSquads = {
         { categories.TECH1 * categories.LAND * categories.MOBILE * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL - categories.xrl0302, 1, 2, 'Attack', 'none' },
         { categories.LAND * categories.SCOUT, 0, 1, 'Guard', 'none' },
-    }
-}
-
-PlatoonTemplate {
-    Name = 'RNGAI Antiair Small',
-    Plan = 'GunshipStrikeAIRNG',    
-    GlobalSquads = {
-        { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 1, 10, 'attack', 'none' },
-        { categories.LAND * categories.SCOUT, 0, 1, 'guard', 'none' },
     }
 }
 

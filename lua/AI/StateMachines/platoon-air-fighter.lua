@@ -319,6 +319,9 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             end
             while aiBrain:PlatoonExists(self) do
                 local platPos = self:GetPlatoonPosition()
+                if not platPos then
+                    return
+                end
                 if self.BuilderData.HoldingPosition or self.BuilderData.Loiter then
                     if self.HoldPosTimer + timer > GetGameTimeSeconds() then
                         for _, unit in GetPlatoonUnits(self) do
@@ -492,7 +495,6 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             local attackUnits = self:GetSquadUnits('Attack')
             if attackUnits then
                 for _, unit in attackUnits do
-                    IssueClearCommands({unit})
                     unit.PlatoonHandle.BuilderName = 'RNGAI Air Intercept'
                     if not unit.Dead and unit:TestToggleCaps('RULEUTC_StealthToggle') then
                         unit:SetScriptBit('RULEUTC_StealthToggle', false)
@@ -532,7 +534,7 @@ AssignToUnitsMachine = function(data, platoon, units)
                 unit.PlatoonHandle = platoon
             end
         end
-
+        platoon:OnUnitsAddedToPlatoon()
         -- start the behavior
         ChangeState(platoon, platoon.Start)
     end

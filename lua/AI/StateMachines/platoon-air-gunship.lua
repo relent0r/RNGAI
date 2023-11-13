@@ -46,6 +46,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             local target
             local platPos = self:GetPlatoonPosition()
             if not platPos then
+                self:LogDebug(string.format('Gunship No Platpos, return'))
                 return
             end
             local homeDist = VDist3Sq(platPos, self.Home)
@@ -57,10 +58,12 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             end
             if aiBrain.BasePerimeterMonitor[self.LocationType].AirUnits > 0 and homeDist > 900 then
                 --LOG('gunship retreating due to perimeter monitor at '..repr(self.LocationType))
+                self:LogDebug(string.format('Gunship retreating due to perimeter monitor at '..repr(self.LocationType)))
                 self:ChangeState(self.Retreating)
                 return
             end
             if self.CurrentEnemyAirThreat > 0 and homeDist > 900 and not aiBrain.BrainIntel.SuicideModeActive then
+                self:LogDebug(string.format('Gunship retreating due to air threat and distance from base'))
                 self:ChangeState(self.Retreating)
                 return
             end
@@ -86,6 +89,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                         }
                     end
                     --LOG('gunship attacking target ')
+                    self:LogDebug(string.format('Gunship Attacking existing target'))
                     self:ChangeState(self.AttackTarget)
                     return
                 else
@@ -100,6 +104,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                         Position = target:GetPosition()
                     }
                     --LOG('gunship sniping acu')
+                    self:LogDebug(string.format('Gunship navigating to snipe ACU'))
                     self:ChangeState(self.Navigating)
                     return
                 end
@@ -113,6 +118,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                         Position = target:GetPosition()
                     }
                     --LOG('gunship navigating to target')
+                    self:LogDebug(string.format('Gunship navigating to high priority target'))
                     self:ChangeState(self.Navigating)
                     return
                 end
@@ -145,6 +151,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                             }
                             --LOG('gunship navigating to target')
                             --LOG('Retreating to platoon')
+                            self:LogDebug(string.format('Gunship navigating to priority point target'))
                             self:ChangeState(self.Navigating)
                             return
                         end
@@ -156,10 +163,12 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                     Position = self.Home
                 }
                 --LOG('gunship has not target and is navigating back home')
+                self:LogDebug(string.format('Gunship has no target and is navigating back home'))
                 self:ChangeState(self.Navigating)
                 return
             end
             coroutine.yield(25)
+            self:LogDebug(string.format('Gunship has nothing to do'))
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -358,6 +367,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         if maxPlatoonDPS > 0 then
             platoon.MaxPlatoonDPS = maxPlatoonDPS
         end
+        platoon:OnUnitsAddedToPlatoon()
         -- start the behavior
         ChangeState(platoon, platoon.Start)
         return
@@ -382,6 +392,7 @@ GunshipThreatThreads = function(aiBrain, platoon)
                 if v[3] > 0 and VDist3Sq({v[1],0,v[2]}, platoon.Pos) < 10000 then
                     platoon.CurrentEnemyAirThreat = v[3]
                     --LOG('Gunship DecideWhatToDo triggered due to threat')
+                    platoon:LogDebug(string.format('Gunship DecideWhatToDo triggered due to threat'))
                     platoon:ChangeState(platoon.DecideWhatToDo)
                 end
             end
@@ -396,6 +407,7 @@ GunshipThreatThreads = function(aiBrain, platoon)
                         aiBrain.BrainIntel.AirStagingRequired = true
                     elseif not platoon.BuilderData.AttackTarget or platoon.BuilderData.AttackTarget.Dead then
                         --LOG('Assigning unit to refuel platoon from refuel')
+                        platoon:LogDebug(string.format('Gunship is low on fuel or health and is going to refuel'))
                         local plat = aiBrain:MakePlatoon('', '')
                         aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'attack', 'None')
                         import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Gunship', LocationType = platoon.LocationType}, plat, {unit})

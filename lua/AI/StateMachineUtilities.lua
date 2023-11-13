@@ -211,7 +211,13 @@ VariableKite = function(platoon,unit,target)--basic kiting function.. complicate
     if unit.Role=='Heavy' or unit.Role=='Bruiser' or unit.GlassCannon then
         strafemod=7
     end
-    if unit.MaxWeaponRange then
+    if unit.Role=='AA'  then
+        dest=KiteDist(pos,tpos,platoon.MaxWeaponRange+3,healthmod)
+        dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
+    elseif unit.Role=='Sniper' and unit.MaxWeaponRange then
+        dest=KiteDist(pos,tpos,unit.MaxWeaponRange,healthmod)
+        dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
+    elseif unit.MaxWeaponRange then
         dest=KiteDist(pos,tpos,unit.MaxWeaponRange-math.random(1,3)-mod,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     else
@@ -467,9 +473,11 @@ GetUnitMaxWeaponRange = function(unit, filterType)
     if unit and not unit.Dead then
         for _, weapon in unit.Blueprint.Weapon or {} do
             -- unit can have MaxWeaponRange entry from the last platoon
-            if filterType and weapon.WeaponCategory == filterType then
-                if not maxRange or weapon.MaxRadius > maxRange then
-                    maxRange = weapon.MaxRadius
+            if filterType then
+                if weapon.WeaponCategory == filterType then
+                    if not maxRange or weapon.MaxRadius > maxRange then
+                        maxRange = weapon.MaxRadius
+                    end
                 end
             elseif not maxRange or weapon.MaxRadius > maxRange then
                 -- save the weaponrange 

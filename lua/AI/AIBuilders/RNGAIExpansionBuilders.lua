@@ -408,6 +408,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Expansion',
+            TransportWait = 5,
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -446,6 +447,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Expansion',
+            TransportWait = 5,
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -481,6 +483,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Expansion',
+            TransportWait = 5,
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -513,6 +516,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Expansion',
+            TransportWait = 5,
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -549,6 +553,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Expansion',
+            TransportWait = 5,
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -583,6 +588,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Expansion',
+            TransportWait = 5,
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -615,6 +621,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Expansion',
+            TransportWait = 5,
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -647,6 +654,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Expansion',
+            TransportWait = 5,
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -679,6 +687,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Expansion',
+            TransportWait = 5,
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -711,6 +720,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Expansion',
+            TransportWait = 5,
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -743,6 +753,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Expansion',
+            TransportWait = 5,
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,

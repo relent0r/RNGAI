@@ -804,7 +804,7 @@ AssignToUnitsMachine = function(data, platoon, units)
                 end
             end
         end
-
+        platoon:OnUnitsAddedToPlatoon()
         -- start the behavior
         ChangeState(platoon, platoon.Start)
     end

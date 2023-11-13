@@ -314,7 +314,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if GetGameTimeSeconds() - self.BuilderData.Time < 30 then
                     --LOG('Defending Expansion '..repr(self.BuilderData.Position))
                     targetSearchPosition = self.BuilderData.Position
-                    targetSearchRange = 80
+                    targetSearchRange = 120
                 else
                     self.BuilderData = {}
                 end
@@ -479,7 +479,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             elseif self.BuilderData.DefendExpansion then
                 coroutine.yield(10)
             end
-            if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < 6400 and not cdr.Caution then
+            if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < 6400 and not cdr.Caution and cdr.CurrentEnemyThreat < 25 then
+                coroutine.yield(2)
                 self:ChangeState(self.EngineerTask)
                 return
             elseif not cdr.SuicideMode and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 and cdr.Phase > 2 then
@@ -768,6 +769,10 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         IssueGuard({eng}, eng.UnitBeingAssist)
                         coroutine.yield(30)
                         while eng and not eng.Dead and not eng:IsIdleState() do
+                            if eng.CurrentEnemyThreat > 30 then
+                                coroutine.yield(2)
+                                break
+                            end
                             if eng.Caution or not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
                                 break
                             end
@@ -948,7 +953,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local brain = self:GetBrain()
             local cdr = self.cdr
             local realEnemyThreat
-            local enemyThreat
             if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) then
                 local target = self.BuilderData.AttackTarget
                 local snipeAttempt = false
@@ -963,25 +967,12 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     local targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                    --RNGLOG('Target Distance is '..targetDistance..' from acu to target')
                     if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdrPos[1], cdrPos[3]) > 2025 then
-                        enemyThreat = GetThreatAtPosition(brain, targetPos, brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+                        local enemyThreat = GetThreatAtPosition(brain, targetPos, brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
                         if enemyThreat > 0 then
-                            realEnemyThreat = RUtils.GrabPosDangerRNG(brain,targetPos, 45).enemy
-                            local friendlyUnits = GetUnitsAroundPoint(brain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), targetPos, 45, 'Ally')
-                            local friendlyUnitThreat = 0
-                            for k,v in friendlyUnits do
-                                if v and not v.Dead then
-                                    if EntityCategoryContains(categories.COMMAND, v) then
-                                        friendlyUnitThreat = v:EnhancementThreatReturn()
-                                    else
-                                        if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
-                                            friendlyUnitThreat = friendlyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel
-                                        end
-                                    end
-                                end
-                            end
-                            RNGLOG('ACU OverCharge Friendly Threat is '..friendlyUnitThreat)
-                            RNGLOG('ACU OverCharge Enemy Threat is '..realEnemyThreat)
-                            if realEnemyThreat >= friendlyUnitThreat and not cdr.SuicideMode then
+                            local realThreat = RUtils.GrabPosDangerRNG(brain,targetPos, 45)
+                            RNGLOG('ACU OverCharge Friendly Threat is '..realThreat.ally)
+                            RNGLOG('ACU OverCharge Enemy Threat is '..realThreat.enemy)
+                            if realThreat.enemy >= realThreat.ally and not cdr.SuicideMode then
                                 --RNGLOG('Enemy Threat too high')
                                 if VDist2Sq(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < 2025 then
                                 --RNGLOG('Threat high and cdr close, retreat')
@@ -1257,7 +1248,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 else
                     local AlliedPlatoons = brain:GetPlatoonsList()
                     for _,aPlat in AlliedPlatoons do
-                        if aPlat.PlanName == 'MassRaidRNG' or aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' or aPlat.PlanName == 'GuardMarkerRNG' or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlanName == 'ZoneControlRNG' then 
+                        if aPlat.PlanName == 'MassRaidRNG' or aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlanName == 'ZoneControlRNG' then 
                             --RNGLOG('Allied platoon name '..aPlat.PlanName)
                             if aPlat.UsingTransport then 
                                 continue 
@@ -1914,7 +1905,7 @@ AssignToUnitsMachine = function(data, platoon, units)
                 IssueClearCommands(unit)
             end
         end
-
+        platoon:OnUnitsAddedToPlatoon()
         -- start the behavior
         ChangeState(platoon, platoon.Start)
     end

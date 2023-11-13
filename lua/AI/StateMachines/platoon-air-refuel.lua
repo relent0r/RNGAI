@@ -42,10 +42,11 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             local refuel = false
-            for _, unit in self:GetPlatoonUnits() do
+            local platUnits = self:GetPlatoonUnits()
+            for _, unit in platUnits do
                 local fuel = unit:GetFuelRatio()
                 local health = unit:GetHealthPercent()
-                if not IsDestroyed(unit) and not unit.Loading and (fuel < 0.3 or health < 0.5) then
+                if not IsDestroyed(unit) and not unit.Loading and (fuel < 0.4 or health < 0.6) then
                     if aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) > 0 then
                         local unitPos = unit:GetPosition()
                         local plats = AIUtils.GetOwnUnitsAroundPoint(aiBrain, categories.AIRSTAGINGPLATFORM, unitPos, 400)
@@ -69,6 +70,18 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                             if closest and not IsDestroyed(unit) and not unit.Dead then
+                                local platPos = self:GetPlatoonPosition()
+                                local closestAirStaging = closest:GetPosition()
+                                local dx = platPos[1] - closestAirStaging[1]
+                                local dz = platPos[3] - closestAirStaging[3]
+                                local posDist = dx * dx + dz * dz
+                                if posDist > 14400 then
+                                    self.BuilderData = {
+                                        Position = closestAirStaging,
+                                    }
+                                    self:ChangeState(self.Navigating)
+                                    return
+                                end
                                 IssueClearCommands({unit})
                                 if table.getn({unit}) == 0 then
                                     --LOG('unit table is zero '..repr(unit))
@@ -87,15 +100,25 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                 RNGINSERT(closest.Refueling, unit)
                                 unit.Loading = true
                             end
+                        else
+                            local platPos = self:GetPlatoonPosition()
+                            local basePos = aiBrain.BuilderManagers['MAIN'].Position
+                            local dx = platPos[1] - basePos[1]
+                            local dz = platPos[3] - basePos[3]
+                            local posDist = dx * dx + dz * dz
+                            if posDist > 3600 then
+                                self.BuilderData = {
+                                    Position = basePos,
+                                }
+                                self:ChangeState(self.Navigating)
+                                return
+                            end
                         end
                     else
                         aiBrain.BrainIntel.AirStagingRequired = true
                     end
                 else
                     if not IsDestroyed(unit) and not unit.Loading then
-                        if (fuel < 0.3 or health < 0.5) then
-                            --LOG('Fighter fuel or health is low but its going to move back into a fighter state machine')
-                        end
                         if self.PreviousStateMachine == 'Gunship' then
                             local plat = aiBrain:MakePlatoon('', 'none')
                             aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
@@ -104,19 +127,12 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                             local plat = StateUtils.GetClosestPlatoonRNG(self, 'FighterBehavior', 450)
                             if not plat then
                                 plat = aiBrain:MakePlatoon('', 'none')
-                                --LOG('Moving refueled fighter back into new state machine')
                                 aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
                                 import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, plat, {unit})
                             else
-                                --LOG('Moving refueled fighter back into existing state machine')
+                                self:LogDebug(string.format('AirFefuel, moving fighter into existing platoon'))
                                 aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
                             end
-                        end
-                    end
-                    if unit.Loading then
-                        --LOG('Unit is still in a loading state so is it still attached or has the platform not released the fighter')
-                        if unit:IsUnitState('Attached') then
-                            --LOG('Unit is still attached to something')
                         end
                     end
                 end
@@ -131,6 +147,54 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
+    Navigating = State {
+
+        StateName = 'Navigating',
+
+        --- The platoon retreats from a threat
+        ---@param self AIPlatoonFighterBehavior
+        Main = function(self)
+            local aiBrain = self:GetBrain()
+            if not self.BuilderData.Position then
+                self:ChangeState(self.Error)
+                return
+            end
+            local platUnits = self:GetPlatoonUnits()
+            IssueClearCommands(platUnits)
+            IssueMove(platUnits, self.BuilderData.Position)
+            local movePosition = self.BuilderData.Position
+            local lastDist
+            local timeout = 0
+            while aiBrain:PlatoonExists(self) do
+                coroutine.yield(15)
+                if IsDestroyed(self) then
+                    return
+                end
+                local platPos = self:GetPlatoonPosition()
+                local dx = platPos[1] - movePosition[1]
+                local dz = platPos[3] - movePosition[3]
+                local posDist = dx * dx + dz * dz
+
+                if posDist < 2025 then
+                    coroutine.yield(5)
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
+                if not lastDist or lastDist == posDist then
+                    timeout = timeout + 1
+                    if timeout > 15 then
+                        break
+                    end
+                end
+                lastDist = posDist
+            end
+            coroutine.yield(30)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+
+    },
+
     MonitorRefuel = State {
 
         StateName = 'MonitorRefuel',
@@ -139,13 +203,12 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local aiBrain = self:GetBrain()
             local refuelComplete = false
-            while not refuelComplete do
+            local refuelTimeout = 0
+            while not refuelComplete or refuelTimeout < 30 do
                 coroutine.yield(25)
-                --LOG('AirRefuel waiting for refuel to complete number of units in platoon is '..table.getn(self:GetPlatoonUnits()))
                 for _, unit in self:GetPlatoonUnits() do
                     local fuel = unit:GetFuelRatio()
                     local health = unit:GetHealthPercent()
-                    --LOG('Fuel '..fuel..' health '..health)
                     if (not unit.Loading or (fuel >= 1.0 and health >= 1.0)) and (not unit:IsUnitState('Attached')) then
                         refuelComplete = true
                     end
@@ -153,7 +216,10 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                 if IsDestroyed(self) then
                     return
                 end
+                refuelTimeout = refuelTimeout + 1
             end
+            local platUnits = self:GetPlatoonUnits()
+            IssueClearCommands(platUnits)
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -185,6 +251,7 @@ AssignToUnitsMachine = function(data, platoon, units)
                 v.PreviousStateMachine = data.StateMachine
             end
         end
+        platoon:OnUnitsAddedToPlatoon()
         -- start the behavior
         ChangeState(platoon, platoon.Start)
         return

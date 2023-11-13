@@ -4757,12 +4757,12 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         local currentGrid = {x = 0, z = 0, Priority = 0}
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
             for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
-                if im.MapIntelGrid[i][k].Enabled and not im.MapIntelGrid[i][k].IntelCoverage and im.MapIntelGrid[i][k].ScoutPriority == 100 then
+                if im.MapIntelGrid[i][k].Enabled and not im.MapIntelGrid[i][k].IntelCoverage and im.MapIntelGrid[i][k].ScoutPriority >= 100 then
                     if not im.MapIntelGrid[i][k].Graphs[locationType].GraphChecked then
                         --RNGLOG('Trying to set graphs for '..i..k..' current grid position is '..repr(im.MapIntelGrid[i][k].Position))
                         im:IntelGridSetGraph(locationType, i, k, aiBrain.BuilderManagers[locationType].Position, im.MapIntelGrid[i][k].Position)
                     end
-                    if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 30 then
+                    if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 45 then
                         --RNGLOG('ScoutPriority is '..im.MapIntelGrid[i][k].ScoutPriority)
                         --RNGLOG('LastScouted is '..im.MapIntelGrid[i][k].LastScouted)
                         --RNGLOG('DistanceToMain is '..im.MapIntelGrid[i][k].DistanceToMain)
@@ -4775,7 +4775,12 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
                         if im.MapIntelGrid[i][k].TimeScouted == 0 then
                             im.MapIntelGrid[i][k].TimeScouted = 1
                         end
-                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].TimeScouted ) / im.MapIntelGrid[i][k].DistanceToMain }
+                        local priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].TimeScouted ) / im.MapIntelGrid[i][k].DistanceToMain
+                        local cellStatus = aiBrain.GridPresence:GetInferredStatus(im.MapIntelGrid[i][k].Position)
+                        if cellStatus == 'Allied' then
+                            priority = priority * 0.80
+                        end
+                        currentGrid = {x = i, z = k, Priority = priority }
                         --RNGLOG('CurrentGrid Priority is '..currentGrid.Priority)
                         --RNGLOG('TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
                         if currentGrid.Priority > highestGrid.Priority then
@@ -4800,12 +4805,12 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         local currentGrid = {x = 0, z = 0, Priority = 0}
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
             for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
-                if im.MapIntelGrid[i][k].Enabled and not im.MapIntelGrid[i][k].IntelCoverage and im.MapIntelGrid[i][k].ScoutPriority == 50 then
+                if im.MapIntelGrid[i][k].Enabled and not im.MapIntelGrid[i][k].IntelCoverage and im.MapIntelGrid[i][k].ScoutPriority < 100 then
                     if not im.MapIntelGrid[i][k].Graphs[locationType].GraphChecked then
                         --RNGLOG('Trying to set graphs for '..i..k..' current grid position is '..repr(im.MapIntelGrid[i][k].Position))
                         im:IntelGridSetGraph(locationType, i, k, aiBrain.BuilderManagers[locationType].Position, im.MapIntelGrid[i][k].Position)
                     end
-                    if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 45 then
+                    if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 60 then
                         --RNGLOG('LastScouted is '..im.MapIntelGrid[i][k].LastScouted)
                         --RNGLOG('DistanceToMain is '..im.MapIntelGrid[i][k].DistanceToMain)
                         if im.MapIntelGrid[i][k].LastScouted == 0 then
@@ -4814,7 +4819,12 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
                         if im.MapIntelGrid[i][k].DistanceToMain == 0 then
                             im.MapIntelGrid[i][k].DistanceToMain = 1
                         end
-                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].TimeScouted ) / im.MapIntelGrid[i][k].DistanceToMain }
+                        local priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].TimeScouted ) / im.MapIntelGrid[i][k].DistanceToMain
+                        local cellStatus = aiBrain.GridPresence:GetInferredStatus(im.MapIntelGrid[i][k].Position)
+                        if cellStatus == 'Allied' then
+                            priority = priority * 0.80
+                        end
+                        currentGrid = {x = i, z = k, Priority = priority }
                         --RNGLOG('CurrentGrid Priority is '..currentGrid.Priority)
                         --RNGLOG(im.MapIntelGrid[i][k].ScoutPriority..','..im.MapIntelGrid[i][k].LastScouted..','..im.MapIntelGrid[i][k].DistanceToMain..','..im.MapIntelGrid[i][k].TimeScouted..','..currentGrid.Priority)
                         --RNGLOG('TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
@@ -4869,26 +4879,26 @@ ScoutFindNearbyPlatoonsRNG = function(platoon, radius)
     for _,aPlat in AlliedPlatoons do
         if aPlat == platoon then continue end
         if aPlat.ScoutSupported then
-            if aPlat.UsingTransport then continue end
-            if aPlat.ScoutPresent then continue end
-            allyPlatPos = GetPlatoonPosition(aPlat)
-            if not allyPlatPos or not PlatoonExists(aiBrain, aPlat) then
-                allyPlatPos = false
-                continue
-            end
-            if not aPlat.MovementLayer then
-                AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
-            end
-            -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
-            if platoon.MovementLayer ~= 'Amphibious' and platoon.MovementLayer ~= aPlat.MovementLayer then
-                continue
-            end
-            if  VDist3Sq(platPos, allyPlatPos) <= radiusSq then
-                if not NavUtils.CanPathTo(platoon.MovementLayer, platPos, allyPlatPos) then continue end
-                if aiBrain.RNGDEBUG then
-                    RNGLOG("*AI DEBUG: Scout moving to allied platoon position for plan "..aPlat.PlanName)
+            if not aPlat.ScoutPresent and not aPlat.UsingTransport and aPlat.PlatoonName ~= 'LandScoutBehavior' then  
+                allyPlatPos = GetPlatoonPosition(aPlat)
+                if not allyPlatPos or not PlatoonExists(aiBrain, aPlat) then
+                    allyPlatPos = false
+                    continue
                 end
-                return true, aPlat
+                if not aPlat.MovementLayer then
+                    AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
+                end
+                -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
+                if platoon.MovementLayer ~= 'Amphibious' and platoon.MovementLayer ~= aPlat.MovementLayer then
+                    continue
+                end
+                if  VDist3Sq(platPos, allyPlatPos) <= radiusSq then
+                    if not NavUtils.CanPathTo(platoon.MovementLayer, platPos, allyPlatPos) then continue end
+                    if aiBrain.RNGDEBUG then
+                        RNGLOG("*AI DEBUG: Scout moving to allied platoon position for plan "..aPlat.PlanName)
+                    end
+                    return true, aPlat
+                end
             end
         end
     end
@@ -4973,8 +4983,8 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
         local currentGrid = {x = 0, z = 0, Priority = 0}
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
             for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
-                if im.MapIntelGrid[i][k].ScoutPriority == 100 then
-                    if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 30 then
+                if im.MapIntelGrid[i][k].ScoutPriority >= 100 then
+                    if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 45 then
                         --RNGLOG('AirScouting ScoutPriority is '..im.MapIntelGrid[i][k].ScoutPriority)
                         --RNGLOG('AirScouting LastScouted is '..im.MapIntelGrid[i][k].LastScouted)
                         --RNGLOG('AirScouting DistanceToMain is '..im.MapIntelGrid[i][k].DistanceToMain)
@@ -5012,8 +5022,8 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
         local currentGrid = {x = 0, z = 0, Priority = 0}
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
             for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
-                if im.MapIntelGrid[i][k].ScoutPriority == 50 then
-                    if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 45 then
+                if im.MapIntelGrid[i][k].ScoutPriority < 100 then
+                    if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 60 then
                         --RNGLOG('LastScouted is '..im.MapIntelGrid[i][k].LastScouted)
                         --RNGLOG('DistanceToMain is '..im.MapIntelGrid[i][k].DistanceToMain)
                         if im.MapIntelGrid[i][k].LastScouted == 0 then
@@ -6066,7 +6076,7 @@ function GetMarkerFromPosition(refPosition, markerType)
         markers = import("/lua/sim/markerutilities.lua").GetMarkersByType(markerType)
     end
     for _, v in markers do
-        local position = v.Position or v.Position
+        local position = v.Position or v.position
         if position and position[1] == refPosition[1] and position[3] == refPosition[3] then
             marker =v
             break

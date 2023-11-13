@@ -244,6 +244,9 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 end
                 if bAggroMove and attackUnits and (not currentLayerSeaBed) then
                     --RNGLOG('HUNTAIPATH Attack and Guard moving Aggro')
+                    if IsDestroyed(self) then
+                        return
+                    end
                     if distEnd and distEnd > 6400 then
                         self:SetPlatoonFormationOverride('NoFormation')
                         attackFormation = false
@@ -495,9 +498,12 @@ AssignToUnitsMachine = function(data, platoon, units)
                 if not unit.Dead and unit:TestToggleCaps('RULEUTC_CloakToggle') then
                     unit:SetScriptBit('RULEUTC_CloakToggle', false)
                 end
+                if unit.Blueprint.CategoriesHash.SCOUT then
+                    platoon.ScoutUnit = unit
+                end
             end
         end
-
+        platoon:OnUnitsAddedToPlatoon()
         -- start the behavior
         ChangeState(platoon, platoon.Start)
     end

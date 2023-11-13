@@ -578,88 +578,6 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
-    ---@param self AIPlatoon
-    ---@param units Unit[]
-    OnUnitsAddedToAttackSquad = function(self, units)
-        local count = RNGGETN(units)
-        local brain = self:GetBrain()
-        if count > 0 then
-            local supportUnits = self:GetSquadUnits('Support')
-            if supportUnits then
-                for _, v in supportUnits do
-                    if not self.machinedata then
-                        self.machinedata = {name = 'TruePlatoon',id=v.EntityId}
-                    end
-                    IssueClearCommands(v)
-                    if EntityCategoryContains(categories.SCOUT, v) then
-                        self.ScoutPresent = true
-                    end
-                    platoonhealth=platoonhealth+StateUtils.GetTrueHealth(v)
-                    platoonhealthtotal=platoonhealthtotal+StateUtils.GetTrueHealth(v,true)
-                    local mult=1
-                    if EntityCategoryContains(categories.INDIRECTFIRE,v) then
-                        mult=0.3
-                    end
-                    if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
-                        platoonthreat = platoonthreat + v.Blueprint.Defense.SurfaceThreatLevel*StateUtils.GetWeightedHealthRatio(v)*mult
-                    end
-                    if (v.Sync.Regen>0) or not v.initialized then
-                        v.initialized=true
-                        if EntityCategoryContains(categories.ARTILLERY * categories.TECH3,v) then
-                            v.Role='Artillery'
-                        elseif EntityCategoryContains(categories.EXPERIMENTAL,v) then
-                            v.Role='Experimental'
-                        elseif EntityCategoryContains(categories.SILO,v) then
-                            v.Role='Silo'
-                        elseif EntityCategoryContains(categories.xsl0202 + categories.xel0305 + categories.xrl0305,v) then
-                            v.Role='Heavy'
-                        elseif EntityCategoryContains((categories.SNIPER + categories.INDIRECTFIRE) * categories.LAND + categories.ual0201 + categories.drl0204 + categories.del0204,v) then
-                            v.Role='Sniper'
-                            if EntityCategoryContains(categories.ual0201,v) then
-                                v.GlassCannon=true
-                            end
-                        elseif EntityCategoryContains(categories.SCOUT,v) then
-                            v.Role='Scout'
-                        elseif EntityCategoryContains(categories.ANTIAIR,v) then
-                            v.Role='AA'
-                        elseif EntityCategoryContains(categories.DIRECTFIRE,v) then
-                            v.Role='Bruiser'
-                        elseif EntityCategoryContains(categories.SHIELD,v) then
-                            v.Role='Shield'
-                        end
-                        for _, weapon in v.Blueprint.Weapon or {} do
-                            if not (weapon.RangeCategory == 'UWRC_DirectFire') then continue end
-                            if not v.MaxWeaponRange or v.MaxRadius > v.MaxWeaponRange then
-                                v.MaxWeaponRange = weapon.MaxRadius * 0.9
-                                if weapon.BallisticArc == 'RULEUBA_LowArc' then
-                                    v.WeaponArc = 'low'
-                                elseif weapon.BallisticArc == 'RULEUBA_HighArc' then
-                                    v.WeaponArc = 'high'
-                                else
-                                    v.WeaponArc = 'none'
-                                end
-                            end
-                        end
-                        if v:TestToggleCaps('RULEUTC_StealthToggle') then
-                            v:SetScriptBit('RULEUTC_StealthToggle', false)
-                        end
-                        if v:TestToggleCaps('RULEUTC_CloakToggle') then
-                            v:SetScriptBit('RULEUTC_CloakToggle', false)
-                        end
-                        v:RemoveCommandCap('RULEUCC_Reclaim')
-                        v:RemoveCommandCap('RULEUCC_Repair')
-                        if v.MaxWeaponRange then
-                            --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
-                            if not self.MaxWeaponRange or v.MaxWeaponRange>self.MaxWeaponRange then
-                                self.MaxWeaponRange=v.MaxWeaponRange
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end,
-
 }
 
 
@@ -733,6 +651,7 @@ AssignToUnitsMachine = function(data, platoon, units)
                         end
                     elseif EntityCategoryContains(categories.SCOUT,v) then
                         v.Role='Scout'
+                        platoon.ScoutUnit = v
                     elseif EntityCategoryContains(categories.ANTIAIR,v) then
                         v.Role='AA'
                     elseif EntityCategoryContains(categories.DIRECTFIRE,v) then
@@ -783,6 +702,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         platoon.health=platoonhealth
         platoon.mhealth=platoonhealthtotal
         platoon.rhealth=platoonhealth/platoonhealthtotal
+        platoon:OnUnitsAddedToPlatoon()
         -- start the behavior
         ChangeState(platoon, platoon.Start)
     end

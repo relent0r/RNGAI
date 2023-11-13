@@ -768,33 +768,24 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Response BaseMilitary ANTIAIR Area',
-        PlatoonTemplate = 'RNGAI Antiair Small',
+        PlatoonTemplate = 'LandAntiAirStateMachineRNG',
         Priority = 1000,
         InstanceCount = 3,
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.ANTIAIR - categories.INDIRECTFIRE} },
         },
         BuilderData = {
-            SearchRadius = 'BaseMilitaryArea',
-            GetTargetsFromBase = true,
-            RequireTransport = false,
-            AggressiveMove = true,
-            LocationType = 'LocationType',
-            Defensive = true,
-            AttackEnemyStrength = 200,                              
-            TargetSearchPriorities = { 
-                categories.EXPERIMENTAL * categories.AIR - categories.UNTARGETABLE,
-                categories.MOBILE * categories.AIR
-            },
-            PrioritizedCategories = {   
-                categories.EXPERIMENTAL * categories.AIR - categories.UNTARGETABLE,
-                categories.MOBILE * categories.AIR * categories.GROUNDATTACK,
-                categories.MOBILE * categories.AIR * categories.BOMBER,
-                categories.MOBILE * categories.AIR,
-            },
+            StateMachine = 'ZoneControlDefense',
+            ZoneType     = 'aadefense',
             UseFormation = 'None',
+            LocationType = 'LocationType',
+            TargetSearchPriorities = {
+                categories.AIR
+            },
+            PrioritizedCategories = {
+                categories.AIR
+            },
         },
     },
     Builder {
@@ -820,50 +811,6 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI Land FormBuilders',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
-    Builder {
-        BuilderName = 'RNGAI Start Location Attack',
-        PlatoonTemplate = 'RNGAI Guard Marker Small',
-        Priority = 700,
-        PriorityFunction = DefensivePosture,
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        InstanceCount = 2,
-        BuilderType = 'Any',
-        BuilderConditions = {     
-            --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER} },
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER} },  	
-            },
-        BuilderData = {
-            MarkerType = 'Start Location',            
-            SafeZone = true,
-            MoveFirst = 'Threat',
-            LocationType = 'LocationType',
-            MoveNext = 'Threat',
-            IgnoreFriendlyBase = true,
-            --ThreatType = '',
-            --SelfThreat = '',
-            --FindHighestThreat ='',
-            --ThreatThreshold = '',
-            AvoidBases = true,
-            AvoidBasesRadius = 30,
-            AggressiveMove = false,      
-            AvoidClosestRadius = 50,
-            GuardTimer = 10,              
-            UseFormation = 'AttackFormation',
-            ThreatType = 'Structures',
-            PrioritizedCategories = {
-                categories.COMMAND,
-                categories.MASSEXTRACTION,
-                categories.EXPERIMENTAL,
-                categories.STRUCTURE * categories.DEFENSE,
-                categories.MOBILE * categories.LAND,
-                categories.ENGINEER,
-            },
-            DistressRange = 120,
-            DistressReactionTime = 6,
-            ThreatSupport = 0,
-        }, 
-    },
     Builder {
         BuilderName = 'RNGAI Zone Control',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
@@ -1089,52 +1036,10 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Land FormBuilders Large',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
-        BuilderName = 'RNGAI Start Location Attack Large',
-        PlatoonTemplate = 'RNGAI Guard Marker Small',
-        Priority = 700,
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        InstanceCount = 3,
-        BuilderType = 'Any',
-        BuilderConditions = {     
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER} },  	
-            },
-        BuilderData = {
-            SearchRadius = 'BaseEnemyArea',
-            LocationType = 'LocationType',
-            MarkerType = 'Start Location',            
-            MoveFirst = 'Threat',
-            SafeZone = true,
-            MoveNext = 'Threat',
-            IgnoreFriendlyBase = true,
-            --ThreatType = '',
-            --SelfThreat = '',
-            --FindHighestThreat ='',
-            --ThreatThreshold = '',
-            AvoidBases = true,
-            AvoidBasesRadius = 30,
-            AggressiveMove = false,      
-            AvoidClosestRadius = 50,
-            GuardTimer = 10,              
-            UseFormation = 'AttackFormation',
-            ThreatSupport = 0,
-            PrioritizedCategories = {
-                categories.COMMAND,
-                categories.MASSEXTRACTION,
-                categories.EXPERIMENTAL,
-                categories.STRUCTURE * categories.DEFENSE,
-                categories.MOBILE * categories.LAND,
-                categories.ENGINEER,
-            },
-            DistressRange = 120,
-            DistressReactionTime = 6,
-        },    
-    },
-    Builder {
         BuilderName = 'RNGAI Trueplatoon Large',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 690,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 4,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 8,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },

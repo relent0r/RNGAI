@@ -45,7 +45,7 @@ function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
     return markerList
 end
 
-function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGeneratePath)
+function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGeneratePath, transportWait)
     local ALLBPS = __blueprints
     if not destination then
         return false
@@ -61,6 +61,9 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
         if NavUtils.CanPathTo('Amphibious', pos, destination) then
             return true
         end
+    end
+    if not transportWait then
+        transportWait = 2
     end
 
     -- first try to find a path with markers. 
@@ -98,7 +101,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
 
         -- Skip the last move... we want to return and do a build
         unit.WaitingForTransport = true
-        bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, unit.PlatoonHandle, destination, 2, true)
+        bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, unit.PlatoonHandle, destination, transportWait, true)
         unit.WaitingForTransport = false
 
         if bUsedTransports then

@@ -432,7 +432,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 Primary',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 800,
+        Priority = 1050,
         DelayEqualBuildPlattons = {'Factories', 3},
         InstanceCount = 1,
         BuilderConditions = {
@@ -623,7 +623,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 Primary Large',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 800,
+        Priority = 1050,
         DelayEqualBuildPlattons = {'Factories', 3},
         InstanceCount = 1,
         BuilderConditions = {

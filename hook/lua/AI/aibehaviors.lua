@@ -1271,6 +1271,7 @@ function AirStagingThreadRNG(unit)
     while not unit.Dead do
         local numUnits = 0
         local refueledUnits = {}
+        LOG('Current refueling count '..table.getn(unit.Refueling))
         for k, v in unit.Refueling do
             if not v.Dead then
                 if (not v:GetFuelRatio() < 1) and (not v:GetHealthPercent() < 1) then
@@ -1279,7 +1280,7 @@ function AirStagingThreadRNG(unit)
                 end
             end
         end
-        
+        LOG('Number of Units ready to deploy '..numUnits)
         if numUnits > 0 then
             --RNGLOG('Number of units in refueldedUnits '..table.getn(refueledUnits))
             local tableRebuild = false
@@ -1287,7 +1288,7 @@ function AirStagingThreadRNG(unit)
                 if not v.Unit.Dead then
                     local pos = unit:GetPosition()
                     if v.Unit:IsIdleState() and not v.Unit:IsUnitState('Attached') then
-                        --RNGLOG('Attempting to add to AirHuntAI Platoon')
+                        RNGLOG('Attempting to add to AirHuntAI Platoon')
                         v.Unit.Loading = false
                         local plat
                         if not v.Unit.PreviousStateMachine then
@@ -1314,7 +1315,7 @@ function AirStagingThreadRNG(unit)
                             --LOG('table removed from refueling')
                         end
                     elseif v.Unit:IsUnitState('Attached') then
-                        --RNGLOG('Air Unit Still attached, force unload')
+                        RNGLOG('Air Unit Still attached, force unload')
                         IssueClearCommands({unit})
                         IssueTransportUnload({unit}, {pos[1] + 5, pos[2], pos[3] + 5})
                         --RNGLOG('Attempting to add to AirHuntAI Platoon')
@@ -1343,6 +1344,10 @@ function AirStagingThreadRNG(unit)
                             --LOG('table removed from refueling')
                         end
                     end
+                else
+                    LOG('Unit is dead remove from refueling table')
+                    unit.Refueling[v.Key] = nil
+                    tableRebuild = true
                 end
             end
             if tableRebuild then

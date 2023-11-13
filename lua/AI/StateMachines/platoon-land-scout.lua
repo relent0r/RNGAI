@@ -96,7 +96,8 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     LOG('We can retreat to mass markers')
                     for _, v in massPoints do
                         LOG('Angle is '..repr(RUtils.GetAngleRNG(scoutPos[1], scoutPos[3], v.Position[1], v.Position[3], enemyPos[1], enemyPos[3])))
-                        if RUtils.GetAngleRNG(scoutPos[1], scoutPos[3], v.Position[1], v.Position[3], enemyPos[1], enemyPos[3]) > 0.6 then
+                        if RUtils.GetAngleRNG(scoutPos[1], scoutPos[3], v.Position[1], v.Position[3], enemyPos[1], enemyPos[3]) > 0.6 
+                           and NavUtils.CanPathTo(self.MovementLayer, scoutPos, v.Position) then
                             local rx = scoutPos[1] - v.Position[1]
                             local rz = scoutPos[3] - v.Position[3]
                             if rx * rx + rz * rz > 4225 then
@@ -222,6 +223,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
     CombatLoop = State {
 
         StateName = 'CombatLoop',
+        StateColor = "ff0000",
 
         --- The platoon searches for a target
         ---@param self AIPlatoonLandScoutBehavior
@@ -233,6 +235,9 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             end
             LOG('Scout combat loop')
             local target = self.BuilderData.AttackTarget
+            if target then
+                self.target = target
+            end
             if not target or target.Dead then
                 coroutine.yield(10)
                 self:LogWarning('No target or target is dead')
@@ -246,11 +251,20 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
+
+        Visualize = function(self)
+            local position = self:GetPlatoonPosition()
+            local target = self.target:GetPosition()
+            if position and target then
+                DrawLinePop(position, target, self.StateColor)
+            end
+        end
     },
 
     SupportUnit = State {
 
         StateName = 'SupportUnit',
+        StateColor = 'FFC400',
 
         --- The platoon searches for a target
         ---@param self AIPlatoonLandScoutBehavior
@@ -272,6 +286,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.DecideWhatToDo)
                     end
                     supportPos = builderData.SupportPlatoon:GetPlatoonPosition()
+                    self.supportpos = builderData.SupportPlatoon:GetPlatoonPosition()
                 elseif builderData.ScoutType == 'AssistUnit' then
                     if IsDestroyed(builderData.SupportUnit) then
                         self.BuilderData = {}
@@ -279,11 +294,18 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.DecideWhatToDo)
                     end
                     supportPos = builderData.SupportUnit:GetPosition()
+                    self.supportpos = builderData.SupportUnit:GetPosition()
                 end
                 --RNGLOG('Move to support platoon position')
-                if VDist3Sq(supportPos, scout:GetPosition()) > 36 then
+                if not supportPos then
+                    coroutine.yield(20)
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
+                local scoutPos = scout:GetPosition()
+                if VDist3Sq(supportPos, scoutPos) > 36 then
                     IssueClearCommands(GetPlatoonUnits(self))
-                    self:MoveToLocation(RUtils.AvoidLocation(supportPos, scout:GetPosition(), 4), false)
+                    self:MoveToLocation(RUtils.AvoidLocation(supportPos, scoutPos, 4), false)
                 end
                 coroutine.yield(20)
             end
@@ -291,11 +313,20 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
+
+        Visualize = function(self)
+            local position = self:GetPlatoonPosition()
+            local target = self.supportpos
+            if position and target then
+                DrawLinePop(position, target, self.StateColor)
+            end
+        end
     },
 
     HoldPosition = State {
 
         StateName = 'HoldPosition',
+        StateColor = "FF00D4",
 
         --- The platoon searches for a target
         ---@param self AIPlatoonLandScoutBehavior
@@ -306,9 +337,14 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             if IsDestroyed(self) then
                 return
             end
-            LOG('Scout support unit')
+            LOG('Scout hold position')
             local builderData = self.BuilderData
-            local holdPos = builderData.ScoutPosition
+            local holdPos = builderData.ScoutPosition or builderData.ZonePosition
+            if holdPos then
+                self.holdpos = holdPos
+            else
+                LOG('No hold position, builderData '..repr(builderData))
+            end
             while not IsDestroyed(self) do
                 coroutine.yield(1)
                 LOG('Scout is holding position at '..repr(holdPos))
@@ -327,6 +363,14 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
+
+        Visualize = function(self)
+            local position = self:GetPlatoonPosition()
+            local target = self.holdpos
+            if position and target then
+                DrawLinePop(position, target, self.StateColor)
+            end
+        end
     },
 
     Transporting = State {
@@ -359,6 +403,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
     Navigating = State {
 
         StateName = "Navigating",
+        StateColor = 'ffffff',
 
         --- The platoon retreats from a threat
         ---@param self AIPlatoonLandScoutBehavior
@@ -382,6 +427,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     return
                 end
                 destination = builderData.SupportUnit:GetPosition()
+                self.destination = builderData.SupportUnit:GetPosition()
             elseif builderData.SupportPlatoon then
                 if builderData.SupportUnit.Dead then
                     self:LogDebug(string.format('Scout support unit died, look for another'))
@@ -389,10 +435,13 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     return
                 end
                 destination = builderData.SupportPlatoon:GetPlatoonPosition()
+                self.destination = builderData.SupportPlatoon:GetPlatoonPosition()
             elseif builderData.ScoutPosition then
                 destination = builderData.ScoutPosition
-            elseif scoutType == 'ZoneLocation' and builderData.Position then
-                destination = builderData.Position
+                self.destination = builderData.ScoutPosition
+            elseif scoutType == 'ZoneLocation' and builderData.ZonePosition then
+                destination = builderData.ZonePosition
+                self.destination = builderData.ZonePosition
             end
             if not destination then
                 coroutine.yield(10)
@@ -409,7 +458,6 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
-            LOG('Scout navigating')
             local pathNodesCount = RNGGETN(path)
             for i=1, pathNodesCount do
                 local distEnd = false
@@ -419,10 +467,10 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                 self:MoveToLocation(path[i], false)
                 while PlatoonExists(aiBrain, self) do
                     coroutine.yield(25)
-                    if self.Dead then
+                    platPos = self:GetPlatoonPosition()
+                    if self.Dead or not platPos then
                         return
                     end
-                    platPos = self:GetPlatoonPosition()
                     local px = path[i][1] - platPos[1]
                     local pz = path[i][3] - platPos[3]
                     dist = px * px + pz * pz
@@ -464,11 +512,21 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
+
+        Visualize = function(self)
+            local position = self:GetPlatoonPosition()
+            local target = self.destination
+            if position and target then
+                DrawLinePop(position, target, self.StateColor)
+            end
+        end
+
     },
 
     Retreating = State {
 
         StateName = "Retreating",
+        StateColor = "FF00D4",
 
         --- The platoon retreats from a threat
         ---@param self AIPlatoonLandScoutBehavior
@@ -487,16 +545,23 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             local platUnits = self:GetPlatoonUnits()
             local platPos = self:GetPlatoonPosition()
             IssueClearCommands(platUnits)
-            self:MoveToLocation(RUtils.AvoidLocation(builderData.Position, platPos, self.IntelRange), false)
+            self:MoveToLocation(RUtils.AvoidLocation(builderData.Position, platPos, self.IntelRange - 2), false)
             coroutine.yield(20)
             if builderData.RetreatFrom and not builderData.RetreatFrom.Dead then
                 if IsDestroyed(self) then
                     return
                 end
                 local enemyUnitRange = StateUtils.GetUnitMaxWeaponRange(builderData.RetreatFrom, 'Direct Fire') or 0
-                local avoidRange = math.max(enemyUnitRange, self.IntelRange)
-                local enemyUnit = builderData.RetreatFrom
+                local avoidRange = math.max(enemyUnitRange + 2, self.IntelRange - 2)
                 while not self.Dead do
+                    if builderData.RetreatFrom then
+                        self.retreatTarget = builderData.RetreatFrom
+                    end
+                    if not builderData.RetreatFrom or builderData.RetreatFrom.Dead then
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
+                    local enemyUnit = builderData.RetreatFrom
                     local enemyPos = enemyUnit:GetPosition()
                     platPos = self:GetPlatoonPosition()
                     if not platPos then
@@ -508,7 +573,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     if enemyDistance < avoidRange * avoidRange then
                         IssueClearCommands(platUnits)
                         self:MoveToLocation(RUtils.AvoidLocation(enemyPos, platPos, avoidRange), false)
-                    elseif enemyDistance > (avoidRange * avoidRange) * 2 then
+                    elseif enemyDistance > (avoidRange * avoidRange) * 1.5 then
                         if self.BuilderData.ScoutType == 'AssistPlatoon' and not self.BuilderData.SupportPlatoon.Dead then
                             self:ChangeState(self.SupportUnit)
                             return
@@ -539,6 +604,14 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
+
+        Visualize = function(self)
+            local position = self:GetPlatoonPosition()
+            local target = self.retreatTarget:GetPosition()
+            if position and target then
+                DrawLinePop(position, target, self.StateColor)
+            end
+        end
     },
 
 }
@@ -596,6 +669,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         if not platoon.MaxWeaponRange then 
             platoon.MaxWeaponRange=19
         end
+        platoon:OnUnitsAddedToPlatoon()
         -- start the behavior
         ChangeState(platoon, platoon.Start)
     end
@@ -639,6 +713,25 @@ LandScoutThreatThread = function(aiBrain, platoon)
                     platoon:ChangeState(platoon.Retreating)
                     coroutine.yield(10)
                     break
+                elseif platoon.StateName == 'Retreating' and not v.Dead then
+                    local unitPos = v:GetPosition()
+                    local rx = platPos[1] - unitPos[1]
+                    local rz = platPos[3] - unitPos[3]
+                    local enemyDistance = rx * rx + rz * rz
+                    if platoon.BuilderData.RetreatFrom and not platoon.BuilderData.RetreatFrom.Dead then
+                        local cx = platPos[1] - unitPos[1]
+                        local cz = platPos[3] - unitPos[3]
+                        local oldEnemyDistance = cx * cx + cz * cz
+                        if enemyDistance < oldEnemyDistance then
+                            platoon.BuilderData = {
+                                Position = unitPos,
+                                RetreatFrom = v
+                            }
+                            coroutine.yield(2)
+                            break
+                        end
+                    end
+                    coroutine.yield(1)
                 end
             end
             if unitToAttack and not IsDestroyed(unitToAttack) then

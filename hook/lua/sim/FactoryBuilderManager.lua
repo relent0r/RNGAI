@@ -386,6 +386,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                         table.insert(queue, 'T1LandScout')
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1BuildEngineer')
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1LandScout')
                     else
@@ -393,6 +394,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                         table.insert(queue, 'T1LandScout')
                         table.insert(queue, 'T1LandDFBot')
                         table.insert(queue, 'T1LandScout')
+                        table.insert(queue, 'T1BuildEngineer')
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1LandScout')
                     end
@@ -449,6 +451,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1LandScout')
                         table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1BuildEngineer')
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1LandScout')
                         table.insert(queue, 'T1LandDFTank')
@@ -458,6 +461,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                         table.insert(queue, 'T1LandDFBot')
                         table.insert(queue, 'T1LandScout')
                         table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1BuildEngineer')
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1LandScout')
                         table.insert(queue, 'T1LandDFTank')

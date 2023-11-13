@@ -557,7 +557,7 @@ function CDRCallPlatoon(cdr, threatRequired)
         if aPlat == cdr.PlatoonHandle or aPlat == supportPlatoonAvailable then
             continue
         end
-        if aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' or aPlat.PlanName == 'GuardMarkerRNG' 
+        if aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' 
         or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlanName == 'ZoneControlRNG' then
             if aPlat.UsingTransport then
                 continue

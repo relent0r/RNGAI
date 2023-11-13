@@ -381,7 +381,8 @@ IntelManager = Class {
         end
     end,
 
-    GetClosestZone = function(self, aiBrain, platoon, enemyPosition)
+    GetClosestZone = function(self, aiBrain, platoon, controlRequired)
+        local control = 1
         if PlatoonExists(aiBrain, platoon) then
             local zoneSet = false
             if aiBrain.ZonesInitialized then
@@ -395,10 +396,13 @@ IntelManager = Class {
                 local bestZoneDist
                 local bestZone
                 for k, v in zoneSet do
+                    if controlRequired then
+                        control = v.control
+                    end
                     local dx = platoonPosition[1] - v.pos[1]
                     local dz = platoonPosition[3] - v.pos[3]
                     local zoneDist = dx * dx + dz * dz
-                    if not bestZoneDist or zoneDist < bestZoneDist then
+                    if (not bestZoneDist or zoneDist < bestZoneDist) and control >= 1 and NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition, v.pos) then
                         bestZoneDist = zoneDist
                         bestZone = v.id
                     end
@@ -417,9 +421,9 @@ IntelManager = Class {
         --A multiplier to adjacent edges if you would. We know how many and of what tier extractors we have in a zone. Actually getting an engineer to expand by zone would be interesting.
        --RNGLOG('RNGAI : Zone Selection Query Received for '..platoon.BuilderName)
         if PlatoonExists(aiBrain, platoon) then
-            local zoneSet = false
+            local zoneSet
             local zoneSelection = 999
-            local selection = false
+            local selection
             local enemyMexmodifier = 0.1
             local enemyDanger = 1.0
             local enemyX, enemyZ
@@ -442,6 +446,8 @@ IntelManager = Class {
                     WARN('No zoneSet returns, validate MovementLayer which is '..platoon.MovementLayer)
                     WARN('BuilderName is '..platoon.BuilderName)
                     WARN('Plan is '..platoon.PlanName)
+                    coroutine.yield(20)
+                    return false
                 end
 
                 if type == 'raid' then
@@ -612,6 +618,62 @@ IntelManager = Class {
                         return zoneSelection
                     else
                        --RNGLOG('RNGAI : Zone Control Selection Query did not select zone')
+                    end
+                elseif type == 'aadefense' then
+                    local compare = 0
+                   --RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
+                    for k, v in aiBrain.Zones.Land.zones do
+                        local distanceModifier = VDist3(aiBrain.Zones.Land.zones[v.id].pos,aiBrain.BrainIntel.StartPos)
+                        local enemyModifier = 1
+                        local startPos = 1
+                        if zoneSet[v.id].enemyantiairthreat > 0 then
+                            enemyModifier = enemyModifier + 2
+                        end
+                        if zoneSet[v.id].friendlythreat > 0 then
+                            if zoneSet[v.id].enemylandthreat == 0 or zoneSet[v.id].enemylandthreat < zoneSet[v.id].friendlythreat then
+                                enemyModifier = enemyModifier - 1
+                            else
+                                enemyModifier = enemyModifier + 0.5
+                            end
+                        end
+                        if enemyModifier < 0 then
+                            enemyModifier = 1.0
+                        end
+                        local controlValue = zoneSet[v.id].control
+                        if controlValue <= 0 then
+                            controlValue = 0.5
+                        end
+                        local resourceValue = zoneSet[v.id].resourcevalue or 1
+                        if zoneSet[v.id].startpositionclose then
+                            startPos = 0.7
+                        end
+                        if zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlythreat then
+                            enemyDanger = 0.4
+                        end
+                       --[[ if aiBrain.RNGDEBUG then
+                            if distanceModifier and resourceValue and controlValue and enemyModifier then
+                                RNGLOG('distanceModifier '..distanceModifier)
+                                RNGLOG('resourceValue '..resourceValue)
+                                RNGLOG('controlValue '..controlValue)
+                                RNGLOG('enemyModifier '..enemyModifier)
+                            end
+                        end]]
+                        compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger
+                        if aiBrain.RNGDEBUG and compare then
+                            --RNGLOG('Compare variable '..compare)
+                        end
+                        if compare > 0 then
+                            if not selection or compare > selection then
+                                selection = compare
+                                zoneSelection = v.id
+                               --RNGLOG('Zone Control Query Select priority '..selection)
+                            end
+                        end
+                    end
+                    if selection then
+                        return zoneSelection
+                    else
+                       RNGLOG('RNGAI : Zone Control Defense Selection Query did not select zone')
                     end
                 end
             else
@@ -895,8 +957,8 @@ IntelManager = Class {
             local mustScoutPresent = false
             local perimeterExpired = false
             for i=self.MapIntelGridXMin, self.MapIntelGridXMax do
+                local time = GetGameTimeSeconds()
                 for k=self.MapIntelGridZMin, self.MapIntelGridZMax do
-                    local time = GetGameTimeSeconds()
                     if self.MapIntelGrid[i][k].MustScout and (not self.MapIntelGrid[i][k].ScoutAssigned or self.MapIntelGrid[i][k].ScoutAssigned.Dead) then
                         --RNGLOG('mustScoutPresent in '..i..k)
                         --RNGLOG(repr(self.MapIntelGrid[i][k]))
