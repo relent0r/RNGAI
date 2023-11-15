@@ -5,9 +5,12 @@ local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local TransportUtils = import("/lua/ai/transportutilities.lua")
+local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
+local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
+local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 
 local Random = Random
 local IsDestroyed = IsDestroyed
@@ -92,6 +95,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local aiBrain = self:GetBrain()
             if not PlatoonExists(aiBrain, self) then
+                self:LogDebug(string.format('DecideWhatToDo platoon doesnt exist'))
                 return
             end
             local platPos = self:GetPlatoonPosition()
@@ -109,6 +113,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         if not self.BuilderData.Position then
                             LOG('No self.BuilderData.Position in DecideWhatToDo suicide')
                         end
+                        self:LogDebug(string.format('DecideWhatToDo acu needs help navigating'))
                         self:ChangeState(self.Navigating)
                         return
                     else
@@ -119,8 +124,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             self:ChangeState(self.CombatLoop)
                             return
                         end
-                        self:ChangeState(self.CombatLoop)
-                        return
                     end
                 end
             end
@@ -156,7 +159,27 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local targetZone
             if not target then
                 -- look for main base attacks?
-                target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
+                local targetThreat
+                local basePosition
+                if aiBrain.BuilderManagers['MAIN'].FactoryManager.LocationActive then
+                    basePosition = aiBrain.BuilderManagers['MAIN'].Position
+                    targetThreat = GetThreatAtPosition(aiBrain, aiBrain.BuilderManagers['MAIN'].Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Air')
+                end
+                if targetThreat > 10 and basePosition and NavUtils.CanPathTo(self.MovementLayer, self.Pos, basePosition) then
+                    local targetZone = MAP:GetZoneID(basePosition,self.Zones.Land.index)
+                    self.BuilderData = {
+                        TargetZone = targetZone,
+                        Position = basePosition,
+                        CutOff = 400
+                    }
+                    self:LogDebug(string.format('TargetZone is MAIN'..repr(self.BuilderData)))
+                    if not self.BuilderData.Position then
+                        self:LogDebug(string.format('No self.BuilderData.Position in DecideWhatToDo targetzone'))
+                    end
+                    self:LogDebug(string.format('DecideWhatToDo target zone navigate'))
+                    self:ChangeState(self.Navigating)
+                    return
+                end
             end
             if not targetZone then
                 targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType)
@@ -175,12 +198,17 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
+            coroutine.yield(30)
+            self:LogDebug(string.format('DecideWhatToDo ending, repeat'))
+            self:ChangeState(self.DecideWhatToDo)
+            return
         end,
     },
 
     CombatLoop = State {
 
         StateName = 'CombatLoop',
+        StateColor = 'ff0000',
 
         --- The platoon searches for a target
         ---@param self AIPlatoonLandCombatBehavior
@@ -218,6 +246,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if target then
+                        self.target = target
                         if not v.Sniper and VDist3Sq(unitPos,target:GetPosition())>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
                             if not approxThreat then
                                 approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius)
@@ -236,6 +265,14 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
+
+        Visualize = function(self)
+            local position = self:GetPlatoonPosition()
+            local target = self.target
+            if position and target then
+                DrawLinePop(position, target:GetPosition(), self.StateColor)
+            end
+        end
     },
 
     Retreating = State {
@@ -247,7 +284,12 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local aiBrain = self:GetBrain()
             local location = false
-            local target = StateUtils.GetClosestUnitRNG(aiBrain, self, self.Pos, (categories.MOBILE + categories.STRUCTURE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, 128, 'Enemy')
+            local target
+            if not self.BuilderData.RetreatTarget or self.BuilderData.RetreatTarget.Dead then
+                target = StateUtils.GetClosestUnitRNG(aiBrain, self, self.Pos, (categories.MOBILE + categories.STRUCTURE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, 128, 'Enemy')
+            else
+                target = self.BuilderData.RetreatTarget
+            end
             if target and not target.Dead then
                 local targetRange = StateUtils.GetUnitMaxWeaponRange(target)
                 if targetRange then
@@ -277,9 +319,18 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     Position = self.Home,
                     CutOff = 400
                 }
-                LOG('No self.BuilderData.Position in retreat')
+                self:LogDebug(string.format('No self.BuilderData.Position in retreat'))
             end
-            --LOG('Retreating to platoon')
+            local rx = self.Pos[1] - self.BuilderData.Position[1]
+            local rz = self.Pos[3] - self.BuilderData.Position[3]
+            if rx * rx + rz * rz < 14400 then
+                self:MoveToLocation(self.BuilderData.Position, false)
+                coroutine.yield(25)
+                self:LogDebug(string.format('Already closes to retreat position '..repr(self.BuilderData.Position)))
+                self:ChangeState(self.DecideWhatToDo)
+                return
+            end
+            self:LogDebug(string.format('retreating to position '..repr(self.BuilderData.Position)))
             self:ChangeState(self.Navigating)
             return
         end,
@@ -543,7 +594,9 @@ AssignToUnitsMachine = function(data, platoon, units)
                         end
                     elseif EntityCategoryContains(categories.SCOUT,v) then
                         v.Role='Scout'
-                        platoon.ScoutUnit = v
+                        if not platoon.ScoutUnit or platoon.ScoutUnit.Dead then
+                            platoon.ScoutUnit = v
+                        end
                     elseif EntityCategoryContains(categories.ANTIAIR,v) then
                         v.Role='AA'
                     elseif EntityCategoryContains(categories.DIRECTFIRE,v) then
@@ -552,6 +605,11 @@ AssignToUnitsMachine = function(data, platoon, units)
                         v.Role='Shield'
                     end
                     for _, weapon in v.Blueprint.Weapon or {} do
+                        if weapon.RangeCategory == 'UWRC_AntiAir' then
+                            if not v.MaxWeaponRange or v.MaxRadius > v.MaxWeaponRange then
+                                v.MaxWeaponRange = weapon.MaxRadius * 0.7
+                            end
+                        end
                         if not (weapon.RangeCategory == 'UWRC_DirectFire') then continue end
                         if not v.MaxWeaponRange or v.MaxRadius > v.MaxWeaponRange then
                             v.MaxWeaponRange = weapon.MaxRadius * 0.9
@@ -591,6 +649,7 @@ end
 ---@param units Unit[]
 StartZoneControlDefenseThreads = function(brain, platoon)
     brain:ForkThread(ZoneControlPositionThread, platoon)
+    brain:ForkThread(ZoneControlThreatThread, platoon)
     brain:ForkThread(StateUtils.ZoneUpdate, platoon)
 end
 
@@ -605,5 +664,37 @@ ZoneControlPositionThread = function(aiBrain, platoon)
             platoon.Pos=GetPlatoonPosition(platoon)
         end
         coroutine.yield(5)
+    end
+end
+
+---@param aiBrain AIBrain
+---@param platoon AIPlatoon
+ZoneControlThreatThread = function(aiBrain, platoon)
+    while aiBrain:PlatoonExists(platoon) do
+        coroutine.yield(15)
+        if platoon.Pos then
+            local targetThreat = GetThreatAtPosition(aiBrain, platoon.Pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+            if targetThreat > 0 then
+                local target = platoon:FindClosestUnit('Attack', 'Enemy', true, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE - categories.INSIGNIFICANTUNIT))
+                if target and not target.Dead then
+                    local closestTarget
+                    local targetRange = RUtils.GetTargetRange(target)
+                    local targetPos = target:GetPosition()
+                    local rx = platoon.Pos[1] - targetPos[1]
+                    local rz = platoon.Pos[3] - targetPos[3]
+                    local tmpDistance = rx * rx + rz * rz
+                    if tmpDistance < math.max(2025, targetRange * targetRange) then
+                        platoon:LogDebug(string.format('ZoneControlThreatThread found close threat, retreating'))
+                        platoon.retreat=true
+                        platoon.BuilderData = { RetreatTarget = target }
+                        platoon:ChangeState(platoon.Retreating)
+                        return
+                    end
+                end
+            end
+        else
+            WARN('*AI DEBUG: zonecontrol defense state machine has no position')
+        end
+        coroutine.yield(15)
     end
 end

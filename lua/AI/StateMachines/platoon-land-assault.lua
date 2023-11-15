@@ -499,7 +499,9 @@ AssignToUnitsMachine = function(data, platoon, units)
                     unit:SetScriptBit('RULEUTC_CloakToggle', false)
                 end
                 if unit.Blueprint.CategoriesHash.SCOUT then
-                    platoon.ScoutUnit = unit
+                    if not platoon.ScoutUnit or platoon.ScoutUnit.Dead then
+                        platoon.ScoutUnit = unit
+                    end
                 end
             end
         end

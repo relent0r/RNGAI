@@ -778,7 +778,6 @@ BuilderGroup {
         BuilderData = {
             StateMachine = 'ZoneControlDefense',
             ZoneType     = 'aadefense',
-            UseFormation = 'None',
             LocationType = 'LocationType',
             TargetSearchPriorities = {
                 categories.AIR

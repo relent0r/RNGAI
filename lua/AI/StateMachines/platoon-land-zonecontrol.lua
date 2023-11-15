@@ -578,7 +578,9 @@ AssignToUnitsMachine = function(data, platoon, units)
                         end
                     elseif EntityCategoryContains(categories.SCOUT,v) then
                         v.Role='Scout'
-                        platoon.ScoutUnit = v
+                        if not platoon.ScoutUnit or platoon.ScoutUnit.Dead then
+                            platoon.ScoutUnit = v
+                        end
                     elseif EntityCategoryContains(categories.ANTIAIR,v) then
                         v.Role='AA'
                     elseif EntityCategoryContains(categories.DIRECTFIRE,v) then
