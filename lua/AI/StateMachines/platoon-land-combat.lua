@@ -93,6 +93,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             Position = aiBrain.BrainIntel.SuicideModeTarget:GetPosition(),
                             CutOff = 400
                         }
+                        self.dest = self.BuilderData.Position
                         self:ChangeState(self.Navigating)
                         return
                     else
@@ -130,6 +131,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                     CutOff = 400,
                                 }
                                 --LOG('Retreating to platoon')
+                                self.dest = self.BuilderData.Position
                                 self:ChangeState(self.Navigating)
                                 return
                             end
@@ -203,6 +205,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                                 Position = point.Position,
                                                 CutOff = 400,
                                             }
+                                            self.dest = self.BuilderData.Position
                                             --LOG('Retreating to platoon')
                                             self:ChangeState(self.Navigating)
                                             return
@@ -481,6 +484,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 local supportsquad={}
                 local scouts={}
                 local aa={}
+                local attack={}
                 for _,v in platoonUnits do
                     if v and not v.Dead then
                         if v.Role=='Artillery' or v.Role=='Silo' or v.Role=='Sniper' or v.Role=='Shield' then
@@ -489,6 +493,8 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             RNGINSERT(scouts,v)
                         elseif v.Role=='AA' then
                             RNGINSERT(aa,v)
+                        else
+                            RNGINSERT(attack,v)
                         end
                     end
                 end
@@ -499,14 +505,14 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 if self.path then
                     nodenum=RNGGETN(self.path)
                     if nodenum>=3 then
-                        --RNGLOG('self.path[3] '..repr(self.path[3]))
+                        self:LogDebug(string.format('nodenum while pathing >= 3 will spreadmove '..nodenum))
                         self.dest={self.path[3][1]+math.random(-4,4),self.path[3][2],self.path[3][3]+math.random(-4,4)}
-                        self:MoveToLocation(self.dest,false)
-                        IssueClearCommands(supportsquad)
+                        IssueMove(attack, self.dest)
                         StateUtils.SpreadMove(supportsquad,StateUtils.Midpoint(self.path[1],self.path[2],0.2))
                         StateUtils.SpreadMove(scouts,StateUtils.Midpoint(self.path[1],self.path[2],0.15))
                         StateUtils.SpreadMove(aa,StateUtils.Midpoint(self.path[1],self.path[2],0.1))
                     else
+                        self:LogDebug(string.format('Platoon move towards end of path '))
                         self.dest={self.path[nodenum][1]+math.random(-4,4),self.path[nodenum][2],self.path[nodenum][3]+math.random(-4,4)}
                         self:MoveToLocation(self.dest,false)
                     end

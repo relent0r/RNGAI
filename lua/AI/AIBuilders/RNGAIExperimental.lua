@@ -36,7 +36,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         PriorityFunction = ExperimentalDelayWaterMap,
         Priority = 910,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
@@ -65,7 +65,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Experimental1 MultiBuild',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 500,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
@@ -95,7 +95,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Experimental1 Excess',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 300,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 3,
         BuilderConditions = {
             { UCBC, 'ValidateLateGameBuild', { }},
@@ -125,7 +125,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Experimental1 Megabot',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 500,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
@@ -156,7 +156,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Experimental1 Air',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 550,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
@@ -186,7 +186,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Experimental1 Sea',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 500,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
@@ -217,7 +217,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 700,
         InstanceCount = 1,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { UCBC, 'ValidateLateGameBuild', { }},
@@ -251,7 +251,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 800,
         PriorityFunction = ExperimentalDelayWaterMap,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
@@ -282,7 +282,7 @@ BuilderGroup {
         BuilderName = 'RNGEXP Experimental1 MultiBuild',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 500,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
@@ -313,7 +313,7 @@ BuilderGroup {
         BuilderName = 'RNGEXP Experimental1 Excess',
         PlatoonTemplate = 'T3EngineerBuilderRNG',
         Priority = 300,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 3,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
@@ -343,7 +343,7 @@ BuilderGroup {
         BuilderName = 'RNGEXP Experimental1 Megabot',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 500,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
@@ -374,7 +374,7 @@ BuilderGroup {
         BuilderName = 'RNGEXP Experimental1 Air',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 550,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
@@ -403,7 +403,7 @@ BuilderGroup {
         BuilderName = 'RNGEXP Experimental1 Sea',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 500,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
@@ -433,7 +433,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 700,
         InstanceCount = 1,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             -- Have we the eco to build it ?

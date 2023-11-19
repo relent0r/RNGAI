@@ -1879,7 +1879,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                 return retUnit
             end
         end
-        coroutine.yield(2)
+        coroutine.yield(1)
     end
     return false
 end

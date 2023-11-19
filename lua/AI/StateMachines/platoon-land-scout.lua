@@ -93,9 +93,9 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                 local massPoints = aiBrain.GridDeposits:GetResourcesWithinDistance('Mass', scoutPos, 180, self.MovementLayer)
                 if not table.empty(massPoints) then
                     local enemyPos = self.BuilderData.RetreatFrom:GetPosition()
-                    LOG('We can retreat to mass markers')
+                    --LOG('We can retreat to mass markers')
                     for _, v in massPoints do
-                        LOG('Angle is '..repr(RUtils.GetAngleRNG(scoutPos[1], scoutPos[3], v.Position[1], v.Position[3], enemyPos[1], enemyPos[3])))
+                        --LOG('Angle is '..repr(RUtils.GetAngleRNG(scoutPos[1], scoutPos[3], v.Position[1], v.Position[3], enemyPos[1], enemyPos[3])))
                         if RUtils.GetAngleRNG(scoutPos[1], scoutPos[3], v.Position[1], v.Position[3], enemyPos[1], enemyPos[3]) > 0.6 
                            and NavUtils.CanPathTo(self.MovementLayer, scoutPos, v.Position) then
                             local rx = scoutPos[1] - v.Position[1]
@@ -104,14 +104,14 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                                 self.BuilderData = {
                                     ScoutPosition = v.Position
                                 }
-                                LOG('Scout Find Masspoint to retreat to SupportUnit')
+                                --LOG('Scout Find Masspoint to retreat to SupportUnit')
                                 self:ChangeState(self.Navigating)
                                 return
                             else
                                 self:MoveToLocation(v.Position, false)
                                 coroutine.yield(40)
                                 self.BuilderData = {}
-                                LOG('Scout Find Masspoint failed DecideWhatToDo')
+                                --LOG('Scout Find Masspoint failed DecideWhatToDo')
                                 self:ChangeState(self.DecideWhatToDo)
                                 return
                             end
@@ -132,11 +132,11 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         local rx = scoutPos[1] - supportUnitPos[1]
                         local rz = scoutPos[3] - supportUnitPos[3]
                         if rx * rx + rz * rz > 4225 then
-                            LOG('Scout SupportUnit Navigating')
+                            --LOG('Scout SupportUnit Navigating')
                             self:ChangeState(self.Navigating)
                             return
                         else
-                            LOG('Scout SupportUnit SupportUnit')
+                            --LOG('Scout SupportUnit SupportUnit')
                             self:ChangeState(self.SupportUnit)
                             return
                         end
@@ -154,11 +154,11 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                             local rx = scoutPos[1] - platPos[1]
                             local rz = scoutPos[3] - platPos[3]
                             if rx * rx + rz * rz > 4225 then
-                                LOG('Scout AssistPlatoon Navigating')
+                                --LOG('Scout AssistPlatoon Navigating')
                                 self:ChangeState(self.Navigating)
                                 return
                             else
-                                LOG('Scout AssistPlatoon SupportUnit')
+                                --LOG('Scout AssistPlatoon SupportUnit')
                                 self:ChangeState(self.SupportUnit)
                                 return
                             end
@@ -176,11 +176,11 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         local rx = scoutPos[1] - targetData.Position[1]
                         local rz = scoutPos[3] - targetData.Position[3]
                         if rx * rx + rz * rz > 4225 then
-                            LOG('Scout ZoneLocation Navigating')
+                            --LOG('Scout ZoneLocation Navigating')
                             self:ChangeState(self.Navigating)
                             return
                         else
-                            LOG('Scout ZoneLocation HoldPosition')
+                            --LOG('Scout ZoneLocation HoldPosition')
                             self:ChangeState(self.HoldPosition)
                             return
                         end
@@ -197,23 +197,23 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     local rx = scoutPos[1] - targetData.Position[1]
                     local rz = scoutPos[3] - targetData.Position[3]
                     if rx * rx + rz * rz > 4225 then
-                        LOG('Scout TargetData Navigating')
+                        --LOG('Scout TargetData Navigating')
                         self:ChangeState(self.Navigating)
                         return
                     else
-                        LOG('Scout TargetData Holdposition')
+                        --LOG('Scout TargetData Holdposition')
                         self:ChangeState(self.HoldPosition)
                         return
                     end
                 else
-                    LOG('Scout Has no path to targetData location')
+                    --LOG('Scout Has no path to targetData location')
                     coroutine.yield(50)
                 end
             else
-                LOG('No Scout targetData returned')
+                --LOG('No Scout targetData returned')
             end
             coroutine.yield(5)
-            LOG('Scout nothing to do in DecideWhatToDo')
+            --LOG('Scout nothing to do in DecideWhatToDo')
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -233,7 +233,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             if IsDestroyed(self) then
                 return
             end
-            LOG('Scout combat loop')
+            --LOG('Scout combat loop')
             local target = self.BuilderData.AttackTarget
             if target then
                 self.target = target
@@ -274,7 +274,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             if IsDestroyed(self) then
                 return
             end
-            LOG('Scout support unit')
+            --LOG('Scout support unit')
             local builderData = self.BuilderData
             local supportPos
             while not IsDestroyed(self) do
@@ -337,17 +337,17 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             if IsDestroyed(self) then
                 return
             end
-            LOG('Scout hold position')
+            --LOG('Scout hold position')
             local builderData = self.BuilderData
             local holdPos = builderData.ScoutPosition or builderData.ZonePosition
             if holdPos then
                 self.holdpos = holdPos
             else
-                LOG('No hold position, builderData '..repr(builderData))
+                --LOG('No hold position, builderData '..repr(builderData))
             end
             while not IsDestroyed(self) do
                 coroutine.yield(1)
-                LOG('Scout is holding position at '..repr(holdPos))
+                --LOG('Scout is holding position at '..repr(holdPos))
                 if VDist3Sq(holdPos, scout:GetPosition()) > 36 then
                     IssueClearCommands(GetPlatoonUnits(self))
                     self:MoveToLocation(holdPos, false)
@@ -380,7 +380,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
         --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
         ---@param self AIPlatoonLandScoutBehavior
         Main = function(self)
-            LOG('LandCombat trying to use transport')
+            --LOG('LandCombat trying to use transport')
             local brain = self:GetBrain()
             if not self.dest then
                 WARN('No position passed to LandAssault')
@@ -452,7 +452,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             local path, reason = NavUtils.PathToWithThreatThreshold(self.MovementLayer, platPos, destination, aiBrain, NavUtils.ThreatFunctions.AntiSurface, 1000, aiBrain.BrainIntel.IMAPConfig.Rings)
             if not path then
                 self.BuilderData = {}
-                LOG('No Path in scout navigation, reason is '..repr(reason))
+                --LOG('No Path in scout navigation, reason is '..repr(reason))
                 coroutine.yield(10)
                 self:LogDebug(string.format('Scout had no path in navigation'))
                 self:ChangeState(self.DecideWhatToDo)
@@ -507,7 +507,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            LOG('Scout exiting navigating')
+            --LOG('Scout exiting navigating')
             self:LogDebug(string.format('Scout exiting navigating'))
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -541,7 +541,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             if IsDestroyed(self) then
                 return
             end
-            LOG('Scout retreating')
+            --LOG('Scout retreating')
             local platUnits = self:GetPlatoonUnits()
             local platPos = self:GetPlatoonPosition()
             IssueClearCommands(platUnits)

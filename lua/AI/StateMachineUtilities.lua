@@ -75,26 +75,6 @@ SimpleTarget = function(platoon,aiBrain,guardee)--find enemies in a range and at
     return false
 end
 
-SpreadMove = function(unitgroup,location)
-    local num=RNGGETN(unitgroup)
-    if num==0 then return end
-    local sum={0,0,0}
-    for i,v in unitgroup do
-        if not v or v.Dead then
-            continue
-        end
-        local pos = v:GetPosition()
-        for k,v in sum do
-            sum[k]=sum[k] + pos[k]/num
-        end
-    end
-    local loc1=crossp(sum,location,-num/VDist3(sum,location))
-    local loc2=crossp(sum,location,num/VDist3(sum,location))
-    for i,v in unitgroup do
-        IssueMove({v},midpoint(loc1,loc2,i/num))
-    end
-end
-
 SimplePriority = function(self,aiBrain)--use the aibrain priority table to do things
     local VDist2Sq = VDist2Sq
     local RNGMAX = math.max
@@ -238,15 +218,15 @@ SpreadMove = function(unitgroup,location)
     if num==0 then return end
     local sum={0,0,0}
     for i,v in unitgroup do
-        if not v.Dead then
+        if v and not v.Dead then
             local pos = v:GetPosition()
             for k,v in sum do
                 sum[k]=sum[k] + pos[k]/num
             end
         end
     end
-    local loc1=Crossp(sum,location,-num/VDist3(sum,location))
-    local loc2=Crossp(sum,location,num/VDist3(sum,location))
+    local loc1=CrossP(sum,location,-num/VDist3(sum,location))
+    local loc2=CrossP(sum,location,num/VDist3(sum,location))
     for i,v in unitgroup do
         IssueMove({v},Midpoint(loc1,loc2,i/num))
     end
@@ -260,13 +240,6 @@ Midpoint = function(vec1,vec2,ratio)
         end
     end
     return vec3
-end
-
-Crossp = function(vec1,vec2,n)
-    local z = vec2[3] + n * (vec2[1] - vec1[1])
-    local y = vec2[2] - n * (vec2[2] - vec1[2])
-    local x = vec2[1] - n * (vec2[3] - vec1[3])
-    return {x,y,z}
 end
 
 GetAngleCCW = function(base, direction)
@@ -299,6 +272,12 @@ end
 
 ExitConditions = function(self,aiBrain)
     if not self.path then
+        return true
+    end
+    if not self.dest then
+        self:LogDebug(string.format('No self.dest in ExitConditions'))
+    end
+    if VDist3Sq(self.dest,self.Pos) < 400 then
         return true
     end
     if VDist3Sq(self.path[RNGGETN(self.path)],self.Pos) < 400 then
@@ -734,8 +713,9 @@ ZoneUpdate = function(aiBrain, platoon)
         LOG(platoon.PlanName)
     end
     while not IsDestroyed(platoon) do
+        local platPos = platoon:GetPlatoonPosition()
         if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
-            SetZone(GetPlatoonPosition(platoon), aiBrain.Zones.Land.index)
+            SetZone(platPos, aiBrain.Zones.Land.index)
         elseif platoon.MovementLayer == 'Water' then
             --SetZone(PlatoonPosition, aiBrain.Zones.Water.index)
         end
@@ -825,6 +805,9 @@ MergeWithNearbyPlatoonsRNG = function(self, stateMachine, radius, maxMergeNumber
             continue
         end
         if aPlat == self then
+            continue
+        end
+        if aPlat.ExcludeFromMerge then
             continue
         end
 

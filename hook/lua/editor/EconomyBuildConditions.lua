@@ -481,7 +481,7 @@ function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)
                 return true
             end
         elseif uType == 'Land' then
-            if GetEconomyStored(aiBrain, 'MASS') >= 5 and GetEconomyStored(aiBrain, 'ENERGY') >= 200 then
+            if GetEconomyStored(aiBrain, 'MASS') >= 5 and GetEconomyStored(aiBrain, 'ENERGY') >= 100 then
                 return true
             end
         else

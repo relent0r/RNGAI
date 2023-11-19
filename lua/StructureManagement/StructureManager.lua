@@ -539,7 +539,7 @@ StructureManager = Class {
             end
         end
         if not t2LandPass and totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 then
-            if GetEconomyStored(self.Brain, 'MASS') >= 1100 and (GetEconomyStored(self.Brain, 'ENERGY') >= 2990 or self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8) then
+            if GetEconomyStored(self.Brain, 'MASS') >= 920 and (GetEconomyStored(self.Brain, 'ENERGY') >= 2990 or self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8) then
                 --RNGLOG('Factory T2 Upgrade HQ Excess Check passed')
                 local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH1')
                 if factoryToUpgrade and not factoryToUpgrade.Dead then

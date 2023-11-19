@@ -11,7 +11,7 @@ BuilderGroup {
         BuilderName = 'RNGAI SML Hi Pri',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 700,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
             
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
@@ -45,7 +45,7 @@ BuilderGroup {
         BuilderName = 'RNGAI SML Low Pri',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 500,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
             
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
@@ -84,7 +84,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T3 Artillery Hi Pri Small',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 600,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { }},
@@ -116,7 +116,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T3 Artillery Lo Pri Small',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 600,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { }},
@@ -148,7 +148,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T4 Mavor Exp Nuke Small',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
@@ -180,7 +180,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T4 RapidFire Small',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
@@ -213,7 +213,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T4 Scathis Small',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
@@ -253,7 +253,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T3 Artillery Hi Pri Large',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 600,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { }},
@@ -285,7 +285,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T3 Artillery Lo Pri Large',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 600,
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', true } },
@@ -317,7 +317,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T4 Mavor Exp Nuke Large',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
@@ -350,7 +350,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T4 RapidFire Large',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {
@@ -383,7 +383,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T4 Scathis Large',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        DelayEqualBuildPlattons = {'HighValue', 10},
+        DelayEqualBuildPlattons = {'HighValue', 20},
         Priority = 650,
         InstanceCount = 1,
         BuilderConditions = {

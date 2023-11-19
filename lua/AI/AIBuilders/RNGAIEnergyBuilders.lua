@@ -166,7 +166,7 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'EnergyT3', 6},
         BuilderConditions = {
-            { EBC, 'NegativeEcoPowerCheck', { 160.0 } },
+            { EBC, 'NegativeEcoPowerCheck', { 180.0 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.1 }},
         },

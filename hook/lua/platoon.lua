@@ -7461,6 +7461,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             if aPlat == self then
                 continue
             end
+            if aPlat.ExcludeFromMerge then
+                continue
+            end
 
             if self.PlatoonData.UnitType and self.PlatoonData.UnitType ~= aPlat.PlatoonData.UnitType then
                 continue

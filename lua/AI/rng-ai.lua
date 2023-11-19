@@ -1076,6 +1076,15 @@ AIBrain = Class(RNGAIBrainClass) {
             DefenseSub = 0,
             ACUGunUpgrades = 0,
         }
+        self.EnemyIntel.EnemyIMAPThreatCurrent = {
+            Air = 0,
+            AntiAir = 0,
+            AirSurface = 0,
+            Experimental = 0,
+            StructuresNotMex = 0,
+            Naval = 0,
+            Land = 0,
+        }
         self.EnemyIntel.CivilianCaptureUnits = {}
         local selfIndex = self:GetArmyIndex()
         for _, v in ArmyBrains do
@@ -3286,40 +3295,6 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
-    
-
-    ACUDetectionRNGOld = function(self, blip)
-        --LOG('ACUDetection Callback has fired')
-        local currentGameTime = GetGameTimeSeconds()
-        if blip then
-            --RNGLOG('* AI-RNG: ACU Detected')
-            local unit = blip:GetSource()
-            if not unit.Dead then
-                --unitDesc = GetBlueprint(v).Description
-                --RNGLOG('* AI-RNG: Units is'..unitDesc)
-                local enemyIndex = unit:GetAIBrain():GetArmyIndex()
-                --RNGLOG('* AI-RNG: EnemyIndex :'..enemyIndex)
-                --RNGLOG('* AI-RNG: Curent Game Time : '..currentGameTime)
-                --RNGLOG('* AI-RNG: Iterating ACUTable')
-                for k, c in self.EnemyIntel.ACU do
-                    --RNGLOG('* AI-RNG: Table Index is : '..k)
-                    --RNGLOG('* AI-RNG:'..c.LastSpotted)
-                    --RNGLOG('* AI-RNG:'..repr(c.Position))
-                    if k == enemyIndex then
-                        --RNGLOG('* AI-RNG: CurrentGameTime IF is true updating tables')
-                        c.Position = unit:GetPosition()
-                        c.HP = unit:GetHealth()
-                        --RNGLOG('Enemy ACU of index '..enemyIndex..' has '..c.HP..' health')
-                        c.Threat = self:GetThreatAtPosition(c.Position, self.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
-                        c.LastSpotted = currentGameTime
-                        c.Unit = unit
-                        --LOG('Enemy ACU Position is set')
-                    end
-                end
-            end
-        end
-    end,
-
     TacticalMonitorThreadRNG = function(self, ALLBPS)
         --RNGLOG('Monitor Tick Count :'..self.TacticalMonitor.TacticalMonitorTime)
         coroutine.yield(Random(2,10))
@@ -3714,10 +3689,20 @@ AIBrain = Class(RNGAIBrainClass) {
         local threatTypes = {
             'Land',
             'AntiAir',
+            'Air',
             'Naval',
             'StructuresNotMex',
             'Experimental',
             'AntiSurface'
+        }
+        local threatTotals = {
+            Air = 0,
+            AntiAir = 0,
+            AntiSurface = 0,
+            Experimental = 0,
+            StructuresNotMex = 0,
+            Naval = 0,
+            Land = 0,
         }
         -- Get threats for each threat type listed on the threatTypes table. Full map scan.
         local currentGameTime = GetGameTimeSeconds()
@@ -3731,12 +3716,15 @@ AIBrain = Class(RNGAIBrainClass) {
                 potentialThreats[raw[1]][raw[2]].Position = potentialThreats[raw[1]][raw[2]].Position or {raw[1], GetSurfaceHeight(raw[1], raw[2]),raw[2]}
                 potentialThreats[raw[1]][raw[2]].UpdateTime = potentialThreats[raw[1]][raw[2]].UpdateTime or currentGameTime
                 --local threatRow = {posX=raw[1], posZ=raw[2], rThreat=raw[3], rThreatType=t}
+                threatTotals[t] = threatTotals[t] + raw[3]
                 --RNGINSERT(potentialThreats, threatRow)
             end
+            coroutine.yield(1)
         end
         --RNGLOG('Threat Table')
         --RNGLOG(repr(potentialThreats))
         --RNGLOG('Potential Threats :'..repr(potentialThreats))
+        --LOG('Threat Totals in tactical monitor '..repr(threatTotals))
         coroutine.yield(2)
         local phaseTwoThreats = {}
         local threatLimit = 20
@@ -5298,6 +5286,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('Assist Focus is Energy')
                 self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION
                 self.EngineerAssistManagerPriorityTable = {
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 , type = 'Completion'}, 
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2, type = 'Completion'}, 
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
                 }
             elseif self.EngineerAssistManagerFocusSnipe then

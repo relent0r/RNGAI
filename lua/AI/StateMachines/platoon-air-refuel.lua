@@ -48,6 +48,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                 local health = unit:GetHealthPercent()
                 if not IsDestroyed(unit) and not unit.Loading and (fuel < 0.4 or health < 0.6) then
                     if aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) > 0 then
+                        self:LogDebug(string.format('Air Refuel we have a staging platform available'))
                         local unitPos = unit:GetPosition()
                         local plats = AIUtils.GetOwnUnitsAroundPoint(aiBrain, categories.AIRSTAGINGPLATFORM, unitPos, 400)
                         --RNGLOG('AirStaging Units found '..table.getn(plats))
@@ -79,6 +80,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                     self.BuilderData = {
                                         Position = closestAirStaging,
                                     }
+                                    self:LogDebug(string.format('Air Refuel navigating to air staging platform'))
                                     self:ChangeState(self.Navigating)
                                     return
                                 end
@@ -100,6 +102,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                 RNGINSERT(closest.Refueling, unit)
                                 unit.Loading = true
                             end
+                            self:LogDebug(string.format('Air Refuel we have an air staging platform but we didnt use it'))
                         else
                             local platPos = self:GetPlatoonPosition()
                             local basePos = aiBrain.BuilderManagers['MAIN'].Position
@@ -116,6 +119,18 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                         end
                     else
                         aiBrain.BrainIntel.AirStagingRequired = true
+                        local platPos = self:GetPlatoonPosition()
+                        local homebase = self.Home
+                        local dx = platPos[1] - homebase[1]
+                        local dz = platPos[3] - homebase[3]
+                        local posDist = dx * dx + dz * dz
+                        if posDist > 3600 then
+                            self.BuilderData = {
+                                Position = homebase,
+                            }
+                            self:ChangeState(self.Navigating)
+                            return
+                        end
                     end
                 else
                     if not IsDestroyed(unit) and not unit.Loading then
@@ -142,6 +157,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                 return
             end
             coroutine.yield(25)
+            self:LogDebug(string.format('Air Refuel has nothing to do'))
             self:ChangeState(self.DecideWhatToDo)
             return
         end,

@@ -526,6 +526,7 @@ IntelManager = Class {
                         local distanceModifier = VDist3(aiBrain.Zones.Land.zones[v.id].pos,aiBrain.BrainIntel.StartPos)
                         local enemyModifier = 1
                         local startPos = 1
+                        local antiairdesire = 1
                         if zoneSet[v.id].enemylandthreat > 0 then
                             enemyModifier = enemyModifier + 2
                         end
@@ -558,6 +559,9 @@ IntelManager = Class {
                                 enemyDanger = 0.4
                             end
                         end
+                        if  zoneSet[v.id].friendlyantiairthreat > 5 then
+                            antiairdesire = 0.5
+                        end
                        --[[ if aiBrain.RNGDEBUG then
                             if distanceModifier and resourceValue and controlValue and enemyModifier then
                                 RNGLOG('distanceModifier '..distanceModifier)
@@ -566,7 +570,7 @@ IntelManager = Class {
                                 RNGLOG('enemyModifier '..enemyModifier)
                             end
                         end]]
-                        compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger
+                        compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger * antiairdesire
                         if aiBrain.RNGDEBUG and compare then
                             --RNGLOG('Compare variable '..compare)
                         end
@@ -627,13 +631,11 @@ IntelManager = Class {
                         local enemyModifier = 1
                         local startPos = 1
                         if zoneSet[v.id].friendlythreat > 0 then
-                            if zoneSet[v.id].enemylandthreat == 0 or zoneSet[v.id].enemylandthreat < zoneSet[v.id].friendlythreat then
-                                enemyModifier = enemyModifier - 1
-                            else
+                            if zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlythreat then
                                 enemyModifier = enemyModifier + 0.5
                             end
                         end
-                        if enemyModifier < 0 then
+                        if enemyModifier <= 0 then
                             enemyModifier = 1.0
                         end
                         local controlValue = zoneSet[v.id].control
@@ -646,6 +648,9 @@ IntelManager = Class {
                         end
                         if zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlythreat then
                             enemyDanger = 0.4
+                        end
+                        if platoon.Zone == v.id and zoneSet[v.id].enemyairthreat == 0 then
+                            enemyDanger = 0
                         end
                         if distanceModifier and resourceValue and controlValue and enemyModifier then
                             RNGLOG('distanceModifier '..distanceModifier)
@@ -722,6 +727,7 @@ IntelManager = Class {
                 for k1, v1 in self.Brain.Zones[v].zones do
                     self.Brain.Zones.Land.zones[k1].enemylandthreat = GetThreatAtPosition(self.Brain, v1.pos, self.Brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
                     self.Brain.Zones.Land.zones[k1].enemyantiairthreat = GetThreatAtPosition(self.Brain, v1.pos, self.Brain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
+                    self.Brain.Zones.Land.zones[k1].enemyairthreat = GetThreatAtPosition(self.Brain, v1.pos, self.Brain.BrainIntel.IMAPConfig.Rings, true, 'Air')
                     coroutine.yield(1)
                 end
                 coroutine.yield(3)
@@ -743,6 +749,7 @@ IntelManager = Class {
             local AlliedPlatoons = self.Brain:GetPlatoonsList()
             for k, v in Zones do
                 local friendlyThreat = {}
+                local friendlyantiairthreat = {}
                 for k1, v1 in AlliedPlatoons do
                     if not v1.MovementLayer then
                         AIAttackUtils.GetMostRestrictiveLayerRNG(v1)
@@ -754,12 +761,23 @@ IntelManager = Class {
                             end
                             friendlyThreat[v1.Zone] = friendlyThreat[v1.Zone] + v1.CurrentPlatoonThreat
                         end
+                        if v1.Zone and v1.CurrentPlatoonThreatAntiAir then
+                            if not friendlyantiairthreat[v1.Zone] then
+                                friendlyantiairthreat[v1.Zone] = 0
+                            end
+                            friendlyantiairthreat[v1.Zone] = friendlyantiairthreat[v1.Zone] + v1.CurrentPlatoonThreatAntiAir
+                        end
                     end
                 end
                 for k2, v2 in self.Brain.Zones[v].zones do
                     for k3, v3 in friendlyThreat do
                         if k2 == k3 then
                             self.Brain.Zones[v].zones[k2].friendlythreat = v3
+                        end
+                    end
+                    for k3, v3 in friendlyantiairthreat do
+                        if k2 == k3 then
+                            self.Brain.Zones[v].zones[k2].friendlyantiairthreat = v3
                         end
                     end
                 end
@@ -1426,7 +1444,7 @@ IntelManager = Class {
             end
             local disableGunship = true
             if self.Brain.BrainIntel.AirPhase < 2 then
-                if self.Brain.BrainIntel.SelfThreat.AntiAirNow > 10 then
+                if self.Brain.BrainIntel.SelfThreat.AntiAirNow > 5 then
                     local gunshipMassKilled = self.Brain.IntelManager.UnitStats['Gunship'].Kills.Mass
                     local gunshipMassBuilt = self.Brain.IntelManager.UnitStats['Gunship'].Built.Mass
                     if self.Brain.amanager.Current['Air']['T1']['gunship'] < 2 then

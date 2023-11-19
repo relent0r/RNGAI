@@ -108,6 +108,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         if not self.BuilderData.Position then
                             LOG('No self.BuilderData.Position in DecideWhatToDo suicide')
                         end
+                        self.dest = self.BuilderData.Position
                         self:ChangeState(self.Navigating)
                         return
                     else
@@ -143,7 +144,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-            local targetZone
             if not target then
                 target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
                 if target and RUtils.HaveUnitVisual(aiBrain, target, true) then
@@ -154,7 +154,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         CutOff = 400
 
                     }
-                    
+                    self.dest = self.BuilderData.Position
                     local ax = self.Pos[1] - targetPos[1]
                     local az = self.Pos[3] - targetPos[3]
                     if ax * ax + az * az < self.EnemyRadiusSq then
@@ -170,6 +170,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
+            local targetZone
             if not targetZone then
                 targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType)
                 if targetZone then
@@ -182,6 +183,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     if not self.BuilderData.Position then
                         LOG('No self.BuilderData.Position in DecideWhatToDo targetzone')
                     end
+                    self.dest = self.BuilderData.Position
                     self:LogDebug(string.format('DecideWhatToDo target zone navigate'))
                     self:ChangeState(self.Navigating)
                     return
@@ -306,6 +308,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             if not self.BuilderData.Position then
                 LOG('No self.BuilderData.Position in retreat')
             end
+            self.dest = self.BuilderData.Position
             --LOG('Retreating to platoon')
             self:ChangeState(self.Navigating)
             return
@@ -467,6 +470,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 local supportsquad={}
                 local scouts={}
                 local aa={}
+                local attack={}
                 for _,v in platoonUnits do
                     if v and not v.Dead then
                         if v.Role=='Artillery' or v.Role=='Silo' or v.Role=='Sniper' or v.Role=='Shield' then
@@ -475,6 +479,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             RNGINSERT(scouts,v)
                         elseif v.Role=='AA' then
                             RNGINSERT(aa,v)
+                        else
+                            RNGINSERT(attack,v)
                         end
                     end
                 end
@@ -485,11 +491,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 if self.path then
                     nodenum=RNGGETN(self.path)
                     --LOG('nodenum while zone control is pathing is '..repr(nodenum))
+                    self:LogDebug(string.format('nodenum while pathing >= 3 will spreadmove'..nodenum))
                     if nodenum>=3 then
                         --RNGLOG('self.path[3] '..repr(self.path[3]))
                         self.dest={self.path[3][1],self.path[3][2],self.path[3][3]}
-                        self:MoveToLocation(self.dest,false)
-                        IssueClearCommands(supportsquad)
+                        IssueMove(attack, self.dest)
                         StateUtils.SpreadMove(supportsquad,StateUtils.Midpoint(self.path[1],self.path[2],0.2))
                         StateUtils.SpreadMove(scouts,StateUtils.Midpoint(self.path[1],self.path[2],0.15))
                         StateUtils.SpreadMove(aa,StateUtils.Midpoint(self.path[1],self.path[2],0.1))
