@@ -951,8 +951,6 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Common',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Spam',                          -- Template Name. 
         Priority = 500,                                                          -- Priority. 1000 is normal.
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
-        PlatoonAddBehaviors = { 'ZoneUpdate' },
         InstanceCount = 20,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -961,6 +959,7 @@ BuilderGroup {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
         },
         BuilderData = {
+            StateMachine = 'ZoneControl',
             UseFormation = 'None',
             LocationType = 'LocationType',
             TargetSearchPriorities = {
@@ -991,8 +990,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Ranged Attack T2',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. 
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 800,                                                          -- Priority. 1000 is normal.
         InstanceCount = 10,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -1000,6 +997,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE * categories.TECH2}},
         },
         BuilderData = {
+            StateMachine = 'LandAssault',
             RangedAttack = true,
             SearchRadius = 'BaseEnemyArea',                                               -- Searchradius for new target.
             GetTargetsFromBase = false,                                         -- Get targets from base position (true) or platoon position (false)
@@ -1095,8 +1093,6 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Intelli Amphib Large',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatAmphibStateMachineRNG',                          -- Template Name. 
         Priority = 710,                                                          -- Priority. 1000 is normal.
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 20,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -1138,8 +1134,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Ranged Attack T2 Large',                              -- Random Builder Name.
         PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. 
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         Priority = 800,                                                          -- Priority. 1000 is normal.
         InstanceCount = 10,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
@@ -1147,6 +1141,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE * categories.TECH2}},
         },
         BuilderData = {
+            StateMachine = 'LandAssault',
             RangedAttack = true,
             SearchRadius = 'BaseEnemyArea',                                               -- Searchradius for new target.
             LocationType = 'LocationType',
@@ -1213,10 +1208,8 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
         BuilderName = 'RNGAI Sera Arty Island',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli Hover',                          -- Template Name. 
+        PlatoonTemplate = 'LandCombatHoverStateMachineRNG',                          -- Template Name. 
         Priority = 550,                                                          -- Priority. 1000 is normal.
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 20,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -1225,6 +1218,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.INDIRECTFIRE * categories.TECH1 - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
+            StateMachine = 'LandAssault',
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
@@ -1256,10 +1250,8 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Aeon Tanks Island',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli Hover',                          -- Template Name. 
+        PlatoonTemplate = 'LandCombatHoverStateMachineRNG',                          -- Template Name. 
         Priority = 550,                                                          -- Priority. 1000 is normal.
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        PlatoonAddPlans = { 'DistressResponseAIRNG' },
         InstanceCount = 20,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
@@ -1268,6 +1260,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.DIRECTFIRE * categories.TECH1 - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
+            StateMachine = 'LandAssault',
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',

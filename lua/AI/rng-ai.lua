@@ -1161,6 +1161,7 @@ AIBrain = Class(RNGAIBrainClass) {
             AllyAirThreat = 0,
             AntiAirNow = 0,
             AirNow = 0,
+            AirSubNow = 0,
             LandNow = 0,
             NavalNow = 0,
             NavalSubNow = 0,
@@ -1325,6 +1326,7 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Current Self Land Threat :'..self.BrainIntel.SelfThreat.LandNow)
             RNGLOG('Current Enemy Land Threat :'..self.EnemyIntel.EnemyThreatCurrent.Land)
             RNGLOG('Current Self Air Threat :'..self.BrainIntel.SelfThreat.AirNow)
+            RNGLOG('Current Self Air Sub Threat :'..self.BrainIntel.SelfThreat.AirSubNow)
             RNGLOG('Current Self AntiAir Threat :'..self.BrainIntel.SelfThreat.AntiAirNow)
             RNGLOG('Current Enemy Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.Air)
             RNGLOG('Current Enemy AntiAir Threat :'..self.EnemyIntel.EnemyThreatCurrent.AntiAir)
@@ -5483,6 +5485,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local engineerDistribution = { BuildPower = 0, BuildStructure = 0, Assist = 0, Reclaim = 0, Expansion = 0, Mass = 0, Repair = 0, ReclaimStructure = 0, Total = 0 }
         local totalLandThreat = 0
         local totalAirThreat = 0
+        local totalAirSubThreat = 0
         local totalAntiAirThreat = 0
         local totalEconomyThreat = 0
         local totalNavalThreat = 0
@@ -5700,7 +5703,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     elseif unitCat.AIR then
                         if not unitCat.EXPERIMENTAL then
-                            totalAirThreat = totalAirThreat + unit.Blueprint.Defense.AirThreatLevel + unit.Blueprint.Defense.SubThreatLevel + unit.Blueprint.Defense.SurfaceThreatLevel
+                            totalAirThreat = totalAirThreat + unit.Blueprint.Defense.AirThreatLevel + unit.Blueprint.Defense.SurfaceThreatLevel + unit.Blueprint.Defense.SubThreatLevel
+                            totalAirSubThreat = totalAirSubThreat + unit.Blueprint.Defense.SubThreatLevel
                         end
                         if unitCat.TECH1 then
                             armyAirTiers.T1=armyAirTiers.T1+1
@@ -5857,6 +5861,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.amanager.Type.Naval=armyNavalType
         self.BrainIntel.SelfThreat.LandNow = totalLandThreat
         self.BrainIntel.SelfThreat.AirNow = totalAirThreat
+        self.BrainIntel.SelfThreat.AirSubNow = totalAirSubThreat
         self.BrainIntel.SelfThreat.AntiAirNow = totalAntiAirThreat
         self.BrainIntel.SelfThreat.NavalNow = totalNavalThreat
         self.BrainIntel.SelfThreat.NavalSubNow = totalNavalSubThreat
@@ -7046,6 +7051,7 @@ AIBrain = Class(RNGAIBrainClass) {
             AllyAirThreat = 0,
             AntiAirNow = 0,
             AirNow = 0,
+            AirSubNow = 0,
             LandNow = 0,
             NavalNow = 0,
             NavalSubNow = 0,

@@ -688,7 +688,8 @@ ZoneControlThreatThread = function(aiBrain, platoon)
             platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
             local targetThreat = GetThreatAtPosition(aiBrain, platoon.Pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
             if targetThreat > 0 then
-                local target = platoon:FindClosestUnit('Attack', 'Enemy', true, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE - categories.INSIGNIFICANTUNIT))
+                platoon:LogDebug(string.format('ZoneControlThreatThread found imap threat, looking for closest unit'))
+                local target = platoon:FindClosestUnit('Attack', 'Enemy', false, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE - categories.INSIGNIFICANTUNIT))
                 if target and not target.Dead then
                     local closestTarget
                     local targetRange = RUtils.GetTargetRange(target) or 45

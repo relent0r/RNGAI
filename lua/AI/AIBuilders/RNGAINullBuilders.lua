@@ -9,7 +9,7 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',
     Builder {
         BuilderName = 'RNGAI Null Spam Intelli',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Spam Intelli',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
+        PlatoonTemplate = 'LandCombatHoverStateMachineRNG',                          -- Template Name. These units will be formed. See: "UvesoPlatoonTemplatesLand.lua"
         Priority = 550,                                                          -- Priority. 1000 is normal.
         --PlatoonAddBehaviors = { 'TacticalResponse' },
         InstanceCount = 30,                                                      -- Number of platoons that will be formed.
@@ -18,6 +18,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER } },
         },
         BuilderData = {
+            StateMachine = 'LandAssault',
             UseFormation = 'None',
             AggressiveMove = true,
             },

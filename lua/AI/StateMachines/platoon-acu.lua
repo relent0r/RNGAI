@@ -461,19 +461,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                         end
-                        if not cdr.HighThreatUpgradeRequired and not cdr.GunUpgradeRequired and not self.BuilderData.AttackTarget then
-                            local canBuild, massMarkers = ACUFunc.CanBuildOnCloseMass(brain, cdr.Position, 35)
-                            if canBuild then
-                                self.BuilderData = {
-                                    Construction = {
-                                        Extractor = true,
-                                        MassPoints = massMarkers
-                                    }
-                                }
-                                self:ChangeState(self.StructureBuild)
-                                return
-                            end
-                        end
                     end
                 end
             elseif self.BuilderData.DefendExpansion then
@@ -487,7 +474,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 LOG('Phase 3 and not close to base')
                 self:ChangeState(self.Retreating)
                 return
-            elseif cdr.CurrentEnemyInnerCircle < 15 then
+            elseif cdr.CurrentEnemyInnerCircle < 15 and not cdr.Caution then
                 local canBuild, massMarkers = ACUFunc.CanBuildOnCloseMass(brain, cdr.Position, 35)
                 if canBuild then
                     self.BuilderData = {
@@ -1248,7 +1235,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 else
                     local AlliedPlatoons = brain:GetPlatoonsList()
                     for _,aPlat in AlliedPlatoons do
-                        if aPlat.PlanName == 'MassRaidRNG' or aPlat.PlanName == 'HuntAIPATHRNG' or aPlat.PlanName == 'TruePlatoonRNG' or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlanName == 'ZoneControlRNG' then 
+                        if aPlat.PlatoonName == 'LandAssaultBehavior' or aPlat.PlatoonName == 'LandCombatBehavior' or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlatoonName == 'ZoneControlBehavior' then 
                             --RNGLOG('Allied platoon name '..aPlat.PlanName)
                             if aPlat.UsingTransport then 
                                 continue 

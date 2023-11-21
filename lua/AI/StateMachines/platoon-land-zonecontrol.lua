@@ -179,7 +179,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         Position = aiBrain.Zones.Land.zones[targetZone].pos,
                         CutOff = 400
                     }
-                    LOG('TargetZone '..repr(self.BuilderData))
                     if not self.BuilderData.Position then
                         LOG('No self.BuilderData.Position in DecideWhatToDo targetzone')
                     end
@@ -491,8 +490,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 if self.path then
                     nodenum=RNGGETN(self.path)
                     --LOG('nodenum while zone control is pathing is '..repr(nodenum))
-                    self:LogDebug(string.format('nodenum while pathing >= 3 will spreadmove'..nodenum))
+                    self:LogDebug(string.format('ZoneControl nodenum while pathing >= 3 will spreadmove'..nodenum))
                     if nodenum>=3 then
+                        self:LogDebug(string.format('ZoneControl spreadmove at node '..nodenum))
                         --RNGLOG('self.path[3] '..repr(self.path[3]))
                         self.dest={self.path[3][1],self.path[3][2],self.path[3][3]}
                         IssueMove(attack, self.dest)
@@ -500,6 +500,12 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         StateUtils.SpreadMove(scouts,StateUtils.Midpoint(self.path[1],self.path[2],0.15))
                         StateUtils.SpreadMove(aa,StateUtils.Midpoint(self.path[1],self.path[2],0.1))
                     else
+                        self:LogDebug(string.format('ZoneControl final movement'..nodenum))
+                        if self.BuilderData.Position then
+                            LOG('Distance to end pos is '..VDist3(self.Pos, self.BuilderData.Position))
+                        else
+                            LOG('No builder data position at end of path')
+                        end
                         self.dest={self.path[nodenum][1],self.path[nodenum][2],self.path[nodenum][3]}
                         self:MoveToLocation(self.dest,false)
                     end

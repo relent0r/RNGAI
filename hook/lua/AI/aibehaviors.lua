@@ -1288,7 +1288,6 @@ function AirStagingThreadRNG(unit)
                 if not v.Unit.Dead then
                     local pos = unit:GetPosition()
                     if v.Unit:IsIdleState() and not v.Unit:IsUnitState('Attached') then
-                        RNGLOG('Attempting to add to AirHuntAI Platoon')
                         v.Unit.Loading = false
                         local plat
                         if not v.Unit.PreviousStateMachine then
@@ -1315,7 +1314,6 @@ function AirStagingThreadRNG(unit)
                             --LOG('table removed from refueling')
                         end
                     elseif v.Unit:IsUnitState('Attached') then
-                        RNGLOG('Air Unit Still attached, force unload')
                         IssueClearCommands({unit})
                         IssueTransportUnload({unit}, {pos[1] + 5, pos[2], pos[3] + 5})
                         --RNGLOG('Attempting to add to AirHuntAI Platoon')
@@ -1345,7 +1343,6 @@ function AirStagingThreadRNG(unit)
                         end
                     end
                 else
-                    LOG('Unit is dead remove from refueling table')
                     unit.Refueling[v.Key] = nil
                     tableRebuild = true
                 end

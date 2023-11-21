@@ -220,19 +220,26 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local refuelComplete = false
             local refuelTimeout = 0
-            while not refuelComplete or refuelTimeout < 30 do
+            while not refuelComplete and refuelTimeout < 30 do
                 coroutine.yield(25)
                 for _, unit in self:GetPlatoonUnits() do
                     local fuel = unit:GetFuelRatio()
                     local health = unit:GetHealthPercent()
                     if (not unit.Loading or (fuel >= 1.0 and health >= 1.0)) and (not unit:IsUnitState('Attached')) then
+                        self:LogDebug(string.format('Air Refuel complete is true '))
                         refuelComplete = true
                     end
+                    self:LogDebug(string.format('Air Refuel fuel is '..fuel))
+                    self:LogDebug(string.format('Air Refuel health is '..health))
                 end
                 if IsDestroyed(self) then
                     return
                 end
                 refuelTimeout = refuelTimeout + 1
+                self:LogDebug(string.format('Air Refuel timeout is '..refuelTimeout))
+                if not refuelComplete then
+                    self:LogDebug(string.format('Air Refuel timeout is not complete'))
+                end
             end
             local platUnits = self:GetPlatoonUnits()
             IssueClearCommands(platUnits)

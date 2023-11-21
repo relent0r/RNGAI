@@ -50,7 +50,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 AA',
         PlatoonTemplate = 'T1LandAA',
-        Priority = 742,
+        Priority = 743,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
@@ -115,7 +115,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 AA',
         PlatoonTemplate = 'T2LandAA',
-        Priority = 746,
+        Priority = 747,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
@@ -210,7 +210,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 AA',
         PlatoonTemplate = 'T3LandAA',
-        Priority = 752,
+        Priority = 753,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
@@ -240,7 +240,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 Mobile Shields',
         PlatoonTemplate = 'T3MobileShields',
-        Priority = 751,
+        Priority = 753,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},

@@ -154,49 +154,8 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'RNGAI LandAttack Spam Intelli',
-    Plan = 'HuntAIPATHRNG', -- The platoon function to use.
-    GlobalSquads = {
-        { landDirectFireCategory, 4, 15, 'attack', 'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-        { categories.MOBILE * categories.LAND * categories.INDIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
-          0, -- Min number of units.
-          12, -- Max number of units.
-          'attack', -- platoon types: 'support', 'attack', 'scout',
-          'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-          { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
-          { categories.LAND * categories.MOBILE * (categories.SHIELD + categories.STEALTHFIELD) - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
-          { categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL, 0, 3, 'guard', 'none' },
-          { categories.LAND * categories.SCOUT - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
-    },
-}
-
-PlatoonTemplate {
-    Name = 'RNGAI LandAttack Spam Intelli Hover',
-    Plan = 'HuntAIPATHRNG', -- The platoon function to use.
-    GlobalSquads = {
-        { categories.MOBILE * categories.LAND * categories.HOVER * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
-          4, -- Min number of units.
-          12, -- Max number of units.
-          'attack', -- platoon types: 'support', 'attack', 'scout',
-          'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-    },
-}
-
-PlatoonTemplate {
-    Name = 'RNGAI LandAttack Spam Intelli Amphib',
-    Plan = 'HuntAIPATHRNG', -- The platoon function to use.
-    GlobalSquads = {
-        { categories.MOBILE * categories.LAND * (categories.AMPHIBIOUS + categories.HOVER) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
-          4, -- Min number of units.
-          12, -- Max number of units.
-          'attack', -- platoon types: 'support', 'attack', 'scout',
-          'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-    },
-}
-
-PlatoonTemplate {
     Name = 'RNGAI LandAttack Spam',
-    Plan = 'ZoneControlRNG', -- The platoon function to use.
+    Plan = 'StateMachineAIRNG', -- The platoon function to use.
     GlobalSquads = {
         { landDirectFireCategory, 4, 18, 'attack', 'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
         { categories.MOBILE * categories.LAND * categories.INDIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
@@ -211,39 +170,8 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'RNGAI Zone Control',
-    Plan = 'ZoneControlRNG', -- The platoon function to use.
-    GlobalSquads = {
-        { categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - categories.SILO - categories.SHIELD - categories.xrl0302, -- Type of units.
-          3, -- Min number of units.
-          12, -- Max number of units.
-          'attack', -- platoon types: 'support', 'attack', 'scout',
-          'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-          { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
-          { categories.LAND * categories.SCOUT, 0, 1, 'guard', 'none' },
-          { categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
-    },
-}
-
-PlatoonTemplate {
-    Name = 'RNGAI LandAttack Spam Aeon Intelli',
-    Plan = 'HuntAIPATHRNG', -- The platoon function to use.
-    GlobalSquads = {
-        { landDirectFireCategory, 4, 12, 'Attack', 'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-        { categories.MOBILE * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.INDIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
-          0, -- Min number of units.
-          12, -- Max number of units.
-          'attack', -- platoon types: 'support', 'attack', 'scout',
-          'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-          { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
-          { categories.LAND * categories.SCOUT, 1, 2, 'guard', 'none' },
-          { categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL, 0, 2, 'Guard', 'none' },
-    },
-}
-
-PlatoonTemplate {
     Name = 'RNGAI LandAttack Small Ranged',
-    Plan = 'HuntAIPATHRNG', -- The platoon function to use.
+    Plan = 'StateMachineAIRNG', -- The platoon function to use.
     GlobalSquads = {
         { categories.MOBILE * categories.LAND * categories.INDIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER, -- Type of units.
           3, -- Min number of units.
@@ -296,27 +224,6 @@ PlatoonTemplate {
           'GrowthFormation' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
           { categories.LAND * categories.SCOUT, 0, 1, 'guard', 'none' },
-    },
-}
-
--- TruePlatoon Template
-PlatoonTemplate {
-    Name = 'RNG TruePlatoon Combat',
-    Plan = 'TruePlatoonRNG', -- The platoon function to use.
-    GlobalSquads = {
-        { categories.MOBILE * categories.LAND * categories.DIRECTFIRE * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - (categories.SNIPER + categories.xel0305 + categories.xal0305 + categories.xrl0305 + categories.xsl0305 + categories.drl0204 + categories.del0204) - categories.xrl0302, -- Type of units.
-          2, -- Min number of units.
-          25, -- Max number of units.
-          'attack', -- platoon types: 'support', 'attack', 'scout',
-          'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-          { categories.MOBILE * categories.LAND * categories.INDIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - categories.uel0304 - categories.url0304 - categories.xsl0304, -- Type of units.
-          0, -- Min number of units.
-          12, -- Max number of units.
-          'attack', -- platoon types: 'support', 'attack', 'scout',
-          'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-          { categories.LAND * categories.MOBILE * (categories.SHIELD + categories.STEALTHFIELD) - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
-          { categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL, 0, 3, 'guard', 'none' },
-          { categories.LAND * categories.SCOUT - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
     },
 }
 

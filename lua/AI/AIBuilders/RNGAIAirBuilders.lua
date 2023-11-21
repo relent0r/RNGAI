@@ -148,18 +148,6 @@ BuilderGroup {
             TechLevel = 1
         },
     },
-    --[[Builder {
-        BuilderName = 'RNGAI Factory Gunship T1',
-        PlatoonTemplate = 'T1Gunship',
-        Priority = 750,
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
-        },
-        BuilderType = 'Air',
-    },]]
     Builder {	
         BuilderName = 'RNGAI Factory Bomber T1 Response',	
         PlatoonTemplate = 'T1AirBomber',	
@@ -179,22 +167,6 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T2',
     BuildersType = 'FactoryBuilder',
-    --[[
-    Builder {
-        BuilderName = 'RNGAI Air Attack Queue T2',
-        PlatoonTemplate = 'RNGAIT2AirQueue',
-        Priority = 0,
-        PriorityFunction = AirAttackMode,
-        BuilderConditions = {
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.85 }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * categories.TECH3 }},
-        },
-        BuilderType = 'Air',
-        BuilderData = {
-            TechLevel = 2
-        },
-    },]]
     Builder {
         BuilderName = 'RNGAI Factory Intie Enemy Threat T2',
         PlatoonTemplate = 'RNGAIT2FighterAeon',
@@ -214,7 +186,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Swift Wind Response',
         PlatoonTemplate = 'RNGAIT2FighterAeon',
-        Priority = 910,
+        Priority = 885,
         BuilderConditions = { 
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
@@ -223,17 +195,6 @@ BuilderGroup {
         },
         BuilderType = 'Air',
     },
-    --[[Builder {
-        BuilderName = 'RNGAI Factory T2 FighterBomber ACUClose',
-        PlatoonTemplate = 'T2FighterBomber',
-        Priority = 800,
-        BuilderType = 'Air',
-        BuilderConditions = { 
-            { TBC, 'EnemyACUCloseToBase', {}},
-            { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-        },
-    },]]
 }
 
 BuilderGroup {

@@ -68,6 +68,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             else
                 self.EnemyRadius = math.max(self.MaxWeaponRange+35, 55)
             end
+            if self.Vented then
+                LOG('Vented LandCombatPlatoon Starting')
+            end
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -80,6 +83,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
+            if self.Vented then
+                LOG('Vented LandCombatPlatoon Deciding what to do')
+            end
             local aiBrain = self:GetBrain()
             if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
                 local enemyAcuPosition = aiBrain.BrainIntel.SuicideModeTarget:GetPosition()
@@ -270,6 +276,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             --LOG('DecideWhatToDo end of loop')
             coroutine.yield(5)
             --LOG('post yield')
+            if self.Vented then
+                LOG('Vented LandCombatPlatoon completed decide what to do loop')
+            end
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -377,6 +386,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         --- The platoon retreats from a threat
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
+            if self.Vented then
+                LOG('Vented LandCombatPlatoon trying to navigating')
+            end
             local aiBrain = self:GetBrain()
             local platoonUnits = GetPlatoonUnits(self)
             local currentPathNum=0
@@ -384,6 +396,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             local lastfinalpoint=nil
             local lastfinaldist=0
             while PlatoonExists(aiBrain, self) do
+                if self.Vented then
+                    LOG('Vented LandCombatPlatoon Navigating')
+                end
                 coroutine.yield(1)
                 if StateUtils.ExitConditions(self,aiBrain) then
                     self.navigating=false
@@ -616,7 +631,10 @@ AssignToUnitsMachine = function(data, platoon, units)
             INDIRECTFIRE = 0,
             ANTIAIR = 0,
         }
-
+        if data.Vented then
+            LOG('This is a state machine that was vented from ACU support')
+            platoon.Vented = true
+        end
         if not platoon.LocationType then
             platoon.LocationType = platoon.PlatoonData.LocationType or 'MAIN'
         end

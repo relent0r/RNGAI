@@ -313,6 +313,8 @@ IntelManager = Class {
 
     ZoneControlMonitorRNG = function(self)
         -- This is doing the maths stuff on understand the zone control level
+        -- The higher the control the more the enemy owns it, the lower the more we do.
+        -- So 0 control means we own it, 2 means the enemy owns it
         self:WaitForZoneInitialization()
         local Zones = {
             'Land',
@@ -351,7 +353,7 @@ IntelManager = Class {
                     ]]
                     --LOG('Total mexes in zone '..v1.id..' are'..tempMyControl)
                     --LOG('Resource Value of Zone is '..v1.resourcevalue)
-                    tempMyControl = tempMyControl / v1.resourcevalue
+                    tempMyControl = tempMyControl / resourcePoints
                     --LOG('Resource Value is '..v1.resourcevalue)
                     --LOG('Control Value after calculation'..tempMyControl)
                     if tempMyControl > 0 then
@@ -368,7 +370,7 @@ IntelManager = Class {
                     end
                     --RNGLOG('Enemy Mexes in zone '..v1.id..' are '..tempMyControl)
                     --RNGLOG('Weight of zone '..v1.resourcevalue)
-                    tempEnemyControl = tempEnemyControl / v1.resourcevalue
+                    tempEnemyControl = tempEnemyControl / resourcePoints
                     --LOG('Enemy Temp control value after calculation '..tempEnemyControl)
                     if tempEnemyControl > 0 then
                         control = control + tempEnemyControl
@@ -640,7 +642,10 @@ IntelManager = Class {
                         end
                         local controlValue = zoneSet[v.id].control
                         if controlValue <= 0 then
-                            controlValue = 0.5
+                            controlValue = 1.0
+                        end
+                        if controlValue >= 1.75 then
+                            controlValue = 0
                         end
                         local resourceValue = zoneSet[v.id].resourcevalue or 1
                         if zoneSet[v.id].startpositionclose then
@@ -852,10 +857,11 @@ IntelManager = Class {
         coroutine.yield(300)
         while self.Brain.Status ~= "Defeat" do
             coroutine.yield(50)
-            self:ForkThread(self.CheckStrikePotential, 'AirAntiSurface',false, 20)
-            self:ForkThread(self.CheckStrikePotential, 'DefensiveAntiSurface')
-            self:ForkThread(self.CheckStrikePotential, 'LandAntiSurface')
-            self:ForkThread(self.CheckStrikePotential, 'AirAntiNaval',false,  20)
+            self:ForkThread(self.AdaptiveProductionThread, 'AirAntiSurface',false, 20)
+            self:ForkThread(self.AdaptiveProductionThread, 'DefensiveAntiSurface')
+            self:ForkThread(self.AdaptiveProductionThread, 'LandAntiSurface')
+            self:ForkThread(self.AdaptiveProductionThread, 'AirAntiNaval',false,  20)
+            self:ForkThread(self.AdaptiveProductionThread, 'MobileAntiAir',false,  20)
         end
     end,
 
@@ -1154,7 +1160,7 @@ IntelManager = Class {
         return false, false
     end,
 
-    CheckStrikePotential = function(self, type, desiredStrikeDamage, threatMax)
+    AdaptiveProductionThread = function(self, type, desiredStrikeDamage, threatMax)
         local baseRestrictedArea = self.Brain.OperatingAreas['BaseRestrictedArea']
         local baseMilitaryArea = self.Brain.OperatingAreas['BaseMilitaryArea']
         local Zones = {
@@ -1428,6 +1434,12 @@ IntelManager = Class {
                 else
                     --RNGLOG('Enemy air threat too high, no looking for naval threat to activate torpedo bombers')
                 end
+            end
+        elseif type == 'MobileAntiAir' then
+            if self.Brain.BrainIntel.SelfThreat.LandNow * 1.5 > self.Brain.EnemyIntel.EnemyThreatCurrent.Land and self.Brain.BrainIntel.SelfThreat.AntiAirNow < self.Brain.EnemyIntel.EnemyThreatCurrent.Air then
+                --for k, v in self.Brain.EnemyIntel.EnemyStartLocations
+                --b.enemystartdata[v.Index].startangle
+                --b.enemystartdata[v.Index].startdistance
             end
         end
         --RNGLOG('CheckStrikPotential')

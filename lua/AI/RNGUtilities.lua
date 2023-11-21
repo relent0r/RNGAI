@@ -6124,6 +6124,35 @@ function SetCoreResources(aiBrain, position, baseName)
     end
 end
 
+function VentToPlatoon(platoon, aiBrain, plan)
+    --RNGLOG('Venting to new trueplatoon platoon')
+    local ventPlatoon
+    local platoonUnits = GetPlatoonUnits(platoon)
+    if plan == 'LandCombatBehavior' then
+        LOG('Venting to LandCombatBehavior')
+        ventPlatoon = aiBrain:MakePlatoon('', '')
+        aiBrain:AssignUnitsToPlatoon(ventPlatoon, platoonUnits, 'Attack', 'None')
+        import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ Vented = true}, ventPlatoon, platoonUnits)
+    elseif plan =='LandAssaultBehavior' then
+        LOG('Venting to LandAssaultBehavior')
+        ventPlatoon = aiBrain:MakePlatoon('', '')
+        aiBrain:AssignUnitsToPlatoon(ventPlatoon, platoonUnits, 'Attack', 'None')
+        import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ Vented = true }, ventPlatoon, platoonUnits)
+    else
+        ventPlatoon = aiBrain:MakePlatoon('', plan)
+        ventPlatoon.PlanName = 'Vented Platoon'
+        for _, unit in platoonUnits do
+            if unit and not unit.Dead and not unit:BeenDestroyed() then
+                --RNGLOG('Added unit to new platoon')
+                aiBrain:AssignUnitsToPlatoon(ventPlatoon, {unit}, 'Attack', 'None')
+            else
+                --RNGLOG('Unit was dead or destroyed')
+            end
+        end
+    end
+    --RNGLOG('Platoon has been vented')
+end
+
 --[[
     -- Calculate dot product between two 3D vectors (same as before)
 

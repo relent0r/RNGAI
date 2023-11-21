@@ -457,34 +457,6 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNG Factory Builder Air T1 High Pri',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 1015,
-        DelayEqualBuildPlattons = {'Factories', 3},
-        BuilderConditions = {
-            --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 105, 1200 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.80 }},
-            { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
-            { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.FACTORY * categories.LAND}},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR }},
-            { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.AIR }},
-            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
-         },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            DesiresAssist = true,
-            Construction = {
-                Location = 'LocationType',
-                AdjacencyPriority = {categories.ENERGYPRODUCTION},
-                BuildClose = false,
-                BuildStructures = {
-                    'T1AirFactory',
-                },
-            }
-        }
-    },
-    Builder {
         BuilderName = 'RNG Factory Builder Air T1 Main',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 1010,
@@ -493,6 +465,7 @@ BuilderGroup {
             { MIBC, 'MapGreaterThan', { 256, 256 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.0 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.AIR }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.AIR * categories.FACTORY }},
@@ -1031,14 +1004,14 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilderT123RNG', -- Air Staging has been moved to T1 so don't need T2 engineers now.
         Priority = 900,
         BuilderConditions = {
+            { MIBC, 'AirStagingWantedRNG', { } },
             -- When do we want to build this ?
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.AIRSTAGINGPLATFORM }},
             -- Do we need additional conditions to build it ?
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 20.0 }},
             -- Have we the eco to build it ?
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 1.0 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.AIRSTAGINGPLATFORM }},
-            { MIBC, 'AirStagingWantedRNG', { } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -1509,7 +1482,6 @@ BuilderGroup {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Gate' } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.80 } },             -- Ratio from 0 to 1. (1=100%)
-            -- Don't build it if...
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
         },
         BuilderType = 'Any',
