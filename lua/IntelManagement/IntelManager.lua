@@ -1437,6 +1437,18 @@ IntelManager = Class {
             end
         elseif type == 'MobileAntiAir' then
             if self.Brain.BrainIntel.SelfThreat.LandNow * 1.5 > self.Brain.EnemyIntel.EnemyThreatCurrent.Land and self.Brain.BrainIntel.SelfThreat.AntiAirNow < self.Brain.EnemyIntel.EnemyThreatCurrent.Air then
+                local totalMobileAARequired = 0
+                local zoneCount = self.BuilderManagers['MAIN'].PathableZones
+                -- We are going to look at the threat in the pathable zones and see which ones are in our territory and make sure we have a theoretical number of air units there
+
+                --[[
+                -- I thought I could set requirements per base but I don't have the structure yet.
+                for k, v in self.Brain.BuilderManagers do
+                    if v.PathableZones > 0 then
+                        
+                    end
+                end
+                ]]
                 --for k, v in self.Brain.EnemyIntel.EnemyStartLocations
                 --b.enemystartdata[v.Index].startangle
                 --b.enemystartdata[v.Index].startdistance

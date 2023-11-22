@@ -302,3 +302,14 @@ function AirStagingWantedRNG(aiBrain)
     end
     return false
 end
+
+function BaseCouldBuildMobileAA(aiBrain, locationType)
+    local basePosition = aiBrain.BuilderManagers[locationType].Position
+    local zoneCount = aiBrain.BuilderManagers[locationType].PathableZones.PathableZoneCount
+    if zoneCount > 0 then
+        for k, v in aiBrain.BuilderManagers[baseName].PathableZones.Zones do
+            math.ceil(zoneCount * (enemy air threat / my air threat))
+        end
+    end
+
+end

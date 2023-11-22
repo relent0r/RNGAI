@@ -1507,6 +1507,27 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    SetPathableZonesForBase = function(self, position, baseName)
+        --LOG('SetPathableZoneForBaseStarting')
+        local zoneTable = {
+            PathableZoneCount = 0,
+            Zones = {}
+        }
+        self:WaitForZoneInitialization()
+        if self.Zones.Land.zones then
+            for k, v in self.Zones.Land.zones do
+                if NavUtils.CanPathTo('Land', position, v.pos) then
+                    zoneTable.PathableZoneCount = zoneTable.PathableZoneCount + 1
+                    RNGINSERT(zoneTable.Zones, v.id)
+                end
+            end
+        else
+            WARN('AI DEBUG: No land zones found for expansion base marker to check')
+        end
+        self.BuilderManagers[baseName].PathableZones = zoneTable
+        --LOG('Pathable zone table for base name '..baseName..' '..repr(self.BuilderManagers[baseName].PathableZones))
+    end,
+
 
     EconomyMonitorRNG = function(self)
         -- This over time thread is based on Sprouto's LOUD AI.
@@ -1636,6 +1657,7 @@ AIBrain = Class(RNGAIBrainClass) {
             FactoryManager = FactoryManager.CreateFactoryBuilderManager(self, baseName, position, radius, useCenter),
             PlatoonFormManager = PlatoonFormManager.CreatePlatoonFormManager(self, baseName, position, radius, useCenter),
             EngineerManager = EngineerManager.CreateEngineerManager(self, baseName, position, radius),
+            PathableZones = {},
             DefensivePoints = {},
             BuilderHandles = {},
             CoreResources = {},
@@ -1648,6 +1670,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if baseLayer == 'Water' then
             --LOG('Created Water base of name '..baseName)
         end
+        self:ForkThread(self.SetPathableZonesForBase, position, baseName)
         self:ForkThread(RUtils.SetCoreResources, position, baseName)
         self:ForkThread(self.GetGraphArea, position, baseName, baseLayer)
         self:ForkThread(self.GetBaseZone, position, baseName, baseLayer)
