@@ -1436,10 +1436,20 @@ IntelManager = Class {
                 end
             end
         elseif type == 'MobileAntiAir' then
-            if self.Brain.BrainIntel.SelfThreat.LandNow * 1.5 > self.Brain.EnemyIntel.EnemyThreatCurrent.Land and self.Brain.BrainIntel.SelfThreat.AntiAirNow < self.Brain.EnemyIntel.EnemyThreatCurrent.Air then
-                local totalMobileAARequired = 0
+            local selfThreat = self.Brain.BrainIntel.SelfThreat
+            local enemyThreat = self.Brain.EnemyIntel.EnemyThreatCurrent
+            if selfThreat.LandNow * 1.5 > enemyThreat.Land and selfThreat.AntiAirNow < enemyThreat.Air then
                 local zoneCount = self.BuilderManagers['MAIN'].PathableZones
                 -- We are going to look at the threat in the pathable zones and see which ones are in our territory and make sure we have a theoretical number of air units there
+                -- I want to do this on a per base method, but I realised I'm not keeping information.
+                local totalMobileAARequired = math.ceil(zoneCount * (enemyThreat.Air / selfThreat.AirNow)) or 0
+                if self.BrainIntel.LandPhase == 1 then
+                    self.Brain.amanager.Demand.Land.T1.aa = totalMobileAARequired
+                elseif self.BrainIntel.LandPhase == 2 then
+                    self.Brain.amanager.Demand.Land.T2.aa = totalMobileAARequired
+                elseif self.BrainIntel.LandPhase == 3 then
+                    self.Brain.amanager.Demand.Land.T3.aa = totalMobileAARequired
+                end
 
                 --[[
                 -- I thought I could set requirements per base but I don't have the structure yet.
@@ -1452,6 +1462,10 @@ IntelManager = Class {
                 --for k, v in self.Brain.EnemyIntel.EnemyStartLocations
                 --b.enemystartdata[v.Index].startangle
                 --b.enemystartdata[v.Index].startdistance
+            else
+                self.Brain.amanager.Demand.Land.T1.aa = 0
+                self.Brain.amanager.Demand.Land.T2.aa = 0
+                self.Brain.amanager.Demand.Land.T2.aa = 0
             end
         end
         --RNGLOG('CheckStrikPotential')
