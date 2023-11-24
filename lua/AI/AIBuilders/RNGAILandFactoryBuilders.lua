@@ -62,6 +62,22 @@ BuilderGroup {
             TechLevel = 1
         },
     },
+    Builder {
+        BuilderName = 'RNGAI T1 AA Demand',
+        PlatoonTemplate = 'T1LandAA',
+        Priority = 743,
+        BuilderConditions = {
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
+            { EBC, 'FactorySpendRatioRNG', {'Land'}},
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'aa'} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 1
+        },
+    },
 }
 
 BuilderGroup {
@@ -117,6 +133,22 @@ BuilderGroup {
         PlatoonTemplate = 'T2LandAA',
         Priority = 747,
         BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
+            { EBC, 'FactorySpendRatioRNG', {'Land'}},
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'aa'} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 2
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 AA Demand',
+        PlatoonTemplate = 'T2LandAA',
+        Priority = 879,
+        BuilderConditions = {
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'aa'} },
@@ -215,6 +247,21 @@ BuilderGroup {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'aa'} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 3
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 AA Demand',
+        PlatoonTemplate = 'T3LandAA',
+        Priority = 890,
+        BuilderConditions = {
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
+            { UCBC, 'UnitBuildDemand', {'Land', 'T3', 'aa'} },
+            { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',

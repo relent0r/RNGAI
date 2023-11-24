@@ -657,19 +657,20 @@ IntelManager = Class {
                         if platoon.Zone == v.id and zoneSet[v.id].enemyairthreat == 0 then
                             enemyDanger = 0
                         end
-                        if distanceModifier and resourceValue and controlValue and enemyModifier then
-                            RNGLOG('distanceModifier '..distanceModifier)
-                            RNGLOG('resourceValue '..resourceValue)
-                            RNGLOG('controlValue '..controlValue)
-                            RNGLOG('enemyModifier '..enemyModifier)
-                        end
+
+                        --if distanceModifier and resourceValue and controlValue and enemyModifier then
+                        --    RNGLOG('distanceModifier '..distanceModifier)
+                        --   RNGLOG('resourceValue '..resourceValue)
+                        --    RNGLOG('controlValue '..controlValue)
+                        --    RNGLOG('enemyModifier '..enemyModifier)
+                        --end
                         compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger
-                        RNGLOG('Compare variable '..compare)
+                        --RNGLOG('Compare variable '..compare)
                         if compare > 0 then
                             if not selection or compare > selection then
                                 selection = compare
                                 zoneSelection = v.id
-                                RNGLOG('Zone Control Query Select priority '..selection)
+                                --RNGLOG('Zone Control Query Select priority '..selection)
                             end
                         end
                     end
@@ -1435,39 +1436,8 @@ IntelManager = Class {
                     --RNGLOG('Enemy air threat too high, no looking for naval threat to activate torpedo bombers')
                 end
             end
-        elseif type == 'MobileAntiAir' then
-            local selfThreat = self.Brain.BrainIntel.SelfThreat
-            local enemyThreat = self.Brain.EnemyIntel.EnemyThreatCurrent
-            if selfThreat.LandNow * 1.5 > enemyThreat.Land and selfThreat.AntiAirNow < enemyThreat.Air then
-                local zoneCount = self.BuilderManagers['MAIN'].PathableZones
-                -- We are going to look at the threat in the pathable zones and see which ones are in our territory and make sure we have a theoretical number of air units there
-                -- I want to do this on a per base method, but I realised I'm not keeping information.
-                local totalMobileAARequired = math.ceil(zoneCount * (enemyThreat.Air / selfThreat.AirNow)) or 0
-                if self.BrainIntel.LandPhase == 1 then
-                    self.Brain.amanager.Demand.Land.T1.aa = totalMobileAARequired
-                elseif self.BrainIntel.LandPhase == 2 then
-                    self.Brain.amanager.Demand.Land.T2.aa = totalMobileAARequired
-                elseif self.BrainIntel.LandPhase == 3 then
-                    self.Brain.amanager.Demand.Land.T3.aa = totalMobileAARequired
-                end
-
-                --[[
-                -- I thought I could set requirements per base but I don't have the structure yet.
-                for k, v in self.Brain.BuilderManagers do
-                    if v.PathableZones > 0 then
-                        
-                    end
-                end
-                ]]
-                --for k, v in self.Brain.EnemyIntel.EnemyStartLocations
-                --b.enemystartdata[v.Index].startangle
-                --b.enemystartdata[v.Index].startdistance
-            else
-                self.Brain.amanager.Demand.Land.T1.aa = 0
-                self.Brain.amanager.Demand.Land.T2.aa = 0
-                self.Brain.amanager.Demand.Land.T2.aa = 0
-            end
         end
+        
         --RNGLOG('CheckStrikPotential')
         --RNGLOG('ThreatRisk is '..minThreatRisk)
         if type == 'AirAntiSurface' then
@@ -1659,6 +1629,39 @@ IntelManager = Class {
                 end
             end
             --RNGLOG('Current T2 torpcount is '..self.Brain.amanager.Demand.Air.T2.torpedo)
+        elseif type == 'MobileAntiAir' then
+            local selfThreat = self.Brain.BrainIntel.SelfThreat
+            local enemyThreat = self.Brain.EnemyIntel.EnemyThreatCurrent
+            if selfThreat.LandNow * 1.5 > enemyThreat.Land and selfThreat.AntiAirNow < enemyThreat.Air then
+                local zoneCount = self.Brain.BuilderManagers['MAIN'].PathableZones.PathableZoneCount
+                -- We are going to look at the threat in the pathable zones and see which ones are in our territory and make sure we have a theoretical number of air units there
+                -- I want to do this on a per base method, but I realised I'm not keeping information.
+                local totalMobileAARequired = math.ceil(zoneCount * (enemyThreat.Air / selfThreat.AirNow)) or 0
+                LOG('totalMobileAARequired '..totalMobileAARequired)
+                if self.BrainIntel.LandPhase == 1 then
+                    self.Brain.amanager.Demand.Land.T1.aa = totalMobileAARequired
+                elseif self.BrainIntel.LandPhase == 2 then
+                    self.Brain.amanager.Demand.Land.T2.aa = totalMobileAARequired
+                elseif self.BrainIntel.LandPhase == 3 then
+                    self.Brain.amanager.Demand.Land.T3.aa = totalMobileAARequired
+                end
+
+                --[[
+                -- I thought I could set requirements per base but I don't have the structure yet.
+                for k, v in self.Brain.BuilderManagers do
+                    if v.PathableZones > 0 then
+                        
+                    end
+                end
+                ]]
+                --for k, v in self.Brain.EnemyIntel.EnemyStartLocations
+                --b.enemystartdata[v.Index].startangle
+                --b.enemystartdata[v.Index].startdistance
+            else
+                self.Brain.amanager.Demand.Land.T1.aa = 0
+                self.Brain.amanager.Demand.Land.T2.aa = 0
+                self.Brain.amanager.Demand.Land.T2.aa = 0
+            end
         end
     end,
 }

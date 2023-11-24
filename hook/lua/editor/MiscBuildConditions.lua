@@ -308,8 +308,15 @@ function BaseCouldBuildMobileAA(aiBrain, locationType)
     local zoneCount = aiBrain.BuilderManagers[locationType].PathableZones.PathableZoneCount
     if zoneCount > 0 then
         for k, v in aiBrain.BuilderManagers[baseName].PathableZones.Zones do
-            math.ceil(zoneCount * (enemy air threat / my air threat))
+            math.ceil(zoneCount * (enemyairthreat / myairthreat))
         end
     end
 
+end
+
+function GatewayValidation(aiBrain)
+    if aiBrain.EcoManager.CoreExtractorT3Percentage >= 1.0 or aiBrain.EconomyOverTimeCurrent.MassIncome > 20 then
+        return true
+    end
+    return false
 end

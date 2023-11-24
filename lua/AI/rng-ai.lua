@@ -1508,7 +1508,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     SetPathableZonesForBase = function(self, position, baseName)
-        --LOG('SetPathableZoneForBaseStarting')
+        LOG('SetPathableZoneForBaseStarting for '..baseName)
         local zoneTable = {
             PathableZoneCount = 0,
             Zones = {}
@@ -1525,7 +1525,7 @@ AIBrain = Class(RNGAIBrainClass) {
             WARN('AI DEBUG: No land zones found for expansion base marker to check')
         end
         self.BuilderManagers[baseName].PathableZones = zoneTable
-        --LOG('Pathable zone table for base name '..baseName..' '..repr(self.BuilderManagers[baseName].PathableZones))
+        LOG('Pathable zone table for base name '..baseName..' '..repr(self.BuilderManagers[baseName].PathableZones))
     end,
 
 

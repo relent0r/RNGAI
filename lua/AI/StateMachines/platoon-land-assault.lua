@@ -130,19 +130,24 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             end
             local target
             if not target then
+                self:LogDebug('looking for acu snipe target')
                 target = RUtils.CheckACUSnipe(aiBrain, 'Land')
             end
             if not target then
+                self:LogDebug('looking for high priority target')
                 target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
             end
             if not target or target.Dead then
                 if self.PlatoonData.RangedAttack and aiBrain.EnemyIntel.EnemyFireBaseDetected then
+                    self:LogDebug('Ranged attack platoon, looking for defensive units')
                     target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, false, self, 'Attack', self.BaseEnemyArea, {categories.STRUCTURE * categories.DEFENSE, categories.STRUCTURE})
                 else
+                    self:LogDebug('Standard attack platoon, looking for normal units')
                     target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, false, self, 'Attack', self.BaseEnemyArea, self.atkPri)
                 end
             end
             if target and not IsDestroyed(target) then
+                self:LogDebug('Target Found of type '..target.UnitId)
                 local targetPos = target:GetPosition()
                 self.BuilderData = {
                     Target = target,
@@ -150,6 +155,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 }
                 local rx = self.Pos[1] - targetPos[1]
                 local rz = self.Pos[3] - targetPos[3]
+                self:LogDebug('Target distance is '..(rx * rx + rz * rz))
                 if rx * rx + rz * rz < self.EnemyRadiusSq and NavUtils.CanPathTo(self.MovementLayer, self.Pos, targetPos) then
                     self:LogDebug('target close in DecideWhatToDo, CombatLoop')
                     self:ChangeState(self.CombatLoop)
@@ -290,8 +296,33 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                                     target = acuUnit
                                     rangeModifier = 5
                                 elseif acuUnit and self.CurrentPlatoonThreat < totalThreat['AntiSurface'] then
+                                    local acuRange = StateUtils.GetUnitMaxWeaponRange(acuUnit)
+                                    if target then
+                                        local targetPos = target:GetPosition()
+                                        local rx = self.Pos[1] - targetPos[1]
+                                        local rz = self.Pos[3] - targetPos[3]
+                                        local targetDistance = rx * rx + rz * rz
+                                        if targetDistance < self.MaxPlatoonWeaponRange * self.MaxPlatoonWeaponRange then
+                                            local acuPos = acuUnit:GetPosition()
+                                            local ax = self.Pos[1] - acuPos[1]
+                                            local az = self.Pos[3] - acuPos[3]
+                                            local acuDistance = ax * ax + az * az
+                                            if targetDistance < acuDistance and acuDistance > acuRange then
+                                                self.BuilderData = {
+                                                    Target = target
+                                                }
+                                                self:LogDebug('target found in Navigating and its closer than the acu is, CombatLoop')
+                                                LOG('target found in Navigating, CombatLoop')
+                                                self:ChangeState(self.CombatLoop)
+                                                return
+                                            end
+                                        end
+                                    end
                                     self:LogDebug('ACU present in Navigating, DecideWhatToDo')
-                                    LOG('ACU present in Navigating, DecideWhatToDo')
+                                    self:LogDebug('ACU target distance is '..VDist3(acuUnit:GetPosition(), self.Pos))
+                                    if target then
+                                        self:LogDebug('Comparitive target distance is '..VDist3(target:GetPosition(), self.Pos))
+                                    end
                                     self:ChangeState(self.DecideWhatToDo)
                                     return
                                 end

@@ -8281,7 +8281,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             coroutine.yield(20)
         end
     end,
-
+--[[
     TruePlatoonRNG = function(self)
         local VDist2Sq = VDist2Sq
         local function GetWeightedHealthRatio(unit)--health % including shields
@@ -9135,26 +9135,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                         if VDist2Sq(unitPos[1],unitPos[3],platoon.Pos[1],platoon.Pos[3])>v.MaxWeaponRange/3*v.MaxWeaponRange/3+platoonNum*platoonNum then
                             --spread=spread+VDist3Sq(v:GetPosition(),platoon.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
                             --snum=snum+1
-                            ---[[
-                            if platoon.dest then
-                                IssueClearCommands({v})
-                                if v.Sniper then
-                                    IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.dest,{VDist3(platoon.dest,platoon.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
-                                else
-                                    IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.dest,{VDist3(platoon.dest,platoon.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
-                                end
-                                spread=spread+VDist3Sq(unitPos,platoon.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
-                                snum=snum+1
-                            else
-                                IssueClearCommands({v})
-                                if v.Sniper or v.Support then
-                                    IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.home,{VDist3(platoon.home,platoon.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
-                                else
-                                    IssueMove({v},RUtils.lerpy(platoon.Pos,platoon.home,{VDist3(platoon.home,platoon.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
-                                end
-                                spread=spread+VDist3Sq(unitPos,platoon.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
-                                snum=snum+1
-                            end--]]
                         end
                     end
                 end
@@ -9298,6 +9278,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             self.chpdata.merging=false
         end
     end,
+    ]]
 
     StateMachineAIRNG = function(self)
         local machineType = self.PlatoonData.StateMachine
