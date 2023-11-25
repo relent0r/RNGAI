@@ -536,6 +536,10 @@ AssignToUnitsMachine = function(data, platoon, units)
                 end
             end
         end
+        if not platoon.MaxPlatoonWeaponRange then
+            LOG('No MaxPlatoonWeaponRange performing backup')
+            platoon.MaxPlatoonWeaponRange=20
+        end
         platoon:OnUnitsAddedToPlatoon()
         -- start the behavior
         ChangeState(platoon, platoon.Start)

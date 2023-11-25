@@ -111,7 +111,7 @@ SimplePriority = function(self,aiBrain)--use the aibrain priority table to do th
         --RNGLOG('No priority found')
         return false
     end
-    if VDist2Sq(point.Position[1],point.Position[3],self.Pos[1],self.Pos[3])<(self.MaxWeaponRange+20)*(self.MaxWeaponRange+20) then return false end
+    if VDist2Sq(point.Position[1],point.Position[3],self.Pos[1],self.Pos[3])<(self.MaxPlatoonWeaponRange+20)*(self.MaxPlatoonWeaponRange+20) then return false end
     if not self.combat and not self.retreat then
         if point.type then
             --RNGLOG('switching to state '..point.type)
@@ -192,7 +192,7 @@ VariableKite = function(platoon,unit,target)--basic kiting function.. complicate
         strafemod=7
     end
     if unit.Role=='AA'  then
-        dest=KiteDist(pos,tpos,platoon.MaxWeaponRange+3,healthmod)
+        dest=KiteDist(pos,tpos,platoon.MaxPlatoonWeaponRange+3,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif unit.Role=='Sniper' and unit.MaxWeaponRange then
         dest=KiteDist(pos,tpos,unit.MaxWeaponRange,healthmod)
@@ -201,7 +201,7 @@ VariableKite = function(platoon,unit,target)--basic kiting function.. complicate
         dest=KiteDist(pos,tpos,unit.MaxWeaponRange-math.random(1,3)-mod,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     else
-        dest=KiteDist(pos,tpos,platoon.MaxWeaponRange+5-math.random(1,3)-mod,healthmod)
+        dest=KiteDist(pos,tpos,platoon.MaxPlatoonWeaponRange+5-math.random(1,3)-mod,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     end
     if VDist3Sq(pos,dest)>6 then
@@ -302,7 +302,7 @@ ExitConditions = function(self,aiBrain)
                             return true
                         end
                     else
-                        if dist<math.max(self.MaxWeaponRange*self.MaxWeaponRange*3,625) then
+                        if dist<math.max(self.MaxPlatoonWeaponRange*self.MaxPlatoonWeaponRange*3,625) then
                             --RNGLOG('Exit Path Navigation')
                             return true
                         end
@@ -321,7 +321,7 @@ MainBaseCheck = function(self, aiBrain)
     else
         return false
     end
-    if VDist2Sq(hiPriTargetPos[1],hiPriTargetPos[3],self.Pos[1],self.Pos[3])<(self.MaxWeaponRange+20)*(self.MaxWeaponRange+20) then return false end
+    if VDist2Sq(hiPriTargetPos[1],hiPriTargetPos[3],self.Pos[1],self.Pos[3])<(self.MaxPlatoonWeaponRange+20)*(self.MaxPlatoonWeaponRange+20) then return false end
     if not self.combat and not self.retreat then
         if self.path and VDist3Sq(self.path[RNGGETN(self.path)],hiPriTargetPos)>400 then
             self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)

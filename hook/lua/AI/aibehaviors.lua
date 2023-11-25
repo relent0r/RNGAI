@@ -873,7 +873,7 @@ function ExpMoveToPosition(aiBrain, platoon, target, unit, ignoreUnits)
         if unit.MaxWeaponRange then
             dest=KiteDist(pos,tpos,unit.MaxWeaponRange-math.random(1,5)-mod)
         else
-            dest=KiteDist(pos,tpos,platoon.MaxWeaponRange+5-math.random(1,3)-mod)
+            dest=KiteDist(pos,tpos,platoon.MaxPlatoonWeaponRange+5-math.random(1,3)-mod)
         end
         if VDist3Sq(pos,dest)>8 then
             IssueMove({unit},dest)

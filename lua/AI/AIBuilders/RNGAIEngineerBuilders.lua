@@ -381,6 +381,19 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
+        BuilderName = 'RNGAI Factory Engineer T1 Reclaim Expansion',
+        PlatoonTemplate = 'T1BuildEngineer',
+        Priority = 0,
+        PriorityFunction = ReclaimBasedFactoryPriority,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH1 - categories.COMMAND }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 30, categories.ENGINEER * categories.TECH1 - categories.COMMAND } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T2 Expansion',
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 450, -- low factory priority

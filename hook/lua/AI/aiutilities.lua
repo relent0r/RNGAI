@@ -877,9 +877,9 @@ function AIGetMarkerLocationsRNG(aiBrain, markerType)
     for k, v in markers do
         if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
             if v.Extractors then
-                table.insert(markerList, {Position = v.position or v.Position, Name = v.Name, MassSpotsInRange = RNGGETN(v.Extractors)})
+                table.insert(markerList, {Position = v.position or v.Position, Name = v.Name or v.name, MassSpotsInRange = RNGGETN(v.Extractors)})
             else
-                table.insert(markerList, {Position = v.position or v.Position, Name = k })
+                table.insert(markerList, {Position = v.position or v.Position, Name = v.Name or v.name })
             end
         end
     end

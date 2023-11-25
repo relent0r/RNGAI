@@ -64,9 +64,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             self.ScoutSupported = true
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             if aiBrain.EnemyIntel.Phase > 1 then
-                self.EnemyRadius = math.max(self.MaxWeaponRange+35, 70)
+                self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 70)
             else
-                self.EnemyRadius = math.max(self.MaxWeaponRange+35, 55)
+                self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 55)
             end
             if self.Vented then
                 LOG('Vented LandCombatPlatoon Starting')
@@ -127,7 +127,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 local hiPriTarget = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
                 if hiPriTarget and not IsDestroyed(hiPriTarget) then
                     hiPriTargetPos = hiPriTarget:GetPosition()
-                    if VDist2Sq(hiPriTargetPos[1],hiPriTargetPos[3],self.Pos[1],self.Pos[3])>(self.MaxWeaponRange+20)*(self.MaxWeaponRange+20) then  
+                    if VDist2Sq(hiPriTargetPos[1],hiPriTargetPos[3],self.Pos[1],self.Pos[3])>(self.MaxPlatoonWeaponRange+20)*(self.MaxPlatoonWeaponRange+20) then  
                         if not self.combat and not self.retreat then
                             if self.path and VDist3Sq(self.path[RNGGETN(self.path)],hiPriTargetPos)>400 then
                                 self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
@@ -194,7 +194,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     end
                     if point then
                     --RNGLOG('point pos '..repr(point.Position)..' with a priority of '..point.priority)
-                        if VDist2Sq(point.Position[1],point.Position[3],self.Pos[1],self.Pos[3])>(self.MaxWeaponRange+20)*(self.MaxWeaponRange+20) then
+                        if VDist2Sq(point.Position[1],point.Position[3],self.Pos[1],self.Pos[3])>(self.MaxPlatoonWeaponRange+20)*(self.MaxPlatoonWeaponRange+20) then
                             if not self.combat and not self.retreat then
                                 if point.type then
                                     --RNGLOG('switching to state '..point.type)
@@ -455,7 +455,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     for _,v in platoonUnits do
                         if v and not v.Dead then
                             local unitPos = v:GetPosition()
-                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>self.MaxWeaponRange*self.MaxWeaponRange+900 then
+                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>self.MaxPlatoonWeaponRange*self.MaxPlatoonWeaponRange+900 then
                                 local vec={}
                                 vec[1],vec[2],vec[3]=v:GetVelocity()
                                 if VDist3Sq({0,0,0},vec)<1 then
@@ -708,19 +708,23 @@ AssignToUnitsMachine = function(data, platoon, units)
                     v:RemoveCommandCap('RULEUCC_Repair')
                     if v.MaxWeaponRange then
                         --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
-                        if not platoon.MaxWeaponRange or v.MaxWeaponRange>platoon.MaxWeaponRange then
-                            platoon.MaxWeaponRange=v.MaxWeaponRange
+                        if not platoon.MaxPlatoonWeaponRange or v.MaxWeaponRange>platoon.MaxPlatoonWeaponRange then
+                            platoon.MaxPlatoonWeaponRange=v.MaxWeaponRange
                         end
                     end
                 end
             end
         end
-        if not platoon.MaxWeaponRange then 
-            platoon.MaxWeaponRange=30
+        if not platoon.MaxPlatoonWeaponRange then
+            LOG('No MaxWeaponRange performing backup')
+            platoon.MaxPlatoonWeaponRange=20
+        end
+        if not platoon.MaxPlatoonWeaponRange then 
+            platoon.MaxPlatoonWeaponRange=30
         end
         for _,v in platoonUnits do
             if not v.MaxWeaponRange then
-                v.MaxWeaponRange=platoon.MaxWeaponRange
+                v.MaxWeaponRange=platoon.MaxPlatoonWeaponRange
             end
         end
         platoon.Pos=GetPlatoonPosition(platoon)

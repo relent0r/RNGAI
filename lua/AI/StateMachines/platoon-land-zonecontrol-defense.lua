@@ -635,16 +635,16 @@ AssignToUnitsMachine = function(data, platoon, units)
                     v:RemoveCommandCap('RULEUCC_Repair')
                     if v.MaxWeaponRange then
                         --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
-                        if not platoon.MaxWeaponRange or v.MaxWeaponRange>platoon.MaxWeaponRange then
-                            platoon.MaxWeaponRange=v.MaxWeaponRange
+                        if not platoon.MaxPlatoonWeaponRange or v.MaxWeaponRange>platoon.MaxPlatoonWeaponRange then
+                            platoon.MaxPlatoonWeaponRange=v.MaxWeaponRange
                         end
                     end
                 end
             end
         end
-        if not platoon.MaxWeaponRange then
+        if not platoon.MaxPlatoonWeaponRange then
             LOG('No MaxWeaponRange performing backup')
-            platoon.MaxWeaponRange=20
+            platoon.MaxPlatoonWeaponRange=20
             for _, v in platoonUnits do
                 for _, weapon in v.Blueprint.Weapon or {} do
                     LOG('PlatoonUnit Weapon Details '..repr(weapon))

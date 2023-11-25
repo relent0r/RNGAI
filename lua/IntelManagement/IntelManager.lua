@@ -626,6 +626,11 @@ IntelManager = Class {
                        --RNGLOG('RNGAI : Zone Control Selection Query did not select zone')
                     end
                 elseif type == 'aadefense' then
+                    --local selfThreat = aiBrain.BrainIntel.SelfThreat
+                    --local enemyThreat = aiBrain.EnemyIntel.EnemyThreatCurrent
+                    --local zoneCount = aiBrain.BuilderManagers['MAIN'].PathableZones.PathableZoneCount
+                    --local totalMobileAARequired = math.ceil(zoneCount * (enemyThreat.Air / selfThreat.AirNow)) or 1
+                    --local threatRequired
                     local compare = 0
                    --RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
                     for k, v in aiBrain.Zones.Land.zones do

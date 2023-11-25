@@ -66,9 +66,9 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             self.ScoutUnit = self:GetPlatoonUnits()[1]
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             if aiBrain.EnemyIntel.Phase > 1 then
-                self.EnemyRadius = math.max(self.MaxWeaponRange+35, 70)
+                self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 70)
             else
-                self.EnemyRadius = math.max(self.MaxWeaponRange+35, 55)
+                self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 55)
             end
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -653,7 +653,7 @@ AssignToUnitsMachine = function(data, platoon, units)
                 if not platoon.IntelRange or v.Blueprint.Intel.RadarRadius > platoon.IntelRange then
                     platoon.IntelRange = v.Blueprint.Intel.RadarRadius
                 end
-                if not platoon.MaxWeaponRange then
+                if not platoon.MaxPlatoonWeaponRange then
                     local maxWeaponRange
                     for _, v in v.Blueprint.Weapon do
                         if v.RangeCategory == 'UWRC_DirectFire' and v.Damage > 0 then
@@ -662,12 +662,12 @@ AssignToUnitsMachine = function(data, platoon, units)
                             end
                         end
                     end
-                    platoon.MaxWeaponRange = maxWeaponRange
+                    platoon.MaxPlatoonWeaponRange = maxWeaponRange
                 end
             end
         end
-        if not platoon.MaxWeaponRange then 
-            platoon.MaxWeaponRange=19
+        if not platoon.MaxPlatoonWeaponRange then 
+            platoon.MaxPlatoonWeaponRange=19
         end
         platoon:OnUnitsAddedToPlatoon()
         -- start the behavior
