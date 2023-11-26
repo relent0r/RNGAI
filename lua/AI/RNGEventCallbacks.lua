@@ -55,12 +55,6 @@ function OnTransfered(transferedUnits, toArmy, captured)
         for _, v in transferedUnits do
             if not v.Dead then
                 if not originalBrain then
-                    if v.oldowner then
-                        LOG('Old Owner is '..v.oldowner)
-                        originalBrain = GetArmyBrain(v.oldowner)
-                    else
-                        LOG('There is no old owner')
-                    end
                     if originalBrain and originalBrain.Status == 'Defeat' then
                         local armyStartX, armyStartZ = originalBrain:GetArmyStartPos()
                         LOG('Original Army brain start pos is '..repr({armyStartX, 0 , armyStartZ}))

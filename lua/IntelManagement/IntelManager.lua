@@ -404,9 +404,16 @@ IntelManager = Class {
                     local dx = platoonPosition[1] - v.pos[1]
                     local dz = platoonPosition[3] - v.pos[3]
                     local zoneDist = dx * dx + dz * dz
-                    if (not bestZoneDist or zoneDist < bestZoneDist) and control >= 1 and NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition, v.pos) then
-                        bestZoneDist = zoneDist
-                        bestZone = v.id
+                    if (not bestZoneDist or zoneDist < bestZoneDist) and NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition, v.pos) then
+                        if controlRequired then
+                            if control < 1 then
+                                bestZoneDist = zoneDist
+                                bestZone = v.id
+                            end
+                        else
+                            bestZoneDist = zoneDist
+                            bestZone = v.id
+                        end
                     end
                 end
                 if bestZone then

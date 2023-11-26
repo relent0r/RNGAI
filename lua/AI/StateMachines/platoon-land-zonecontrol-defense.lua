@@ -329,7 +329,12 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 if rx * rx + rz * rz < targetRange * targetRange then
                     self:MoveToLocation(RUtils.AvoidLocation(targetPos, self.Pos, avoidRange), false)
                 else
-                    self:MoveToLocation(self.Home, false)
+                    local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, true)
+                    if zoneRetreat then
+                        self:MoveToLocation(aiBrain.Zones.Land.zones[zoneRetreat].pos, false)
+                    else
+                        self:MoveToLocation(self.Home, false)
+                    end
                 end
                 coroutine.yield(40)
             end
@@ -689,7 +694,7 @@ ZoneControlThreatThread = function(aiBrain, platoon)
             local targetThreat = GetThreatAtPosition(aiBrain, platoon.Pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
             if targetThreat > 0 then
                 platoon:LogDebug(string.format('ZoneControlThreatThread found imap threat, looking for closest unit'))
-                local target = platoon:FindClosestUnit('Attack', 'Enemy', false, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE - categories.INSIGNIFICANTUNIT))
+                local target = StateUtils.GetClosestUnitRNG(aiBrain, platoon, platoon.Pos, (categories.STRUCTURE * categories.DEFENSE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, platoon.EnemyRadius, 'Enemy')
                 if target and not target.Dead then
                     local closestTarget
                     local targetRange = RUtils.GetTargetRange(target) or 45

@@ -282,7 +282,12 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 if rx * rx + rz * rz < targetRange * targetRange then
                     self:MoveToLocation(RUtils.AvoidLocation(targetPos, self.Pos, avoidRange), false)
                 else
-                    self:MoveToLocation(self.Home, false)
+                    local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, true)
+                    if zoneRetreat then
+                        self:MoveToLocation(aiBrain.Zones.Land.zones[zoneRetreat].pos, false)
+                    else
+                        self:MoveToLocation(self.Home, false)
+                    end
                 end
                 coroutine.yield(40)
             end
