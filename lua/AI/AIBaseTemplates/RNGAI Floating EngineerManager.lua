@@ -11,6 +11,7 @@ BaseBuilderTemplate {
     Builders = {       
                 'RNGAI Mass Builder Floating',
                 'RNGAI T1 Reclaim Floating',
+                'RNGAI Mass Storage Builder Floating',
 
 		},
     NonCheatBuilders = { },

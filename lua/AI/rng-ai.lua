@@ -1215,7 +1215,6 @@ AIBrain = Class(RNGAIBrainClass) {
 
         self.BuilderManagers = {}
         SUtils.AddCustomUnitSupport(self)
-        LOG('Adding builder managers at '..repr(self:GetStartVector3f()))
         self:AddBuilderManagers(self:GetStartVector3f(), 100, 'MAIN', false)
         -- Generates the zones and updates the resource marker table with Zone IDs
         --IntelManagerRNG.GenerateMapZonesRNG(self)

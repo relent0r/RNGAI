@@ -1218,6 +1218,9 @@ function AdjacencyMassCheckRNG(aiBrain, locationType, category, radius)
         WARN('*AI WARNING: AdjacencyCheck - Invalid location - ' .. locationType)
         return false
     end
+    if type(radius) == 'string' then
+        radius = aiBrain.OperatingAreas[radius]
+    end
     local refunits  = AIUtils.GetOwnUnitsAroundPoint(aiBrain, category, factoryManager:GetLocationCoords(), radius)
     if not refunits or table.empty(refunits) then
         return false

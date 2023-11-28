@@ -86,6 +86,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             local scout = self.ScoutUnit
             local scoutPos = scout:GetPosition()
             if self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Dead then
+                self:LogDebug(string.format('We have an existing AttackTarget, CombatLoop'))
                 self:ChangeState(self.CombatLoop)
                 return
             end
@@ -93,9 +94,8 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                 local massPoints = aiBrain.GridDeposits:GetResourcesWithinDistance('Mass', scoutPos, 180, self.MovementLayer)
                 if not table.empty(massPoints) then
                     local enemyPos = self.BuilderData.RetreatFrom:GetPosition()
-                    --LOG('We can retreat to mass markers')
+                    self:LogDebug(string.format('We can retreat to a masspoint, number of potential points '..table.getn(massPoints)))
                     for _, v in massPoints do
-                        --LOG('Angle is '..repr(RUtils.GetAngleRNG(scoutPos[1], scoutPos[3], v.Position[1], v.Position[3], enemyPos[1], enemyPos[3])))
                         if RUtils.GetAngleRNG(scoutPos[1], scoutPos[3], v.Position[1], v.Position[3], enemyPos[1], enemyPos[3]) > 0.6 
                            and NavUtils.CanPathTo(self.MovementLayer, scoutPos, v.Position) then
                             local rx = scoutPos[1] - v.Position[1]
@@ -104,14 +104,14 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                                 self.BuilderData = {
                                     ScoutPosition = v.Position
                                 }
-                                --LOG('Scout Find Masspoint to retreat to SupportUnit')
+                                self:LogDebug(string.format('Mass point is greater than 65 units, navigate'))
                                 self:ChangeState(self.Navigating)
                                 return
                             else
                                 self:MoveToLocation(v.Position, false)
                                 coroutine.yield(40)
                                 self.BuilderData = {}
-                                --LOG('Scout Find Masspoint failed DecideWhatToDo')
+                                self:LogDebug(string.format('Mass points are close, moving to marker'))
                                 self:ChangeState(self.DecideWhatToDo)
                                 return
                             end
@@ -132,11 +132,11 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         local rx = scoutPos[1] - supportUnitPos[1]
                         local rz = scoutPos[3] - supportUnitPos[3]
                         if rx * rx + rz * rz > 4225 then
-                            --LOG('Scout SupportUnit Navigating')
+                            self:LogDebug(string.format('Assist Unit greater than 65 units navigate to platoon.'))
                             self:ChangeState(self.Navigating)
                             return
                         else
-                            --LOG('Scout SupportUnit SupportUnit')
+                            self:LogDebug(string.format('Switch to support unit mode SupportUnit'))
                             self:ChangeState(self.SupportUnit)
                             return
                         end
@@ -154,11 +154,11 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                             local rx = scoutPos[1] - platPos[1]
                             local rz = scoutPos[3] - platPos[3]
                             if rx * rx + rz * rz > 4225 then
-                                --LOG('Scout AssistPlatoon Navigating')
+                                self:LogDebug(string.format('Assist Platoon greater than 65 units navigate to platoon.'))
                                 self:ChangeState(self.Navigating)
                                 return
                             else
-                                --LOG('Scout AssistPlatoon SupportUnit')
+                                self:LogDebug(string.format('Switch to support platoon mode SupportUnit'))
                                 self:ChangeState(self.SupportUnit)
                                 return
                             end
@@ -176,11 +176,11 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         local rx = scoutPos[1] - targetData.Position[1]
                         local rz = scoutPos[3] - targetData.Position[3]
                         if rx * rx + rz * rz > 4225 then
-                            --LOG('Scout ZoneLocation Navigating')
+                            self:LogDebug(string.format('Zone Location scout greater than 65 units navigate'))
                             self:ChangeState(self.Navigating)
                             return
                         else
-                            --LOG('Scout ZoneLocation HoldPosition')
+                            self:LogDebug(string.format('Zone Location close, hold position'))
                             self:ChangeState(self.HoldPosition)
                             return
                         end
@@ -197,22 +197,22 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     local rx = scoutPos[1] - targetData.Position[1]
                     local rz = scoutPos[3] - targetData.Position[3]
                     if rx * rx + rz * rz > 4225 then
-                        --LOG('Scout TargetData Navigating')
+                        self:LogDebug(string.format('We have targetData from unknown scoutType Position why? navigate'))
                         self:ChangeState(self.Navigating)
                         return
                     else
-                        --LOG('Scout TargetData Holdposition')
+                        self:LogDebug(string.format('We have targetData from unknown scoutType Position why? HoldPosition'))
                         self:ChangeState(self.HoldPosition)
                         return
                     end
                 else
-                    --LOG('Scout Has no path to targetData location')
+                    self:LogDebug(string.format('We have no targetData Position..50 tick wait.'))
                     coroutine.yield(50)
                 end
             else
-                --LOG('No Scout targetData returned')
+                self:LogDebug(string.format('We have no targetData at all..50 tick wait.'))
             end
-            coroutine.yield(5)
+            coroutine.yield(10)
             --LOG('Scout nothing to do in DecideWhatToDo')
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -245,6 +245,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                 return
             end
             if target and not target.Dead then
+                self:LogDebug(string.format('Kiting Enemy'))
                 StateUtils.VariableKite(self,scout,target)
             end
             coroutine.yield(20)
@@ -302,8 +303,10 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
+                --local zonePos = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, true).pos
                 local scoutPos = scout:GetPosition()
                 if VDist3Sq(supportPos, scoutPos) > 36 then
+                    self:LogDebug(string.format('Lerp to support position'))
                     IssueClearCommands(GetPlatoonUnits(self))
                     self:MoveToLocation(RUtils.AvoidLocation(supportPos, scoutPos, 4), false)
                 end
@@ -350,6 +353,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                 --LOG('Scout is holding position at '..repr(holdPos))
                 if VDist3Sq(holdPos, scout:GetPosition()) > 36 then
                     IssueClearCommands(GetPlatoonUnits(self))
+                    self:LogDebug(string.format('Lerp to hold position'))
                     self:MoveToLocation(holdPos, false)
                 end
                 if builderData.Zone and im.ZoneIntel.Assignment[builderData.Zone].RadarCoverage then
@@ -558,6 +562,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         self.retreatTarget = builderData.RetreatFrom
                     end
                     if not builderData.RetreatFrom or builderData.RetreatFrom.Dead then
+                        self:LogDebug(string.format('Unit we were retreating from has died, decidewhattodo'))
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
@@ -575,26 +580,32 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         self:MoveToLocation(RUtils.AvoidLocation(enemyPos, platPos, avoidRange), false)
                     elseif enemyDistance > (avoidRange * avoidRange) * 1.5 then
                         if self.BuilderData.ScoutType == 'AssistPlatoon' and not self.BuilderData.SupportPlatoon.Dead then
+                            self:LogDebug(string.format('Enemy is further away, supportPlatoon'))
                             self:ChangeState(self.SupportUnit)
                             return
                         end
                         if self.BuilderData.ScoutType == 'AssistUnit' and not self.BuilderData.SupportUnit.Dead then
+                            self:LogDebug(string.format('Enemy is further away, supportUnit'))
                             self:ChangeState(self.SupportUnit)
                             return
                         end
+                        self:LogDebug(string.format('Enemy is further away, decidewhattodo'))
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
                     coroutine.yield(20)
                     if enemyUnit.Dead then
                         if self.BuilderData.ScoutType == 'AssistPlatoon' and not self.BuilderData.SupportPlatoon.Dead then
+                            self:LogDebug(string.format('Enemy is dead, supportPlatoon'))
                             self:ChangeState(self.SupportUnit)
                             return
                         end
                         if self.BuilderData.ScoutType == 'AssistUnit' and not self.BuilderData.SupportUnit.Dead then
+                            self:LogDebug(string.format('Enemy is dead, supportUnit'))
                             self:ChangeState(self.SupportUnit)
                             return
                         end
+                        self:LogDebug(string.format('Enemy is dead, decidewhattodo'))
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end

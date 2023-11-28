@@ -134,6 +134,9 @@ function MassMarkerLessThanDistanceRNG(aiBrain, distance)
     local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     local adaptiveResourceMarkers = GetMarkersRNG()
     local startX, startZ = aiBrain:GetArmyStartPos()
+    if type(distance) == 'string' then
+        distance = aiBrain.OperatingAreas[distance]
+    end
     for k, v in adaptiveResourceMarkers do
         if v.type == 'Mass' then
             if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then

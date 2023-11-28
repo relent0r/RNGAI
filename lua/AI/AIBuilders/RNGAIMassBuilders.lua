@@ -678,6 +678,49 @@ BuilderGroup {
 }
 
 BuilderGroup {
+    BuilderGroupName = 'RNGAI Mass Storage Builder Floating',
+    BuildersType = 'EngineerBuilder',
+    
+    Builder {
+        BuilderName = 'RNG T1 Mass Adjacency Floating',
+        PlatoonTemplate = 'EngineerBuilderRNG',
+        Priority = 905,
+        DelayEqualBuildPlattons = {'MassStorage', 5},
+        InstanceCount = 1,
+        BuilderConditions = {
+            --{ UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
+            { MABC, 'MassMarkerLessThanDistanceRNG',  { 'BaseDMZArea' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.95, 1.05 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'MAIN', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 'BaseDMZArea', 'ueb1106' } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
+                BaseTemplate = 'CappedExtractorTemplate',
+                BuildClose = false,
+                CappingTemplate = true,
+                Categories = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
+                NearDefensivePoints = false,
+                NoPause = true,
+                Radius = 150,
+                BuildStructures = {
+                    'MassStorage',
+                    'MassStorage',
+                    'MassStorage',
+                    'MassStorage',
+
+                },
+                Location = 'MAIN',
+            }
+        }
+    },
+}
+
+BuilderGroup {
     BuilderGroupName = 'RNGEXP Crazyrush Builder',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'EngineerBuilder',
     Builder {
