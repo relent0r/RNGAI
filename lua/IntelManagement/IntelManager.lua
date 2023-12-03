@@ -1649,6 +1649,8 @@ IntelManager = Class {
                 -- We are going to look at the threat in the pathable zones and see which ones are in our territory and make sure we have a theoretical number of air units there
                 -- I want to do this on a per base method, but I realised I'm not keeping information.
                 local totalMobileAARequired = math.ceil(zoneCount * (enemyThreat.Air / selfThreat.AirNow)) or 0
+                LOG('Enemy Air Threat '..enemyThreat.Air)
+                LOG('Self Air Threat '..selfThreat.AirNow)
                 LOG('totalMobileAARequired '..totalMobileAARequired)
                 if self.BrainIntel.LandPhase == 1 then
                     self.Brain.amanager.Demand.Land.T1.aa = totalMobileAARequired

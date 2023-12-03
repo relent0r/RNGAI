@@ -511,7 +511,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         else
                             LOG('No builder data position at end of path')
                         end
-                        self.dest={self.path[nodenum][1],self.path[nodenum][2],self.path[nodenum][3]}
+                        self.dest=self.BuilderData.Position
                         self:MoveToLocation(self.dest,false)
                     end
                     for i,v in self.path do

@@ -517,7 +517,10 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         self.dest={self.path[nodenum][1],self.path[nodenum][2],self.path[nodenum][3]}
                         StateUtils.SpreadMove(platoonUnits,StateUtils.Midpoint(self.path[1],self.path[2],0.1))
                     else
-                        self.dest={self.path[nodenum][1],self.path[nodenum][2],self.path[nodenum][3]}
+                        if not self.BuilderData.Position then
+                            self:LogDebug(string.format('No BuilderData.Position '))
+                        end
+                        self.dest=self.BuilderData.Position
                         self:MoveToLocation(self.dest,false)
                     end
                     for i,v in self.path do
@@ -680,7 +683,7 @@ ZoneControlPositionThread = function(aiBrain, platoon)
         else
             platoon.Pos=GetPlatoonPosition(platoon)
         end
-        coroutine.yield(5)
+        coroutine.yield(10)
     end
 end
 
@@ -694,9 +697,8 @@ ZoneControlThreatThread = function(aiBrain, platoon)
             local targetThreat = GetThreatAtPosition(aiBrain, platoon.Pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
             if targetThreat > 0 then
                 platoon:LogDebug(string.format('ZoneControlThreatThread found imap threat, looking for closest unit'))
-                local target = StateUtils.GetClosestUnitRNG(aiBrain, platoon, platoon.Pos, (categories.STRUCTURE * categories.DEFENSE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, platoon.EnemyRadius, 'Enemy')
+                local target = StateUtils.GetClosestUnitRNG(aiBrain, platoon, platoon.Pos, (categories.STRUCTURE * categories.DEFENSE) + (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, platoon.EnemyRadius, 'Enemy')
                 if target and not target.Dead then
-                    local closestTarget
                     local targetRange = RUtils.GetTargetRange(target) or 45
                     local targetPos = target:GetPosition()
                     local rx = platoon.Pos[1] - targetPos[1]

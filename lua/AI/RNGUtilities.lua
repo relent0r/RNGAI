@@ -6128,6 +6128,13 @@ function VentToPlatoon(platoon, aiBrain, plan)
     --RNGLOG('Venting to new trueplatoon platoon')
     local ventPlatoon
     local platoonUnits = platoon:GetPlatoonUnits()
+    for k, v in platoonUnits do
+        if v.Dead then
+            LOG('vent unit is dead')
+        else
+            LOG('vent unit is '..v.UnitId)
+        end
+    end
     if plan == 'LandCombatBehavior' then
         LOG('Venting to LandCombatBehavior')
         ventPlatoon = aiBrain:MakePlatoon('', '')

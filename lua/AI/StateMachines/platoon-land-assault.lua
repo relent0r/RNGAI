@@ -216,7 +216,6 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 WARN('No position passed to LandAssault')
                 return false
             end
-            LOG('Navigating LandAssault')
             if not self.CurrentPlatoonThreat then
                 self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
             end

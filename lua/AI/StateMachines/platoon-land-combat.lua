@@ -528,7 +528,10 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                         StateUtils.SpreadMove(aa,StateUtils.Midpoint(self.path[1],self.path[2],0.1))
                     else
                         self:LogDebug(string.format('Platoon move towards end of path '))
-                        self.dest={self.path[nodenum][1]+math.random(-4,4),self.path[nodenum][2],self.path[nodenum][3]+math.random(-4,4)}
+                        if not self.BuilderData.Position then
+                            self:LogDebug(string.format('No BuilderData.Position '))
+                        end
+                        self.dest=self.BuilderData.Position
                         self:MoveToLocation(self.dest,false)
                     end
                     for i,v in self.path do

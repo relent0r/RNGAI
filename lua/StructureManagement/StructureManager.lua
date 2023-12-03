@@ -1241,7 +1241,7 @@ StructureManager = Class {
             --if extractorsDetail.TECH1 > 0 and extractorsDetail.TECH2 > 0 then
             --    RNGLOG('T2 Mex Ratio is '..(extractorsDetail.TECH1 / extractorsDetail.TECH2))
             --end
-            if extractorsDetail.TECH1Upgrading < 2 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and
+            if extractorsDetail.TECH1Upgrading < 3 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and
                 (totalSpend < upgradeSpend or massStorage > 600) and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                     --LOG('We Could upgrade an extractor now with over time')
                     --LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')

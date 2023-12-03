@@ -1264,7 +1264,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.StructureManager:Run()
         self:ForkThread(IntelManagerRNG.CreateIntelGrid, self.IntelManager)
         self:ForkThread(self.CreateFloatingEngineerBase, self.BrainIntel.StartPos)
-        if self.RNGDEBUG then
+        if true then
             self:ForkThread(self.LogDataThreadRNG)
         end
     end,
@@ -1355,7 +1355,15 @@ AIBrain = Class(RNGAIBrainClass) {
             local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(self)
             --RNGLOG('Unit Stats '..repr(im.UnitStats))
             RNGLOG('IntelCoverage Percentage '..repr(im.MapIntelStats.IntelCoverage))
-            RNGLOG('Tactical Missions '..repr(self.TacticalMonitor.TacticalMissions))
+            RNGLOG('Tactical Snipe Missions ')
+            for k, v in self.TacticalMonitor.TacticalMissions.ACUSnipe do
+                if table.getn(v.AIR) > 0 then
+                    LOG(repr(v.AIR))
+                end
+                if table.getn(v.LAND) > 0 then
+                    LOG(repr(v.LAND))
+                end
+            end
             RNGLOG('Enemy Build Power Table '..repr(im.EnemyBuildStrength))
             coroutine.yield(100)
         end
@@ -4223,7 +4231,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
-                            local NavalFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
+                            local NavalFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.NAVAL) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'MASSEXTRACTION' then
                             local unitAlreadySet = false
@@ -4311,20 +4319,6 @@ AIBrain = Class(RNGAIBrainClass) {
             coroutine.yield(20)
         end
     end,
-
-    --[[EcoManagerPowerStateCheck = function(self)
-
-        local stallTime = GetEconomyStored(self, 'ENERGY') / ((GetEconomyRequested(self, 'ENERGY') * 10) - (GetEconomyIncome(self, 'ENERGY') * 10))
-        --RNGLOG('Time to stall for '..stallTime)
-        if stallTime >= 0.0 then
-            if stallTime < 20 then
-                return true
-            elseif stallTime > 20 then
-                return false
-            end
-        end
-        return false
-    end,]]
 
     EcoManagerMassStateCheck = function(self)
         if GetEconomyTrend(self, 'MASS') <= 0.0 and GetEconomyStored(self, 'MASS') <= 200 then
@@ -4612,7 +4606,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         if unitCat.TECH3 and unitCat.AIR then
                                 if v:GetFractionComplete() < 0.7 then
                                     --RNGLOG('EcoPowerPreemptive : T3 Air Being Built')
-                                    potentialPowerConsumption = potentialPowerConsumption + (1800 * multiplier)
+                                    potentialPowerConsumption = potentialPowerConsumption + (1200 * multiplier)
                                     continue
                                 else
                                     v.BuildCompleted = true
