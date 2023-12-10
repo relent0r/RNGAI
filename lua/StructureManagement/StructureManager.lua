@@ -153,13 +153,15 @@ StructureManager = Class {
             },
         }
         self.ShieldCoverage = {}
+        self.TMDRequired = false
+        self.StructuresRequiringTMD = {}
     end,
 
     Run = function(self)
        --LOG('RNGAI : StructureManager Starting')
         self:ForkThread(self.FactoryDataCaptureRNG)
         self:ForkThread(self.EcoExtractorUpgradeCheckRNG, self.Brain)
-        --self:ForkThread(self.CheckShieldCoverage)
+        self:ForkThread(self.CheckDefensiveCoverage)
         if self.Debug then
             self:ForkThread(self.StructureDebugThread)
         end
@@ -1306,23 +1308,25 @@ StructureManager = Class {
         end
     end,
 
-    ExtractorTMLCheck = function(self, extractor)
+    StructureTMLCheck = function(self, structure)
         local defended = true
-        local needSort = false
-        if extractor.TMLInRange then
-            for k, v in extractor.TMLInRange do
-                if not aiBrain.EnemyIntel.TML[k] or aiBrain.EnemyIntel.TML[k].object.Dead then
-                    extractor.TMLInRange[k] = nil
+        if structure.TMLInRange then
+            LOG('TMLInRange table found '..repr(structure.TMLInRange))
+        end
+        if structure.TMLInRange and not table.empty(structure.TMLInRange) then
+            LOG('TMLInRange is greater than 0')
+            for k, v in structure.TMLInRange do
+                if not self.Brain.EnemyIntel.TML[k] or self.Brain.EnemyIntel.TML[k].object.Dead then
+                    LOG('No Entry for TML, dump table '..repr(self.Brain.EnemyIntel.TML))
+                    structure.TMLInRange[k] = nil
                     continue
                 end    
             end
-            if not extractor.TMDInRange then
+            if not structure.TMDInRange then
+                LOG('Not TML defended Entity '..structure.EntityId)
                 defended = false
             end
         end
-        if needSort then
-            extractor.TMLInRange = self:RebuildTable(extractor.TMLInRange)
-         end
         return defended
     end,
     
@@ -1509,6 +1513,12 @@ StructureManager = Class {
                 if VDist3Sq(upgradedExtractor:GetPosition(), aiBrain.BuilderManagers['MAIN'].Position) < 6400 then
                     upgradedExtractor.MAINBASE = true
                 end
+                if not table.empty(aiBrain.EnemyIntel.TML) then
+                    local unitCheck = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').UnitTMLCheck
+                    for _, v in aiBrain.EnemyIntel.TML do
+                        unitCheck(upgradedExtractor, v)
+                    end
+                end
             end
         else
             WARN('No upgrade id provided to upgradeextractorrng')
@@ -1610,38 +1620,25 @@ StructureManager = Class {
         return {TECH1 = tech1Total, TECH1Upgrading = tech1ExtNumBuilding, TECH2 = tech2Total, TECH2Upgrading = tech2ExtNumBuilding, TECH3 = tech3Total }, extractorTable, totalSpend
     end,
 
-    CheckShieldCoverage = function(self)
+    CheckDefensiveCoverage = function(self)
         coroutine.yield(math.random(50, 100))
-        local categoriesToCheck = categories.STRUCTURE * (categories.FACTORY + categories.ENERGYPRODUCTION + categories.STRATEGIC ) * ( categories.TECH3 + categories.EXPERIMENTAL)
-        while not self.Brain.Status ~= "Defeat" do
+        while self.Brain.Status ~= "Defeat" do
             coroutine.yield(100)
-            local shieldCoverage = {}
-            for k, manager in self.Brain.BuilderManagers do
-                if manager.FactoryManager.LocationActive then
-                    local shieldedUnits = 0
-                    local totalUnits = 0
-                    local checkUnits = GetUnitsAroundPoint(self.Brain, categoriesToCheck, manager.FactoryManager.Location, manager.FactoryManager.Radius, 'Ally')
-                    for _, unit in checkUnits do
-                        if unit.AdjacentUnits and not table.empty(unit.AdjacentUnits) then
-                            local shielded = false
-                            for d, adjUnit in unit.AdjacentUnits do
-                                if adjUnit.Blueprint.CategoriesHash.SHIELD then
-                                    shieldedUnits = shieldedUnits + 1
-                                    shielded = true
-                                end
-                            end
-                            totalUnits = totalUnits + 1
-                        end
-                    end
-                    if totalUnits > 0 and shieldedUnits > 0 then
-                        shieldCoverage[k] = { Coverage = shieldedUnits / totalUnits * 100 }
-                    else
-                        shieldCoverage[k] = { Coverage = 0 }
-                    end
+            local extractors = self.Brain:GetListOfUnits(categories.MASSEXTRACTION - categories.TECH1, true)
+            local tmdRequired = {}
+            for _, v in extractors do
+                local isDefended = self:StructureTMLCheck(v)
+                if not isDefended then
+                    RNGINSERT(tmdRequired, v)
                 end
             end
-            self.ShieldCoverage = shieldCoverage
-            --LOG('Shield Coverage '..repr(shieldCoverage))
+            if not table.empty(tmdRequired) then
+                LOG('Set TMD Required on structure manager')
+                self.TMDRequired = true
+                self.StructuresRequiringTMD = tmdRequired
+            else
+                self.TMDRequired = false
+            end
         end
     end,
 }
@@ -1657,6 +1654,10 @@ DummyManager = Class {
         return
     end,
 }
+
+function GetStructureManager(brain)
+    return brain.StructureManager
+end
 
 function CreateStructureManager(brain)
     local sm 

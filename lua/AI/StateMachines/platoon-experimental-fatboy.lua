@@ -153,7 +153,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                             Retreat = true,
                             RetreatReason = 'NoShield'
                         }
-                        --LOG('Fatboy shield is low and there is alot of air threat')
+                        self:LogDebug(string.format('Fatboy has low shield, retreating'))
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -164,7 +164,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                             Retreat = true,
                             RetreatReason = 'NoShield'
                         }
-                        --LOG('Fatboy shield is low and there is artillery threat, retreat')
+                        self:LogDebug(string.format('Fatboy shield is low and there is artillery threat, retreat'))
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -177,7 +177,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                                 Retreat = true,
                                 RetreatReason = 'AirThreat'
                             }
-                            --LOG('Fatboy has 80+ air surface threat around it and less than 30 antiair threat, retreat')
+                            self:LogDebug(string.format('Fatboy has 80+ air surface threat around it and less than 30 antiair threat, retreat'))
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -189,7 +189,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                                 Retreat = true,
                                 RetreatReason = 'AirThreat'
                             }
-                            --LOG('Fatboy has 25+ air surface threat around it and less than 15 antiair threat, retreat')
+                            self:LogDebug(string.format('Fatboy has 25+ air surface threat around it and less than 15 antiair threat, retreat'))
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -201,7 +201,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                                 Retreat = true,
                                 RetreatReason = 'AirThreat'
                             }
-                            --LOG('Fatboy has 10+ air surface threat around it and less than 10 antiair threat, retreat')
+                            self:LogDebug(string.format('Fatboy has 10+ air surface threat around it and less than 10 antiair threat, retreat'))
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -209,7 +209,9 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     local closestUnit
                     local closestUnitDistance
                     if threatTable.RangedUnitThreat.TotalThreat > 0 or threatTable.ArtilleryThreat.TotalThreat > 0 then
-                        --LOG('We have Artillery or Ranged unit threat around us')
+                        self:LogDebug(string.format('We have Artillery or Ranged unit threat around us'))
+                        self:LogDebug(string.format('Artillery Threat '..threatTable.ArtilleryThreat.TotalThreat))
+                        self:LogDebug(string.format('Ranged Threat '..threatTable.RangedUnitThreat.TotalThreat))
                         local overRangedCount = 0
                         for _, enemyUnit in threatTable.ArtilleryThreat.Units do
                             if not IsDestroyed(enemyUnit.Object) then
@@ -224,7 +226,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                                         RetreatReason = 'ArtilleryThreat',
                                         AttackTarget = enemyUnit.Object
                                     }
-                                    --LOG('Fatboy has more than 1 T2 arty within range of it, retreat')
+                                    self:LogDebug(string.format('Fatboy has more than one T2 arty within range of it, retreat'))
                                     self:ChangeState(self.Retreating)
                                 end
                                 if not closestUnit or enemyUnit.Distance < closestUnitDistance then
@@ -245,7 +247,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                                         RetreatReason = 'ArtilleryThreat',
                                         AttackTarget = enemyUnit.Object
                                     }
-                                    --LOG('Fatboy has more than 3 units with more range than the fatboy, retreat')
+                                    self:LogDebug(string.format('Fatboy has more than 3 units with more range than the fatboy, retreat'))
                                     self:ChangeState(self.Retreating)
                                 end
                                 if not closestUnit or enemyUnit.Distance < closestUnitDistance then
@@ -286,7 +288,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                                         RetreatReason = 'NavalThreat',
                                         AttackTarget = enemyUnit.Object
                                     }
-                                    --LOG('Fatboy has naval threat that outranges it, retreat')
+                                    self:LogDebug(string.format('Fatboy has naval threat that outranges it, retreat'))
                                     self:ChangeState(self.Retreating)
                                 end
                                 if not closestUnit or enemyUnit.Distance < closestUnitDistance then
@@ -307,6 +309,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     AttackTarget = target,
                     Position = target:GetPosition()
                 }
+                self:LogDebug(string.format('Fatboy Attacking target'))
                 self:ChangeState(self.AttackTarget)
                 return
             end
@@ -414,6 +417,10 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                     local position = self.ExperimentalUnit:GetPosition()
+                    if self.EnemyThreatTable.TotalSuroundingThreat > 15 and not StateUtils.PositionInWater(position) then
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
                     -- check if we're near our current waypoint
                     local dx = position[1] - wx
                     local dz = position[3] - wz
@@ -426,10 +433,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                         end
                         break
                     end
-                    if self.EnemyThreatTable.TotalSuroundingThreat > 15 and not StateUtils.PositionInWater(position) then
-                        self:ChangeState(self.DecideWhatToDo)
-                        return
-                    end
+                    LOG('Current TotalSuroundingThreat '..repr(self.EnemyThreatTable.TotalSuroundingThreat))
                     -- check for threats
                     WaitTicks(10)
                 end
@@ -780,7 +784,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         if platoonUnits then
             for _, unit in platoonUnits do
                 if not unit.Dead then
-                    IssueClearCommands(unit)
+                    IssueClearCommands({unit})
                     unit.PlatoonHandle = platoon
                     if unit.ExternalFactory then
                         unit.ExternalFactory.FatboyPlatoon = platoon
@@ -907,7 +911,7 @@ GuardThread = function(aiBrain, platoon)
                 if v.Blueprint.CategoriesHash.ANTIAIR then
                     if dx * dx + dz * dz > guardCutOff or v.FatBoyGuardAdded then
                         v.FatBoyGuardAdded = nil
-                        IssueClearCommands(v)
+                        IssueClearCommands({v})
                         IssueMove({v}, experimental)
                         IssueGuard({v}, experimental)
                     end
@@ -915,7 +919,7 @@ GuardThread = function(aiBrain, platoon)
                 if v.Blueprint.CategoriesHash.SCOUT then
                     if dx * dx + dz * dz > guardCutOff or v.FatBoyGuardAdded then
                         v.FatBoyGuardAdded = nil
-                        IssueClearCommands(v)
+                        IssueClearCommands({v})
                         IssueMove({v}, experimental)
                         IssueGuard({v}, experimental)
                     end

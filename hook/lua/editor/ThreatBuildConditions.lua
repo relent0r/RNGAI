@@ -109,7 +109,7 @@ function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
     if expansionMarkers then
         --RNGLOG('Initial expansionMarker list is '..repr(expansionMarkers))
         for k, v in expansionMarkers do
-            if v.type == 'Expansion Area' or v.type == 'Large Expansion Area' or v.type == 'Blank Marker' then
+            if v.type == 'Expansion Area' or v.type == 'Large Expansion Area' or v.type == 'Blank Marker' or v.type == 'Spawn' then
                 if v.RNGArea then
                     if string.find(graphArea, v.RNGArea) then
                         local threat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, tType)

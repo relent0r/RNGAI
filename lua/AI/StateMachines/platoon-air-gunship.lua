@@ -343,7 +343,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         local maxPlatoonDPS = 0
         if platoonUnits then
             for _, v in platoonUnits do
-                IssueClearCommands(v)
+                IssueClearCommands({v})
                 if not v.Dead and v:TestToggleCaps('RULEUTC_StealthToggle') then
                     v:SetScriptBit('RULEUTC_StealthToggle', false)
                 end

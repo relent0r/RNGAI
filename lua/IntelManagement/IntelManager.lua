@@ -641,55 +641,39 @@ IntelManager = Class {
                     local compare = 0
                    --RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
                     for k, v in aiBrain.Zones.Land.zones do
-                        local distanceModifier = VDist3(aiBrain.Zones.Land.zones[v.id].pos,aiBrain.BrainIntel.StartPos)
+                        local distanceModifier = VDist3(aiBrain.Zones.Land.zones[v.id].pos, aiBrain.BrainIntel.StartPos)
                         local enemyModifier = 1
                         local startPos = 1
-                        if zoneSet[v.id].friendlythreat > 0 then
-                            if zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlythreat then
-                                enemyModifier = enemyModifier + 0.5
-                            end
+            
+                        if zoneSet[v.id].friendlythreat > 0 and zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlythreat then
+                            enemyModifier = enemyModifier + 0.5
                         end
-                        if enemyModifier <= 0 then
-                            enemyModifier = 1.0
-                        end
-                        local controlValue = zoneSet[v.id].control
-                        if controlValue <= 0 then
-                            controlValue = 1.0
-                        end
-                        if controlValue >= 1.75 then
-                            controlValue = 0
-                        end
+                        enemyModifier = math.max(enemyModifier, 1.0)  -- Ensure enemyModifier is not less than 1
+                        local controlValue = math.min(math.max(zoneSet[v.id].control, 0), 1.75)  -- Clamp controlValue between 0 and 1.75
                         local resourceValue = zoneSet[v.id].resourcevalue or 1
                         if zoneSet[v.id].startpositionclose then
                             startPos = 0.7
                         end
+                
                         if zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlythreat then
                             enemyDanger = 0.4
                         end
+                
                         if platoon.Zone == v.id and zoneSet[v.id].enemyairthreat == 0 then
                             enemyDanger = 0
                         end
-
-                        --if distanceModifier and resourceValue and controlValue and enemyModifier then
-                        --    RNGLOG('distanceModifier '..distanceModifier)
-                        --   RNGLOG('resourceValue '..resourceValue)
-                        --    RNGLOG('controlValue '..controlValue)
-                        --    RNGLOG('enemyModifier '..enemyModifier)
-                        --end
-                        compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger
-                        --RNGLOG('Compare variable '..compare)
-                        if compare > 0 then
-                            if not selection or compare > selection then
-                                selection = compare
-                                zoneSelection = v.id
-                                --RNGLOG('Zone Control Query Select priority '..selection)
-                            end
+                
+                        compare = (20000 / distanceModifier) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger
+                
+                        if compare > selection then
+                            selection = compare
+                            zoneSelection = v.id
                         end
                     end
-                    if selection then
+                    if zoneSelection then
                         return zoneSelection
                     else
-                       RNGLOG('RNGAI : Zone Control Defense Selection Query did not select zone')
+                        RNGLOG('RNGAI: Zone Control Defense Selection Query did not select zone')
                     end
                 end
             else
@@ -2555,17 +2539,21 @@ TacticalThreatAnalysisRNG = function(aiBrain)
     end
 
     if not RNGTableEmpty(aiBrain.EnemyIntel.TML) then
+        LOG('EnemyIntelTML table it not empty')
         local needSort = false
         for k, v in aiBrain.EnemyIntel.TML do
             if not v.object.Dead then 
                 if not v.validated then
-                    local extractors = GetListOfUnits(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL, false, false)
+                    LOG('EnemyIntelTML unit has not been validated')
+                    local extractors = GetListOfUnits(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL - categories.TECH1, false, false)
                     for c, b in extractors do
                         if VDist3Sq(b:GetPosition(), v.position) < v.range * v.range then
+                            LOG('EnemyIntelTML there is an extractor that is in range')
                             if not b.TMLInRange then
                                 b.TMLInRange = {}
                             end
-                            b.TMLInRange[v.object.EntityId] = v
+                            b.TMLInRange[v.object.EntityId] = v.object
+                            LOG('EnemyIntelTML added TML unit '..repr(b.TMLInRange))
                         end
                     end
                     v.validated = true
@@ -2742,6 +2730,7 @@ LastKnownThread = function(aiBrain)
                                         if not aiBrain.EnemyIntel.TML[id] then
                                             local angle = RUtils.GetAngleToPosition(aiBrain.BuilderManagers['MAIN'].Position, unitPosition)
                                             aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=v.Blueprint.Weapon[1].MaxRadius }
+                                            ForkThread(ValidateTML, aiBrain, aiBrain.EnemyIntel.TML[id])
                                             aiBrain.BasePerimeterMonitor['MAIN'].RecentTMLAngle = angle
                                         end
                                     elseif unitCat.TECH3 and unitCat.ANTIMISSILE and unitCat.SILO then
@@ -3000,6 +2989,29 @@ TruePlatoonPriorityDirector = function(aiBrain)
             needSort = false
         end
         coroutine.yield(40)
+    end
+end
+
+ValidateTML = function(aiBrain, tml)
+    if not tml.validated then
+        LOG('ValidateTML unit has not been validated')
+        local extractors = GetListOfUnits(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL - categories.TECH1, false, false)
+        for _, b in extractors do
+            UnitTMLCheck(b, tml)
+        end
+        tml.validated = true
+    end
+end
+
+UnitTMLCheck = function(extractor, tml)
+    LOG('Distance to TML is '..VDist3Sq(extractor:GetPosition(), tml.position)..' cutoff is '..(tml.range * tml.range))
+    if not extractor.Dead and VDist3Sq(extractor:GetPosition(), tml.position) < tml.range * tml.range then
+        LOG('ValidateTML there is an extractor that is in range')
+        if not extractor.TMLInRange then
+            extractor.TMLInRange = {}
+        end
+        extractor.TMLInRange[tml.object.EntityId] = tml.object
+        LOG('ValidateTML added TML unit '..repr(extractor.TMLInRange))
     end
 end
 

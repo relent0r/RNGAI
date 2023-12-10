@@ -2688,14 +2688,27 @@ Platoon = Class(RNGAIPlatoonClass) {
             return
         end
         if cons.NearDefensivePoints then
-            relative = false
-            reference = RUtils.GetDefensivePointRNG(aiBrain, cons.Location or 'MAIN', cons.Tier or 2, cons.Type)
-            --RNGLOG('reference for defensivepoint is '..repr(reference))
-            --baseTmpl = baseTmplFile[cons.BaseTemplate][factionIndex]
-            -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
-            buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
-            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
-            --RNGLOG('baseTmplList '..repr(baseTmplList))
+            if cons.Type == 'TMD' then
+                local tmdPositions = RUtils.GetTMDPosition(aiBrain, cons.Location)
+                for _, v in tmdPositions do
+                    reference = v
+                    break
+                end
+                LOG('TMD Reference '..repr(reference))
+                RNGINSERT(baseTmplList, baseTmpl)
+                relative = true
+                buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
+                RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            else
+                relative = false
+                reference = RUtils.GetDefensivePointRNG(aiBrain, cons.Location or 'MAIN', cons.Tier or 2, cons.Type)
+                --RNGLOG('reference for defensivepoint is '..repr(reference))
+                --baseTmpl = baseTmplFile[cons.BaseTemplate][factionIndex]
+                -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
+                buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
+                RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+                --RNGLOG('baseTmplList '..repr(baseTmplList))
+            end
         elseif cons.OrderedTemplate then
             local relativeTo = RNGCOPY(eng:GetPosition())
             --RNGLOG('relativeTo is'..repr(relativeTo))

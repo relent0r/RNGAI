@@ -45,6 +45,8 @@ EngineerManager = Class(RNGEngineerManager) {
                         v.TMDInRange[finishedUnit.EntityId] = finishedUnit
                         table.insert(finishedUnit.UnitsDefended, v)
                         LOG('TMD is defending the current unit '..v.UnitId)
+                        LOG('Entity '..v.EntityId)
+                        LOG('TMD Table '..repr(v.TMDInRange))
                     end
                 end
             end

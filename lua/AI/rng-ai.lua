@@ -1381,7 +1381,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     BaseDMZArea = BaseDMZArea,
                     BaseEnemyArea = BaseEnemyArea,
                 }
-                --LOG('Operating Areas set '..repr(self.OperatingAreas))
+                LOG('Operating Areas set '..repr(self.OperatingAreas))
                 self.MapPlayableSize = math.max(playableArea[3], playableArea[4])
             end
             coroutine.yield(3)

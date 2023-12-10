@@ -3972,10 +3972,13 @@ function GetBomberRange(oUnit)
     return iRange
 end
 
-function GetAngleToPosition(Pos1, Pos2)
+function GetAngleToPositionold(Pos1, Pos2)
     -- Returns an angle 0 = north, 90 = east, etc. based on direction of Pos2 from Pos1
     -- This is Maudlins function
-    local iTheta = math.atan(math.abs(Pos1[3] - Pos2[3]) / math.abs(Pos1[1] - Pos2[1])) * 180 / math.pi
+    local deltaY = math.abs(Pos1[3] - Pos2[3])
+    local deltaX = math.abs(Pos1[1] - Pos2[1])
+    local iTheta = math.atan(deltaY / deltaX) * 180 / math.pi
+
     if Pos2[1] > Pos1[1] then
         if Pos2[3] > Pos1[3] then
             return 90 + iTheta
@@ -3988,6 +3991,46 @@ function GetAngleToPosition(Pos1, Pos2)
         end
     end
 end
+
+function DrawAngleDistance(Pos1, Pos2, Pos3)
+    local counter = 0
+    while counter < 500 do
+        WaitTicks(2)
+        DrawCircle(Pos1, 10, '0000FF')
+        DrawCircle(Pos2, 10, '0000FF')
+        DrawCircle(Pos3, 10, 'FFA500')
+
+        DrawLine(Pos1, Pos2, '0000FF')
+        DrawLine(Pos3, Pos2, 'FFA500')
+        counter = counter + 1
+    end
+end
+
+function GetAngleToPosition(Pos1, Pos2)
+    -- Returns an angle 0 = north, 90 = east, etc. based on direction of Pos2 from Pos1
+    local deltaY = Pos2[3] - Pos1[3]
+    local deltaX = Pos2[1] - Pos1[1]
+    local angle = math.atan2(deltaY , deltaX) * 180 / math.pi
+    angle =  modulo(angle + 360, 360) 
+    --local newPos = GetPositionTowardsAngle(Pos2, angle, 30)
+    --ForkThread(DrawAngleDistance, Pos1, Pos2, newPos)
+    return angle
+end
+
+function modulo(a, b)
+    return a - math.floor(a / b) * b
+end
+
+function GetPositionTowardsAngle(Pos1, angle, distance)
+    -- Calculate the new position based on the provided angle and distance
+    local angleRad = math.rad(angle) -- Convert angle to radians
+    local newX = Pos1[1] + distance * math.cos(angleRad)
+    local newZ = Pos1[3] + distance * math.sin(angleRad)
+
+    -- Return the new position as a vector3
+    return {newX, Pos1[2], newZ}
+end
+
 
 function ShieldProtectingTargetRNG(aiBrain, targetUnit, shields)
     local function GetShieldRadiusAboveGroundSquaredRNG(shield)
@@ -6128,36 +6171,146 @@ function VentToPlatoon(platoon, aiBrain, plan)
     --RNGLOG('Venting to new trueplatoon platoon')
     local ventPlatoon
     local platoonUnits = platoon:GetPlatoonUnits()
+    local validUnits = {}
     for k, v in platoonUnits do
-        if v.Dead then
-            LOG('vent unit is dead')
-        else
-            LOG('vent unit is '..v.UnitId)
+        if not v.Dead then
+            table.insert(validUnits, v)
         end
     end
     if plan == 'LandCombatBehavior' then
         LOG('Venting to LandCombatBehavior')
         ventPlatoon = aiBrain:MakePlatoon('', '')
-        aiBrain:AssignUnitsToPlatoon(ventPlatoon, platoonUnits, 'Attack', 'None')
-        import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ Vented = true}, ventPlatoon, platoonUnits)
+        aiBrain:AssignUnitsToPlatoon(ventPlatoon, validUnits, 'Attack', 'None')
+        import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ Vented = true}, ventPlatoon, validUnits)
     elseif plan =='LandAssaultBehavior' then
         LOG('Venting to LandAssaultBehavior')
         ventPlatoon = aiBrain:MakePlatoon('', '')
-        aiBrain:AssignUnitsToPlatoon(ventPlatoon, platoonUnits, 'Attack', 'None')
-        import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ Vented = true }, ventPlatoon, platoonUnits)
+        aiBrain:AssignUnitsToPlatoon(ventPlatoon, validUnits, 'Attack', 'None')
+        import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ Vented = true }, ventPlatoon, validUnits)
     else
         ventPlatoon = aiBrain:MakePlatoon('', plan)
         ventPlatoon.PlanName = 'Vented Platoon'
-        for _, unit in platoonUnits do
-            if unit and not unit.Dead and not unit:BeenDestroyed() then
-                --RNGLOG('Added unit to new platoon')
-                aiBrain:AssignUnitsToPlatoon(ventPlatoon, {unit}, 'Attack', 'None')
-            else
-                --RNGLOG('Unit was dead or destroyed')
-            end
-        end
+        aiBrain:AssignUnitsToPlatoon(ventPlatoon, validUnits, 'Attack', 'None')
     end
     --RNGLOG('Platoon has been vented')
+end
+
+function GetTMDPosition(aiBrain, locationType)
+    local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
+    local smInstance = StructureManagerRNG.GetStructureManager(aiBrain)
+    local structureTable = smInstance.StructuresRequiringTMD
+    local tmdPos
+    local tmdCandidate
+    LOG('Getting TMD Position')
+    LOG('Structure table requiring TMD has this many '..table.getn(structureTable))
+    if not table.empty(structureTable)then
+        local buildPositions = {}
+        local tmdRequired 
+        local tmdPosFound = false
+        for k, v in structureTable do
+            LOG('Unit that needs protecting '..v.UnitId)
+            LOG('Entity '..v.EntityId)
+            if not v.Dead then
+                if not v.TMDInRange and v.TMLInRange then
+                    LOG('No TMD table but tml in range')
+                    local tmlCount = 0
+                    for _, c in v.TMLInRange do
+                        if not c.Dead then
+                            tmlCount = tmlCount + 1
+                        end
+                    end
+                    tmdRequired = math.ceil(tmlCount / 2)
+                    LOG('We need this many TMD '..tmdRequired)
+                    if tmdRequired < 1 then
+                        LOG('TMLInRange looks empty '..repr(v.TMLInRange))
+                    end
+                    for c, b in v.TMLInRange do
+                        if not b.Dead then
+                            LOG('CalculateTMDPositions for unit '..v.UnitId)
+                            local buildPos = CalculateTMDPositions(aiBrain, v, b)
+                            table.insert(buildPositions, buildPos)
+                            tmdPosFound = true
+                            break
+                        end
+                    end
+                elseif v.TMDInRange and v.TMLInRange then
+                    LOG('TMD table and tml in range')
+                    local tmlCount = 0
+                    for _, c in v.TMLInRange do
+                        if not c.Dead then
+                            tmlCount = tmlCount + 1
+                        end
+                    end
+                    tmdRequired = math.ceil(tmlCount / 2)
+                    LOG('We need this many TMD '..tmdRequired)
+                    if tmdRequired < 1 then
+                        LOG('TMLInRange looks empty '..repr(v.TMLInRange))
+                    end
+                    local tmdCount = 0
+                    for _, c in v.TMDInRange do
+                        if not c.Dead then
+                            tmdCount = tmdCount + 1
+                        end
+                    end
+                    if tmdCount < tmdRequired then
+                        for c, b in v.TMLInRange do
+                            if not b.Dead then
+                                local buildPos = CalculateTMDPositions(aiBrain, v, b)
+                                table.insert(buildPositions, {Position = buildPos, Count = tmdRequired})
+                                tmdPosFound = true
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+            if tmdPosFound then
+                break
+            end
+        end
+        return buildPositions
+    end
+end
+
+function CalculateTMDPositions(aiBrain, structure, tml)
+    LOG('CalculateTMDPositions for unit'..structure.UnitId)
+    local structurePos = structure:GetPosition()
+    local tmlPos = tml:GetPosition()
+    local tmlAngle = GetAngleToPosition(structurePos, tmlPos)
+    local smInstance = aiBrain.StructureManager
+    local tmdDistance = 10 -- Adjust this value based on your game's scale
+    local tmdSearchRadius = 15
+    LOG('Calculating build position , structurePos is '..repr(structurePos))
+    if not smInstance then
+        WARN('AI-RNG : Structure Manager not found in CalculateTMDPositions')
+    end
+
+    local unitsToProtect = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE, structurePos, tmdSearchRadius, 'Ally')  -- Adjust the radius as needed
+    local closestUnitDistance
+    local bestTMDPos
+    
+    for _, unit in unitsToProtect do
+        if not smInstance:StructureTMLCheck(unit) then
+            local unitPos = unit:GetPosition()
+            local tx = unitPos[1] - tmlPos[1]
+            local tz = unitPos[3] - tmlPos[3]
+            local tmlDistance = tx * tx + tz * tz
+            if not closestUnitDistance or tmlDistance < closestUnitDistance then
+                local testBuildPos = GetPositionTowardsAngle(unitPos, tmlAngle, tmdDistance)
+                LOG('Checking buildPos of '..repr(testBuildPos))
+                if CanBuildStructureAt(aiBrain, 'ueb4201', testBuildPos) then
+                    LOG('We can build there')
+                    closestUnitDistance = tmlDistance
+                    bestTMDPos = testBuildPos
+                end
+            end
+        end
+        if bestTMDPos then
+            break
+        end
+    end
+    LOG('Returning best build pos of '..repr(bestTMDPos))
+    return bestTMDPos
 end
 
 --[[

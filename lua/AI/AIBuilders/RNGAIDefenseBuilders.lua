@@ -331,7 +331,7 @@ BuilderGroup {
         Priority = 825,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 7, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
+            { UCBC, 'RequireTMDCheckRNG', { }},
             { UCBC, 'LastKnownUnitDetection', { 'LocationType', 'tml'}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -341,13 +341,10 @@ BuilderGroup {
             JobType = 'BuildStructure',
             NumAssistees = 5,
             Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
-                BaseTemplate = 'DefenseTemplate',
-                BuildClose = true,
-                NoPause = true,
                 NearDefensivePoints = true,
-                Type = 'TML',
-                Tier = 1,
+                BuildClose = false,
+                NoPause = true,
+                Type = 'TMD',
                 BuildStructures = {
                     'T2MissileDefense',
                 },

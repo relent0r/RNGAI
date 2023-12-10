@@ -1432,6 +1432,16 @@ function ExpansionBaseCountRNG(aiBrain, compareType, checkNum)
     return CompareBody(expBaseCount, checkNum, compareType)
 end
 
+function RequireTMDCheckRNG(aiBrain)
+    local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
+    local smInstance = StructureManagerRNG.GetStructureManager(aiBrain)
+    if smInstance.TMDRequired then
+        LOG('TMD is required for a MEX')
+        return true
+    end
+    return false
+end
+
 --[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.

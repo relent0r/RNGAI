@@ -47,7 +47,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         local platoonUnits = platoon:GetPlatoonUnits()
         if platoonUnits then
             for _, unit in platoonUnits do
-                IssueClearCommands(unit)
+                IssueClearCommands({unit})
                 unit.PlatoonHandle = platoon
                 if not unit.Dead and unit:TestToggleCaps('RULEUTC_StealthToggle') then
                     unit:SetScriptBit('RULEUTC_StealthToggle', false)
