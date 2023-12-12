@@ -2611,6 +2611,7 @@ end
 LastKnownThread = function(aiBrain)
     local unitCat
     local im = GetIntelManager(aiBrain)
+    
     local enemyBuildStrength = {
         Total = {
             EngineerBuildPower = 0,
@@ -2629,6 +2630,7 @@ LastKnownThread = function(aiBrain)
         RNGLOG('Waiting for MapIntelGrid to exist...')
         coroutine.yield(20)
     end
+    local sm = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua').GetStructureManager(aiBrain)
     while not aiBrain.emanager.enemies do coroutine.yield(20) end
     while aiBrain.Status ~= "Defeat" do
         local time=GetGameTimeSeconds()
@@ -2730,7 +2732,7 @@ LastKnownThread = function(aiBrain)
                                         if not aiBrain.EnemyIntel.TML[id] then
                                             local angle = RUtils.GetAngleToPosition(aiBrain.BuilderManagers['MAIN'].Position, unitPosition)
                                             aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=v.Blueprint.Weapon[1].MaxRadius }
-                                            ForkThread(ValidateTML, aiBrain, aiBrain.EnemyIntel.TML[id])
+                                            ForkThread(sm.ValidateTML, aiBrain, aiBrain.EnemyIntel.TML[id])
                                             aiBrain.BasePerimeterMonitor['MAIN'].RecentTMLAngle = angle
                                         end
                                     elseif unitCat.TECH3 and unitCat.ANTIMISSILE and unitCat.SILO then
@@ -2992,28 +2994,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
     end
 end
 
-ValidateTML = function(aiBrain, tml)
-    if not tml.validated then
-        LOG('ValidateTML unit has not been validated')
-        local extractors = GetListOfUnits(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL - categories.TECH1, false, false)
-        for _, b in extractors do
-            UnitTMLCheck(b, tml)
-        end
-        tml.validated = true
-    end
-end
 
-UnitTMLCheck = function(extractor, tml)
-    LOG('Distance to TML is '..VDist3Sq(extractor:GetPosition(), tml.position)..' cutoff is '..(tml.range * tml.range))
-    if not extractor.Dead and VDist3Sq(extractor:GetPosition(), tml.position) < tml.range * tml.range then
-        LOG('ValidateTML there is an extractor that is in range')
-        if not extractor.TMLInRange then
-            extractor.TMLInRange = {}
-        end
-        extractor.TMLInRange[tml.object.EntityId] = tml.object
-        LOG('ValidateTML added TML unit '..repr(extractor.TMLInRange))
-    end
-end
 
 ShowPrirotyKnown = function(aiBrain)
     while not aiBrain.prioritypoints do

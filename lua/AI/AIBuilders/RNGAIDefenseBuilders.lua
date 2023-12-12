@@ -296,6 +296,7 @@ BuilderGroup {
             }
         }
     },
+    --[[
     Builder {
         BuilderName = 'RNGAI T2 Defence Engineer TMD',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
@@ -324,7 +325,7 @@ BuilderGroup {
                 Location = 'LocationType',
             }
         }
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI T2 Defence Reactive TMD',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
@@ -342,7 +343,9 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 NearDefensivePoints = true,
-                BuildClose = false,
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
+                BaseTemplate = 'DefenseTemplate',
+                BuildClose = true,
                 NoPause = true,
                 Type = 'TMD',
                 BuildStructures = {
@@ -620,6 +623,37 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T2 Defence Reactive TMD Expansion',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 0,
+        PriorityFunction = ActiveExpansion,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'RequireTMDCheckRNG', { }},
+            --{ UCBC, 'LastKnownUnitDetection', { 'LocationType', 'tml'}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8}},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            NumAssistees = 5,
+            Construction = {
+                NearDefensivePoints = true,
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
+                BaseTemplate = 'DefenseTemplate',
+                BuildClose = true,
+                NoPause = true,
+                Type = 'TMD',
+                BuildStructures = {
+                    'T2MissileDefense',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
+    --[[
+    Builder {
         BuilderName = 'RNGAI T2 Defence Engineer TMD Expansion',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 0,
@@ -648,7 +682,7 @@ BuilderGroup {
                 Location = 'LocationType',
             }
         }
-    },
+    },]]
 }
 
 BuilderGroup {

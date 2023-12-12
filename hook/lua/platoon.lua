@@ -2695,9 +2695,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                     break
                 end
                 LOG('TMD Reference '..repr(reference))
-                RNGINSERT(baseTmplList, baseTmpl)
                 relative = true
-                buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
+                buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
                 RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
             else
                 relative = false
@@ -2869,7 +2868,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
             -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
             --buildFunction = AIBuildStructures.AIBuildBaseTemplateOrdered
-            buildFunction = AIBuildStructures.AIBuildBaseTemplate
+            buildFunction = AIBuildStructures.AIBuildBaseTemplateRNG
         elseif cons.NearMarkerType and cons.NearMarkerType == 'Defensive Point' then
             baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
 

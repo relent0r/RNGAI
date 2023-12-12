@@ -253,11 +253,26 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
             borderWarning = true
         end
         -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
+        if constructionData.Type == 'TMD' then
+            LOG('We are trying to build TMD, the location we have is '..repr(relativeLoc))
+        end
         AddToBuildQueueRNG(aiBrain, builder, whatToBuild, NormalToBuildLocation(relativeLoc), false, borderWarning)
         return true
     end
     -- At this point we're out of options, so move on to the next thing
     return false
+end
+
+function AIBuildBaseTemplateRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
+    local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
+    if whatToBuild then
+        for _,bType in baseTemplate do
+            for n,bString in bType[1] do
+                AIExecuteBuildStructureRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
+                return
+            end
+        end
+    end
 end
 
 function AIBuildAvoidRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, cons)

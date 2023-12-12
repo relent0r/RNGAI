@@ -1140,6 +1140,11 @@ StructureManager = Class {
                     fractionComplete = upgradedFactory:GetFractionComplete()
                     coroutine.yield(20)
                 end
+                if not table.empty(self.Brain.EnemyIntel.TML) then
+                    for _, v in self.Brain.EnemyIntel.TML do
+                        self.UnitTMLCheck(upgradedFactory, v)
+                    end
+                end
                 if hq == 'LAND' then
                     self.Brain.EngineerAssistManagerFocusLandUpgrade = false
                     if self.Brain.EngineerAssistManagerFocusCategory == categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY then
@@ -1514,9 +1519,8 @@ StructureManager = Class {
                     upgradedExtractor.MAINBASE = true
                 end
                 if not table.empty(aiBrain.EnemyIntel.TML) then
-                    local unitCheck = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').UnitTMLCheck
                     for _, v in aiBrain.EnemyIntel.TML do
-                        unitCheck(upgradedExtractor, v)
+                        self.UnitTMLCheck(upgradedExtractor, v)
                     end
                 end
             end
@@ -1639,6 +1643,29 @@ StructureManager = Class {
             else
                 self.TMDRequired = false
             end
+        end
+    end,
+
+    ValidateTML = function(aiBrain, tml)
+        if not tml.validated then
+            LOG('ValidateTML unit has not been validated')
+            local extractors = GetListOfUnits(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL - categories.TECH1, false, false)
+            for _, b in extractors do
+                UnitTMLCheck(b, tml)
+            end
+            tml.validated = true
+        end
+    end,
+    
+    UnitTMLCheck = function(extractor, tml)
+        LOG('Distance to TML is '..VDist3Sq(extractor:GetPosition(), tml.position)..' cutoff is '..(tml.range * tml.range))
+        if not extractor.Dead and VDist3Sq(extractor:GetPosition(), tml.position) < tml.range * tml.range then
+            LOG('ValidateTML there is an extractor that is in range')
+            if not extractor.TMLInRange then
+                extractor.TMLInRange = {}
+            end
+            extractor.TMLInRange[tml.object.EntityId] = tml.object
+            LOG('ValidateTML added TML unit '..repr(extractor.TMLInRange))
         end
     end,
 }

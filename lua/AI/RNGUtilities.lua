@@ -3355,7 +3355,7 @@ GrabPosDangerRNG = function(aiBrain,pos,radius)
                 if v.Blueprint.CategoriesHash.INDIRECTFIRE then
                     mult=0.3
                 end
-                if v.Blueprint.CategoriesHash.STRUCTURE then
+                if v.Blueprint.CategoriesHash.STRUCTURE and not v.Blueprint.CategoriesHash.TACTICALMISSILEPLATFORM then
                     mult=1.5
                 end
                 if v.Blueprint.CategoriesHash.COMMAND then
