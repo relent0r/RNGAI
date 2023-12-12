@@ -848,54 +848,6 @@ function BeginSession()
     else
        --RNGLOG("FlowAI framework: No custom zoning classes found.")
     end
-    --GenerateMapMarkers()
-end
-
-function GenerateMapMarkers()
-    local WantedGridCellSize = math.floor( math.max( ScenarioInfo.size[1], ScenarioInfo.size[2] ) / 32)
-    local AIMarkerGenerator = import('/mods/AI-Uveso/lua/AI/AIMarkerGenerator.lua')
-    AIMarkerGenerator.InitMarkerGenerator()
-    AIMarkerGenerator.BuildTerrainPathMap()
-    -- Set grid cell size for air (half the size than normal layers)
-    AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize * 2)
-    AIMarkerGenerator.CreateMarkerGrid("Air")
-    AIMarkerGenerator.ConnectMarkerWithPathing("Air")
-    AIMarkerGenerator.BuildGraphAreas("Air")
-    RNGAIMarkerTable["Air"] = AIMarkerGenerator.GetMarkerTable("Air")
-
-    -- Set grid cell size for land
-    AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize)
-    AIMarkerGenerator.CreateMarkerGrid("Land")
-    AIMarkerGenerator.ConnectMarkerWithPathing("Land")
-    AIMarkerGenerator.BuildGraphAreas("Land")
-    RNGAIMarkerTable["Land"] = AIMarkerGenerator.GetMarkerTable("Land")
-
-    -- Set grid cell size for water
-    AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize)
-    AIMarkerGenerator.CreateMarkerGrid("Water")
-    AIMarkerGenerator.ConnectMarkerWithPathing("Water")
-    AIMarkerGenerator.BuildGraphAreas("Water")
-    RNGAIMarkerTable["Water"] = AIMarkerGenerator.GetMarkerTable("Water")
-
-    -- Set grid cell size for amphibious
-    AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize)
-    AIMarkerGenerator.CreateMarkerGrid("Amphibious")
-    AIMarkerGenerator.ConnectMarkerWithPathing("Amphibious")
-    AIMarkerGenerator.BuildGraphAreas("Amphibious")
-    RNGAIMarkerTable["Amphibious"] = AIMarkerGenerator.GetMarkerTable("Amphibious")
-
-    -- Set grid cell size for hover
-    AIMarkerGenerator.SetWantedGridCellSize(WantedGridCellSize)
-    AIMarkerGenerator.CreateMarkerGrid("Hover")
-    AIMarkerGenerator.ConnectMarkerWithPathing("Hover")
-    AIMarkerGenerator.BuildGraphAreas("Hover")
-    RNGAIMarkerTable["Hover"] = AIMarkerGenerator.GetMarkerTable("Hover")
-    
-    --create naval Areas
-    RNGAIMarkerTable["NavalExpansions"] = AIMarkerGenerator.CreateNavalExpansions()
-
-    --create land expansions
-    RNGAIMarkerTable["LandExpansions"] = AIMarkerGenerator.CreateLandExpansions()
 end
 
 function GetMap()

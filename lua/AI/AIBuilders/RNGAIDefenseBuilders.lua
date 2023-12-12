@@ -332,7 +332,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'RequireTMDCheckRNG', { }},
-            { UCBC, 'LastKnownUnitDetection', { 'LocationType', 'tml'}},
+            --{ UCBC, 'LastKnownUnitDetection', { 'LocationType', 'tml'}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },

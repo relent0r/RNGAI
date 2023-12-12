@@ -509,19 +509,18 @@ CzarBehaviorRNG = function(self)
     AssignCZARPriorities(self)
     local cmd = {}
     local targetUnit, targetBase = FindExperimentalTargetRNG(self)
+    LOG('Looked for experimental target '..repr(targetUnit.UnitId))
     local oldTargetUnit = nil
     while not experimental.Dead do
         if (targetUnit and not targetUnit.Dead and targetUnit ~= oldTargetUnit) or not self:IsCommandsActive(cmd) then
             if targetUnit and VDist3(targetUnit:GetPosition(), self:GetPlatoonPosition()) > 100 then
                 IssueClearCommands({experimental})
                 coroutine.yield(5)
-
                 cmd = ExpPathToLocation(aiBrain, self, 'Air', targetUnit:GetPosition(), false, 62500)
                 cmd = self:AttackTarget(targetUnit)
             else
                 IssueClearCommands({experimental})
                 coroutine.yield(5)
-
                 cmd = self:AttackTarget(targetUnit)
             end
         end
@@ -645,6 +644,7 @@ FindExperimentalTargetRNG = function(self)
     end
 
     local enemyBases = aiBrain.EnemyIntel.EnemyThreatLocations
+    LOG('FInd Exp unit enemy bases '..repr(enemyBases))
     
     local mostUnits = 0
     local highestMassValue = 0

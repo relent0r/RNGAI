@@ -6302,6 +6302,21 @@ function CalculateTMDPositions(aiBrain, structure, tml)
                     LOG('We can build there')
                     closestUnitDistance = tmlDistance
                     bestTMDPos = testBuildPos
+                else
+                    -- if we can't build a structure there we will look around a little bit
+                    local lookAroundTable = {1,-1,2,-2,3,-3,4,-4}
+                    LOG('We are trying to look for another build position for TMD')
+                    for ix, offsetX in lookAroundTable do
+                        for iz, offsetZ in lookAroundTable do
+                            local lookAroundPos = {testBuildPos[1]+offsetZ, GetSurfaceHeight(testBuildPos[1]+offsetX, testBuildPos[3]+offsetZ), testBuildPos[3]+offsetZ}
+                            -- is it lower land... make it our new position to continue searching around
+                            if CanBuildStructureAt(aiBrain, 'ueb4201', lookAroundPos) then
+                                closestUnitDistance = tmlDistance
+                                bestTMDPos = testBuildPos
+                                LOG('We found an alternative build position for TMD')
+                            end
+                        end
+                    end
                 end
             end
         end
