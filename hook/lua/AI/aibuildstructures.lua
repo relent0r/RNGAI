@@ -24,7 +24,7 @@ function AddToBuildQueueRNG(aiBrain, builder, whatToBuild, buildLocation, relati
     table.insert(builder.EngineerBuildQueue, newEntry)
 end
 
-function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
+function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToBuilder, relative, buildingTemplate, baseTemplate, reference)
     local whatToBuild = aiBrain:DecideWhatToBuild(builder, buildingType, buildingTemplate)
     if whatToBuild then
         if IsResource(buildingType) then
@@ -253,9 +253,6 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
             borderWarning = true
         end
         -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
-        if constructionData.Type == 'TMD' then
-            LOG('We are trying to build TMD, the location we have is '..repr(relativeLoc))
-        end
         AddToBuildQueueRNG(aiBrain, builder, whatToBuild, NormalToBuildLocation(relativeLoc), false, borderWarning)
         return true
     end

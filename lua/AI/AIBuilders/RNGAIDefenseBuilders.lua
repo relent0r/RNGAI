@@ -343,8 +343,8 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 NearDefensivePoints = true,
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
-                BaseTemplate = 'DefenseTemplate',
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
+                BaseTemplate = 'BaseTemplates',
                 BuildClose = true,
                 NoPause = true,
                 Type = 'TMD',
