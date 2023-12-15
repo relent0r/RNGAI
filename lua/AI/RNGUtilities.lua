@@ -6195,12 +6195,14 @@ function VentToPlatoon(platoon, aiBrain, plan)
     --RNGLOG('Platoon has been vented')
 end
 
-function GetTMDPosition(aiBrain, locationType)
+function GetTMDPosition(aiBrain, eng, locationType)
     local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
     local smInstance = StructureManagerRNG.GetStructureManager(aiBrain)
-    local structureTable = smInstance.StructuresRequiringTMD
+    local structureTable = table.copy(smInstance.StructuresRequiringTMD)
+    local engPos = eng:GetPosition()
     local tmdPos
     local tmdCandidate
+    table.sort(structureTable,function(a,b) return VDist3Sq(engPos,a:GetPosition())<VDist3Sq(engPos,b:GetPosition()) end)
     LOG('Getting TMD Position')
     LOG('Structure table requiring TMD has this many '..table.getn(structureTable))
     if not table.empty(structureTable)then
@@ -6314,6 +6316,7 @@ function CalculateTMDPositions(aiBrain, structure, tml)
                                 closestUnitDistance = tmlDistance
                                 bestTMDPos = testBuildPos
                                 LOG('We found an alternative build position for TMD')
+                                break
                             end
                         end
                     end

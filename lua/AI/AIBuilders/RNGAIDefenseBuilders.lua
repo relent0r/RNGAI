@@ -203,11 +203,11 @@ BuilderGroup {
                 NearDefensivePoints = true,
                 Type = 'AntiAir',
                 Tier = 2,
+                Location = 'LocationType',
                 LocationType = 'LocationType',
                 BuildStructures = {
                     'T2AADefense',
                 },
-                Location = 'LocationType',
             }
         }
     },
@@ -345,6 +345,7 @@ BuilderGroup {
                 NearDefensivePoints = true,
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
                 BaseTemplate = 'BaseTemplates',
+                LocationType = 'LocationType',
                 BuildClose = true,
                 NoPause = true,
                 Type = 'TMD',
@@ -491,6 +492,8 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
+            BaseTemplate = 'BaseTemplates',
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
@@ -524,6 +527,8 @@ BuilderGroup {
                 NearDefensivePoints = false,
                 AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY * categories.NAVAL},
                 AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
+                BaseTemplate = 'BaseTemplates',
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildStructures = {
@@ -552,6 +557,8 @@ BuilderGroup {
             Construction = {
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
+                BaseTemplate = 'BaseTemplates',
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildClose = false,
@@ -582,6 +589,8 @@ BuilderGroup {
             Construction = {
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
+                BaseTemplate = 'BaseTemplates',
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildClose = false,
@@ -625,8 +634,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Defence Reactive TMD Expansion',
         PlatoonTemplate = 'T23EngineerBuilderRNG',
-        Priority = 0,
-        PriorityFunction = ActiveExpansion,
+        Priority = 825,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'RequireTMDCheckRNG', { }},
@@ -640,8 +648,8 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 NearDefensivePoints = true,
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
-                BaseTemplate = 'DefenseTemplate',
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
+                BaseTemplate = 'BaseTemplates',
                 BuildClose = true,
                 NoPause = true,
                 Type = 'TMD',

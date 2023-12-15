@@ -2689,7 +2689,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         if cons.NearDefensivePoints then
             if cons.Type == 'TMD' then
-                local tmdPositions = RUtils.GetTMDPosition(aiBrain, cons.Location)
+                local tmdPositions = RUtils.GetTMDPosition(aiBrain, eng, cons.Location)
                 for _, v in tmdPositions do
                     reference = v
                     break

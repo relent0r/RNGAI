@@ -2732,7 +2732,7 @@ LastKnownThread = function(aiBrain)
                                         if not aiBrain.EnemyIntel.TML[id] then
                                             local angle = RUtils.GetAngleToPosition(aiBrain.BuilderManagers['MAIN'].Position, unitPosition)
                                             aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=v.Blueprint.Weapon[1].MaxRadius }
-                                            ForkThread(sm.ValidateTML, aiBrain, aiBrain.EnemyIntel.TML[id])
+                                            ForkThread(sm.ValidateTML, sm, aiBrain, aiBrain.EnemyIntel.TML[id])
                                             aiBrain.BasePerimeterMonitor['MAIN'].RecentTMLAngle = angle
                                         end
                                     elseif unitCat.TECH3 and unitCat.ANTIMISSILE and unitCat.SILO then
