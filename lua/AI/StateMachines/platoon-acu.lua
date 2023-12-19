@@ -1762,7 +1762,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             -- Do we have already a enhancment in this slot ?
                             if unitEnhancements[tempEnhanceBp.Slot] and unitEnhancements[tempEnhanceBp.Slot] ~= tempEnhanceBp.Prerequisite then
                                 -- remove the enhancement
-                                RNGLOG('* RNGAI: * Found enhancement ['..unitEnhancements[tempEnhanceBp.Slot]..'] in Slot ['..tempEnhanceBp.Slot..']. - Removing...')
+                                --RNGLOG('* RNGAI: * Found enhancement ['..unitEnhancements[tempEnhanceBp.Slot]..'] in Slot ['..tempEnhanceBp.Slot..']. - Removing...')
                                 local order = { TaskName = "EnhanceTask", Enhancement = unitEnhancements[tempEnhanceBp.Slot]..'Remove' }
                                 IssueScript({cdr}, order)
                                 if tempEnhanceBp.Prerequisite then

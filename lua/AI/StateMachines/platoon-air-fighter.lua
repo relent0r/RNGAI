@@ -123,7 +123,6 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                         local expPos = v.object:GetPosition()
                         if expPos and GetThreatAtPosition(aiBrain, expPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') < self.CurrentPlatoonThreat
                         or VDist2(expPos[1], expPos[3], self.Home[1], self.Home[3]) < self.BaseMilitaryArea then
-                            RNGLOG('FighterBehavior DecideWhatToDo Found experimental')
                             target = v.object
                             break
                         end

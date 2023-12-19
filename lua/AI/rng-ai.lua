@@ -94,13 +94,11 @@ AIBrain = Class(RNGAIBrainClass) {
         StandardBrain.OnCreateAI(self, planName)
         local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
         if string.find(per, 'RNG') then
-            RNGLOG('* AI-RNG: This is RNG')
             self.RNG = true
             self.RNGDEBUG = false
             ForkThread(RUtils.AIWarningChecks, self)
         end
         if string.find(per, 'RNGStandardExperimental') then
-            RNGLOG('* AI-RNG: This is RNGEXP')
             self.RNGEXP = true
             self.RNGDEBUG = false
         end

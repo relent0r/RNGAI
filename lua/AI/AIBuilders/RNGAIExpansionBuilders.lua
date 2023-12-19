@@ -23,23 +23,22 @@ end
 
 local NavalExpansionAdjust = function(self, aiBrain, builderManager)
     if aiBrain.BrainIntel.AirPlayer then
-        RNGLOG('Air Player')
         return 0
     elseif aiBrain.MapWaterRatio < 0.20 and not aiBrain.MassMarkersInWater then
-        --RNGLOG('NavalExpansionAdjust return 0')
+        RNGLOG('NavalExpansionAdjust return 0')
         return 0
     elseif aiBrain.MapWaterRatio < 0.30 then
-        --RNGLOG('NavalExpansionAdjust return 200')
+        RNGLOG('NavalExpansionAdjust return 200')
         return 200
     elseif aiBrain.MapWaterRatio < 0.40 then
-        --RNGLOG('NavalExpansionAdjust return 400')
+        RNGLOG('NavalExpansionAdjust return 400')
         return 400
     elseif aiBrain.MapWaterRatio < 0.60 then
-        --RNGLOG('NavalExpansionAdjust return 650')
+        RNGLOG('NavalExpansionAdjust return 650')
         return 675
     else
-        --RNGLOG('NavalExpansionAdjust return 910')
-        return 910
+        RNGLOG('NavalExpansionAdjust return 910')
+        return 950
     end
 end
 

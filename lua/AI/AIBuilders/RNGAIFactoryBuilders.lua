@@ -57,10 +57,10 @@ end
 
 local NavalAdjust = function(self, aiBrain, builderManager)
     if aiBrain.MapWaterRatio > 0.60 then
-        --RNGLOG('NavalExpansionAdjust return 200')
+        RNGLOG('NavalExpansionAdjust return 200')
         return 910
     else
-        --RNGLOG('NavalExpansionAdjust return 750')
+        RNGLOG('NavalExpansionAdjust return 750')
         return 0
     end
 end

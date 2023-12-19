@@ -27,7 +27,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.GunUpgradePresent = false
     cdr.WeaponRange = false
     cdr.DefaultRange = 384
-    cdr.MaxBaseRange = 0
+    cdr.MaxBaseRange = 80
     cdr.OverCharge = false
     cdr.ThreatLimit = 35
     cdr.Confidence = 1
@@ -425,6 +425,9 @@ function CDRThreatAssessmentRNG(cdr)
             end
             enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + enemyUnitThreat
             cdr.Confidence = friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier
+            if aiBrain.EnemyIntel.Phase > 2 then
+                cdr.Confidence = cdr.Confidence * 0.7
+            end
             if aiBrain.RNGEXP then
                 cdr.MaxBaseRange = 80
             else

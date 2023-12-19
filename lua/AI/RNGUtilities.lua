@@ -4734,11 +4734,9 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
 
     if aiBrain.CDRUnit.Active then
         if not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead then
-            RNGLOG('Scout Assignment assist acu')
             if NavUtils.CanPathTo(platoon.MovementLayer, scoutPos, aiBrain.CDRUnit.Position) then
                 aiBrain.CDRUnit.Scout = scout
                 scoutType = 'AssistUnit'
-                RNGLOG('ScoutDest is acu support')
                 return aiBrain.CDRUnit, scoutType
             end
         end
@@ -4751,18 +4749,14 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     end
     if platoonNeedScout then
         if supportPlatoon and PlatoonExists(aiBrain, supportPlatoon) then
-            RNGLOG('Scout Assignment assist platoon')
             scoutType = 'AssistPlatoon'
-            RNGLOG('ScoutDest is assist platoon')
             return supportPlatoon, scoutType
         end
     end
     if (not platoonNeedScout) and (not platoon.ZonesValidated) then
-        RNGLOG('Excess scout looking for zone')
         scoutPos = scout:GetPosition()
         local scoutMarker
         if not RNGTableEmpty(im.ZoneIntel.Assignment) then
-            RNGLOG('Scout Assignment ZoneIntel Assignment table')
             for k, v in im.ZoneIntel.Assignment do
                 if (not v.RadarCoverage) and (not v.ScoutUnit or v.ScoutUnit.Dead) and (not v.StartPosition) then
                     --RNGLOG('Scout ZoneIntel Assignment has found a zone with no radar and no scout')
@@ -4782,7 +4776,6 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         end
 
         if scoutMarker then
-            RNGLOG('Scout Assignment found zone intel assignment')
             --RNGLOG('Scout Marker Found, moving to position')
             scoutType = 'ZoneLocation'
             --RNGLOG('ScoutDest is zone location')
@@ -4795,7 +4788,6 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     --RNGLOG(repr(aiBrain.IntelData.HiPriScouts))
     --RNGLOG(repr(aiBrain.NumOpponents))
     if aiBrain.IntelData.HiPriScouts < aiBrain.NumOpponents then
-        RNGLOG('Scout Assignment intelgrid hi')
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
@@ -4843,7 +4835,6 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         end
         aiBrain.IntelData.HiPriScouts = aiBrain.IntelData.HiPriScouts + 1
     elseif aiBrain.IntelData.LowPriScouts < 2 then
-        RNGLOG('Scout Assignment intelgrid low')
         local highestGrid = {x = 0, z = 0, Priority = 0}
         local currentGrid = {x = 0, z = 0, Priority = 0}
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
@@ -4902,7 +4893,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             aiBrain:ForkThread(drawScoutMarker, scoutingData.Position)
         end
     end
-    if not scoutingData then
+    if aiBrain.RNGDEBUG and not scoutingData then
         RNGLOG('Scout Assignment returned nothing')
     end
     return scoutingData, scoutType
@@ -5272,37 +5263,37 @@ CDRWeaponCheckRNG = function (aiBrain, cdr, selfThreat)
                 local enhancement = cdr.Blueprint.Enhancements
                 cdr.GunUpgradePresent = true
                 weaponRange = enhancement.HeavyAntiMatterCannon.NewMaxRadius or 30
-                threatLimit = 45
+                threatLimit = 48
             end
         elseif factionIndex == 2 then
             if cdr:HasEnhancement('HeatSink') then
                 cdr.GunUpgradePresent = true
-                threatLimit = 40
+                threatLimit = 43
             end
             if cdr:HasEnhancement('CrysalisBeam') then
                 local enhancement = cdr.Blueprint.Enhancements
                 cdr.GunUpgradePresent = true
                 weaponRange = enhancement.CrysalisBeam.NewMaxRadius or 30
-                cdr.ThreatLimit = 45
+                threatLimit = 48
             end
             if cdr:HasEnhancement('FAF_CrysalisBeamAdvanced') then
                 local enhancement = cdr.Blueprint.Enhancements
                 cdr.GunUpgradePresent = true
                 weaponRange = enhancement.FAF_CrysalisBeamAdvanced.NewMaxRadius or 35
-                threatLimit = 45
+                threatLimit = 50
             end
         elseif factionIndex == 3 then
             if cdr:HasEnhancement('CoolingUpgrade') then
                 local enhancement = cdr.Blueprint.Enhancements
                 cdr.GunUpgradePresent = true
                 weaponRange = enhancement.CoolingUpgrade.NewMaxRadius or 30
-                threatLimit = 45
+                threatLimit = 48
             end
         elseif factionIndex == 4 then
             if cdr:HasEnhancement('RateOfFire') then
                 cdr.GunUpgradePresent = true
                 weaponRange = enhancement.RateOfFire.NewMaxRadius or 30
-                threatLimit = 45
+                threatLimit = 48
             end
         end
     end

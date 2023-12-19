@@ -651,13 +651,7 @@ AssignToUnitsMachine = function(data, platoon, units)
             end
         end
         if not platoon.MaxPlatoonWeaponRange then
-            LOG('No MaxWeaponRange performing backup')
             platoon.MaxPlatoonWeaponRange=20
-            for _, v in platoonUnits do
-                for _, weapon in v.Blueprint.Weapon or {} do
-                    LOG('PlatoonUnit Weapon Details '..repr(weapon))
-                end
-            end
         end
         platoon:OnUnitsAddedToPlatoon()
         -- start the behavior

@@ -160,10 +160,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                         --RNGLOG('* AI-RNG: Target Dead or not or Destroyed, breaking loop')
                         break
                     end
-                    --[[
-                    if not self:CanAttackTarget('Attack', target) then
-                        RNGLOG('AirTorp platoon cant attack target')
-                    end]]
                     if currentPlatPos and VDist3Sq(oldPlatPos, currentPlatPos) < 4 then
                         stuckCount = stuckCount + 1
                         if stuckCount > 5 then
@@ -263,7 +259,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local platoonUnits = GetPlatoonUnits(self)
             local requiredCount = 0
             local acuIndex
-            RNGLOG('Mercy strike : loop ACU Snipe table '..repr(aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe))
+            --RNGLOG('Mercy strike : loop ACU Snipe table '..repr(aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe))
             if not target then
                 --LOG('no target, searching ')
                 target, requiredCount, acuIndex = RUtils.CheckACUSnipe(aiBrain, self.MovementLayer)
@@ -272,9 +268,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                     requiredCount = math.ceil(hp / weaponDamage)
                 end
                 if not target then
-                    RNGLOG('Mercy strike : No ACU target')
+                    --RNGLOG('Mercy strike : No ACU target')
                     if RNGGETN(platoonUnits) >= 2 then
-                        RNGLOG('Mercy strike : No ACU found in TacticalMission loop, look for closest')
+                        --RNGLOG('Mercy strike : No ACU found in TacticalMission loop, look for closest')
                         target = self:FindClosestUnit('Attack', 'Enemy', true, categories.COMMAND )
                         if target then
                             local hp = target:GetHealth()
@@ -284,7 +280,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
             if target and RNGGETN(platoonUnits) >= requiredCount then
-                RNGLOG('Mercy strike : required count available')
+                --RNGLOG('Mercy strike : required count available')
                 self:Stop()
                 self:AttackTarget(target)
                 coroutine.yield(170)
@@ -907,7 +903,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             coroutine.yield(1)
             --RNGLOG('ACU Support loop started')
             if (not aiBrain.CDRUnit.Active and not aiBrain.CDRUnit.Retreating) or (VDist2Sq(aiBrain.CDRUnit.CDRHome[1], aiBrain.CDRUnit.CDRHome[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3]) < 14400) and aiBrain.CDRUnit.CurrentEnemyThreat < 5 then
-                RNGLOG('CDR is not active and not retreating, vent')
+                --RNGLOG('CDR is not active and not retreating, vent')
                 coroutine.yield(20)
                 RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
                 if PlatoonExists(aiBrain, self) then
@@ -916,7 +912,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 return
             end
             if aiBrain.CDRUnit.Retreating and aiBrain.CDRUnit.CurrentEnemyThreat < 5 then
-                RNGLOG('CDR is not in danger and retreating, vent')
+                --RNGLOG('CDR is not in danger and retreating, vent')
                 coroutine.yield(20)
                 RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
                 if PlatoonExists(aiBrain, self) then
@@ -925,11 +921,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                 return
             end
             if aiBrain.CDRUnit.CurrentEnemyThreat < 5 and aiBrain.CDRUnit.CurrentFriendlyThreat > 15 then
-                RNGLOG('CDR is not in danger, threatTimeout increased')
+                --RNGLOG('CDR is not in danger, threatTimeout increased')
                 threatTimeout = threatTimeout + 1
                 if threatTimeout > 10 then
                     coroutine.yield(20)
-                    RNGLOG('CDR is not in danger, venting to LandCombatBehavior')
+                    --RNGLOG('CDR is not in danger, venting to LandCombatBehavior')
                     RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
                     if PlatoonExists(aiBrain, self) then
                         aiBrain:DisbandPlatoon(self)
@@ -1201,7 +1197,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                     end
                 else
-                    RNGLOG('Target is too far from acu')
+                    --RNGLOG('Target is too far from acu')
                     local attackSquad = self:GetSquadUnits('Attack')
                     local artillerySquad = self:GetSquadUnits('Artillery')
                     local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, self, true)
