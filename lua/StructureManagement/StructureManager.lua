@@ -1145,7 +1145,7 @@ StructureManager = Class {
                     end
                 end
                 local tmdUnits = self.Brain:GetUnitsAroundPoint(categories.STRUCTURE * categories.ANTIMISSILE, upgradedFactory:GetPosition(), 40, 'Ally')
-                LOG('Number TMD around Upgraded Factory '..table.getn(tmdUnits))
+                --LOG('Number TMD around Upgraded Factory '..table.getn(tmdUnits))
                 if not table.empty(tmdUnits) then
                     for _, v in tmdUnits do
                         local defenseRadius = v.Blueprint.Weapon[1].MaxRadius - 2
@@ -1153,7 +1153,7 @@ StructureManager = Class {
                             if not upgradedFactory.TMDInRange then
                                 upgradedFactory.TMDInRange = {}
                             end
-                            LOG('Found TMD that is protecting this unit, add to TMDInRange table')
+                            --LOG('Found TMD that is protecting this unit, add to TMDInRange table')
                             upgradedFactory.TMDInRange[v.EntityId] = v
                         end
                     end
@@ -1329,21 +1329,21 @@ StructureManager = Class {
     StructureTMLCheck = function(self, structure)
         local defended = true
         if structure.TMLInRange then
-            LOG('TMLInRange table found '..repr(structure.TMLInRange))
+            --LOG('TMLInRange table found '..repr(structure.TMLInRange))
         end
         if structure.TMLInRange and not table.empty(structure.TMLInRange) then
-            LOG('TMLInRange is greater than 0')
+            --LOG('TMLInRange is greater than 0')
             for k, v in structure.TMLInRange do
                 if not self.Brain.EnemyIntel.TML[k] or self.Brain.EnemyIntel.TML[k].object.Dead then
-                    LOG('No Entry for TML, dump table '..repr(self.Brain.EnemyIntel.TML))
+                    --LOG('No Entry for TML, dump table '..repr(self.Brain.EnemyIntel.TML))
                     structure.TMLInRange[k] = nil
                     continue
                 end    
             end
             if not structure.TMDInRange then
-                LOG('Not TML defended Entity '..structure.EntityId)
-                LOG('Unit ID is '..structure.UnitId)
-                LOG('Unit Position is '..repr(structure:GetPosition()))
+                --LOG('Not TML defended Entity '..structure.EntityId)
+                --LOG('Unit ID is '..structure.UnitId)
+                --LOG('Unit Position is '..repr(structure:GetPosition()))
                 defended = false
             end
         end
@@ -1539,7 +1539,7 @@ StructureManager = Class {
                     end
                 end
                 local tmdUnits = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.ANTIMISSILE, upgradedExtractor:GetPosition(), 40, 'Ally')
-                LOG('Number TMD around Upgraded Extractor '..table.getn(tmdUnits))
+                --LOG('Number TMD around Upgraded Extractor '..table.getn(tmdUnits))
                 if not table.empty(tmdUnits) then
                     for _, v in tmdUnits do
                         local defenseRadius = v.Blueprint.Weapon[1].MaxRadius - 2
@@ -1547,7 +1547,7 @@ StructureManager = Class {
                             if not upgradedExtractor.TMDInRange then
                                 upgradedExtractor.TMDInRange = {}
                             end
-                            LOG('Found TMD that is protecting this unit, add to TMDInRange table')
+                            --LOG('Found TMD that is protecting this unit, add to TMDInRange table')
                             upgradedExtractor.TMDInRange[v.EntityId] = v
                         end
                     end
@@ -1666,7 +1666,7 @@ StructureManager = Class {
                 end
             end
             if not table.empty(tmdRequired) then
-                LOG('Set TMD Required on structure manager')
+                --LOG('Set TMD Required on structure manager')
                 self.TMDRequired = true
                 self.StructuresRequiringTMD = tmdRequired
             else
@@ -1677,7 +1677,7 @@ StructureManager = Class {
 
     ValidateTML = function(self, aiBrain, tml)
         if not tml.validated then
-            LOG('ValidateTML unit has not been validated')
+            --LOG('ValidateTML unit has not been validated')
             local extractors = aiBrain:GetListOfUnits(categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL - categories.TECH1, false, false)
             for _, b in extractors do
                 self.UnitTMLCheck(b, tml)
@@ -1687,14 +1687,14 @@ StructureManager = Class {
     end,
     
     UnitTMLCheck = function(unit, tml)
-        LOG('Distance to TML is '..VDist3Sq(unit:GetPosition(), tml.position)..' cutoff is '..(tml.range * tml.range))
+        --LOG('Distance to TML is '..VDist3Sq(unit:GetPosition(), tml.position)..' cutoff is '..(tml.range * tml.range))
         if not unit.Dead and VDist3Sq(unit:GetPosition(), tml.position) < tml.range * tml.range then
-            LOG('ValidateTML there is a unit that is in range')
+            --LOG('ValidateTML there is a unit that is in range')
             if not unit.TMLInRange then
                 unit.TMLInRange = {}
             end
             unit.TMLInRange[tml.object.EntityId] = tml.object
-            LOG('ValidateTML added TML unit '..repr(unit.TMLInRange))
+            --LOG('ValidateTML added TML unit '..repr(unit.TMLInRange))
         end
     end,
 }

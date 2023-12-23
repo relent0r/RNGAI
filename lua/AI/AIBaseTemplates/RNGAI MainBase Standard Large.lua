@@ -14,7 +14,6 @@ BaseBuilderTemplate {
         -- ACU MainBase Builder --
         'RNGAI ACU Structure Builders Large',
         'RNGAI ACU Build Assist',
-        --'RNGAI ACU Enhancements Tier Large',
 
         -- Expansion Builders --
         'RNGAI Engineer Expansion Builders Large',
@@ -96,12 +95,6 @@ BaseBuilderTemplate {
         -- Air Factory Builders --
         'RNGAI Factory Builder Air Large',
 
-        -- Land Upgrade Builders --
-        --'RNGAI Land Upgrade Builders',
-
-        -- Air Upgrade Builders --
-        --'RNGAI Air Upgrade Builders',
-
         -- RNGAI Air Support Builders --
         'RNGAI Air Staging Platform',
 
@@ -118,15 +111,6 @@ BaseBuilderTemplate {
         'RNGAI Experimental Builders',
         'RNGAI Experimental Formers',
 
-        -- Sea Builders --
-        --'RNGAI Factory Builder Sea Large',
-        --'RNGAI Sea Builders T1',
-        --'RNGAI Sea Builders T23',
-        --'RNGAI SonarBuilders',
-        --'RNGAI SonarUpgrade',
-
-        -- Sea Formers --
-        --'RNGAI Sea Formers',
     },
     NonCheatBuilders = {
     },

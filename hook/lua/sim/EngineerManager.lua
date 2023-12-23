@@ -24,7 +24,7 @@ EngineerManager = Class(RNGEngineerManager) {
                                 if v.TMDInRange then
                                     if v.TMDInRange[unit.EntityId] then
                                         v.TMDInRange[unit.EntityId] = nil
-                                        LOG('TMD has been destroyed, removed from '..v.UnitId)
+                                        --LOG('TMD has been destroyed, removed from '..v.UnitId)
                                     end
                                 end
                             end
@@ -33,10 +33,10 @@ EngineerManager = Class(RNGEngineerManager) {
                 end
                 import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, unit)
                 finishedUnit.UnitsDefended = {}
-                LOG('TMD Built, looking for units to defend')
+                --LOG('TMD Built, looking for units to defend')
                 local defenseRadius = finishedUnit.Blueprint.Weapon[1].MaxRadius - 2
                 local units = self.Brain:GetUnitsAroundPoint(categories.STRUCTURE, finishedUnit:GetPosition(), defenseRadius, 'Ally')
-                LOG('Number of units around TMD '..table.getn(units))
+                --LOG('Number of units around TMD '..table.getn(units))
                 if not table.empty(units) then
                     for _, v in units do
                         if not v.TMDInRange then
@@ -44,9 +44,9 @@ EngineerManager = Class(RNGEngineerManager) {
                         end
                         v.TMDInRange[finishedUnit.EntityId] = finishedUnit
                         table.insert(finishedUnit.UnitsDefended, v)
-                        LOG('TMD is defending the current unit '..v.UnitId)
-                        LOG('Entity '..v.EntityId)
-                        LOG('TMD Table '..repr(v.TMDInRange))
+                        --LOG('TMD is defending the current unit '..v.UnitId)
+                        --LOG('Entity '..v.EntityId)
+                        --LOG('TMD Table '..repr(v.TMDInRange))
                     end
                 end
             end

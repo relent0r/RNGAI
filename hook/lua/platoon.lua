@@ -2690,7 +2690,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     reference = v
                     break
                 end
-                LOG('TMD Reference '..repr(reference))
+                --LOG('TMD Reference '..repr(reference))
                 relative = true
                 buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
                 RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
@@ -3142,12 +3142,12 @@ Platoon = Class(RNGAIPlatoonClass) {
             unit.ProcessBuild = nil
         end
         if not unit.ProcessBuild then
-            LOG('Failed to build process build command')
+            --LOG('Failed to build process build command')
             if not unit.FailedCount then
                 unit.FailedCount = 0
             end
             unit.FailedCount = unit.FailedCount + 1
-            LOG('Current fail count is '..unit.FailedCount)
+            --LOG('Current fail count is '..unit.FailedCount)
             if unit.FailedCount > 2 then
                 unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, true)  --DUNCAN - changed to true
             else
@@ -3176,7 +3176,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local factionIndex = aiBrain:GetFactionIndex()
         local platoonUnits = GetPlatoonUnits(self)
         local eng
-        LOG('CommanderInitialize')
+        --LOG('CommanderInitialize')
         if not aiBrain.ACUData[eng.EntityId].CDRBrainThread then
             aiBrain:CDRDataThreads(eng)
         end
@@ -3251,7 +3251,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         if aiBrain.RNGDEBUG then
             RNGLOG('RNG ACU wants to build '..whatToBuild)
         end
-        LOG('BuildLocation '..repr(buildLocation))
+        --LOG('BuildLocation '..repr(buildLocation))
         if borderWarning and buildLocation and whatToBuild then
             IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
             borderWarning = false

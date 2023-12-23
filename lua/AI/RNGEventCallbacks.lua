@@ -49,15 +49,15 @@ end
 function OnTransfered(transferedUnits, toArmy, captured)
     local brain = ArmyBrains[toArmy]
     if not captured and brain.RNG then
-        LOG('OnTransfered')
-        LOG('brain is RNG')
+        --LOG('OnTransfered')
+        --LOG('brain is RNG')
         local originalBrain
         for _, v in transferedUnits do
             if not v.Dead then
                 if not originalBrain then
                     if originalBrain and originalBrain.Status == 'Defeat' then
                         local armyStartX, armyStartZ = originalBrain:GetArmyStartPos()
-                        LOG('Original Army brain start pos is '..repr({armyStartX, 0 , armyStartZ}))
+                        --LOG('Original Army brain start pos is '..repr({armyStartX, 0 , armyStartZ}))
                         local numFactories = brain:GetNumUnitsAroundPoint(categories.FACTORY, {armyStartX, GetSurfaceHeight(armyStartX, armyStartZ), armyStartZ}, 80, 'Ally')
                         if numFactories > 0 then
                             local distanceToBase
@@ -65,7 +65,7 @@ function OnTransfered(transferedUnits, toArmy, captured)
                             local closestBaseDistance
                             for c, b in brain.BuilderManagers do
                                 if c ~= 'FLOATING' then
-                                    LOG('Found Base'..c)
+                                    --LOG('Found Base'..c)
                                     distanceToBase = VDist3Sq(b.Position, v:GetPosition())
                                     if not closestBase or distanceToBase < closestBaseDistance then
                                         closestBase = c
@@ -74,8 +74,8 @@ function OnTransfered(transferedUnits, toArmy, captured)
                                 end
                             end
                             if closestBase and closestBaseDistance > 14400 then
-                                LOG('The closest base to the allies start position is greater than 120 units')
-                                LOG('Attempting to create new base at position')
+                                --LOG('The closest base to the allies start position is greater than 120 units')
+                                --LOG('Attempting to create new base at position')
                                 local markers = import('/lua/ai/aiutilities.lua').AIGetMarkerLocationsRNG(brain, 'Spawn')
                                 local spawnMarkers = {}
                                 for _, v in markers do
@@ -84,7 +84,7 @@ function OnTransfered(transferedUnits, toArmy, captured)
                                         table.insert(spawnMarkers, v)
                                     end
                                 end
-                                LOG('Spawn Markers Found '..repr(spawnMarkers))
+                                --LOG('Spawn Markers Found '..repr(spawnMarkers))
                                 if table.getn(spawnMarkers) > 0 then
                                     for _, v in spawnMarkers do
                                         if v.Position then
@@ -107,10 +107,10 @@ function OnTransfered(transferedUnits, toArmy, captured)
                                                     table.insert(validNames, v.Base)
                                                 end
                                             end
-                                            SPEW('*AI DEBUG: AINewExpansionBase(): validNames for Expansions ' .. repr(validNames))
+                                            --SPEW('*AI DEBUG: AINewExpansionBase(): validNames for Expansions ' .. repr(validNames))
                                             local pick = validNames[ Random(1, table.getn(validNames)) ]
                                             import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(brain, v.Name, pick)
-                                            LOG('Base Created')
+                                            --LOG('Base Created')
                                             break
                                         end
                                     end
@@ -120,7 +120,7 @@ function OnTransfered(transferedUnits, toArmy, captured)
                     end
                 end
                 if v.Blueprint.CategoriesHash.ENGINEER and not v.Blueprint.CategoriesHash.STATIONASSISTPOD then
-                    LOG('FoundEngineer')
+                    --LOG('FoundEngineer')
                     local distanceToBase
                     local closestBase
                     local closestBaseDistance
@@ -134,18 +134,18 @@ function OnTransfered(transferedUnits, toArmy, captured)
                         end
                     end
                     if closestBase then
-                        LOG('Adding Engineer to EngineerManager '..closestBase)
+                        --LOG('Adding Engineer to EngineerManager '..closestBase)
                         brain.BuilderManagers[closestBase].EngineerManager:AddUnitRNG(v)
                     end
                 elseif v.Blueprint.CategoriesHash.STRUCTURE and v.Blueprint.CategoriesHash.FACTORY then
-                    LOG('FoundFactory')
+                    --LOG('FoundFactory')
                     local distanceToBase
                     local closestBase
                     local closestBaseDistance
                     for c, b in brain.BuilderManagers do
                         if c ~= 'FLOATING' and b.FactoryManager and b.FactoryManager.Active then
                             distanceToBase = VDist3Sq(b.Position, v:GetPosition())
-                            LOG('Distance to factory manager '..c..' '..math.sqrt(distanceToBase))
+                            --LOG('Distance to factory manager '..c..' '..math.sqrt(distanceToBase))
                             if distanceToBase < 14400 and (not closestBase or distanceToBase < closestBaseDistance) then
                                 closestBase = c
                                 closestBaseDistance = distanceToBase
@@ -154,12 +154,12 @@ function OnTransfered(transferedUnits, toArmy, captured)
                     end
                     if closestBase then
                         if v:GetFractionComplete() == 1 then
-                            LOG('Factory is complete, adding factory manager '..closestBase)
+                            --LOG('Factory is complete, adding factory manager '..closestBase)
                             brain.BuilderManagers[closestBase].FactoryManager:AddFactory(v)
                         end
                     end
                 elseif v.Blueprint.CategoriesHash.MOBILE then
-                    LOG('Making mobile unit return to base')
+                    --LOG('Making mobile unit return to base')
                     local returnPlatoon = brain:MakePlatoon('', 'ReturnToBaseAIRNG')
                     brain:AssignUnitsToPlatoon(returnPlatoon, {v}, 'Attack', 'None')
                 end

@@ -1120,9 +1120,7 @@ function LessThanFactoryCountRNG(aiBrain, count, category, navalOnly)
         end
         if v.FactoryManager and v.FactoryManager.LocationActive then
             factoryCount = factoryCount + v.FactoryManager:GetNumCategoryFactories(category)
-            --LOG('factoryCount '..factoryCount..' number to compare '..count)
             if factoryCount >= count then
-                --LOG('LessThanFactoryCountRNG is true')
                 return false
             end
         end
@@ -1428,7 +1426,7 @@ function RequireTMDCheckRNG(aiBrain)
     local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
     local smInstance = StructureManagerRNG.GetStructureManager(aiBrain)
     if smInstance.TMDRequired then
-        LOG('TMD is required for a MEX')
+        --LOG('TMD is required for a MEX')
         return true
     end
     return false

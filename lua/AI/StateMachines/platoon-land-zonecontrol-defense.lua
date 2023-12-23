@@ -113,7 +113,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             CutOff = 400
                         }
                         if not self.BuilderData.Position then
-                            LOG('No self.BuilderData.Position in DecideWhatToDo suicide')
+                            --LOG('No self.BuilderData.Position in DecideWhatToDo suicide')
                         end
                         self:LogDebug(string.format('DecideWhatToDo acu needs help navigating'))
                         self:ChangeState(self.Navigating)
@@ -190,11 +190,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType)
                 if targetZone then
                     self:LogDebug(string.format('DecideWhatToDo Target zone '..targetZone))
-                    LOG('Target Zone friendlyairthreat '..repr(aiBrain.Zones.Land.zones[targetZone].friendlyantiairthreat))
-                    LOG('Current platoon zone'..repr(self.Zone))
-                    LOG('Target zone '..repr(targetZone))
-                    LOG('Enemy Air threat '..repr(aiBrain.Zones.Land.zones[targetZone].enemyairthreat))
-                    LOG('Current Zone Distance '..repr(VDist3(self.Pos,aiBrain.Zones.Land.zones[self.Zone].pos)))
+                    --LOG('Target Zone friendlyairthreat '..repr(aiBrain.Zones.Land.zones[targetZone].friendlyantiairthreat))
+                    --LOG('Current platoon zone'..repr(self.Zone))
+                    --LOG('Target zone '..repr(targetZone))
+                    --LOG('Enemy Air threat '..repr(aiBrain.Zones.Land.zones[targetZone].enemyairthreat))
+                    --LOG('Current Zone Distance '..repr(VDist3(self.Pos,aiBrain.Zones.Land.zones[self.Zone].pos)))
                     self.BuilderData = {
                         TargetZone = targetZone,
                         Position = aiBrain.Zones.Land.zones[targetZone].pos,
@@ -211,20 +211,20 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
-                    LOG('TargetZone '..repr(self.BuilderData))
-                    LOG('TargetZone distance '..VDist3(self.Pos,self.BuilderData.Position))
+                    --LOG('TargetZone '..repr(self.BuilderData))
+                    --LOG('TargetZone distance '..VDist3(self.Pos,self.BuilderData.Position))
                     if not self.BuilderData.Position then
-                        LOG('No self.BuilderData.Position in DecideWhatToDo targetzone')
+                        --LOG('No self.BuilderData.Position in DecideWhatToDo targetzone')
                     end
                     self:LogDebug(string.format('DecideWhatToDo target zone navigate'))
                     self:ChangeState(self.Navigating)
                     return
                 else
-                    LOG('No target zone returned, continue')
+                    --LOG('No target zone returned, continue')
                 end
             end
             coroutine.yield(30)
-            LOG('aa defense end of decidewhattodoloop')
+            --LOG('aa defense end of decidewhattodoloop')
             self:LogDebug(string.format('DecideWhatToDo ending, repeat'))
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -374,11 +374,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
         ---@param self AIPlatoonAdaptiveReclaimBehavior
         Main = function(self)
-            LOG('ZoneControl trying to use transport')
+            --LOG('ZoneControl trying to use transport')
             local brain = self:GetBrain()
             local builderData = self.BuilderData
             if not builderData.Position then
-                LOG('BuilderData '..repr(self.BuilderData))
+                --LOG('BuilderData '..repr(self.BuilderData))
                 WARN('No position passed to ZoneControl')
                 return false
             end
@@ -386,7 +386,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             if usedTransports then
                 self:LogDebug(string.format('platoon used transports'))
                 if not self.BuilderData.Position then
-                    LOG('No self.BuilderData.Position in Transporting')
+                    --LOG('No self.BuilderData.Position in Transporting')
                 end
                 self:ChangeState(self.Navigating)
                 return

@@ -69,7 +69,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 55)
             end
             if self.Vented then
-                LOG('Vented LandCombatPlatoon Starting')
+                --LOG('Vented LandCombatPlatoon Starting')
             end
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -84,7 +84,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
             if self.Vented then
-                LOG('Vented LandCombatPlatoon Deciding what to do')
+                --LOG('Vented LandCombatPlatoon Deciding what to do')
             end
             local aiBrain = self:GetBrain()
             if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
@@ -277,7 +277,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             coroutine.yield(5)
             --LOG('post yield')
             if self.Vented then
-                LOG('Vented LandCombatPlatoon completed decide what to do loop')
+                --LOG('Vented LandCombatPlatoon completed decide what to do loop')
             end
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -359,7 +359,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
         ---@param self AIPlatoonAdaptiveReclaimBehavior
         Main = function(self)
-            LOG('LandCombat trying to use transport')
+            --LOG('LandCombat trying to use transport')
             local brain = self:GetBrain()
             if not self.dest then
                 WARN('No position passed to LandAssault')
@@ -387,7 +387,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
             if self.Vented then
-                LOG('Vented LandCombatPlatoon trying to navigating')
+                --LOG('Vented LandCombatPlatoon trying to navigating')
             end
             local aiBrain = self:GetBrain()
             local platoonUnits = GetPlatoonUnits(self)
@@ -397,7 +397,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             local lastfinaldist=0
             while PlatoonExists(aiBrain, self) do
                 if self.Vented then
-                    LOG('Vented LandCombatPlatoon Navigating')
+                    --LOG('Vented LandCombatPlatoon Navigating')
                 end
                 coroutine.yield(1)
                 if StateUtils.ExitConditions(self,aiBrain) then
@@ -640,7 +640,7 @@ AssignToUnitsMachine = function(data, platoon, units)
             ANTIAIR = 0,
         }
         if data.Vented then
-            LOG('This is a state machine that was vented from ACU support')
+            --LOG('This is a state machine that was vented from ACU support')
             platoon.Vented = true
         end
         if not platoon.LocationType then
@@ -724,7 +724,7 @@ AssignToUnitsMachine = function(data, platoon, units)
             end
         end
         if not platoon.MaxPlatoonWeaponRange then
-            LOG('No MaxWeaponRange performing backup')
+            --LOG('No MaxWeaponRange performing backup')
             platoon.MaxPlatoonWeaponRange=20
         end
         if not platoon.MaxPlatoonWeaponRange then 

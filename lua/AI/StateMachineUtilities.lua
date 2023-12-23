@@ -704,14 +704,6 @@ ZoneUpdate = function(aiBrain, platoon)
     if not platoon.MovementLayer then
         AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
     end
-    if not platoon then
-        --LOG('No platoon for zoneupdate')
-        LOG(platoon.PlanName)
-    end
-    if not aiBrain then
-        --LOG('no brain passed to zoneupdate')
-        LOG(platoon.PlanName)
-    end
     while not IsDestroyed(platoon) do
         local platPos = platoon:GetPlatoonPosition()
         if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then

@@ -179,7 +179,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
         --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
         ---@param self AIPlatoonAdaptiveReclaimBehavior
         Main = function(self)
-            LOG('LandAssault trying to use transport')
+            --LOG('LandAssault trying to use transport')
             local brain = self:GetBrain()
             local builderData = self.BuilderData
             if not builderData.Position then
@@ -223,7 +223,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             local maxPathDistance = 250
             local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), builderData.Position, 10 , maxPathDistance)
             if not path then
-                LOG('LandAssault trying to take transport')
+                --LOG('LandAssault trying to take transport')
                 self:LogDebug(string.format('platoon is going to use transport'))
                 self:ChangeState(self.Transporting)
                 return
@@ -311,7 +311,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                                                     Target = target
                                                 }
                                                 self:LogDebug('target found in Navigating and its closer than the acu is, CombatLoop')
-                                                LOG('target found in Navigating, CombatLoop')
+                                                --LOG('target found in Navigating, CombatLoop')
                                                 self:ChangeState(self.CombatLoop)
                                                 return
                                             end
@@ -330,7 +330,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                                         Target = target
                                     }
                                     self:LogDebug('target found in Navigating, CombatLoop')
-                                    LOG('target found in Navigating, CombatLoop')
+                                    --LOG('target found in Navigating, CombatLoop')
                                     self:ChangeState(self.CombatLoop)
                                     return
                                 end
@@ -372,7 +372,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 end
             end
             self:LogDebug('end of Navigating, DecideWhatToDo')
-            LOG('end of Navigating, DecideWhatToDo')
+            --LOG('end of Navigating, DecideWhatToDo')
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -446,7 +446,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             self:LogDebug('CombatLoop')
             local builderData = self.BuilderData
             if not builderData.Target or builderData.Target.Dead then
-                LOG('Not target for target dead at start of CombatLoop')
+                --LOG('Not target for target dead at start of CombatLoop')
                 coroutine.yield(10)
                 self:ChangeState(self.DecideWhatToDo)
                 return
@@ -541,7 +541,7 @@ AssignToUnitsMachine = function(data, platoon, units)
             end
         end
         if not platoon.MaxPlatoonWeaponRange then
-            LOG('No MaxPlatoonWeaponRange performing backup')
+            --LOG('No MaxPlatoonWeaponRange performing backup')
             platoon.MaxPlatoonWeaponRange=20
         end
         platoon:OnUnitsAddedToPlatoon()

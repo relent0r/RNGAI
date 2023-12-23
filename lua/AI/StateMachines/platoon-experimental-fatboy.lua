@@ -87,12 +87,8 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                 return
             end
             if self.ExperimentalUnit.ExternalFactory then
-                LOG('Factory ID is '..self.ExperimentalUnit.ExternalFactory.UnitId)
+                --LOG('Factory ID is '..self.ExperimentalUnit.ExternalFactory.UnitId)
                 local factoryWorkFinish = function(experimentalFactory, finishedUnit)
-                    if finishedUnit then
-                        LOG('fatboy factory work finished ')
-                        LOG('Fraction complete '..finishedUnit:GetFractionComplete())
-                    end
                     
                     if finishedUnit and not finishedUnit.Dead and finishedUnit:GetFractionComplete() == 1.0 then
                         local aiBrain = finishedUnit:GetAIBrain()
@@ -112,7 +108,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                         else
                             finishedUnit.FatBoyGuardAdded = true
                             aiBrain:AssignUnitsToPlatoon(experimentalFactory.FatboyPlatoon, {finishedUnit}, 'guard', 'none')
-                            LOG('Unit added to guard squad '..finishedUnit.UnitId)
+                            --LOG('Unit added to guard squad '..finishedUnit.UnitId)
                         end
                     end
                 end
@@ -208,11 +204,12 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     end
                     local closestUnit
                     local closestUnitDistance
+                    local overRangedCount = 0
                     if threatTable.RangedUnitThreat.TotalThreat > 0 or threatTable.ArtilleryThreat.TotalThreat > 0 then
                         self:LogDebug(string.format('We have Artillery or Ranged unit threat around us'))
                         self:LogDebug(string.format('Artillery Threat '..threatTable.ArtilleryThreat.TotalThreat))
                         self:LogDebug(string.format('Ranged Threat '..threatTable.RangedUnitThreat.TotalThreat))
-                        local overRangedCount = 0
+                        
                         for _, enemyUnit in threatTable.ArtilleryThreat.Units do
                             if not IsDestroyed(enemyUnit.Object) then
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object)
@@ -433,7 +430,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                         end
                         break
                     end
-                    LOG('Current TotalSuroundingThreat '..repr(self.EnemyThreatTable.TotalSuroundingThreat))
+                    --LOG('Current TotalSuroundingThreat '..repr(self.EnemyThreatTable.TotalSuroundingThreat))
                     -- check for threats
                     WaitTicks(10)
                 end
@@ -485,6 +482,11 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                         continue
                     end
                     local unitPos = experimental:GetPosition()
+                    if StateUtils.PositionInWater(unitPos) then
+                        maxPlatoonRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Anti Navy')
+                    elseif maxPlatoonRange < self.MaxPlatoonWeaponRange then
+                        maxPlatoonRange = self.MaxPlatoonWeaponRange
+                    end
                     local targetDistance = VDist3Sq(unitPos, targetPosition)
                     local alpha = math.atan2(targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
                     local x = targetPosition[1] - math.cos(alpha) * (maxPlatoonRange - 10)
@@ -833,10 +835,6 @@ GuardThread = function(aiBrain, platoon)
     }
     local function BuildUnit(aiBrain, experimental, unitBuildQueue)
         local factory = experimental.ExternalFactory
-        if factory.FatboyPlatoon.ArmyPool then
-            LOG('Factory army pool is back in the ArmyPool, check fatboy')
-            LOG('Fatboy platoon handle '..repr(experimental))
-        end
         local experimentalPosition = experimental:GetPosition()
         if not factory.UnitBeingBuilt and not factory:IsUnitState('Building') then
             for _, v in unitBuildQueue do
@@ -928,9 +926,9 @@ GuardThread = function(aiBrain, platoon)
         end
         if not StateUtils.PositionInWater(experimental:GetPosition()) and not platoon.BuildThread and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.7 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 0.8 then
             local buildQueue = {}
-            LOG('currentT2AntiAirCount '..currentT2AntiAirCount)
-            LOG('currentT3AntiAirCount '..currentT3AntiAirCount)
-            LOG('currentLandScoutCount '..currentLandScoutCount)
+            --LOG('currentT2AntiAirCount '..currentT2AntiAirCount)
+            --LOG('currentT3AntiAirCount '..currentT3AntiAirCount)
+            --LOG('currentLandScoutCount '..currentLandScoutCount)
             if currentT2AntiAirCount < platoon.SupportT2MobileAA then
                 table.insert(buildQueue, UnitTable['T2LandAA'])
             elseif currentT3AntiAirCount < platoon.SupportT3MobileAA then
@@ -943,7 +941,7 @@ GuardThread = function(aiBrain, platoon)
                 experimental.ExternalFactory.EngineerManager.Task = 'Firebase'
                 table.insert(buildQueue, UnitTable['T3Engineer'])
             end
-            LOG('Current FatBoy build queue '..repr(buildQueue))
+            --LOG('Current FatBoy build queue '..repr(buildQueue))
             platoon.BuildThread = aiBrain:ForkThread(BuildUnit, experimental, buildQueue)
         end
         platoon.CurrentAntiAirThreat = currentAntiAirThreat
@@ -977,7 +975,7 @@ ThreatThread = function(aiBrain, platoon)
             experimental:EnableShield()
             shieldEnabled = true
         end
-        if experimental.MyShield.DepletedByEnergy or  experimental.MyShield.DepletedByDamage then
+        if experimental.MyShield.DepletedByEnergy or experimental.MyShield.DepletedByDamage then
             experimental.ShieldCaution = true
         elseif experimental.ShieldCaution then
             experimental.ShieldCaution = false

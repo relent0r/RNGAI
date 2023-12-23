@@ -14,9 +14,6 @@ BaseBuilderTemplate {
         -- ACU Other Builders --
         'RNGAI ACU Build Assist',
         'RNGAI ACU Structure Builders',
-        --'RNGAI Test PD',
-        --'RNGAI ACU Enhancements Gun',
-        --'RNGAI ACU Enhancements Tier',
 
         -- Intel Builders --
         'RNGAI RadarBuilders',
@@ -64,18 +61,9 @@ BaseBuilderTemplate {
         'RNGAI LandBuilder T3',
         'RNGAI LandBuilder T1 Islands',
 
-        -- Land Factory Formers --
-        --'RNGAI Land Upgrade Builders',
-
         -- Air Factory Builders --
         'RNGAI Factory Builder Air',
         'RNGAI Air Staging Platform',
-        
-        -- Sea Factory Builders
-        --'RNGAI Factory Builder Sea',
-
-        -- Air Factory Formers --
-        --'RNGAI Air Upgrade Builders',
 
         -- Air Unit Builders --
         'RNGAI ScoutAirBuilder',
@@ -91,13 +79,6 @@ BaseBuilderTemplate {
         'RNGAI ScoutAirFormer',
         'RNGAI Air Platoon Builder',
         'RNGAI Air Response Formers',
-
-        -- Sea Unit Builders
-        --'RNGAI Sea Builders T1',
-        
-        -- Sea Unit Formers
-        --'RNGAI Sea Formers',
-        --'RNGAI Mass Hunter Sea Formers',
         
         -- Defence Builders --
         'RNGAI Base Defenses',

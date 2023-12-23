@@ -879,7 +879,7 @@ IntelManager = Class {
             end
         end
         RNGLOG('Zone Intel Assignment Complete')
-        RNGLOG('Initial Zone Assignment Table '..repr(self.ZoneIntel.Assignment))
+        --RNGLOG('Initial Zone Assignment Table '..repr(self.ZoneIntel.Assignment))
     end,
 
     EnemyPositionAngleAssignment = function(self)
@@ -1524,7 +1524,9 @@ IntelManager = Class {
                     self.Brain.EngineerAssistManagerFocusSnipe = true
                 end
                 if zoneAttack then
-                    self.Brain.amanager.Demand.Air.T2.bomber = count
+                    if self.Brain.BrainIntel.AirPhase < 3 then
+                        self.Brain.amanager.Demand.Air.T2.bomber = count
+                    end
                 end
             else
                 local disableBomb = true
@@ -1633,9 +1635,9 @@ IntelManager = Class {
                 -- We are going to look at the threat in the pathable zones and see which ones are in our territory and make sure we have a theoretical number of air units there
                 -- I want to do this on a per base method, but I realised I'm not keeping information.
                 local totalMobileAARequired = math.ceil(zoneCount * (enemyThreat.Air / selfThreat.AirNow)) or 0
-                LOG('Enemy Air Threat '..enemyThreat.Air)
-                LOG('Self Air Threat '..selfThreat.AirNow)
-                LOG('totalMobileAARequired '..totalMobileAARequired)
+                --LOG('Enemy Air Threat '..enemyThreat.Air)
+                --LOG('Self Air Threat '..selfThreat.AirNow)
+                --LOG('totalMobileAARequired '..totalMobileAARequired)
                 if self.BrainIntel.LandPhase == 1 then
                     self.Brain.amanager.Demand.Land.T1.aa = totalMobileAARequired
                 elseif self.BrainIntel.LandPhase == 2 then
@@ -2539,21 +2541,21 @@ TacticalThreatAnalysisRNG = function(aiBrain)
     end
 
     if not RNGTableEmpty(aiBrain.EnemyIntel.TML) then
-        LOG('EnemyIntelTML table it not empty')
+        --LOG('EnemyIntelTML table it not empty')
         local needSort = false
         for k, v in aiBrain.EnemyIntel.TML do
             if not v.object.Dead then 
                 if not v.validated then
-                    LOG('EnemyIntelTML unit has not been validated')
+                    --LOG('EnemyIntelTML unit has not been validated')
                     local extractors = GetListOfUnits(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL - categories.TECH1, false, false)
                     for c, b in extractors do
                         if VDist3Sq(b:GetPosition(), v.position) < v.range * v.range then
-                            LOG('EnemyIntelTML there is an extractor that is in range')
+                            --LOG('EnemyIntelTML there is an extractor that is in range')
                             if not b.TMLInRange then
                                 b.TMLInRange = {}
                             end
                             b.TMLInRange[v.object.EntityId] = v.object
-                            LOG('EnemyIntelTML added TML unit '..repr(b.TMLInRange))
+                            --LOG('EnemyIntelTML added TML unit '..repr(b.TMLInRange))
                         end
                     end
                     v.validated = true

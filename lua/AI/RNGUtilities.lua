@@ -6169,12 +6169,12 @@ function VentToPlatoon(platoon, aiBrain, plan)
         end
     end
     if plan == 'LandCombatBehavior' then
-        LOG('Venting to LandCombatBehavior')
+        --LOG('Venting to LandCombatBehavior')
         ventPlatoon = aiBrain:MakePlatoon('', '')
         aiBrain:AssignUnitsToPlatoon(ventPlatoon, validUnits, 'Attack', 'None')
         import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ Vented = true}, ventPlatoon, validUnits)
     elseif plan =='LandAssaultBehavior' then
-        LOG('Venting to LandAssaultBehavior')
+        --LOG('Venting to LandAssaultBehavior')
         ventPlatoon = aiBrain:MakePlatoon('', '')
         aiBrain:AssignUnitsToPlatoon(ventPlatoon, validUnits, 'Attack', 'None')
         import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ Vented = true }, ventPlatoon, validUnits)
@@ -6194,18 +6194,18 @@ function GetTMDPosition(aiBrain, eng, locationType)
     local tmdPos
     local tmdCandidate
     table.sort(structureTable,function(a,b) return VDist3Sq(engPos,a:GetPosition())<VDist3Sq(engPos,b:GetPosition()) end)
-    LOG('Getting TMD Position')
-    LOG('Structure table requiring TMD has this many '..table.getn(structureTable))
+    --LOG('Getting TMD Position')
+    --LOG('Structure table requiring TMD has this many '..table.getn(structureTable))
     if not table.empty(structureTable)then
         local buildPositions = {}
         local tmdRequired 
         local tmdPosFound = false
         for k, v in structureTable do
-            LOG('Unit that needs protecting '..v.UnitId)
-            LOG('Entity '..v.EntityId)
+            --LOG('Unit that needs protecting '..v.UnitId)
+            --LOG('Entity '..v.EntityId)
             if not v.Dead then
                 if not v.TMDInRange and v.TMLInRange then
-                    LOG('No TMD table but tml in range')
+                    --LOG('No TMD table but tml in range')
                     local tmlCount = 0
                     for _, c in v.TMLInRange do
                         if not c.Dead then
@@ -6213,13 +6213,10 @@ function GetTMDPosition(aiBrain, eng, locationType)
                         end
                     end
                     tmdRequired = math.ceil(tmlCount / 2)
-                    LOG('We need this many TMD '..tmdRequired)
-                    if tmdRequired < 1 then
-                        LOG('TMLInRange looks empty '..repr(v.TMLInRange))
-                    end
+                    --LOG('We need this many TMD '..tmdRequired)
                     for c, b in v.TMLInRange do
                         if not b.Dead then
-                            LOG('CalculateTMDPositions for unit '..v.UnitId)
+                            --LOG('CalculateTMDPositions for unit '..v.UnitId)
                             local buildPos = CalculateTMDPositions(aiBrain, v, b)
                             table.insert(buildPositions, buildPos)
                             tmdPosFound = true
@@ -6227,7 +6224,7 @@ function GetTMDPosition(aiBrain, eng, locationType)
                         end
                     end
                 elseif v.TMDInRange and v.TMLInRange then
-                    LOG('TMD table and tml in range')
+                    --LOG('TMD table and tml in range')
                     local tmlCount = 0
                     for _, c in v.TMLInRange do
                         if not c.Dead then
@@ -6235,10 +6232,7 @@ function GetTMDPosition(aiBrain, eng, locationType)
                         end
                     end
                     tmdRequired = math.ceil(tmlCount / 2)
-                    LOG('We need this many TMD '..tmdRequired)
-                    if tmdRequired < 1 then
-                        LOG('TMLInRange looks empty '..repr(v.TMLInRange))
-                    end
+                    --LOG('We need this many TMD '..tmdRequired)
                     local tmdCount = 0
                     for _, c in v.TMDInRange do
                         if not c.Dead then
@@ -6266,14 +6260,14 @@ function GetTMDPosition(aiBrain, eng, locationType)
 end
 
 function CalculateTMDPositions(aiBrain, structure, tml)
-    LOG('CalculateTMDPositions for unit'..structure.UnitId)
+    --LOG('CalculateTMDPositions for unit'..structure.UnitId)
     local structurePos = structure:GetPosition()
     local tmlPos = tml:GetPosition()
     local tmlAngle = GetAngleToPosition(structurePos, tmlPos)
     local smInstance = aiBrain.StructureManager
     local tmdDistance = 10 -- Adjust this value based on your game's scale
     local tmdSearchRadius = 15
-    LOG('Calculating build position , structurePos is '..repr(structurePos))
+    --LOG('Calculating build position , structurePos is '..repr(structurePos))
     if not smInstance then
         WARN('AI-RNG : Structure Manager not found in CalculateTMDPositions')
     end
@@ -6290,15 +6284,15 @@ function CalculateTMDPositions(aiBrain, structure, tml)
             local tmlDistance = tx * tx + tz * tz
             if not closestUnitDistance or tmlDistance < closestUnitDistance then
                 local testBuildPos = GetPositionTowardsAngle(unitPos, tmlAngle, tmdDistance)
-                LOG('Checking buildPos of '..repr(testBuildPos))
+                --LOG('Checking buildPos of '..repr(testBuildPos))
                 if CanBuildStructureAt(aiBrain, 'ueb4201', testBuildPos) then
-                    LOG('We can build there')
+                    --LOG('We can build there')
                     closestUnitDistance = tmlDistance
                     bestTMDPos = testBuildPos
                 else
                     -- if we can't build a structure there we will look around a little bit
                     local lookAroundTable = {1,-1,2,-2,3,-3,4,-4}
-                    LOG('We are trying to look for another build position for TMD')
+                    --LOG('We are trying to look for another build position for TMD')
                     for ix, offsetX in lookAroundTable do
                         for iz, offsetZ in lookAroundTable do
                             local lookAroundPos = {testBuildPos[1]+offsetZ, GetSurfaceHeight(testBuildPos[1]+offsetX, testBuildPos[3]+offsetZ), testBuildPos[3]+offsetZ}
@@ -6306,7 +6300,7 @@ function CalculateTMDPositions(aiBrain, structure, tml)
                             if CanBuildStructureAt(aiBrain, 'ueb4201', lookAroundPos) then
                                 closestUnitDistance = tmlDistance
                                 bestTMDPos = testBuildPos
-                                LOG('We found an alternative build position for TMD')
+                                --LOG('We found an alternative build position for TMD')
                                 break
                             end
                         end
@@ -6318,7 +6312,7 @@ function CalculateTMDPositions(aiBrain, structure, tml)
             break
         end
     end
-    LOG('Returning best build pos of '..repr(bestTMDPos))
+    --LOG('Returning best build pos of '..repr(bestTMDPos))
     return bestTMDPos
 end
 

@@ -106,7 +106,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             CutOff = 400
                         }
                         if not self.BuilderData.Position then
-                            LOG('No self.BuilderData.Position in DecideWhatToDo suicide')
+                            --LOG('No self.BuilderData.Position in DecideWhatToDo suicide')
                         end
                         self.dest = self.BuilderData.Position
                         self:ChangeState(self.Navigating)
@@ -163,7 +163,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                     if not self.BuilderData.Position then
-                        LOG('No self.BuilderData.Position in DecideWhatToDo HiPriority')
+                        --LOG('No self.BuilderData.Position in DecideWhatToDo HiPriority')
                     end
                     self:LogDebug(string.format('DecideWhatToDo high priority distant navigate'))
                     self:ChangeState(self.Navigating)
@@ -180,7 +180,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         CutOff = 400
                     }
                     if not self.BuilderData.Position then
-                        LOG('No self.BuilderData.Position in DecideWhatToDo targetzone')
+                        --LOG('No self.BuilderData.Position in DecideWhatToDo targetzone')
                     end
                     self.dest = self.BuilderData.Position
                     self:LogDebug(string.format('DecideWhatToDo target zone navigate'))
@@ -310,7 +310,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 CutOff = 400,
             }
             if not self.BuilderData.Position then
-                LOG('No self.BuilderData.Position in retreat')
+                --LOG('No self.BuilderData.Position in retreat')
             end
             self.dest = self.BuilderData.Position
             --LOG('Retreating to platoon')
@@ -326,11 +326,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
         ---@param self AIPlatoonAdaptiveReclaimBehavior
         Main = function(self)
-            LOG('ZoneControl trying to use transport')
+            --LOG('ZoneControl trying to use transport')
             local brain = self:GetBrain()
             local builderData = self.BuilderData
             if not builderData.Position then
-                LOG('BuilderData '..repr(self.BuilderData))
+                --LOG('BuilderData '..repr(self.BuilderData))
                 WARN('No position passed to ZoneControl')
                 return false
             end
@@ -338,7 +338,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             if usedTransports then
                 self:LogDebug(string.format('platoon used transports'))
                 if not self.BuilderData.Position then
-                    LOG('No self.BuilderData.Position in Transporting')
+                    --LOG('No self.BuilderData.Position in Transporting')
                 end
                 self:ChangeState(self.Navigating)
                 return
@@ -507,9 +507,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     else
                         self:LogDebug(string.format('ZoneControl final movement'..nodenum))
                         if self.BuilderData.Position then
-                            LOG('Distance to end pos is '..VDist3(self.Pos, self.BuilderData.Position))
+                            --LOG('Distance to end pos is '..VDist3(self.Pos, self.BuilderData.Position))
                         else
-                            LOG('No builder data position at end of path')
+                            --LOG('No builder data position at end of path')
                         end
                         self.dest=self.BuilderData.Position
                         self:MoveToLocation(self.dest,false)
@@ -636,7 +636,7 @@ AssignToUnitsMachine = function(data, platoon, units)
             end
         end
         if not platoon.MaxPlatoonWeaponRange then
-            LOG('No MaxWeaponRange performing backup')
+            --LOG('No MaxWeaponRange performing backup')
             platoon.MaxPlatoonWeaponRange=20
         end
         platoon:OnUnitsAddedToPlatoon()

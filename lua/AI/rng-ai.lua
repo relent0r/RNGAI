@@ -1262,7 +1262,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.StructureManager:Run()
         self:ForkThread(IntelManagerRNG.CreateIntelGrid, self.IntelManager)
         self:ForkThread(self.CreateFloatingEngineerBase, self.BrainIntel.StartPos)
-        if true then
+        if self.RNGDEBUG then
             self:ForkThread(self.LogDataThreadRNG)
         end
     end,
@@ -1513,7 +1513,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     SetPathableZonesForBase = function(self, position, baseName)
-        LOG('SetPathableZoneForBaseStarting for '..baseName)
+        --LOG('SetPathableZoneForBaseStarting for '..baseName)
         local zoneTable = {
             PathableZoneCount = 0,
             Zones = {}
@@ -1530,7 +1530,7 @@ AIBrain = Class(RNGAIBrainClass) {
             WARN('AI DEBUG: No land zones found for expansion base marker to check')
         end
         self.BuilderManagers[baseName].PathableZones = zoneTable
-        LOG('Pathable zone table for base name '..baseName..' '..repr(self.BuilderManagers[baseName].PathableZones))
+        --LOG('Pathable zone table for base name '..baseName..' '..repr(self.BuilderManagers[baseName].PathableZones))
     end,
 
 
@@ -1657,7 +1657,7 @@ AIBrain = Class(RNGAIBrainClass) {
             position[2] = GetSurfaceHeight( position[1], position[3] )
 			baseLayer = 'Water'
         end
-        LOG('AddBuilderManager '..baseName)
+        --LOG('AddBuilderManager '..baseName)
         self.BuilderManagers[baseName] = {
             FactoryManager = FactoryManager.CreateFactoryBuilderManager(self, baseName, position, radius, useCenter),
             PlatoonFormManager = PlatoonFormManager.CreatePlatoonFormManager(self, baseName, position, radius, useCenter),

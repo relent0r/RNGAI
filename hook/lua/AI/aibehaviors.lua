@@ -509,7 +509,7 @@ CzarBehaviorRNG = function(self)
     AssignCZARPriorities(self)
     local cmd = {}
     local targetUnit, targetBase = FindExperimentalTargetRNG(self)
-    LOG('Looked for experimental target '..repr(targetUnit.UnitId))
+    --LOG('Looked for experimental target '..repr(targetUnit.UnitId))
     local oldTargetUnit = nil
     while not experimental.Dead do
         if (targetUnit and not targetUnit.Dead and targetUnit ~= oldTargetUnit) or not self:IsCommandsActive(cmd) then
@@ -644,7 +644,7 @@ FindExperimentalTargetRNG = function(self)
     end
 
     local enemyBases = aiBrain.EnemyIntel.EnemyThreatLocations
-    LOG('FInd Exp unit enemy bases '..repr(enemyBases))
+    --LOG('FInd Exp unit enemy bases '..repr(enemyBases))
     
     local mostUnits = 0
     local highestMassValue = 0
@@ -1271,7 +1271,7 @@ function AirStagingThreadRNG(unit)
     while not unit.Dead do
         local numUnits = 0
         local refueledUnits = {}
-        LOG('Current refueling count '..table.getn(unit.Refueling))
+        --LOG('Current refueling count '..table.getn(unit.Refueling))
         for k, v in unit.Refueling do
             if not v.Dead then
                 if (not v:GetFuelRatio() < 1) and (not v:GetHealthPercent() < 1) then
@@ -1280,7 +1280,7 @@ function AirStagingThreadRNG(unit)
                 end
             end
         end
-        LOG('Number of Units ready to deploy '..numUnits)
+        --LOG('Number of Units ready to deploy '..numUnits)
         if numUnits > 0 then
             --RNGLOG('Number of units in refueldedUnits '..table.getn(refueledUnits))
             local tableRebuild = false
