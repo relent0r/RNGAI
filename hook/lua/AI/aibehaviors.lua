@@ -828,7 +828,7 @@ function ExpMoveToPosition(aiBrain, platoon, target, unit, ignoreUnits)
     local targetPos
     local destination
     local LandRadiusScanCategory = categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL - categories.INSIGNIFICANTUNIT
-    local LandRadiusDetectionCategory = (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * categories.LAND - categories.SCOUT)
+    local LandRadiusDetectionCategory = (categories.STRUCTURE * categories.DEFENSE - categories.WALL) + (categories.MOBILE * categories.LAND - categories.SCOUT)
     local TargetSearchPriorities = {
         categories.EXPERIMENTAL * categories.LAND,
         categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE,

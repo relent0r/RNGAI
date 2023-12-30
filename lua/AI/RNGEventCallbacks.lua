@@ -55,6 +55,7 @@ function OnTransfered(transferedUnits, toArmy, captured)
         for _, v in transferedUnits do
             if not v.Dead then
                 if not originalBrain then
+                    originalBrain = v:GetAIBrain()
                     if originalBrain and originalBrain.Status == 'Defeat' then
                         local armyStartX, armyStartZ = originalBrain:GetArmyStartPos()
                         --LOG('Original Army brain start pos is '..repr({armyStartX, 0 , armyStartZ}))

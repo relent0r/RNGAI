@@ -1,6 +1,6 @@
 name = "RNGAI"
-uid = "faf0863e-4c91-4bc0-932f-8d82b622f1c0"
-version = 157
+uid = "faf0863e-4c91-4bc0-84de-8d82b622f1c0"
+version = 158
 copyright = "2023 relentless"
 description = "RNG Standard AI. Note . December 2023, the focus of this release is state machines and fixes. For best experience all host game settings should be default. Best played with OMNI cheat disabled. For feedback please visit the FAF discord AI feedback channel."
 author = "relentless"

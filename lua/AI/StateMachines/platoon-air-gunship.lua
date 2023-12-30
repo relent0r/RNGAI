@@ -1,6 +1,7 @@
 local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local NavUtils = import("/lua/sim/navutils.lua")
+local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local RNGMAX = math.max
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
@@ -167,6 +168,17 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Navigating)
                 return
             end
+            if not target and VDist3Sq(platPos, self.Home) < 900 then
+                if self.PlatoonCount < 10 then
+                    local plat = StateUtils.GetClosestPlatoonRNG(self, 'GunshipBehavior', 60)
+                    if plat and plat.PlatoonCount and plat.PlatoonCount < 10 then
+                        self:LogDebug(string.format('Gunship platoon is merging with another'))
+                        local platUnits = plat:GetPlatoonUnits()
+                        aiBrain:AssignUnitsToPlatoon(self, platUnits, 'Attack', 'None')
+                        import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, plat, platUnits)
+                    end
+                end
+            end
             coroutine.yield(25)
             self:LogDebug(string.format('Gunship has nothing to do'))
             self:ChangeState(self.DecideWhatToDo)
@@ -211,7 +223,12 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                     local dz = origin[3] - destination[3]
                     endPoint = true
                     if dx * dx + dz * dz < navigateDistanceCutOff then
-                        IssueMove(platoonUnits, destination)
+                        local movementPositions = StateUtils.GenerateGridPositions(destination, 5, self.PlatoonCount)
+                        for k, unit in platoonUnits do
+                            if not unit.Dead then
+                                IssueMove({platoonUnits[k]}, movementPositions[k])
+                            end
+                        end
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
@@ -222,7 +239,12 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
-                IssueMove(platoonUnits, waypoint)
+                local movementPositions = StateUtils.GenerateGridPositions(waypoint, 5, self.PlatoonCount)
+                for k, unit in platoonUnits do
+                    if not unit.Dead then
+                        IssueMove({platoonUnits[k]}, movementPositions[k])
+                    end
+                end
                 -- check for opportunities
                 local wx = waypoint[1]
                 local wz = waypoint[3]
@@ -344,28 +366,9 @@ AssignToUnitsMachine = function(data, platoon, units)
         if platoonUnits then
             for _, v in platoonUnits do
                 IssueClearCommands({v})
-                if not v.Dead and v:TestToggleCaps('RULEUTC_StealthToggle') then
-                    v:SetScriptBit('RULEUTC_StealthToggle', false)
-                end
-                if not v.Dead and v:TestToggleCaps('RULEUTC_CloakToggle') then
-                    v:SetScriptBit('RULEUTC_CloakToggle', false)
-                end
+
                 v.PlatoonHandle = platoon
-                for i = 1, v:GetWeaponCount() do
-                    local wep = v:GetWeapon(i)
-                    local weaponBlueprint = wep:GetBlueprint()
-                    if weaponBlueprint.CannotAttackGround then
-                        continue
-                    end
-                    if v.Blueprint.CategoriesHash.GUNSHIP and weaponBlueprint.RangeCategory == 'UWRC_DirectFire' then
-                        v.ApproxDPS = RUtils.CalculatedDPSRNG(weaponBlueprint) --weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
-                        maxPlatoonDPS = maxPlatoonDPS + v.ApproxDPS
-                    end
-                end
             end
-        end
-        if maxPlatoonDPS > 0 then
-            platoon.MaxPlatoonDPS = maxPlatoonDPS
         end
         platoon:OnUnitsAddedToPlatoon()
         -- start the behavior
@@ -398,22 +401,32 @@ GunshipThreatThreads = function(aiBrain, platoon)
             end
         end
         if not aiBrain.BrainIntel.SuicideModeActive then
+            local unitCount = 0
+            local maxPlatoonDPS = 0
             for _, unit in platoon:GetPlatoonUnits() do
-                local fuel = unit:GetFuelRatio()
-                local health = unit:GetHealthPercent()
-                if not unit.Loading and (fuel < 0.3 or health < 0.5) then
-                    --LOG('Gunship needs refuel')
-                    if not aiBrain.BrainIntel.AirStagingRequired and aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) < 1 then
-                        aiBrain.BrainIntel.AirStagingRequired = true
-                    elseif not platoon.BuilderData.AttackTarget or platoon.BuilderData.AttackTarget.Dead then
-                        --LOG('Assigning unit to refuel platoon from refuel')
-                        platoon:LogDebug(string.format('Gunship is low on fuel or health and is going to refuel'))
-                        local plat = aiBrain:MakePlatoon('', '')
-                        aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'attack', 'None')
-                        import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Gunship', LocationType = platoon.LocationType}, plat, {unit})
+                if not unit.Dead then
+                    local fuel = unit:GetFuelRatio()
+                    local health = unit:GetHealthPercent()
+                    if not unit.Loading and (fuel < 0.3 or health < 0.5) then
+                        --LOG('Gunship needs refuel')
+                        if not aiBrain.BrainIntel.AirStagingRequired and aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) < 1 then
+                            aiBrain.BrainIntel.AirStagingRequired = true
+                        elseif not platoon.BuilderData.AttackTarget or platoon.BuilderData.AttackTarget.Dead then
+                            --LOG('Assigning unit to refuel platoon from refuel')
+                            platoon:LogDebug(string.format('Gunship is low on fuel or health and is going to refuel'))
+                            local plat = aiBrain:MakePlatoon('', '')
+                            aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'attack', 'None')
+                            import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Gunship', LocationType = platoon.LocationType}, plat, {unit})
+                        end
                     end
+                    if unit.ApproxDPS then
+                        maxPlatoonDPS = maxPlatoonDPS + unit.ApproxDPS
+                    end
+                    unitCount = unitCount + 1
                 end
             end
+            platoon.PlatoonCount = unitCount
+            platoon.MaxPlatoonDPS = maxPlatoonDPS
         end
         coroutine.yield(20)
     end

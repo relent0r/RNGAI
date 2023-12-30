@@ -1274,6 +1274,7 @@ AIBrain = Class(RNGAIBrainClass) {
         while true do
             local factionIndex = self:GetFactionIndex()
             RNGLOG('-- Eco Stats --')
+            RNGLOG('AI '..self.Nickname)
             RNGLOG('EnergyIncome --'..self.EconomyOverTimeCurrent.EnergyIncome)
             RNGLOG('MassIncome --'..self.EconomyOverTimeCurrent.MassIncome)
             RNGLOG('EnergyRequested --'..self.EconomyOverTimeCurrent.EnergyRequested)

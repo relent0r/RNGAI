@@ -233,13 +233,19 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         if not alreadyHaveExpansion then
                             local stageExpansion
                             local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
+                            local maxRange
                             if gameTime < 480 then
                                 --LOG('ACU Looking wide for expansion as its early')
-                                stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, BaseDMZArea * 1.5, 'Land', 10, 'acu')
+                                maxRange = math.min(BaseDMZArea * 1.5, 385)
+                                stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, maxRange, 'Land', 10, 'acu')
+                                if stageExpansion then
+                                    self:LogDebug(string.format('Distance to Expansion is '..VDist3(stageExpansion.Expansion.Position,cdr.Position)))
+                                end
                             else
                                 --LOG('ACU Looking close for expansion as its mid or later')
-                                local distanceCheck = math.sqrt(brain.EnemyIntel.ClosestEnemyBase) / 2 or BaseDMZArea * 0.8
-                                stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, distanceCheck, 'Land', 10, 'acu')
+                                local enemyBaseRange = math.sqrt(brain.EnemyIntel.ClosestEnemyBase) / 2
+                                maxRange = math.min(enemyBaseRange, 256)
+                                stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, maxRange, 'Land', 10, 'acu')
                             end
 
                             if stageExpansion then

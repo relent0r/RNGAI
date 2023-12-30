@@ -1081,3 +1081,26 @@ function MexBuildAIDoneRNG(unit, params)
     end
     --RNGLOG('Queue size after remove '..RNGGETN(unit.EngineerBuildQueue))
 end
+
+function GenerateGridPositions(referencePosition, distanceBetweenPositions, unitCount)
+    local gridPositions = {}
+    local gridSize = math.ceil(math.sqrt(unitCount))
+    local numRows = math.ceil(unitCount / gridSize)
+    local numCols = gridSize
+    
+    for row = 1, numRows do
+        for col = 1, numCols do
+            local xOffset = (col - 1) * distanceBetweenPositions
+            local zOffset = (row - 1) * distanceBetweenPositions
+            
+            local newPosition = {
+                referencePosition[1] + xOffset,
+                referencePosition[2],
+                referencePosition[3] + zOffset
+            }
+            table.insert(gridPositions, newPosition)
+        end
+    end
+    
+    return gridPositions
+end

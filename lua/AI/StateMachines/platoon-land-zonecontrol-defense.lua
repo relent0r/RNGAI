@@ -633,12 +633,6 @@ AssignToUnitsMachine = function(data, platoon, units)
                             end
                         end
                     end
-                    if v:TestToggleCaps('RULEUTC_StealthToggle') then
-                        v:SetScriptBit('RULEUTC_StealthToggle', false)
-                    end
-                    if v:TestToggleCaps('RULEUTC_CloakToggle') then
-                        v:SetScriptBit('RULEUTC_CloakToggle', false)
-                    end
                     v:RemoveCommandCap('RULEUCC_Reclaim')
                     v:RemoveCommandCap('RULEUCC_Repair')
                     if v.MaxWeaponRange then
@@ -689,7 +683,7 @@ ZoneControlThreatThread = function(aiBrain, platoon)
         if platoon.Pos then
             platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
             local targetThreat = GetThreatAtPosition(aiBrain, platoon.Pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
-            if targetThreat > 0 then
+            if not platoon.retreat and targetThreat > 0 then
                 platoon:LogDebug(string.format('ZoneControlThreatThread found imap threat, looking for closest unit'))
                 local target = StateUtils.GetClosestUnitRNG(aiBrain, platoon, platoon.Pos, (categories.STRUCTURE * categories.DEFENSE) + (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, platoon.EnemyRadius, 'Enemy')
                 if target and not target.Dead then
@@ -698,12 +692,13 @@ ZoneControlThreatThread = function(aiBrain, platoon)
                     local rx = platoon.Pos[1] - targetPos[1]
                     local rz = platoon.Pos[3] - targetPos[3]
                     local tmpDistance = rx * rx + rz * rz
+                    platoon:LogDebug(string.format('Have enemy unit, tmp distance is '..tmpDistance))
+                    platoon:LogDebug(string.format('Range check is targetRange '..targetRange))
                     if tmpDistance < math.max(2025, targetRange * targetRange) then
                         platoon:LogDebug(string.format('ZoneControlThreatThread found close threat, retreating'))
                         platoon.retreat=true
                         platoon.BuilderData = { RetreatTarget = target }
                         platoon:ChangeState(platoon.Retreating)
-                        return
                     end
                 end
             end

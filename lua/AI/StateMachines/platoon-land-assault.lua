@@ -527,12 +527,6 @@ AssignToUnitsMachine = function(data, platoon, units)
                 if not platoon.machinedata then
                     platoon.machinedata = {name = 'ZoneControl',id=unit.EntityId}
                 end
-                if not unit.Dead and unit:TestToggleCaps('RULEUTC_StealthToggle') then
-                    unit:SetScriptBit('RULEUTC_StealthToggle', false)
-                end
-                if not unit.Dead and unit:TestToggleCaps('RULEUTC_CloakToggle') then
-                    unit:SetScriptBit('RULEUTC_CloakToggle', false)
-                end
                 if unit.Blueprint.CategoriesHash.SCOUT then
                     if not platoon.ScoutUnit or platoon.ScoutUnit.Dead then
                         platoon.ScoutUnit = unit

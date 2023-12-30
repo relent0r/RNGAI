@@ -524,12 +524,6 @@ AssignToUnitsMachine = function(data, platoon, units)
         if platoonUnits then
             for _, unit in platoonUnits do
                 IssueClearCommands({unit})
-                if not unit.Dead and unit:TestToggleCaps('RULEUTC_StealthToggle') then
-                    unit:SetScriptBit('RULEUTC_StealthToggle', false)
-                end
-                if not unit.Dead and unit:TestToggleCaps('RULEUTC_CloakToggle') then
-                    unit:SetScriptBit('RULEUTC_CloakToggle', false)
-                end
                 unit.PlatoonHandle = platoon
             end
         end

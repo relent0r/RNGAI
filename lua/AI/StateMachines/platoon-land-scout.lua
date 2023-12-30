@@ -655,12 +655,6 @@ AssignToUnitsMachine = function(data, platoon, units)
                     platoon.machinedata = {name = 'TruePlatoon',id=v.EntityId}
                 end
                 IssueClearCommands({v})
-                if v:TestToggleCaps('RULEUTC_StealthToggle') then
-                    v:SetScriptBit('RULEUTC_StealthToggle', false)
-                end
-                if v:TestToggleCaps('RULEUTC_CloakToggle') then
-                    v:SetScriptBit('RULEUTC_CloakToggle', false)
-                end
                 if not platoon.IntelRange or v.Blueprint.Intel.RadarRadius > platoon.IntelRange then
                     platoon.IntelRange = v.Blueprint.Intel.RadarRadius
                 end
