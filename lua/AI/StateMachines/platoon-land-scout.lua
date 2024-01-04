@@ -32,6 +32,7 @@ local RNGMAX = math.max
 AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
 
     PlatoonName = 'LandScoutBehavior',
+    Debug = false,
 
     Start = State {
 

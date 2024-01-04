@@ -16,6 +16,7 @@ local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
 
     PlatoonName = 'AirRefuelBehavior',
+    Debug = false,
 
     Start = State {
 

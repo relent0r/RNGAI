@@ -304,6 +304,7 @@ BuilderGroup {
             --{ SeaAttackCondition, { 'LocationType', 14 } },
         },
         BuilderData = {
+            StateMachine = 'NavalZoneControl',
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             DistressRange = 180,
@@ -343,6 +344,7 @@ BuilderGroup {
             --{ SeaAttackCondition, { 'LocationType', 14 } },
         },
         BuilderData = {
+            StateMachine = 'NavalZoneControl',
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             DistressRange = 180,

@@ -75,6 +75,59 @@ SimpleTarget = function(platoon,aiBrain,guardee)--find enemies in a range and at
     return false
 end
 
+SimpleNavalTarget = function(platoon, aiBrain)
+    local function ViableTargetCheck(unit, unitPosition, platoonRange)
+        if unit.Dead or not unit then return false end
+        if platoon:CanAttackTarget('attack', unit) then
+            if not NavUtils.CanPathTo(platoon.MovementLayer, platoon.Pos,unitPosition) then
+                local checkPoints = NavUtils.GetPositionsInRadius('Water', unitPosition, platoonRange, 6)
+                if checkPoints then
+                    local platRangeSq = platoonRange * platoonRange
+                    for _, m in checkPoints do
+                        local dx = platoon.Pos[1] - m[1]
+                        local dz = platoon.Pos[3] - m[3]
+                        local posDist = dx * dx + dz * dz
+                        if posDist <= platRangeSq then
+                            return true
+                        end
+                    end
+                end
+                return false
+            end
+            return true
+        end
+    end
+    local id=platoon.machinedata.id
+    --RNGLOG('machinedata.id '..repr(id))
+    local position=platoon.Pos
+    if not position then return false end
+    platoon.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.NAVAL + categories.STRUCTURE - categories.WALL - categories.INSIGNIFICANTUNIT, position, platoon.EnemyRadius, 'Enemy')
+    local candidates = platoon.targetcandidates
+    platoon.targetcandidates={}
+    local gameTime = GetGameTimeSeconds()
+    for _,unit in candidates do
+        local unitPos = unit:GetPosition()
+        if ViableTargetCheck(unit, unitPos, platoon.MaxPlatoonWeaponRange) then
+            if not unit.machinepriority then unit.machinepriority={} unit.machinedistance={} end
+            if not unit.dangerupdate or not unit.machinedanger or gameTime-unit.dangerupdate>10 then
+                unit.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30).enemy)
+                unit.dangerupdate=gameTime
+            end
+            if not unit.machinevalue then unit.machinevalue=unit.Blueprint.Economy.BuildCostMass/GetTrueHealth(unit) end
+            unit.machineworth=unit.machinevalue/GetTrueHealth(unit)
+            unit.machinedistance[id]=VDist3(position,unitPos)
+            unit.machinepriority[id]=unit.machineworth/math.max(30,unit.machinedistance[id])/unit.machinedanger
+            table.insert(platoon.targetcandidates,unit)
+            --RNGLOG('CheckPriority On Units '..repr(unit.chppriority))
+        end
+    end
+    if not table.empty(platoon.targetcandidates) then
+        table.sort(platoon.targetcandidates, function(a,b) return a.machinepriority[id]>b.machinepriority[id] end)
+        return true
+    end
+    return false
+end
+
 SimplePriority = function(self,aiBrain)--use the aibrain priority table to do things
     local VDist2Sq = VDist2Sq
     local RNGMAX = math.max
@@ -194,7 +247,7 @@ VariableKite = function(platoon,unit,target)--basic kiting function.. complicate
     if unit.Role=='AA'  then
         dest=KiteDist(pos,tpos,platoon.MaxPlatoonWeaponRange+3,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
-    elseif unit.Role=='Sniper' and unit.MaxWeaponRange then
+    elseif (unit.Role=='Sniper' or unit.Role=='Artillery' or unit.Role=='Silo') and unit.MaxWeaponRange then
         dest=KiteDist(pos,tpos,unit.MaxWeaponRange,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif unit.MaxWeaponRange then
@@ -840,7 +893,7 @@ MergeWithNearbyPlatoonsRNG = function(self, stateMachine, radius, maxMergeNumber
                 end
             end
             if bValidUnits then
-                --RNGLOG("*AI DEBUG: Merging platoons " .. self.BuilderName .. ": (" .. platPos[1] .. ", " .. platPos[3] .. ") and " .. aPlat.BuilderName .. ": (" .. allyPlatPos[1] .. ", " .. allyPlatPos[3] .. ")")
+                --LOG("*AI DEBUG: Merging platoons " .. self.PlatoonName .. ": (" .. platPos[1] .. ", " .. platPos[3] .. ") and " .. aPlat.PlatoonName .. ": (" .. allyPlatPos[1] .. ", " .. allyPlatPos[3] .. ")")
                 aiBrain:AssignUnitsToPlatoon(self, validUnits, 'Attack', 'GrowthFormation')
                 bMergedPlatoons = true
             end

@@ -58,6 +58,7 @@ local mainWeaponPriorities = {
 AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
 
     PlatoonName = 'ExperimentalFatBoyBehavior',
+    Debug = false,
 
     Start = State {
 

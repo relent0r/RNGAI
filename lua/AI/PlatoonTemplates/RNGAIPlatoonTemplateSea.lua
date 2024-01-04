@@ -25,7 +25,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI Intelli Sea Attack T1',
-    Plan = 'NavalAttackAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE * categories.TECH1, 0, 20, 'Attack', 'GrowthFormation' },
         { categories.MOBILE * categories.NAVAL * categories.FRIGATE * categories.TECH1, 1, 20, 'Attack', 'GrowthFormation' },
@@ -34,7 +34,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI Intelli Sea Attack T123',
-    Plan = 'NavalAttackAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE - categories.xsb3202, 0, 20, 'Attack', 'GrowthFormation' },
         { categories.MOBILE * categories.NAVAL - categories.xsb3202, 0, 20, 'Attack', 'GrowthFormation' },

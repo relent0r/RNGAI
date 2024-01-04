@@ -26,6 +26,7 @@ local RNGMAX = math.max
 AIPlatoonBehavior = Class(AIPlatoonRNG) {
 
     PlatoonName = 'ZoneControlBehavior',
+    Debug = false,
 
     Start = State {
 
@@ -230,15 +231,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                     target = m
                                     closestTarget = tmpDistance
                                 end
-                                if not closestTarget or tmpDistance < closestTarget then
-                                    target = m
-                                    closestTarget = tmpDistance
-                                end
                             end
                         end
                     end
                     if target then
-                        if not v.Sniper and VDist3Sq(unitPos,target:GetPosition())>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
+                        if not (v.Role == 'Sniper' or v.Role == 'Silo') and closestTarget>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
                             if not approxThreat then
                                 approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius)
                             end
@@ -604,19 +601,6 @@ AssignToUnitsMachine = function(data, platoon, units)
                         v.Role='Bruiser'
                     elseif EntityCategoryContains(categories.SHIELD,v) then
                         v.Role='Shield'
-                    end
-                    for _, weapon in v.Blueprint.Weapon or {} do
-                        if not (weapon.RangeCategory == 'UWRC_DirectFire') then continue end
-                        if not v.MaxWeaponRange or v.MaxRadius > v.MaxWeaponRange then
-                            v.MaxWeaponRange = weapon.MaxRadius * 0.9
-                            if weapon.BallisticArc == 'RULEUBA_LowArc' then
-                                v.WeaponArc = 'low'
-                            elseif weapon.BallisticArc == 'RULEUBA_HighArc' then
-                                v.WeaponArc = 'high'
-                            else
-                                v.WeaponArc = 'none'
-                            end
-                        end
                     end
                     v:RemoveCommandCap('RULEUCC_Reclaim')
                     v:RemoveCommandCap('RULEUCC_Repair')

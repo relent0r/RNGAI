@@ -339,7 +339,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 ACUFunc.PerformACUReclaim(brain, cdr, 25, false)
             end
             numUnits = GetNumUnitsAroundPoint(brain, categories.LAND + categories.MASSEXTRACTION - categories.SCOUT, targetSearchPosition, targetSearchRange, 'Enemy')
-            if numUnits > 1 then
+            if numUnits > 0 then
+                self:LogDebug(string.format('numUnits > 1'))
                 local target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition
                 cdr.Combat = true
                 local acuDistanceToBase = VDist3Sq(cdr.Position, cdr.CDRHome)
@@ -397,10 +398,10 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
                 if not cdr.SuicideMode then
                     if self.BuilderData.DefendExpansion then
-                        --LOG('Defending Expansion findacu target')
+                        self:LogDebug(string.format('Defend expansion looking for target'))
                         target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition = RUtils.AIAdvancedFindACUTargetRNG(brain, nil, nil, 80, self.BuilderData.Position)
                     else
-                        --LOG('Normal Attack search findacu target')
+                        self:LogDebug(string.format('Look for normal target'))
                         target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition = RUtils.AIAdvancedFindACUTargetRNG(brain)
                     end
                 elseif cdr.SuicideMode then
@@ -461,7 +462,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.AttackTarget)
                     return
                 else
-                    --RNGLOG('CDR : No target found')
+                    self:LogDebug(string.format('No target found for ACU'))
                     if not cdr.SuicideMode then
                         --RNGLOG('Total highThreatCount '..highThreatCount)
                         if cdr.Phase < 3 and not cdr.HighThreatUpgradePresent and closestThreatUnit and closestUnitPosition then
@@ -512,6 +513,11 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
             end
             coroutine.yield(5)
+            if VDist3Sq(cdr.Position, cdr.CDRHome) > cdr.MaxBaseRange * cdr.MaxBaseRange then
+                self:LogDebug(string.format('ACU is too far from base'))
+                self:LogDebug(string.format('Current Distance '..VDist3Sq(cdr.Position, cdr.CDRHome)))
+                self:LogDebug(string.format('MaxBase Range '..(cdr.MaxBaseRange * cdr.MaxBaseRange)))
+            end
             self:LogDebug(string.format('End of loop and no state change, loop again'))
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -755,9 +761,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local assistList
             local assistee = false
             local eng = self.cdr
-            if eng and not eng.Dead then
-                eng:SetCustomName('cdr is assisting')
-            end
+            self:LogDebug(string.format('ACU is assisting'))
             if self.BuilderData.Assist then
                 for _, cat in self.BuilderData.Assist.BeingBuiltCategories do
                     assistList = RUtils.GetAssisteesRNG(brain, 'MAIN', categories.ENGINEER, cat, categories.ALLUNITS)
@@ -824,9 +828,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local brain = self:GetBrain()
             local eng = self.cdr
-            if eng and not eng.Dead then
-                eng:SetCustomName('cdr is building a structure')
-            end
+            self:LogDebug(string.format('ACU is building a structure'))
             local engPos = eng:GetPosition()
             if self.BuilderData.Construction then
                 if self.BuilderData.Construction.BuildStructures then

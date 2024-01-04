@@ -30,6 +30,7 @@ local RNGSORT = table.sort
 AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
 
     PlatoonName = 'FighterBehavior',
+    Debug = false,
 
     Start = State {
 

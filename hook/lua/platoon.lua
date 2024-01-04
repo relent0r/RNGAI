@@ -334,7 +334,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         if captureUnit and not IsDestroyed(captureUnit) then
             if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, captureUnit:GetPosition()) then
-                eng:SetCustomName('CaptureUnitAIRNG')
+                --eng:SetCustomName('CaptureUnitAIRNG')
                 local captureUnitCallback = function(unit, captor)
                     local aiBrain = captor:GetAIBrain()
                     --LOG('*AI DEBUG: ENGINEER: I was Captured by '..aiBrain.Nickname..'!')
@@ -7911,6 +7911,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         elseif machineType == 'FatBoy' then
             import("/mods/rngai/lua/ai/statemachines/platoon-experimental-fatboy.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+        elseif machineType == 'NavalZoneControl' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-naval-zonecontrol.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         end
         WaitTicks(50)
     end,

@@ -447,6 +447,8 @@ IntelManager = Class {
                     zoneSet = self.Brain.Zones.Land.zones
                 elseif platoon.MovementLayer == 'Air' then
                     zoneSet = self.Brain.Zones.Air.zones
+                elseif platoon.MovementLayer == 'Water' then
+                    zoneSet = self.Brain.Zones.Naval.zones
                 end
                 if aiBrain:GetCurrentEnemy() then
                     enemyX, enemyZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()

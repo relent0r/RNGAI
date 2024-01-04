@@ -6051,12 +6051,28 @@ AIBrain = Class(RNGAIBrainClass) {
                     unit.PlatoonHandle.RetreatOrdered = true
                 end
             end
+        local function AntiNavalRetreatState(unit, instigator)
+            --RNGLOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy))
+            if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.CategoriesHash.ANTINAVY 
+            and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy == 0 and unit.PlatoonHandle.StateName ~= 'Retreating' then
+                unit.PlatoonHandle:LogDebug(string.format('Naval retreat callback fired'))
+                unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.Retreating)
+            end
+        end
         local function AntiAirRetreat(unit, instigator)
             --RNGLOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiAir))
             if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.CategoriesHash.ANTINAVY and instigator.Blueprint.CategoriesHash.AIR
             and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiAir == 0 and (not unit.PlatoonHandle.RetreatOrdered) then
                 --RNGLOG('Naval Callback AntiAir We want to retreat '..unit.UnitId)
                 unit.PlatoonHandle.RetreatOrdered = true
+            end
+        end
+        local function AntiAirRetreatState(unit, instigator)
+            --RNGLOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiAir))
+            if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.CategoriesHash.ANTINAVY and instigator.Blueprint.CategoriesHash.AIR
+            and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiAir == 0 and unit.PlatoonHandle.StateName ~= 'Retreating' then
+                unit.PlatoonHandle:LogDebug(string.format('Naval retreat callback fired'))
+                unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.Retreating)
             end
         end
         local function ACUDamageDetail(unit, instigator)
@@ -6076,15 +6092,27 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         if unit.Blueprint.CategoriesHash.TECH1 and unit.Blueprint.CategoriesHash.FRIGATE then
             --RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
-            unit:AddOnDamagedCallback( AntiNavalRetreat, nil, 100)
+            if unit.AIPlatoonReference then
+                unit:AddOnDamagedCallback( AntiNavalRetreatState, nil, 100)
+            else
+                unit:AddOnDamagedCallback( AntiNavalRetreat, nil, 100)
+            end
         end
         if unit.Blueprint.CategoriesHash.TECH2 and unit.Blueprint.CategoriesHash.CRUISER then
             --RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
-            unit:AddOnDamagedCallback( AntiNavalRetreat, nil, 100)
+            if unit.AIPlatoonReference then
+                unit:AddOnDamagedCallback( AntiNavalRetreatState, nil, 100)
+            else
+                unit:AddOnDamagedCallback( AntiNavalRetreat, nil, 100)
+            end
         end
         if unit.Blueprint.CategoriesHash.TECH2 and unit.Blueprint.CategoriesHash.DESTROYER then
             --RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
-            unit:AddOnDamagedCallback( AntiAirRetreat, nil, 100)
+            if unit.AIPlatoonReference then
+                unit:AddOnDamagedCallback( AntiAirRetreatState, nil, 100)
+            else
+                unit:AddOnDamagedCallback( AntiAirRetreat, nil, 100)
+            end
         end
         if unit.Blueprint.CategoriesHash.COMMAND then
             unit:AddOnDamagedCallback( ACUDamageDetail, nil, 100)

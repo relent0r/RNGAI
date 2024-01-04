@@ -574,8 +574,31 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     end
 
     local platoonUnits = platoon:GetPlatoonUnits()
-    #eval platoon threat
-    local myThreat = GetThreatOfUnits(platoon)
+    local myThreat = 0
+
+    for _,u in platoonUnits do
+        local bpThreat = 0
+        if not u.Dead then
+            local bp = u.Blueprint
+            if platoon.MovementLayer == 'Land' then
+                bpThreat = bp.Defense.SurfaceThreatLevel
+            elseif platoon.MovementLayer == 'Water' then
+                bpThreat = bp.Defense.SurfaceThreatLevel
+                if bp.Defense.SubThreatLevel then
+                    bpThreat = bpThreat + bp.Defense.SubThreatLevel
+                end
+            elseif platoon.MovementLayer == 'Amphibious' then
+                bpThreat = bp.Defense.SurfaceThreatLevel
+            elseif platoon.MovementLayer == 'Air' then
+                bpThreat = bp.Defense.SurfaceThreatLevel
+                if bp.Defense.AirThreatLevel then
+                    bpThreat = bpThreat + bp.Defense.AirThreatLevel
+                end
+            end
+        end
+        myThreat = myThreat + bpThreat
+    end
+
     --RNGLOG('GetBestNavalTarget myThreat is '..myThreat)
     
     local friendlyThreat = platoon:CalculatePlatoonThreatAroundPosition('Surface', categories.MOBILE * categories.NAVAL, platoonPosition, 50) - myThreat

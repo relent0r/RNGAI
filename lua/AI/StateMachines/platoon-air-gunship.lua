@@ -18,6 +18,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
     Start = State {
 
         StateName = 'Start',
+        Debug = false,
 
         --- Initial state of any state machine
         ---@param self AIPlatoonGunshipBehavior

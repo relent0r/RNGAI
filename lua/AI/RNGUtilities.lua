@@ -1880,6 +1880,9 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
             end
         end
         coroutine.yield(1)
+        if IsDestroyed(platoon) then
+            return
+        end
     end
     return false
 end
@@ -3351,7 +3354,6 @@ GrabPosDangerRNG = function(aiBrain,pos,radius)
         for _,v in enemyunits do
             if not v.Dead then
                 local mult=1
-                
                 if v.Blueprint.CategoriesHash.INDIRECTFIRE then
                     mult=0.3
                 end
@@ -6058,7 +6060,7 @@ function AIFindNavalAreaNeedsEngineer(aiBrain, locationType, enemyLabelCheck, ra
     if eng then
         pos = eng:GetPosition()
     end
-    local positions = AIUtils.AIGetMarkersAroundLocation(aiBrain, 'Naval Area', pos, radius, tMin, tMax, tRings, tType)
+    local positions = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Naval Area', pos, radius, tMin, tMax, tRings, tType)
     if enemyLabelCheck then
         --LOG('Checking based on enemy label')
     end

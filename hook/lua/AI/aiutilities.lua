@@ -1151,7 +1151,7 @@ function AIFindNavalAreaNeedsEngineer(aiBrain, locationType, radius, tMin, tMax,
     if not pos then
         return false
     end
-    local positions = AIGetMarkersAroundLocation(aiBrain, 'Naval Area', pos, radius, tMin, tMax, tRings, tType)
+    local positions = AIGetMarkersAroundLocationRNG(aiBrain, 'Naval Area', pos, radius, tMin, tMax, tRings, tType)
 
     local retPos, retName
     if eng then

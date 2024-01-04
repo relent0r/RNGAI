@@ -30,6 +30,7 @@ local LandRadiusScanCategory = categories.ALLUNITS - categories.NAVAL - categori
 AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
 
     PlatoonName = 'LandAssaultBehavior',
+    Debug = false,
 
     Start = State {
 
