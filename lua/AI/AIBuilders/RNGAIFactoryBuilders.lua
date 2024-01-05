@@ -796,7 +796,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * categories.TECH1 }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
+            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY, true }},
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -821,7 +821,7 @@ BuilderGroup {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.85 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
+            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY, true }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
         },
         BuilderType = 'Any',
@@ -846,6 +846,7 @@ BuilderGroup {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.90, 1.0 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
+            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3), true }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
         },
         BuilderType = 'Any',
@@ -892,11 +893,11 @@ BuilderGroup {
         Priority = 700,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
-            { UCBC, 'LessThanFactoryCountRNG', { 4, categories.STRUCTURE * categories.FACTORY * categories.NAVAL, true } },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.85}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
+            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3), true } },
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
         },
         BuilderType = 'Any',
@@ -929,7 +930,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * categories.TECH1 }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
+            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY, true }},
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -953,7 +954,7 @@ BuilderGroup {
             { UCBC, 'LessThanFactoryCountRNG', { 3, categories.STRUCTURE * categories.FACTORY * categories.NAVAL, true } },
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.85 }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
+            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY, true }},
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
         },
         BuilderType = 'Any',
@@ -977,7 +978,7 @@ BuilderGroup {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
             --{ EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.50}}, -- Ratio from 0 to 1. (1=100%)
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.90, 1.0 }},
-            { UCBC, 'LessThanFactoryCountRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3), true } },
+            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3), true } },
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
 
