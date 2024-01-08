@@ -6341,6 +6341,34 @@ function CalculateTMDPositions(aiBrain, structure, tml)
     return bestTMDPos
 end
 
+---@param self FactoryBuilderManager
+---@param template any
+---@param templateName string
+---@param faction Unit
+---@return boolean|table
+GetCustomUnitReplacement = function(self, template, templateName, faction)
+    local retTemplate = false
+    local templateData = self.Brain.CustomUnits[templateName]
+    if templateData and templateData[faction] then
+        -- LOG('*AI DEBUG: Replacement for '..templateName..' exists.')
+        local rand = Random(1,100)
+        local possibles = {}
+        for k,v in templateData[faction] do
+            if rand <= v[2] or template[1] == 'NoOriginalUnit' then
+                -- LOG('*AI DEBUG: Insert possibility.')
+                table.insert(possibles, v[1])
+            end
+        end
+        if not table.empty(possibles) then
+            rand = Random(1,TableGetn(possibles))
+            local customUnitID = possibles[rand]
+            -- LOG('*AI DEBUG: Replaced with '..customUnitID)
+            retTemplate = { customUnitID, template[2], template[3], template[4], template[5] }
+        end
+    end
+    return retTemplate
+end
+
 --[[
     -- Calculate dot product between two 3D vectors (same as before)
 

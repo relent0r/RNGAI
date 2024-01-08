@@ -1990,42 +1990,79 @@ function InitialNavalAttackCheck(aiBrain)
     -- points = number of points around the extractor, doesn't need to have too many.
     -- radius = the radius that the points will be, be set this a little lower than a frigates max weapon range
     -- center = the x,y values for the position of the mass extractor. e.g {x = 0, y = 0} 
+    
     aiBrain.IntelManager:WaitForMarkerInfection()
-    local frigateRaidMarkers = {}
-    local markers = GetMarkersRNG()
-    if markers then
-        local markerCount = 0
-        local markerCountNotBlocked = 0
-        local markerCountBlocked = 0
-        for _, v in markers do 
-            local checkPoints = NavUtils.GetPositionsInRadius('Water', v.position, 30, 6)
-            if checkPoints then
-                for _, m in checkPoints do
-                    local dx = v.position[1] - m[1]
-                    local dz = v.position[3] - m[3]
-                    local posDist = dx * dx + dz * dz
-                    if posDist <= 900 then
-                        markerCount = markerCount + 1
-                        if not aiBrain:CheckBlockingTerrain({m[1], GetSurfaceHeight(m[1], m[3]), m[3]}, v.position, 'low') then
-                            markerCountNotBlocked = markerCountNotBlocked + 1
-                            table.insert( frigateRaidMarkers, { Position=v.position, Name=v.name, RaidPosition={m[1], m[2], m[3]} } )
-                        else
-                            markerCountBlocked = markerCountBlocked + 1
+    if aiBrain.MapWaterRatio > 0 then
+        LOG('Map Water Ratio is '..aiBrain.MapWaterRatio)
+        local navalMarkers = {}
+        local markers = GetMarkersRNG()
+        local maxRadius = 30
+        local unitTable = {
+            Frigate = { Template = 'T1SeaFrigate', UnitID = 'ues0103',Range = 0 },
+            Destroyer = { Template = 'T2SeaDestroyer', UnitID = 'ues0201',Range = 0 },
+            Cruiser = { Template = 'T2SeaCruiser', UnitID = 'ues0202',Range = 0 },
+            BattleShip = { Template = 'T3SeaBattleship', UnitID = 'ues0302',Range = 0 },
+            MissileShip = { Template = 'T3MissileBoat', UnitID = 'xas0306',Range = 0 }
+        }
+        
+        for _, v in unitTable do
+            v.Range = ALLBPS[v.UnitID].Weapon[1].MaxRadius
+            if not maxRadius or v.Range > maxRadius then
+                maxRadius = v.Range
+            end
+        end
+        LOG('Max Radius is '..maxRadius)
+
+
+        if markers then
+            local markerCount = 0
+            local markerCountNotBlocked = 0
+            local markerCountBlocked = 0
+            local totalMarkerValue = 0
+            for _, v in markers do 
+                markerCount = markerCount + 1
+                local markerValue = 0
+                local valueValidated = false
+                local checkPoints = NavUtils.GetPositionsInRadius('Water', v.position, maxRadius, 6)
+                if checkPoints then
+                    for _, m in checkPoints do
+                        local dx = v.position[1] - m[1]
+                        local dz = v.position[3] - m[3]
+                        local posDist = dx * dx + dz * dz
+                        if not valueValidated then
+                            for _, b in unitTable do
+                                if b.Range > 0 and posDist <= b.Range * b.Range then
+                                    markerValue = markerValue + 1000 / b.Range
+                                    valueValidated = true
+                                end
+                            end
                         end
-                        break
+                        if valueValidated then
+                            if not aiBrain:CheckBlockingTerrain({m[1], GetSurfaceHeight(m[1], m[3]), m[3]}, v.position, 'low') then
+                                markerCountNotBlocked = markerCountNotBlocked + 1
+                                table.insert( navalMarkers, { Position=v.position, Name=v.name, RaidPosition={m[1], m[2], m[3]}, Distance = posDist, MarkerValue = markerValue } )
+                                totalMarkerValue = totalMarkerValue + markerValue
+                            else
+                                markerCountBlocked = markerCountBlocked + 1
+                            end
+                            break
+                        end
+                        
                     end
                 end
             end
-        end
-        if aiBrain.RNGDEBUG then
-            RNGLOG('There are potentially '..markerCount..' markers that are in range for frigates')
-            RNGLOG('There are '..markerCountNotBlocked..' markers NOT blocked by terrain')
-            RNGLOG('There are '..markerCountBlocked..' markers that ARE blocked')
-            RNGLOG('Markers that frigates can try and raid '..repr(frigateRaidMarkers))
-        end
-        if markerCountNotBlocked > 8 then
-            aiBrain.EnemyIntel.FrigateRaid = true
-            aiBrain.EnemyIntel.FrigateRaidMarkers = frigateRaidMarkers
+            if true then
+                RNGLOG('There are potentially '..markerCount..' markers that are in range for frigates')
+                RNGLOG('There are '..markerCountNotBlocked..' markers NOT blocked by terrain')
+                RNGLOG('There are '..markerCountBlocked..' markers that ARE blocked')
+                LOG('Total Map marker value is '..(markerCount/totalMarkerValue))
+                RNGLOG('Markers that frigates can try and raid '..repr(navalMarkers))
+                LOG('Naval Value = '..totalMarkerValue)
+            end
+            if markerCountNotBlocked > 8 then
+                aiBrain.EnemyIntel.FrigateRaid = true
+                aiBrain.EnemyIntel.FrigateRaidMarkers = navalMarkers
+            end
         end
     end
 end
