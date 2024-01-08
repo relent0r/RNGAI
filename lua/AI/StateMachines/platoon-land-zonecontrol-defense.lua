@@ -53,6 +53,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Error)
                 return
             end
+            if not self.MovementLayer then
+                self.MovementLayer = self:GetNavigationalLayer()
+            end
             local aiBrain = self:GetBrain()
             self.ZoneType = self.PlatoonData.ZoneType or 'aadefense'
             if aiBrain.EnemyIntel.Phase > 1 then
@@ -74,7 +77,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 self.LocationType = 'MAIN'
             end
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
-            self.MaxPlatoonWeaponRange = false
             self.ScoutSupported = true
             self.ScoutUnit = false
             self.atkPri = {}
@@ -130,7 +132,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            local threat=RUtils.GrabPosDangerRNG(aiBrain,platPos,self.EnemyRadius)
+            local threat=RUtils.GrabPosDangerRNG(aiBrain,platPos,self.EnemyRadius, true, false, false)
             if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
                 self:LogDebug(string.format('DecideWhatToDo high threat retreating'))
                 self.retreat=true
@@ -272,7 +274,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         self.target = target
                         if not (v.Role == 'Sniper' or v.Role == 'Silo') and VDist3Sq(unitPos,target:GetPosition())>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
                             if not approxThreat then
-                                approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius)
+                                approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, false, false)
                             end
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.ally and approxThreat.enemy and approxThreat.ally > approxThreat.enemy then
                                 IssueClearCommands({v}) 
@@ -560,6 +562,11 @@ AssignToUnitsMachine = function(data, platoon, units)
         local platoonthreat=0
         local platoonhealth=0
         local platoonhealthtotal=0
+        platoon.UnitRatios = {
+            DIRECTFIRE = 0,
+            INDIRECTFIRE = 0,
+            ANTIAIR = 0,
+        }
         if data.ZoneType then
             platoon.ZoneType = data.ZoneType
         else
@@ -584,42 +591,6 @@ AssignToUnitsMachine = function(data, platoon, units)
                 end
                 if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
                     platoonthreat = platoonthreat + v.Blueprint.Defense.SurfaceThreatLevel*StateUtils.GetWeightedHealthRatio(v)*mult
-                end
-                if (v.Sync.Regen>0) or not v.initialized then
-                    v.initialized=true
-                    if EntityCategoryContains(categories.ARTILLERY * categories.TECH3,v) then
-                        v.Role='Artillery'
-                    elseif EntityCategoryContains(categories.EXPERIMENTAL,v) then
-                        v.Role='Experimental'
-                    elseif EntityCategoryContains(categories.SILO,v) then
-                        v.Role='Silo'
-                    elseif EntityCategoryContains(categories.xsl0202 + categories.xel0305 + categories.xrl0305,v) then
-                        v.Role='Heavy'
-                    elseif EntityCategoryContains((categories.SNIPER + categories.INDIRECTFIRE) * categories.LAND + categories.ual0201 + categories.drl0204 + categories.del0204,v) then
-                        v.Role='Sniper'
-                        if EntityCategoryContains(categories.ual0201,v) then
-                            v.GlassCannon=true
-                        end
-                    elseif EntityCategoryContains(categories.SCOUT,v) then
-                        v.Role='Scout'
-                        if not platoon.ScoutUnit or platoon.ScoutUnit.Dead then
-                            platoon.ScoutUnit = v
-                        end
-                    elseif EntityCategoryContains(categories.ANTIAIR,v) then
-                        v.Role='AA'
-                    elseif EntityCategoryContains(categories.DIRECTFIRE,v) then
-                        v.Role='Bruiser'
-                    elseif EntityCategoryContains(categories.SHIELD,v) then
-                        v.Role='Shield'
-                    end
-                    v:RemoveCommandCap('RULEUCC_Reclaim')
-                    v:RemoveCommandCap('RULEUCC_Repair')
-                    if v.MaxWeaponRange then
-                        --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
-                        if not platoon.MaxPlatoonWeaponRange or v.MaxWeaponRange>platoon.MaxPlatoonWeaponRange then
-                            platoon.MaxPlatoonWeaponRange=v.MaxWeaponRange
-                        end
-                    end
                 end
             end
         end

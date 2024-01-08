@@ -20,7 +20,7 @@ end
 local SeaDefenseForm = function(self, aiBrain, manager)
     local mySubThreat = aiBrain.BrainIntel.SelfThreat.NavalSubNow
     local enemySubThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.NavalSub
-    if mySubThreat < enemySubThreat then
+    if mySubThreat < enemySubThreat * 1.1 then
         --RNGLOG('Enable Sub Pool Builder')
         --RNGLOG('My Sub Threat '..mySubThreat..'Enemy Sub Threat '..enemySubThreat)
         return 350
@@ -416,18 +416,17 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Sea Hunters',
         PlatoonTemplate = 'RNGAI Sea Hunt',
-        PlatoonAddPlans = {'DistressResponseAIRNG'},
         Priority = 310,
         PriorityFunction = SeaDefenseForm,
         InstanceCount = 20,
         BuilderType = 'Any',
-        BuilderData = {
-        UseFormation = 'GrowthFormation',
-        },
         BuilderConditions = {
             -- Change to NUKESUB once the Cybran BP is updated
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.NAVAL * categories.ANTINAVY - categories.ENGINEER - categories.EXPERIMENTAL - categories.NUKE } },
             --{ SeaAttackCondition, { 'LocationType', 20 } },
+        },
+        BuilderData = {
+            StateMachine = 'NavalCombat'
         },
     },
 }

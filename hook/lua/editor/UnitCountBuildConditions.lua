@@ -370,7 +370,7 @@ function LargeExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadius, 
 end
 
 function NavalAreaNeedsEngineerRNG(aiBrain, locationType, validateLabel, locationRadius, threatMin, threatMax, threatRings, threatType)
-    local pos, name = RUtils.AIFindNavalAreaNeedsEngineer(aiBrain, locationType, validateLabel, locationRadius, threatMin, threatMax, threatRings, threatType)
+    local pos, name = RUtils.AIFindNavalAreaNeedsEngineerRNG(aiBrain, locationType, validateLabel, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
         --LOG('Naval Area Needs Engineer TRUE')
         return true
@@ -1125,7 +1125,6 @@ function LessThanFactoryCountRNG(aiBrain, count, category, navalOnly)
             end
         end
     end
-    --LOG('LessThanFactoryCountRNG is false')
     return true
 end
 

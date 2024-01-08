@@ -1143,23 +1143,3 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
     return false
 end
 
-function AIFindNavalAreaNeedsEngineer(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
-    local pos
-    if aiBrain.BuilderManagers[locationType] then
-        pos = aiBrain.BuilderManagers[locationType].FactoryManager:GetLocationCoords()
-    end
-    if not pos then
-        return false
-    end
-    local positions = AIGetMarkersAroundLocationRNG(aiBrain, 'Naval Area', pos, radius, tMin, tMax, tRings, tType)
-
-    local retPos, retName
-    if eng then
-        retPos, retName = AIFindMarkerNeedsEngineer(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, positions)
-    else
-        retPos, retName = AIFindMarkerNeedsEngineer(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
-    end
-
-    return retPos, retName
-end
-

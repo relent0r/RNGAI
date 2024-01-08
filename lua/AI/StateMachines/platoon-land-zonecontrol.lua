@@ -50,6 +50,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Error)
                 return
             end
+            if not self.MovementLayer then
+                self.MovementLayer = self:GetNavigationalLayer()
+            end
             local aiBrain = self:GetBrain()
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
             if aiBrain.EnemyIntel.Phase > 1 then
@@ -70,13 +73,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 self.LocationType = 'MAIN'
             end
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
-            self.MaxPlatoonWeaponRange = false
             self.ScoutSupported = true
             self.ScoutUnit = false
             self.atkPri = {}
             self.CurrentPlatoonThreat = false
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
-            RUtils.ConfigurePlatoon(self)
             StartZoneControlThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -118,7 +119,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius)
+            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, false)
             if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
                 self:LogDebug(string.format('DecideWhatToDo high threat retreating'))
                 self.retreat=true
@@ -189,6 +190,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
+            coroutine.yield(25)
+            self:ChangeState(self.DecideWhatToDo)
+            return
         end,
     },
 
@@ -235,9 +239,10 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if target then
+                        local skipKite = false
                         if not (v.Role == 'Sniper' or v.Role == 'Silo') and closestTarget>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
                             if not approxThreat then
-                                approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius)
+                                approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, false, false)
                             end
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.ally and approxThreat.enemy and approxThreat.ally > approxThreat.enemy then
                                 IssueClearCommands({v}) 
@@ -245,7 +250,22 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                 continue
                             end
                         end
-                        StateUtils.VariableKite(self,v,target)
+                        if v.Role == 'Artillery' or v.Role == 'Silo' then
+                            local targetCats = target.Blueprint.CategoriesHash
+                            if targetCats.DIRECTFIRE and targetCats.STRUCTURE and targetCats.DEFENSE then
+                                local unitRange = StateUtils.GetUnitMaxWeaponRange(target)
+                                if v.MaxWeaponRange > unitRange then
+                                    skipKite = true
+                                    if not v:IsUnitState("Attacking") then
+                                        IssueClearCommands({v})
+                                        IssueAttack({v}, target)
+                                    end
+                                end
+                            end
+                        end
+                        if not skipKite then
+                            StateUtils.VariableKite(self,v,target)
+                        end
                     end
                 end
             end
@@ -268,10 +288,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local target = StateUtils.GetClosestUnitRNG(aiBrain, self, self.Pos, (categories.MOBILE + categories.STRUCTURE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, 128, 'Enemy')
             if target and not target.Dead then
                 local targetRange = StateUtils.GetUnitMaxWeaponRange(target)
+                local minTargetRange
                 if targetRange then
-                    targetRange = targetRange + 10
+                    minTargetRange = targetRange + 10
                 end
-                local avoidRange = math.max(targetRange or 60)
+                local avoidRange = math.max(minTargetRange or 60)
                 local targetPos = target:GetPosition()
                 IssueClearCommands(GetPlatoonUnits(self))
                 local rx = self.Pos[1] - targetPos[1]
@@ -279,11 +300,39 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 if rx * rx + rz * rz < targetRange * targetRange then
                     self:MoveToLocation(RUtils.AvoidLocation(targetPos, self.Pos, avoidRange), false)
                 else
+                    local targetCats = target.Blueprint.CategoriesHash
+                    local attackStructure = false
+                    local platUnits = self:GetPlatoonUnits()
+                    if targetCats.STRUCTURE and targetCats.DEFENSE then
+                        if targetRange < self.MaxPlatoonWeaponRange then
+                            attackStructure = true
+                            for _, v in platUnits do
+                                self:LogDebug('Role is '..repr(v.Role))
+                                if v.Role == 'Artillery' or v.Role == 'Silo' and not v:IsUnitState("Attacking") then
+                                    IssueClearCommands({v})
+                                    IssueAttack({v},target)
+                                end
+                            end
+                        end
+                    end
                     local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, true)
-                    if zoneRetreat then
-                        self:MoveToLocation(aiBrain.Zones.Land.zones[zoneRetreat].pos, false)
+                    if attackStructure then
+                        self:LogDebug(string.format('Non Artillery retreating'))
+                        for _, v in platUnits do
+                            if v.Role ~= 'Artillery' and v.Role ~= 'Silo' then
+                                if zoneRetreat then
+                                    IssueMove({v}, aiBrain.Zones.Land.zones[zoneRetreat].pos)
+                                else
+                                    IssueMove({v}, aiBrain.Zones.Land.zones[zoneRetreat].pos)
+                                end
+                            end
+                        end
                     else
-                        self:MoveToLocation(self.Home, false)
+                        if zoneRetreat then
+                            self:MoveToLocation(aiBrain.Zones.Land.zones[zoneRetreat].pos, false)
+                        else
+                            self:MoveToLocation(self.Home, false)
+                        end
                     end
                 end
                 coroutine.yield(40)
@@ -550,6 +599,11 @@ AssignToUnitsMachine = function(data, platoon, units)
         local platoonthreat=0
         local platoonhealth=0
         local platoonhealthtotal=0
+        platoon.UnitRatios = {
+            DIRECTFIRE = 0,
+            INDIRECTFIRE = 0,
+            ANTIAIR = 0,
+        }
         if data.ZoneType then
             platoon.ZoneType = data.ZoneType
         else
@@ -575,47 +629,7 @@ AssignToUnitsMachine = function(data, platoon, units)
                 if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
                     platoonthreat = platoonthreat + v.Blueprint.Defense.SurfaceThreatLevel*StateUtils.GetWeightedHealthRatio(v)*mult
                 end
-                if (v.Sync.Regen>0) or not v.initialized then
-                    v.initialized=true
-                    if EntityCategoryContains(categories.ARTILLERY * categories.TECH3,v) then
-                        v.Role='Artillery'
-                    elseif EntityCategoryContains(categories.EXPERIMENTAL,v) then
-                        v.Role='Experimental'
-                    elseif EntityCategoryContains(categories.SILO,v) then
-                        v.Role='Silo'
-                    elseif EntityCategoryContains(categories.xsl0202 + categories.xel0305 + categories.xrl0305,v) then
-                        v.Role='Heavy'
-                    elseif EntityCategoryContains((categories.SNIPER + categories.INDIRECTFIRE) * categories.LAND + categories.ual0201 + categories.drl0204 + categories.del0204,v) then
-                        v.Role='Sniper'
-                        if EntityCategoryContains(categories.ual0201,v) then
-                            v.GlassCannon=true
-                        end
-                    elseif EntityCategoryContains(categories.SCOUT,v) then
-                        v.Role='Scout'
-                        if not platoon.ScoutUnit or platoon.ScoutUnit.Dead then
-                            platoon.ScoutUnit = v
-                        end
-                    elseif EntityCategoryContains(categories.ANTIAIR,v) then
-                        v.Role='AA'
-                    elseif EntityCategoryContains(categories.DIRECTFIRE,v) then
-                        v.Role='Bruiser'
-                    elseif EntityCategoryContains(categories.SHIELD,v) then
-                        v.Role='Shield'
-                    end
-                    v:RemoveCommandCap('RULEUCC_Reclaim')
-                    v:RemoveCommandCap('RULEUCC_Repair')
-                    if v.MaxWeaponRange then
-                        --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
-                        if not platoon.MaxPlatoonWeaponRange or v.MaxWeaponRange>platoon.MaxPlatoonWeaponRange then
-                            platoon.MaxPlatoonWeaponRange=v.MaxWeaponRange
-                        end
-                    end
-                end
             end
-        end
-        if not platoon.MaxPlatoonWeaponRange then
-            --LOG('No MaxWeaponRange performing backup')
-            platoon.MaxPlatoonWeaponRange=20
         end
         platoon:OnUnitsAddedToPlatoon()
         -- start the behavior

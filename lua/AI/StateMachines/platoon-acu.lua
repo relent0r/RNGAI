@@ -296,7 +296,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         threat = brain:GetThreatAtPosition( closestPos, brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface' )
                         self:LogDebug(string.format('Found a close base and the threat is '..threat))
                         if threat > 30 then
-                            local realThreat = RUtils.GrabPosDangerRNG(brain,closestPos,120)
+                            local realThreat = RUtils.GrabPosDangerRNG(brain,closestPos,120, true, true, false)
                             if realThreat.enemy > 30 and realThreat.enemy > realThreat.ally then
                                 self:LogDebug(string.format('no close base retreat'))
                                 self.BuilderData = {}
@@ -378,7 +378,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             self:LogDebug(string.format('Found a close base and the threat is '..threat))
                             if threat > 30 then
                                 self:LogDebug(string.format('high threat validate real threat'))
-                                local realThreat = RUtils.GrabPosDangerRNG(brain,closestPos,120)
+                                local realThreat = RUtils.GrabPosDangerRNG(brain,closestPos,120, true, true, false)
                                 if realThreat.enemy > 30 and realThreat.enemy > realThreat.ally then
                                     self:LogDebug(string.format('high threat retreat'))
                                     self.BuilderData = {}
@@ -993,7 +993,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdrPos[1], cdrPos[3]) > 2025 then
                         local enemyThreat = GetThreatAtPosition(brain, targetPos, brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
                         if enemyThreat > 0 then
-                            local realThreat = RUtils.GrabPosDangerRNG(brain,targetPos, 45)
+                            local realThreat = RUtils.GrabPosDangerRNG(brain,targetPos, 45, true, true, false)
                             --RNGLOG('ACU OverCharge Friendly Threat is '..realThreat.ally)
                             --RNGLOG('ACU OverCharge Enemy Threat is '..realThreat.enemy)
                             if realThreat.enemy >= realThreat.ally and not cdr.SuicideMode then
@@ -1475,7 +1475,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                     cdr.initialized=true
                 end
-                if RUtils.GrabPosDangerRNG(brain,cdr.Position, 40).enemy > 20 then
+                if RUtils.GrabPosDangerRNG(brain,cdr.Position, 40, true, true, false).enemy > 20 then
                     --LOG('Too dangerous after building extractors, returning')
                     self:ChangeState(self.DecideWhatToDo)
                     return

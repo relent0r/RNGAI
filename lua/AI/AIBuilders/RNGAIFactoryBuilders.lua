@@ -860,6 +860,57 @@ BuilderGroup {
             }
         }
     },
+    Builder {
+        BuilderName = 'RNG Factory Builder Sea T2 High Pri Naval',
+        PlatoonTemplate = 'EngineerBuilderT23RNG',
+        Priority = 0,
+        PriorityFunction = NavalAdjust,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.05 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * categories.TECH3 }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            Construction = {
+                Location = 'LocationType',
+                BuildStructures = {
+                    'T2SupportSeaFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Sea T3 High Pri Naval',
+        PlatoonTemplate = 'EngineerBuilderT23RNG',
+        Priority = 0,
+        PriorityFunction = NavalAdjust,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.05 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH3 - categories.SUPPORTFACTORY } },
+            { UCBC, 'LessThanFactoryCountRNG', { 3, categories.FACTORY * categories.NAVAL * categories.TECH3, true }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            Construction = {
+                Location = 'LocationType',
+                BuildStructures = {
+                    'T3SupportSeaFactory',
+                },
+            }
+        }
+    },
 
     Builder {
         BuilderName = 'RNG Factory Builder Sea T2 High Pri Naval',
@@ -1034,6 +1085,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.05 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * categories.TECH3 }},
          },
@@ -1044,6 +1096,31 @@ BuilderGroup {
                 Location = 'LocationType',
                 BuildStructures = {
                     'T2SupportSeaFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Sea T3 High Pri Naval Large',
+        PlatoonTemplate = 'EngineerBuilderT23RNG',
+        Priority = 0,
+        PriorityFunction = NavalAdjust,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.05 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH3 - categories.SUPPORTFACTORY } },
+            { UCBC, 'LessThanFactoryCountRNG', { 3, categories.FACTORY * categories.NAVAL * categories.TECH3, true }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            Construction = {
+                Location = 'LocationType',
+                BuildStructures = {
+                    'T3SupportSeaFactory',
                 },
             }
         }

@@ -163,7 +163,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 
                 if closestUnit and not IsDestroyed(closestUnit) then
                     --LOG('Found unit to capture, checking threat at position')
-                    if GrabPosDangerRNG(aiBrain,closestUnit:GetPosition(), 40).enemy < 5 then
+                    if GrabPosDangerRNG(aiBrain,closestUnit:GetPosition(), 40, true, false, false).enemy < 5 then
                         --LOG('Attempting to start capture unit ai')
                         self:CaptureUnitAIRNG(closestUnit)
                         return
@@ -3347,23 +3347,32 @@ end
 
 -- TruePlatoon Support functions
 
-GrabPosDangerRNG = function(aiBrain,pos,radius)
+GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, includeAir)
     if pos and radius then
         local brainThreats = {ally=0,enemy=0}
         local enemyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Enemy')
         for _,v in enemyunits do
             if not v.Dead then
                 local mult=1
-                if v.Blueprint.CategoriesHash.INDIRECTFIRE then
+                local cats = v.Blueprint.CategoriesHash
+                if cats.INDIRECTFIRE then
                     mult=0.3
                 end
-                if v.Blueprint.CategoriesHash.STRUCTURE and not v.Blueprint.CategoriesHash.TACTICALMISSILEPLATFORM then
+                if cats.STRUCTURE and not cats.TACTICALMISSILEPLATFORM then
                     mult=1.5
                 end
-                if v.Blueprint.CategoriesHash.COMMAND then
+                if cats.COMMAND then
                     brainThreats.enemy = brainThreats.enemy + v:EnhancementThreatReturn()
-                elseif v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
-                    brainThreats.enemy = brainThreats.enemy + v.Blueprint.Defense.SurfaceThreatLevel*mult
+                else
+                    if includeSurface and v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                        brainThreats.enemy = brainThreats.enemy + v.Blueprint.Defense.SurfaceThreatLevel*mult
+                    end
+                    if includeSub and v.Blueprint.Defense.SubThreatLevel ~= nil then
+                        brainThreats.enemy = brainThreats.enemy + v.Blueprint.Defense.SubThreatLevel*mult
+                    end
+                    if includeAir and v.Blueprint.Defense.AirThreatLevel ~= nil then
+                        brainThreats.enemy = brainThreats.enemy + v.Blueprint.Defense.AirThreatLevel*mult
+                    end
                 end
             end
         end
@@ -3372,13 +3381,22 @@ GrabPosDangerRNG = function(aiBrain,pos,radius)
         for _,v in allyunits do
             if not v.Dead then
                 local mult=1
-                if v.Blueprint.CategoriesHash.INDIRECTFIRE then
+                local cats = v.Blueprint.CategoriesHash
+                if cats.INDIRECTFIRE then
                     mult=0.3
                 end
-                if v.Blueprint.CategoriesHash.COMMAND then
+                if cats.COMMAND then
                     brainThreats.ally = brainThreats.ally + v:EnhancementThreatReturn()
                 elseif v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
-                    brainThreats.ally = brainThreats.ally + v.Blueprint.Defense.SurfaceThreatLevel*mult
+                    if includeSurface and v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
+                        brainThreats.ally = brainThreats.ally + v.Blueprint.Defense.SurfaceThreatLevel*mult
+                    end
+                    if includeSub and v.Blueprint.Defense.SubThreatLevel ~= nil then
+                        brainThreats.ally = brainThreats.ally + v.Blueprint.Defense.SubThreatLevel*mult
+                    end
+                    if includeAir and v.Blueprint.Defense.AirThreatLevel ~= nil then
+                        brainThreats.ally = brainThreats.ally + v.Blueprint.Defense.AirThreatLevel*mult
+                    end
                 end
             end
         end
@@ -6052,7 +6070,7 @@ end
 ---@param eng Unit
 ---@return boolean
 ---@return string
-function AIFindNavalAreaNeedsEngineer(aiBrain, locationType, enemyLabelCheck, radius, tMin, tMax, tRings, tType, eng)
+function AIFindNavalAreaNeedsEngineerRNG(aiBrain, locationType, enemyLabelCheck, radius, tMin, tMax, tRings, tType, eng)
     local pos = aiBrain.BuilderManagers[locationType].Position
     if not pos then
         return false
@@ -6061,9 +6079,6 @@ function AIFindNavalAreaNeedsEngineer(aiBrain, locationType, enemyLabelCheck, ra
         pos = eng:GetPosition()
     end
     local positions = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Naval Area', pos, radius, tMin, tMax, tRings, tType)
-    if enemyLabelCheck then
-        --LOG('Checking based on enemy label')
-    end
 
     local retPos, retName
     local closest = false
@@ -6074,16 +6089,24 @@ function AIFindNavalAreaNeedsEngineer(aiBrain, locationType, enemyLabelCheck, ra
         local distance = VDist3Sq(pos, v.Position)
         if enemyLabelCheck then
             local label= NavUtils.GetLabel('Water', {v.Position[1], v.Position[2], v.Position[3]})
-            --LOG('Label is '..label)
             if label and aiBrain.BrainIntel.NavalBaseLabels[label] ~= 'Confirmed' then
-                --LOG('Label Rejected')
                 labelRejected = true
-            else
-                --LOG('Label accepted')
             end
         end
         if not labelRejected and not aiBrain.BuilderManagers[v.Name] then
-            if not closest or distance < closest then
+            local closeToExisting = false
+            for _, b in aiBrain.BuilderManagers do
+                if b.Layer == 'Water' then
+                    local rx = v.Position[1] - b.Position[1]
+                    local rz = v.Position[3] - b.Position[3]
+                    local posDistance = rx * rx + rz * rz
+                    if posDistance < 10000 then
+                        closeToExisting = true
+                        break
+                    end
+                end
+            end
+            if not closeToExisting and (not closest or distance < closest) then
                 closest = distance
                 retPos = v.Position
                 retName = v.Name
@@ -6099,7 +6122,6 @@ function AIFindNavalAreaNeedsEngineer(aiBrain, locationType, enemyLabelCheck, ra
             end
         end
     end
-
     return retPos, retName
 end
 
@@ -6119,7 +6141,7 @@ function GetMarkerFromPosition(refPosition, markerType)
         end
     end
     if not marker then
-        WARN('No Marker returned from GetMarkerFromPosition')
+        WARN('No Marker returned from GetMarkerFromPosition, marker type was '..repr(markerType))
     end
     return marker
 end
@@ -6148,8 +6170,9 @@ end
 
 function SetCoreResources(aiBrain, position, baseName)
     coroutine.yield(50)
+    local MarkerUtilities = import("/lua/sim/markerutilities.lua")
     local resources = {}
-    local refMarker = GetMarkerFromPosition(position, 'Spawn')
+    local refMarker = MarkerUtilities.GetMarker(baseName)
     local resourceTable = GetResourcesFromMarker(refMarker)
     if resourceTable then
         if aiBrain.BuilderManagers[baseName] then

@@ -1990,6 +1990,7 @@ function InitialNavalAttackCheck(aiBrain)
     -- points = number of points around the extractor, doesn't need to have too many.
     -- radius = the radius that the points will be, be set this a little lower than a frigates max weapon range
     -- center = the x,y values for the position of the mass extractor. e.g {x = 0, y = 0} 
+    aiBrain.IntelManager:WaitForMarkerInfection()
     local frigateRaidMarkers = {}
     local markers = GetMarkersRNG()
     if markers then
@@ -2837,7 +2838,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                         acuPresent = true
                     end
                     unitAddedCount = unitAddedCount + 1
-                    aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=RUtils.GrabPosDangerRNG(aiBrain,v.Position,30).enemy,unit=v.object, ACUPresent=acuPresent, time=timeStamp}
+                    aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=RUtils.GrabPosDangerRNG(aiBrain,v.Position,30, true, false, false).enemy,unit=v.object, ACUPresent=acuPresent, time=timeStamp}
                 else
                     local acuPresent = false
                     local priority=0
@@ -2873,7 +2874,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     local statusModifier = 1
                     --RNGLOG('angle of enemy units '..angleOfEnemyUnits)
                     --RNGLOG('distance to main '..im.MapIntelGrid[i][k].DistanceToMain)
-                    im.MapIntelGrid[i][k].EnemyUnitDanger = RUtils.GrabPosDangerRNG(aiBrain,position,30).enemy
+                    im.MapIntelGrid[i][k].EnemyUnitDanger = RUtils.GrabPosDangerRNG(aiBrain,position,30, true, false, false).enemy
                     if aiBrain.GridPresence and aiBrain.GridPresence:GetInferredStatus(position) == 'Allied' then
                         statusModifier = 1.8
                     end
@@ -2953,7 +2954,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                 acuPriority = acuPriority + 100
             end
             unitAddedCount = unitAddedCount + 1
-            aiBrain.prioritypoints['ACU']={type='raid',Position=aiBrain.CDRUnit.Position,priority=acuPriority,danger=RUtils.GrabPosDangerRNG(aiBrain,aiBrain.CDRUnit.Position,30).enemy,unit=nil}
+            aiBrain.prioritypoints['ACU']={type='raid',Position=aiBrain.CDRUnit.Position,priority=acuPriority,danger=RUtils.GrabPosDangerRNG(aiBrain,aiBrain.CDRUnit.Position,30, true, false, false).enemy,unit=nil}
         end
         for k, v in aiBrain.prioritypoints do
             if v.unit.Dead or (v.time and v.time + 60 < timeStamp) then

@@ -79,7 +79,6 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             self.BaseMilitaryArea = aiBrain.OperatingAreas['BaseMilitaryArea']
             self.BaseEnemyArea = aiBrain.OperatingAreas['BaseEnemyArea']
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
-            self.MaxPlatoonWeaponRange = false
             self.ScoutUnit = false
             self.atkPri = {}
             self.CurrentPlatoonThreat = false
@@ -122,12 +121,15 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             end
             self:LogDebug('DecideWhatToDo')
             local aiBrain = self:GetBrain()
-            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius)
+            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, false)
             if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
                 self:LogDebug('Threat too high in DecideWhatToDo, retreating')
                 self.retreat=true
                 self:ChangeState(self.Retreating)
                 return
+            end
+            if not self.MovementLayer then
+                self.MovementLayer = self:GetNavigationalLayer()
             end
             local target
             if not target then
@@ -167,7 +169,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-            coroutine.yield(10)
+            coroutine.yield(25)
             self:ChangeState(self.DecideWhatToDo)
             return
         end,

@@ -1,6 +1,6 @@
 PlatoonTemplate {
     Name = 'RNGAI Sea Hunt',
-    Plan = 'NavalHuntAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.NAVAL * categories.ANTINAVY, 1, 10, 'Attack', 'GrowthFormation' }
     },

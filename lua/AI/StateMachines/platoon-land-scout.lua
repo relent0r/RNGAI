@@ -54,6 +54,9 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Error)
                 return
             end
+            if not self.MovementLayer then
+                self.MovementLayer = self:GetNavigationalLayer()
+            end
             local aiBrain = self:GetBrain()
             StartLandScoutThreads(aiBrain, self)
 
@@ -213,7 +216,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             else
                 self:LogDebug(string.format('We have no targetData at all..50 tick wait.'))
             end
-            coroutine.yield(10)
+            coroutine.yield(25)
             --LOG('Scout nothing to do in DecideWhatToDo')
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -659,21 +662,7 @@ AssignToUnitsMachine = function(data, platoon, units)
                 if not platoon.IntelRange or v.Blueprint.Intel.RadarRadius > platoon.IntelRange then
                     platoon.IntelRange = v.Blueprint.Intel.RadarRadius
                 end
-                if not platoon.MaxPlatoonWeaponRange then
-                    local maxWeaponRange
-                    for _, v in v.Blueprint.Weapon do
-                        if v.RangeCategory == 'UWRC_DirectFire' and v.Damage > 0 then
-                            if not maxWeaponRange or v.MaxRadius > maxWeaponRange then
-                                maxWeaponRange = v.MaxRadius
-                            end
-                        end
-                    end
-                    platoon.MaxPlatoonWeaponRange = maxWeaponRange
-                end
             end
-        end
-        if not platoon.MaxPlatoonWeaponRange then 
-            platoon.MaxPlatoonWeaponRange=19
         end
         platoon:OnUnitsAddedToPlatoon()
         -- start the behavior

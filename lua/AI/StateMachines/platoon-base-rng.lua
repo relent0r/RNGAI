@@ -25,6 +25,8 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
         self.Units = units
         for k, unit in units do
             unit.AIPlatoonReference = self
+            local unitBp = unit.Blueprint
+            local unitCats = unit.Blueprint.CategoriesHash
             if self.Debug then
                 unit:SetCustomName(self.PlatoonName)
             end
@@ -34,18 +36,18 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
             if not unit.Dead and unit:TestToggleCaps('RULEUTC_CloakToggle') then
                 unit:SetScriptBit('RULEUTC_CloakToggle', false)
             end
-            if unit.Blueprint.CategoriesHash.GUNSHIP and not unit.ApproxDPS then
-                for _, weapon in unit.Blueprint.Weapon or {} do
+            if unitCats.GUNSHIP and not unit.ApproxDPS then
+                for _, weapon in unitBp.Weapon or {} do
                     if not weapon.CannotAttackGround and weapon.RangeCategory == 'UWRC_DirectFire' then
                         unit.ApproxDPS = RUtils.CalculatedDPSRNG(weapon) --weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
                     end
                 end
             end
-            if not unit.MaxWeaponRange and unit.Blueprint.Weapon[1].MaxRadius and not unit.Blueprint.Weapon[1].ManualFire then
-                unit.MaxWeaponRange = unit.Blueprint.Weapon[1].MaxRadius
+            if not unit.MaxWeaponRange and unitBp.Weapon[1].MaxRadius and not unitBp.Weapon[1].ManualFire then
+                unit.MaxWeaponRange = unitBp.Weapon[1].MaxRadius
             end
             if not unit.MaxWeaponRange then
-                for _, weapon in unit.Blueprint.Weapon or {} do
+                for _, weapon in unitBp.Weapon or {} do
                     -- unit can have MaxWeaponRange entry from the last platoon
                     if weapon.WeaponCategory == 'Anti Air' then
                         continue
@@ -64,9 +66,47 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                     end
                 end
             end
+            if (unit.MaxWeaponRange and unitBp.Weapon[1].RangeCategory == 'UWRC_DirectFire') and not self.MaxDirectFireRange or self.MaxDirectFireRange < unit.MaxWeaponRange then
+                self.MaxDirectFireRange = unit.MaxWeaponRange
+            end
             if not self.MaxPlatoonWeaponRange or self.MaxPlatoonWeaponRange < unit.MaxWeaponRange then
                 self.MaxPlatoonWeaponRange = unit.MaxWeaponRange
             end
+            if (unit.Sync.Regen>0) or not unit.initialized then
+                unit.initialized=true
+                if unitCats.ARTILLERY and unitCats.MOBILE and not unitCats.EXPERIMENTAL then
+                    self:LogDebug(string.format('Assign Artillery role'))
+                    unit.Role='Artillery'
+                elseif unitCats.EXPERIMENTAL then
+                    unit.Role='Experimental'
+                elseif unitCats.SILO then
+                    unit.Role='Silo'
+                elseif unitCats.xsl0202 or unitCats.xel0305 or unitCats.xrl0305 then
+                    unit.Role='Heavy'
+                elseif EntityCategoryContains((categories.SNIPER + categories.INDIRECTFIRE) * categories.LAND + categories.ual0201 + categories.drl0204 + categories.del0204,unit) then
+                    self:LogDebug(string.format('Assign Sniper role to '..unit.UnitId))
+                    unit.Role='Sniper'
+                    if EntityCategoryContains(categories.ual0201,unit) then
+                        unit.GlassCannon=true
+                    end
+                elseif unitCats.SCOUT then
+                    unit.Role='Scout'
+                    if not self.ScoutUnit or self.ScoutUnit.Dead then
+                        self.ScoutUnit = unit
+                    end
+                elseif unitCats.ANTIAIR then
+                    unit.Role='AA'
+                elseif unitCats.DIRECTFIRE then
+                    unit.Role='Bruiser'
+                elseif unitCats.SHIELD then
+                    unit.Role='Shield'
+                end
+                unit:RemoveCommandCap('RULEUCC_Reclaim')
+                unit:RemoveCommandCap('RULEUCC_Repair')
+            end
+        end
+        if not self.MaxPlatoonWeaponRange then
+            self.MaxPlatoonWeaponRange=20
         end
     end,
 

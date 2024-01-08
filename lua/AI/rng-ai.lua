@@ -90,7 +90,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     OnCreateAI = function(self, planName)
-        LOG('Oncreate AI from RNG code')
+        LOG('Oncreate AI from RNG')
         StandardBrain.OnCreateAI(self, planName)
         local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
         if string.find(per, 'RNG') then
@@ -204,7 +204,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     InitializeSkirmishSystems = function(self)
-        LOG('Initialize Skirmish Systems')
+        --LOG('Initialize Skirmish Systems')
         if not self.RNG then
             return RNGAIBrainClass.InitializeSkirmishSystems(self)
         end
@@ -984,24 +984,10 @@ AIBrain = Class(RNGAIBrainClass) {
             LAND = 2,
         }
         self.EcoManager.MassPriorityTable = {
-            Advantage = {
-                --MASSEXTRACTION = 5,
-                TML = 12,
-                STATIONPODS = 10,
-                ENGINEER = 11,
-                AIR = 7,
-                NAVAL = 8,
-                LAND = 6,
-                NUKE = 9,
-                },
-            Disadvantage = {
-                --MASSEXTRACTION = 8,
-                TML = 12,
-                STATIONPODS = 10,
-                ENGINEER = 11,
-                NAVAL = 8,
-                NUKE = 9,
-            }
+            TML = 12,
+            STATIONPODS = 10,
+            ENGINEER = 11,
+            NUKE = 9
         }
 
         self.DefensiveSupport = {}
@@ -1646,8 +1632,8 @@ AIBrain = Class(RNGAIBrainClass) {
         if not self.RNG then
             return RNGAIBrainClass.AddBuilderManagers(self, position, radius, baseName, useCenter)
         end
+        local MarkerUtilities = import("/lua/sim/markerutilities.lua")
         local baseRestrictedArea = self.OperatingAreas['BaseRestrictedArea']
-        --LOG('Create Builder Manager')
 
         -- Set the layer of the builder manager so that factory managers and platoon managers know if we should be graphing to land or naval production.
         -- Used for identifying if we can graph to an enemy factory for multi landmass situations
@@ -1658,7 +1644,6 @@ AIBrain = Class(RNGAIBrainClass) {
             position[2] = GetSurfaceHeight( position[1], position[3] )
 			baseLayer = 'Water'
         end
-        --LOG('AddBuilderManager '..baseName)
         self.BuilderManagers[baseName] = {
             FactoryManager = FactoryManager.CreateFactoryBuilderManager(self, baseName, position, radius, useCenter),
             PlatoonFormManager = PlatoonFormManager.CreatePlatoonFormManager(self, baseName, position, radius, useCenter),
@@ -1670,7 +1655,7 @@ AIBrain = Class(RNGAIBrainClass) {
             Position = position,
             Layer = baseLayer,
             GraphArea = false,
-            BaseType = Scenario.MasterChain._MASTERCHAIN_.Markers[baseName].type or 'MAIN',
+            BaseType = MarkerUtilities.GetMarker(baseName).Type or 'MAIN',
         }
         self.NumBases = self.NumBases + 1
         if baseLayer == 'Water' then
@@ -1716,26 +1701,34 @@ AIBrain = Class(RNGAIBrainClass) {
     GetGraphArea = function(self, position, baseName, baseLayer)
         -- This will set the graph area of the factory manager so we don't need to look it up every time
         -- Needs to wait a while for the RNGArea properties to be populated
+        --LOG('Get Graph Area for baseLayer '..repr(baseLayer))
+        --LOG('baseName is '..repr(baseName))
         local graphAreaSet = false
         while not graphAreaSet do
             local graphArea
             if baseLayer then
                 if baseLayer == 'Water' then
                     graphArea = NavUtils.GetLabel('Water', position)
+                    --LOG('GetLabel returned the following graph area for position '..repr(position)..' on water '..repr(graphArea))
                 else
                     graphArea = NavUtils.GetLabel('Land', position)
+                    --LOG('GetLabel returned the following graph area for position '..repr(position)..' on land '..repr(graphArea))
                 end
+                
             end
             if not graphArea then
-                WARN('Missing RNGArea for builder manager land node or no path markers')
+                WARN('Missing Label for builder manager. Expansion position may be on large incline/decline')
+                
+                --LOG('baseName '..repr(baseName))
+                --LOG('Position '..repr(position))
             end
             if graphArea then
-                --RNGLOG('Graph Area for buildermanager is '..graphArea)
+                --LOG('Graph Area for buildermanager is '..graphArea)
                 graphAreaSet = true
                 self.BuilderManagers[baseName].GraphArea = graphArea
             end
             if not graphAreaSet then
-                --RNGLOG('Graph Area not set yet')
+                --LOG('Graph Area not set yet')
                 coroutine.yield(30)
             end
         end
@@ -2365,7 +2358,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 if not table.empty(validNavalLabels) then
                     self.BrainIntel.NavalBaseLabels = validNavalLabels
-                    LOG('Label Table '..repr(validNavalLabels))
+                    --LOG('Label Table '..repr(validNavalLabels))
                 end
             end
             im.MapIntelStats.ScoutLocationsBuilt = true
@@ -3587,6 +3580,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local allyExtractorthreat = 0
         local allyLandThreat = 0
         local allyAirThreat = 0
+        local allyNavalThreat = 0
         local unitCat
         --RNGLOG('Number of Allies '..RNGGETN(allyBrains))
         coroutine.yield(1)
@@ -3634,6 +3628,12 @@ AIBrain = Class(RNGAIBrainClass) {
                 for _,v in allyAirList do
                     allyAirThreat = allyAirThreat + v.Blueprint.Defense.AirThreatLevel
                 end
+
+                local allyNavalList = GetListOfUnits( ally, categories.MOBILE * categories.NAVAL , false, false)
+                
+                for _,v in allyNavalList do
+                    allyNavalThreat = allyNavalThreat + (v.Blueprint.Defense.SurfaceThreatLevel + v.Blueprint.Defense.SubThreatLevel)
+                end
             end
         end
         self.BrainIntel.SelfThreat.AllyExtractorTable = allyExtractors
@@ -3641,6 +3641,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SelfThreat.AllyExtractor = allyExtractorthreat + self.BrainIntel.SelfThreat.Extractor
         self.BrainIntel.SelfThreat.AllyLandThreat = allyLandThreat
         self.BrainIntel.SelfThreat.AllyAirThreat = allyAirThreat
+        self.BrainIntel.SelfThreat.AllyNavalThreat = allyNavalThreat
         --RNGLOG('AllyExtractorCount is '..self.BrainIntel.SelfThreat.AllyExtractorCount)
         --RNGLOG('SelfExtractorCount is '..self.BrainIntel.SelfThreat.ExtractorCount)
         --RNGLOG('AllyExtractorThreat is '..self.BrainIntel.SelfThreat.AllyExtractor)
@@ -4147,12 +4148,15 @@ AIBrain = Class(RNGAIBrainClass) {
                         local priorityNum = 0
                         local priorityUnit = false
                         --RNGLOG('Threat Stats Self + ally :'..self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat..'Enemy : '..self.EnemyIntel.EnemyThreatCurrent.Land)
-                        if (self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat) > (self.EnemyIntel.EnemyThreatCurrent.Land * 1.3) and (self.BrainIntel.SelfThreat.AirNow + self.BrainIntel.SelfThreat.AllyAirThreat) > (self.EnemyIntel.EnemyThreatCurrent.Air * 1.3) and self.BasePerimeterMonitor['MAIN'].LandUnits < 1 then
-                            massPriorityTable = self.EcoManager.MassPriorityTable.Advantage
-                            --RNGLOG('Land threat advantage mass priority table')
-                        else
-                            massPriorityTable = self.EcoManager.MassPriorityTable.Disadvantage
-                            --RNGLOG('Land thread disadvantage mass priority table')
+                        massPriorityTable = self.EcoManager.MassPriorityTable
+                        if (self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat) > (self.EnemyIntel.EnemyThreatCurrent.Land * 1.3) and self.BasePerimeterMonitor['MAIN'].LandUnits < 1 then
+                            massPriorityTable.LAND = 6
+                        end
+                        if (self.BrainIntel.SelfThreat.AirNow + self.BrainIntel.SelfThreat.AllyAirThreat) > (self.EnemyIntel.EnemyThreatCurrent.Air * 1.3) then
+                            massPriorityTable.AIR = 7
+                        end
+                        if (self.BrainIntel.SelfThreat.NavalNow + self.BrainIntel.SelfThreat.AllyNavalThreat) > (self.EnemyIntel.EnemyThreatCurrent.Naval * 1.3) then
+                            massPriorityTable.NAVAL = 8
                         end
                         massCycle = massCycle + 1
                         for k, v in massPriorityTable do
@@ -5941,13 +5945,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 SetAlliance(AIIndex, brainIndex, real_state)
             end
         end
-        if self.EnemyIntel.ClosestEnemyBase > 0 then
-            minimumRadius = self.EnemyIntel.ClosestEnemyBase * 0.8
-        end
         local civUnits = {}
-        local searchRadius = math.min(self.OperatingAreas['BaseMilitaryArea'], minimumRadius)
         local baseEnemyArea = self.OperatingAreas['BaseEnemyArea']
-        --LOG('civ unit search radius '..searchRadius)
         local allyUnits = GetUnitsAroundPoint(self, categories.MOBILE + (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.UNSELECTABLE - categories.UNTARGETABLE, self.BrainIntel.StartPos, baseEnemyArea, 'Neutral')
         for _, v in allyUnits do
             local unitPos = v:GetPosition()
@@ -5962,6 +5961,23 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         if not table.empty(civUnits) then
             self.EnemyIntel.CivilianCaptureUnits = civUnits
+        end
+        local enemyUnits = GetUnitsAroundPoint(self, categories.STRUCTURE * categories.DEFENSE * (categories.DIRECTFIRE + categories.INDIRECTFIRE), self.BrainIntel.StartPos, baseEnemyArea, 'Enemy')
+        local closestCivPD
+        for _, v in enemyUnits do
+            local unitPos = v:GetPosition()
+            local civPDClose = false
+            if not IsDestroyed(v) and ArmyIsCivilian(v:GetArmy()) and NavUtils.CanPathTo('Land', self.BrainIntel.StartPos, unitPos) then
+                local rx = unitPos[1] - self.BrainIntel.StartPos[1]
+                local rz = unitPos[3] - self.BrainIntel.StartPos[3]
+                local tmpDistance = rx * rx + rz * rz
+                if not closestCivPD or tmpDistance < closestCivPD then
+                    closestCivPD = tmpDistance
+                end
+            end
+        end
+        if closestCivPD then
+            self.EnemyIntel.CivilianClosestPD = closestCivPD
         end
         --LOG('Civ units '..repr(civUnits))
     end,
@@ -6147,8 +6163,8 @@ AIBrain = Class(RNGAIBrainClass) {
         ---@deprecated
     ---@param self AIBrain
     InitializePlatoonBuildManager = function(self)
-        LOG('Starting PlatoonBuildManager')
-        LOG('Initialize Skirmish Systems')
+       --('Starting PlatoonBuildManager')
+        --LOG('Initialize Skirmish Systems')
         if not self.RNG then
             return RNGAIBrainClass.InitializePlatoonBuildManager(self)
         end
@@ -6928,24 +6944,11 @@ AIBrain = Class(RNGAIBrainClass) {
             LAND = 2,
         }
         self.EcoManager.MassPriorityTable = {
-            Advantage = {
-                --MASSEXTRACTION = 5,
-                TML = 12,
-                STATIONPODS = 10,
-                ENGINEER = 11,
-                AIR = 7,
-                NAVAL = 8,
-                LAND = 6,
-                NUKE = 9,
-                },
-            Disadvantage = {
-                --MASSEXTRACTION = 8,
-                TML = 12,
-                STATIONPODS = 10,
-                ENGINEER = 11,
-                NAVAL = 8,
-                NUKE = 9,
-            }
+            TML = 12,
+            STATIONPODS = 10,
+            ENGINEER = 11,
+            NAVAL = 8,
+            NUKE = 9,
         }
 
         self.DefensiveSupport = {}
@@ -7019,6 +7022,7 @@ AIBrain = Class(RNGAIBrainClass) {
             ACUGunUpgrades = 0,
         }
         self.EnemyIntel.CivilianCaptureUnits = {}
+        self.EnemyIntel.CivilianClosestPD = 0
         local selfIndex = self:GetArmyIndex()
         for _, v in ArmyBrains do
             local armyIndex = v:GetArmyIndex()
@@ -7148,7 +7152,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         self.BuilderManagers = {}
         SUtils.AddCustomUnitSupport(self)
-        LOG('Adding builder managers at '..repr(self:GetStartVector3f()))
+        --LOG('Adding builder managers at '..repr(self:GetStartVector3f()))
         self:AddBuilderManagers(self:GetStartVector3f(), 100, 'MAIN', false)
         -- Generates the zones and updates the resource marker table with Zone IDs
         --IntelManagerRNG.GenerateMapZonesRNG(self)
@@ -7210,7 +7214,7 @@ AIBrain = Class(RNGAIBrainClass) {
             coroutine.yield(30)
             local mainManagers = self.BuilderManagers.MAIN
             local pool = self:GetPlatoonUniquelyNamed('ArmyPool')
-            LOG('ArmyPool current has '..table.getn(pool:GetPlatoonUnits())..' in it')
+            --LOG('ArmyPool current has '..table.getn(pool:GetPlatoonUnits())..' in it')
             for k,v in pool:GetPlatoonUnits() do
                 if EntityCategoryContains(categories.ENGINEER, v) then
                     hasRun = true
@@ -7221,7 +7225,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
-        LOG('ACU Should be present now')
+        --LOG('ACU Should be present now')
     end,
 
 }

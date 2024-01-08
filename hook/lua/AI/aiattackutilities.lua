@@ -482,11 +482,11 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
 
     -- If the platoon we're sending is weaker than a potential target, lower
     -- the desirability of choosing that target by this factor
-    local WeakAttackThreatWeight = 8
+    local WeakAttackThreatWeight = 5
 
     -- If the platoon we're sending is stronger than a potential target, raise
     -- the desirability of choosing that target by this factor
-    local StrongAttackThreatWeight = 8
+    local StrongAttackThreatWeight = 10
 
 
     -- We can also tune the desirability of a target based on various
@@ -496,16 +496,16 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     -- the desirability for the distance category
 
     local VeryNearThreatWeight = 20000
-    local VeryNearThreatRadius = 25
+    local VeryNearThreatRadius = 50
 
     local NearThreatWeight = 2500
-    local NearThreatRadius = 75
+    local NearThreatRadius = 120
 
     local MidThreatWeight = 500
-    local MidThreatRadius = 150
+    local MidThreatRadius = 250
 
     local FarThreatWeight = 100
-    local FarThreatRadius = 300
+    local FarThreatRadius = 350
 
     -- anything that's farther than the FarThreatRadius is considered VeryFar
     local VeryFarThreatWeight = 1
@@ -535,7 +535,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
 
     ----------------------------------------------------------------------------------
 
-    local platoonPosition = platoon:GetPlatoonPosition()
+    local platoonPosition = platoon.Pos or platoon:GetPlatoonPosition()
     local selectedWeaponArc = 'None'
 
     if not platoonPosition then
@@ -756,19 +756,7 @@ function CheckNavalPathingRNG(aiBrain, platoon, location, maxRange, selectedWeap
     --if it is not in the water or we can't get to it, then see if there is water within weapon range that we can get to
     if not success and maxRange then
         --Check vectors in 8 directions around the threat location at maxRange to see if they are in water.
-        local rootSaver = maxRange / 1.4142135623 --For diagonals. X and Z components of the vector will have length maxRange / sqrt(2)
-        local vectors = {
-            {location[1],             0, location[3] + maxRange},   --up
-            {location[1],             0, location[3] - maxRange},   --down
-            {location[1] + maxRange,  0, location[3]},              --right
-            {location[1] - maxRange,  0, location[3]},              --left
-
-            {location[1] + rootSaver,  0, location[3] + rootSaver},   --right-up
-            {location[1] + rootSaver,  0, location[3] - rootSaver},   --right-down
-            {location[1] - rootSaver,  0, location[3] + rootSaver},   --left-up
-            {location[1] - rootSaver,  0, location[3] - rootSaver},   --left-down
-        }
-
+        local vectors = NavUtils.GetPositionsInRadius('Water', platoonPosition, maxRange, 6)
         --Sort the vectors by their distance to us.
         table.sort(vectors, function(a,b)
             local distA = VDist2Sq(platoonPosition[1], platoonPosition[3], a[1], a[3])

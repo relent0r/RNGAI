@@ -306,8 +306,16 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     end
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1BuildEngineer')
-                    table.insert(queue, 'T1LandDFTank')
-                    table.insert(queue, 'T1LandDFTank')
+                    if self.Brain.EnemyIntel.CivilianClosestPD > 0 and self.Brain.EnemyIntel.ClosestEnemyBase > 0 then
+                        if self.Brain.EnemyIntel.CivilianClosestPD < 62500 and self.Brain.EnemyIntel.CivilianClosestPD < self.Brain.EnemyIntel.ClosestEnemyBase then
+                            for i=1, 2 do
+                                table.insert(queue, 'T1LandArtillery')
+                            end
+                        end
+                    else
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandDFTank')
+                    end
                     table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandArtillery')
                     table.insert(queue, 'T1LandAA')
@@ -318,7 +326,14 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     table.insert(queue, 'T1LandScout')
                     table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandDFTank')
-                    table.insert(queue, 'T1LandArtillery')
+                    if self.Brain.EnemyIntel.CivilianClosestPD > 0 and self.Brain.EnemyIntel.ClosestEnemyBase > 0 then
+                        if self.Brain.EnemyIntel.CivilianClosestPD < 62500 and self.Brain.EnemyIntel.CivilianClosestPD < self.Brain.EnemyIntel.ClosestEnemyBase then
+                            for i=1, 2 do
+                                table.insert(queue, 'T1LandArtillery')
+                            end
+                        end
+                    end
+                    table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandAA')
                     for i=1, 4 do
                         table.insert(queue, 'T1BuildEngineer')
@@ -354,8 +369,16 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     end
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1BuildEngineer')
-                    table.insert(queue, 'T1LandDFTank')
-                    table.insert(queue, 'T1LandDFTank')
+                    if self.Brain.EnemyIntel.CivilianClosestPD > 0 and self.Brain.EnemyIntel.ClosestEnemyBase > 0 then
+                        if self.Brain.EnemyIntel.CivilianClosestPD < 62500 and self.Brain.EnemyIntel.CivilianClosestPD < self.Brain.EnemyIntel.ClosestEnemyBase then
+                            for i=1, 2 do
+                                table.insert(queue, 'T1LandArtillery')
+                            end
+                        end
+                    else
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandDFTank')
+                    end
                     table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandArtillery')
                     table.insert(queue, 'T1LandAA')
@@ -366,7 +389,14 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     table.insert(queue, 'T1LandScout')
                     table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandDFTank')
-                    table.insert(queue, 'T1LandArtillery')
+                    if self.Brain.EnemyIntel.CivilianClosestPD > 0 and self.Brain.EnemyIntel.ClosestEnemyBase > 0 then
+                        if self.Brain.EnemyIntel.CivilianClosestPD < 62500 and self.Brain.EnemyIntel.CivilianClosestPD < 62500 and self.Brain.EnemyIntel.CivilianClosestPD < self.Brain.EnemyIntel.ClosestEnemyBase then
+                            for i=1, 2 do
+                                table.insert(queue, 'T1LandArtillery')
+                            end
+                        end
+                    end
+                    table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandAA')
                     table.insert(queue, 'T1LandAA')
                     for i=1, 4 do
@@ -410,8 +440,16 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     end
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1BuildEngineer')
-                    table.insert(queue, 'T1LandDFTank')
-                    table.insert(queue, 'T1LandDFTank')
+                    if self.Brain.EnemyIntel.CivilianClosestPD > 0 and self.Brain.EnemyIntel.ClosestEnemyBase > 0 then
+                        if self.Brain.EnemyIntel.CivilianClosestPD < 62500 and self.Brain.EnemyIntel.CivilianClosestPD < self.Brain.EnemyIntel.ClosestEnemyBase then
+                            for i=1, 2 do
+                                table.insert(queue, 'T1LandArtillery')
+                            end
+                        end
+                    else
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandDFTank')
+                    end
                     table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1LandArtillery')
@@ -431,7 +469,14 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                             table.insert(queue, 'T1BuildEngineer')
                         end
                     end
-                    table.insert(queue, 'T1LandArtillery')
+                    if self.Brain.EnemyIntel.CivilianClosestPD > 0 and self.Brain.EnemyIntel.ClosestEnemyBase > 0 then
+                        if self.Brain.EnemyIntel.CivilianClosestPD < 62500 and self.Brain.EnemyIntel.CivilianClosestPD < self.Brain.EnemyIntel.ClosestEnemyBase then
+                            for i=1, 2 do
+                                table.insert(queue, 'T1LandArtillery')
+                            end
+                        end
+                    end
+                    table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandAA')
                     for i=1, 4 do
                         table.insert(queue, 'T1BuildEngineer')
@@ -478,8 +523,16 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     end
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1BuildEngineer')
-                    table.insert(queue, 'T1LandDFTank')
-                    table.insert(queue, 'T1LandDFTank')
+                    if self.Brain.EnemyIntel.CivilianClosestPD > 0 and self.Brain.EnemyIntel.ClosestEnemyBase > 0 then
+                        if self.Brain.EnemyIntel.CivilianClosestPD < 62500 and self.Brain.EnemyIntel.CivilianClosestPD < self.Brain.EnemyIntel.ClosestEnemyBase then
+                            for i=1, 2 do
+                                table.insert(queue, 'T1LandArtillery')
+                            end
+                        end
+                    else
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandDFTank')
+                    end
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1BuildEngineer')
                     if self.Brain.BrainIntel.RestrictedMassMarker > 8 then
@@ -510,6 +563,13 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     if self.Brain.StartReclaimCurrent > 500 then
                         for i=1, 2 do
                             table.insert(queue, 'T1BuildEngineer')
+                        end
+                    end
+                    if self.Brain.EnemyIntel.CivilianClosestPD > 0 and self.Brain.EnemyIntel.ClosestEnemyBase > 0 then
+                        if self.Brain.EnemyIntel.CivilianClosestPD < 62500 and self.Brain.EnemyIntel.CivilianClosestPD < self.Brain.EnemyIntel.ClosestEnemyBase then
+                            for i=1, 2 do
+                                table.insert(queue, 'T1LandArtillery')
+                            end
                         end
                     end
                     table.insert(queue, 'T1LandAA')
@@ -547,8 +607,16 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     end
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1BuildEngineer')
-                    table.insert(queue, 'T1LandDFTank')
-                    table.insert(queue, 'T1LandDFTank')
+                    if self.Brain.EnemyIntel.CivilianClosestPD > 0 and self.Brain.EnemyIntel.ClosestEnemyBase > 0 then
+                        if self.Brain.EnemyIntel.CivilianClosestPD < 62500 and self.Brain.EnemyIntel.CivilianClosestPD < self.Brain.EnemyIntel.ClosestEnemyBase then
+                            for i=1, 2 do
+                                table.insert(queue, 'T1LandArtillery')
+                            end
+                        end
+                    else
+                        table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1LandDFTank')
+                    end
                     for i=1, 2 do
                         table.insert(queue, 'T1BuildEngineer')
                     end
@@ -571,7 +639,14 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                             table.insert(queue, 'T1BuildEngineer')
                         end
                     end
-                    table.insert(queue, 'T1LandArtillery')
+                    if self.Brain.EnemyIntel.CivilianClosestPD > 0 and self.Brain.EnemyIntel.ClosestEnemyBase > 0 then
+                        if self.Brain.EnemyIntel.CivilianClosestPD < 62500 and self.Brain.EnemyIntel.CivilianClosestPD < self.Brain.EnemyIntel.ClosestEnemyBase then
+                            for i=1, 2 do
+                                table.insert(queue, 'T1LandArtillery')
+                            end
+                        end
+                    end
+                    table.insert(queue, 'T1LandDFTank')
                     table.insert(queue, 'T1LandAA')
                     table.insert(queue, 'T1BuildEngineer')
                     table.insert(queue, 'T1LandAA')
