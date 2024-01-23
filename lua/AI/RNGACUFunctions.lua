@@ -428,6 +428,12 @@ function CDRThreatAssessmentRNG(cdr)
             if aiBrain.EnemyIntel.Phase > 2 then
                 cdr.Confidence = cdr.Confidence * 0.7
             end
+            if cdr.DistanceToHome < math.max(aiBrain.OperatingAreas['BaseRestrictedArea'], 160) then
+                LOG('ACU is closer to home')
+                LOG('Distance is '..cdr.DistanceToHome)
+                LOG('Max base range would be '..(math.max(120, cdr.DefaultRange * cdr.Confidence)))
+                LOG('If we manipulated it due to being close to base it would be '..(math.max(120, cdr.DefaultRange * (cdr.Confidence * 1.5))))
+            end
             if aiBrain.RNGEXP then
                 cdr.MaxBaseRange = 80
             else
@@ -484,9 +490,12 @@ function CDRHpUpgradeCheck(aiBrain, cdr)
             return true
         end
     elseif factionIndex == 4 then
+        LOG('Checking if ACU has nano repair')
         if not cdr:HasEnhancement('DamageStabilization') then
+            LOG('ACU does not have nano repair')
             return true
         end
+        LOG('ACU has nano repair')
     end
     return false
 end

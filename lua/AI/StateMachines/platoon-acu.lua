@@ -168,11 +168,11 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 --LOG('Current distance from base is '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
                                 --LOG('Current base key is '..baseName)
                                 inRange = true
-                                if baseName ~= 'MAIN' and cdr.CurrentEnemyThreat > 20 then
-                                    self:LogDebug(string.format('Threat is too high at expansion for enhancement upgrade abort'))
+                                if baseName ~= 'MAIN' and (cdr.CurrentEnemyThreat > 20 and cdr.CurrentFriendlyInnerCircle < 20 or cdr.CurrentEnemyThreat > 35) then
+                                    self:LogDebug(string.format('Threat is too high at expansion for enhancement upgrade abort, enemythreat is '..cdr.CurrentEnemyThreat))
                                     highThreat = true
-                                elseif baseName == 'MAIN' and cdr.CurrentEnemyInnerCircle > 30 then
-                                    self:LogDebug(string.format('Threat is too high at expansion for enhancement upgrade abort'))
+                                elseif baseName == 'MAIN' and cdr.CurrentEnemyInnerCircle > 35 then
+                                    self:LogDebug(string.format('Threat is too high at expansion for enhancement upgrade abort, enemythreat is '..cdr.CurrentEnemyInnerCircle))
                                     highThreat = true
                                 end
                                 break
@@ -645,9 +645,10 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             local enemyAcuHealth = acuUnit:GetHealth()
                             --RNGLOG('CDR : Enemy ACU in range of ACU')
                             if enemyAcuHealth < 5000 then
+                                self:LogDebug(string.format('Enemy ACU has low health, setting snipe mode'))
                                 ACUFunc.SetAcuSnipeMode(cdr, true)
                             elseif cdr.SnipeMode then
-                                SetAcuSnipeMode(cdr, false)
+                                ACUFunc.SetAcuSnipeMode(cdr, false)
                                 cdr.SnipeMode = false
                             end
                             cdr.EnemyCDRPresent = true
@@ -1039,12 +1040,12 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                         if enemyACUHealth < 4500 and cdr.Health - enemyACUHealth < 3000 or cdr.CurrentFriendlyInnerCircle > cdr.CurrentEnemyInnerCircle * 1.3 then
                             if not cdr.SnipeMode then
-                                --RNGLOG('Enemy ACU is under HP limit we can potentially draw')
+                                self:LogDebug(string.format('Enemy ACU is under HP limit we can potentially draw, enable snipe mode'))
                                 ACUFunc.SetAcuSnipeMode(cdr, true)
                                 cdr.SnipeMode = true
                             end
                         elseif enemyACUHealth < 7000 and cdr.Health - enemyACUHealth > 3250 and not RUtils.PositionInWater(targetPos) and defenseThreat < 45 then
-                            --RNGLOG('Enemy ACU could be killed or drawn, should we try?')
+                            self:LogDebug(string.format('Enemy ACU could be killed or drawn, should we try?, enable snipe mode'))
                             if target and not IsDestroyed(target) then
                                 ACUFunc.SetAcuSnipeMode(cdr, true)
                                 cdr:SetAutoOvercharge(true)
@@ -1082,7 +1083,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                         local movePos
                         if snipeAttempt then
-                            --RNGLOG('Lets try snipe the target')
+                            self:LogDebug(string.format('Moving to enemy acu pos'))
                             movePos = targetPos
                         elseif cdr.CurrentEnemyInnerCircle < 20 then
                             --RNGLOG('cdr pew pew low enemy threat move pos')
@@ -1790,6 +1791,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         local enhancementPaused = false
                         local lastTick
                         local lastProgress
+                        LOG('Enhancement is '..NextEnhancement)
                         while not cdr.Dead and not cdr:HasEnhancement(NextEnhancement) do
                             -- note eta will be in ticks not seconds
                             local eta = -1
@@ -1844,6 +1846,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     cdr.GunUpgradePresent = true
                                 end
                                 if not ACUFunc.CDRHpUpgradeCheck(brain, cdr) then
+                                    LOG('HighThreatUpgrade is now present')
                                     cdr.HighThreatUpgradeRequired = false
                                     cdr.HighThreatUpgradePresent = true
                                 end

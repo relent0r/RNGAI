@@ -1166,8 +1166,8 @@ AIBrain = Class(RNGAIBrainClass) {
        --LOG('Build Multiplier now set, this impacts many economy checks that look at income '..self.EcoManager.EcoMultiplier)
 
         self.MapWaterRatio = self:GetMapWaterRatio()
-        if self.RNGDEBUG then
-            --LOG('Water Ratio is '..self.MapWaterRatio)
+        if true then
+            LOG('Water Ratio is '..self.MapWaterRatio)
         end
 
         -- Table to holding the starting reclaim
@@ -3255,19 +3255,19 @@ AIBrain = Class(RNGAIBrainClass) {
         local function CDRGunCheck(aiBrain, cdr)
             local factionIndex = aiBrain:GetFactionIndex()
             if factionIndex == 1 then
-                if not cdr:HasEnhancement('HeavyAntiMatterCannon') then
+                if cdr:HasEnhancement('HeavyAntiMatterCannon') then
                     return true
                 end
             elseif factionIndex == 2 then
-                if not cdr:HasEnhancement('CrysalisBeam') or not cdr:HasEnhancement('HeatSink') then
+                if cdr:HasEnhancement('CrysalisBeam') or cdr:HasEnhancement('HeatSink') then
                     return true
                 end
             elseif factionIndex == 3 then
-                if not cdr:HasEnhancement('CoolingUpgrade') then
+                if cdr:HasEnhancement('CoolingUpgrade') then
                     return true
                 end
             elseif factionIndex == 4 then
-                if not cdr:HasEnhancement('RateOfFire') then
+                if cdr:HasEnhancement('RateOfFire') then
                     return true
                 end
             end
