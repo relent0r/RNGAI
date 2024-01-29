@@ -660,6 +660,35 @@ BuilderGroup {
             }
         }
     },
+    Builder {
+        BuilderName = 'RNGAI T2 Defence Engineer Artillery Counter',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 0,
+        PriorityFunction = ActiveExpansion,
+        InstanceCount = 1,
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 1.0 }},
+            { UCBC, 'DefensiveClusterCloseRNG', {'LocationType'}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.STRUCTURE * categories.TECH2 * categories.ARTILLERY}},
+        },
+        BuilderData = {
+            JobType = 'BuildStructure',
+            NumAssistees = 5,
+            Construction = {
+                BuildClose = false,
+                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
+                AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH2,
+                maxUnits = 1,
+                maxRadius = 35,
+                BuildStructures = {
+                    'T2Artillery',
+                },
+                Location = 'LocationType',
+            }
+        }
+    },
     --[[
     Builder {
         BuilderName = 'RNGAI T2 Defence Engineer TMD Expansion',
@@ -723,35 +752,6 @@ BuilderGroup {
                 BuildStructures = {
                     'T1GroundDefense',
                     'T1AADefense',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Defence Engineer Artillery Counter',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
-        Priority = 0,
-        PriorityFunction = ActiveExpansion,
-        InstanceCount = 1,
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
-            { UCBC, 'DefensiveClusterCloseRNG', {'LocationType'}},
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.STRUCTURE * categories.TECH2 * categories.ARTILLERY}},
-        },
-        BuilderData = {
-            JobType = 'BuildStructure',
-            NumAssistees = 5,
-            Construction = {
-                BuildClose = false,
-                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
-                AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH2,
-                maxUnits = 1,
-                maxRadius = 35,
-                BuildStructures = {
-                    'T2Artillery',
                 },
                 Location = 'LocationType',
             }

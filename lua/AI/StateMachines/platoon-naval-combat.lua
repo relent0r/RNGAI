@@ -197,6 +197,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             end
             local markerLocations = RUtils.AIGetMassMarkerLocations(aiBrain, false, true)
             if not table.empty(markerLocations) then
+                local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
                 local massMarkers = {}
                 for _, v in markerLocations do
                     if v.Position[1] > playableArea[1] and v.Position[1] < playableArea[3] and v.Position[3] > playableArea[2] and v.Position[3] < playableArea[4] then

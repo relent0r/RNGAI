@@ -458,7 +458,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     --LOG('Current CurrentFriendlyThreat '..cdr.CurrentFriendlyThreat)
                     --LOG('Current CurrentFriendlyAntiAirThreat '..cdr.CurrentFriendlyAntiAirThreat)
                     --LOG('Current CurrentFriendlyInnerCircle '..cdr.CurrentFriendlyInnerCircle)
-                    self:LogDebug(string.format('Have target, attacking enemy threat is '..cdr.CurrentEnemyThreat))
+                    self:LogDebug(string.format('Have target, attacking enemy threat is '..cdr.CurrentEnemyThreat..' friendly threat is '..cdr.CurrentFriendlyThreat))
                     self:ChangeState(self.AttackTarget)
                     return
                 else
@@ -997,7 +997,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             local realThreat = RUtils.GrabPosDangerRNG(brain,targetPos, 45, true, true, false)
                             --RNGLOG('ACU OverCharge Friendly Threat is '..realThreat.ally)
                             --RNGLOG('ACU OverCharge Enemy Threat is '..realThreat.enemy)
-                            if realThreat.enemy >= realThreat.ally and not cdr.SuicideMode then
+                            if realThreat.enemy > realThreat.ally and realThreat.enemy > cdr.CurrentFriendlyInnerCircle and not cdr.SuicideMode then
                                 --RNGLOG('Enemy Threat too high')
                                 if VDist2Sq(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < 2025 then
                                 --RNGLOG('Threat high and cdr close, retreat')
@@ -1011,6 +1011,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                         coroutine.yield(40)
                                     end
                                     --RNGLOG('cdr retreating due to enemy threat within attacktarget')
+                                    self:LogDebug(string.format('cdr retreating due to enemy threat within attacktarget enemy '..realThreat.enemy..' ally '..realThreat.ally..' friendly inner '..cdr.CurrentFriendlyInnerCircle))
                                     self:ChangeState(self.Retreating)
                                     return
                                 end

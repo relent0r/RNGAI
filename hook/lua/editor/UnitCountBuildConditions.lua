@@ -1358,8 +1358,10 @@ function PlatoonTemplateExist(aiBrain, template)
 end
 
 function DefensiveClusterCloseRNG(aiBrain, locationType)
-    if aiBrain.BuilderManagers[locationType].FactoryManager.Location then
-        if RUtils.DefensiveClusterCheck(aiBrain, aiBrain.BuilderManagers[locationType].FactoryManager.Location) then
+    local manager = aiBrain.BuilderManagers[locationType]
+    if manager.FactoryManager.Location then
+        if RUtils.DefensiveClusterCheck(aiBrain, manager.FactoryManager.Location) then
+            LOG('Build Condition Defensive Cluster Check is true')
             return true
         end
     end

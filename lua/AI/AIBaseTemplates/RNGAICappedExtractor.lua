@@ -18,6 +18,18 @@ CappedExtractorTemplate =
             { 0, 2, 0 },
         },
     },
+-- Aeon BaseTemplates Building List
+    {
+        {
+            {
+            'MassStorage',  
+            },
+            { 2, 0, 0 },
+            { -2, 0, 0 },
+            { 0, -2, 0 },
+            { 0, 2, 0 },
+        },
+    },
 -- Cybran BaseTemplates Building List
     {
         {
@@ -42,7 +54,7 @@ CappedExtractorTemplate =
             { 0, 2, 0 },
         },
     },
--- UEF BaseTemplates Building List
+-- Nomads BaseTemplates Building List
     {
         {
             {

@@ -428,6 +428,9 @@ function CDRThreatAssessmentRNG(cdr)
             if aiBrain.EnemyIntel.Phase > 2 then
                 cdr.Confidence = cdr.Confidence * 0.7
             end
+            if cdr.Confidence then
+                LOG('Current Confidence is '..cdr.Confidence)
+            end
             if cdr.DistanceToHome < math.max(aiBrain.OperatingAreas['BaseRestrictedArea'], 160) then
                 LOG('ACU is closer to home')
                 LOG('Distance is '..cdr.DistanceToHome)

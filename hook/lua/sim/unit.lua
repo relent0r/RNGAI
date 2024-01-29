@@ -19,7 +19,7 @@ Unit = Class(RNGUnitClass) {
 
     EnhancementThreatReturn = function(self)
         local unitEnh = SimUnitEnhancements[self.EntityId]
-        local threatReturn = 25
+        local threatReturn = 26
         if unitEnh then
             for k, v in unitEnh do
                 if v == 'HeavyAntiMatterCannon' then

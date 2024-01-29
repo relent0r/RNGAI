@@ -28,6 +28,28 @@ T1PDTemplate =
             { -1, 1, 0 },
         },
     },
+-- Aeon BaseTemplates Building List
+    {
+        {
+            {
+            'T1GroundDefense',
+            },
+            { 0, 0, 0 },
+        },
+        {
+            {
+            'Wall',  
+            },
+            { 0, -1, 0 },
+            { 0, 1, 0 },
+            { 1, 0, 0 },
+            { 1, -1, 0 },
+            { 1, 1, 0 },
+            { -1, 0, 0 },
+            { -1, -1, 0 },
+            { -1, 1, 0 },
+        },
+    },
 -- Cybran BaseTemplates Building List
     {
         {
@@ -72,7 +94,7 @@ T1PDTemplate =
             { -1, 1, 0 },
         },
     },
--- UEF BaseTemplates Building List
+-- Nomads BaseTemplates Building List
     {
         {
             {
