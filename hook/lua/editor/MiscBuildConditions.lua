@@ -108,8 +108,6 @@ end
 function MassMarkersInWater(aiBrain)
     if aiBrain.MassMarkersInWater then
         return true
-    else
-        return false
     end
     return false
 end

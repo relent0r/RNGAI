@@ -1017,6 +1017,7 @@ AIBrain = Class(RNGAIBrainClass) {
             Position = {},
             Range = 0,
         }
+        self.MassMarkersInWater = false
         self.EnemyIntel.FrigateRaid = false
         self.EnemyIntel.FrigateRaidMarkers = {}
         self.EnemyIntel.EnemyCount = 0
@@ -1203,14 +1204,6 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Generates the zones and updates the resource marker table with Zone IDs
         --IntelManagerRNG.GenerateMapZonesRNG(self)
 
-        if RUtils.InitialMassMarkersInWater(self) then
-            --RNGLOG('* AI-RNG: Map has mass markers in water')
-            self.MassMarkersInWater = true
-        else
-            --RNGLOG('* AI-RNG: Map does not have mass markers in water')
-            self.MassMarkersInWater = false
-        end
-       
         self:IMAPConfigurationRNG()
         -- Begin the base monitor process
         self:NoRushCheck()
@@ -6978,6 +6971,7 @@ AIBrain = Class(RNGAIBrainClass) {
             Position = {},
             Range = 0,
         }
+        self.MassMarkersInWater = false
         self.EnemyIntel.FrigateRaid = false
         self.EnemyIntel.FrigateRaidMarkers = {}
         self.EnemyIntel.EnemyCount = 0
@@ -7157,14 +7151,6 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Generates the zones and updates the resource marker table with Zone IDs
         --IntelManagerRNG.GenerateMapZonesRNG(self)
 
-        if RUtils.InitialMassMarkersInWater(self) then
-            --RNGLOG('* AI-RNG: Map has mass markers in water')
-            self.MassMarkersInWater = true
-        else
-            --RNGLOG('* AI-RNG: Map does not have mass markers in water')
-            self.MassMarkersInWater = false
-        end
-       
         self:IMAPConfigurationRNG()
         -- Begin the base monitor process
         self:NoRushCheck()

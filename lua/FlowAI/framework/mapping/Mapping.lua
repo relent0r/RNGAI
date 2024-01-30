@@ -1043,7 +1043,7 @@ function DoMassPointInfect(aiBrain,masspoint)
     --DrawCircle(marker.position,4,'FF'..aiBrain.analysistablecolors[expand])
     if not AdaptiveResourceMarkerTableRNG[masspoint].RNGArea then
         --RNGLOG('Marker data '..repr(AdaptiveResourceMarkerTableRNG[masspoint]))
-        if AdaptiveResourceMarkerTableRNG[masspoint].Water then
+        if RUtils.PositionInWater(AdaptiveResourceMarkerTableRNG[masspoint].position) then
             local label, reason = NavUtils.GetLabel('Water', AdaptiveResourceMarkerTableRNG[masspoint].position)
             if not label then
                 WARN('No water label returned reason '..reason)

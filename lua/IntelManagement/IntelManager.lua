@@ -2018,6 +2018,7 @@ function InitialNavalAttackCheck(aiBrain)
         
         for k, v in unitTable do
             if factionIndex ~= 2 and k == 'MissileShip' then continue end
+            if (factionIndex == 2 or factionIndex == 3) and k == 'Cruiser' then continue end
             v.Range = ALLBPS[v.UnitID].Weapon[1].MaxRadius
             if not maxRadius or v.Range > maxRadius then
                 maxRadius = v.Range
@@ -2034,17 +2035,17 @@ function InitialNavalAttackCheck(aiBrain)
             local totalMarkerValue = 0
             local frigateRange = unitTable.Frigate.Range
             for _, v in markers do 
-                markerCount = markerCount + 1
-                local markerValue = 0
-                local valueValidated = false
-                local frigateValidated = false
-                --local checkPoints = RUtils.DrawCirclePoints(8, frigateRange, v.position)
-                local checkPoints = NavUtils.GetDetailedPositionsInRadius('Water', v.position, maxRadius, 6)
-                --LOG('CheckPoints for '..repr(v))
-                --LOG(repr(checkPoints))
-                if checkPoints then
-                    for _, m in checkPoints do
-                        --if RUtils.PositionInWater(m) then
+                if not v.Water then
+                    markerCount = markerCount + 1
+                    local markerValue = 0
+                    local valueValidated = false
+                    local frigateValidated = false
+                    --local checkPoints = RUtils.DrawCirclePoints(8, frigateRange, v.position)
+                    local checkPoints = NavUtils.GetDetailedPositionsInRadius('Water', v.position, maxRadius, 6)
+                    --LOG('CheckPoints for '..repr(v))
+                    --LOG(repr(checkPoints))
+                    if checkPoints then
+                        for _, m in checkPoints do
                             local dx = v.position[1] - m[1]
                             local dz = v.position[3] - m[3]
                             local posDist = dx * dx + dz * dz
@@ -2082,7 +2083,12 @@ function InitialNavalAttackCheck(aiBrain)
                                     break
                                 end
                             end
-                        --end
+                        end
+                    end
+                else
+                    if not aiBrain.MassMarkersInWater then
+                        aiBrain.MassMarkersInWater = true
+                        LOG('Mass point is under water, setting brain to true')
                     end
                 end
             end

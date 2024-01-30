@@ -1201,14 +1201,6 @@ function AIFindBrainTargetInRangeOrigRNG(aiBrain, position, platoon, squad, maxR
     return false
 end
 
-function InitialMassMarkersInWater(aiBrain)
-    if not table.empty(AIGetMassMarkerLocations(aiBrain, false, true)) then
-        return true
-    else
-        return false
-    end
-end
-
 function PositionOnWater(positionX, positionZ)
     --Check if a position is under water. Used to identify if threat/unit position is over water
     -- Terrain >= Surface = Target is on land
