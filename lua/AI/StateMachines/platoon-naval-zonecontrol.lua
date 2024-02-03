@@ -86,7 +86,10 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             end
             local aiBrain = self:GetBrain()
             local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, false)
-            if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
+            if threat.ally and threat.enemy and threat.enemyrange > 0 and (threat.ally*1.1 < threat.enemy and threat.enemyrange >= self.MaxPlatoonWeaponRange or threat.ally*1.4 < threat.enemy) then
+                self:LogDebug(string.format('Retreating due to threat'))
+                self:LogDebug(string.format('Enemy Threat '..threat.enemy..' max enemy weapon range '..threat.enemyrange))
+                self:LogDebug(string.format('Ally Threat '..threat.ally..' max ally weapon range '..threat.allyrange))
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos, true)
                 local basePos
                 if not closestBase then
@@ -138,8 +141,11 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                             self:LogDebug(string.format('No path or no entries in path returned'..repr(self.Pos)))
                         end
                     else
-                        self:ChangeState(self.CombatLoop)
-                        return
+                        if StateUtils.SimpleNavalTarget(self,aiBrain) then
+                            self:LogDebug(string.format('DecideWhatToDo found simple target'))
+                            self:ChangeState(self.CombatLoop)
+                            return
+                        end
                     end
                 else
                     self:LogDebug(string.format('Have attack position but cant path to it, movement layer is '..repr(self.MovementLayer)))
@@ -175,7 +181,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    if NavUtils.CanPathTo(self.MovementLayer, self.Pos, closestTargetPos) then
+                    if target and closestTargetPos and NavUtils.CanPathTo(self.MovementLayer, self.Pos, closestTargetPos) then
                         local rx = self.Pos[1] - closestTargetPos[1]
                         local rz = self.Pos[3] - closestTargetPos[3]
                         local posDistance = rx * rx + rz * rz
@@ -197,6 +203,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                             end
                         else
                             self:LogDebug(string.format('target is close, combat loop'))
+                            self.targetcandidates = {target}
                             self:ChangeState(self.CombatLoop)
                             return
                         end
@@ -372,6 +379,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                                 CutOff = 400
                             }
                             self:LogDebug(string.format('Target found, moving to combat loop'))
+                            self.targetcandidates = {target}
                             self:ChangeState(self.CombatLoop)
                             return
                         else

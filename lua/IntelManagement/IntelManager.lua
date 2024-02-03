@@ -1984,11 +1984,11 @@ ExpansionIntelScanRNG = function(aiBrain)
     end
 end
 
-DrawTargetRadius = function(self, position, strikeRadius)
+DrawTargetRadius = function(self, position, colour)
     --RNGLOG('Draw Target Radius points')
     local counter = 0
     while counter < 60 do
-        DrawCircle(position, 3, 'cc0000')
+        DrawCircle(position, 3, colour)
         counter = counter + 1
         coroutine.yield( 2 )
     end
@@ -2038,48 +2038,66 @@ function InitialNavalAttackCheck(aiBrain)
                 if not v.Water then
                     markerCount = markerCount + 1
                     local markerValue = 0
-                    local valueValidated = false
                     local frigateValidated = false
                     --local checkPoints = RUtils.DrawCirclePoints(8, frigateRange, v.position)
-                    local checkPoints = NavUtils.GetDetailedPositionsInRadius('Water', v.position, maxRadius, 6)
+                    local frigateCheckPoints = NavUtils.GetDetailedPositionsInRadius('Water', v.position, frigateRange, 6)
+                    local navalCheckPoints = NavUtils.GetPositionsInRadius('Water', v.position, maxRadius)
                     --LOG('CheckPoints for '..repr(v))
                     --LOG(repr(checkPoints))
-                    if checkPoints then
-                        for _, m in checkPoints do
+                    if frigateCheckPoints then
+                        local valueValidated = false
+                        for _, m in frigateCheckPoints do
                             local dx = v.position[1] - m[1]
                             local dz = v.position[3] - m[3]
                             local posDist = dx * dx + dz * dz
-                            aiBrain:ForkThread(DrawTargetRadius, m)
+                            aiBrain:ForkThread(DrawTargetRadius, m, 'cc0000')
                             if not valueValidated then
-                                --for _, b in unitTable do
-                                --    if b.Range > 0 and posDist <= b.Range * b.Range then
-                                --        markerValue = markerValue + 1000 / b.Range
-                                --        valueValidated = true
-                                --    end
-                                --end
-                                LOG('frigateRange * frigateRange '..(frigateRange * frigateRange))
-                                LOG('posDist '..posDist)
                                 if posDist <= frigateRange * frigateRange then
                                     valueValidated = true
-                                    frigateValidated = true
+                                end
+                            end
+                            if valueValidated then
+                                local markerValue = 1000 / 28
+                                if not aiBrain:CheckBlockingTerrain({m[1], GetSurfaceHeight(m[1], m[3]), m[3]}, v.position, 'low') then
+                                    markerCountNotBlocked = markerCountNotBlocked + 1
+                                    if frigateValidated then
+                                        frigateRaidMarkers = frigateRaidMarkers + 1
+                                        table.insert( frigateMarkers, { Position=v.position, Name=v.name, RaidPosition={m[1], m[2], m[3]}, Distance = posDist, MarkerValue = markerValue } )
+                                    end
+                                    totalMarkerValue = totalMarkerValue + markerValue
+                                else
+                                    markerCountBlocked = markerCountBlocked + 1
+                                end
+                                if valueValidated then
+                                    break
+                                end
+                            end
+                        end
+                    end
+                    if navalCheckPoints then
+                        local valueValidated = false
+                        for _, m in navalCheckPoints do
+                            local dx = v.position[1] - m[1]
+                            local dz = v.position[3] - m[3]
+                            local posDist = dx * dx + dz * dz
+                            aiBrain:ForkThread(DrawTargetRadius, m, 'FFFF00')
+                            if not valueValidated then
+                                for _, b in unitTable do
+                                    if b.Range > 0 and posDist <= b.Range * b.Range then
+                                        markerValue = markerValue + 1000 / b.Range
+                                        valueValidated = true
+                                    end
                                 end
                             end
                             if valueValidated then
                                 if not aiBrain:CheckBlockingTerrain({m[1], GetSurfaceHeight(m[1], m[3]), m[3]}, v.position, 'low') then
                                     markerCountNotBlocked = markerCountNotBlocked + 1
-                                    if frigateValidated then
-                                        LOG('Marker Distance is '..posDist)
-                                        LOG('frigateRange is '..frigateRange)
-                                        frigateRaidMarkers = frigateRaidMarkers + 1
-                                        frigateValidated = true
-                                        table.insert( frigateMarkers, { Position=v.position, Name=v.name, RaidPosition={m[1], m[2], m[3]}, Distance = posDist, MarkerValue = markerValue } )
-                                    end
                                     table.insert( navalMarkers, { Position=v.position, Name=v.name, RaidPosition={m[1], m[2], m[3]}, Distance = posDist, MarkerValue = markerValue } )
                                     totalMarkerValue = totalMarkerValue + markerValue
                                 else
                                     markerCountBlocked = markerCountBlocked + 1
                                 end
-                                if frigateValidated then
+                                if valueValidated then
                                     break
                                 end
                             end
@@ -2093,11 +2111,12 @@ function InitialNavalAttackCheck(aiBrain)
                 end
             end
             if true then
-                RNGLOG('There are potentially '..markerCount..' markers that are in range for frigates')
-                RNGLOG('There are '..markerCountNotBlocked..' markers NOT blocked by terrain')
-                RNGLOG('There are '..markerCountBlocked..' markers that ARE blocked')
+                LOG('There are potentially '..markerCount..' markers that are in range for frigates')
+                LOG('There are '..markerCountNotBlocked..' markers NOT blocked by terrain')
+                LOG('There are '..markerCountBlocked..' markers that ARE blocked')
                 LOG('Total Map marker value is '..(totalMarkerValue/markerCount))
-                RNGLOG('Markers that frigates can try and raid '..repr(frigateRaidMarkers))
+                LOG('Marker count that frigates can try and raid '..frigateRaidMarkers)
+                LOG('Marker count that can be hit by navy '..table.getn(navalMarkers))
                 LOG('Naval Value = '..totalMarkerValue)
                 LOG('Potential priority '..totalMarkerValue/markerCount*1000)
             end

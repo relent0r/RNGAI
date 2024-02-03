@@ -3341,57 +3341,79 @@ end
 
 GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, includeAir)
     if pos and radius then
-        local brainThreats = {ally=0,enemy=0}
+        local brainThreats = {ally=0,enemy=0,enemyrange=0,allyrange=0}
+        local enemyMaxRadius = 0
+        local allyMaxRadius = 0
         local enemyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Enemy')
         for _,v in enemyunits do
             if not v.Dead then
                 local mult=1
-                local cats = v.Blueprint.CategoriesHash
-                if cats.INDIRECTFIRE then
+                local bp = v.Blueprint
+                if bp.CategoriesHash.INDIRECTFIRE then
                     mult=0.3
                 end
-                if cats.STRUCTURE and not cats.TACTICALMISSILEPLATFORM then
+                if bp.CategoriesHash.STRUCTURE and not bp.CategoriesHash.TACTICALMISSILEPLATFORM then
                     mult=1.5
                 end
-                if cats.COMMAND then
+                if bp.CategoriesHash.COMMAND then
                     brainThreats.enemy = brainThreats.enemy + v:EnhancementThreatReturn()
                 else
-                    if includeSurface and v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
-                        brainThreats.enemy = brainThreats.enemy + v.Blueprint.Defense.SurfaceThreatLevel*mult
+                    if includeSurface and bp.CategoriesHash.Defense.SurfaceThreatLevel ~= nil then
+                        brainThreats.enemy = brainThreats.enemy + bp.CategoriesHash.Defense.SurfaceThreatLevel*mult
+                        if bp.Weapon[1].MaxRadius > enemyMaxRadius then
+                            enemyMaxRadius = bp.Weapon[1].MaxRadius
+                        end
                     end
-                    if includeSub and v.Blueprint.Defense.SubThreatLevel ~= nil then
-                        brainThreats.enemy = brainThreats.enemy + v.Blueprint.Defense.SubThreatLevel*mult
+                    if includeSub and bp.CategoriesHash.Defense.SubThreatLevel ~= nil then
+                        brainThreats.enemy = brainThreats.enemy + bp.CategoriesHash.Defense.SubThreatLevel*mult
+                        if bp.Weapon[1].MaxRadius > enemyMaxRadius then
+                            enemyMaxRadius = bp.Weapon[1].MaxRadius
+                        end
                     end
-                    if includeAir and v.Blueprint.Defense.AirThreatLevel ~= nil then
-                        brainThreats.enemy = brainThreats.enemy + v.Blueprint.Defense.AirThreatLevel*mult
+                    if includeAir and bp.CategoriesHash.Defense.AirThreatLevel ~= nil then
+                        brainThreats.enemy = brainThreats.enemy + bp.CategoriesHash.Defense.AirThreatLevel*mult
+                        if bp.Weapon[1].MaxRadius > enemyMaxRadius then
+                            enemyMaxRadius = bp.Weapon[1].MaxRadius
+                        end
                     end
                 end
             end
         end
+        brainThreats.enemyrange = enemyMaxRadius
 
         local allyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Ally')
         for _,v in allyunits do
             if not v.Dead then
                 local mult=1
-                local cats = v.Blueprint.CategoriesHash
-                if cats.INDIRECTFIRE then
+                local bp = v.Blueprint
+                if bp.CategoriesHash.INDIRECTFIRE then
                     mult=0.3
                 end
-                if cats.COMMAND then
+                if bp.CategoriesHash.COMMAND then
                     brainThreats.ally = brainThreats.ally + v:EnhancementThreatReturn()
-                elseif v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
-                    if includeSurface and v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
-                        brainThreats.ally = brainThreats.ally + v.Blueprint.Defense.SurfaceThreatLevel*mult
+                else
+                    if includeSurface and bp.CategoriesHash.Defense.SurfaceThreatLevel ~= nil then
+                        brainThreats.ally = brainThreats.ally + bp.CategoriesHash.Defense.SurfaceThreatLevel*mult
+                        if bp.Weapon[1].MaxRadius > allyMaxRadius then
+                            allyMaxRadius = bp.Weapon[1].MaxRadius
+                        end
                     end
-                    if includeSub and v.Blueprint.Defense.SubThreatLevel ~= nil then
-                        brainThreats.ally = brainThreats.ally + v.Blueprint.Defense.SubThreatLevel*mult
+                    if includeSub and bp.CategoriesHash.Defense.SubThreatLevel ~= nil then
+                        brainThreats.ally = brainThreats.ally + bp.CategoriesHash.Defense.SubThreatLevel*mult
+                        if bp.Weapon[1].MaxRadius > allyMaxRadius then
+                            allyMaxRadius = bp.Weapon[1].MaxRadius
+                        end
                     end
-                    if includeAir and v.Blueprint.Defense.AirThreatLevel ~= nil then
-                        brainThreats.ally = brainThreats.ally + v.Blueprint.Defense.AirThreatLevel*mult
+                    if includeAir and bp.CategoriesHash.Defense.AirThreatLevel ~= nil then
+                        brainThreats.ally = brainThreats.ally + bp.CategoriesHash.Defense.AirThreatLevel*mult
+                        if bp.Weapon[1].MaxRadius > allyMaxRadius then
+                            allyMaxRadius = bp.Weapon[1].MaxRadius
+                        end
                     end
                 end
             end
         end
+        brainThreats.allyrange = allyMaxRadius
         return brainThreats
     end
 end

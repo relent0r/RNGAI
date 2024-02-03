@@ -92,7 +92,10 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
                 self:LogDebug(string.format('Current status at position is '..repr(currentStatus)))
             end
-            if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy and currentStatus ~= 'Allied' then
+            if threat.ally and threat.enemy and threat.enemyrange > 0 and (threat.ally*1.1 < threat.enemy and threat.enemyrange >= self.MaxPlatoonWeaponRange or threat.ally*1.4 < threat.enemy) and currentStatus ~= 'Allied' then
+                self:LogDebug(string.format('Retreating due to threat'))
+                self:LogDebug(string.format('Enemy Threat '..threat.enemy..' max enemy weapon range '..threat.enemyrange))
+                self:LogDebug(string.format('Ally Threat '..threat.ally..' max ally weapon range '..threat.allyrange))
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos, true)
                 local basePos = aiBrain.BuilderManagers[closestBase].Position
                 local bx = self.Pos[1] - basePos[1]
@@ -185,6 +188,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                             return
                         else
                             self:LogDebug(string.format('target is close, combat loop'))
+                            self.targetcandidates = {target}
                             self:ChangeState(self.CombatLoop)
                             return
                         end
@@ -258,7 +262,11 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.Navigating)
                         return
                     else
-                        self:ChangeState(self.CombatLoop)
+                        if StateUtils.SimpleNavalTarget(self,aiBrain) then
+                            self:LogDebug(string.format('DecideWhatToDo found simple target'))
+                            self:ChangeState(self.CombatLoop)
+                            return
+                        end
                         return
                     end
                 end
@@ -421,6 +429,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                             CutOff = 400
                         }
                         self:LogDebug(string.format('Target found, moving to combat loop'))
+                        self.targetcandidates = {target}
                         self:ChangeState(self.CombatLoop)
                         return
                     else

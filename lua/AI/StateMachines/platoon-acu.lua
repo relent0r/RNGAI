@@ -569,11 +569,13 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     --LOG('Current distance is '..VDist3Sq(origin, destination))
                     --LOG('Cutoff is '..navigateDistanceCutOff)
                     waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 50)
+                    self:LogDebug(string.format('ACU Moving to waypoint '..repr(waypoint)))
                 else
                     --LOG('destination move to '..repr(destination))
                     --LOG('Current distance is '..VDist3Sq(origin, destination))
                     --LOG('Cutoff is '..navigateDistanceCutOff)
                     waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 50)
+                    self:LogDebug(string.format('ACU Moving to waypoint '..repr(waypoint)))
                 end
                 if builderData.Retreat then
                     cdr:SetAutoOvercharge(true)
@@ -1478,7 +1480,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     cdr.initialized=true
                 end
                 if RUtils.GrabPosDangerRNG(brain,cdr.Position, 40, true, true, false).enemy > 20 then
-                    --LOG('Too dangerous after building extractors, returning')
+                    self:LogDebug(string.format('Cancel expand, enemy threat greater than 20'))
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
@@ -1581,6 +1583,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                                         cdr.BuilderManagerData.EngineerManager:RemoveUnitRNG(cdr)
                                                         brain.BuilderManagers['MAIN'].EngineerManager:AddUnitRNG(cdr, true)
                                                         --LOG('cdr is caution mid expansion abort')
+                                                        self:LogDebug(string.format('cdr.Caution while building expansion'))
                                                         self:ChangeState(self.DecideWhatToDo)
                                                         return
                                                     end
@@ -1648,6 +1651,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                                     if cdr.Caution then
                                                         cdr.BuilderManagerData.EngineerManager:RemoveUnitRNG(cdr)
                                                         brain.BuilderManagers['MAIN'].EngineerManager:AddUnitRNG(cdr, true)
+                                                        self:LogDebug(string.format('cdr.Caution while building expansion'))
                                                         self:ChangeState(self.DecideWhatToDo)
                                                         return
                                                     end
@@ -1675,6 +1679,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
             end
             --LOG('expansion complete')
+            self:LogDebug(string.format('Expansion Complete'))
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
