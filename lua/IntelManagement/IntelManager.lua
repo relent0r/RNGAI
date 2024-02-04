@@ -1738,7 +1738,7 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit)
         --LOG('lost unit')
         local targetBrain = targetUnit:GetAIBrain()
         if targetBrain.RNG then
-            --LOG('rng lost unit')
+            LOG('rng lost unit '..targetUnit.UnitId)
             local valueLost
             local targetCat = targetUnit.Blueprint.CategoriesHash
             if targetCat.EXPERIMENTAL then
@@ -1747,7 +1747,7 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit)
                 if targetCat.SCOUT then
                     RecordUnitDeath(targetUnit, 'SCOUT')
                 elseif targetCat.GROUNDATTACK then
-                    --LOG('RNG gunship was lost')
+                    LOG('RNG gunship was lost')
                     data.targetcat = 'Gunship'
                     if targetUnit.Blueprint.Economy.BuildCostMass then
                         valueLost = targetUnit.Blueprint.Economy.BuildCostMass
@@ -1764,8 +1764,8 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit)
                 local unitStats = targetBrain.IntelManager.UnitStats
                 unitStats[data.targetcat].Deaths.Mass = unitStats[data.targetcat].Deaths.Mass + valueLost
                 if valueLost then
-                    --LOG('Gunship died')
-                    --LOG('Target Unit '..targetUnit.UnitId)
+                    LOG('Gunship died')
+                    LOG('Target Unit '..targetUnit.UnitId)
                     local gained
                     local lost
                     if unitStats[data.targetcat].Kills.Mass > 0 then
@@ -1778,66 +1778,72 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit)
                     else
                         lost = 0.1
                     end
-                    --LOG('Current Gunship Efficiency '..(math.min(gained / lost, 2)))
+                    LOG('Current Gunship Efficiency '..(math.min(gained / lost, 2)))
                 end
             end
         end
-    end
-    ]]
+    end]]
 end
 
-function ProcessSourceOnDeath(targetUnit)
+function ProcessSourceOnDeath(targetBrain, targetUnit)
     local data = {
         targetcat = false,
         sourcecat = false
     }
 
-    if targetUnit.GetAIBrain then
-        local targetBrain = targetUnit:GetAIBrain()
-        if targetBrain.RNG then
-            local valueLost
-            local targetCat = targetUnit.Blueprint.CategoriesHash
-            if targetCat.EXPERIMENTAL then
-                data.targetcat = 'Experimental'
-            elseif targetCat.AIR then
-                if targetCat.SCOUT then
-                    RecordUnitDeath(targetUnit, 'SCOUT')
-                elseif targetCat.GROUNDATTACK then
-                    data.targetcat = 'Gunship'
-                    if targetUnit.Blueprint.Economy.BuildCostMass then
-                        valueLost = targetUnit.Blueprint.Economy.BuildCostMass
-                    end
-                else
-                    data.targetcat = 'Air'
+    if targetBrain.RNG then
+        local valueLost
+        local targetCat = targetUnit.Blueprint.CategoriesHash
+        if targetCat.EXPERIMENTAL then
+            data.targetcat = 'Experimental'
+        elseif targetCat.AIR then
+            if targetCat.SCOUT then
+                RecordUnitDeath(targetUnit, 'SCOUT')
+            elseif targetCat.GROUNDATTACK then
+                data.targetcat = 'Gunship'
+                if targetUnit.Blueprint.Economy.BuildCostMass then
+                    valueLost = targetUnit.Blueprint.Economy.BuildCostMass
                 end
-            elseif targetCat.LAND then
-                data.targetcat = 'Land'
-            elseif targetCat.STRUCTURE then
-                data.targetcat = 'Structure'
+            else
+                data.targetcat = 'Air'
             end
-            if valueLost then
-                local unitStats = targetBrain.IntelManager.UnitStats
-                unitStats[data.targetcat].Deaths.Mass = unitStats[data.targetcat].Deaths.Mass + valueLost
-                if valueLost then
-                    --LOG('Gunship died')
-                    --LOG('Target Unit '..targetUnit.UnitId)
-                    local gained
-                    local lost
-                    if unitStats[data.targetcat].Kills.Mass > 0 then
-                        gained = unitStats[data.targetcat].Kills.Mass
-                    else
-                        gained = 0.1
-                    end
-                    if unitStats[data.targetcat].Deaths.Mass > 0 then
-                        lost = unitStats[data.targetcat].Deaths.Mass
-                    else
-                        lost = 0.1
-                    end
-                    --LOG('Current Gunship Efficiency '..(math.min(gained / lost, 2)))
+        elseif targetCat.LAND then
+            data.targetcat = 'Land'
+        elseif targetCat.STRUCTURE then
+            data.targetcat = 'Structure'
+            if targetCat.DEFENSE and not targetCat.WALL then
+                local locationType = targetUnit.BuilderManagerData.LocationType
+                LOG('BuilderManagerData '..repr(targetUnit.BuilderManagerData))
+                if locationType then
+                    RUtils.RemoveDefenseUnit(targetBrain, locationType, targetUnit)
+                else
+                    WARN('AI RNG : No location type in defensive unit on death, may have been gifted. Unit is '..targetUnit.UnitId)
                 end
             end
         end
+        if valueLost then
+            local unitStats = targetBrain.IntelManager.UnitStats
+            unitStats[data.targetcat].Deaths.Mass = unitStats[data.targetcat].Deaths.Mass + valueLost
+            if valueLost then
+                LOG('Gunship died')
+                LOG('Target Unit '..targetUnit.UnitId)
+                local gained
+                local lost
+                if unitStats[data.targetcat].Kills.Mass > 0 then
+                    gained = unitStats[data.targetcat].Kills.Mass
+                else
+                    gained = 0.1
+                end
+                if unitStats[data.targetcat].Deaths.Mass > 0 then
+                    lost = unitStats[data.targetcat].Deaths.Mass
+                else
+                    lost = 0.1
+                end
+                LOG('Current Gunship Efficiency '..(math.min(gained / lost, 2)))
+            end
+        end
     end
+
 end
 
 RebuildTable = function(oldtable)
@@ -1858,7 +1864,14 @@ function RecordUnitDeath(targetUnit, type)
     local im = GetIntelManager(targetUnit:GetAIBrain())
     if type == 'SCOUT' then
         local gridXID, gridZID = im:GetIntelGrid(targetUnit:GetPosition())
-        im.MapIntelGrid[gridXID][gridZID].RecentScoutDeaths = im.MapIntelGrid[gridXID][gridZID].RecentScoutDeaths + 1
+        if im.MapIntelGrid[gridXID][gridZID].RecentScoutDeaths then
+            im.MapIntelGrid[gridXID][gridZID].RecentScoutDeaths = im.MapIntelGrid[gridXID][gridZID].RecentScoutDeaths + 1
+        else
+            WARN('AI RNG : Unable to record scout death. Grid IDs '..repr(gridXID)..' '..repr(gridZID))
+            if not im.MapIntelGrid[gridXID][gridZID] then
+                WARN('AI RNG : Intel Grid entry does not exist.')
+            end
+        end
     end
 
 end

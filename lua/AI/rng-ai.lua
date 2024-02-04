@@ -2821,7 +2821,7 @@ AIBrain = Class(RNGAIBrainClass) {
         ]]
         coroutine.yield(Random(5,20))
         local baseRestrictedArea = self.OperatingAreas['BaseRestrictedArea']
-        local perimeterMonitorRadius = baseRestrictedArea * 1.2
+        local perimeterMonitorRadius = baseRestrictedArea * 1.3
         self.BasePerimeterMonitor = {}
         if self.RNGDEBUG then
             self:ForkThread(self.drawMainRestricted)
@@ -2836,6 +2836,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 local airThreat = 0
                 local navalThreat = 0
                 local enemyLandAngle = false
+                local enemyLandDistance = 0
                 local enemySurfaceAirAngle = false
                 local enemyAirAngle = false
                 local enemyNavalAngle = false
@@ -2853,7 +2854,12 @@ AIBrain = Class(RNGAIBrainClass) {
                                     landUnits = landUnits + 1
                                     landThreat = landThreat + unit.Blueprint.Defense.SurfaceThreatLevel
                                     if landUnits == 1 then
-                                        enemyLandAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unit:GetPosition())
+                                        local unitPos = unit:GetPosition()
+                                        enemyLandAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
+                                        local ex = self.BuilderManagers[k].Position[1] - unitPos[1]
+                                        local ez = self.BuilderManagers[k].Position[3] - unitPos[3]
+                                        local posDistance = ex * ex + ez * ez
+                                        enemyLandDistance = posDistance
                                     end
                                     continue
                                 end
@@ -2861,7 +2867,8 @@ AIBrain = Class(RNGAIBrainClass) {
                                     antiSurfaceAir = antiSurfaceAir + 1
                                     airThreat = airThreat + unit.Blueprint.Defense.AirThreatLevel
                                     if antiSurfaceAir == 1 then
-                                        enemySurfaceAirAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unit:GetPosition())
+                                        local unitPos = unit:GetPosition()
+                                        enemySurfaceAirAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
                                     end
                                     continue
                                 end
@@ -2869,7 +2876,8 @@ AIBrain = Class(RNGAIBrainClass) {
                                     airUnits = airUnits + 1
                                     airThreat = airThreat + unit.Blueprint.Defense.AirThreatLevel
                                     if airUnits == 1 then
-                                        enemyAirAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unit:GetPosition())
+                                        local unitPos = unit:GetPosition()
+                                        enemyAirAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
                                     end
                                     continue
                                 end
@@ -2877,7 +2885,8 @@ AIBrain = Class(RNGAIBrainClass) {
                                     navalUnits = navalUnits + 1
                                     navalThreat = navalThreat + unit.Blueprint.Defense.SurfaceThreatLevel + unit.Blueprint.Defense.AirThreatLevel + unit.Blueprint.Defense.SubThreatLevel
                                     if navalUnits == 1 then
-                                        enemyNavalAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unit:GetPosition())
+                                        local unitPos = unit:GetPosition()
+                                        enemyNavalAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
                                     end
                                     continue
                                 end
@@ -2888,6 +2897,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.BasePerimeterMonitor[k].LandUnits = landUnits
                     if enemyLandAngle then
                         self.BasePerimeterMonitor[k].RecentLandAngle = enemyLandAngle
+                        self.BasePerimeterMonitor[k].RecentLandDistance = enemyLandDistance
                     end
                     self.BasePerimeterMonitor[k].AirUnits = airUnits
                     if enemySurfaceAirAngle then
@@ -6049,6 +6059,16 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             coroutine.yield(100)
         end
+    end,
+
+        --- Called by a unit of this army when it is killed
+    ---@param self AIBrain
+    ---@param unit Unit
+    ---@param instigator Unit | Projectile | nil
+    ---@param damageType DamageType
+    ---@param overkillRatio number
+    OnUnitKilled = function(self, unit, instigator, damageType, overkillRatio)
+        IntelManagerRNG.ProcessSourceOnDeath(self, unit)
     end,
 
     GetCallBackCheck = function(self, unit)

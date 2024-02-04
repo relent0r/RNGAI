@@ -86,7 +86,14 @@ EngineerManager = Class(RNGEngineerManager) {
     
     AddUnitRNG = function(self, unit, dontAssign)
         --LOG('+ AddUnit')
-        if EntityCategoryContains(categories.STRUCTURE * categories.DEFENSE, unit) then
+        local unitCat = unit.Blueprint.CategoriesHash
+        if EntityCategoryContains(categories.STRUCTURE * categories.DEFENSE - categories.WALL, unit) then
+            if not unit.BuilderManagerData then
+                unit.BuilderManagerData = {}
+            end
+            unit.BuilderManagerData.LocationType = self.LocationType
+            LOG('Adding defense unit '..unit.UnitId)
+            LOG('LocationType is '..unit.BuilderManagerData.LocationType)
             RUtils.AddDefenseUnit(self.Brain, self.LocationType, unit)
         end
         for k,v in self.ConsumptionUnits do
