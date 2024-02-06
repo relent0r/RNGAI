@@ -2905,11 +2905,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     self.BasePerimeterMonitor[k].AntiSurfaceAirUnits = antiSurfaceAir
                     if enemyAirAngle then
-                        self.BasePerimeterMonitor[k].RecentLandAngle = enemyAirAngle
+                        self.BasePerimeterMonitor[k].RecentAirAngle = enemyAirAngle
                     end
                     self.BasePerimeterMonitor[k].NavalUnits = navalUnits
                     if enemyNavalAngle then
-                        self.BasePerimeterMonitor[k].RecentLandAngle = enemyNavalAngle
+                        self.BasePerimeterMonitor[k].RecentNavalAngle = enemyNavalAngle
                     end
                     self.BasePerimeterMonitor[k].NavalThreat = navalThreat
                     self.BasePerimeterMonitor[k].AirThreat = airThreat

@@ -10,6 +10,7 @@ local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local RNGGETN = table.getn
+local RNGTableEmpty = table.empty
 local RNGINSERT = table.insert
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
@@ -544,6 +545,121 @@ function EnemyUnitsGreaterAtRestrictedRNG(aiBrain, locationType, number, type)
             if aiBrain.BasePerimeterMonitor[locationType].NavalUnits > number or aiBrain.BasePerimeterMonitor[locationType].LandUnits > number then
                 --RNGLOG('LandNaval units greater than '..number..' at base location '..locationType)
                 return true
+            end
+        end
+    end
+    return false
+end
+
+function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, pointTier, type)
+    if aiBrain.BasePerimeterMonitor[locationType] then
+        local basePosition = aiBrain.BuilderManagers[locationType].Position
+        local bestPoint
+        local bestKey
+        if type == 'LAND' then
+            if not RNGTableEmpty(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier]) then
+                if aiBrain.BasePerimeterMonitor[locationType].RecentLandAngle then
+                    local pointCheck = aiBrain.BasePerimeterMonitor[locationType].RecentLandAngle
+                    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier] do
+                        local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
+                        if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                            bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                            bestKey = k
+                        end
+                    end
+                end
+            end
+            if bestPoint then
+                if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5 then
+                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5))
+                    return true
+                else
+                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5))
+                end
+            end
+        elseif type == 'AIR' then
+            if not RNGTableEmpty(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier]) then
+                if aiBrain.BasePerimeterMonitor[locationType].RecentAirAngle then
+                    local pointCheck = aiBrain.BasePerimeterMonitor[locationType].RecentAirAngle
+                    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier] do
+                        local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
+                        if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                            bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                            bestKey = k
+                        end
+                    end
+                end
+            end
+            if bestPoint then
+                if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat < aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5 then
+                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
+                    return true
+                else
+                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
+                end
+            end
+        elseif type == 'ANTISURFACEAIR' then
+            if not RNGTableEmpty(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier]) then
+                if aiBrain.BasePerimeterMonitor[locationType].RecentSurfaceAirAngle then
+                    local pointCheck = aiBrain.BasePerimeterMonitor[locationType].RecentSurfaceAirAngle
+                    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier] do
+                        local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
+                        if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                            bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                            bestKey = k
+                        end
+                    end
+                end
+            end
+            if bestPoint then
+                if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat < aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5 then
+                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
+                    return true
+                else
+                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
+                end
+            end
+        elseif type == 'NAVAL' then
+            if not RNGTableEmpty(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier]) then
+                if aiBrain.BasePerimeterMonitor[locationType].RecentNavalAngle then
+                    local pointCheck = aiBrain.BasePerimeterMonitor[locationType].RecentNavalAngle
+                    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier] do
+                        local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
+                        if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                            bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                            bestKey = k
+                        end
+                    end
+                end
+            end
+            if bestPoint then
+                if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5 then
+                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5))
+                    return true
+                else
+                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5))
+                end
+            end
+        elseif type == 'LANDNAVAL' then
+            if not RNGTableEmpty(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier]) then
+                if aiBrain.BasePerimeterMonitor[locationType].RecentLandAngle or aiBrain.BasePerimeterMonitor[locationType].RecentNavalAngle then
+                    local pointCheck = aiBrain.BasePerimeterMonitor[locationType].RecentLandAngle or aiBrain.BasePerimeterMonitor[locationType].RecentNavalAngle
+                    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier] do
+                        local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
+                        if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                            bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                            bestKey = k
+                        end
+                    end
+                end
+            end
+            if bestPoint then
+                if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < (aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5 or aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5) then
+                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..repr((aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5)..' or land of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5)))
+                    return true
+                else
+                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..repr((aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5)..' or land of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5)))
+                end
             end
         end
     end

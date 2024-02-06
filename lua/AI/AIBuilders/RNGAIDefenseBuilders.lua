@@ -57,6 +57,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.DIRECTFIRE}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.6 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 1, 'LAND'}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
@@ -97,6 +98,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.ANTIAIR}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 1, 'AIR'}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
@@ -121,6 +123,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LANDNAVAL' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 0.6 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 2, 'LANDNAVAL'}},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 18, categories.DEFENSE * categories.TECH2 * categories.DIRECTFIRE}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -154,6 +157,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 2, 'AIR'}},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 6, categories.DEFENSE * categories.TECH2 * categories.ANTIAIR}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
@@ -450,6 +454,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.DIRECTFIRE}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 1, 'LAND'}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
@@ -487,6 +492,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.ANTIAIR}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 1, 'AIR'}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
@@ -547,6 +553,7 @@ BuilderGroup {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LANDNAVAL' }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.DIRECTFIRE}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 2, 'LANDNAVAL'}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
@@ -579,6 +586,7 @@ BuilderGroup {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.ANTIAIR}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 2, 'AIR'}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
@@ -689,37 +697,6 @@ BuilderGroup {
             }
         }
     },
-    --[[
-    Builder {
-        BuilderName = 'RNGAI T2 Defence Engineer TMD Expansion',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
-        Priority = 0,
-        PriorityFunction = ActiveExpansion,
-        InstanceCount = 1,
-        BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 720 } },
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0}},
-            { UCBC, 'UnitCapCheckLess', { .9 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            NumAssistees = 2,
-            Construction = {
-                BuildClose = true,
-                NearDefensivePoints = false,
-                AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY},
-                AvoidCategory = categories.STRUCTURE * categories.ANTIMISSILE * categories.TECH2 * categories.DEFENSE,
-                maxUnits = 1,
-                maxRadius = 5,
-                BuildStructures = {
-                    'T2MissileDefense',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },]]
 }
 
 BuilderGroup {
