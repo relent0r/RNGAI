@@ -2118,51 +2118,50 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
             distance = maxRange * maxRange
             --RNGLOG('* AIFindNearestCategoryTargetInRange: numTargets '..RNGGETN(TargetsInRange)..'  ')
             for num, Target in TargetsInRange do
-                if Target.Dead or Target:BeenDestroyed() then
-                    continue
-                end
-                if ignoreNotCompleted then
-                    if Target:GetFractionComplete() ~= 1 then
-                        continue
+                if not Target.Dead and not Target.Tractored then
+                    if ignoreNotCompleted then
+                        if Target:GetFractionComplete() ~= 1 then
+                            continue
+                        end
                     end
-                end
-                if Target.EntityId and not unitThreatTable[Target.EntityId] then
-                    if platoon.MovementLayer == 'Water' then
-                        threatTable['AntiNaval'] = threatTable['AntiNaval'] + Target.Blueprint.Defense.SurfaceThreatLevel + Target.Blueprint.Defense.SubThreatLevel
-                    elseif platoon.MovementLayer == 'Air' then
-                        threatTable['Air'] = threatTable['Air'] + Target.Blueprint.Defense.AirThreatLevel
-                    else
-                        threatTable['AntiSurface'] = threatTable['AntiSurface'] + Target.Blueprint.Defense.SurfaceThreatLevel
+                    if Target.EntityId and not unitThreatTable[Target.EntityId] then
+                        if platoon.MovementLayer == 'Water' then
+                            threatTable['AntiNaval'] = threatTable['AntiNaval'] + Target.Blueprint.Defense.SurfaceThreatLevel + Target.Blueprint.Defense.SubThreatLevel
+                        elseif platoon.MovementLayer == 'Air' then
+                            threatTable['Air'] = threatTable['Air'] + Target.Blueprint.Defense.AirThreatLevel
+                        else
+                            threatTable['AntiSurface'] = threatTable['AntiSurface'] + Target.Blueprint.Defense.SurfaceThreatLevel
+                        end
+                        if EntityCategoryContains(CategoriesLandDefense, Target) then
+                            RNGINSERT(defensiveStructureTable, Target)
+                        end
+                        unitThreatTable[Target.EntityId] = true
                     end
-                    if EntityCategoryContains(CategoriesLandDefense, Target) then
-                        RNGINSERT(defensiveStructureTable, Target)
+                    TargetPosition = Target:GetPosition()
+                    -- check if we have a special player as enemy
+                    if enemyBrain and enemyIndex and enemyBrain ~= enemyIndex then continue end
+                    if EntityCategoryContains(categories.COMMAND, Target) then
+                        acuPresent = true
+                        acuUnit = Target
                     end
-                    unitThreatTable[Target.EntityId] = true
-                end
-                TargetPosition = Target:GetPosition()
-                -- check if we have a special player as enemy
-                if enemyBrain and enemyIndex and enemyBrain ~= enemyIndex then continue end
-                if EntityCategoryContains(categories.COMMAND, Target) then
-                    acuPresent = true
-                    acuUnit = Target
-                end
-                -- check if the Target is still alive, matches our target priority and can be attacked from our platoon
-                if not Target.Dead and not Target.CaptureInProgress and EntityCategoryContains(category, Target) and platoon:CanAttackTarget(squad, Target) then
-                    -- yes... we need to check if we got friendly units with GetUnitsAroundPoint(_, _, _, 'Enemy')
-                    if not IsEnemy( MyArmyIndex, Target:GetAIBrain():GetArmyIndex() ) then continue end
-                    if Target.ReclaimInProgress then
-                        --WARN('* AIFindNearestCategoryTargetInRange: ReclaimInProgress !!! Ignoring the target.')
-                        continue
-                    end
-                    if Target.CaptureInProgress then
-                        --WARN('* AIFindNearestCategoryTargetInRange: CaptureInProgress !!! Ignoring the target.')
-                        continue
-                    end
-                    targetRange = VDist2Sq(position[1],position[3],TargetPosition[1],TargetPosition[3])
-                    -- check if the target is in range of the unit and in range of the base
-                    if targetRange < distance then
-                        TargetUnit = Target
-                        distance = targetRange
+                    -- check if the Target is still alive, matches our target priority and can be attacked from our platoon
+                    if not Target.Dead and not Target.CaptureInProgress and EntityCategoryContains(category, Target) and platoon:CanAttackTarget(squad, Target) then
+                        -- yes... we need to check if we got friendly units with GetUnitsAroundPoint(_, _, _, 'Enemy')
+                        if not IsEnemy( MyArmyIndex, Target:GetAIBrain():GetArmyIndex() ) then continue end
+                        if Target.ReclaimInProgress then
+                            --WARN('* AIFindNearestCategoryTargetInRange: ReclaimInProgress !!! Ignoring the target.')
+                            continue
+                        end
+                        if Target.CaptureInProgress then
+                            --WARN('* AIFindNearestCategoryTargetInRange: CaptureInProgress !!! Ignoring the target.')
+                            continue
+                        end
+                        targetRange = VDist2Sq(position[1],position[3],TargetPosition[1],TargetPosition[3])
+                        -- check if the target is in range of the unit and in range of the base
+                        if targetRange < distance then
+                            TargetUnit = Target
+                            distance = targetRange
+                        end
                     end
                 end
             end
@@ -4645,6 +4644,7 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
             if not closestPoint then
                 LOG('AddDefenseUnit No closest point found defensive point dump '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints))
             end
+            LOG('ClosestPoint distance is '..math.sqrt(closestDistance)..'radius is '..aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].Radius)
             if closestPoint and math.sqrt(closestDistance) <= aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].Radius then
                 --RNGLOG('Adding T1 defensive unit to defensepoint table at key '..closestPoint)
                 if finishedUnit.Blueprint.CategoriesHash.ANTIAIR and not aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiAir[finishedUnit.EntityId] then
@@ -4687,6 +4687,7 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
                 if not closestPoint then
                     LOG('AddDefenseUnit No closest point found defensive point dump '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints))
                 end
+                LOG('ClosestPoint distance is '..math.sqrt(closestDistance)..'radius is '..aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Radius)
                 if closestPoint and math.sqrt(closestDistance) <= aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Radius then
                     if finishedUnit.Blueprint.CategoriesHash.ANTIMISSILE and not aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TMD[finishedUnit.EntityId] then
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TMD[finishedUnit.EntityId] = finishedUnit

@@ -349,7 +349,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     location = aiBrain.BuilderManagers[closestBase].Position
                 end
             end
-            StateUtils.MergeWithNearbyPlatoonsRNG(self, 'ZoneControlBehavior', 80, 25, false)
+            StateUtils.MergeWithNearbyPlatoonsRNG(self, 'ZoneControlBehavior', 80, 35, false)
             self.Retreat = true
             self.BuilderData = {
                 Position = location,

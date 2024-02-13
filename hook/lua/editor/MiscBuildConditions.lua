@@ -10,18 +10,16 @@ local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 -- # parameter 1: string   locType     = "MAIN"
 -- #
 -- ##############################################################################################################
-function ReclaimablesInArea(aiBrain, locType)
-    if aiBrain:GetEconomyStoredRatio('MASS') > .9 then
-        --RNGLOG('Mass Storage Ratio Returning False')
-        return false
+function ReclaimablesAvailableAtBase(aiBrain, locType)
+    if aiBrain:GetEconomyStoredRatio('MASS') < .80 then
+        for k, v in aiBrain.BuilderManagers do
+            if locType == k then
+                if v.ReclaimData.ReclaimAvailable and v.EngineerManager.ConsumptionUnits.Engineers.Count and v.EngineerManager.ConsumptionUnits.Engineers.Count < (v.ReclaimData.EngineersRequired + 3) then
+                    return true
+                end
+            end
+        end
     end
-    
-    local ents = AIUtils.AIGetReclaimablesAroundLocation( aiBrain, locType )
-    if ents and table.getn(ents) > 0 then
-        --RNGLOG('Engineer Reclaim condition returned true')
-        return true
-    end
-    
     return false
 end
 

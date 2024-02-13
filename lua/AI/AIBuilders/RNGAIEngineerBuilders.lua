@@ -62,7 +62,7 @@ end
 
 local MinimumAntiAirThreat = function(self, aiBrain, builderManager, builderData)
     local myAntiAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
-    if myAntiAirThreat > 8 then
+    if myAntiAirThreat > 12 then
         return 893
     end
     return 0
@@ -94,6 +94,18 @@ BuilderGroup {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 30, categories.ENGINEER * categories.TECH1 - categories.COMMAND } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Engineer T1 Reclaim Available',
+        PlatoonTemplate = 'T1BuildEngineer',
+        Priority = 879,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 2, categories.ENGINEER - categories.COMMAND }},
+            { MIBC, 'ReclaimablesAvailableAtBase', {'LocationType'}},
         },
         BuilderType = 'All',
     },
@@ -383,13 +395,12 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Reclaim Expansion',
         PlatoonTemplate = 'T1BuildEngineer',
-        Priority = 0,
-        PriorityFunction = ReclaimBasedFactoryPriority,
+        Priority = 900,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH1 - categories.COMMAND }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 30, categories.ENGINEER * categories.TECH1 - categories.COMMAND } },
+            { MIBC, 'ReclaimablesAvailableAtBase', {'LocationType'}},
         },
         BuilderType = 'All',
     },

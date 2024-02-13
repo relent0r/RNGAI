@@ -1645,6 +1645,7 @@ AIBrain = Class(RNGAIBrainClass) {
             DefensivePoints = {},
             BuilderHandles = {},
             CoreResources = {},
+            ReclaimData = {},
             Position = position,
             Layer = baseLayer,
             GraphArea = false,
@@ -1840,6 +1841,7 @@ AIBrain = Class(RNGAIBrainClass) {
         while true do
             if self.BaseMonitor.BaseMonitorStatus == 'ACTIVE' then
                 self:BaseMonitorCheckRNG()
+                self:BasesReclaimCheckRNG()
             end
             coroutine.yield(40)
         end
@@ -1993,6 +1995,49 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
+    end,
+
+    BasesReclaimCheckRNG = function(self)
+        local reclaimGridInstance = self.GridReclaim
+        local brainGridInstance = self.GridBrain
+        for k, v in self.BuilderManagers do
+            if k ~= 'FLOATING' and v.FactoryManager.LocationActive then
+                local gx, gz = reclaimGridInstance:ToGridSpace(v.Position[1],v.Position[3])
+                local cells, count = reclaimGridInstance:FilterAndSortInRadius(gx, gz, self.BrainIntel.IMAPConfig.Rings, 50)
+                local maxEngineersRequired = 0
+                local totalMassRequired = 0
+                local totalEnergyRequired = 0
+                local reclaimAvailable = false
+                for k = 1, count do
+                    local cell = cells[k] --[[@as AIGridReclaimCell]]
+                    if cell.TotalMass > 0 then
+                        local centerOfCell = reclaimGridInstance:ToWorldSpace(cell.X, cell.Z)
+                        totalMassRequired = totalMassRequired + cell.TotalMass
+                        totalEnergyRequired = totalEnergyRequired + cell.TotalEnergy
+                        -- Setup a path check for the cell, but make it a flag since the base position never changes. Where will I put this data? GridBrain?
+                        --[[if NavUtils.CanPathTo('AMPHIBIOUS', v.Position, centerOfCell) then
+                        end]]
+                    end
+                end
+                local maxEngineersRequired = math.max(math.ceil(totalMassRequired / 500), math.ceil(totalEnergyRequired / 500))
+                if totalMassRequired > 500 or totalEnergyRequired > 1500 then
+                    LOG('Reclaim available for base '..k)
+                    LOG('Engineers Required '..maxEngineersRequired)
+                    LOG('totalMassRequired '..totalMassRequired)
+                    LOG('totalEnergyRequired '..totalEnergyRequired)
+                    v.ReclaimData.ReclaimAvailable = true
+                    v.ReclaimData.EngineersRequired = math.max(3, maxEngineersRequired)
+                else 
+                    LOG('Reclaim not available for base '..k)
+                    LOG('Engineers Required '..maxEngineersRequired)
+                    LOG('totalMassRequired '..totalMassRequired)
+                    LOG('totalEnergyRequired '..totalEnergyRequired)
+                    v.ReclaimData.ReclaimAvailable = false
+                    v.ReclaimData.EngineersRequired = maxEngineersRequired
+                end
+            end
+        end
+
     end,
 
     BaseMonitorAlertTimeoutRNG = function(self, pos, location, type)
