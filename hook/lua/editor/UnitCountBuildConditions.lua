@@ -1168,17 +1168,64 @@ function IsEngineerNotBuilding(aiBrain, category)
     return true 
 end
 
-function ValidateLateGameBuild(aiBrain)
+function ValidateLateGameBuild(aiBrain, locationType)
     -- Returns true if no engineer is building anything in the category and if the economy is good. 
     -- Used to avoid building multiple late game things when the AI can't support them but other conditions are right.
+    
+    local queuedStructures = aiBrain.BuilderManagers[locationType].EngineerManager.QueuedStructures
+    local queuedCount = 0
+    local timeStamp = GetGameTimeSeconds()
+    for _, v in queuedStructures do
+        for _, c in v do
+            LOG('Checking queue item '..repr(c))
+            if c.Engineer and not c.Engineer.Dead then
+                if c.TimeStamp + 30 > timeStamp then
+                    queuedCount = queuedCount + 1
+                end
+            end
+        end
+    end
+    if queuedCount > 0 then
+        LOG('Number of high value units queued '..queuedCount)
+        LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+        LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * queuedCount)))
+        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * queuedCount) then
+            LOG('Income is not high enough, return false')
+            return false
+        end
+    end
+    local unitsBeingBuilt = 0
+    local structuresBeingBuilt = aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt
+    for _, v in structuresBeingBuilt do
+        for _, c in v do
+            if c and not c.Dead then
+                if c:GetFractionComplete() < 0.98 then
+                    unitsBeingBuilt = unitsBeingBuilt + 1
+                end
+            end
+        end
+    end
+    if unitsBeingBuilt > 0 then
+        LOG('Number of high value units being built '..unitsBeingBuilt)
+        LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+        LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * unitsBeingBuilt)))
+        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * unitsBeingBuilt) then
+            LOG('Income is not high enough, return false')
+            return false
+        end
+    end
+    --[[
     if IsAnyEngineerBuilding(aiBrain, categories.EXPERIMENTAL + (categories.STRATEGIC * categories.TECH3)) then
-        if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime < 1.3 or aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.2 or GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 then
+        if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime < 1.3 or aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.2 or GetEconomyStoredRatio(aiBrain, 'MASS') < 0.20 then
+            return false
+        end
+        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 + 50 < aiBrain.EcoManager.ApproxFactoryMassConsumption then
             return false
         end
         --RNGLOG('Validate late game bulid is returning true even tho an experimental is being built')
         --RNGLOG('Energy Eco over time '..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
         --RNGLOG('Mass eco over time '..aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime)
-    end
+    end]]
     --RNGLOG('Validate late game bulid is returning true')
   return true
 end
@@ -1335,16 +1382,15 @@ function AdjacencyMassCheckRNG(aiBrain, locationType, category, radius)
     local baseTemplate = BaseTemplateFile['CappedExtractorTemplate'][factionIndex]
     local unitId = RUtils.GetUnitIDFromTemplate(aiBrain, 'MassStorage')
     for _, v in refunits do
-        local unitPosition = v:GetPosition()
+        local extratorPos = v:GetPosition()
         if not IsDestroyed(v) then
             for l,bType in baseTemplate do
                 for m,bString in bType[1] do
                     if bString == 'MassStorage' then
                         for n,position in bType do
                             if n > 1 then
-                                local relativeLoc = {position[1], 0, position[2]}
-                                relativeLoc = {relativeLoc[1] + unitPosition[1], relativeLoc[2] + unitPosition[2], relativeLoc[3] + unitPosition[3]}
-                                if aiBrain:CanBuildStructureAt(unitId, relativeLoc) then
+                                local reference = {position[1] + extratorPos[1], position[2] + extratorPos[2], position[3] + extratorPos[3]}
+                                if aiBrain:CanBuildStructureAt(unitId, reference) then
                                     return true
                                 end
                             end

@@ -119,6 +119,8 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Retreating)
                 return
             else
+                self:LogDebug(string.format('DecideWhatToDo low threat ally'..repr(threat.ally..' enemy '..repr(threat.enemy))))
+                self:LogDebug(string.format('inputs are position'..repr(self.Pos).. ' radius '..repr(self.EnemyRadius)))
                 self.retreat=false
             end
             if StateUtils.SimpleTarget(self,aiBrain) then

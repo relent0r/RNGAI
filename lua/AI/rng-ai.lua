@@ -2021,17 +2021,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 local maxEngineersRequired = math.max(math.ceil(totalMassRequired / 500), math.ceil(totalEnergyRequired / 500))
                 if totalMassRequired > 500 or totalEnergyRequired > 1500 then
-                    LOG('Reclaim available for base '..k)
-                    LOG('Engineers Required '..maxEngineersRequired)
-                    LOG('totalMassRequired '..totalMassRequired)
-                    LOG('totalEnergyRequired '..totalEnergyRequired)
                     v.ReclaimData.ReclaimAvailable = true
                     v.ReclaimData.EngineersRequired = math.max(3, maxEngineersRequired)
                 else 
-                    LOG('Reclaim not available for base '..k)
-                    LOG('Engineers Required '..maxEngineersRequired)
-                    LOG('totalMassRequired '..totalMassRequired)
-                    LOG('totalEnergyRequired '..totalEnergyRequired)
                     v.ReclaimData.ReclaimAvailable = false
                     v.ReclaimData.EngineersRequired = maxEngineersRequired
                 end
@@ -5335,6 +5327,13 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     EngineerAssistManagerBrainRNG = function(self, type)
+
+        local buildPowerTable = {
+            TECH1 = 5,
+            TECH2 = 13,
+            TECH3 = 32.5
+        }
+
         coroutine.yield(1200)
         local state
         while true do
@@ -5342,13 +5341,20 @@ AIBrain = Class(RNGAIBrainClass) {
             local energyStorage = GetEconomyStored( self, 'ENERGY')
             local gameTime = GetGameTimeSeconds()
             local CoreMassNumberAchieved = false
+            local minAssistPower = 0
+            if self.cmanager.income.r.m then
+                minAssistPower = math.ceil(math.max(self.cmanager.income.r.m * 0.45, 10))
+                LOG('minAssistPower '..minAssistPower)
+                LOG('Current build power '..self.EngineerAssistManagerBuildPower)
+                LOG('Current build power required '..self.EngineerAssistManagerBuildPowerRequired)
+            end
             if (gameTime < 300 and self.EconomyOverTimeCurrent.MassIncome < 2.5) then
                 state = 'Energy'
                 --RNGLOG('Assist Focus is Factory and Energy Completion')
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
-                    {cat = categories.STRUCTURE * categories.DEFENSE, type = 'Completion' }, 
+                    {cat = categories.STRUCTURE * categories.DEFENSE, type = 'Completion' }
                 }
             elseif self.EcoManager.EcoPowerPreemptive or self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 or self.EngineerAssistManagerFocusPower then
                 state = 'Energy'
@@ -5358,6 +5364,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 , type = 'Completion'}, 
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2, type = 'Completion'}, 
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
+                    {cat = categories.FACTORY * ( categories.LAND + categories.AIR ) - categories.SUPPORTFACTORY, type = 'Upgrade'},
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
                 }
             elseif self.EngineerAssistManagerFocusSnipe then
                 state = 'Snipe'
@@ -5441,13 +5449,11 @@ AIBrain = Class(RNGAIBrainClass) {
             elseif self.EngineerAssistManagerFocusExperimental and self.EngineerAssistManagerBuildPower <= 150 then
                 --RNGLOG('EngineerAssistManagerFocusExperimental is true')
                 self.EngineerAssistManagerBuildPowerRequired = 150
-            elseif massStorage > 150 and energyStorage > 150 then
-                if not self.EngineerAssistManagerFocusExperimental and not self.EcoManager.CoreMassPush then
-                    if self.EngineerAssistManagerBuildPower <= 30 and self.EngineerAssistManagerBuildPowerRequired <= 26 then
-                        self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
-                    end
+            elseif massStorage > 150 and energyStorage > 150 and self.EngineerAssistManagerBuildPower < math.max(minAssistPower, 5) and not self.EngineerAssistManagerFocusExperimental and not self.EcoManager.CoreMassPush then
+                if self.EngineerAssistManagerBuildPower <= 30 and self.EngineerAssistManagerBuildPowerRequired <= 26 then
+                    self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
                 end
-                --RNGLOG('EngineerAssistManager is Active')
+                RNGLOG('EngineerAssistManager is Active due to storage and builder power being less than minAssistPower')
                 self.EngineerAssistManagerActive = true
             elseif self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.6 and self.EngineerAssistManagerBuildPower <= 0 and self.EngineerAssistManagerBuildPowerRequired < 6 then
                 --RNGLOG('EngineerAssistManagerBuildPower being set to 5')
@@ -5457,15 +5463,16 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('EngineerAssistManagerBuildPower matches EngineerAssistManagerBuildPowerRequired, not add or removal')
                 coroutine.yield(30)
             else
-                if self.EngineerAssistManagerBuildPowerRequired > 5 then
+                if self.EngineerAssistManagerBuildPowerRequired > math.max(minAssistPower, 5) then
+                    LOG('Decreasing build power by 1 due to lower requirements')
                     self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired - 1
                 end
                 --self.EngineerAssistManagerActive = false
             end
             if not CoreMassNumberAchieved and self.EcoManager.CoreExtractorT3Count > 2 then
                 CoreMassNumberAchieved = true
-                if not self.EngineerAssistManagerFocusExperimental and not self.EcoManager.CoreMassPush then
-                    self.EngineerAssistManagerBuildPowerRequired = 16
+                if not self.EngineerAssistManagerFocusExperimental and not self.EcoManager.CoreMassPush and self.EngineerAssistManagerBuildPowerRequired > minAssistPower then
+                    self.EngineerAssistManagerBuildPowerRequired = minAssistPower
                 end
             end
             coroutine.yield(10)

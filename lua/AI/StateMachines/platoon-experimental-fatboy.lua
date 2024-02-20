@@ -900,7 +900,7 @@ GuardThread = function(aiBrain, platoon)
                     elseif v.Blueprint.CategoriesHash.SHIELD and v.Blueprint.CategoriesHash.DEFENSE and v.Blueprint.CategoriesHash.MOBILE then
                         currentShieldCount = currentShieldCount + 1
                     elseif v.Blueprint.CategoriesHash.DIRECTFIRE and v.Blueprint.CategoriesHash.LAND then
-                        currentLandThreat = currentLandThreat + v.Blueprint.CategoriesHash.SurfaceThreatLevel
+                        currentLandThreat = currentLandThreat + v.Blueprint.Defense.SurfaceThreatLevel
                         currentLandCount = currentLandCount + 1
                     end
                 end

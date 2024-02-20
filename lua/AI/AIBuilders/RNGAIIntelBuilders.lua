@@ -46,7 +46,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T1Radar',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -72,7 +72,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T1Radar',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -101,7 +101,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T1Sonar',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },

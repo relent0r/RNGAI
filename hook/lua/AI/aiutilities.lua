@@ -1095,7 +1095,7 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
                     local totalShieldHealth = 0
                     for _, sUnit in shieldUnits do
                         if not sUnit.Dead and sUnit.MyShield then
-                            if sUnit.bp.Defense.ShieldSize and VDist3Sq(unitPos, sUnit:GetPosition()) < sUnit.bp.Defense.ShieldSize and sUnit.MyShield.GetHealth then
+                            if sUnit.Blueprint.Defense.ShieldSize and VDist3Sq(unitPos, sUnit:GetPosition()) < sUnit.Blueprint.Defense.ShieldSize and sUnit.MyShield.GetHealth then
                                 totalShieldHealth = totalShieldHealth + sUnit.MyShield:GetHealth()
                             end
                         end

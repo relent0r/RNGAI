@@ -2685,7 +2685,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         if cons.NearDefensivePoints then
             if cons.Type == 'TMD' then
-                local tmdPositions = RUtils.GetTMDPosition(aiBrain, eng, cons.Location)
+                local tmdPositions = RUtils.GetTMDPosition(aiBrain, eng, cons.LocationType)
                 for _, v in tmdPositions do
                     reference = v
                     break
@@ -2696,7 +2696,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
             else
                 relative = false
-                reference = RUtils.GetDefensivePointRNG(aiBrain, cons.Location or 'MAIN', cons.Tier or 2, cons.Type)
+                reference = RUtils.GetDefensivePointRNG(aiBrain, cons.LocationType or 'MAIN', cons.Tier or 2, cons.Type)
                 --RNGLOG('reference for defensivepoint is '..repr(reference))
                 --baseTmpl = baseTmplFile[cons.BaseTemplate][factionIndex]
                 -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
@@ -2729,14 +2729,14 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             local refunits=AIUtils.GetOwnUnitsAroundPoint(aiBrain, cons.Categories, pos, cons.Radius, cons.ThreatMin,cons.ThreatMax, cons.ThreatRings)
             local reference = RUtils.GetCappingPosition(aiBrain, eng, pos, refunits, baseTmpl, buildingTmpl)
-            --RNGLOG('reference is '..repr(reference))
-            --RNGLOG('World Pos '..repr(tmpReference))
+            LOG('Capping template')
+            RNGLOG('reference is '..repr(reference))
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
             RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
             --RNGLOG('baseTmpList is :'..repr(baseTmplList))
         elseif cons.NearPerimeterPoints then
             --RNGLOG('NearPerimeterPoints')
-            reference = RUtils.GetBasePerimeterPoints(aiBrain, cons.Location or 'MAIN', cons.Radius or 60, cons.BasePerimeterOrientation or 'FRONT', cons.BasePerimeterSelection or false)
+            reference = RUtils.GetBasePerimeterPoints(aiBrain, cons.LocationType or 'MAIN', cons.Radius or 60, cons.BasePerimeterOrientation or 'FRONT', cons.BasePerimeterSelection or false)
             --RNGLOG('referece is '..repr(reference))
             relative = false
             baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
@@ -2746,7 +2746,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrdered
         elseif cons.NearBasePatrolPoints then
             relative = false
-            reference = AIUtils.GetBasePatrolPoints(aiBrain, cons.Location or 'MAIN', cons.Radius or 100)
+            reference = AIUtils.GetBasePatrolPoints(aiBrain, cons.LocationType or 'MAIN', cons.Radius or 100)
             baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
             for k,v in reference do
                 RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, v))
@@ -3075,6 +3075,11 @@ Platoon = Class(RNGAIPlatoonClass) {
             import('/lua/ScenarioTriggers.lua').CreateUnitStopCaptureTrigger(eng.PlatoonHandle.EngineerCaptureDoneRNG, eng)
             eng.CaptureDoneCallbackSet = true
         end
+        if eng and not eng.Dead and not eng.StartBuildCallbackSet and eng.PlatoonHandle and PlatoonExists(eng:GetAIBrain(), eng.PlatoonHandle) then
+            -- note the CreateStartBuildTrigger says it takes a category but in reality it doesn't
+            import('/lua/ScenarioTriggers.lua').CreateStartBuildTrigger(eng.PlatoonHandle.EngineerStartBuildRNG, eng)
+            eng.StartBuildCallbackSet = true
+        end
         --if eng and not eng.Dead and not eng.ReclaimPlatoon and not eng.ReclaimDoneCallbackSet and eng.PlatoonHandle and PlatoonExists(eng:GetAIBrain(), eng.PlatoonHandle) then
         --    import('/lua/ScenarioTriggers.lua').CreateUnitStopReclaimTrigger(eng.PlatoonHandle.EngineerReclaimDoneRNG, eng)
         --    eng.ReclaimDoneCallbackSet = true
@@ -3152,6 +3157,68 @@ Platoon = Class(RNGAIPlatoonClass) {
                 unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, true)  --DUNCAN - changed to true
             else
                 unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, false)
+            end
+        end
+    end,
+
+    EngineerStartBuildRNG = function(eng, unit)
+        if eng.Active then return end
+        if not eng.PlatoonHandle then return end
+        if not eng.PlatoonHandle.PlanName == 'EngineerBuildAIRNG' then return end
+        --LOG("*AI DEBUG: Build done " .. unit.EntityId)
+        if eng and not eng.Dead and unit and not unit.Dead then
+            local locationType = eng.PlatoonHandle.PlatoonData.Construction.LocationType
+            local highValue = eng.PlatoonHandle.PlatoonData.Construction.HighValue
+            if locationType and highValue then
+                local aiBrain = eng.Brain
+                if aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt then
+                    LOG('StructuresBeingBuilt exist on engineer manager '..repr(aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt))
+                    local structuresBeingBuilt = aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt
+                    local queuedStructures = aiBrain.BuilderManagers[locationType].EngineerManager.QueuedStructures
+                    local unitBp = unit.Blueprint
+                    LOG('Unit tech category is '..repr(unitBp.TechCategory))
+                    local unitsBeingBuilt = 0
+                    --if structuresBeingBuilt['QUEUED'][unitBp.TechCategory] then
+                    if structuresBeingBuilt[unitBp.TechCategory] and not structuresBeingBuilt[unitBp.TechCategory][unit.EntityId] then
+                        local rebuildTable = false
+                        for _, v in structuresBeingBuilt do
+                            for _, c in v do
+                                if c and not c.Dead then
+                                    if c:GetFractionComplete() < 0.98 then
+                                        unitsBeingBuilt = unitsBeingBuilt + 1
+                                    end
+                                end
+                            end
+                        end
+                        LOG('Number of high value units being built '..unitsBeingBuilt)
+                        LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+                        LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + 100))
+                        if unitsBeingBuilt > 0 and aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + 100 then
+                            LOG('Too many high value units being built, abort this one')
+                            if queuedStructures[unitBp.TechCategory][eng.EntityId] then
+                                LOG('Deleting engineer entry in queue')
+                                queuedStructures[unitBp.TechCategory][eng.EntityId] = nil
+                            else
+                                LOG('There is no entry for this high value unit in the engineer manager queue table')
+                            end
+                            IssueClearCommands({eng})
+                            unit.ReclaimInProgress = true
+                            IssueReclaim({eng}, unit)
+                            eng.ProcessBuild = eng:ForkThread(eng.PlatoonHandle.WaitForIdleDisband)
+                        else
+                            LOG('Tech category exist but unit entity does not, adding to table')
+                            if queuedStructures[unitBp.TechCategory][eng.EntityId] then
+                                LOG('Deleting engineer entry in queue')
+                                queuedStructures[unitBp.TechCategory][eng.EntityId] = nil
+                            else
+                                LOG('There is no entry for this high value unit in the engineer manager queue table')
+                            end
+                            structuresBeingBuilt[unitBp.TechCategory][unit.EntityId] = unit
+                            LOG('Have added the following unit to the structuresBeingBuilt table '..repr(structuresBeingBuilt[unitBp.TechCategory]))
+                        end
+                    end
+                    
+                end
             end
         end
     end,
@@ -3718,6 +3785,15 @@ Platoon = Class(RNGAIPlatoonClass) {
         self:PlatoonDisband()
     end,
 
+    WaitForIdleDisband = function(eng)
+        while RNGGETN(eng:GetCommandQueue()) > 0 do
+            coroutine.yield(20)
+        end
+        if eng.PlatoonHandle.PlatoonDisband then
+            eng.PlatoonHandle:PlatoonDisband()
+        end
+    end,
+
     -------------------------------------------------------
     --   Function: ProcessBuildCommand
     --   Args:
@@ -3844,7 +3920,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 eng.PlatoonHandle:Stop()
                 if eng.PlatoonHandle.PlatoonData.Construction.HighValue then
                     --LOG('HighValue Unit being built')
-                    local highValueCount = RUtils.CheckHighValueUnitsBuilding(aiBrain, eng.PlatoonHandle.PlatoonData.Construction.Location)
+                    local highValueCount = RUtils.CheckHighValueUnitsBuilding(aiBrain, eng.PlatoonHandle.PlatoonData.Construction.LocationType)
                     if highValueCount > 1 then
                         --LOG('highValueCount is 2 or more')
                         --LOG('We are going to abort '..repr(eng.EngineerBuildQueue[1]))
@@ -6741,7 +6817,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         --RNGLOG('Platoon Merge Started')
         local aiBrain = self:GetBrain()
         local destinationPlan = self.PlatoonData.PlatoonPlan
-        local location = self.PlatoonData.Location
+        local location = self.PlatoonData.LocationType
         --RNGLOG('Location Type is '..location)
         --RNGLOG('at position '..repr(aiBrain.BuilderManagers[location].Position))
         --RNGLOG('Destiantion Plan is '..destinationPlan)
@@ -7335,7 +7411,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         local armyIndex = aiBrain:GetArmyIndex()
         local platoonUnits
         local platoonCount = 0
-        local locationType = self.PlatoonData.Location or 'MAIN'
+        local locationType = self.PlatoonData.LocationType or 'MAIN'
         local engineerRadius = aiBrain.BuilderManagers[locationType].EngineerManager.Radius
         local managerPosition = aiBrain.BuilderManagers[locationType].Position
         local totalBuildRate = 0
@@ -7605,7 +7681,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         self:Stop()
         local aiBrain = self:GetBrain()
         local data = self.PlatoonData
-        local radius = aiBrain.BuilderManagers[data.Location].EngineerManager.Radius
+        local radius = aiBrain.BuilderManagers[data.LocationType].EngineerManager.Radius
         local counter = 0
         local reclaimcat
         local reclaimables
@@ -7626,13 +7702,13 @@ Platoon = Class(RNGAIPlatoonClass) {
             reclaimunit = false
             distance = false
             if data.JobType == 'ReclaimT1Power' then
-                local centerExtractors = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION, aiBrain.BuilderManagers[data.Location].FactoryManager.Location, 80, 'Ally')
+                local centerExtractors = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION, aiBrain.BuilderManagers[data.LocationType].FactoryManager.Location, 80, 'Ally')
                 for _,v in centerExtractors do
                     if not v.Dead and ownIndex == v:GetAIBrain():GetArmyIndex() then
                         local pgens = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH1, v:GetPosition(), 2.5, 'Ally')
                         for _, b in pgens do
                             local bPos = b:GetPosition()
-                            if not b.Dead and (not reclaimunit or VDist3Sq(unitPos, bPos) < distance) and unitPos and VDist3Sq(aiBrain.BuilderManagers[data.Location].FactoryManager.Location, bPos) < (radius * radius) then
+                            if not b.Dead and (not reclaimunit or VDist3Sq(unitPos, bPos) < distance) and unitPos and VDist3Sq(aiBrain.BuilderManagers[data.LocationType].FactoryManager.Location, bPos) < (radius * radius) then
                                 reclaimunit = b
                                 distance = VDist3Sq(unitPos, bPos)
                             end
@@ -7645,7 +7721,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     reclaimables = aiBrain:GetListOfUnits(cat, false)
                     for k,v in reclaimables do
                         local vPos = v:GetPosition()
-                        if not v.Dead and (not reclaimunit or VDist3Sq(unitPos, vPos) < distance) and unitPos and not v:IsUnitState('Upgrading') and VDist3Sq(aiBrain.BuilderManagers[data.Location].FactoryManager.Location, vPos) < (radius * radius) then
+                        if not v.Dead and (not reclaimunit or VDist3Sq(unitPos, vPos) < distance) and unitPos and not v:IsUnitState('Upgrading') and VDist3Sq(aiBrain.BuilderManagers[data.LocationType].FactoryManager.Location, vPos) < (radius * radius) then
                             reclaimunit = v
                             distance = VDist3Sq(unitPos, vPos)
                         end

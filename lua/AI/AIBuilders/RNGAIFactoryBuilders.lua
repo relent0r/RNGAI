@@ -86,7 +86,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
                     'T1LandFactory',
@@ -114,7 +114,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
                     'T1LandFactory',
@@ -144,7 +144,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
                     'T1LandFactory',
@@ -170,7 +170,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
@@ -196,7 +196,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
@@ -223,7 +223,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
                     'T1LandFactory',
@@ -253,7 +253,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
                     'T1LandFactory',
@@ -284,7 +284,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
                     'T1LandFactory',
@@ -311,7 +311,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
                     'T1LandFactory',
@@ -337,7 +337,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
                     'T1LandFactory',
@@ -363,7 +363,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
                     'T1LandFactory',
@@ -389,7 +389,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
@@ -415,7 +415,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
@@ -448,7 +448,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
                     'T1AirFactory',
@@ -474,7 +474,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildClose = false,
                 BuildStructures = {
@@ -502,7 +502,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildClose = false,
                 BuildStructures = {
@@ -527,7 +527,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
@@ -551,7 +551,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
@@ -580,7 +580,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
                     'T1AirFactory',
@@ -612,7 +612,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
                     'T1AirFactory',
@@ -638,7 +638,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
                     'T1AirFactory',
@@ -664,7 +664,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
                     'T1AirFactory',
@@ -688,7 +688,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
@@ -712,7 +712,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
@@ -739,7 +739,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildClose = false,
                 BuildStructures = {
@@ -771,7 +771,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
                     'T1AirFactory',
@@ -803,7 +803,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
                     'T1SeaFactory',
@@ -828,7 +828,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildStructures = {
                     'T1SeaFactory',
                 },
@@ -853,7 +853,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildStructures = {
                     'T1SeaFactory',
                 },
@@ -879,7 +879,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildStructures = {
                     'T2SupportSeaFactory',
                 },
@@ -904,7 +904,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildStructures = {
                     'T3SupportSeaFactory',
                 },
@@ -930,7 +930,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildStructures = {
                     'T2SupportSeaFactory',
                 },
@@ -957,7 +957,7 @@ BuilderGroup {
             Construction = {
                 NearMarkerType = 'Naval Area',
                 LocationRadius = 90,
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildStructures = {
                     'T1SeaFactory',
                 },
@@ -988,7 +988,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
                     'T1SeaFactory',
@@ -1012,7 +1012,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildStructures = {
                     'T1SeaFactory',
                 },
@@ -1040,7 +1040,7 @@ BuilderGroup {
             Construction = {
                 NearMarkerType = 'Naval Area',
                 LocationRadius = 90,
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildStructures = {
                     'T1SeaFactory',
                 },
@@ -1067,7 +1067,7 @@ BuilderGroup {
             Construction = {
                 NearMarkerType = 'Naval Area',
                 LocationRadius = 90,
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildStructures = {
                     'T1SeaFactory',
                 },
@@ -1093,7 +1093,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildStructures = {
                     'T2SupportSeaFactory',
                 },
@@ -1118,7 +1118,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildStructures = {
                     'T3SupportSeaFactory',
                 },
@@ -1153,7 +1153,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T2AirStagingPlatform',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -1467,7 +1467,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
                     'T1LandFactory',
@@ -1492,7 +1492,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
                     'T1LandFactory',
@@ -1566,7 +1566,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
                     'T1LandFactory',
@@ -1591,7 +1591,7 @@ BuilderGroup {
         BuilderData = {
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
                     'T1LandFactory',
@@ -1621,7 +1621,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             Construction = {
                 BuildClose = false,
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
                     'T3QuantumGate',
@@ -1651,7 +1651,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
                     'T1LandFactory',
@@ -1683,7 +1683,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
                     'T1AirFactory',
@@ -1708,7 +1708,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
                     'T1AirFactory',

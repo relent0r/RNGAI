@@ -28,6 +28,14 @@ local ExperimentalDelayWaterMap = function(self, aiBrain, builderManager)
     return 910
 end
 
+local NavalExpansionAdjust = function(self, aiBrain, builderManager)
+    if aiBrain.MapWaterRatio < 0.20 and not aiBrain.MassMarkersInWater then
+        return 0
+    else
+        return 500
+    end
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Experimental Builders',
     BuildersType = 'EngineerBuilder',
@@ -57,7 +65,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T4LandExperimental1',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -69,7 +77,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.40, 0.95 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL }},
@@ -87,7 +95,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T4LandExperimental1',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -98,7 +106,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 3,
         BuilderConditions = {
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 4, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2 }},
@@ -117,20 +125,20 @@ BuilderGroup {
                 BuildStructures = {
                     'T4LandExperimental1',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 Megabot',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        Priority = 500,
+        Priority = 550,
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
@@ -148,7 +156,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T4LandExperimental3',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -160,7 +168,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             -- Have we the eco to build it ?
             --{ UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
@@ -178,7 +186,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T4AirExperimental1',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -186,11 +194,12 @@ BuilderGroup {
         BuilderName = 'RNGAI Experimental1 Sea',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
         Priority = 500,
+        PriorityFunction = NavalExpansionAdjust,
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             -- Have we the eco to build it ?
             --{ UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
@@ -208,7 +217,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T4SeaExperimental1',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -220,7 +229,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             -- Have we the eco to build it ?
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
@@ -237,7 +246,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T4SatelliteExperimental',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -274,7 +283,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T4LandExperimental1',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -305,7 +314,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T4LandExperimental1',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -335,7 +344,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T4LandExperimental1',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -366,7 +375,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T4LandExperimental3',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -395,7 +404,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T4AirExperimental1',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -424,7 +433,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T4SeaExperimental1',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -452,7 +461,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T4SatelliteExperimental',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },

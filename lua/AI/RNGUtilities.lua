@@ -3344,8 +3344,10 @@ GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, inclu
         local enemyMaxRadius = 0
         local allyMaxRadius = 0
         local enemyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Enemy')
+        local enemyUnitCount = 0
         for _,v in enemyunits do
             if not v.Dead then
+                enemyUnitCount = enemyUnitCount + 1
                 local mult=1
                 local bp = v.Blueprint
                 if bp.CategoriesHash.INDIRECTFIRE then
@@ -3357,20 +3359,20 @@ GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, inclu
                 if bp.CategoriesHash.COMMAND then
                     brainThreats.enemy = brainThreats.enemy + v:EnhancementThreatReturn()
                 else
-                    if includeSurface and bp.CategoriesHash.Defense.SurfaceThreatLevel ~= nil then
-                        brainThreats.enemy = brainThreats.enemy + bp.CategoriesHash.Defense.SurfaceThreatLevel*mult
+                    if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil then
+                        brainThreats.enemy = brainThreats.enemy + bp.Defense.SurfaceThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > enemyMaxRadius then
                             enemyMaxRadius = bp.Weapon[1].MaxRadius
                         end
                     end
-                    if includeSub and bp.CategoriesHash.Defense.SubThreatLevel ~= nil then
-                        brainThreats.enemy = brainThreats.enemy + bp.CategoriesHash.Defense.SubThreatLevel*mult
+                    if includeSub and bp.Defense.SubThreatLevel ~= nil then
+                        brainThreats.enemy = brainThreats.enemy + bp.Defense.SubThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > enemyMaxRadius then
                             enemyMaxRadius = bp.Weapon[1].MaxRadius
                         end
                     end
-                    if includeAir and bp.CategoriesHash.Defense.AirThreatLevel ~= nil then
-                        brainThreats.enemy = brainThreats.enemy + bp.CategoriesHash.Defense.AirThreatLevel*mult
+                    if includeAir and bp.Defense.AirThreatLevel ~= nil then
+                        brainThreats.enemy = brainThreats.enemy + bp.Defense.AirThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > enemyMaxRadius then
                             enemyMaxRadius = bp.Weapon[1].MaxRadius
                         end
@@ -3391,20 +3393,20 @@ GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, inclu
                 if bp.CategoriesHash.COMMAND then
                     brainThreats.ally = brainThreats.ally + v:EnhancementThreatReturn()
                 else
-                    if includeSurface and bp.CategoriesHash.Defense.SurfaceThreatLevel ~= nil then
-                        brainThreats.ally = brainThreats.ally + bp.CategoriesHash.Defense.SurfaceThreatLevel*mult
+                    if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil then
+                        brainThreats.ally = brainThreats.ally + bp.Defense.SurfaceThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > allyMaxRadius then
                             allyMaxRadius = bp.Weapon[1].MaxRadius
                         end
                     end
-                    if includeSub and bp.CategoriesHash.Defense.SubThreatLevel ~= nil then
-                        brainThreats.ally = brainThreats.ally + bp.CategoriesHash.Defense.SubThreatLevel*mult
+                    if includeSub and bp.Defense.SubThreatLevel ~= nil then
+                        brainThreats.ally = brainThreats.ally + bp.Defense.SubThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > allyMaxRadius then
                             allyMaxRadius = bp.Weapon[1].MaxRadius
                         end
                     end
-                    if includeAir and bp.CategoriesHash.Defense.AirThreatLevel ~= nil then
-                        brainThreats.ally = brainThreats.ally + bp.CategoriesHash.Defense.AirThreatLevel*mult
+                    if includeAir and bp.Defense.AirThreatLevel ~= nil then
+                        brainThreats.ally = brainThreats.ally + bp.Defense.AirThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > allyMaxRadius then
                             allyMaxRadius = bp.Weapon[1].MaxRadius
                         end
@@ -4778,12 +4780,14 @@ RemoveDefenseUnit = function(aiBrain, locationType, killedUnit)
                 end
             end
         else
-            for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[2] do
-                if v then
-                    local distance = VDist3Sq(v.Position, unitPos)
-                    if not closestPoint or distance < closestDistance then
-                        closestPoint = k
-                        closestDistance = distance
+            if aiBrain.BuilderManagers[locationType].DefensivePoints[2] then
+                for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[2] do
+                    if v then
+                        local distance = VDist3Sq(v.Position, unitPos)
+                        if not closestPoint or distance < closestDistance then
+                            closestPoint = k
+                            closestDistance = distance
+                        end
                     end
                 end
             end
@@ -5794,7 +5798,8 @@ function GetCappingPosition(aiBrain, eng, pos, refunits, baseTemplate, buildingT
     local buildingTmpl = buildingTmplFile[('BuildingTemplates')][engIndex]
     for _, v in refunits do
         if not IsDestroyed(v) then
-            local distance = VDist3(pos, v:GetPosition())
+            local extratorPos = v:GetPosition()
+            local distance = VDist3(pos, extratorPos)
             local unitValue = closestUnit.Blueprint.Economy.BuildCostEnergy.BuildCostMass or 50
             local value = unitValue / distance
             if (not bestValue or distance == 0) or value > bestValue then
@@ -5809,7 +5814,7 @@ function GetCappingPosition(aiBrain, eng, pos, refunits, baseTemplate, buildingT
                         if whatToBuild then
                             for n,position in bType do
                                 if n > 1 then
-                                    local reference = eng:CalculateWorldPositionFromRelative(position)
+                                    local reference = {position[1] + extratorPos[1], position[2] + extratorPos[2], position[3] + extratorPos[3]}
                                     if aiBrain:CanBuildStructureAt(whatToBuild, reference) then
                                         canBeCapped = true
                                         closestUnit = v

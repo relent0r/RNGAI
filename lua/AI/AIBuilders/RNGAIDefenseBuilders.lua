@@ -84,7 +84,7 @@ BuilderGroup {
                     'Wall',
                     'Wall',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -111,7 +111,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T1AADefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -145,7 +145,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T2GroundDefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -176,7 +176,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T2AADefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -207,7 +207,7 @@ BuilderGroup {
                 NearDefensivePoints = true,
                 Type = 'AntiAir',
                 Tier = 2,
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 LocationType = 'LocationType',
                 BuildStructures = {
                     'T2AADefense',
@@ -239,7 +239,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T2Artillery',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -266,7 +266,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T3AADefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -296,7 +296,7 @@ BuilderGroup {
                     'T3AADefense',
                 },
                 AdjacencyPriority = {categories.STRUCTURE * (categories.SHIELD + categories.FACTORY)},
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -326,7 +326,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T2MissileDefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },]]
@@ -356,7 +356,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T2MissileDefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -391,7 +391,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T2StrategicMissile',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -419,7 +419,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T3AADefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -479,7 +479,7 @@ BuilderGroup {
                     'Wall',
                     'Wall',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -508,7 +508,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T1AADefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -540,7 +540,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T1NavalDefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -573,7 +573,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T2GroundDefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -606,7 +606,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T2AADefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -635,7 +635,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T2StrategicMissile',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -664,7 +664,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T2MissileDefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -693,7 +693,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T2Artillery',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -730,7 +730,7 @@ BuilderGroup {
                     'T1GroundDefense',
                     'T1AADefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -765,7 +765,7 @@ BuilderGroup {
                     'T1AADefense',
                     'T1NavalDefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -798,7 +798,7 @@ BuilderGroup {
                     'T2GroundDefense',
                     'T2MissileDefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -838,7 +838,7 @@ BuilderGroup {
                     'T1AADefense',
                     'T1NavalDefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -874,7 +874,7 @@ BuilderGroup {
                     'T2NavalDefense',
                     'T2MissileDefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -904,7 +904,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T1NavalDefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -934,7 +934,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T2NavalDefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -964,7 +964,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T2MissileDefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -985,7 +985,7 @@ BuilderGroup {
         },
         BuilderData = {
             PlatoonPlan = 'TMLAIRNG',
-            Location = 'LocationType'
+            LocationType = 'LocationType'
         },
         BuilderType = 'Any',
     },
@@ -1033,7 +1033,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T3StrategicMissileDefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -1062,7 +1062,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T3StrategicMissileDefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },

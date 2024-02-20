@@ -846,7 +846,7 @@ BuilderGroup {
             },
         BuilderData = {
             JobType = 'ReclaimStructure',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.LAND * categories.FACTORY},
         },
@@ -866,7 +866,7 @@ BuilderGroup {
             },
         BuilderData = {
             JobType = 'ReclaimStructure',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH2 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY},
         },
@@ -885,7 +885,7 @@ BuilderGroup {
             },
         BuilderData = {
             JobType = 'ReclaimStructure',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH3 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY},
         },
@@ -911,7 +911,7 @@ BuilderGroup {
             },
         BuilderData = {
             JobType = 'ReclaimStructure',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.AIR * categories.FACTORY},
         },
@@ -932,7 +932,7 @@ BuilderGroup {
             },
         BuilderData = {
             JobType = 'ReclaimStructure',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH2 * categories.AIR * categories.FACTORY * categories.SUPPORTFACTORY},
         },
@@ -957,7 +957,7 @@ BuilderGroup {
             },
         BuilderData = {
             JobType = 'ReclaimStructure',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.NAVAL * categories.FACTORY},
         },
@@ -977,7 +977,7 @@ BuilderGroup {
             },
         BuilderData = {
             JobType = 'ReclaimStructure',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH2 * categories.NAVAL * categories.FACTORY * categories.SUPPORTFACTORY},
         },
@@ -1002,7 +1002,7 @@ BuilderGroup {
             },
         BuilderData = {
             JobType = 'ReclaimT1Power',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 5,
             Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.ENERGYPRODUCTION - categories.HYDROCARBON},
         },
@@ -1022,7 +1022,7 @@ BuilderGroup {
             },
         BuilderData = {
             JobType = 'ReclaimPower',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH2 * categories.ENERGYPRODUCTION - categories.HYDROCARBON},
         },
@@ -1162,7 +1162,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'Assist',
             PlatoonPlan = 'EngineerAssistManagerRNG',
-            Location = 'LocationType'
+            LocationType = 'LocationType'
         },
         BuilderType = 'Any',
     },
@@ -1179,7 +1179,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'Assist',
             PlatoonPlan = 'EngineerAssistManagerRNG',
-            Location = 'LocationType'
+            LocationType = 'LocationType'
         },
         BuilderType = 'Any',
     },
@@ -1196,7 +1196,7 @@ BuilderGroup {
         BuilderData = {
             JobType = 'Assist',
             PlatoonPlan = 'EngineerAssistManagerRNG',
-            Location = 'LocationType'
+            LocationType = 'LocationType'
         },
         BuilderType = 'Any',
     },

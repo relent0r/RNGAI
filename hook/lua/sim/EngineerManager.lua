@@ -1,9 +1,58 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
+local WeakValueTable = { __mode = 'v' }
 
 RNGEngineerManager = EngineerManager
 EngineerManager = Class(RNGEngineerManager) {
+
+        ---@param self EngineerManager
+    ---@param brain AIBrain
+    ---@param lType LocationType
+    ---@param location Vector
+    ---@param radius number
+    ---@return boolean
+    Create = function(self, brain, lType, location, radius)
+        BuilderManager.Create(self,brain, lType, location, radius)
+
+        if not lType or not location or not radius then
+            error('*PLATOOM FORM MANAGER ERROR: Invalid parameters; requires locationType, location, and radius')
+            return false
+        end
+
+        -- backwards compatibility for mods
+        self.Location = self.Location or location
+        self.Radius = self.Radius or radius
+        self.LocationType = self.LocationType or lType
+
+        self.ConsumptionUnits = {
+            Engineers = { Category = categories.ENGINEER, Units = {}, UnitsList = {}, Count = 0, },
+            Fabricators = { Category = categories.MASSFABRICATION * categories.STRUCTURE, Units = {}, UnitsList = {}, Count = 0, },
+            Shields = { Category = categories.SHIELD * categories.STRUCTURE, Units = {}, UnitsList = {}, Count = 0, },
+            MobileShields = { Category = categories.SHIELD * categories.MOBILE, Units = {}, UnitsList = {}, Count = 0, },
+            Intel = { Category = categories.STRUCTURE * (categories.SONAR + categories.RADAR + categories.OMNI), Units = {}, UnitsList = {}, Count = 0, },
+            MobileIntel = { Category = categories.MOBILE - categories.ENGINEER - categories.SHIELD, Units = {}, UnitsList = {}, Count = 0, },
+        }
+        self.QueuedStructures = setmetatable({}, WeakValueTable)
+        self.QueuedStructures = {
+            TECH1 = setmetatable({}, WeakValueTable),
+            TECH2 = setmetatable({}, WeakValueTable),
+            TECH3 = setmetatable({}, WeakValueTable),
+            EXPERIMENTAL = setmetatable({}, WeakValueTable),
+            SUBCOMMANDER = setmetatable({}, WeakValueTable),
+            COMMAND = setmetatable({}, WeakValueTable),
+        }
+        self.StructuresBeingBuilt = setmetatable({}, WeakValueTable)
+        self.StructuresBeingBuilt = {
+            TECH1 = setmetatable({}, WeakValueTable),
+            TECH2 = setmetatable({}, WeakValueTable),
+            TECH3 = setmetatable({}, WeakValueTable),
+            EXPERIMENTAL = setmetatable({}, WeakValueTable),
+            SUBCOMMANDER = setmetatable({}, WeakValueTable),
+            COMMAND = setmetatable({}, WeakValueTable),
+        }
+        self:AddBuilderType('Any')
+    end,
 
     UnitConstructionFinished = function(self, unit, finishedUnit)
         if not self.Brain.RNG then

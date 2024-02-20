@@ -177,7 +177,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
                     'T1LandFactory',
@@ -444,7 +444,7 @@ BuilderGroup {
                     'Wall',
                     'Wall',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -466,7 +466,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T1AADefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -492,7 +492,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
                     'T1LandFactory',
@@ -540,7 +540,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                Location = 'LocationType',
+                LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
                     'T1LandFactory',
@@ -732,7 +732,7 @@ BuilderGroup {
                     'Wall',
                     'Wall',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -754,7 +754,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T1AADefense',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -764,7 +764,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI ACU Build Assist',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI CDR Assist T1 Engineer',
+        BuilderName = 'RNGAI CDR Assist Engineer',
         PlatoonTemplate = 'CommanderAssistRNG',
         Priority = 850,
         DelayEqualBuildPlattons = {'ACUAssist', 3},
@@ -804,7 +804,6 @@ BuilderGroup {
             },
         }
     },
-    
     Builder {
         BuilderName = 'RNGAI CDR Assist T1 Factory',
         PlatoonTemplate = 'CommanderAssistRNG',

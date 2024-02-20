@@ -450,7 +450,7 @@ BuilderGroup {
                     'MassStorage',
 
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -472,24 +472,22 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
-                Construction = {
-                    BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
-                    BaseTemplate = 'CappedExtractorTemplate',
-                    BuildClose = false,
-                    CappingTemplate = true,
-                    Categories = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
-                    NearDefensivePoints = false,
-                    NoPause = true,
-                    Radius = 150,
-                    BuildStructures = {
-                        'MassStorage',
-                        'MassStorage',
-                        'MassStorage',
-                        'MassStorage',
-    
-                    },
-                    Location = 'LocationType',
-                }
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
+                BaseTemplate = 'CappedExtractorTemplate',
+                BuildClose = false,
+                CappingTemplate = true,
+                Categories = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
+                NearDefensivePoints = false,
+                NoPause = true,
+                Radius = 150,
+                BuildStructures = {
+                    'MassStorage',
+                    'MassStorage',
+                    'MassStorage',
+                    'MassStorage',
+
+                },
+                LocationType = 'LocationType',
             }
         }
     },
@@ -525,7 +523,7 @@ BuilderGroup {
                     'MassStorage',
 
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -561,7 +559,7 @@ BuilderGroup {
                     'MassStorage',
 
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -594,7 +592,7 @@ BuilderGroup {
                     'MassStorage',
 
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -635,7 +633,7 @@ BuilderGroup {
                     'MassStorage',
 
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -671,7 +669,7 @@ BuilderGroup {
                     'MassStorage',
 
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -714,7 +712,7 @@ BuilderGroup {
                     'MassStorage',
 
                 },
-                Location = 'MAIN',
+                LocationType = 'MAIN',
             }
         }
     },

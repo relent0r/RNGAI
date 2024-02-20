@@ -15,7 +15,7 @@ BuilderGroup {
         BuilderConditions = {
             
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 600.0 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.NUKE * categories.STRUCTURE}},
@@ -49,7 +49,7 @@ BuilderGroup {
         BuilderConditions = {
             
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.1 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 9.0, 800.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.40, 0.90 } },
@@ -87,7 +87,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 8.0, 700.0 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 } },
@@ -108,7 +108,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T3Artillery',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -119,7 +119,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', true } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.1 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 10.0, 800.0 }},
@@ -141,7 +141,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T3Artillery',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -154,7 +154,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', {1,4} }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE - categories.ORBITALSYSTEM}},
@@ -173,7 +173,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T4Artillery',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -187,7 +187,7 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 2 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE}},
@@ -206,7 +206,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T3RapidArtillery',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -220,7 +220,7 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 3 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE}},
@@ -239,7 +239,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T4LandExperimental2',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -256,7 +256,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 8.0, 700.0 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 } },
@@ -277,7 +277,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T3Artillery',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -289,7 +289,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', true } },
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.05 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 8.0, 700.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.30, 0.95 } },
@@ -310,7 +310,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T3Artillery',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -323,7 +323,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', {1,4} }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', false } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
@@ -343,7 +343,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T4Artillery',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -356,7 +356,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', false } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
@@ -376,7 +376,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T3RapidArtillery',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -389,7 +389,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { TBC, 'EnemyInT3ArtilleryRangeRNG', { 'LocationType', false } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ARTILLERY * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
@@ -409,7 +409,7 @@ BuilderGroup {
                 BuildStructures = {
                     'T4LandExperimental2',
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -441,7 +441,7 @@ BuilderGroup {
         },
         BuilderData = {
             PlatoonPlan = 'NUKEAIRNG',
-            Location = 'LocationType'
+            LocationType = 'LocationType'
         },
         BuilderType = 'Any',
     },

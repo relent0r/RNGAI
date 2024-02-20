@@ -768,7 +768,7 @@ BuilderGroup {
         },
         BuilderData = {
             PlatoonPlan = 'MercyAIRNG',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             SearchRadius = 'BaseEnemyArea',
             PrioritizedCategories = {
                 categories.COMMAND,
