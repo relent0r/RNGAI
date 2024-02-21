@@ -123,13 +123,10 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, false)
             if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
-                self:LogDebug('Threat too high in DecideWhatToDo, retreating')
+                self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemy))
                 self.retreat=true
                 self:ChangeState(self.Retreating)
                 return
-            else
-                self:LogDebug(string.format('DecideWhatToDo low threat ally'..repr(threat.ally..' enemy '..repr(threat.enemy))))
-                self:LogDebug(string.format('inputs are position'..repr(self.Pos).. ' radius '..repr(self.EnemyRadius)))
             end
             if not self.MovementLayer then
                 self.MovementLayer = self:GetNavigationalLayer()

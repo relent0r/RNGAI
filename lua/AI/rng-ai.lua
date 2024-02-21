@@ -5343,10 +5343,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local CoreMassNumberAchieved = false
             local minAssistPower = 0
             if self.cmanager.income.r.m then
-                minAssistPower = math.ceil(math.max(self.cmanager.income.r.m * 0.45, 10))
-                LOG('minAssistPower '..minAssistPower)
-                LOG('Current build power '..self.EngineerAssistManagerBuildPower)
-                LOG('Current build power required '..self.EngineerAssistManagerBuildPowerRequired)
+                minAssistPower = math.ceil(math.max(self.cmanager.income.r.m * 0.45, 5))
             end
             if (gameTime < 300 and self.EconomyOverTimeCurrent.MassIncome < 2.5) then
                 state = 'Energy'
@@ -5422,7 +5419,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 state = 'Mass'
                 --RNGLOG('Assist Focus is Mass')
                 self.EngineerAssistManagerPriorityTable = {
-                    {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
+                    {cat = categories.MASSEXTRACTION, type = 'Upgrade'},
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.EXPERIMENTAL, type = 'Completion'},
@@ -5431,6 +5428,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
                     {cat = categories.FACTORY * categories.AIR, type = 'AssistFactory'}, 
                     {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
+                    
                 }
             end
             --RNGLOG('EngineerAssistManager State is '..state)
@@ -5465,7 +5463,10 @@ AIBrain = Class(RNGAIBrainClass) {
             else
                 if self.EngineerAssistManagerBuildPowerRequired > math.max(minAssistPower, 5) then
                     LOG('Decreasing build power by 1 due to lower requirements')
-                    self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired - 1
+                    LOG('minAssistPower '..minAssistPower)
+                    LOG('Current build power '..self.EngineerAssistManagerBuildPower)
+                    LOG('Current build power required '..self.EngineerAssistManagerBuildPowerRequired)
+                    self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired - 2.5
                 end
                 --self.EngineerAssistManagerActive = false
             end

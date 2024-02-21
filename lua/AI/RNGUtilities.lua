@@ -1535,7 +1535,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                         end
                     end
                 end
-                if v.distance < (closestDistance * 2) and surfaceThreat < math.max(55, cdrThreat) or acuDistanceToBase < 3600 then
+                if v.distance < (closestDistance * 2) and surfaceThreat < math.max(55, cdrThreat) or acuDistanceToBase < 6400 then
                     local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
                     local targetLayer = v.unit:GetCurrentLayer()
                     if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
@@ -1589,7 +1589,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                 if not v.unit:BeenDestroyed() then
                     if not PositionInWater(v.position) then
                         local surfaceThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
-                        if v.distance < (closestDistance * 2) and surfaceThreat < math.max(55, cdrThreat) or acuDistanceToBase < 3600 or v.distance < 400 then
+                        if v.distance < (closestDistance * 2) and surfaceThreat < math.max(55, cdrThreat) or acuDistanceToBase < 6400 or v.distance < 400 then
                             local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
                             local targetLayer = v.unit:GetCurrentLayer()
                             if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
@@ -1641,7 +1641,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             for k, v in structureTargets do
                 if not v.unit:BeenDestroyed() then
                     local surfaceThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
-                    if v.distance < (closestDistance * 2) and surfaceThreat < math.max(55, cdrThreat) or acuDistanceToBase < 3600 then
+                    if v.distance < (closestDistance * 2) and surfaceThreat < math.max(55, cdrThreat) or acuDistanceToBase < 6400 then
                         local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
                         local targetLayer = v.unit:GetCurrentLayer()
                         if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and

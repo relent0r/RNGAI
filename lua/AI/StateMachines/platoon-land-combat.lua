@@ -115,12 +115,11 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, false)
             --RNGLOG('Simple Retreat Threat Stats '..repr(threat))
             if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
+                self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemy))
                 self.retreat=true
                 self:ChangeState(self.Retreating)
                 return
             else
-                self:LogDebug(string.format('DecideWhatToDo low threat ally'..repr(threat.ally..' enemy '..repr(threat.enemy))))
-                self:LogDebug(string.format('inputs are position'..repr(self.Pos).. ' radius '..repr(self.EnemyRadius)))
                 self.retreat=false
             end
             if StateUtils.SimpleTarget(self,aiBrain) then

@@ -3217,7 +3217,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                             LOG('Have added the following unit to the structuresBeingBuilt table '..repr(structuresBeingBuilt[unitBp.TechCategory]))
                         end
                     end
-                    
                 end
             end
         end
@@ -3786,6 +3785,7 @@ Platoon = Class(RNGAIPlatoonClass) {
     end,
 
     WaitForIdleDisband = function(eng)
+        coroutine.yield(20)
         while RNGGETN(eng:GetCommandQueue()) > 0 do
             coroutine.yield(20)
         end
@@ -7636,7 +7636,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     break
                 end
             end
-            if aiBrain.EngineerAssistManagerFocusCategory and not EntityCategoryContains(aiBrain.EngineerAssistManagerFocusCategory, eng.UnitBeingAssist) then
+            if aiBrain.EngineerAssistManagerFocusCategory and not EntityCategoryContains(aiBrain.EngineerAssistManagerFocusCategory, eng.UnitBeingAssist) and aiBrain:IsAnyEngineerBuilding(aiBrain.EngineerAssistManagerFocusCategory) then
                 --RNGLOG('Assist Platoon Focus Category has changed, aborting current assist')
                 eng.UnitBeingAssist = nil
                 break

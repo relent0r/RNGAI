@@ -120,20 +120,12 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 end
             end
             local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, false)
-            if threat then
-                self:LogDebug(string.format('Threat Table '..repr(threat)))
-            else
-                self:LogDebug(string.format('No threat table exist'))
-                self:LogDebug(string.format('inputs are position'..repr(self.Pos).. ' radius '..repr(self.EnemyRadius)))
-            end
             if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
-                self:LogDebug(string.format('DecideWhatToDo high threat retreating'))
+                self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemy))
                 self.retreat=true
                 self:ChangeState(self.Retreating)
                 return
             else
-                self:LogDebug(string.format('DecideWhatToDo low threat ally '..repr(threat.ally..' enemy '..repr(threat.enemy))))
-                self:LogDebug(string.format('inputs are position'..repr(self.Pos).. ' radius '..repr(self.EnemyRadius)))
                 self.retreat=false
             end
             if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) then

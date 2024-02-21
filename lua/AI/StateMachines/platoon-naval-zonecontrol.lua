@@ -85,7 +85,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                 return
             end
             local aiBrain = self:GetBrain()
-            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, false)
+            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, true, false)
             if threat.ally and threat.enemy and threat.enemyrange > 0 and (threat.ally*1.1 < threat.enemy and threat.enemyrange >= self.MaxPlatoonWeaponRange or threat.ally*1.4 < threat.enemy) then
                 self:LogDebug(string.format('Retreating due to threat'))
                 self:LogDebug(string.format('Enemy Threat '..threat.enemy..' max enemy weapon range '..threat.enemyrange))
@@ -456,7 +456,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local aiBrain = self:GetBrain()
             local LocationType = self.PlatoonData.LocationType or 'MAIN'
-            local platoonLimit = self.PlatoonData.PlatoonLimit or 18
+            local platoonLimit = self.PlatoonData.PlatoonLimit or 25
             local mainBasePos
             local baseRetreat = false
             local mergeDistance = 122500
@@ -465,7 +465,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             else
                 mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
             end
-            self:LogDebug(string.format('Naval attack platoon ordered to retreat'))
+            self:LogDebug(string.format('Naval attack platoon ordered to retreat, main base pos is '..repr(mainBasePos)))
             self:SetPlatoonFormationOverride('NoFormation')
             self:Stop()
             self:MoveToLocation(mainBasePos, false)
@@ -564,6 +564,14 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                     end
+                    
+                    if baseRetreat then
+                        local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, true, false)
+                        if threat.ally and threat.enemy and threat.enemyrange > 0 and (threat.ally > threat.enemy*1.1 and threat.enemyrange <= self.MaxPlatoonWeaponRange or threat.ally > threat.enemy*1.4) then
+                            self:ChangeState(self.DecideWhatToDo)
+                            return
+                        end
+                    end
                     coroutine.yield(30)
                     --RNGLOG('End of movement loop we are '..VDist3(PlatoonPosition, alternatePos)..' from alternate position')
                 end
@@ -633,7 +641,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            coroutine.yield(35)
+            coroutine.yield(40)
             self:ChangeState(self.DecideWhatToDo)
             return
         end,

@@ -567,23 +567,27 @@ StructureManager = Class {
 
         local t2LandPass = false
         if totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 then
-            --RNGLOG('Factory T1 Upgrade HQ Check passed')
+            --LOG('Factory T1 Upgrade HQ Check passed '..self.Brain.Nickname)
             if (not self.Brain.RNGEXP and actualMexIncome > (23 * self.Brain.EcoManager.EcoMultiplier) or self.Brain.RNGEXP and actualMexIncome > (18 * self.Brain.EcoManager.EcoMultiplier)) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 20.0 then
-                --RNGLOG('Factory Upgrade actual mex income is '..actualMexIncome)
+                --LOG('Factory Upgrade actual mex income is '..actualMexIncome..' for '..self.Brain.Nickname)
                 if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.015 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
-                    --RNGLOG('Factory Upgrade efficiency over time check passed')
+                    --LOG('Factory Upgrade efficiency over time check passed '..self.Brain.Nickname)
                     local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                     local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
                     if MassEfficiency >= 1.015 and EnergyEfficiency >= 0.8 then
-                        --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
+                        --LOG('Factory Upgrade efficiency check passed, get closest factory '..self.Brain.Nickname)
                         local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH1')
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
-                            --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
+                            LOG('Structure Manager Triggering T2 Land HQ Upgrade '..self.Brain.Nickname)
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'LAND')
                             t2LandPass = true
                             coroutine.yield(30)
                         end
                     end
+                else
+                    --LOG('Factory Upgrade efficiency over time check failed '..self.Brain.Nickname)
+                    --LOG('Mass efficiency is '..self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime)
+                    --LOG('Energy efficiency is '..self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
                 end
             end
         end

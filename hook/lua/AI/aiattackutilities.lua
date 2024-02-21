@@ -466,7 +466,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
 
     
     local PrimaryTargetThreatType = 'Naval'
-    local SecondaryTargetThreatType = 'StructuresNotMex'
+    local SecondaryTargetThreatType = 'Structures'
     --RNGLOG('GetBestNavalTargetRNG Running')
 
 
@@ -496,16 +496,16 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     -- the desirability for the distance category
 
     local VeryNearThreatWeight = 20000
-    local VeryNearThreatRadius = 50
+    local VeryNearThreatRadius = 125
 
     local NearThreatWeight = 2500
-    local NearThreatRadius = 120
+    local NearThreatRadius = 250
 
     local MidThreatWeight = 500
-    local MidThreatRadius = 250
+    local MidThreatRadius = 350
 
     local FarThreatWeight = 100
-    local FarThreatRadius = 350
+    local FarThreatRadius = 500
 
     -- anything that's farther than the FarThreatRadius is considered VeryFar
     local VeryFarThreatWeight = 1

@@ -1058,7 +1058,7 @@ function ForcePathLimitRNG(aiBrain, locationType, unitCategory, pathType, unitCo
                     end
                 end
             end
-            if numUnits > unitCount then
+            if numUnits >= unitCount then
                 return false
             end
         end
@@ -1177,7 +1177,7 @@ function ValidateLateGameBuild(aiBrain, locationType)
     local timeStamp = GetGameTimeSeconds()
     for _, v in queuedStructures do
         for _, c in v do
-            LOG('Checking queue item '..repr(c))
+            --LOG('Checking queue item '..repr(c))
             if c.Engineer and not c.Engineer.Dead then
                 if c.TimeStamp + 30 > timeStamp then
                     queuedCount = queuedCount + 1
@@ -1186,11 +1186,11 @@ function ValidateLateGameBuild(aiBrain, locationType)
         end
     end
     if queuedCount > 0 then
-        LOG('Number of high value units queued '..queuedCount)
-        LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
-        LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * queuedCount)))
+        --LOG('Number of high value units queued '..queuedCount)
+        --LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+        --LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * queuedCount)))
         if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * queuedCount) then
-            LOG('Income is not high enough, return false')
+            --LOG('Income is not high enough, return false')
             return false
         end
     end
@@ -1206,27 +1206,14 @@ function ValidateLateGameBuild(aiBrain, locationType)
         end
     end
     if unitsBeingBuilt > 0 then
-        LOG('Number of high value units being built '..unitsBeingBuilt)
-        LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
-        LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * unitsBeingBuilt)))
+        --LOG('Number of high value units being built '..unitsBeingBuilt)
+        --LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+        --LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * unitsBeingBuilt)))
         if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * unitsBeingBuilt) then
-            LOG('Income is not high enough, return false')
+            --LOG('Income is not high enough, return false')
             return false
         end
     end
-    --[[
-    if IsAnyEngineerBuilding(aiBrain, categories.EXPERIMENTAL + (categories.STRATEGIC * categories.TECH3)) then
-        if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime < 1.3 or aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.2 or GetEconomyStoredRatio(aiBrain, 'MASS') < 0.20 then
-            return false
-        end
-        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 + 50 < aiBrain.EcoManager.ApproxFactoryMassConsumption then
-            return false
-        end
-        --RNGLOG('Validate late game bulid is returning true even tho an experimental is being built')
-        --RNGLOG('Energy Eco over time '..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
-        --RNGLOG('Mass eco over time '..aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime)
-    end]]
-    --RNGLOG('Validate late game bulid is returning true')
   return true
 end
 

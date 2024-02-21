@@ -593,6 +593,13 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                     end
+                    if baseRetreat then
+                        local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, false)
+                        if threat.ally and threat.enemy and threat.enemyrange > 0 and (threat.ally > threat.enemy*1.1 and threat.enemyrange <= self.MaxPlatoonWeaponRange or threat.ally > threat.enemy*1.4) then
+                            self:ChangeState(self.DecideWhatToDo)
+                            return
+                        end
+                    end
                     coroutine.yield(30)
                     --RNGLOG('End of movement loop we are '..VDist3(PlatoonPosition, alternatePos)..' from alternate position')
                 end
@@ -662,7 +669,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            coroutine.yield(35)
+            coroutine.yield(40)
             self:ChangeState(self.DecideWhatToDo)
             return
         end,

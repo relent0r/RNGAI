@@ -213,7 +213,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.85 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.95 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { MIBC, 'AirPlayerCheck', {'LocationType', 3, categories.FACTORY * categories.LAND }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
