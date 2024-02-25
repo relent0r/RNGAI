@@ -310,6 +310,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             local target
             local closestTarget
             local approxThreat
+            local targetPos
             for _,v in units do
                 if v and not v.Dead then
                     local unitPos = v:GetPosition()
@@ -334,20 +335,22 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     end
                     if target then
                         local skipKite = false
+                        local unitRange = StateUtils.GetUnitMaxWeaponRange(target)
+                        targetPos = target:GetPosition()
+                        if not approxThreat then
+                            approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, false, false)
+                        end
                         if not (v.Role == 'Sniper' or v.Role == 'Silo') and closestTarget>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
-                            if not approxThreat then
-                                approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, false, false)
-                            end
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.ally and approxThreat.enemy and approxThreat.ally > approxThreat.enemy then
                                 IssueClearCommands({v}) 
-                                IssueMove({v},target:GetPosition())
+                                --IssueMove({v},target:GetPosition())
+                                IssueAggressiveMove({v},targetPos)
                                 continue
                             end
                         end
-                        if v.Role == 'Artillery' or v.Role == 'Silo' then
+                        if v.Role == 'Artillery' or v.Role == 'Silo' or v.Role == 'Sniper' then
                             local targetCats = target.Blueprint.CategoriesHash
                             if targetCats.DIRECTFIRE and targetCats.STRUCTURE and targetCats.DEFENSE then
-                                local unitRange = StateUtils.GetUnitMaxWeaponRange(target)
                                 if v.MaxWeaponRange > unitRange then
                                     skipKite = true
                                     if not v:IsUnitState("Attacking") then
@@ -358,12 +361,20 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if not skipKite then
-                            StateUtils.VariableKite(self,v,target)
+                            if approxThreat.ally and approxThreat.enemy and approxThreat.ally > approxThreat.enemy*1.5 and target.Blueprint.CategoriesHash.MOBILE and v.MaxWeaponRange <= unitRange then
+                                IssueClearCommands({v})
+                                IssueAggressiveMove({v},targetPos)
+                            else
+                                StateUtils.VariableKite(self,v,target)
+                            end
                         end
                     end
                 end
             end
-            coroutine.yield(25)
+            if target and not target.Dead and targetPos and aiBrain:CheckBlockingTerrain(self.Pos, targetPos, 'none') then
+                IssueMove(units, targetPos)
+            end
+            coroutine.yield(30)
             self:ChangeState(self.DecideWhatToDo)
             return
         end,

@@ -1189,7 +1189,7 @@ function ValidateLateGameBuild(aiBrain, locationType)
         --LOG('Number of high value units queued '..queuedCount)
         --LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
         --LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * queuedCount)))
-        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * queuedCount) then
+        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (150 * queuedCount) then
             --LOG('Income is not high enough, return false')
             return false
         end
@@ -1209,7 +1209,7 @@ function ValidateLateGameBuild(aiBrain, locationType)
         --LOG('Number of high value units being built '..unitsBeingBuilt)
         --LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
         --LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * unitsBeingBuilt)))
-        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * unitsBeingBuilt) then
+        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (150 * unitsBeingBuilt) then
             --LOG('Income is not high enough, return false')
             return false
         end
@@ -1308,6 +1308,9 @@ function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
         if aiBrain.cmanager.income.r.m > 55 and aiBrain.cmanager.buildpower.eng.T2 < 75 then
             return true
         end
+        if aiBrain.cmanager.income.r.m > 80 and aiBrain.cmanager.buildpower.eng.T2 < 160 then
+            return true
+        end
     elseif type == 3 then
         if aiBrain.cmanager.buildpower.eng.T3 == 0 then
             return true
@@ -1319,6 +1322,9 @@ function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
             return true
         end
         if aiBrain.cmanager.income.r.m > 160 and aiBrain.cmanager.buildpower.eng.T3 < 400 then
+            return true
+        end
+        if aiBrain.cmanager.income.r.m > 300 and aiBrain.cmanager.buildpower.eng.T3 < 800 then
             return true
         end
     elseif type == 4 then

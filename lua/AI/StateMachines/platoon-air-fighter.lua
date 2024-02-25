@@ -222,6 +222,9 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 IssueAggressiveMove(GetPlatoonUnits(self), self.BuilderData.Position)
             end
             local movePosition = self.BuilderData.Position
+            if not movePosition then
+                WARN('AI-RNG : Fighter no builderdata position passed')
+            end
             local lastDist
             local timeout = 0
             while aiBrain:PlatoonExists(self) do

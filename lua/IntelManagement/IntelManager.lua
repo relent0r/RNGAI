@@ -2014,6 +2014,10 @@ function InitialNavalAttackCheck(aiBrain)
     -- center = the x,y values for the position of the mass extractor. e.g {x = 0, y = 0} 
     
     aiBrain.IntelManager:WaitForMarkerInfection()
+    while not aiBrain.IntelManager.MapIntelStats.ScoutLocationsBuilt do
+        LOG('*AI:RNG NavalAttackCheck is waiting for ScoutLocations to be built')
+        coroutine.yield(20)
+    end
     if aiBrain.MapWaterRatio > 0 then
         LOG('Map Water Ratio is '..aiBrain.MapWaterRatio)
         local factionIndex = aiBrain:GetFactionIndex()
@@ -2039,7 +2043,33 @@ function InitialNavalAttackCheck(aiBrain)
         end
         LOG('Max Radius is '..maxRadius)
 
-
+        if not table.empty(aiBrain.EnemyIntel.EnemyStartLocations) then
+            local validNavalLabels = {}
+            local selfNavalPositions = NavUtils.GetPositionsInRadius('Water', aiBrain.BrainIntel.StartPos, 256, 10)
+            if selfNavalPositions then
+                for _, v in selfNavalPositions do
+                    local label = NavUtils.GetLabel('Water', {v[1], v[2], v[3]})
+                    if label and not validNavalLabels[label] then
+                        validNavalLabels[label] = 'Unconfirmed'
+                    end
+                end
+                for _, b in aiBrain.EnemyIntel.EnemyStartLocations do
+                    local enemyNavalPositions = NavUtils.GetPositionsInRadius('Water', b.Position, 256, 10)
+                    if enemyNavalPositions then
+                        for _, v in enemyNavalPositions do
+                            local label = NavUtils.GetLabel('Water', {v[1], v[2], v[3]})
+                            if label and validNavalLabels[label] then
+                                validNavalLabels[label] = 'Confirmed'
+                            end
+                        end
+                    end
+                end
+            end
+            if not table.empty(validNavalLabels) then
+                aiBrain.BrainIntel.NavalBaseLabels = validNavalLabels
+                LOG('Label Table '..repr(validNavalLabels))
+            end
+        end
         if markers then
             local markerCount = 0
             local markerCountNotBlocked = 0

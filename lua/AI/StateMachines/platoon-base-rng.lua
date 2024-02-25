@@ -80,7 +80,6 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
             if (unit.Sync.Regen>0) or not unit.initialized then
                 unit.initialized=true
                 if unitCats.ARTILLERY and unitCats.MOBILE and not unitCats.EXPERIMENTAL then
-                    self:LogDebug(string.format('Assign Artillery role'))
                     unit.Role='Artillery'
                 elseif unitCats.EXPERIMENTAL then
                     unit.Role='Experimental'
@@ -89,7 +88,6 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                 elseif unitCats.xsl0202 or unitCats.xel0305 or unitCats.xrl0305 then
                     unit.Role='Heavy'
                 elseif EntityCategoryContains((categories.SNIPER + categories.INDIRECTFIRE) * categories.LAND + categories.ual0201 + categories.drl0204 + categories.del0204,unit) then
-                    self:LogDebug(string.format('Assign Sniper role to '..unit.UnitId))
                     unit.Role='Sniper'
                     if EntityCategoryContains(categories.ual0201,unit) then
                         unit.GlassCannon=true

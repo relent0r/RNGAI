@@ -463,7 +463,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { MIBC, 'MapGreaterThan', { 256, 256 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.1 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.AIR }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },

@@ -3192,8 +3192,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                         LOG('Number of high value units being built '..unitsBeingBuilt)
                         LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
-                        LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + 100))
-                        if unitsBeingBuilt > 0 and aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + 100 then
+                        LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + 150))
+                        if unitsBeingBuilt > 0 and aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + 150 then
                             LOG('Too many high value units being built, abort this one')
                             if queuedStructures[unitBp.TechCategory][eng.EntityId] then
                                 LOG('Deleting engineer entry in queue')
@@ -3201,10 +3201,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             else
                                 LOG('There is no entry for this high value unit in the engineer manager queue table')
                             end
-                            IssueClearCommands({eng})
-                            unit.ReclaimInProgress = true
-                            IssueReclaim({eng}, unit)
-                            eng.ProcessBuild = eng:ForkThread(eng.PlatoonHandle.WaitForIdleDisband)
+                            eng.ProcessBuild = eng:ForkThread(eng.PlatoonHandle.WaitForIdleDisband, unit)
                         else
                             LOG('Tech category exist but unit entity does not, adding to table')
                             if queuedStructures[unitBp.TechCategory][eng.EntityId] then
@@ -3219,6 +3216,21 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                 end
             end
+        end
+    end,
+
+    WaitForIdleDisband = function(eng, unit)
+        coroutine.yield(5)
+        if unit and not IsDestroyed(unit) then
+            IssueClearCommands({eng})
+            unit.ReclaimInProgress = true
+            IssueReclaim({eng}, unit)
+        end
+        while RNGGETN(eng:GetCommandQueue()) > 0 do
+            coroutine.yield(20)
+        end
+        if eng.PlatoonHandle.PlatoonDisband then
+            eng.PlatoonHandle:PlatoonDisband()
         end
     end,
 
@@ -3754,18 +3766,63 @@ Platoon = Class(RNGAIPlatoonClass) {
                         else
                             WARN('No buildLocation or whatToBuild during ACU initialization')
                         end
-                        if aiBrain.MapSize > 5 then
-                            --RNGLOG("Attempt to build air factory")
-                            buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 25, true)
-                            if borderWarning and buildLocation and whatToBuild then
-                                IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
-                                borderWarning = false
-                            elseif buildLocation and whatToBuild then
-                                aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
-                            else
-                                WARN('No buildLocation or whatToBuild during ACU initialization')
+                        while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                            coroutine.yield(5)
+                        end
+                        if not aiBrain:IsAnyEngineerBuilding(categories.FACTORY * categories.AIR) then
+                            if aiBrain.MapSize > 5 then
+                                --RNGLOG("Attempt to build air factory")
+                                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 25, true)
+                                if borderWarning and buildLocation and whatToBuild then
+                                    IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                                    borderWarning = false
+                                elseif buildLocation and whatToBuild then
+                                    aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                                else
+                                    WARN('No buildLocation or whatToBuild during ACU initialization')
+                                end
+                                --aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                             end
-                            --aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                        else
+                            local assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.FACTORY * categories.AIR, categories.ALLUNITS)
+                            local assistee = false
+                            if not RNGTableEmpty(assistList) then
+                                -- only have one unit in the list; assist it
+                                local low = false
+                                local bestUnit = false
+                                for k,v in assistList do
+                                    --DUNCAN - check unit is inside assist range 
+                                    local unitPos = v:GetPosition()
+                                    local UnitAssist = v.UnitBeingBuilt or v.UnitBeingAssist or v
+                                    local NumAssist = RNGGETN(UnitAssist:GetGuards())
+                                    local dist = VDist2Sq(engPos[1], engPos[3], unitPos[1], unitPos[3])
+                                    --RNGLOG('CommanderInitializeAIRNG : Assist distance for commander assist is '..dist)
+                                    -- Find the closest unit to assist
+                                    if (not low or dist < low) and NumAssist < 20 and dist < 225 then
+                                        low = dist
+                                        bestUnit = v
+                                    end
+                                end
+                                assistee = bestUnit
+                            end
+                            if assistee  then
+                                IssueClearCommands({eng})
+                                eng.UnitBeingAssist = assistee.UnitBeingBuilt or assistee.UnitBeingAssist or assistee
+                                --RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
+                                IssueGuard({eng}, eng.UnitBeingAssist)
+                                coroutine.yield(30)
+                                while eng and not eng.Dead and not eng:IsIdleState() do
+                                    if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
+                                        break
+                                    end
+                                    -- stop if our target is finished
+                                    if eng.UnitBeingAssist:GetFractionComplete() == 1 and not eng.UnitBeingAssist:IsUnitState('Upgrading') then
+                                        IssueClearCommands({eng})
+                                        break
+                                    end
+                                    coroutine.yield(30)
+                                end
+                            end
                         end
                     end
                     while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
@@ -3782,16 +3839,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         eng.Active = false
         eng.Initializing = false
         self:PlatoonDisband()
-    end,
-
-    WaitForIdleDisband = function(eng)
-        coroutine.yield(20)
-        while RNGGETN(eng:GetCommandQueue()) > 0 do
-            coroutine.yield(20)
-        end
-        if eng.PlatoonHandle.PlatoonDisband then
-            eng.PlatoonHandle:PlatoonDisband()
-        end
     end,
 
     -------------------------------------------------------

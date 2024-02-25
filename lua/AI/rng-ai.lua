@@ -229,44 +229,84 @@ AIBrain = Class(RNGAIBrainClass) {
             Active = false,
             Radius = 0
             }
+        self.MapWaterRatio = self:GetMapWaterRatio()
+        if true then
+            LOG('Water Ratio is '..self.MapWaterRatio)
+        end
 
         self.MapSize = 10
         local mapSizeX, mapSizeZ = GetMapSize()
         self.MapDimension = math.max(mapSizeX, mapSizeZ)
         if mapSizeX > 1000 and mapSizeZ > 1000 then
             if self.RNGEXP then
-                self.DefaultLandRatio = 0.2
-                self.DefaultAirRatio = 0.3
-                self.DefaultNavalRatio = 0.2
+                if self.MapWaterRatio < 10 then
+                    self.DefaultLandRatio = 0.4
+                    self.DefaultAirRatio = 0.3
+                    self.DefaultNavalRatio = 0.0
+                else
+                    self.DefaultLandRatio = 0.2
+                    self.DefaultAirRatio = 0.3
+                    self.DefaultNavalRatio = 0.2
+                end
             else
-                self.DefaultLandRatio = 0.5
-                self.DefaultAirRatio = 0.4
-                self.DefaultNavalRatio = 0.4
+                if self.MapWaterRatio < 10 then
+                    self.DefaultLandRatio = 0.65
+                    self.DefaultAirRatio = 0.35
+                    self.DefaultNavalRatio = 0.0
+                else
+                    self.DefaultLandRatio = 0.5
+                    self.DefaultAirRatio = 0.25
+                    self.DefaultNavalRatio = 0.25
+                end
             end
             self.MapSize = 20
         elseif mapSizeX > 500 and mapSizeZ > 500 then
             if self.RNGEXP then
-                self.DefaultLandRatio = 0.2
-                self.DefaultAirRatio = 0.3
-                self.DefaultNavalRatio = 0.2
+                if self.MapWaterRatio < 10 then
+                    self.DefaultLandRatio = 0.65
+                    self.DefaultAirRatio = 0.35
+                    self.DefaultNavalRatio = 0.0
+                else
+                    self.DefaultLandRatio = 0.2
+                    self.DefaultAirRatio = 0.3
+                    self.DefaultNavalRatio = 0.2
+                end
             else
-                self.DefaultLandRatio = 0.6
-                self.DefaultAirRatio = 0.4
-                self.DefaultNavalRatio = 0.4
+                if self.MapWaterRatio < 10 then
+                    self.DefaultLandRatio = 0.65
+                    self.DefaultAirRatio = 0.35
+                    self.DefaultNavalRatio = 0.0
+                else
+                    self.DefaultLandRatio = 0.6
+                    self.DefaultAirRatio = 0.2
+                    self.DefaultNavalRatio = 0.2
+                end
+
             end
-            --RNGLOG('10 KM Map Check true')
             self.MapSize = 10
         elseif mapSizeX > 200 and mapSizeZ > 200 then
             if self.RNGEXP then
-                self.DefaultLandRatio = 0.2
-                self.DefaultAirRatio = 0.3
-                self.DefaultNavalRatio = 0.2
+                if self.MapWaterRatio < 10 then
+                    self.DefaultLandRatio = 0.65
+                    self.DefaultAirRatio = 0.35
+                    self.DefaultNavalRatio = 0.0
+                else
+                    self.DefaultLandRatio = 0.2
+                    self.DefaultAirRatio = 0.3
+                    self.DefaultNavalRatio = 0.2
+                end
             else
-                self.DefaultLandRatio = 0.7
-                self.DefaultAirRatio = 0.3
-                self.DefaultNavalRatio = 0.3
+                if self.MapWaterRatio < 10 then
+                    self.DefaultLandRatio = 0.65
+                    self.DefaultAirRatio = 0.35
+                    self.DefaultNavalRatio = 0.0
+                else
+                    self.DefaultLandRatio = 0.6
+                    self.DefaultAirRatio = 0.15
+                    self.DefaultNavalRatio = 0.15
+                end
+
             end
-            --RNGLOG('5 KM Map Check true')
             self.MapSize = 5
         end
 
@@ -1166,11 +1206,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.coinFlip = math.random(1,3)
        --LOG('Build Multiplier now set, this impacts many economy checks that look at income '..self.EcoManager.EcoMultiplier)
 
-        self.MapWaterRatio = self:GetMapWaterRatio()
-        if true then
-            LOG('Water Ratio is '..self.MapWaterRatio)
-        end
-
         -- Table to holding the starting reclaim
         self.StartReclaimTable = {}
         self.StartMassReclaimTotal = 0
@@ -1241,9 +1276,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self.StructureManager:Run()
         self:ForkThread(IntelManagerRNG.CreateIntelGrid, self.IntelManager)
         self:ForkThread(self.CreateFloatingEngineerBase, self.BrainIntel.StartPos)
-        if self.RNGDEBUG then
+        --if self.RNGDEBUG then
             self:ForkThread(self.LogDataThreadRNG)
-        end
+        --end
     end,
 
     LogDataThreadRNG = function(self)
@@ -5420,15 +5455,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('Assist Focus is Mass')
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'},
-                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
+                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'},
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.EXPERIMENTAL, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC, type = 'Completion'},
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
                     {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade' }, 
-                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
-                    {cat = categories.FACTORY * categories.AIR, type = 'AssistFactory'}, 
-                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
-                    
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'}, 
                 }
             end
             --RNGLOG('EngineerAssistManager State is '..state)
@@ -6255,6 +6288,10 @@ AIBrain = Class(RNGAIBrainClass) {
             Active = false,
             Radius = 0
             }
+        self.MapWaterRatio = self:GetMapWaterRatio()
+        if self.RNGDEBUG then
+            --LOG('Water Ratio is '..self.MapWaterRatio)
+        end
 
         self.MapSize = 10
         local mapSizeX, mapSizeZ = GetMapSize()
@@ -7184,11 +7221,6 @@ AIBrain = Class(RNGAIBrainClass) {
         --This coin flip is done for aggressive expansion chances
         self.coinFlip = math.random(1,3)
        --LOG('Build Multiplier now set, this impacts many economy checks that look at income '..self.EcoManager.EcoMultiplier)
-
-        self.MapWaterRatio = self:GetMapWaterRatio()
-        if self.RNGDEBUG then
-            --LOG('Water Ratio is '..self.MapWaterRatio)
-        end
 
         -- Table to holding the starting reclaim
         self.StartReclaimTable = {}

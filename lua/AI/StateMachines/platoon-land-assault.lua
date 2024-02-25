@@ -284,6 +284,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                     end
                     local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, LandRadiusDetectionCategory, self.Pos, self.EnemyRadius, 'Enemy')
                     if enemyUnitCount > 0 and (not currentLayerSeaBed) then
+                        self:LogDebug('Enemy Found during navigation')
                         local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, self.Pos, 'Attack', self.EnemyRadius, LandRadiusScanCategory, self.atkPri, false)
                         local attackSquad = self:GetSquadUnits('Attack')
                         IssueClearCommands(attackSquad)
