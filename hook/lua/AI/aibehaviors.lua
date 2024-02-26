@@ -996,15 +996,23 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     end
     -- Look for commander first
     local ALLBPS = __blueprints
-    local AIFindNumberOfUnitsBetweenPointsRNG = import('/lua/ai/aiattackutilities.lua').AIFindNumberOfUnitsBetweenPointsRNG
+    --local AIFindNumberOfUnitsBetweenPointsRNG = import('/lua/ai/aiattackutilities.lua').AIFindNumberOfUnitsBetweenPointsRNG
+    local FindSMDBetweenPositions = import('/lua/ai/aiattackutilities.lua').FindSMDBetweenPositions
     local im = IntelManagerRNG.GetIntelManager(aiBrain)
     local platoonPosition = GetPlatoonPosition(platoon)
+    local knownSMDUnits = aiBrain.EnemyIntel.SMD
     -- minimumValue : I want to make sure that whatever we shoot at it either an ACU or is worth more than the missile we just built.
     local minimumValue = 0
+    local missilesConsumed = 0
+    local maxMissiles = 0
     local targetPositions = {}
+    local readyLaunchers = {}
+    local firingPositions = {}
     local validPosition = false
     local missileCost
     local missileRadius
+    local smdRadius
+    local gameTime = GetGameTimeSeconds()
     for _, sml in GetPlatoonUnits(platoon) do
         if sml and not sml.Dead then
             local smlMissileCost, smlMissileRadius = GetMissileDetails(ALLBPS, sml.UnitId)
@@ -1014,8 +1022,13 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
             if not missileRadius or smlMissileRadius > missileRadius then
                 missileRadius = smlMissileRadius
             end
+            if sml:GetNukeSiloAmmoCount() > 0 then
+                table.insert(readyLaunchers, sml)
+                maxMissiles = maxMissiles + 1
+            end
         end
     end
+
     --RNGLOG('SML Missile cost is '..missileCost)
     --RNGLOG('SML Missile radius is '..missileRadius)
     if not missileRadius or not missileCost then
@@ -1023,7 +1036,17 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
         missileRadius = 30
         missileCost = 12000
     end
-    
+    if not table.empty(knownSMDUnits) do
+        for _, v in knownSMDUnits do
+            if v.Blueprint.Weapon[1].MaxRadius then
+                smdRadius = v.Blueprint.Weapon[1].MaxRadius
+                break
+            end
+        end
+    end
+    if not smdRadius then
+        smdRadius = 90
+    end
 
     for k, v in aiBrain.EnemyIntel.ACU do
         if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.LastSpotted ~= 0 then
@@ -1036,16 +1059,22 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     --RNGLOG(' ACUs detected are '..table.getn(targetPositions))
 
     if not table.empty(targetPositions) then
+        local targetFound = false
         for _, pos in targetPositions do
-            local antinukes = AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, platoonPosition, pos[1], categories.ANTIMISSILE * categories.SILO, 90, 'Enemy')
-            if antinukes < 1 then
-                validPosition = pos[1]
-                break
+            for _, v in readyLaunchers do
+                local antiNukes = FindSMDBetweenPositions(v:GetPosition(), pos, knownSMDUnits, smdRadius, 45)
+            --local antinukes = AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, platoonPosition, pos[1], categories.ANTIMISSILE * categories.SILO, 90, 'Enemy')
+                if antinukes < 1 then
+                    targetFound = true
+                    table.insert(firingPositions, { Position = pos[1],  TimeStamp = gameTime })
+                    missilesConsumed = missilesConsumed + 1
+                    break
+                end
             end
         end
-        if validPosition then
+        if targetFound and missilesConsumed >= maxMissiles then
             --RNGLOG('Valid Nuke Target Position with no Anti Nukes is '..repr(validPosition))
-            return validPosition
+            return firingPositions
         end
     end
 
@@ -1084,29 +1113,27 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
         if target.threat > 0 then
             local numunits = 0
             local massValue = 0
-            local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, target.position, missileRadius, 'Enemy')
-            for k, v in unitsAtLocation do
-                numunits = numunits + 1
-                local unitPos = v:GetPosition()
-                local completion = v:GetFractionComplete()
-                if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE * categories.SILO, v) then
-                    --RNGLOG('Found SMD')
-                    if not aiBrain.EnemyIntel.SMD[v.EntityId] then
-                        aiBrain.EnemyIntel.SMD[v.EntityId] = {object = v, Position=unitPos , Detected=GetGameTimeSeconds()}
-                    end
-                    if completion == 1 then
-                        if aiBrain.EnemyIntel.SMD[v.EntityId].Detected + 240 < GetGameTimeSeconds() then
-                            RNGINSERT(SMDPositions, { Position = unitPos, Radius = v.Blueprint.Weapon[1].MaxRadius * v.Blueprint.Weapon[1].MaxRadius, EntityId = v.EntityId})
+            for k, v in knownSMDUnits do
+                if v.object and not v.object.Dead then
+                    numunits = numunits + 1
+                    local unitPos = v.Position
+                    local completion = v.object:GetFractionComplete()
+                    if EntityCategoryContains(categories.TECH3 * categories.ANTIMISSILE * categories.SILO, v) then
+                        --RNGLOG('Found SMD')
+                        if completion == 1 then
+                            if aiBrain.EnemyIntel.SMD[v.EntityId].Detected + 240 < GetGameTimeSeconds() then
+                                RNGINSERT(SMDPositions, { Position = unitPos, Radius = v.Blueprint.Weapon[1].MaxRadius * v.Blueprint.Weapon[1].MaxRadius, EntityId = v.EntityId})
+                            end
+                            --RNGLOG('AntiNuke present at location')
                         end
-                        --RNGLOG('AntiNuke present at location')
+                        if 3 > platoon.ReadySMLCount then
+                            break
+                        end
                     end
-                    if 3 > platoon.ReadySMLCount then
-                        break
-                    end
-                end
-                if completion > 0.4 then
-                    if v.Blueprint.Economy.BuildCostMass then
-                        massValue = massValue + v.Blueprint.Economy.BuildCostMass
+                    if completion > 0.4 then
+                        if v.Blueprint.Economy.BuildCostMass then
+                            massValue = massValue + v.Blueprint.Economy.BuildCostMass
+                        end
                     end
                 end
             end
