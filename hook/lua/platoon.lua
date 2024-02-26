@@ -7371,14 +7371,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                 continue
             end
             local nukePos
-            nukePos = import('/lua/ai/aibehaviors.lua').GetNukeStrikePositionRNG(aiBrain, self)
-            if nukePos then
-                for _, launcher in readySmlLaunchers do
-                    IssueNuke({launcher}, nukePos)
-                    --RNGLOG('NukeAIRNG : Launching Single Nuke')
-                    coroutine.yield(120)
-                    IssueClearCommands({launcher})
-                    break
+            nukePosTable = RUtils.GetNukeStrikePositionRNG(aiBrain, self)
+            if nukePosTable then
+                for _, firingPosition in nukePosTable do
+                    IssueNuke({firingPosition.Launcher}, firingPosition.Position)
                 end
             else
                 --RNGLOG('NukeAIRNG : No available targets or nukePos is null')

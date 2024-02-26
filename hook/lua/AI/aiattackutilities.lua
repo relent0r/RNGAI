@@ -452,53 +452,6 @@ function AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, start, finish, unitCat, s
 	return returnNum
 end
 
-function FindSMDBetweenPositions(start, finish, smdTable, radius, stepDistance)
-    -- Function to calculate the distance squared between two points
-    local function calculateDistanceSquared(x1, y1, z1, x2, y2, z2)
-        local dx = x2 - x1
-        local dy = y2 - y1
-        local dz = z2 - z1
-        return dx * dx + dy * dy + dz * dz
-    end
-
-    -- Function to check if a point lies within the interception radius squared of any defense system
-    local function isWithinInterceptionRadiusSquared(position1, position2)
-        local distanceSquared = calculateDistanceSquared(position1[1], position1[2], position1[3], position2[1], position2[2], position2[3])
-        return distanceSquared <= radius
-    end
-
-    -- Function to check if the missile's trajectory intersects with any defense system
-
-    local dx = finish[1] - start[1]
-    local dy = finish[2] - start[2]
-    local dz = finish[3] - start[3]
-    local distanceSquared = calculateDistanceSquared(start[1], start[2], start[3], finish[1], finish[2], finish[3])
-    
-    -- Normalize direction vector
-    local magnitudeSquared = dx * dx + dy * dy + dz * dz
-    local invMagnitude = 1 / magnitudeSquared
-    dx = dx * invMagnitude
-    dy = dy * invMagnitude
-    dz = dz * invMagnitude
-
-    local totalDistance = math.sqrt(distanceSquared)
-    
-    -- Check points along the trajectory for interception
-    local numSteps = math.floor(totalDistance / stepDistance)
-    local stepSizeSquared = distanceSquared / numSteps
-    for i = 1, numSteps do
-        local currentX = start[1] + dx * stepSizeSquared * i
-        local currentY = start[2] + dy * stepSizeSquared * i
-        local currentZ = start[3] + dz * stepSizeSquared * i
-        -- Check if current point intersects with any defense system
-        for _, defense in ipairs(smdTable) do
-            if isWithinInterceptionRadiusSquared(defense.Position, {currentX, currentY, currentZ}) then
-                return true
-            end
-        end
-    end
-end
-
 function DrawTargetRadius(aiBrain, position)
     --RNGLOG('Draw Target Radius points')
     local counter = 0

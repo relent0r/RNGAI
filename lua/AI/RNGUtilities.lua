@@ -6533,6 +6533,256 @@ GetCustomUnitReplacement = function(self, template, templateName, faction)
     return retTemplate
 end
 
+FindSMDAtPosition = function(position, smdTable, radius)
+    local function isWithinInterceptionRadiusSquared(position1, position2)
+        local distanceSquared = calculateDistanceSquared(position1[1], position1[2], position1[3], position2[1], position2[2], position2[3])
+        return distanceSquared <= radius
+    end
+    local gameTime = GetGameTimeSeconds()
+    local smdList = {}
+
+    for _, defense in smdTable do
+        if defense.Detected > gameTime - 240 or isWithinInterceptionRadiusSquared(defense.Position, {position[1], position[2], position[3]}) then
+            table.insert(smdList, defense)
+        end
+    end
+    if not table.empty(smdList) then
+        return true, smdList
+    end
+    return false
+end
+
+FindSMDBetweenPositions = function(start, finish, smdTable, radius, stepDistance)
+    -- Function to calculate the distance squared between two points
+    local function calculateDistanceSquared(x1, y1, z1, x2, y2, z2)
+        local dx = x2 - x1
+        local dy = y2 - y1
+        local dz = z2 - z1
+        return dx * dx + dy * dy + dz * dz
+    end
+
+    -- Function to check if a point lies within the interception radius squared of any defense system
+    local function isWithinInterceptionRadiusSquared(position1, position2)
+        local distanceSquared = calculateDistanceSquared(position1[1], position1[2], position1[3], position2[1], position2[2], position2[3])
+        return distanceSquared <= radius
+    end
+
+    local gameTime = GetGameTimeSeconds()
+
+    -- Function to check if the missile's trajectory intersects with any defense system
+
+    local dx = finish[1] - start[1]
+    local dy = finish[2] - start[2]
+    local dz = finish[3] - start[3]
+    local distanceSquared = calculateDistanceSquared(start[1], start[2], start[3], finish[1], finish[2], finish[3])
+    
+    -- Normalize direction vector
+    local magnitudeSquared = dx * dx + dy * dy + dz * dz
+    local invMagnitude = 1 / magnitudeSquared
+    dx = dx * invMagnitude
+    dy = dy * invMagnitude
+    dz = dz * invMagnitude
+
+    local totalDistance = math.sqrt(distanceSquared)
+    
+    -- Check points along the trajectory for interception
+    local numSteps = math.floor(totalDistance / stepDistance)
+    local stepSizeSquared = distanceSquared / numSteps
+    for i = 1, numSteps do
+        local currentX = start[1] + dx * stepSizeSquared * i
+        local currentY = start[2] + dy * stepSizeSquared * i
+        local currentZ = start[3] + dz * stepSizeSquared * i
+        -- Check if current point intersects with any defense system
+        for _, defense in smdTable do
+            if defense.Detected > gameTime - 240 or isWithinInterceptionRadiusSquared(defense.Position, {currentX, currentY, currentZ}) then
+                return true, { currentX, currentY, currentZ }
+            end
+        end
+    end
+    return false
+end
+
+GetNukeStrikePositionRNG = function(aiBrain, platoon)
+    if not aiBrain or not platoon then
+        return nil
+    end
+    local function GetMissileDetails(ALLBPS, unitId)
+        if ALLBPS[unitId].Weapon[1].DamageType == 'Nuke' and ALLBPS[unitId].Weapon[1].ProjectileId then
+            local projBp = ALLBPS[unitId].Weapon[1].ProjectileId
+            return ALLBPS[projBp].Economy.BuildCostMass, ALLBPS[unitId].Weapon[1].NukeInnerRingRadius
+        end
+        return false
+    end
+    -- Look for commander first
+    local ALLBPS = __blueprints
+    local im = IntelManagerRNG.GetIntelManager(aiBrain)
+    local knownSMDUnits = aiBrain.EnemyIntel.SMD
+    -- minimumValue : I want to make sure that whatever we shoot at it either an ACU or is worth more than the missile we just built.
+    local minimumValue = 0
+    local missilesConsumed = 0
+    local maxMissiles = 0
+    local targetPositions = {}
+    local readyLaunchers = {}
+    local firingPositions = {}
+    local missileCost
+    local missileRadius
+    local smdRadius
+    local gameTime = GetGameTimeSeconds()
+    for _, sml in GetPlatoonUnits(platoon) do
+        if sml and not sml.Dead then
+            local smlMissileCost, smlMissileRadius = GetMissileDetails(ALLBPS, sml.UnitId)
+            if not missileCost or smlMissileCost > missileCost then
+                missileCost = smlMissileCost
+            end
+            if not missileRadius or smlMissileRadius > missileRadius then
+                missileRadius = smlMissileRadius
+            end
+            if sml:GetNukeSiloAmmoCount() > 0 then
+                table.insert(readyLaunchers, sml)
+                maxMissiles = maxMissiles + 1
+            end
+        end
+    end
+
+    --RNGLOG('SML Missile cost is '..missileCost)
+    --RNGLOG('SML Missile radius is '..missileRadius)
+    if not missileRadius or not missileCost then
+        -- fallback incase its a strange launcher
+        missileRadius = 30
+        missileCost = 12000
+    end
+    if not table.empty(knownSMDUnits) do
+        for _, v in knownSMDUnits do
+            if v.Blueprint.Weapon[1].MaxRadius then
+                smdRadius = v.Blueprint.Weapon[1].MaxRadius
+                break
+            end
+        end
+    end
+    if not smdRadius then
+        smdRadius = 90
+    end
+
+    for k, v in aiBrain.EnemyIntel.ACU do
+        if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.LastSpotted ~= 0 then
+            if HaveUnitVisual(aiBrain, v.Unit, true) and not FindSMDAtPosition(v.Position, knownSMDUnits, smdRadius) then
+                RNGINSERT(targetPositions, {v.Position, type = 'COMMAND'})
+            end
+        end
+    end
+
+    --RNGLOG(' ACUs detected are '..table.getn(targetPositions))
+
+    if not table.empty(targetPositions) then
+        local targetFound = false
+        for _, pos in targetPositions do
+            for _, v in readyLaunchers do
+                local antiNukes = FindSMDBetweenPositions(v:GetPosition(), pos, knownSMDUnits, smdRadius, 45)
+                if antinukes < 1 then
+                    targetFound = true
+                    table.insert(firingPositions, { Launcher = v, Position = pos[1],  TimeStamp = gameTime })
+                    missilesConsumed = missilesConsumed + 1
+                    break
+                end
+            end
+        end
+        if targetFound and missilesConsumed >= maxMissiles then
+            --RNGLOG('Valid Nuke Target Position with no Anti Nukes is '..repr(validPosition))
+            return firingPositions
+        end
+    end
+
+    -- Now look through the bases for the highest economic threat and largest cluster of units
+    local targetShortList = {}
+    local enemyBases = aiBrain.EnemyIntel.EnemyThreatLocations
+    for _, x in enemyBases do
+        for _, z in x do
+            if z.StructuresNotMex then
+                local posThreat = aiBrain:GetThreatAtPosition(z.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Economy')
+                RNGINSERT(targetShortList, { threat = posThreat, position = z.Position, massvalue = 0 })
+            end
+        end
+    end
+    RNGSORT( targetShortList, function(a,b) return a.threat > b.threat  end )
+
+    --RNGLOG('targetShortList 1st pass '..repr(targetShortList))
+
+    if table.empty(targetShortList) then
+        -- No threat
+        return firingPositions
+    end
+
+    for _, target in targetShortList do
+        if target.threat > 0 then
+            local numunits = 0
+            local massValue = 0
+            local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, target.position, missileRadius, 'Enemy')
+            for k, v in unitsAtLocation do
+                numunits = numunits + 1
+                local completion = v:GetFractionComplete()
+                if completion > 0.4 then
+                    if v.Blueprint.Economy.BuildCostMass then
+                        massValue = massValue + v.Blueprint.Economy.BuildCostMass
+                    end
+                end
+            end
+            target.massvalue = massValue
+        end
+    end
+    RNGSORT( targetShortList, function(a,b) return a.massvalue > b.massvalue  end )
+    for _, finalTarget in targetShortList do
+        local maxValue = 0
+        if finalTarget.massvalue > (missileCost / 1.5) then
+            local lookAroundTable = {-2, -1, 0, 1, 2}
+            local squareRadius = (ScenarioInfo.size[1] / 16) / RNGGETN(lookAroundTable)
+            local missileAllocated = false
+            for ix, offsetX in lookAroundTable do
+                for iz, offsetZ in lookAroundTable do
+                    local searchPos = {finalTarget.position[1] + offsetX*squareRadius, 0, finalTarget.position[3]+offsetZ*squareRadius}
+                    local smdPresent, _ = FindSMDAtPosition(searchPos, knownSMDUnits, smdRadius)
+                    if not smdPresent then
+                        local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, searchPos, missileRadius, 'Enemy')
+                        local currentValue = 0
+                        for _, v in unitsAtLocation do
+                            if v.Blueprint.Economy.BuildCostMass then
+                                currentValue = currentValue + v.Blueprint.Economy.BuildCostMass
+                            end
+                        end
+                        if currentValue > maxValue then
+                            maxValue = currentValue
+                            for _, v in readyLaunchers do
+                                local smdBetweenPos, smds = FindSMDBetweenPositions(v:GetPosition(), searchPos, knownSMDUnits, smdRadius, 45)
+                                if not smdBetweenPos then
+                                    table.insert(firingPositions, { Launcher = v, Position = searchPos,  TimeStamp = gameTime })
+                                    missilesConsumed = missilesConsumed + 1
+                                    missileAllocated = true
+                                    break
+                                end
+                            end
+                            if missileAllocated then
+                                if missilesConsumed >= maxMissiles then
+                                    --RNGLOG('Valid Nuke Target Position with no Anti Nukes is '..repr(validPosition))
+                                    return true, firingPositions
+                                end
+                                break
+                            end
+                        end
+                    end
+                end
+                if missileAllocated then
+                    break
+                end
+            end
+        end
+        if not table.empty(firingPositions) then
+            --RNGLOG('Best pos found with a mass value of '..maxValue)
+            --RNGLOG('Best pos position is '..repr(bestPos))
+            return true, firingPositions
+        end
+    end
+    return false
+end
+
 --[[
     -- Calculate dot product between two 3D vectors (same as before)
 
