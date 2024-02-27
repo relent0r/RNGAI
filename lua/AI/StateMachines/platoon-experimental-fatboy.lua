@@ -114,11 +114,11 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 import("/lua/scenariotriggers.lua").CreateUnitBuiltTrigger(factoryWorkFinish, self.ExperimentalUnit.ExternalFactory, categories.ALLUNITS)
+                self.ExperimentalUnit.ExternalFactory.EngineerManager = {
+                    Task = nil,
+                    Engineers = {}
+                }
             end
-            self.ExperimentalUnit.ExternalFactory.EngineerManager = {
-                Task = nil,
-                Engineers = {}
-            }
             
             self.UnitRatios = {}
             self.SupportT1MobileScout = 0
@@ -820,7 +820,9 @@ end
 ---@param data { Behavior: 'AIBehaviorZoneControl' }
 ---@param units Unit[]
 StartFatBoyThreads = function(brain, platoon)
-    brain:ForkThread(GuardThread, platoon)
+    if platoon.ExperimentalUnit.ExternalFactory then
+        brain:ForkThread(GuardThread, platoon)
+    end
     brain:ForkThread(ThreatThread, platoon)
     brain:ForkThread(StateUtils.ZoneUpdate, platoon)
 end
@@ -969,16 +971,16 @@ ThreatThread = function(aiBrain, platoon)
         if imapThreat > 0 then
             platoon.EnemyThreatTable = StateUtils.ExperimentalTargetLocalCheckRNG(aiBrain, experimentalPos, platoon, 135, false)
         end
-        if shieldEnabled and experimental.MyShield.DepletedByEnergy and platoon.EnemyThreatTable.TotalSuroundingThreat < 1 and aiBrain:GetEconomyStoredRatio( 'ENERGY') < 0.20 then
+        if shieldEnabled and experimental.MyShield and experimental.MyShield.DepletedByEnergy and platoon.EnemyThreatTable.TotalSuroundingThreat < 1 and aiBrain:GetEconomyStoredRatio( 'ENERGY') < 0.20 then
             experimental:DisableShield()
             shieldEnabled = false
-        elseif not shieldEnabled and not experimental:ShieldIsOn() and aiBrain:GetEconomyStoredRatio( 'ENERGY') > 0.50 then
+        elseif experimental.MyShield and not shieldEnabled and not experimental:ShieldIsOn() and aiBrain:GetEconomyStoredRatio( 'ENERGY') > 0.50 then
             experimental:EnableShield()
             shieldEnabled = true
         end
-        if experimental.MyShield.DepletedByEnergy or experimental.MyShield.DepletedByDamage then
+        if experimental.MyShield and experimental.MyShield.DepletedByEnergy or experimental.MyShield.DepletedByDamage then
             experimental.ShieldCaution = true
-        elseif experimental.ShieldCaution then
+        elseif experimental.MyShield and experimental.ShieldCaution then
             experimental.ShieldCaution = false
         end
         coroutine.yield(35)

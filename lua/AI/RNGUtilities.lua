@@ -6651,7 +6651,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
         missileRadius = 30
         missileCost = 12000
     end
-    if not table.empty(knownSMDUnits) do
+    if not table.empty(knownSMDUnits) then
         for _, v in knownSMDUnits do
             if v.Blueprint.Weapon[1].MaxRadius then
                 smdRadius = v.Blueprint.Weapon[1].MaxRadius
