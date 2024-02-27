@@ -117,12 +117,11 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 import("/lua/scenariotriggers.lua").CreateUnitBuiltTrigger(factoryWorkFinish, self.ExperimentalUnit.ExternalFactory, categories.ALLUNITS)
+                self.ExperimentalUnit.ExternalFactory.EngineerManager = {
+                    Task = nil,
+                    Engineers = {}
+                }
             end
-            self.ExperimentalUnit.ExternalFactory.EngineerManager = {
-                Task = nil,
-                Engineers = {}
-            }
-            
             self.UnitRatios = {}
             self.SupportT1MobileScout = 0
             self.SupportT2MobileAA = 3
@@ -215,7 +214,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         self:LogDebug(string.format('Ranged Threat '..threatTable.RangedUnitThreat.TotalThreat))
                         
                         for _, enemyUnit in threatTable.ArtilleryThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) then
+                            if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored then
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object)
                                 --LOG('Artillery Range is greater than Experimental')
                                 if unitRange > self.MaxPlatoonWeaponRange then
@@ -237,7 +236,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         for _, enemyUnit in threatTable.RangedUnitThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) then
+                            if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored then
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object)
                                 if unitRange > self.MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
@@ -260,7 +259,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     end
                     if threatTable.DefenseThreat.TotalThreat > 0 or threatTable.CloseUnitThreat.TotalThreat > 15 then
                         for _, enemyUnit in threatTable.DefenseThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) then
+                            if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored then
                                 if not closestUnit or enemyUnit.Distance < closestUnitDistance then
                                     closestUnit = enemyUnit.Object
                                     closestUnitDistance = enemyUnit.Distance
@@ -268,7 +267,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         for _, enemyUnit in threatTable.CloseUnitThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) then
+                            if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored then
                                 if not closestUnit or enemyUnit.Distance < closestUnitDistance then
                                     closestUnit = enemyUnit.Object
                                     closestUnitDistance = enemyUnit.Distance
@@ -278,7 +277,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     end
                     if threatTable.NavalUnitThreat.TotalThreat > 0 then
                         for _, enemyUnit in threatTable.NavalUnitThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) then
+                            if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored then
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object)
                                 if unitRange > self.MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
@@ -418,7 +417,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                     local position = self.ExperimentalUnit:GetPosition()
-                    if self.EnemyThreatTable.TotalSuroundingThreat > 15 and not StateUtils.PositionInWater(position) then
+                    if self.EnemyThreatTable.TotalSuroundingThreat > 25 and not StateUtils.PositionInWater(position) then
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
@@ -480,6 +479,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         IssueClearCommands({experimental})
                     end
                     local targetPosition = target:GetPosition()
+                    local targetMaxWeaponRange = StateUtils.GetUnitMaxWeaponRange(target)
                     if not maxPlatoonRange then
                         coroutine.yield(3)
                         WARN('Warning : Experimental has no max weapon range')
@@ -497,7 +497,9 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     local y = targetPosition[3] - math.sin(alpha) * (maxPlatoonRange - 10)
                     local smartPos = { x, GetTerrainHeight( x, y), y }
                     -- check if the move position is new or target has moved
-                    if VDist2Sq( smartPos[1], smartPos[3], experimental.smartPos[1], experimental.smartPos[3] ) > 4 or experimental.TargetPos ~= targetPosition  or targetDistance > maxPlatoonRange * maxPlatoonRange then
+                    if targetDistance < maxPlatoonRange and maxPlatoonRange > targetMaxWeaponRange and not aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental.WeaponArc) then
+                        IssueAggressiveMove({experimental}, targetPosition)
+                    elseif VDist2Sq( smartPos[1], smartPos[3], experimental.smartPos[1], experimental.smartPos[3] ) > 4 or experimental.TargetPos ~= targetPosition  or targetDistance > maxPlatoonRange * maxPlatoonRange then
                         -- clear move commands if we have queued more than 4
                         if RNGGETN(experimental:GetCommandQueue()) > 2 then
                             IssueClearCommands({experimental})
@@ -823,7 +825,9 @@ end
 ---@param data { Behavior: 'AIBehaviorZoneControl' }
 ---@param units Unit[]
 StartExperimentalThreads = function(brain, platoon)
-    brain:ForkThread(GuardThread, platoon)
+    if platoon.ExperimentalUnit.ExternalFactory then
+        brain:ForkThread(GuardThread, platoon)
+    end
     brain:ForkThread(ThreatThread, platoon)
     brain:ForkThread(StateUtils.ZoneUpdate, platoon)
 end
@@ -972,16 +976,16 @@ ThreatThread = function(aiBrain, platoon)
         if imapThreat > 0 then
             platoon.EnemyThreatTable = StateUtils.ExperimentalTargetLocalCheckRNG(aiBrain, experimentalPos, platoon, 135, false)
         end
-        if shieldEnabled and experimental.MyShield.DepletedByEnergy and platoon.EnemyThreatTable.TotalSuroundingThreat < 1 and aiBrain:GetEconomyStoredRatio( 'ENERGY') < 0.20 then
+        if shieldEnabled and experimental.MyShield and experimental.MyShield.DepletedByEnergy and platoon.EnemyThreatTable.TotalSuroundingThreat < 1 and aiBrain:GetEconomyStoredRatio( 'ENERGY') < 0.20 then
             experimental:DisableShield()
             shieldEnabled = false
-        elseif not shieldEnabled and not experimental:ShieldIsOn() and aiBrain:GetEconomyStoredRatio( 'ENERGY') > 0.50 then
+        elseif experimental.MyShield and not shieldEnabled and not experimental:ShieldIsOn() and aiBrain:GetEconomyStoredRatio( 'ENERGY') > 0.50 then
             experimental:EnableShield()
             shieldEnabled = true
         end
-        if experimental.MyShield.DepletedByEnergy or experimental.MyShield.DepletedByDamage then
+        if experimental.MyShield and experimental.MyShield.DepletedByEnergy or experimental.MyShield.DepletedByDamage then
             experimental.ShieldCaution = true
-        elseif experimental.ShieldCaution then
+        elseif experimental.MyShield and experimental.ShieldCaution then
             experimental.ShieldCaution = false
         end
         coroutine.yield(35)

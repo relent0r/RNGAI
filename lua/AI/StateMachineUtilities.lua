@@ -953,7 +953,7 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
     }
     local targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS - categories.INSIGNIFICANTUNIT, position, maxRange, 'Enemy')
     for _, unit in targetUnits do
-        if not unit.Dead then
+        if not unit.Dead and not unit.Tractored then
             if ignoreNotCompleted then
                 if unit:GetFractionComplete() ~= 1 then
                     continue

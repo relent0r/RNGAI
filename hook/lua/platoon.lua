@@ -7143,7 +7143,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             return behaviors.ScathisBehaviorSorian(self)
         end
         --RNGLOG('Standard Behemoth')
-        return behaviors.BehemothBehaviorRNG(self, ID)
+        self.PlatoonData.StateMachine = 'LandExperimental'
+        self.PlatoonData.StateID = ID
+        return self.StateMachineAIRNG(self)
     end,
 
     SatelliteAIRNG = function(self)
@@ -8034,6 +8036,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             import("/mods/rngai/lua/ai/statemachines/platoon-naval-zonecontrol.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         elseif machineType == 'NavalCombat' then
             import("/mods/rngai/lua/ai/statemachines/platoon-naval-combat.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+        elseif machineType == 'LandExperimental' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-experimental-land-combat.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         end
         WaitTicks(50)
     end,
