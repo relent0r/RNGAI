@@ -6602,8 +6602,8 @@ FindSMDBetweenPositions = function(start, finish, smdTable, radius, stepDistance
     return false
 end
 
-GetNukeStrikePositionRNG = function(aiBrain, platoon)
-    if not aiBrain or not platoon then
+GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers)
+    if not aiBrain then
         return nil
     end
     local function GetMissileDetails(ALLBPS, unitId)
@@ -6620,7 +6620,6 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     -- minimumValue : I want to make sure that whatever we shoot at it either an ACU or is worth more than the missile we just built.
     local minimumValue = 0
     local missilesConsumed = 0
-    local maxMissiles = 0
     local targetPositions = {}
     local readyLaunchers = {}
     local firingPositions = {}
@@ -6628,7 +6627,7 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
     local missileRadius
     local smdRadius
     local gameTime = GetGameTimeSeconds()
-    for _, sml in GetPlatoonUnits(platoon) do
+    for _, sml in smlLaunchers do
         if sml and not sml.Dead then
             local smlMissileCost, smlMissileRadius = GetMissileDetails(ALLBPS, sml.UnitId)
             if not missileCost or smlMissileCost > missileCost then
@@ -6637,11 +6636,10 @@ GetNukeStrikePositionRNG = function(aiBrain, platoon)
             if not missileRadius or smlMissileRadius > missileRadius then
                 missileRadius = smlMissileRadius
             end
-            if sml:GetNukeSiloAmmoCount() > 0 then
-                table.insert(readyLaunchers, sml)
-                maxMissiles = maxMissiles + 1
-            end
         end
+    end
+    if maxMissiles == 0 then
+        return {}
     end
 
     --RNGLOG('SML Missile cost is '..missileCost)

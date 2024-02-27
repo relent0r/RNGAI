@@ -7371,7 +7371,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 continue
             end
             local nukePos
-            nukePosTable = RUtils.GetNukeStrikePositionRNG(aiBrain, self)
+            nukePosTable = RUtils.GetNukeStrikePositionRNG(aiBrain, readySmlLauncherCount, readySmlLaunchers)
             if nukePosTable then
                 for _, firingPosition in nukePosTable do
                     IssueNuke({firingPosition.Launcher}, firingPosition.Position)

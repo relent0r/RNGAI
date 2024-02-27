@@ -50,12 +50,12 @@ local mainWeaponPriorities = {
     categories.ALLUNITS,
 }
 
----@class AIExperimentalLandBehavior : AIPlatoon
+---@class AIExperimentalAirBehavior : AIPlatoon
 ---@field RetreatCount number 
 ---@field ThreatToEvade Vector | nil
 ---@field LocationToRaid Vector | nil
 ---@field OpportunityToRaid Vector | nil
-AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
+AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
 
     PlatoonName = 'ExperimentalLandBehavior',
     Debug = false,
@@ -64,7 +64,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
 
         StateName = 'Start',
 
-        ---@param self AIExperimentalLandBehavior
+        ---@param self AIExperimentalAirBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
             if not self.MovementLayer then
@@ -350,7 +350,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
         StateName = 'SeigeMode',
 
         --- This will be used for performing seiges on firebases and the like
-        ---@param self AIExperimentalLandBehavior
+        ---@param self AIExperimentalAirBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
             local builderData = self.BuilderData
@@ -363,7 +363,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
 
         StateName = 'Navigating',
 
-        ---@param self AIExperimentalLandBehavior
+        ---@param self AIExperimentalAirBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
             local builderData = self.BuilderData
@@ -447,7 +447,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
 
         StateName = 'AttackTarget',
 
-        ---@param self AIExperimentalLandBehavior
+        ---@param self AIExperimentalAirBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
             local experimental = self.ExperimentalUnit
@@ -538,7 +538,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
 
         StateName = 'HoldPosition',
 
-        ---@param self AIExperimentalLandBehavior
+        ---@param self AIExperimentalAirBehavior
         Main = function(self)
             local function GetShieldRadiusAboveGroundSquaredRNG(shield)
                 local width = shield.Blueprint.Defense.Shield.ShieldSize
@@ -630,7 +630,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
 
         StateName = 'Retreating',
 
-        ---@param self AIExperimentalLandBehavior
+        ---@param self AIExperimentalAirBehavior
         Main = function(self)
             if IsDestroyed(self.ExperimentalUnit) then
                 return
@@ -785,7 +785,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/navutils.lua").Generate()
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
-        setmetatable(platoon, AIExperimentalLandBehavior)
+        setmetatable(platoon, AIExperimentalAirBehavior)
         local platoonUnits = platoon:GetPlatoonUnits()
         if platoonUnits then
             for _, unit in platoonUnits do
