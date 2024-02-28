@@ -7317,7 +7317,6 @@ Platoon = Class(RNGAIPlatoonClass) {
     NUKEAIRNG = function(self)
         --RNGLOG('NukeAIRNG starting')
         local aiBrain = self:GetBrain()
-        local missileCount
         local unit
         local readySmlLaunchers
         local readySmlLauncherCount
@@ -7350,16 +7349,19 @@ Platoon = Class(RNGAIPlatoonClass) {
             --RNGLOG('NukeAIRNG main loop beginning')
             readySmlLaunchers = {}
             readySmlLauncherCount = 0
+            LOG('NukeAIRNG : Waiting 5 seconds')
             coroutine.yield(50)
+            LOG('NukeAIRNG : Performing loop')
             platoonUnits = GetPlatoonUnits(self)
             for _, sml in platoonUnits do
-                if not sml or sml.Dead or sml:BeenDestroyed() then
+                if not sml or sml:BeenDestroyed() then
                     self:PlatoonDisbandNoAssign()
                     return
                 end
                 sml:SetAutoMode(true)
+                LOG('NukeAIRNG : Issuing Clear Commands')
                 IssueClearCommands({sml})
-                missileCount = sml:GetNukeSiloAmmoCount() or 0
+                local missileCount = sml:GetNukeSiloAmmoCount() or 0
                 --RNGLOG('NukeAIRNG : SML has '..missileCount..' missiles')
                 if missileCount > 0 then
                     readySmlLauncherCount = readySmlLauncherCount + 1
@@ -7369,18 +7371,21 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             --RNGLOG('NukeAIRNG : readySmlLauncherCount '..readySmlLauncherCount)
             if readySmlLauncherCount < 1 then
-                coroutine.yield(100)
+                coroutine.yield(60)
                 continue
             end
-            local nukePos
-            nukePosTable = RUtils.GetNukeStrikePositionRNG(aiBrain, readySmlLauncherCount, readySmlLaunchers)
-            if nukePosTable then
+            local validTarget, nukePosTable = RUtils.GetNukeStrikePositionRNG(aiBrain, readySmlLauncherCount, readySmlLaunchers)
+            if validTarget then
+                LOG('NukeAIRNG : Valid nuke target, table is '..repr(nukePosTable))
                 for _, firingPosition in nukePosTable do
+                    LOG('Triggering launch for '..repr(firingPosition.Launcher.EntityId))
                     IssueNuke({firingPosition.Launcher}, firingPosition.Position)
                 end
+                coroutine.yield(60)
             else
-                --RNGLOG('NukeAIRNG : No available targets or nukePos is null')
+                LOG('NukeAIRNG : No available targets or nukePos is null')
             end
+            LOG('NukeAIRNG : Waiting 1 seconds')
             coroutine.yield(10)
         end
     end,
