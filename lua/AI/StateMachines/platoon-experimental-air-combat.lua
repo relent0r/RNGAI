@@ -34,10 +34,6 @@ local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
             TotalThreat = 0,
             Units = {}
         },
-        ArtilleryThreat = {
-            TotalThreat = 0,
-            Units = {}
-        },
     }
 ]]
 local mainWeaponPriorities = {
@@ -57,7 +53,7 @@ local mainWeaponPriorities = {
 ---@field OpportunityToRaid Vector | nil
 AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
 
-    PlatoonName = 'ExperimentalLandBehavior',
+    PlatoonName = 'ExperimentalAirBehavior',
     Debug = false,
 
     Start = State {
@@ -124,9 +120,10 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             }
             
             self.UnitRatios = {}
-            self.SupportT1MobileScout = 0
-            self.SupportT2MobileAA = 3
-            self.SupportT3MobileAA = 0
+            self.SupportT1AirScout = 0
+            self.SupportT2AirAA = 3
+            self.SupportT3AirScout = 0
+            self.SupportT3AirAA = 0
             StartExperimentalThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -158,16 +155,6 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                     --LOG('Shield is in caution our threat table is '..repr(threatTable))
-                    if (threatTable.ArtilleryThreat.TotalThreat > 0 or threatTable.RangedUnitThreat.TotalThreat > 0 
-                    or threatTable.CloseUnitThreat.TotalThreat > 25 or threatTable.NavalUnitThreat.TotalThreat > 0) then
-                        self.BuilderData = {
-                            Retreat = true,
-                            RetreatReason = 'NoShield'
-                        }
-                        self:LogDebug(string.format('Experimental shield is low and there is artillery threat, retreat'))
-                        self:ChangeState(self.Retreating)
-                        return
-                    end
                 end
                 if threatTable.TotalSuroundingThreat > 15 then
                     if threatTable.AirSurfaceThreat.TotalThreat > 80 and self.CurrentAntiAirThreat < 30 then
@@ -209,33 +196,10 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     local closestUnit
                     local closestUnitDistance
                     local overRangedCount = 0
-                    if threatTable.RangedUnitThreat.TotalThreat > 0 or threatTable.ArtilleryThreat.TotalThreat > 0 then
-                        self:LogDebug(string.format('We have Artillery or Ranged unit threat around us'))
-                        self:LogDebug(string.format('Artillery Threat '..threatTable.ArtilleryThreat.TotalThreat))
+                    if threatTable.RangedUnitThreat.TotalThreat > 0 then
+                        self:LogDebug(string.format('We have  Ranged unit threat around us'))
                         self:LogDebug(string.format('Ranged Threat '..threatTable.RangedUnitThreat.TotalThreat))
                         
-                        for _, enemyUnit in threatTable.ArtilleryThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) then
-                                local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object)
-                                --LOG('Artillery Range is greater than Experimental')
-                                if unitRange > self.MaxPlatoonWeaponRange then
-                                    overRangedCount = overRangedCount + 1
-                                end
-                                if overRangedCount > 1 then
-                                    self.BuilderData = {
-                                        Retreat = true,
-                                        RetreatReason = 'ArtilleryThreat',
-                                        AttackTarget = enemyUnit.Object
-                                    }
-                                    self:LogDebug(string.format('Experimental has more than one T2 arty within range of it, retreat'))
-                                    self:ChangeState(self.Retreating)
-                                end
-                                if not closestUnit or enemyUnit.Distance < closestUnitDistance then
-                                    closestUnit = enemyUnit.Object
-                                    closestUnitDistance = enemyUnit.Distance
-                                end
-                            end
-                        end
                         for _, enemyUnit in threatTable.RangedUnitThreat.Units do
                             if not IsDestroyed(enemyUnit.Object) then
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object)
@@ -245,7 +209,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                                 if overRangedCount > 3 then
                                     self.BuilderData = {
                                         Retreat = true,
-                                        RetreatReason = 'ArtilleryThreat',
+                                        RetreatReason = 'RangedThreat',
                                         AttackTarget = enemyUnit.Object
                                     }
                                     self:LogDebug(string.format('Experimental has more than 3 units with more range than the Experimental, retreat'))
@@ -455,24 +419,11 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             local maxPlatoonRange = self.MaxPlatoonWeaponRange
             local threatTable = self.EnemyThreatTable
             while experimental and not IsDestroyed(experimental) do
-                if (experimental.ShieldCaution or threatTable.ArtilleryThreat.TotalThreat > 0) and not experimental.HoldPosition then
+                if experimental.ShieldCaution and not experimental.HoldPosition then
                     if experimental.ShieldCaution then
                         --LOG('Shield is under caution, decidewhattodo')
                         self:ChangeState(self.DecideWhatToDo)
                         return
-                    end
-                    if threatTable.ArtilleryThreat.TotalThreat > 0 then
-                        local artilleryCount = 0
-                        for _, unit in threatTable.ArtilleryThreat.Units do
-                            if unit.Distance < 16384 then
-                                artilleryCount = artilleryCount + 1
-                                if artilleryCount > 1 then
-                                    --LOG('Land is within range of Artillery and count is greater than one')
-                                    self:ChangeState(self.DecideWhatToDo)
-                                    return 
-                                end
-                            end
-                        end
                     end
                 end
                 if target and not target.Dead then
@@ -640,9 +591,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             if retreatReason then
                 if retreatReason == 'AirThreat' then
                     if self.CurrentAntiAirThreat > 80 then
-                        self.SupportT3MobileAA = 5
-                    elseif self.CurrentAntiAirThreat > 25 then
-                        self.SupportT3MobileAA = 2
+                        self.SupportT3AirAA = 5
                     end
                 end
             end
@@ -867,7 +816,7 @@ GuardThread = function(aiBrain, platoon)
         local currentShieldCount = 0
         local currentLandCount = 0
         local currentLandThreat = 0
-        local currentLandScoutCount = 0
+        local currentAirScoutCount = 0
         local guardUnits = platoon:GetSquadUnits('guard')
         local platoonUnits = platoon:GetPlatoonUnits()
         local intelCoverage = true
@@ -879,7 +828,7 @@ GuardThread = function(aiBrain, platoon)
                 IssueClearCommands(guardUnits)
                 local plat = aiBrain:MakePlatoon('', '')
                 aiBrain:AssignUnitsToPlatoon(plat, guardUnits, 'attack', 'None')
-                import("/mods/rngai/lua/ai/statemachines/platoon-land-zonecontrol.lua").AssignToUnitsMachine({ {ZoneType = 'control'}, LocationType = platoon.LocationType}, plat, guardUnits)
+                import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ {}, LocationType = platoon.LocationType}, plat, guardUnits)
                 return
             end
             local experimentalPos = experimental:GetPosition()
@@ -890,7 +839,7 @@ GuardThread = function(aiBrain, platoon)
             for _, v in guardUnits do
                 if v and not v.Dead then
                     if v.Blueprint.CategoriesHash.SCOUT then
-                        currentLandScoutCount = currentLandScoutCount + 1
+                        currentAirScoutCount = currentAirScoutCount + 1
                     elseif v.Blueprint.CategoriesHash.ANTIAIR then
                         currentAntiAirThreat = currentAntiAirThreat + v.Blueprint.Defense.AirThreatLevel
                         if v.Blueprint.CategoriesHash.TECH1 then
@@ -934,16 +883,12 @@ GuardThread = function(aiBrain, platoon)
             --LOG('currentT3AntiAirCount '..currentT3AntiAirCount)
             --LOG('currentLandScoutCount '..currentLandScoutCount)
             if currentT2AntiAirCount < platoon.SupportT2MobileAA then
-                table.insert(buildQueue, UnitTable['T2LandAA'])
-            elseif currentT3AntiAirCount < platoon.SupportT3MobileAA then
-                table.insert(buildQueue, UnitTable['T3LandAA'])
+                table.insert(buildQueue, UnitTable['T2AirAA'])
+            elseif currentT3AntiAirCount < platoon.SupportT3AirAA then
+                table.insert(buildQueue, UnitTable['T3AirFighter'])
             end
-            if not intelCoverage and currentLandScoutCount < 3 then
-                table.insert(buildQueue, UnitTable['T1LandScout'])
-            end
-            if not experimental.ExternalFactory.EngineerManager.Task and platoon.EnemyThreatTable.ArtilleryThreat.TotalThreat > 60 then
-                experimental.ExternalFactory.EngineerManager.Task = 'Firebase'
-                table.insert(buildQueue, UnitTable['T3Engineer'])
+            if not intelCoverage and currentAirScoutCount < 3 then
+                table.insert(buildQueue, UnitTable['T1AirScout'])
             end
             --LOG('Current Experimental build queue '..repr(buildQueue))
             platoon.BuildThread = aiBrain:ForkThread(BuildUnit, experimental, buildQueue)
@@ -970,7 +915,7 @@ ThreatThread = function(aiBrain, platoon)
         platoon.CurrentPlatoonAirThreat = platoon:CalculatePlatoonThreat('Air', categories.ANTIAIR)
         local imapThreat = GetThreatAtPosition(aiBrain, experimentalPos, imapRings, true, 'AntiSurface')
         if imapThreat > 0 then
-            platoon.EnemyThreatTable = StateUtils.ExperimentalTargetLocalCheckRNG(aiBrain, experimentalPos, platoon, 135, false)
+            platoon.EnemyThreatTable = StateUtils.ExperimentalAirTargetLocalCheckRNG(aiBrain, experimentalPos, platoon, 135, false)
         end
         if shieldEnabled and experimental.MyShield.DepletedByEnergy and platoon.EnemyThreatTable.TotalSuroundingThreat < 1 and aiBrain:GetEconomyStoredRatio( 'ENERGY') < 0.20 then
             experimental:DisableShield()
