@@ -42,7 +42,7 @@ local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 ]]
 local mainWeaponPriorities = {
     categories.EXPERIMENTAL,
-    categories.COMMANDER,
+    categories.COMMAND,
     categories.SUBCOMMANDER,
     categories.TECH3 * categories.MOBILE,
     categories.STRUCTURE * categories.DEFENSE - categories.ANTIMISSILE,
@@ -182,7 +182,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                     end
-                    if threatTable.AirSurfaceThreat.TotalThreat > 25 and self.CurrentAntiAirThreat < 15 then
+                    if threatTable.AirSurfaceThreat.TotalThreat > 35 and self.CurrentAntiAirThreat < 15 then
                         local localFriendlyAirThreat = self:CalculatePlatoonThreatAroundPosition('Air', categories.ANTIAIR, experimentalPosition, 35)
                         if localFriendlyAirThreat < 15 then
                             self.BuilderData = {
@@ -190,18 +190,6 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                 RetreatReason = 'AirThreat'
                             }
                             self:LogDebug(string.format('Experimental has 25+ air surface threat around it and less than 15 antiair threat, retreat'))
-                            self:ChangeState(self.Retreating)
-                            return
-                        end
-                    end
-                    if threatTable.AirSurfaceThreat.TotalThreat > 10 and self.CurrentAntiAirThreat < 10 then
-                        local localFriendlyAirThreat = self:CalculatePlatoonThreatAroundPosition('Air', categories.ANTIAIR, experimentalPosition, 35)
-                        if localFriendlyAirThreat < 10 then
-                            self.BuilderData = {
-                                Retreat = true,
-                                RetreatReason = 'AirThreat'
-                            }
-                            self:LogDebug(string.format('Experimental has 10+ air surface threat around it and less than 10 antiair threat, retreat'))
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -368,7 +356,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local builderData = self.BuilderData
             local destination = builderData.Position
-            local navigateDistanceCutOff = builderData.CutOff or 3600
+            local navigateDistanceCutOff = builderData.CutOff or 900
             if not destination then
                 --LOG('no destination BuilderData '..repr(builderData))
                 self:LogWarning(string.format('no destination to navigate to'))
@@ -385,7 +373,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
 
             while not IsDestroyed(self.ExperimentalUnit) do
                 local origin = self.ExperimentalUnit:GetPosition()
-                waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 50)
+                waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 60)
                 if StateUtils.PositionInWater(origin) then
                     self.VentGuardPlatoon = true
                     --LOG('GuardPlatoon Vent has gone true')
@@ -436,7 +424,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     end
                     --LOG('Current TotalSuroundingThreat '..repr(self.EnemyThreatTable.TotalSuroundingThreat))
                     -- check for threats
-                    WaitTicks(10)
+                    WaitTicks(20)
                 end
                 WaitTicks(1)
             end
@@ -500,6 +488,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     -- check if the move position is new or target has moved
                     if targetDistance < maxPlatoonRange and maxPlatoonRange > targetMaxWeaponRange and not aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental.WeaponArc) then
                         IssueAggressiveMove({experimental}, targetPosition)
+                        coroutine.yield(25)
                     elseif VDist2Sq( smartPos[1], smartPos[3], experimental.smartPos[1], experimental.smartPos[3] ) > 4 or experimental.TargetPos ~= targetPosition  or targetDistance > maxPlatoonRange * maxPlatoonRange then
                         -- clear move commands if we have queued more than 4
                         if RNGGETN(experimental:GetCommandQueue()) > 2 then
@@ -532,7 +521,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
-                coroutine.yield(25)
+                coroutine.yield(35)
             end
         end,
     },

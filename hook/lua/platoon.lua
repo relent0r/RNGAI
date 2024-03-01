@@ -7345,6 +7345,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             sml:SetAutoMode(true)
             IssueClearCommands({sml})
         end
+        local recentTargets = {}
         while PlatoonExists(aiBrain, self) do
             --RNGLOG('NukeAIRNG main loop beginning')
             readySmlLaunchers = {}
@@ -7365,27 +7366,42 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --RNGLOG('NukeAIRNG : SML has '..missileCount..' missiles')
                 if missileCount > 0 then
                     readySmlLauncherCount = readySmlLauncherCount + 1
-                    RNGINSERT(readySmlLaunchers, sml)
+                    RNGINSERT(readySmlLaunchers, {Launcher = sml, Count = missileCount})
                     self.ReadySMLCount = readySmlLauncherCount
                 end
             end
             --RNGLOG('NukeAIRNG : readySmlLauncherCount '..readySmlLauncherCount)
             if readySmlLauncherCount < 1 then
+                aiBrain.BrainIntel.SMLReady = false
                 coroutine.yield(60)
                 continue
+            else
+                aiBrain.BrainIntel.SMLReady = true
             end
             local validTarget, nukePosTable = RUtils.GetNukeStrikePositionRNG(aiBrain, readySmlLauncherCount, readySmlLaunchers)
             if validTarget then
                 LOG('NukeAIRNG : Valid nuke target, table is '..repr(nukePosTable))
                 for _, firingPosition in nukePosTable do
+                    table.insert(aiBrain.BrainIntel.SMLTargetPositions, {Position = firingPosition.IMAPPos, Time=GetGameTimeSeconds()})
                     LOG('Triggering launch for '..repr(firingPosition.Launcher.EntityId))
                     IssueNuke({firingPosition.Launcher}, firingPosition.Position)
                 end
-                coroutine.yield(60)
+                coroutine.yield(70)
             else
                 LOG('NukeAIRNG : No available targets or nukePos is null')
             end
             LOG('NukeAIRNG : Waiting 1 seconds')
+            local gameTime = GetGameTimeSeconds()
+            local rebuildTable = false
+            for k, v in aiBrain.BrainIntel.SMLTargetPositions do
+                if v.Time > gameTime - 180 then
+                    aiBrain.BrainIntel.SMLTargetPositions[k] = nil
+                    rebuildTable = true
+                end
+            end
+            if rebuildTable then
+                aiBrain.BrainIntel.SMLTargetPositions = aiBrain:RebuildTable(aiBrain.BrainIntel.SMLTargetPositions)
+            end
             coroutine.yield(10)
         end
     end,

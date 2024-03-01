@@ -383,7 +383,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
 
             while not IsDestroyed(self.ExperimentalUnit) do
                 local origin = self.ExperimentalUnit:GetPosition()
-                waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 50)
+                waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 60)
                 if StateUtils.PositionInWater(origin) then
                     self.VentGuardPlatoon = true
                     --LOG('GuardPlatoon Vent has gone true')
@@ -434,7 +434,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     end
                     --LOG('Current TotalSuroundingThreat '..repr(self.EnemyThreatTable.TotalSuroundingThreat))
                     -- check for threats
-                    WaitTicks(10)
+                    WaitTicks(20)
                 end
                 WaitTicks(1)
             end
