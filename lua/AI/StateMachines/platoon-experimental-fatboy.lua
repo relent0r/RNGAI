@@ -42,7 +42,7 @@ local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 ]]
 local mainWeaponPriorities = {
     categories.EXPERIMENTAL,
-    categories.COMMANDER,
+    categories.COMMAND,
     categories.SUBCOMMANDER,
     categories.TECH3 * categories.MOBILE,
     categories.STRUCTURE * categories.DEFENSE - categories.ANTIMISSILE,

@@ -311,7 +311,8 @@ function BaseCouldBuildMobileAA(aiBrain, locationType)
 end
 
 function GatewayValidation(aiBrain)
-    if aiBrain.EcoManager.CoreExtractorT3Percentage >= 1.0 or aiBrain.EconomyOverTimeCurrent.MassIncome > 20 then
+    local multiplier = aiBrain.EcoManager.EcoMultiplier
+    if aiBrain.EcoManager.CoreExtractorT3Percentage >= 1.0 or aiBrain.EconomyOverTimeCurrent.MassIncome > (20 * multiplier) then
         return true
     end
     return false

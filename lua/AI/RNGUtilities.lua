@@ -6711,6 +6711,7 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers)
             if z.StructuresNotMex then
                 for _, v in aiBrain.BrainIntel.SMLTargetPositions do
                     if v.Position[1] == z.Position[1] and v.Position[3] == z.Position[3] then
+                        LOG('Attempting to nuke a position that has recently been nuked, skipping')
                         skip = true
                         break
                     end
@@ -6747,12 +6748,16 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers)
                     LOG('Number of units at location with structure category is '..table.getn(unitsAtLocation))
                     for _, v in unitsAtLocation do
                         if v.Blueprint.Economy.BuildCostMass then
-                            currentValue = currentValue + v.Blueprint.Economy.BuildCostMass
+                            if v.Blueprint.CategoriesHash.ENERGYPRODUCTION then
+                                currentValue = currentValue + v.Blueprint.Economy.BuildCostMass * 1.5
+                            else
+                                currentValue = currentValue + v.Blueprint.Economy.BuildCostMass
+                            end
                         end
                     end
                     RNGLOG('Current UnitValue at location '..repr(currentValue))
-                    LOG('Must be greater than '..(missileCost / 1.5))
-                    if currentValue > (missileCost / 1.5) and currentValue > maxValue then
+                    LOG('Must be greater than '..(missileCost / 1.2))
+                    if currentValue > (missileCost / 1.2) and currentValue > maxValue then
                         maxValue = currentValue
                         for _, v in smlLaunchers do
                             LOG('Missile Count of current launcher is '..v.Count)

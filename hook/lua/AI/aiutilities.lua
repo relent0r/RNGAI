@@ -6,7 +6,7 @@ local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
-local TransportUtils = import("/lua/ai/transportutilities.lua")
+local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
 local MarkerUtils = import("/lua/sim/MarkerUtilities.lua")
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
@@ -102,6 +102,9 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
         -- Skip the last move... we want to return and do a build
         unit.WaitingForTransport = true
         bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, unit.PlatoonHandle, destination, transportWait, true)
+        if unit.PlatoonHandle.BuilderName == 'RNGAI Engineer Reclaim T1 Excess Expansion' then
+            LOG('used transports response '..repr(bUsedTransports)..' for unit '..repr(unit.EntityId))
+        end
         unit.WaitingForTransport = false
 
         if bUsedTransports then

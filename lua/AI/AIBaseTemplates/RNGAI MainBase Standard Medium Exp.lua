@@ -100,7 +100,7 @@ BaseBuilderTemplate {
         'RNGAI Strategic Formers',
 
         --Experimentals --
-        'RNGEXP Experimental Builders',
+        'RNGAI Experimental Builders',
         'RNGAI Experimental Formers',
     },
     NonCheatBuilders = {

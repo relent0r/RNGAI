@@ -348,7 +348,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerBuildPower = 0
         self.EngineerAssistManagerFocusCategory = false
         self.EngineerAssistManagerFocusAirUpgrade = false
-        self.EngineerAssistManagerFocusExperimental = false
+        self.EngineerAssistManagerFocusHighValue = false
         self.EngineerAssistManagerFocusLandUpgrade = false
         self.EngineerAssistManagerPriorityTable = {}
         self.EngineerDistributionTable = {
@@ -1319,7 +1319,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.cmanager.income.r.m > 110 and self.cmanager.buildpower.eng.T3 < 225 then
                 RNGLOG('Dynamic T3 Engineer builder should be activated for experimental extractor push')
             end
-            if self.EngineerAssistManagerFocusExperimental then
+            if self.EngineerAssistManagerFocusHighValue then
                 RNGLOG('We should be pushing for an experimental and we only have one in progress')
             end
             RNGLOG('Core T3 Extractor Count '..self.EcoManager.CoreExtractorT3Count)
@@ -3415,6 +3415,7 @@ AIBrain = Class(RNGAIBrainClass) {
         coroutine.yield(Random(150,200))
         local im = IntelManagerRNG.GetIntelManager(self)
         while true do
+            local multiplier = self.EcoManager.EcoMultiplier
             if self.TacticalMonitor.TacticalMonitorStatus == 'ACTIVE' then
                 --RNGLOG('Run TacticalThreatAnalysisRNG')
                 self:ForkThread(IntelManagerRNG.TacticalThreatAnalysisRNG, self)
@@ -3495,13 +3496,13 @@ AIBrain = Class(RNGAIBrainClass) {
             
             --Lets ponder this one some more
             if self.BrainIntel.LandPhase > 2 then
-                if not self.RNGEXP and self.cmanager.income.r.m > (120 * self.EcoManager.EcoMultiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBuilding(self, categories.EXPERIMENTAL) == 1 then
+                if not self.RNGEXP and self.cmanager.income.r.m > (120 * multiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBuilding(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC)) >= 1 then
                     --RNGLOG('Land Phase > 2 and eco is above 120 and number units building for exp is 1')
-                    self.EngineerAssistManagerFocusExperimental = true
-                elseif self.RNGEXP and self.cmanager.income.r.m > (90 * self.EcoManager.EcoMultiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBuilding(self, categories.EXPERIMENTAL) == 1 then
-                    self.EngineerAssistManagerFocusExperimental = true
+                    self.EngineerAssistManagerFocusHighValue = true
+                elseif self.RNGEXP and self.cmanager.income.r.m > (90 * multiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBuilding(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC)) >= 1 then
+                    self.EngineerAssistManagerFocusHighValue = true
                 else
-                    self.EngineerAssistManagerFocusExperimental = false
+                    self.EngineerAssistManagerFocusHighValue = false
                 end
             end
             coroutine.yield(600)
@@ -5377,6 +5378,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local massStorage = GetEconomyStored( self, 'MASS')
             local energyStorage = GetEconomyStored( self, 'ENERGY')
             local gameTime = GetGameTimeSeconds()
+            local multiplier = self.EcoManager.EcoMultiplier
             local CoreMassNumberAchieved = false
             local minAssistPower = 0
             if self.cmanager.income.r.m then
@@ -5415,13 +5417,14 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
                 }
-            elseif self.EngineerAssistManagerFocusExperimental then
+            elseif self.EngineerAssistManagerFocusHighValue then
                 state = 'Experimental'
                 --RNGLOG('Assist Focus is Experimental')
                 self.EngineerAssistManagerFocusCategory = categories.EXPERIMENTAL
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.EXPERIMENTAL, type = 'Completion'},
+                    {cat = categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC , type = 'Completion'},
                     {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
@@ -5479,10 +5482,10 @@ AIBrain = Class(RNGAIBrainClass) {
             elseif not CoreMassNumberAchieved and self.EcoManager.CoreMassPush and self.EngineerAssistManagerBuildPower <= 75 then
                 --RNGLOG('CoreMassPush is true')
                 self.EngineerAssistManagerBuildPowerRequired = 75
-            elseif self.EngineerAssistManagerFocusExperimental and self.EngineerAssistManagerBuildPower <= 150 then
-                --RNGLOG('EngineerAssistManagerFocusExperimental is true')
-                self.EngineerAssistManagerBuildPowerRequired = 150
-            elseif massStorage > 150 and energyStorage > 150 and self.EngineerAssistManagerBuildPower < math.max(minAssistPower, 5) and not self.EngineerAssistManagerFocusExperimental and not self.EcoManager.CoreMassPush then
+            elseif self.EngineerAssistManagerFocusHighValue and self.EngineerAssistManagerBuildPower <= math.ceil( 150 * multiplier) then
+                --RNGLOG('EngineerAssistManagerFocusHighValue is true')
+                self.EngineerAssistManagerBuildPowerRequired = math.ceil((150 * multiplier))
+            elseif massStorage > 150 and energyStorage > 150 and self.EngineerAssistManagerBuildPower < math.max(minAssistPower, 5) and not self.EngineerAssistManagerFocusHighValue and not self.EcoManager.CoreMassPush then
                 if self.EngineerAssistManagerBuildPower <= 30 and self.EngineerAssistManagerBuildPowerRequired <= 26 then
                     self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
                 end
@@ -5507,7 +5510,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             if not CoreMassNumberAchieved and self.EcoManager.CoreExtractorT3Count > 2 then
                 CoreMassNumberAchieved = true
-                if not self.EngineerAssistManagerFocusExperimental and not self.EcoManager.CoreMassPush and self.EngineerAssistManagerBuildPowerRequired > minAssistPower then
+                if not self.EngineerAssistManagerFocusHighValue and not self.EcoManager.CoreMassPush and self.EngineerAssistManagerBuildPowerRequired > minAssistPower then
                     self.EngineerAssistManagerBuildPowerRequired = minAssistPower
                 end
             end
@@ -6373,7 +6376,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerBuildPower = 0
         self.EngineerAssistManagerFocusCategory = false
         self.EngineerAssistManagerFocusAirUpgrade = false
-        self.EngineerAssistManagerFocusExperimental = false
+        self.EngineerAssistManagerFocusHighValue = false
         self.EngineerAssistManagerFocusLandUpgrade = false
         self.EngineerAssistManagerPriorityTable = {}
         self.EngineerDistributionTable = {

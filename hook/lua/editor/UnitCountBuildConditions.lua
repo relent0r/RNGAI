@@ -1175,6 +1175,7 @@ function ValidateLateGameBuild(aiBrain, locationType)
     local queuedStructures = aiBrain.BuilderManagers[locationType].EngineerManager.QueuedStructures
     local queuedCount = 0
     local timeStamp = GetGameTimeSeconds()
+    local multiplier = aiBrain.EcoManager.EcoMultiplier
     for _, v in queuedStructures do
         for _, c in v do
             --LOG('Checking queue item '..repr(c))
@@ -1189,7 +1190,7 @@ function ValidateLateGameBuild(aiBrain, locationType)
         --LOG('Number of high value units queued '..queuedCount)
         --LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
         --LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * queuedCount)))
-        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (150 * queuedCount) then
+        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + ((150 * multiplier) * queuedCount) then
             --LOG('Income is not high enough, return false')
             return false
         end
@@ -1209,7 +1210,7 @@ function ValidateLateGameBuild(aiBrain, locationType)
         --LOG('Number of high value units being built '..unitsBeingBuilt)
         --LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
         --LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * unitsBeingBuilt)))
-        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (150 * unitsBeingBuilt) then
+        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + ((150 * multiplier) * unitsBeingBuilt) then
             --LOG('Income is not high enough, return false')
             return false
         end
@@ -1305,10 +1306,10 @@ function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
         if availableIncome - aiBrain.cmanager.buildpower.eng.T2 > 0 then
             return true
         end
-        if aiBrain.cmanager.income.r.m > 55 and aiBrain.cmanager.buildpower.eng.T2 < 75 then
+        if aiBrain.cmanager.income.r.m > (55 * multiplier) and aiBrain.cmanager.buildpower.eng.T2 < (75 * multiplier) then
             return true
         end
-        if aiBrain.cmanager.income.r.m > 80 and aiBrain.cmanager.buildpower.eng.T2 < 160 then
+        if aiBrain.cmanager.income.r.m > (80 * multiplier) and aiBrain.cmanager.buildpower.eng.T2 < (160 * multiplier) then
             return true
         end
     elseif type == 3 then
@@ -1316,15 +1317,16 @@ function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
             return true
         end
         if availableIncome - aiBrain.cmanager.buildpower.eng.T3 > 0 then
+            LOG('Available income '..availableIncome..' minus t3 build power is true '..aiBrain.cmanager.buildpower.eng.T3)
             return true
         end
-        if aiBrain.cmanager.income.r.m > 100 and aiBrain.cmanager.buildpower.eng.T3 < 225 then
+        if aiBrain.cmanager.income.r.m > (100 * multiplier) and aiBrain.cmanager.buildpower.eng.T3 < (225 * multiplier) then
             return true
         end
-        if aiBrain.cmanager.income.r.m > 160 and aiBrain.cmanager.buildpower.eng.T3 < 400 then
+        if aiBrain.cmanager.income.r.m > (160 * multiplier) and aiBrain.cmanager.buildpower.eng.T3 < (400 * multiplier) then
             return true
         end
-        if aiBrain.cmanager.income.r.m > 300 and aiBrain.cmanager.buildpower.eng.T3 < 800 then
+        if aiBrain.cmanager.income.r.m > (300 * multiplier) and aiBrain.cmanager.buildpower.eng.T3 < (800 * multiplier) then
             return true
         end
     elseif type == 4 then

@@ -7,7 +7,7 @@ local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMa
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIUtils = import('/lua/ai/aiutilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
-local TransportUtils = import("/lua/ai/transportutilities.lua")
+local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetPosition = moho.entity_methods.GetPosition
@@ -3171,6 +3171,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local highValue = eng.PlatoonHandle.PlatoonData.Construction.HighValue
             if locationType and highValue then
                 local aiBrain = eng.Brain
+                local multiplier = aiBrain.EcoManager.EcoMultiplier
                 if aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt then
                     LOG('StructuresBeingBuilt exist on engineer manager '..repr(aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt))
                     local structuresBeingBuilt = aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt
@@ -3192,8 +3193,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                         LOG('Number of high value units being built '..unitsBeingBuilt)
                         LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
-                        LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + 150))
-                        if unitsBeingBuilt > 0 and aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + 150 then
+                        LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (150 * multiplier)))
+                        if unitsBeingBuilt > 0 and aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (150 * multiplier) then
                             LOG('Too many high value units being built, abort this one')
                             if queuedStructures[unitBp.TechCategory][eng.EntityId] then
                                 LOG('Deleting engineer entry in queue')
@@ -6830,6 +6831,10 @@ Platoon = Class(RNGAIPlatoonClass) {
             v.ReclaimInProgress = nil
             v.CaptureInProgress = nil
             v.JobType = nil
+            if v.Blueprint.CategoriesHash.TRANSPORTFOCUS then
+                LOG('Disbanding platoon with transport in it')
+                LOG(reprsl(debug.traceback()))
+            end
             if v:IsPaused() then
                 v:SetPaused( false )
             end
@@ -7345,7 +7350,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             sml:SetAutoMode(true)
             IssueClearCommands({sml})
         end
-        local recentTargets = {}
+        local targetsAvailable = true
         while PlatoonExists(aiBrain, self) do
             --RNGLOG('NukeAIRNG main loop beginning')
             readySmlLaunchers = {}
@@ -7359,7 +7364,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     self:PlatoonDisbandNoAssign()
                     return
                 end
-                sml:SetAutoMode(true)
+
                 LOG('NukeAIRNG : Issuing Clear Commands')
                 IssueClearCommands({sml})
                 local missileCount = sml:GetNukeSiloAmmoCount() or 0
@@ -7368,6 +7373,12 @@ Platoon = Class(RNGAIPlatoonClass) {
                     readySmlLauncherCount = readySmlLauncherCount + 1
                     RNGINSERT(readySmlLaunchers, {Launcher = sml, Count = missileCount})
                     self.ReadySMLCount = readySmlLauncherCount
+                end
+                if not targetsAvailable and missileCount > 1 and GetEconomyStoredRatio(aiBrain, 'MASS') < 0.20 then
+                    LOG('No nuke targets and have at least 2 missiles ready, stop building missiles')
+                    sml:SetAutoMode(false)
+                else
+                    sml:SetAutoMode(true)
                 end
             end
             --RNGLOG('NukeAIRNG : readySmlLauncherCount '..readySmlLauncherCount)
@@ -7381,6 +7392,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local validTarget, nukePosTable = RUtils.GetNukeStrikePositionRNG(aiBrain, readySmlLauncherCount, readySmlLaunchers)
             if validTarget then
                 LOG('NukeAIRNG : Valid nuke target, table is '..repr(nukePosTable))
+                targetsAvailable = true
                 for _, firingPosition in nukePosTable do
                     table.insert(aiBrain.BrainIntel.SMLTargetPositions, {Position = firingPosition.IMAPPos, Time=GetGameTimeSeconds()})
                     LOG('Triggering launch for '..repr(firingPosition.Launcher.EntityId))
@@ -7388,6 +7400,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
                 coroutine.yield(70)
             else
+                targetsAvailable = false
                 LOG('NukeAIRNG : No available targets or nukePos is null')
             end
             LOG('NukeAIRNG : Waiting 1 seconds')
