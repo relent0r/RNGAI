@@ -485,6 +485,72 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
+    AttackRun = State {
+
+        StateName = 'AttackRun',
+
+        ---@param self AIExperimentalAirBehavior
+        Main = function(self)
+            local aiBrain = self:GetBrain()
+            local experimental = self.ExperimentalUnit
+            local target = self.BuilderData.AttackTarget
+            local maxPlatoonRange = self.MaxPlatoonWeaponRange
+            local threatTable = self.EnemyThreatTable
+            while experimental and not IsDestroyed(experimental) do
+                if target and not target.Dead then
+                    if not table.empty(experimental:GetCommandQueue()) then
+                        IssueClearCommands({experimental})
+                    end
+                    local targetPosition = target:GetPosition()
+                    if not maxPlatoonRange then
+                        coroutine.yield(3)
+                        WARN('Warning : Experimental has no max weapon range')
+                        continue
+                    end
+                    local unitPos = experimental:GetPosition()
+                    if StateUtils.PositionInWater(unitPos) then
+                        maxPlatoonRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Anti Navy')
+                    elseif maxPlatoonRange < self.MaxPlatoonWeaponRange then
+                        maxPlatoonRange = self.MaxPlatoonWeaponRange
+                    end
+                    -- check if the move position is new or target has moved
+                    if VDist2Sq( smartPos[1], smartPos[3], experimental.smartPos[1], experimental.smartPos[3] ) > 4 or experimental.TargetPos ~= targetPosition  or targetDistance > maxPlatoonRange * maxPlatoonRange then
+                        -- clear move commands if we have queued more than 4
+                        if RNGGETN(experimental:GetCommandQueue()) > 2 then
+                            IssueClearCommands({experimental})
+                            coroutine.yield(3)
+                        end
+                        IssueMove({experimental}, smartPos )
+                        IssueAttack({experimental}, target)
+                        experimental.smartPos = smartPos
+                        experimental.TargetPos = targetPosition
+                    -- in case we don't move, check if we can fire at the target
+                    else
+                        if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental.WeaponArc) then
+                            --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
+                            IssueMove({experimental}, targetPosition )
+                            coroutine.yield(30)
+                        else
+                            --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
+                        end
+                    end
+                    if not target.Dead and threatTable.ClosestUnitDistance + 25 < VDist3Sq(unitPos, targetPosition) then
+                        coroutine.yield(10)
+                        --LOG('Another unit is closer to the Experimental, DecideWhatToDo')
+                        self:ChangeState(self.DecideWhatToDo)
+                        return 
+                    end
+                else
+                    --LOG('enemy unit is dead, DecideWhatToDo')
+                    coroutine.yield(10)
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
+                coroutine.yield(25)
+            end
+        end,
+    },
+
     HoldPosition = State {
 
         StateName = 'HoldPosition',
