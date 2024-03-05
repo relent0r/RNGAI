@@ -781,10 +781,10 @@ end
 ---@param platoon AIPlatoon
 GuardThread = function(aiBrain, platoon)
     local UnitTable = {
-        T1LandScout = 'uel0101',
-        T2LandAA = 'uel0205',
-        T3LandAA = 'delk002',
-        T3Engineer = 'uel0309'
+        T3AirScout = 'uaa0302',
+        T3AirBomber = 'uaa0304',
+        T3AirFighter = 'uaa0303',
+        T3AirGunship = 'xaa0305'
     }
     local function BuildUnit(aiBrain, experimental, unitBuildQueue)
         local factory = experimental.ExternalFactory
@@ -849,11 +849,6 @@ GuardThread = function(aiBrain, platoon)
                         elseif v.Blueprint.CategoriesHash.TECH3 then
                             currentT3AntiAirCount = currentT3AntiAirCount + 1
                         end
-                    elseif v.Blueprint.CategoriesHash.SHIELD and v.Blueprint.CategoriesHash.DEFENSE and v.Blueprint.CategoriesHash.MOBILE then
-                        currentShieldCount = currentShieldCount + 1
-                    elseif v.Blueprint.CategoriesHash.DIRECTFIRE and v.Blueprint.CategoriesHash.LAND then
-                        currentLandThreat = currentLandThreat + v.Blueprint.Defense.SurfaceThreatLevel
-                        currentLandCount = currentLandCount + 1
                     end
                 end
                 local unitPos = v:GetPosition()
@@ -877,18 +872,18 @@ GuardThread = function(aiBrain, platoon)
                 end
             end
         end
-        if not StateUtils.PositionInWater(experimental:GetPosition()) and not platoon.BuildThread and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.7 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 0.8 then
+        if not platoon.BuildThread and aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.7 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime > 0.8 then
             local buildQueue = {}
             --LOG('currentT2AntiAirCount '..currentT2AntiAirCount)
             --LOG('currentT3AntiAirCount '..currentT3AntiAirCount)
             --LOG('currentLandScoutCount '..currentLandScoutCount)
-            if currentT2AntiAirCount < platoon.SupportT2MobileAA then
-                table.insert(buildQueue, UnitTable['T2AirAA'])
+            if currentT2AntiAirCount < platoon.SupportT3Gunship then
+                table.insert(buildQueue, UnitTable['T3AirGunship'])
             elseif currentT3AntiAirCount < platoon.SupportT3AirAA then
                 table.insert(buildQueue, UnitTable['T3AirFighter'])
             end
-            if not intelCoverage and currentAirScoutCount < 3 then
-                table.insert(buildQueue, UnitTable['T1AirScout'])
+            if not intelCoverage and currentAirScoutCount < 1 then
+                table.insert(buildQueue, UnitTable['T3AirScout'])
             end
             --LOG('Current Experimental build queue '..repr(buildQueue))
             platoon.BuildThread = aiBrain:ForkThread(BuildUnit, experimental, buildQueue)
