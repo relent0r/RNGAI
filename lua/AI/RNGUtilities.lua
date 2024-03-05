@@ -6607,7 +6607,7 @@ FindSMDBetweenPositions = function(start, finish, smdTable, radius, stepDistance
     return false
 end
 
-GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers)
+GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experimentalPresent)
     if not aiBrain then
         return nil
     end
@@ -6756,13 +6756,17 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers)
                         end
                     end
                     RNGLOG('Current UnitValue at location '..repr(currentValue))
-                    LOG('Must be greater than '..(missileCost / 1.2))
-                    if currentValue > (missileCost / 1.2) and currentValue > maxValue then
+                    LOG('Must be greater than '..missileCost)
+                    if currentValue > missileCost and currentValue > maxValue then
                         maxValue = currentValue
                         for _, v in smlLaunchers do
+                            local experimental = v.Launcher.Blueprint.CategoriesHash.EXPERIMENTAL or false
+                            local smdBetweenPos
                             LOG('Missile Count of current launcher is '..v.Count)
                             if v.Count > 0 then
-                                local smdBetweenPos, smd = FindSMDBetweenPositions(v.Launcher:GetPosition(), searchPos, knownSMDUnits, smdRadius, 45)
+                                if not experimental then
+                                    smdBetweenPos, smd = FindSMDBetweenPositions(v.Launcher:GetPosition(), searchPos, knownSMDUnits, smdRadius, 45)
+                                end
                                 if not smdBetweenPos then
                                     LOG('No SMD between positions for target pos '..repr(searchPos))
                                     LOG('Adding firing position for searchtargetarea')
@@ -6789,6 +6793,7 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers)
                 end
             end
         end
+        coroutine.yield(1)
     end
     if not table.empty(firingPositions) then
         --RNGLOG('Best pos found with a mass value of '..maxValue)

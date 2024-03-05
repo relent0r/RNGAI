@@ -23,7 +23,6 @@ function MexUpgradeEco(aiBrain)
 end
 
 function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio, mult)
-    local multiplier = aiBrain.EcoManager.EcoMultiplier
 
     if aiBrain.EnemyIntel.ChokeFlag then
         if mult == 'LAND' then

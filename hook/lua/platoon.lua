@@ -1532,7 +1532,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             end
                             --RNGLOG('* AI-RNG: * HuntAIPATH: Ending Loop at :'..GetGameTimeSeconds())
                         end
-                    elseif (not path and reason == 'NoPath') then
+                    elseif (not path and reason == 'Unpathable') then
                         --RNGLOG('* AI-RNG: * NavalAIPATH: NoPath reason from path')
                     else
                         --RNGLOG('* AI-RNG: * NavalRangedAIRNG:: No Path found, no reason')
@@ -2000,7 +2000,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 end
                                 --RNGLOG('* AI-RNG: * HuntAIPATH: Ending Loop at :'..GetGameTimeSeconds())
                             end
-                        elseif (not path and reason == 'NoPath') then
+                        elseif (not path and reason == 'Unpathable') then
                             --RNGLOG('* NavalAttackAIRNG: NoPath reason from path')
                         else
                             --RNGLOG('* NavalAttackAIRNG: No Path found, no reason')
@@ -4585,7 +4585,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     self:PlatoonMoveWithMicro(aiBrain, path, self.PlatoonData.Avoid, false, true, 60)
                     --RNGLOG('Exited PlatoonMoveWithMicro so we should be at a destination')
                 end
-            elseif (not path and reason == 'NoPath') then
+            elseif (not path and reason == 'Unpathable') then
                 --RNGLOG('MassRaid requesting transports')
                 if not self.PlatoonData.EarlyRaid then
                     usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, raidPosition, 3, true)
@@ -7355,6 +7355,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             --RNGLOG('NukeAIRNG main loop beginning')
             readySmlLaunchers = {}
             readySmlLauncherCount = 0
+            local experimentalPresent = false
             LOG('NukeAIRNG : Waiting 5 seconds')
             coroutine.yield(50)
             LOG('NukeAIRNG : Performing loop')
@@ -7380,6 +7381,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 else
                     sml:SetAutoMode(true)
                 end
+                experimentalPresent = sml.Blueprint.CategoriesHash.EXPERIMENTAL or false
             end
             --RNGLOG('NukeAIRNG : readySmlLauncherCount '..readySmlLauncherCount)
             if readySmlLauncherCount < 1 then
@@ -7389,7 +7391,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             else
                 aiBrain.BrainIntel.SMLReady = true
             end
-            local validTarget, nukePosTable = RUtils.GetNukeStrikePositionRNG(aiBrain, readySmlLauncherCount, readySmlLaunchers)
+            local validTarget, nukePosTable = RUtils.GetNukeStrikePositionRNG(aiBrain, readySmlLauncherCount, readySmlLaunchers, experimentalPresent)
             if validTarget then
                 LOG('NukeAIRNG : Valid nuke target, table is '..repr(nukePosTable))
                 targetsAvailable = true
