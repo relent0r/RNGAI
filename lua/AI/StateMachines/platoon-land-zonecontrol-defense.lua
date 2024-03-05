@@ -394,6 +394,19 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 return
             else
                 self:LogDebug(string.format('platoon tried but didnt use transports'))
+                coroutine.yield(20)
+                if self.Home and self.LocationType then
+                    local rx = self.Pos[1] - self.Home[1]
+                    local rz = self.Pos[3] - self.Home[3]
+                    local homeDistance = rx * rx + rz * rz
+                    if homeDistance < 6400 and brain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint then
+                        self:LogDebug(string.format('No transport used and close to base, move to rally point'))
+                        local rallyPoint = brain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint
+                        local units = self:GetPlatoonUnits()
+                        IssueMove(units, rallyPoint )
+                        coroutine.yield(50)
+                    end
+                end
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end

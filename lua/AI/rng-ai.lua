@@ -5422,6 +5422,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('Assist Focus is Experimental')
                 self.EngineerAssistManagerFocusCategory = categories.EXPERIMENTAL
                 self.EngineerAssistManagerPriorityTable = {
+                    {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion'},
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.EXPERIMENTAL, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC , type = 'Completion'},
@@ -5459,6 +5460,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 state = 'Mass'
                 --RNGLOG('Assist Focus is Mass')
                 self.EngineerAssistManagerPriorityTable = {
+                    {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion'},
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'},
                     {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'},
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},

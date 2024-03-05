@@ -23,7 +23,6 @@ function MexUpgradeEco(aiBrain)
 end
 
 function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio, mult)
-    local multiplier = aiBrain.EcoManager.EcoMultiplier
 
     if aiBrain.EnemyIntel.ChokeFlag then
         if mult == 'LAND' then
@@ -41,12 +40,8 @@ function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio, m
         elseif GetEconomyStoredRatio(aiBrain, 'MASS') >= mStorageRatio and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= eStorageRatio then
             return true
         end
-    elseif aiBrain.UpgradeMode == 'Aggressive' then
-        if GetEconomyStoredRatio(aiBrain, 'MASS') >= mStorageRatio * 1.5 and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= eStorageRatio then
-            return true
-        end
     elseif mult == true then
-        if GetEconomyStoredRatio(aiBrain, 'MASS') >= mStorageRatio * multiplier and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= eStorageRatio then
+        if GetEconomyStoredRatio(aiBrain, 'MASS') >= mStorageRatio and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= eStorageRatio then
             return true
         end
     elseif GetEconomyStoredRatio(aiBrain, 'MASS') >= mStorageRatio and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= eStorageRatio then

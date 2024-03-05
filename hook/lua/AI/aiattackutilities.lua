@@ -28,8 +28,10 @@ function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, 
     optThreatWeight = optThreatWeight or 1
 
     --Generate the safest path between the start and destination
-    local path, msg, distance = NavUtils.PathToWithThreatThreshold(platoonLayer, startPos, endPos, aiBrain, NavUtils.ThreatFunctions.AntiSurface, 1000, aiBrain.BrainIntel.IMAPConfig.Rings)
-    if not path then return false, 'NoPath' end
+    local path, msg, distance, threats = NavUtils.PathToWithThreatThreshold(platoonLayer, startPos, endPos, aiBrain, NavUtils.ThreatFunctions.AntiSurface, 1000, aiBrain.BrainIntel.IMAPConfig.Rings)
+    if not path then 
+        return false, msg, distance, threats
+    end
 
     -- Insert the path nodes (minus the start node and end nodes, which are close enough to our start and destination) into our command queue.
     -- delete the first and last node only if they are very near (under 30 map units) to the start or end destination.
@@ -59,11 +61,13 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
     end
 
     --Generate the safest path between the start and destination
-    local path = NavUtils.PathToWithThreatThreshold(platoonLayer, start, destination, aiBrain, threatType, 1000, aiBrain.BrainIntel.IMAPConfig.Rings)
-    if not path then return false, 'NoPath' end
+    local path, msg, distance, threats = NavUtils.PathToWithThreatThreshold(platoonLayer, start, destination, aiBrain, threatType, 1000, aiBrain.BrainIntel.IMAPConfig.Rings)
+    if not path then 
+        return false, msg, distance, threats
+    end
     -- Insert the path nodes (minus the start node and end nodes, which are close enough to our start and destination) into our command queue.
 
-    return path, false, path.totalThreat
+    return path, 'PathOK', distance
 end
 
 function PlatoonGeneratePathToRNG(platoonLayer, start, destination, optMaxMarkerDist, minPathDistance)
@@ -316,7 +320,7 @@ function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
 
         local usedTransports = false
         local position = platoon:GetPlatoonPosition()
-        if (not path and reason == 'NoPath') or bNeedTransports then
+        if (not path and reason == 'Unpathable') or bNeedTransports then
             usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, platoon, attackPos, 5, true)
         -- Require transports over 500 away
         elseif VDist2Sq(position[1], position[3], attackPos[1], attackPos[3]) > 512*512 then

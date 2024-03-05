@@ -237,7 +237,7 @@ function GetTransports( platoon, aiBrain)
     if (armypooltransports and TableGetn(armypooltransports) < 1) and (TransportPoolTransports and TableGetn(TransportPoolTransports) < 1) then
     
         if TransportDialog then
-            LOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." there are no transports at all")
+            LOG("*AI DEBUG "..aiBrain.Nickname.." "..repr(platoon.BuilderName).." there are no transports at all")
         end
         aiBrain.TransportRequested = true   -- turn on need flag
         return false, false

@@ -123,6 +123,8 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     Engineers = {}
                 }
             end
+            self.AntiAirSupportRequested = false
+            self.SuicideMode = false
             self.UnitRatios = {}
             self.SupportT1MobileScout = 0
             self.SupportT2MobileAA = 3
@@ -170,33 +172,42 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 if threatTable.TotalSuroundingThreat > 15 then
-                    if threatTable.AirSurfaceThreat.TotalThreat > 80 and self.CurrentAntiAirThreat < 30 then
-                        local localFriendlyAirThreat = self:CalculatePlatoonThreatAroundPosition('Air', categories.ANTIAIR, experimentalPosition, 35)
+                    local antiAirSupportNeeded = false
+                    if threatTable.AirSurfaceThreat.TotalThreat > 80 and self.CurrentAntiAirThreat < 40 then
+                        local localFriendlyAirThreat = self:CalculatePlatoonThreatAroundPosition('Air', categories.AIR, experimentalPosition, 35)
                         if localFriendlyAirThreat < 30 then
                             self.BuilderData = {
                                 Retreat = true,
                                 RetreatReason = 'AirThreat'
                             }
+                            antiAirSupportNeeded = true
                             self:LogDebug(string.format('Experimental has 80+ air surface threat around it and less than 30 antiair threat, retreat'))
                             self:ChangeState(self.Retreating)
                             return
                         end
                     end
-                    if threatTable.AirSurfaceThreat.TotalThreat > 35 and self.CurrentAntiAirThreat < 15 then
+                    if threatTable.AirSurfaceThreat.TotalThreat > 35 and self.CurrentAntiAirThreat < 20 then
                         local localFriendlyAirThreat = self:CalculatePlatoonThreatAroundPosition('Air', categories.ANTIAIR, experimentalPosition, 35)
                         if localFriendlyAirThreat < 15 then
                             self.BuilderData = {
                                 Retreat = true,
                                 RetreatReason = 'AirThreat'
                             }
+                            antiAirSupportNeeded = true
                             self:LogDebug(string.format('Experimental has 25+ air surface threat around it and less than 15 antiair threat, retreat'))
                             self:ChangeState(self.Retreating)
                             return
                         end
                     end
+                    if antiAirSupportNeeded then
+                        self.AntiAirSupportRequested = true
+                    else
+                        self.AntiAirSupportRequested = false
+                    end
                     local closestUnit
                     local closestUnitDistance
                     local overRangedCount = 0
+                    local overRangedThreat = 0
                     if threatTable.RangedUnitThreat.TotalThreat > 0 or threatTable.ArtilleryThreat.TotalThreat > 0 then
                         self:LogDebug(string.format('We have Artillery or Ranged unit threat around us'))
                         self:LogDebug(string.format('Artillery Threat '..threatTable.ArtilleryThreat.TotalThreat))
@@ -208,8 +219,11 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                 --LOG('Artillery Range is greater than Experimental')
                                 if unitRange > self.MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
+                                    if enemyUnit.Blueprint.Defense.SurfaceThreatLevel then
+                                        overRangedThreat = overRangedThreat + enemyUnit.Blueprint.Defense.SurfaceThreatLevel
+                                    end
                                 end
-                                if overRangedCount > 1 then
+                                if overRangedCount > 2 and overRangedThreat > 60 and not self.SuicideMode then
                                     self.BuilderData = {
                                         Retreat = true,
                                         RetreatReason = 'ArtilleryThreat',
@@ -229,8 +243,11 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object)
                                 if unitRange > self.MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
+                                    if enemyUnit.Blueprint.Defense.SurfaceThreatLevel then
+                                        overRangedThreat = overRangedThreat + enemyUnit.Blueprint.Defense.SurfaceThreatLevel
+                                    end
                                 end
-                                if overRangedCount > 3 then
+                                if overRangedCount > 3 and overRangedThreat > 60 and not self.SuicideMode then
                                     self.BuilderData = {
                                         Retreat = true,
                                         RetreatReason = 'ArtilleryThreat',
@@ -454,7 +471,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         for _, unit in threatTable.ArtilleryThreat.Units do
                             if unit.Distance < 16384 then
                                 artilleryCount = artilleryCount + 1
-                                if artilleryCount > 1 then
+                                if artilleryCount > 1 and experimental:GetHealthPercent() < 0.4 or artilleryCount > 4 then
                                     --LOG('Land is within range of Artillery and count is greater than one')
                                     self:ChangeState(self.DecideWhatToDo)
                                     return 
@@ -475,7 +492,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         continue
                     end
                     local unitPos = experimental:GetPosition()
-                    if StateUtils.PositionInWater(unitPos) then
+                    if StateUtils.PositionInWater(unitPos) and experimental.Blueprint.CategoriesHash.ANTINAVY then
                         maxPlatoonRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Anti Navy')
                     elseif maxPlatoonRange < self.MaxPlatoonWeaponRange then
                         maxPlatoonRange = self.MaxPlatoonWeaponRange
