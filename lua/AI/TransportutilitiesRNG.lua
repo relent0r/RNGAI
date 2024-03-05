@@ -104,6 +104,9 @@ function AssignTransportToPool( unit, aiBrain )
             unit.Assigning = false        
 			unit.PlatoonHandle = aiBrain.TransportPool
             if not IsBeingBuilt(unit) then
+				if TransportDialog then
+					LOG('*AI DEBUG not IsBeingBuilt adding unit to ReturnTransportsToPool '..unit.EntityId)
+				end
                 ForkTo( ReturnTransportsToPool, aiBrain, {unit}, true )
                 return
             end
@@ -412,6 +415,9 @@ function GetTransports( platoon, aiBrain)
             end
        		if transportcount > 0 then
                 -- send all transports back into pool - which covers the specials (ie. UEF Gunships) 
+				if TransportDialog then
+					LOG('*AI DEBUG no location and transport count > 0 adding unit to ReturnTransportsToPool')
+				end
                 ForkThread( ReturnTransportsToPool, aiBrain, AvailableTransports, true )
             end
 		end
