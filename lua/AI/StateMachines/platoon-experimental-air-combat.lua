@@ -114,11 +114,17 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                 end
                 import("/lua/scenariotriggers.lua").CreateUnitBuiltTrigger(factoryWorkFinish, self.ExperimentalUnit.ExternalFactory, categories.ALLUNITS)
             end
-            self.ExperimentalUnit.ExternalFactory.EngineerManager = {
-                Task = nil,
-                Engineers = {}
-            }
-            
+            if self.ExperimentalUnit.ExternalFactory then
+                self.ExperimentalUnit.ExternalFactory.EngineerManager = {
+                    Task = nil,
+                    Engineers = {}
+                }
+            end
+            if self.ExperimentalUnit.Blueprint.CategoriesHash.BOMBER then
+                self.Bomber = true
+            else
+                self.Bomber = false
+            end
             self.UnitRatios = {}
             self.SupportT1AirScout = 0
             self.SupportT2AirAA = 3
@@ -275,7 +281,11 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     Position = target:GetPosition()
                 }
                 self:LogDebug(string.format('Experimental Attacking target'))
-                self:ChangeState(self.AttackTarget)
+                if self.Bomber then
+                    self:ChangeState(self.AttackRun)
+                else
+                    self:ChangeState(self.AttackTarget)
+                end
                 return
             end
             if not target then
@@ -299,7 +309,11 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                         AttackTarget = target,
                         Position = target:GetPosition()
                     }
-                    self:ChangeState(self.AttackTarget)
+                    if self.Bomber then
+                        self:ChangeState(self.AttackRun)
+                    else
+                        self:ChangeState(self.AttackTarget)
+                    end
                     return
                 end
             end
@@ -349,7 +363,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
 
             while not IsDestroyed(self.ExperimentalUnit) do
                 local origin = self.ExperimentalUnit:GetPosition()
-                waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 50)
+                waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 80)
                 if StateUtils.PositionInWater(origin) then
                     self.VentGuardPlatoon = true
                     --LOG('GuardPlatoon Vent has gone true')
@@ -442,21 +456,26 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     elseif maxPlatoonRange < self.MaxPlatoonWeaponRange then
                         maxPlatoonRange = self.MaxPlatoonWeaponRange
                     end
+                    self:LogDebug(string.format('Experimental of unit '..self.ExperimentalUnit.UnitId..' has a max platoon range of '..repr(maxPlatoonRange)))
                     local targetDistance = VDist3Sq(unitPos, targetPosition)
-                    local alpha = math.atan2(targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
-                    local x = targetPosition[1] - math.cos(alpha) * (maxPlatoonRange - 10)
-                    local y = targetPosition[3] - math.sin(alpha) * (maxPlatoonRange - 10)
-                    local smartPos = { x, GetTerrainHeight( x, y), y }
                     -- check if the move position is new or target has moved
-                    if VDist2Sq( smartPos[1], smartPos[3], experimental.smartPos[1], experimental.smartPos[3] ) > 4 or experimental.TargetPos ~= targetPosition  or targetDistance > maxPlatoonRange * maxPlatoonRange then
+                    if targetDistance < maxPlatoonRange * maxPlatoonRange then
                         -- clear move commands if we have queued more than 4
                         if RNGGETN(experimental:GetCommandQueue()) > 2 then
                             IssueClearCommands({experimental})
                             coroutine.yield(3)
                         end
-                        IssueMove({experimental}, smartPos )
                         IssueAttack({experimental}, target)
-                        experimental.smartPos = smartPos
+                        experimental.TargetPos = targetPosition
+                    -- in case we don't move, check if we can fire at the target
+                    elseif targetDistance > maxPlatoonRange * maxPlatoonRange then
+                        -- clear move commands if we have queued more than 4
+                        if RNGGETN(experimental:GetCommandQueue()) > 2 then
+                            IssueClearCommands({experimental})
+                            coroutine.yield(3)
+                        end
+                        IssueMove({experimental}, targetPosition )
+                        IssueAttack({experimental}, target)
                         experimental.TargetPos = targetPosition
                     -- in case we don't move, check if we can fire at the target
                     else
@@ -480,7 +499,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
-                coroutine.yield(25)
+                coroutine.yield(35)
             end
         end,
     },
@@ -494,7 +513,6 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local experimental = self.ExperimentalUnit
             local target = self.BuilderData.AttackTarget
-            local maxPlatoonRange = self.MaxPlatoonWeaponRange
             local threatTable = self.EnemyThreatTable
             while experimental and not IsDestroyed(experimental) do
                 if target and not target.Dead then
@@ -502,37 +520,13 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                         IssueClearCommands({experimental})
                     end
                     local targetPosition = target:GetPosition()
-                    if not maxPlatoonRange then
-                        coroutine.yield(3)
-                        WARN('Warning : Experimental has no max weapon range')
-                        continue
-                    end
                     local unitPos = experimental:GetPosition()
-                    if StateUtils.PositionInWater(unitPos) then
-                        maxPlatoonRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Anti Navy')
-                    elseif maxPlatoonRange < self.MaxPlatoonWeaponRange then
-                        maxPlatoonRange = self.MaxPlatoonWeaponRange
-                    end
-                    -- check if the move position is new or target has moved
-                    if VDist2Sq( smartPos[1], smartPos[3], experimental.smartPos[1], experimental.smartPos[3] ) > 4 or experimental.TargetPos ~= targetPosition  or targetDistance > maxPlatoonRange * maxPlatoonRange then
-                        -- clear move commands if we have queued more than 4
-                        if RNGGETN(experimental:GetCommandQueue()) > 2 then
-                            IssueClearCommands({experimental})
-                            coroutine.yield(3)
-                        end
-                        IssueMove({experimental}, smartPos )
-                        IssueAttack({experimental}, target)
-                        experimental.smartPos = smartPos
-                        experimental.TargetPos = targetPosition
-                    -- in case we don't move, check if we can fire at the target
+                    if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental.WeaponArc) then
+                        IssueMove({experimental}, targetPosition )
+                        coroutine.yield(30)
                     else
-                        if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental.WeaponArc) then
-                            --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
-                            IssueMove({experimental}, targetPosition )
-                            coroutine.yield(30)
-                        else
-                            --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
-                        end
+                        IssueAttack({experimental}, target)
+                    -- in case we don't move, check if we can fire at the target
                     end
                     if not target.Dead and threatTable.ClosestUnitDistance + 25 < VDist3Sq(unitPos, targetPosition) then
                         coroutine.yield(10)
@@ -546,7 +540,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
-                coroutine.yield(25)
+                coroutine.yield(35)
             end
         end,
     },

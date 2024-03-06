@@ -7137,13 +7137,16 @@ Platoon = Class(RNGAIPlatoonClass) {
             return self.StateMachineAIRNG(self)
         elseif ID == 'uaa0310' then
             --RNGLOG('CZAR Behavior')
-            return behaviors.CzarBehaviorRNG(self)
+            self.PlatoonData.StateMachine = 'AirExperimental'
+            return self.StateMachineAIRNG(self)
         elseif ID == 'xsa0402' then
             --RNGLOG('Exp Bomber Behavior')
-            return behaviors.AhwassaBehaviorRNG(self)
+            self.PlatoonData.StateMachine = 'AirExperimental'
+            return self.StateMachineAIRNG(self)
         elseif ID == 'ura0401' then
             --RNGLOG('Exp Gunship Behavior')
-            return behaviors.TickBehavior(self)
+            self.PlatoonData.StateMachine = 'AirExperimental'
+            return self.StateMachineAIRNG(self)
         elseif ID == 'url0401' then
             return behaviors.ScathisBehaviorSorian(self)
         end
@@ -8074,6 +8077,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             import("/mods/rngai/lua/ai/statemachines/platoon-naval-combat.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         elseif machineType == 'LandExperimental' then
             import("/mods/rngai/lua/ai/statemachines/platoon-experimental-land-combat.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+        elseif machineType == 'AirExperimental' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-experimental-air-combat.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         end
         WaitTicks(50)
     end,
