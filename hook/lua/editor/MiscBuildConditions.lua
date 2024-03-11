@@ -312,10 +312,8 @@ end
 
 function GatewayValidation(aiBrain)
     local multiplier = aiBrain.EcoManager.EcoMultiplier
-    if aiBrain.EcoManager.CoreExtractorT3Percentage >= 1.0 or aiBrain.EconomyOverTimeCurrent.MassIncome > (20 * multiplier) then
-        if aiBrain:GetEconomyIncome('MASS') > (20 * multiplier) then
-            return true
-        end
+    if aiBrain.EcoManager.CoreExtractorT3Percentage >= 1.0 and (aiBrain.cmanager.income.r.m > (200 * multiplier) or aiBrain.RNGEXP) then
+        return true
     end
     return false
 end

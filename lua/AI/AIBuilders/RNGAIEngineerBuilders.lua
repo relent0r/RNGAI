@@ -453,7 +453,7 @@ BuilderGroup {
         Priority = 0,
         DelayEqualBuildPlattons = {'EngineerAssistFactory', 1},
         PriorityFunction = AirDefenseScramble,
-        InstanceCount = 10,
+        InstanceCount = 6,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.90, 1.0 }},
         },

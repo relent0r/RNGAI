@@ -8,7 +8,6 @@
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
-local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 local ActiveExpansion = function(self, aiBrain, builderManager)
     --RNGLOG('LocationType is '..builderManager.LocationType)
@@ -173,11 +172,26 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI RadarUpgrade T1 Expansion',
     BuildersType = 'PlatoonFormBuilder',
     Builder {
+        BuilderName = 'RNGAI T1 Radar Upgrade Expansion Active',
+        PlatoonTemplate = 'T1RadarUpgrade',
+        PriorityFunction = ActiveExpansion,
+        Priority = 0,
+        BuilderConditions = {
+            { UCBC, 'ShouldUpgradeRadar', {'LocationType', 'TECH2'}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.TECH2 * categories.ENERGYPRODUCTION }},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 1.2 }},
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
         BuilderName = 'RNGAI T1 Radar Upgrade Expansion',
         PlatoonTemplate = 'T1RadarUpgrade',
         Priority = 600,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
+            { UCBC, 'ShouldUpgradeRadar', {'LocationType', 'TECH2'}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.OMNI * categories.STRUCTURE }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.TECH2 * categories.RADAR}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.TECH2 * categories.ENERGYPRODUCTION }},

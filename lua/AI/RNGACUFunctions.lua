@@ -444,10 +444,17 @@ function CDRThreatAssessmentRNG(cdr)
                     --RNGLOG('cdrcombat is off setting max radius to 60')
                     cdr.MaxBaseRange = 80
                 elseif cdr.Phase < 2 and aiBrain.EnemyIntel.Phase < 2 then
-                    cdr.MaxBaseRange = math.max(120, cdr.DefaultRange * cdr.Confidence)
+                    local safetyCutOff
+                    if aiBrain.EnemyIntel.ClosestEnemyBase > 0 then
+                        safetyCutOff = math.sqrt(aiBrain.EnemyIntel.ClosestEnemyBase) / 2
+                    else
+                        safetyCutOff = 120
+                    end
+                    cdr.MaxBaseRange = math.max(safetyCutOff, cdr.DefaultRange * cdr.Confidence)
                 else
                     cdr.MaxBaseRange = math.min(180, cdr.DefaultRange * cdr.Confidence)
                 end
+                LOG('Current Max base range is '..cdr.MaxBaseRange)
             end
             aiBrain.ACUSupport.ACUMaxSearchRadius = cdr.MaxBaseRange
            --RNGLOG('Current CDR Max Base Range '..cdr.MaxBaseRange)

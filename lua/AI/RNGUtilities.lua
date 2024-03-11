@@ -1757,7 +1757,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
             local retDistance = false
             local targetShields = 9999
             for num, unit in targetUnits do
-                if not unit.Dead then
+                if not unit.Dead and not unit.Tractored then
                     if ignoreNotCompleted then
                         if unit:GetFractionComplete() ~= 1 then
                             continue
@@ -2000,7 +2000,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, 
         if index then
             for k, v in index do
                 if unit:GetAIBrain():GetArmyIndex() == v then
-                    if not unit.Dead and EntityCategoryContains(categories.COMMAND, unit) and platoon:CanAttackTarget(squad, unit) then
+                    if not unit.Dead and EntityCategoryContains(categories.COMMAND, unit) and platoon:CanAttackTarget(squad, unit) and not unit.Tractored then
                         local unitPos = unit:GetPosition()
                         local unitArmyIndex = unit:GetArmy()
         
@@ -2027,7 +2027,7 @@ function AIFindACUTargetInRangeRNG(aiBrain, platoon, position, squad, maxRange, 
                 end
             end
         else
-            if not unit.Dead and EntityCategoryContains(categories.COMMAND, unit) and platoon:CanAttackTarget(squad, unit) then
+            if not unit.Dead and EntityCategoryContains(categories.COMMAND, unit) and platoon:CanAttackTarget(squad, unit) and not unit.Tractored then
                 local unitPos = unit:GetPosition()
                 local unitArmyIndex = unit:GetArmy()
 
@@ -5545,18 +5545,25 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, defensiveBomber)
             rangeCheck = 9
         end
         if platPos and VDist3Sq(platPos, aiBrain.BrainIntel.StartPos) < (aiBrain.EnemyIntel.ClosestEnemyBase / rangeCheck) then
-            for k, v in aiBrain.prioritypointshighvalue do
-                if not v.unit.Dead then
-                    local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
-                    local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
-                    if tempPoint > highestPriority then
-                        if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
-                            --LOG('Set higher priority')
-                            --LOG('Distance '..targetDistance)
-                            --LOG('Priority '..(v.priority + (v.danger or 0)))
-                            --LOG('Point Calculation is '..(v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30))
-                            highestPriority = tempPoint
-                            closestTarget = v.unit
+            for k, v in aiBrain.EnemyIntel.Experimental do
+                if not v.object.Dead then
+                    closestTarget = v.object
+                end
+            end
+            if not closestTarget then
+                for k, v in aiBrain.prioritypointshighvalue do
+                    if not v.unit.Dead and not v.unit.Tractored then
+                        local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
+                        local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
+                        if tempPoint > highestPriority then
+                            if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
+                                --LOG('Set higher priority')
+                                --LOG('Distance '..targetDistance)
+                                --LOG('Priority '..(v.priority + (v.danger or 0)))
+                                --LOG('Point Calculation is '..(v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30))
+                                highestPriority = tempPoint
+                                closestTarget = v.unit
+                            end
                         end
                     end
                 end
@@ -6657,7 +6664,7 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
     end
     if not table.empty(knownSMDUnits) then
         for _, v in knownSMDUnits do
-            if v.Blueprint.Weapon[1].MaxRadius then
+            if not v.Dead and v.Blueprint.Weapon[1].MaxRadius then
                 smdRadius = v.Blueprint.Weapon[1].MaxRadius
                 break
             end
@@ -6711,7 +6718,7 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
             if z.StructuresNotMex then
                 for _, v in aiBrain.BrainIntel.SMLTargetPositions do
                     if v.Position[1] == z.Position[1] and v.Position[3] == z.Position[3] then
-                        LOG('Attempting to nuke a position that has recently been nuked, skipping')
+                        --LOG('Attempting to nuke a position that has recently been nuked, skipping')
                         skip = true
                         break
                     end
@@ -6730,7 +6737,7 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
         return true, firingPositions
     end
 
-    RNGLOG('First pass of target shortlist complete')
+    --RNGLOG('First pass of target shortlist complete')
     RNGSORT( targetShortList, function(a,b) return a.threat > b.threat  end )
     local finalShortList = {}
     for _, finalTarget in targetShortList do
@@ -6745,7 +6752,7 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
                 if not smdPresent then
                     local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, searchPos, missileRadius, 'Enemy')
                     local currentValue = 0
-                    LOG('Number of units at location with structure category is '..table.getn(unitsAtLocation))
+                    --LOG('Number of units at location with structure category is '..table.getn(unitsAtLocation))
                     for _, v in unitsAtLocation do
                         if v.Blueprint.Economy.BuildCostMass then
                             if v.Blueprint.CategoriesHash.ENERGYPRODUCTION then
@@ -6755,21 +6762,21 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
                             end
                         end
                     end
-                    RNGLOG('Current UnitValue at location '..repr(currentValue))
-                    LOG('Must be greater than '..missileCost)
+                    --RNGLOG('Current UnitValue at location '..repr(currentValue))
+                    --LOG('Must be greater than '..missileCost)
                     if currentValue > missileCost and currentValue > maxValue then
                         maxValue = currentValue
                         for _, v in smlLaunchers do
                             local experimental = v.Launcher.Blueprint.CategoriesHash.EXPERIMENTAL or false
                             local smdBetweenPos
-                            LOG('Missile Count of current launcher is '..v.Count)
+                            --LOG('Missile Count of current launcher is '..v.Count)
                             if v.Count > 0 then
                                 if not experimental then
                                     smdBetweenPos, smd = FindSMDBetweenPositions(v.Launcher:GetPosition(), searchPos, knownSMDUnits, smdRadius, 45)
                                 end
                                 if not smdBetweenPos then
-                                    LOG('No SMD between positions for target pos '..repr(searchPos))
-                                    LOG('Adding firing position for searchtargetarea')
+                                    --LOG('No SMD between positions for target pos '..repr(searchPos))
+                                    --LOG('Adding firing position for searchtargetarea')
                                     table.insert(finalShortList, { Launcher = v.Launcher, Position = searchPos,  MassValue = currentValue, TimeStamp = gameTime, EntityId = v.Launcher.EntityId, IMAP = finalTarget.position})
                                     missileAllocated = true
                                     break
@@ -6779,7 +6786,7 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
                     end
                 end
             end
-            LOG('missileAllocated current max value is '..maxValue)
+            --LOG('missileAllocated current max value is '..maxValue)
         end
         RNGSORT( finalShortList, function(a,b) return a.MassValue > b.MassValue  end )
         LOG('Looping through final shortlist for highest mass value')

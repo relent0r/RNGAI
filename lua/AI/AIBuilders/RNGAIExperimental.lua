@@ -56,7 +56,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
-            NumAssistees = 25,
+            NumAssistees = 30,
             Construction = {
                 DesiresAssist = true,
                 BuildClose = true,
@@ -79,14 +79,14 @@ BuilderGroup {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.40, 0.95 } },
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.25, 0.95 } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.MOBILE }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
         },
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
-            NumAssistees = 20,
+            NumAssistees = 30,
             Construction = {
                 DesiresAssist = true,
                 BuildClose = true,
@@ -110,7 +110,6 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 4, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2 }},
-            { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.95 } },
         },
         BuilderType = 'Any',
@@ -224,7 +223,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Experimental1 Novax',
         PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        Priority = 700,
+        Priority = 650,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
@@ -234,6 +233,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 600.0 }},                    -- Base income
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.EXPERIMENTAL}},
         },
         BuilderType = 'Any',
         BuilderData = {

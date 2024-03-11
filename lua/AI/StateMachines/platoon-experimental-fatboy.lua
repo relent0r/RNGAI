@@ -125,6 +125,9 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
             self.SupportT1MobileScout = 0
             self.SupportT2MobileAA = 3
             self.SupportT3MobileAA = 0
+            self.DefaultSurfaceThreat = self.ExperimentalUnit.Blueprint.Defense.SurfaceThreatLevel
+            self.DefaultAirThreat = self.ExperimentalUnit.Blueprint.Defense.AirThreatLevel
+            self.DefaultSubThreat = self.ExperimentalUnit.Blueprint.Defense.SubThreatLevel
             StartFatBoyThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
             return

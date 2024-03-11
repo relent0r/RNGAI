@@ -1190,7 +1190,7 @@ function ValidateLateGameBuild(aiBrain, locationType)
         --LOG('Number of high value units queued '..queuedCount)
         --LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
         --LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * queuedCount)))
-        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + ((150 * multiplier) * queuedCount) then
+        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + ((250 * multiplier) * queuedCount) then
             --LOG('Income is not high enough, return false')
             return false
         end
@@ -1210,7 +1210,7 @@ function ValidateLateGameBuild(aiBrain, locationType)
         --LOG('Number of high value units being built '..unitsBeingBuilt)
         --LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
         --LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * unitsBeingBuilt)))
-        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + ((150 * multiplier) * unitsBeingBuilt) then
+        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + ((250 * multiplier) * unitsBeingBuilt) then
             --LOG('Income is not high enough, return false')
             return false
         end
@@ -1588,6 +1588,32 @@ function RequireTMDCheckRNG(aiBrain)
         return true
     end
     return false
+end
+
+--- Buildcondition to decide if radars should upgrade based on other radar locations.
+---@param aiBrain AIBrain
+---@param locationType string
+---@param radarTech string
+---@return boolean
+function RequireRadarUpgradeRNG(aiBrain, locationType, radarTech)
+
+    -- loop over radars that are one tech higher
+    local basePos = aiBrain.BuilderManagers[locationType].Position
+    local otherRadars = aiBrain.Radars[radarTech]
+    for _, other in otherRadars do
+        -- determine if we're too close to higher tech radars
+        local range = other.Blueprint.Intel.RadarRadius
+        if range then
+            local squared = 0.64 * (range * range)
+            local ox, _, oz = other:GetPositionXYZ()
+            local dx = ox - basePos[1]
+            local dz = oz - basePos[3]
+            if dx * dx + dz * dz < squared then
+                return false
+            end
+        end
+    end
+    return true
 end
 
 --[[

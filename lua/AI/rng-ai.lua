@@ -1278,9 +1278,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self.StructureManager:Run()
         self:ForkThread(IntelManagerRNG.CreateIntelGrid, self.IntelManager)
         self:ForkThread(self.CreateFloatingEngineerBase, self.BrainIntel.StartPos)
-        --if self.RNGDEBUG then
+        if self.RNGDEBUG then
             self:ForkThread(self.LogDataThreadRNG)
-        --end
+        end
     end,
 
     LogDataThreadRNG = function(self)
@@ -4687,7 +4687,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         if unitCat.TECH3 and unitCat.AIR then
                                 if v:GetFractionComplete() < 0.7 then
                                     --RNGLOG('EcoPowerPreemptive : T3 Air Being Built')
-                                    potentialPowerConsumption = potentialPowerConsumption + (1200 * multiplier)
+                                    potentialPowerConsumption = potentialPowerConsumption + (1000 * multiplier)
                                     continue
                                 else
                                     v.BuildCompleted = true
@@ -5491,7 +5491,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 if self.EngineerAssistManagerBuildPower <= 30 and self.EngineerAssistManagerBuildPowerRequired <= 26 then
                     self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
                 end
-                RNGLOG('EngineerAssistManager is Active due to storage and builder power being less than minAssistPower')
+                --RNGLOG('EngineerAssistManager is Active due to storage and builder power being less than minAssistPower')
                 self.EngineerAssistManagerActive = true
             elseif self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.6 and self.EngineerAssistManagerBuildPower <= 0 and self.EngineerAssistManagerBuildPowerRequired < 6 then
                 --RNGLOG('EngineerAssistManagerBuildPower being set to 5')

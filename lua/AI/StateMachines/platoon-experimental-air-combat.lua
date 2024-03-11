@@ -6,6 +6,7 @@ local RNGGETN = table.getn
 AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local NavUtils = import("/lua/sim/navutils.lua")
+local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 
@@ -130,6 +131,9 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             self.SupportT2AirAA = 3
             self.SupportT3AirScout = 0
             self.SupportT3AirAA = 0
+            self.DefaultSurfaceThreat = self.ExperimentalUnit.Blueprint.Defense.SurfaceThreatLevel
+            self.DefaultAirThreat = self.ExperimentalUnit.Blueprint.Defense.AirThreatLevel
+            self.DefaultSubThreat = self.ExperimentalUnit.Blueprint.Defense.SubThreatLevel
             StartExperimentalThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -140,7 +144,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
 
         StateName = 'DecideWhatToDo',
 
-        ---@param self AIPlatoonACUBehavior
+        ---@param self AIExperimentalAirBehavior
         Main = function(self)
             if IsDestroyed(self.ExperimentalUnit) then
                 return
@@ -148,10 +152,22 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local threatTable = self.EnemyThreatTable
             local experimentalPosition = self.ExperimentalUnit:GetPosition()
+            local experimentalHealthPercent = self.ExperimentalUnit:GetHealthPercent()
             local target
+            local acuSnipeUnit = RUtils.CheckACUSnipe(aiBrain, 'Air')
+            if acuSnipeUnit and not acuSnipeUnit.Dead then
+                local targetPos = acuSnipeUnit:GetPosition()
+                local dx = targetPos[1] - experimentalPosition[1]
+                local dz = targetPos[3] - experimentalPosition[3]
+                local distance = dx * dx + dz * dz
+                if distance < 14400 then
+                    target = acuSnipeUnit
+                    self.SuicideMode = true
+                end
+            end
             if threatTable then
-                if self.ExperimentalUnit.ShieldCaution and threatTable.TotalSuroundingThreat > 0 then
-                    if threatTable.AirSurfaceThreat.TotalThreat > 15 and self.CurrentPlatoonAirThreat < 20 then
+                if self.ExperimentalUnit.ShieldCaution and threatTable.TotalSuroundingThreat > 0 and not self.SuicideMode then
+                    if threatTable.AirSurfaceThreat.TotalThreat > 25 then
                         self.BuilderData = {
                             Retreat = true,
                             RetreatReason = 'NoShield'
@@ -162,73 +178,60 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     end
                     --LOG('Shield is in caution our threat table is '..repr(threatTable))
                 end
+                self:LogDebug(string.format('Total Surrounding threat is '..repr(threatTable.TotalSuroundingThreat)))
+                self:LogDebug(string.format('Air Surrounding threat is '..repr(threatTable.AirThreat.TotalThreat)))
+                self:LogDebug(string.format('AirSurface Surrounding threat is '..repr(threatTable.AirSurfaceThreat.TotalThreat)))
+                self:LogDebug(string.format('Defense Surrounding threat is '..repr(threatTable.DefenseThreat.TotalThreat)))
+                self:LogDebug(string.format('Current experimental health percent is '..repr(experimentalHealthPercent)))
+                if experimentalHealthPercent < 0.20 and not self.SuicideMode then
+                    self.BuilderData = {
+                        Retreat = true,
+                        RetreatReason = 'LowHealth'
+                    }
+                    self:LogDebug(string.format('Experimental retreating due to very low health '))
+                    self:ChangeState(self.Retreating)
+                    return
+                end
                 if threatTable.TotalSuroundingThreat > 15 then
-                    if threatTable.AirSurfaceThreat.TotalThreat > 80 and self.CurrentAntiAirThreat < 30 then
+                    if threatTable.AirThreat.TotalThreat > 240 and not self.SuicideMode or experimentalHealthPercent < 0.40 and threatTable.AirThreat.TotalThreat > 80 and not self.SuicideMode then
                         local localFriendlyAirThreat = self:CalculatePlatoonThreatAroundPosition('Air', categories.ANTIAIR, experimentalPosition, 35)
-                        if localFriendlyAirThreat < 30 then
+                        if localFriendlyAirThreat < self.DefaultAirThreat + 30 then
                             self.BuilderData = {
                                 Retreat = true,
                                 RetreatReason = 'AirThreat'
                             }
-                            self:LogDebug(string.format('Experimental has 80+ air surface threat around it and less than 30 antiair threat, retreat'))
+                            self:LogDebug(string.format('Experimental enemy air threat of '..threatTable.AirThreat.TotalThreat..' and friendly air threat of '..localFriendlyAirThreat..' retreating'))
                             self:ChangeState(self.Retreating)
                             return
                         end
                     end
-                    if threatTable.AirSurfaceThreat.TotalThreat > 25 and self.CurrentAntiAirThreat < 15 then
-                        local localFriendlyAirThreat = self:CalculatePlatoonThreatAroundPosition('Air', categories.ANTIAIR, experimentalPosition, 35)
-                        if localFriendlyAirThreat < 15 then
+                    if threatTable.AirSurfaceThreat.TotalThreat > 240 and not self.SuicideMode or experimentalHealthPercent < 0.40 and threatTable.AirSurfaceThreat.TotalThreat > 80 and not self.SuicideMode then
+                        local localFriendlyLandThreat = self:CalculatePlatoonThreatAroundPosition('Surface', (categories.LAND + categories.AMPHIBIOUS) * (categories.DIRECTFIRE + categories.INDIRECTFIRE), experimentalPosition, 35)
+                        if localFriendlyLandThreat < self.DefaultSurfaceThreat + 30 then
                             self.BuilderData = {
                                 Retreat = true,
                                 RetreatReason = 'AirThreat'
                             }
-                            self:LogDebug(string.format('Experimental has 25+ air surface threat around it and less than 15 antiair threat, retreat'))
+                            self:LogDebug(string.format('Experimental enemy land threat of '..threatTable.DefenseThreat.TotalThreat..' and friendly surface threat of '..localFriendlyLandThreat..' retreating'))
                             self:ChangeState(self.Retreating)
                             return
                         end
                     end
-                    if threatTable.AirSurfaceThreat.TotalThreat > 10 and self.CurrentAntiAirThreat < 10 then
-                        local localFriendlyAirThreat = self:CalculatePlatoonThreatAroundPosition('Air', categories.ANTIAIR, experimentalPosition, 35)
-                        if localFriendlyAirThreat < 10 then
+                    if threatTable.DefenseThreat.TotalThreat > 240 and not self.SuicideMode or experimentalHealthPercent < 0.40 and threatTable.DefenseThreat.TotalThreat > 80 and not self.SuicideMode then
+                        local localFriendlyLandThreat = self:CalculatePlatoonThreatAroundPosition('Surface', (categories.LAND + categories.AMPHIBIOUS) * (categories.DIRECTFIRE + categories.INDIRECTFIRE), experimentalPosition, 35)
+                        if localFriendlyLandThreat < self.DefaultSurfaceThreat + 30 then
                             self.BuilderData = {
                                 Retreat = true,
                                 RetreatReason = 'AirThreat'
                             }
-                            self:LogDebug(string.format('Experimental has 10+ air surface threat around it and less than 10 antiair threat, retreat'))
+                            self:LogDebug(string.format('Experimental enemy defense threat of '..threatTable.DefenseThreat.TotalThreat..' and friendly surface threat of '..localFriendlyLandThreat..' retreating'))
                             self:ChangeState(self.Retreating)
                             return
                         end
                     end
                     local closestUnit
                     local closestUnitDistance
-                    local overRangedCount = 0
-                    if threatTable.RangedUnitThreat.TotalThreat > 0 then
-                        self:LogDebug(string.format('We have  Ranged unit threat around us'))
-                        self:LogDebug(string.format('Ranged Threat '..threatTable.RangedUnitThreat.TotalThreat))
-                        
-                        for _, enemyUnit in threatTable.RangedUnitThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) then
-                                local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object)
-                                if unitRange > self.MaxPlatoonWeaponRange then
-                                    overRangedCount = overRangedCount + 1
-                                end
-                                if overRangedCount > 3 then
-                                    self.BuilderData = {
-                                        Retreat = true,
-                                        RetreatReason = 'RangedThreat',
-                                        AttackTarget = enemyUnit.Object
-                                    }
-                                    self:LogDebug(string.format('Experimental has more than 3 units with more range than the Experimental, retreat'))
-                                    self:ChangeState(self.Retreating)
-                                end
-                                if not closestUnit or enemyUnit.Distance < closestUnitDistance then
-                                    closestUnit = enemyUnit.Object
-                                    closestUnitDistance = enemyUnit.Distance
-                                end
-                            end
-                        end
-                    end
-                    if threatTable.DefenseThreat.TotalThreat > 0 or threatTable.CloseUnitThreat.TotalThreat > 15 then
+                    if not target and threatTable.DefenseThreat.TotalThreat > 0 then
                         for _, enemyUnit in threatTable.DefenseThreat.Units do
                             if not IsDestroyed(enemyUnit.Object) then
                                 if not closestUnit or enemyUnit.Distance < closestUnitDistance then
@@ -237,7 +240,9 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                         end
-                        for _, enemyUnit in threatTable.CloseUnitThreat.Units do
+                    end
+                    if not target and threatTable.AirSurfaceThreat.TotalThreat > 0 then
+                        for _, enemyUnit in threatTable.AirSurfaceThreat.Units do
                             if not IsDestroyed(enemyUnit.Object) then
                                 if not closestUnit or enemyUnit.Distance < closestUnitDistance then
                                     closestUnit = enemyUnit.Object
@@ -246,30 +251,36 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    if threatTable.NavalUnitThreat.TotalThreat > 0 then
-                        for _, enemyUnit in threatTable.NavalUnitThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) then
-                                local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object)
-                                if unitRange > self.MaxPlatoonWeaponRange then
-                                    overRangedCount = overRangedCount + 1
+                    local bypassSecondary = false
+                    if closestUnit and closestUnit.Blueprint.CategoriesHash.ANTIAIR then
+                        local closestUnitWeaponRange = StateUtils.GetUnitMaxWeaponRange(closestUnit, 'Anti Air')
+                        if closestUnitWeaponRange and closestUnitWeaponRange <= closestUnitDistance then
+                            bypassSecondary = true
+                        end
+                    end
+                    if not bypassSecondary then
+                        if not target and threatTable.LandUnitThreat.TotalThreat > 0 then
+                            for _, enemyUnit in threatTable.LandUnitThreat.Units do
+                                if not IsDestroyed(enemyUnit.Object) then
+                                    if not closestUnit or enemyUnit.Distance < closestUnitDistance then
+                                        closestUnit = enemyUnit.Object
+                                        closestUnitDistance = enemyUnit.Distance
+                                    end
                                 end
-                                if overRangedCount > 0 then
-                                    self.BuilderData = {
-                                        Retreat = true,
-                                        RetreatReason = 'NavalThreat',
-                                        AttackTarget = enemyUnit.Object
-                                    }
-                                    self:LogDebug(string.format('Experimental has naval threat that outranges it, retreat'))
-                                    self:ChangeState(self.Retreating)
-                                end
-                                if not closestUnit or enemyUnit.Distance < closestUnitDistance then
-                                    closestUnit = enemyUnit.Object
-                                    closestUnitDistance = enemyUnit.Distance
+                            end
+                        end
+                        if not target and threatTable.StructureUnitThreat.TotalThreat > 0 then
+                            for _, enemyUnit in threatTable.StructureUnitThreat.Units do
+                                if not IsDestroyed(enemyUnit.Object) then
+                                    if not closestUnit or enemyUnit.Distance < closestUnitDistance then
+                                        closestUnit = enemyUnit.Object
+                                        closestUnitDistance = enemyUnit.Distance
+                                    end
                                 end
                             end
                         end
                     end
-                    if closestUnit and not IsDestroyed(closestUnit) then
+                    if not target and closestUnit and not IsDestroyed(closestUnit) then
                         target = closestUnit
                         --LOG('We have a target from threattable')
                     end
@@ -832,7 +843,9 @@ end
 ---@param data { Behavior: 'AIBehaviorZoneControl' }
 ---@param units Unit[]
 StartExperimentalThreads = function(brain, platoon)
-    brain:ForkThread(GuardThread, platoon)
+    if platoon.ExperimentalUnit.ExternalFactory then
+        brain:ForkThread(GuardThread, platoon)
+    end
     brain:ForkThread(ThreatThread, platoon)
     brain:ForkThread(StateUtils.ZoneUpdate, platoon)
 end

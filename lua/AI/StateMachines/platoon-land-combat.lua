@@ -335,8 +335,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     end
                     if target then
                         local skipKite = false
-                        local unitRange = StateUtils.GetUnitMaxWeaponRange(target)
+                        local unitRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
                         targetPos = target:GetPosition()
+                        local targetCats = target.Blueprint.CategoriesHash
                         if not approxThreat then
                             approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, false, false)
                         end
@@ -349,7 +350,6 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if v.Role == 'Artillery' or v.Role == 'Silo' or v.Role == 'Sniper' then
-                            local targetCats = target.Blueprint.CategoriesHash
                             if targetCats.DIRECTFIRE and targetCats.STRUCTURE and targetCats.DEFENSE then
                                 if v.MaxWeaponRange > unitRange then
                                     skipKite = true
@@ -361,7 +361,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if not skipKite then
-                            if approxThreat.ally and approxThreat.enemy and approxThreat.ally > approxThreat.enemy*1.5 and target.Blueprint.CategoriesHash.MOBILE and v.MaxWeaponRange <= unitRange then
+                            if approxThreat.ally and approxThreat.enemy and approxThreat.ally > approxThreat.enemy*1.5 and not targetCats.INDIRECTFIRE and targetCats.MOBILE and v.MaxWeaponRange <= unitRange then
                                 IssueClearCommands({v})
                                 IssueAggressiveMove({v},targetPos)
                             else
@@ -608,7 +608,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             local avoidTargetPos
             local target = StateUtils.GetClosestUnitRNG(aiBrain, self, self.Pos, (categories.MOBILE + categories.STRUCTURE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, 128, 'Enemy')
             if target and not target.Dead then
-                local targetRange = StateUtils.GetUnitMaxWeaponRange(target)
+                local targetRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
                 local minTargetRange
                 if targetRange then
                     minTargetRange = targetRange + 10

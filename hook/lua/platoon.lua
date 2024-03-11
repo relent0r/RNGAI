@@ -2714,6 +2714,10 @@ Platoon = Class(RNGAIPlatoonClass) {
             else
                 return
             end
+            if cons.BaseTemplate == 'T1PDTemplate' then
+                RNGLOG('PD World Pos '..repr(tmpReference))
+                RNGLOG('PD reference is '..repr(reference))
+            end
             --RNGLOG('reference is '..repr(reference))
             --RNGLOG('World Pos '..repr(tmpReference))
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
@@ -3193,8 +3197,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                         LOG('Number of high value units being built '..unitsBeingBuilt)
                         LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
-                        LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (150 * multiplier)))
-                        if unitsBeingBuilt > 0 and aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (150 * multiplier) then
+                        LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (250 * multiplier)))
+                        if unitsBeingBuilt > 0 and aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (250 * multiplier) then
                             LOG('Too many high value units being built, abort this one')
                             if queuedStructures[unitBp.TechCategory][eng.EntityId] then
                                 LOG('Deleting engineer entry in queue')
@@ -3226,6 +3230,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             IssueClearCommands({eng})
             unit.ReclaimInProgress = true
             IssueReclaim({eng}, unit)
+            unit.EngineerBuildQueue = {}
         end
         while RNGGETN(eng:GetCommandQueue()) > 0 do
             coroutine.yield(20)

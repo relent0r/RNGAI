@@ -63,6 +63,7 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
     --Generate the safest path between the start and destination
     local path, msg, distance, threats = NavUtils.PathToWithThreatThreshold(platoonLayer, start, destination, aiBrain, threatType, 1000, aiBrain.BrainIntel.IMAPConfig.Rings)
     if not path then 
+        LOG('No path from '..repr(start)..' to '..repr(destination)..' reason is '..repr(msg)..' platoon layer was '..platoonLayer)
         return false, msg, distance, threats
     end
     -- Insert the path nodes (minus the start node and end nodes, which are close enough to our start and destination) into our command queue.
@@ -126,33 +127,6 @@ function GetPathGraphsRNG()
     end
 
     return ScenarioInfo.PathGraphsRNG or {}
-end
-
-function GetClosestPathNodeInRadiusByLayerRNG(location, radius, layer)
-
-    local bestDist = radius*radius
-    local bestMarker = false
-
-    local graphTable =  GetPathGraphsRNG()[layer]
-    if graphTable == false then
-        --RNGLOG('graphTable doesnt exist yet')
-        return false
-    end
-
-    if graphTable then
-        for name, graph in graphTable do
-            for mn, markerInfo in graph do
-                local dist2 = VDist2Sq(location[1], location[3], markerInfo.position[1], markerInfo.position[3])
-
-                if dist2 < bestDist then
-                    bestDist = dist2
-                    bestMarker = markerInfo
-                end
-            end
-        end
-    end
-
-    return bestMarker
 end
 
 -- Sproutos work

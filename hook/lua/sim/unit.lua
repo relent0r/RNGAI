@@ -19,17 +19,17 @@ Unit = Class(RNGUnitClass) {
 
     EnhancementThreatReturn = function(self)
         local unitEnh = SimUnitEnhancements[self.EntityId]
-        local threatReturn = 26
+        local threatReturn = 28
         if unitEnh then
             for k, v in unitEnh do
                 if v == 'HeavyAntiMatterCannon' then
-                    threatReturn = threatReturn + 15
+                    threatReturn = threatReturn + 25
                 elseif v == 'HeatSink' then
-                    threatReturn = threatReturn + 15
+                    threatReturn = threatReturn + 25
                 elseif v == 'CoolingUpgrade' then
-                    threatReturn = threatReturn + 15
+                    threatReturn = threatReturn + 25
                 elseif v == 'RateOfFire' then
-                    threatReturn = threatReturn + 15
+                    threatReturn = threatReturn + 25
                 end
                 if v == 'HeatSink' then
                     threatReturn = threatReturn + 6

@@ -89,7 +89,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local scout = self.ScoutUnit
             local scoutPos = scout:GetPosition()
-            if self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Dead then
+            if self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Dead and not self.BuilderData.AttackTarget.Tractored then
                 self:LogDebug(string.format('We have an existing AttackTarget, CombatLoop'))
                 self:ChangeState(self.CombatLoop)
                 return

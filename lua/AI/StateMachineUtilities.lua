@@ -598,7 +598,7 @@ GetClosestUnitRNG = function(aiBrain, platoon, platoonPosition, unitCat, pathChe
             local targetUnits = GetUnitsAroundPoint(aiBrain, unitCat, platoonPosition, range, alliance)
             if targetUnits then
                 for _, unit in targetUnits do
-                    if unit and not unit.Dead then
+                    if unit and not unit.Dead and not unit.Tractored then
                         local pathable = true
                         local threatable = true
                         local unitPos = unit:GetPosition()
@@ -950,6 +950,16 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
             TotalCount = 0,
             Units = {}
         },
+        ExperimentalThreat = {
+            TotalThreat = 0,
+            TotalCount = 0,
+            Units = {}
+        },
+        CommandThreat = {
+            TotalThreat = 0,
+            TotalCount = 0,
+            Units = {}
+        },
     }
     local targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS - categories.INSIGNIFICANTUNIT, position, maxRange, 'Enemy')
     for _, unit in targetUnits do
@@ -967,11 +977,19 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
             if unitTable.ClosestUnitDistance == 0 or unitTable.ClosestUnitDistance > distance then
                 unitTable.ClosestUnitDistance = distance
             end
-            if unit.Blueprint.CategoriesHash.AIR and (unit.Blueprint.CategoriesHash.BOMBER or unit.Blueprint.CategoriesHash.GROUNDATTACK) then
+            if unit.Blueprint.CategoriesHash.COMMAND then
+                unitTable.CommandThreat.TotalThreat = unitTable.CommandThreat.TotalThreat + unitThreat
+                unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
+                RNGINSERT(unitTable.CommandThreat.Units, {Object = unit, Distance = distance})
+            elseif unit.Blueprint.CategoriesHash.EXPERIMENTAL and (unit.Blueprint.CategoriesHash.LAND or unit.Blueprint.CategoriesHash.AMPHIBIOUS) then
+                unitTable.ExperimentalThreat.TotalThreat = unitTable.ExperimentalThreat.TotalThreat + unitThreat
+                unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
+                RNGINSERT(unitTable.ExperimentalThreat.Units, {Object = unit, Distance = distance})
+            elseif unit.Blueprint.CategoriesHash.AIR and (unit.Blueprint.CategoriesHash.BOMBER or unit.Blueprint.CategoriesHash.GROUNDATTACK) then
                 unitTable.AirSurfaceThreat.TotalThreat = unitTable.AirSurfaceThreat.TotalThreat + unitThreat
                 unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                 RNGINSERT(unitTable.AirSurfaceThreat.Units, {Object = unit, Distance = distance})
-            elseif unit.Blueprint.CategoriesHash.LAND and (unit.Blueprint.CategoriesHash.DIRECTFIRE or unit.Blueprint.CategoriesHash.INDIRECTFIRE) then
+            elseif (unit.Blueprint.CategoriesHash.LAND or unit.Blueprint.CategoriesHash.AMPHIBIOUS) and (unit.Blueprint.CategoriesHash.DIRECTFIRE or unit.Blueprint.CategoriesHash.INDIRECTFIRE) then
                 local unitRange = GetUnitMaxWeaponRange(unit)
                 if unitRange > 35 then
                     unitTable.RangedUnitThreat.TotalThreat = unitTable.RangedUnitThreat.TotalThreat + unitThreat
@@ -1031,11 +1049,7 @@ function ExperimentalAirTargetLocalCheckRNG(aiBrain, position, platoon, maxRange
             TotalThreat = 0,
             Units = {}
         },
-        RangedUnitThreat = {
-            TotalThreat = 0,
-            Units = {}
-        },
-        CloseUnitThreat = {
+        AirThreat = {
             TotalThreat = 0,
             Units = {}
         },
@@ -1044,6 +1058,14 @@ function ExperimentalAirTargetLocalCheckRNG(aiBrain, position, platoon, maxRange
             Units = {}
         },
         DefenseThreat = {
+            TotalThreat = 0,
+            Units = {}
+        },
+        LandUnitThreat = {
+            TotalThreat = 0,
+            Units = {}
+        },
+        StructureUnitThreat = {
             TotalThreat = 0,
             Units = {}
         },
@@ -1060,36 +1082,34 @@ function ExperimentalAirTargetLocalCheckRNG(aiBrain, position, platoon, maxRange
             local dx = unitPos[1] - position[1]
             local dz = unitPos[3] - position[3]
             local distance = dx * dx + dz * dz
-            local unitThreat = unit.Blueprint.Defense.SurfaceThreatLevel or 0
+            local unitThreat = unit.Blueprint.Defense.AirThreatLevel or 0
             if unitTable.ClosestUnitDistance == 0 or unitTable.ClosestUnitDistance > distance then
                 unitTable.ClosestUnitDistance = distance
             end
             if unit.Blueprint.CategoriesHash.AIR and (unit.Blueprint.CategoriesHash.ANTIAIR or unit.Blueprint.CategoriesHash.GROUNDATTACK) then
+                unitTable.AirThreat.TotalThreat = unitTable.AirThreat.TotalThreat + unitThreat
+                unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
+                RNGINSERT(unitTable.AirThreat.Units, {Object = unit, Distance = distance})
+            elseif (unit.Blueprint.CategoriesHash.LAND or unit.Blueprint.CategoriesHash.AMPHIBIOUS) and unit.Blueprint.CategoriesHash.ANTIAIR then
                 unitTable.AirSurfaceThreat.TotalThreat = unitTable.AirSurfaceThreat.TotalThreat + unitThreat
                 unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                 RNGINSERT(unitTable.AirSurfaceThreat.Units, {Object = unit, Distance = distance})
-            elseif unit.Blueprint.CategoriesHash.LAND and unit.Blueprint.CategoriesHash.ANTIAIR then
-                local unitRange = GetUnitMaxWeaponRange(unit)
-                if unitRange > 35 then
-                    unitTable.RangedUnitThreat.TotalThreat = unitTable.RangedUnitThreat.TotalThreat + unitThreat
-                    unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
-                    RNGINSERT(unitTable.RangedUnitThreat.Units, {Object = unit, Distance = distance})
-                else
-                    unitTable.CloseUnitThreat.TotalThreat = unitTable.CloseUnitThreat.TotalThreat + unitThreat
-                    unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
-                    RNGINSERT(unitTable.CloseUnitThreat.Units, {Object = unit, Distance = distance})
-                end
             elseif unit.Blueprint.CategoriesHash.STRUCTURE and unit.Blueprint.CategoriesHash.ANTIAIR  then
                 unitTable.DefenseThreat.TotalThreat = unitTable.DefenseThreat.TotalThreat + unitThreat
                 unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                 RNGINSERT(unitTable.DefenseThreat.Units, {Object = unit, Distance = distance})
             elseif unit.Blueprint.CategoriesHash.NAVAL and unit.Blueprint.CategoriesHash.ANTIAIR and not unit.Blueprint.CategoriesHash.WEAKANTIAIR then
-                local unitRange = GetUnitMaxWeaponRange(unit)
-                if unitRange > 35 or distance < 1225 then
-                    unitTable.NavalUnitThreat.TotalThreat = unitTable.NavalUnitThreat.TotalThreat + unitThreat
-                    unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
-                    RNGINSERT(unitTable.NavalUnitThreat.Units, {Object = unit, Distance = distance})
-                end
+                unitTable.NavalUnitThreat.TotalThreat = unitTable.NavalUnitThreat.TotalThreat + unitThreat
+                unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
+                RNGINSERT(unitTable.NavalUnitThreat.Units, {Object = unit, Distance = distance})
+            elseif unit.Blueprint.CategoriesHash.MOBILE and (unit.Blueprint.CategoriesHash.DIRECTFIRE or unit.Blueprint.CategoriesHash.DIRECTFIRE) then
+                unitTable.LandUnitThreat.TotalThreat = unitTable.LandUnitThreat.TotalThreat + unitThreat
+                unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
+                RNGINSERT(unitTable.LandUnitThreat.Units, {Object = unit, Distance = distance})
+            elseif unit.Blueprint.CategoriesHash.STRUCTURE and (unit.Blueprint.CategoriesHash.ENERGYPRODUCTION or unit.Blueprint.CategoriesHash.SHIELD or unit.Blueprint.CategoriesHash.STRATEGIC or unit.Blueprint.CategoriesHash.EXPERIMENTAL) then
+                local unitThreat = unit.Blueprint.Defense.EconomyThreatLevel or 0
+                unitTable.StructureUnitThreat.TotalThreat = unitTable.StructureUnitThreat.TotalThreat + unitThreat
+                RNGINSERT(unitTable.StructureUnitThreat.Units, {Object = unit, Distance = distance})
             end
         end
     end
@@ -1261,13 +1281,28 @@ function GetClosestTargetByIMAP(aiBrain, platoon, position, threatType, searchFi
     local id=platoon.machinedata.id
     local threatcandidates = {}
     local enemyThreat = aiBrain:GetThreatsAroundPosition(position, 16, true, threatType)
+    local platoonWeaponRange = platoon.MaxPlatoonWeaponRange
     --LOG('enemyThreatTable '..repr(enemyThreat))
     for _, threat in enemyThreat do
         local tx = position[1] - threat[1]
         local tz = position[3] - threat[2]
         local threatDistance = tx * tx + tz * tz
         if threat[3] > 0 then
-            table.insert(threatcandidates, { Position = { threat[1], 0, threat[2] }, Distance = threatDistance, Threat = threat[3]})
+            table.insert(threatcandidates, { Position = { threat[1], 0, threat[2] }, Distance = threatDistance, Threat = threat[3], Type = threatType})
+        end
+    end
+    if layer ~= 'Sub' then
+        local structureThreat = aiBrain:GetThreatsAroundPosition(position, 16, true, 'Structures')
+        for _, threat in structureThreat do
+            local tx = position[1] - threat[1]
+            local tz = position[3] - threat[2]
+            local threatDistance = tx * tx + tz * tz
+            if threat[3] > 0 then
+                local navalCheckPoints = NavUtils.GetPositionsInRadius('Water', {threat[1], GetSurfaceHeight(threat[1], threat[2]),threat[2]}, platoonWeaponRange)
+                if not table.empty(navalCheckPoints) then
+                    table.insert(threatcandidates, { Position = { threat[1], 0, threat[2] }, Distance = threatDistance, Threat = threat[3], Type = 'Structures'})
+                end
+            end
         end
     end
     --LOG('threatcandidates '..repr(enemyThreat))
@@ -1293,7 +1328,7 @@ function GetClosestTargetByIMAP(aiBrain, platoon, position, threatType, searchFi
                                 end
                                 if not unit.machinevalue then unit.machinevalue=unit.Blueprint.Economy.BuildCostMass/unithealth end
                                 unit.machineworth=unit.machinevalue/unithealth
-                                unit.machinedistance[id]=VDist3(position,unitPos)
+                                unit.machinedistance[id]=math.sqrt(position,unitPos)
                                 unit.machinepriority[id]=unit.machineworth/math.max(30,unit.machinedistance[id])/unit.machinedanger
                                 table.insert(targetCandidates,unit)
                             end

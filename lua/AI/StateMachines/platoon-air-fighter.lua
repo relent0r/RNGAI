@@ -93,7 +93,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) then
+            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
                 --LOG('FighterBehavior DecideWhatToDo already has target, attacking')
                 self:ChangeState(self.AttackTarget)
                 return
@@ -287,7 +287,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 return
             end
             IssueClearCommands(GetPlatoonUnits(self))
-            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) then
+            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
                 local target = self.BuilderData.AttackTarget
                 if target.Blueprint.CategoriesHash.BOMBER or target.Blueprint.CategoriesHash.GROUNDATTACK or target.Blueprint.CategoriesHash.TRANSPORTFOCUS then
                     IssueAttack(GetPlatoonUnits(self), target)

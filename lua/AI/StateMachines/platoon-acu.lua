@@ -264,7 +264,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > cdr.MaxBaseRange * cdr.MaxBaseRange and not self.BuilderData.DefendExpansion then
-                self:LogDebug(string.format('ACU is beyond maxRadius of '..(cdr.MaxBaseRange * cdr.MaxBaseRange)))
+                self:LogDebug(string.format('ACU is beyond maxRadius of '..cdr.MaxBaseRange))
                 if not cdr.Caution then
                     self:LogDebug(string.format('We are not in caution mode, check if base closer than 6400'))
                     local closestBaseDistance
@@ -376,10 +376,10 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         if closestPos then
                             threat = brain:GetThreatAtPosition( closestPos, brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface' )
                             self:LogDebug(string.format('Found a close base and the threat is '..threat))
-                            if threat > 30 then
+                            if threat > 35 then
                                 self:LogDebug(string.format('high threat validate real threat'))
                                 local realThreat = RUtils.GrabPosDangerRNG(brain,closestPos,120, true, true, false)
-                                if realThreat.enemy > 30 and realThreat.enemy > realThreat.ally then
+                                if realThreat.enemy > 35 and realThreat.enemy > realThreat.ally then
                                     self:LogDebug(string.format('high threat retreat'))
                                     self.BuilderData = {}
                                     self:ChangeState(self.Retreating)
@@ -467,7 +467,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         --RNGLOG('Total highThreatCount '..highThreatCount)
                         if cdr.Phase < 3 and not cdr.HighThreatUpgradePresent and closestThreatUnit and closestUnitPosition then
                             if not IsDestroyed(closestThreatUnit) then
-                                if GetThreatAtPosition(brain, closestUnitPosition, brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > cdr.ThreatLimit * 1.3 and GetEconomyIncome(brain, 'ENERGY') > 80 then
+                                local threatAtPos = GetThreatAtPosition(brain, closestUnitPosition, brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+                                if threatAtPos > 50 and threatAtPos > cdr.ThreatLimit * 1.3 and GetEconomyIncome(brain, 'ENERGY') > 80 then
                                     self:LogDebug(string.format('High threat upgrade required'))
                                     cdr.HighThreatUpgradeRequired = true
                                     local closestBase = ACUFunc.GetClosestBase(brain, cdr)
@@ -569,17 +570,16 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     --LOG('Current distance is '..VDist3Sq(origin, destination))
                     --LOG('Cutoff is '..navigateDistanceCutOff)
                     waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 50)
-                    self:LogDebug(string.format('ACU Moving to waypoint '..repr(waypoint)))
                 else
                     --LOG('destination move to '..repr(destination))
                     --LOG('Current distance is '..VDist3Sq(origin, destination))
                     --LOG('Cutoff is '..navigateDistanceCutOff)
                     waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 50)
-                    self:LogDebug(string.format('ACU Moving to waypoint '..repr(waypoint)))
                 end
                 if builderData.Retreat then
                     cdr:SetAutoOvercharge(true)
                 end
+                self:LogDebug(string.format('Length is '..repr(length)))
 
                 -- something odd happened: no direction found
                 if not waypoint then
@@ -979,8 +979,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local brain = self:GetBrain()
             local cdr = self.cdr
-            local realEnemyThreat
-            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) then
+            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
                 local target = self.BuilderData.AttackTarget
                 local snipeAttempt = false
                 if target and not target.Dead then
@@ -1085,7 +1084,12 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         --RNGLOG('Target is '..target.UnitId)
                         targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                         local movePos
-                        if snipeAttempt then
+                        local currentLayer = cdr:GetCurrentLayer() 
+                        if target.Blueprint.CategoriesHash.RECLAIMABLE and currentLayer == 'Seabed' and targetDistance < 10 then
+                            self:LogDebug(string.format('acu is under water and target is close, attempt reclaim, current unit distance is '..VDist3(cdrPos, targetPos)))
+                            IssueReclaim({cdr}, target)
+                            movePos = targetPos
+                        elseif snipeAttempt then
                             self:LogDebug(string.format('Moving to enemy acu pos'))
                             movePos = targetPos
                         elseif cdr.CurrentEnemyInnerCircle < 20 then
@@ -1098,7 +1102,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             --RNGLOG('cdr pew pew standard move pos')
                             movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - 5)})
                         end
-                        if not snipeAttempt and brain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
+                        if not snipeAttempt and currentLayer ~= 'Seabed' and brain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
                             --RNGLOG('Blocking terrain for acu')
                             local checkPoints = ACUFunc.DrawCirclePoints(6, 15, movePos)
                             local alternateFirePos = false
@@ -1154,14 +1158,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         if not overChargeFired and VDist3Sq(cdr:GetPosition(), target:GetPosition()) < cdr.WeaponRange * cdr.WeaponRange then
                             IssueClearCommands({cdr})
                             IssueOverCharge({cdr}, target)
-                        end
-                    end
-                    if target and not target.Dead and cdr.TargetPosition then
-                        if RUtils.PositionInWater(cdr.Position) and VDist3Sq(cdr.Position, cdr.TargetPosition) < 100 then
-                            --RNGLOG('ACU is in water, going to try reclaim')
-                            IssueClearCommands({cdr})
-                            IssueReclaim({cdr}, target)
-                            coroutine.yield(30)
                         end
                     end
                 end
@@ -1229,7 +1225,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 baseRetreat = true
             end
             local supportPlatoon = brain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
-            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) then
+            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
                 currentTargetPosition = self.BuilderData.AttackTarget:GetPosition()
             end
             if cdr.Health > 5000 and distanceToHome > 6400 and not baseRetreat then

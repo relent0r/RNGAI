@@ -4,7 +4,6 @@ local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
-local GetClosestPathNodeInRadiusByLayerRNG = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayerRNG
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetThreatBetweenPositions = moho.aibrain_methods.GetThreatBetweenPositions
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
@@ -553,7 +552,7 @@ IntelManager = Class {
                         end
                         local controlValue = zoneSet[v.id].control
                         if controlValue <= 0 then
-                            controlValue = 0.5
+                            controlValue = 0.25
                         end
                         local resourceValue = zoneSet[v.id].resourcevalue or 1
                         if resourceValue then
@@ -1956,7 +1955,6 @@ ExpansionIntelScanRNG = function(aiBrain)
     if ScenarioInfo.Options.AIDebugDisplay == 'displayOn' then
         aiBrain:ForkThread(RUtils.RenderBrainIntelRNG)
     end
-    local GetClosestPathNodeInRadiusByLayer = import('/lua/AI/aiattackutilities.lua').GetClosestPathNodeInRadiusByLayer
     local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     --RNGLOG('Starting ExpansionIntelScan')
     while aiBrain.Status ~= "Defeat" do

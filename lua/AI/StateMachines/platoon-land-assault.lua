@@ -413,7 +413,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             local avoidTargetPos
             local target = StateUtils.GetClosestUnitRNG(aiBrain, self, self.Pos, (categories.MOBILE + categories.STRUCTURE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, 128, 'Enemy')
             if target and not target.Dead then
-                local targetRange = StateUtils.GetUnitMaxWeaponRange(target)
+                local targetRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
                 if targetRange then
                     targetRange = targetRange + 10
                 end

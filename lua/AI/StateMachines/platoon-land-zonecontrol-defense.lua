@@ -141,7 +141,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             else
                 self.retreat=false
             end
-            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) then
+            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
                 local targetPos = self.BuilderData.AttackTarget:GetPosition()
                 local ax = platPos[1] - targetPos[1]
                 local az = platPos[3] - targetPos[3]

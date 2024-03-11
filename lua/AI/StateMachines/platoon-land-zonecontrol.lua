@@ -128,7 +128,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             else
                 self.retreat=false
             end
-            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) then
+            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
                 local targetPos = self.BuilderData.AttackTarget:GetPosition()
                 local ax = self.Pos[1] - targetPos[1]
                 local az = self.Pos[3] - targetPos[3]
@@ -185,7 +185,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         --LOG('No self.BuilderData.Position in DecideWhatToDo targetzone')
                     end
                     self.dest = self.BuilderData.Position
-                    self:LogDebug(string.format('DecideWhatToDo target zone navigate'))
+                    self:LogDebug(string.format('DecideWhatToDo target zone navigate, zone selection '..targetZone))
+                    self:LogDebug(string.format('Distance to zone is '..VDist3(self.Pos, self.dest)))
                     self:ChangeState(self.Navigating)
                     return
                 end
@@ -241,7 +242,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                     if target then
                         local skipKite = false
-                        local unitRange = StateUtils.GetUnitMaxWeaponRange(target)
+                        local unitRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
                         targetPos = target:GetPosition()
                         if not approxThreat then
                             approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, false, false)
@@ -298,7 +299,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local avoidTargetPos
             local target = StateUtils.GetClosestUnitRNG(aiBrain, self, self.Pos, (categories.MOBILE + categories.STRUCTURE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, 128, 'Enemy')
             if target and not target.Dead then
-                local targetRange = StateUtils.GetUnitMaxWeaponRange(target)
+                local targetRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
                 local minTargetRange
                 if targetRange then
                     minTargetRange = targetRange + 10

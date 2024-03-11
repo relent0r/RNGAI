@@ -69,7 +69,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Retreating)
                 return
             end
-            if self.BuilderData.AttackTarget then 
+            if self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Tractored then 
                 if not self.BuilderData.AttackTarget.Dead then
                     local targetPos = self.BuilderData.AttackTarget:GetPosition()
                     local newTarget
@@ -317,11 +317,11 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if self.BuilderData.Retreat then
-                while aiBrain:PlatoonExists(self) and VDist3Sq(self:GetPlatoonPosition(), self.Home) > 100 do
+                while not self.Dead and VDist3Sq(self:GetPlatoonPosition(), self.Home) > 100 do
                     coroutine.yield(25)
                 end
             end
-            if not aiBrain:PlatoonExists(self) then
+            if self.Dead then
                 return
             end
             self.CurrentEnemyAirThreat = 0
@@ -339,7 +339,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonGunshipBehavior
         Main = function(self)
             local platoonUnits = self:GetPlatoonUnits()
-            if self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Dead then
+            if self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Dead and not self.BuilderData.AttackTarget.Tractored then
                 local target = self.BuilderData.AttackTarget
                 IssueAttack(platoonUnits, target)
                 coroutine.yield(35)
