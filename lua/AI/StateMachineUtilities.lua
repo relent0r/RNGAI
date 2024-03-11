@@ -1328,7 +1328,7 @@ function GetClosestTargetByIMAP(aiBrain, platoon, position, threatType, searchFi
                                 end
                                 if not unit.machinevalue then unit.machinevalue=unit.Blueprint.Economy.BuildCostMass/unithealth end
                                 unit.machineworth=unit.machinevalue/unithealth
-                                unit.machinedistance[id]=math.sqrt(position,unitPos)
+                                unit.machinedistance[id]=VDist3(position,unitPos)
                                 unit.machinepriority[id]=unit.machineworth/math.max(30,unit.machinedistance[id])/unit.machinedanger
                                 table.insert(targetCandidates,unit)
                             end
