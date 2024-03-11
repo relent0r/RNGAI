@@ -554,8 +554,9 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     local targetMaxWeaponRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
                     if not maxPlatoonRange then
                         coroutine.yield(3)
-                        WARN('Warning : Experimental has no max weapon range')
-                        continue
+                        WARN('AI-RNG* Warning : Experimental has no max weapon range, unable to attack')
+                        self:ChangeState(self.Error)
+                        return
                     end
                     local unitPos = experimental:GetPosition()
                     if StateUtils.PositionInWater(unitPos) and experimental.Blueprint.CategoriesHash.ANTINAVY then
@@ -563,17 +564,19 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     elseif maxPlatoonRange < self.MaxPlatoonWeaponRange then
                         maxPlatoonRange = self.MaxPlatoonWeaponRange
                     end
-                    local targetDistance = VDist3Sq(unitPos, targetPosition)
+                    local tx = unitPos[1] - targetPosition[1]
+                    local tz = unitPos[3] - targetPosition[3]
+                    local targetDistance = tx * tx + tz * tz
                     local alpha = math.atan2(targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
                     local x = targetPosition[1] - math.cos(alpha) * (maxPlatoonRange - 10)
                     local y = targetPosition[3] - math.sin(alpha) * (maxPlatoonRange - 10)
                     local smartPos = { x, GetTerrainHeight( x, y), y }
                     -- check if the move position is new or target has moved
                     local expTargetBlocked = aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental.WeaponArc)
-                    if targetDistance < maxPlatoonRange * maxPlatoonRange and maxPlatoonRange > targetMaxWeaponRange and not expTargetBlocked then
+                    if targetDistance < self.MaxPlatoonWeaponRangeSq and maxPlatoonRange > targetMaxWeaponRange and not expTargetBlocked then
                         IssueAggressiveMove({experimental}, targetPosition)
                         coroutine.yield(45)
-                    elseif not expTargetBlocked and VDist2Sq( smartPos[1], smartPos[3], experimental.smartPos[1], experimental.smartPos[3] ) > 9 or targetDistance > maxPlatoonRange * maxPlatoonRange then
+                    elseif not expTargetBlocked and VDist2Sq( smartPos[1], smartPos[3], experimental.smartPos[1], experimental.smartPos[3] ) > 9 or targetDistance > self.MaxPlatoonWeaponRangeSq then
                         -- clear move commands if we have queued more than 4
                         if RNGGETN(experimental:GetCommandQueue()) > 2 then
                             IssueClearCommands({experimental})
@@ -594,15 +597,22 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                             --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
                         end
                     end
-                    if not target.Dead and threatTable.ClosestUnitDistance + 25 < VDist3Sq(unitPos, targetPosition) then
-                        coroutine.yield(10)
-                        --LOG('Another unit is closer to the Experimental, DecideWhatToDo')
-                        self:ChangeState(self.DecideWhatToDo)
-                        return 
+                    if not target.Dead then
+                        unitPos = experimental:GetPosition()
+                        targetPosition = target:GetPosition()
+                        tx = unitPos[1] - targetPosition[1]
+                        tz = unitPos[3] - targetPosition[3]
+                        targetDistance = tx * tx + tz * tz
+                        if threatTable.ClosestUnitDistance + 25 < targetDistance then
+                            coroutine.yield(10)
+                            --LOG('Another unit is closer to the Experimental, DecideWhatToDo')
+                            self:ChangeState(self.DecideWhatToDo)
+                            return 
+                        end
                     end
                 else
                     --LOG('enemy unit is dead, DecideWhatToDo')
-                    coroutine.yield(10)
+                    coroutine.yield(35)
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end

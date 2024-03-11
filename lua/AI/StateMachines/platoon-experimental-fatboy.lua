@@ -483,8 +483,9 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     local targetPosition = target:GetPosition()
                     if not maxPlatoonRange then
                         coroutine.yield(3)
-                        WARN('Warning : Experimental has no max weapon range')
-                        continue
+                        WARN('AI-RNG* Warning : Experimental has no max weapon range, unable to attack')
+                        self:ChangeState(self.Error)
+                        return
                     end
                     local unitPos = experimental:GetPosition()
                     if StateUtils.PositionInWater(unitPos) then
