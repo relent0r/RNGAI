@@ -430,7 +430,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                     target = closestThreatUnit
                 end
-                if (cdr.Health < 4000 and cdr.DistanceToHome > 14400) or (cdr.Health < 6500 and cdr.Caution and not cdr.SuicideMode and cdr.DistanceToHome > 3600 ) or cdr.InFirebaseRange then
+                if (cdr.Health < 4000 and cdr.DistanceToHome > 14400 and not cdr.SuicideMode) or (cdr.Health < 6500 and cdr.Caution and not cdr.SuicideMode and cdr.DistanceToHome > 3600 ) or cdr.InFirebaseRange then
                     self:LogDebug(string.format('Emergency Retreat, low health or high danger'))
                     self.BuilderData = {}
                     self:ChangeState(self.Retreating)
@@ -1053,6 +1053,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 cdr:SetAutoOvercharge(true)
                                 cdr.SnipeMode = true
                                 cdr.SuicideMode = true
+                                brain.BrainIntel.SuicideModeActive = true
+                                brain.BrainIntel.SuicideModeTarget = target
                                 self.BuilderData.ACUTarget = target
                                 snipeAttempt = true
                                 local gameTime = GetGameTimeSeconds()

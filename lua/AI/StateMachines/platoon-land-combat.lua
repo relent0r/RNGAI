@@ -91,7 +91,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 --LOG('Vented LandCombatPlatoon Deciding what to do')
             end
             local aiBrain = self:GetBrain()
-            if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
+            if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
                 local enemyAcuPosition = aiBrain.BrainIntel.SuicideModeTarget:GetPosition()
                 local rx = self.Pos[1] - enemyAcuPosition[1]
                 local rz = self.Pos[3] - enemyAcuPosition[3]

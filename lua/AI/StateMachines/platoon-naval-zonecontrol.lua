@@ -607,7 +607,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             for _,v in units do
                 if v and not v.Dead then
                     local unitPos = v:GetPosition()
-                    if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
+                    if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
                         target = aiBrain.BrainIntel.SuicideModeTarget
                     else
                         for l, m in self.targetcandidates do

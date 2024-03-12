@@ -131,6 +131,27 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             if not self.MovementLayer then
                 self.MovementLayer = self:GetNavigationalLayer()
             end
+            if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
+                local enemyAcuPosition = aiBrain.BrainIntel.SuicideModeTarget:GetPosition()
+                local rx = self.Pos[1] - enemyAcuPosition[1]
+                local rz = self.Pos[3] - enemyAcuPosition[3]
+                local acuDistance = rx * rx + rz * rz
+                if NavUtils.CanPathTo(self.MovementLayer, self.Pos, enemyAcuPosition) then
+                    if acuDistance > 6400 then
+                        self.BuilderData = {
+                            Target = aiBrain.BrainIntel.SuicideModeTarget,
+                            Position = aiBrain.BrainIntel.SuicideModeTarget:GetPosition(),
+                            CutOff = 400
+                        }
+                        self.dest = self.BuilderData.Position
+                        self:ChangeState(self.Navigating)
+                        return
+                    else
+                        self:ChangeState(self.CombatLoop)
+                        return
+                    end
+                end
+            end
             local target
             if not target then
                 self:LogDebug('looking for acu snipe target')
