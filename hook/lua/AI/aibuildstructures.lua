@@ -46,8 +46,12 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToB
                 for m,bString in bType[1] do
                     if bString == buildingType then
                         for n,position in bType do
-                            if n > 1 then
-                                AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false)
+                            if n > 1 and CanBuildStructureAt(aiBrain, whatToBuild, {position[1], GetSurfaceHeight(position[1], position[2]), position[2]}) then
+                                if buildingType == 'MassStorage' then
+                                    AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false, true)
+                                else
+                                    AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false)
+                                end
                                 table.remove(bType,n)
                                 return
                             end
@@ -61,8 +65,6 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToB
     --RNGLOG('AIBuildBaseTemplateOrderedRNG Unsuccessful build')
     return
 end
-
---and CanBuildStructureAt(aiBrain, whatToBuild, {position[1], GetSurfaceHeight(position[1], position[2]), position[2]})
 
 function TMLStartUpLogic(buildingType, builder)
     if buildingType == 'T2StrategicMissile' then
