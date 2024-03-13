@@ -6811,6 +6811,73 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
     return false
 end
 
+GetRaidPositions = function(startX, startY, enemyX, enemyY, zoneTable)
+    local function DrawTargetRadius(position, colour)
+        --RNGLOG('Draw Target Radius points')
+        local counter = 0
+        while counter < 60 do
+            DrawCircle(position, 3, colour)
+            counter = counter + 1
+            coroutine.yield( 2 )
+        end
+    end
+
+    local function filterPositions(startX, startY, endX, endY, resourcePositions, tolerance)
+        local filteredPositions = {}
+        
+        -- Calculate the slope and intercept of the line connecting start and end positions
+        local slope = (endY - startY) / (endX - startX)
+        local intercept = startY - slope * startX
+        
+        -- Iterate through resource positions
+        for _, position in ipairs(resourcePositions) do
+            -- Calculate the expected Y value on the line for this X position
+            local expectedY = slope * position.x + intercept
+            
+            -- Check if the actual Y position is within tolerance of the expected Y
+            if math.abs(position.y - expectedY) <= tolerance then
+                table.insert(filteredPositions, position)
+            end
+        end
+        
+        return filteredPositions
+    end
+    local tolerance = 2
+
+    if startX and startY and enemyX and enemyY and zoneTable then
+        local targetAngle = GetAngleToPosition(enemyX, enemyY, startX, startY)
+        table.sort(zoneTable, function(a, b)
+            local distanceA = distance(startX, startY, a.pos[1], a.pos[3])
+            local distanceB = distance(startX, startY, b.pos[1], b.pos[3])
+            
+            -- Check if the resource positions are on the same side as the target angle
+            local angleA = GetAngleToPosition(enemyX, enemyY, a.pos[1], a.pos[3])
+            local angleB = GetAngleToPosition(enemyX, enemyY,b.pos[1], b.pos[3])
+            
+            local angleDifferenceA = math.abs(targetAngle - angleA)
+            local angleDifferenceB = math.abs(targetAngle - angleB)
+            
+            -- Calculate the importance score based on distance, resource value, and angle
+            local importanceA = a.resourceValue / (distanceA * angleDifferenceA)
+            local importanceB = b.resourceValue / (distanceB * angleDifferenceB)
+            
+            -- Prioritize positions that are closer to a straight line between start and end
+            importanceA = importanceA * math.cos(angleDifferenceA)
+            importanceB = importanceB * math.cos(angleDifferenceB)
+            
+            return importanceA > importanceB
+        end)
+        local filteredPositions = filterPositions(startX, startY, enemyX, enemyY, zoneTable, tolerance)
+        for _, v in filteredPositions do
+            DrawTargetRadius(v.pos, 'cc0000')
+        end
+    else
+        WARNING('AI-RNG* : GetRaidPositions missing parameters')
+    end
+
+end
+
+
 --[[
     -- Calculate dot product between two 3D vectors (same as before)
 

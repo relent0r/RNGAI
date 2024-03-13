@@ -101,6 +101,19 @@ IntelManager = Class {
                 Efficiency = 0
 
             },
+            Bomber = {
+                Deaths = {
+                    Mass = 0
+                },
+                Kills = {
+                    Mass = 0
+                },
+                Built = {
+                    Mass = 0
+                },
+                Efficiency = 0
+
+            },
             Air = {
                 Deaths = {
                     Total = {
