@@ -1701,6 +1701,14 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit)
                     if targetUnit.Blueprint.Economy.BuildCostMass then
                         valueGained = targetUnit.Blueprint.Economy.BuildCostMass or 0
                     end
+                elseif sourceCat.BOMBER then
+                    data.sourcecat = 'Bomber'
+                    if targetUnit.Blueprint.Economy.BuildCostMass then
+                        valueGained = targetUnit.Blueprint.Economy.BuildCostMass or 0
+                    end
+                    if sourceUnit.PlatoonHandle.UnitTarget == 'ENGINEER' then
+
+                    end
                 else
                     data.sourcecat = 'Air'
                 end
@@ -1732,56 +1740,6 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit)
             end
         end
     end
-    --[[
-    if targetUnit.GetAIBrain then
-        --LOG('lost unit')
-        local targetBrain = targetUnit:GetAIBrain()
-        if targetBrain.RNG then
-            LOG('rng lost unit '..targetUnit.UnitId)
-            local valueLost
-            local targetCat = targetUnit.Blueprint.CategoriesHash
-            if targetCat.EXPERIMENTAL then
-                data.targetcat = 'Experimental'
-            elseif targetCat.AIR then
-                if targetCat.SCOUT then
-                    RecordUnitDeath(targetUnit, 'SCOUT')
-                elseif targetCat.GROUNDATTACK then
-                    LOG('RNG gunship was lost')
-                    data.targetcat = 'Gunship'
-                    if targetUnit.Blueprint.Economy.BuildCostMass then
-                        valueLost = targetUnit.Blueprint.Economy.BuildCostMass
-                    end
-                else
-                    data.targetcat = 'Air'
-                end
-            elseif targetCat.LAND then
-                data.targetcat = 'Land'
-            elseif targetCat.STRUCTURE then
-                data.targetcat = 'Structure'
-            end
-            if valueLost then
-                local unitStats = targetBrain.IntelManager.UnitStats
-                unitStats[data.targetcat].Deaths.Mass = unitStats[data.targetcat].Deaths.Mass + valueLost
-                if valueLost then
-                    LOG('Gunship died')
-                    LOG('Target Unit '..targetUnit.UnitId)
-                    local gained
-                    local lost
-                    if unitStats[data.targetcat].Kills.Mass > 0 then
-                        gained = unitStats[data.targetcat].Kills.Mass
-                    else
-                        gained = 0.1
-                    end
-                    if unitStats[data.targetcat].Deaths.Mass > 0 then
-                        lost = unitStats[data.targetcat].Kills.Mass
-                    else
-                        lost = 0.1
-                    end
-                    LOG('Current Gunship Efficiency '..(math.min(gained / lost, 2)))
-                end
-            end
-        end
-    end]]
 end
 
 function ProcessSourceOnDeath(targetBrain, targetUnit)
@@ -1800,6 +1758,11 @@ function ProcessSourceOnDeath(targetBrain, targetUnit)
                 RecordUnitDeath(targetUnit, 'SCOUT')
             elseif targetCat.GROUNDATTACK then
                 data.targetcat = 'Gunship'
+                if targetUnit.Blueprint.Economy.BuildCostMass then
+                    valueLost = targetUnit.Blueprint.Economy.BuildCostMass
+                end
+            elseif targetCat.BOMBER then
+                data.targetcat = 'Bomber'
                 if targetUnit.Blueprint.Economy.BuildCostMass then
                     valueLost = targetUnit.Blueprint.Economy.BuildCostMass
                 end
@@ -1824,7 +1787,7 @@ function ProcessSourceOnDeath(targetBrain, targetUnit)
             local unitStats = targetBrain.IntelManager.UnitStats
             unitStats[data.targetcat].Deaths.Mass = unitStats[data.targetcat].Deaths.Mass + valueLost
             if valueLost then
-                LOG('Gunship died')
+                LOG('Unit type '..data.targetcat..' died')
                 LOG('Target Unit '..targetUnit.UnitId)
                 local gained
                 local lost
@@ -1838,7 +1801,7 @@ function ProcessSourceOnDeath(targetBrain, targetUnit)
                 else
                     lost = 0.1
                 end
-                LOG('Current Gunship Efficiency '..(math.min(gained / lost, 2)))
+                LOG('Current Unit Efficiency '..(math.min(gained / lost, 2)))
             end
         end
     end

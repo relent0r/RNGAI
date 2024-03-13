@@ -23,6 +23,10 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
     OnUnitsAddedToPlatoon = function(self)
         local units = self:GetPlatoonUnits()
         self.Units = units
+        local maxPlatoonStrikeDamage = 0
+        local maxPlatoonDPS = 0
+        local maxPlatoonStrikeRadius = 20
+        local maxPlatoonStrikeRadiusDistance = 0
         for k, unit in units do
             unit.AIPlatoonReference = self
             local unitBp = unit.Blueprint
@@ -37,10 +41,31 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                 unit:SetScriptBit('RULEUTC_CloakToggle', false)
             end
             if unitBp.Weapon then
+                if unitCats.BOMBER then
+                    for _, weapon in unitBp.Weapon or {} do
+                        if (weapon.WeaponCategory == 'Bomb' or weapon.RangeCategory == 'UWRC_DirectFire') then
+                            unit.DamageRadius = weapon.DamageRadius
+                            unit.StrikeDamage = weapon.Damage * weapon.MuzzleSalvoSize
+                            if weapon.InitialDamage then
+                                unit.StrikeDamage = unit.StrikeDamage + (weapon.InitialDamage * weapon.MuzzleSalvoSize)
+                            end
+                            unit.StrikeRadiusDistance = weapon.MaxRadius
+                            maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + unit.StrikeDamage
+                            if weapon.DamageRadius > 0 or  weapon.DamageRadius < maxPlatoonStrikeRadius then
+                                maxPlatoonStrikeRadius = weapon.DamageRadius
+                            end
+                            if unit.StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
+                                maxPlatoonStrikeRadiusDistance = unit.StrikeRadiusDistance
+                            end
+                        end
+                    end
+                    --RNGLOG('Have set units DamageRadius to '..v.DamageRadius)
+                end
                 if unitCats.GUNSHIP and not unit.ApproxDPS then
                     for _, weapon in unitBp.Weapon or {} do
                         if not weapon.CannotAttackGround and weapon.RangeCategory == 'UWRC_DirectFire' then
                             unit.ApproxDPS = RUtils.CalculatedDPSRNG(weapon) --weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
+                            maxPlatoonDPS = maxPlatoonDPS + v.ApproxDPS
                         end
                     end
                 end
@@ -107,6 +132,18 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                 unit:RemoveCommandCap('RULEUCC_Reclaim')
                 unit:RemoveCommandCap('RULEUCC_Repair')
             end
+        end
+        if maxPlatoonStrikeDamage > 0 then
+            self.PlatoonStrikeDamage = maxPlatoonStrikeDamage
+        end
+        if maxPlatoonStrikeRadius > 0 then
+            self.PlatoonStrikeRadius = maxPlatoonStrikeRadius
+        end
+        if maxPlatoonStrikeRadiusDistance > 0 then
+            self.PlatoonStrikeRadiusDistance = maxPlatoonStrikeRadiusDistance
+        end
+        if maxPlatoonDPS > 0 then
+            self.MaxPlatoonDPS = maxPlatoonDPS
         end
         if not self.MaxPlatoonWeaponRange then
             self.MaxPlatoonWeaponRange=20
