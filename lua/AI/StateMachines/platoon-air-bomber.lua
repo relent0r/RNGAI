@@ -65,6 +65,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.AttackTarget)
                 return
             end
+            --[[
             if self.BuilderData.AttackTarget.Dead and self.UnitTarget and self.UnitTarget == 'ENGINEER' and self.BuilderData.Position then
                 local targetPosition = self.BuilderData.Position
                 local tx = platPos[1] - targetPosition[1]
@@ -79,7 +80,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 end
-            end
+            end]]
             if self.BuilderData.AttackTarget then
                 local target = self.BuilderData.AttackTarget
                 if not target.Dead and not target.Tractored then
@@ -92,10 +93,11 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if not target then
+                self:LogDebug(string.format('Checking for ACU Snipe'))
                 local target, _, acuIndex = RUtils.CheckACUSnipe(aiBrain, 'Air')
                 if target then
                     local enemyAcuHealth = aiBrain.EnemyIntel.ACU[acuIndex].HP
-                    if self.PlatoonStrikeDamage > enemyACUHealth * 0.80 or acuHP < 2500 then
+                    if self.PlatoonStrikeDamage > enemyAcuHealth * 0.80 or acuHP < 2500 then
                         self.BuilderData = {
                             AttackTarget = target,
                             Position = target:GetPosition()
@@ -118,6 +120,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if not target then
+                self:LogDebug(string.format('Checking for High Priority Target'))
                 local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
                 if target then
                     --LOG('Bomber high Priority Target Found '..target.UnitId)
@@ -132,6 +135,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if not self.PlatoonData.Defensive then
+                self:LogDebug(string.format('Checking for director target'))
                 target = aiBrain:CheckDirectorTargetAvailable('AntiAir', self.CurrentPlatoonThreat, 'BOMBER', self.PlatoonStrikeDamage)
                 if target then
                     self.BuilderData = {
@@ -155,6 +159,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if not target then
+                self:LogDebug(string.format('Checking priority points'))
                 if not table.empty(aiBrain.prioritypoints) then
                     local pointHighest = 0
                     local point = false
@@ -209,6 +214,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 return
             end
             if not target and VDist3Sq(platPos, self.Home) < 900 then
+                self:LogDebug(string.format('trying to merge with another platoon'))
                 if self.PlatoonCount < 10 then
                     local plat = StateUtils.GetClosestPlatoonRNG(self, 'BomberBehavior', 60)
                     if plat and plat.PlatoonCount and plat.PlatoonCount < 10 then
@@ -216,6 +222,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         local platUnits = plat:GetPlatoonUnits()
                         aiBrain:AssignUnitsToPlatoon(self, platUnits, 'Attack', 'None')
                         import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, plat, platUnits)
+                        self:LogDebug(string.format('Merged'))
                     end
                 end
             end

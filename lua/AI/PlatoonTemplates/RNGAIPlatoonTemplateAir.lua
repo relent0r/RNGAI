@@ -20,15 +20,6 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'RNGAI AntiAirLockdown',
-    Plan = 'AirHuntAI',
-    GlobalSquads = {
-        { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.GROUNDATTACK - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL, 3, 100, 'Attack', 'none' },
-        { categories.AIR * categories.SCOUT * (categories.TECH1 + categories.TECH3), 0, 1, 'scout', 'None' },
-    }
-}
-
-PlatoonTemplate {
     Name = 'RNGAI AirScoutForm',
     Plan = 'ScoutingAIRNG',
     GlobalSquads = {
@@ -46,7 +37,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI BomberAttack T1',
-    Plan = 'BomberStrikeAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1, 1, 1, 'Attack', 'GrowthFormation' },
     }
@@ -54,7 +45,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI BomberAttack',
-    Plan = 'BomberStrikeAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.AIR * categories.BOMBER - categories.EXPERIMENTAL - categories.ANTINAVY - categories.daa0206, 1, 100, 'Attack', 'GrowthFormation' },
         --Add an escort fighter squad?
@@ -67,16 +58,6 @@ PlatoonTemplate {
     Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.AIR * categories.GROUNDATTACK - categories.EXPERIMENTAL - categories.ANTINAVY, 1, 100, 'Attack', 'GrowthFormation' },
-        --Add an escort fighter squad?
-        --{ categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.EXPERIMENTAL - categories.BOMBER - categories.TRANSPORTFOCUS, 0, 10, 'Artillery', 'GrowthFormation' },
-    }
-}
-
-PlatoonTemplate {
-    Name = 'RNGAI BomberEnergyAttack',
-    Plan = 'BomberStrikeAIRNG',
-    GlobalSquads = {
-        { categories.MOBILE * categories.AIR * categories.BOMBER - categories.EXPERIMENTAL - categories.ANTINAVY - categories.daa0206, 1, 5, 'Attack', 'GrowthFormation' },
         --Add an escort fighter squad?
         --{ categories.MOBILE * categories.AIR * categories.ANTIAIR - categories.EXPERIMENTAL - categories.BOMBER - categories.TRANSPORTFOCUS, 0, 10, 'Artillery', 'GrowthFormation' },
     }
