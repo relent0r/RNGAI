@@ -95,9 +95,10 @@ function EnemyInT3ArtilleryRangeRNG(aiBrain, locationtype, inrange)
     return false
 end
 
-function EnemyThreatInT3ArtilleryRangeRNG(aiBrain, locationtype, radius, ratio)
+function EnemyThreatInT3ArtilleryRangeRNG(aiBrain, locationtype, ratio)
     -- This will look at all structure threat on the map and figure out what ratio exist within the radius of a T3 static artillery
     local basePos = aiBrain.BuilderManagers[locationtype].Position
+    local radius = 825 * 825
     local structureThreats = aiBrain:GetThreatsAroundPosition(basePos, 16, true, 'Economy')
     local inRangeThreat = 0
     local totalThreat = 0

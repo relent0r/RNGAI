@@ -86,7 +86,6 @@ BaseBuilderTemplate {
         'RNGAI Shield Builder',
         'RNGAI Shields Upgrader',
         'RNGAI SMD Builders',
-        'RNGAI Perimeter Defenses Expansions',
 
         -- SACU Builders --
         'RNGAI Gate Builders',

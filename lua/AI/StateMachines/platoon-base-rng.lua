@@ -51,6 +51,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                             end
                             unit.StrikeRadiusDistance = weapon.MaxRadius
                             maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + unit.StrikeDamage
+                            LOG('Bomber Weapon radius is '..repr(weapon.DamageRadius))
                             if weapon.DamageRadius > 0 or  weapon.DamageRadius < maxPlatoonStrikeRadius then
                                 maxPlatoonStrikeRadius = weapon.DamageRadius
                             end
@@ -59,7 +60,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                             end
                         end
                     end
-                    --RNGLOG('Have set units DamageRadius to '..v.DamageRadius)
+                    --LOG('Have set units DamageRadius to '..maxPlatoonStrikeRadius)
                 end
                 if unitCats.GUNSHIP and not unit.ApproxDPS then
                     for _, weapon in unitBp.Weapon or {} do

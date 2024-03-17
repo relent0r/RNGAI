@@ -3915,7 +3915,7 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
         end
         return circlePoints
     end
-
+    LOG('Platoon Strike radius is '..repr(platoon.PlatoonStrikeRadius))
     local pointTable = DrawCirclePoints(8, platoon.PlatoonStrikeRadius, targetPosition)
     local maxDamage = target.Blueprint.Economy.BuildCostMass
     local setPointPos = false
@@ -3934,7 +3934,7 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
             --RNGLOG('unitPos is '..repr(unitPos))
             --RNGLOG('Distance between units '..VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]))
             --RNGLOG('strike radius + damage radius '..(platoon.PlatoonStrikeRadius + damageRadius))
-            if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (platoon.PlatoonStrikeRadius * 2 + damageRadius) then
+            if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (platoon.PlatoonStrikeRadius * 1.9 + damageRadius) then
                 if platoon.PlatoonStrikeDamage > unit.Blueprint.Defense.MaxHealth or platoon.PlatoonStrikeDamage > (unit:GetHealth() / 3) then
                     damage = damage + unit.Blueprint.Economy.BuildCostMass
                 else
@@ -3962,7 +3962,7 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
                 --RNGLOG('unitPos is '..repr(unitPos))
                 --RNGLOG('Distance between units '..VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]))
                 --RNGLOG('strike radius + damage radius '..(platoon.PlatoonStrikeRadius + damageRadius))
-                if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (platoon.PlatoonStrikeRadius * 2 + damageRadius) then
+                if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (platoon.PlatoonStrikeRadius * 1.9 + damageRadius) then
                     if platoon.PlatoonStrikeDamage > unit.Blueprint.Defense.MaxHealth or platoon.PlatoonStrikeDamage > (unit:GetHealth() / 3) then
                         damage = damage + unit.Blueprint.Economy.BuildCostMass
                     else
@@ -6549,8 +6549,6 @@ end
 
 IsWithinInterceptionRadiusSquared = function(position1, position2, radius)
     local distanceSquared = CalculateDistanceSquared(position1[1], position1[2], position1[3], position2[1], position2[2], position2[3])
-    LOG('Distance between position and smd '..repr(math.sqrt(distanceSquared)))
-    LOG('Radius is '..radius)
     return distanceSquared <= (radius * radius)
 end
 
@@ -6560,7 +6558,7 @@ FindSMDAtPosition = function(position, smdTable, radius)
 
     for _, defense in smdTable do
         if not defense.object.Dead then
-            if defense.Detected < gameTime - 240 and IsWithinInterceptionRadiusSquared(defense.Position, {position[1], position[2], position[3]}, radius) then
+            if ( defense.Detected < gameTime - 240 and defense.Completed and defense.Completed < gameTime - 240 ) and IsWithinInterceptionRadiusSquared(defense.Position, {position[1], position[2], position[3]}, radius) then
                 table.insert(smdList, defense)
             end
         end
@@ -6604,7 +6602,7 @@ FindSMDBetweenPositions = function(start, finish, smdTable, radius, stepDistance
         for _, defense in smdTable do
             if not defense.object.Dead then
                 LOG('Checking if smd is within range of target, current range is '..repr(VDist3(defense.Position, {currentX, currentY, currentZ})))
-                if defense.Detected < gameTime - 240 and IsWithinInterceptionRadiusSquared(defense.Position, {currentX, currentY, currentZ}, radius) then
+                if ( defense.Detected < gameTime - 240 and defense.Completed and defense.Completed < gameTime - 240 ) and IsWithinInterceptionRadiusSquared(defense.Position, {currentX, currentY, currentZ}, radius) then
                     LOG('We found an smd on the flight path '..repr(defense.Position))
                     return true, defense.Position
                 end
@@ -6664,9 +6662,12 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
     end
     if not table.empty(knownSMDUnits) then
         for _, v in knownSMDUnits do
-            if not v.Dead and v.Blueprint.Weapon[1].MaxRadius then
+            if not v.object.Dead and v.object.Blueprint.Weapon[1].MaxRadius then
+                LOG('knownSMD unit '..repr(v.object:GetPosition()))
                 smdRadius = v.Blueprint.Weapon[1].MaxRadius
                 break
+            else
+                LOG('SMD is dead')
             end
         end
     end
@@ -6717,8 +6718,11 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
             local skip = false
             if z.StructuresNotMex then
                 for _, v in aiBrain.BrainIntel.SMLTargetPositions do
-                    if v.Position[1] == z.Position[1] and v.Position[3] == z.Position[3] then
-                        --LOG('Attempting to nuke a position that has recently been nuked, skipping')
+                    local tx = v.Position[1] - z.Position[1]
+                    local tz = v.Position[3] - z.Position[3]
+                    local targetDistance = tx * tx + tz * tz
+                    if targetDistance < missileRadius * missileRadius then
+                        LOG('Attempting to nuke a position that has recently been nuked, skipping')
                         skip = true
                         break
                     end
@@ -6811,8 +6815,8 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
     return false
 end
 
-GetRaidPositions = function(startX, startY, enemyX, enemyY, zoneTable)
-    local function DrawTargetRadius(position, colour)
+GetStartRaidPositions = function(aiBrain, startPos, enemyIndex)
+    local function DrawTargetRadius(brain, position, colour)
         --RNGLOG('Draw Target Radius points')
         local counter = 0
         while counter < 60 do
@@ -6832,49 +6836,86 @@ GetRaidPositions = function(startX, startY, enemyX, enemyY, zoneTable)
         -- Iterate through resource positions
         for _, position in ipairs(resourcePositions) do
             -- Calculate the expected Y value on the line for this X position
-            local expectedY = slope * position.x + intercept
+            local expectedY = slope * position.pos[1] + intercept
             
             -- Check if the actual Y position is within tolerance of the expected Y
-            if math.abs(position.y - expectedY) <= tolerance then
+            if math.abs(position.pos[3] - expectedY) <= tolerance then
                 table.insert(filteredPositions, position)
             end
         end
         
         return filteredPositions
     end
-    local tolerance = 2
-
-    if startX and startY and enemyX and enemyY and zoneTable then
-        local targetAngle = GetAngleToPosition(enemyX, enemyY, startX, startY)
-        table.sort(zoneTable, function(a, b)
-            local distanceA = distance(startX, startY, a.pos[1], a.pos[3])
-            local distanceB = distance(startX, startY, b.pos[1], b.pos[3])
-            
-            -- Check if the resource positions are on the same side as the target angle
-            local angleA = GetAngleToPosition(enemyX, enemyY, a.pos[1], a.pos[3])
-            local angleB = GetAngleToPosition(enemyX, enemyY,b.pos[1], b.pos[3])
-            
-            local angleDifferenceA = math.abs(targetAngle - angleA)
-            local angleDifferenceB = math.abs(targetAngle - angleB)
-            
-            -- Calculate the importance score based on distance, resource value, and angle
-            local importanceA = a.resourceValue / (distanceA * angleDifferenceA)
-            local importanceB = b.resourceValue / (distanceB * angleDifferenceB)
-            
-            -- Prioritize positions that are closer to a straight line between start and end
-            importanceA = importanceA * math.cos(angleDifferenceA)
-            importanceB = importanceB * math.cos(angleDifferenceB)
-            
-            return importanceA > importanceB
-        end)
-        local filteredPositions = filterPositions(startX, startY, enemyX, enemyY, zoneTable, tolerance)
-        for _, v in filteredPositions do
-            DrawTargetRadius(v.pos, 'cc0000')
-        end
-    else
-        WARNING('AI-RNG* : GetRaidPositions missing parameters')
+    if not aiBrain.ZonesInitialized then
+        WARN('AI-RNG* : Zones are not currently initialized for start raid positions, currentl value is '..repr(aiBrain.ZonesInitialized))
+        coroutine.yield(50)
+        return
     end
+    if not enemyIndex then
+        WARN('AI-RNG* : No enemy index passed to get start raid positions, possibly there is not enemy or this is a campaign map')
+        coroutine.yield(50)
+        return
+    end
+    local tolerance = 100
 
+    local filteredZoneTable = {}
+    local enemyStartPos = aiBrain.EnemyIntel.EnemyStartLocations[enemyIndex].Position
+    local distanceToEnemy = VDist2Sq(startPos[1],startPos[3],enemyStartPos[1],enemyStartPos[3])
+    for _, v in aiBrain.Zones.Land.zones do
+        if not v.startpositionclose then
+            local startDist = v.enemystartdata[enemyIndex].startdistance
+            if startDist < distanceToEnemy then
+                table.insert(filteredZoneTable, {pos = v.pos, resourceValue = v.resourcevalue, startDist = startDist})
+            end
+        end
+    end
+    table.sort(filteredZoneTable, function(a, b) return a.startDist < b.startDist end)
+    local shortList = {}
+    local shortListCount = math.min(RNGGETN(filteredZoneTable), 5)
+    LOG('shortListCount is '..repr(shortListCount))
+    if shortListCount == 0 then
+        coroutine.yield(5)
+        return
+    end
+    for i=1, shortListCount do
+        if filteredZoneTable[i] then
+            table.insert(shortList, filteredZoneTable[i])
+        end
+    end
+    
+    LOG('Dump shortList '..repr(shortList))
+    table.sort(shortList, function(a, b) return a.resourceValue > b.resourceValue end)
+    LOG('Dump shortList by resource value '..repr(shortList))
+    local selectedPos = shortList[math.random(1,shortListCount)]
+    LOG('shortList random pos is '..repr(selectedPos))
+    local targetAngle = GetAngleToPosition(selectedPos.pos, startPos)
+    table.sort(filteredZoneTable, function(a, b)
+        local distanceA = VDist2(startPos[1], startPos[3], a.pos[1], a.pos[3])
+        local distanceB = VDist2(startPos[1], startPos[3], b.pos[1], b.pos[3])
+        
+        -- Check if the resource positions are on the same side as the target angle
+        local angleA = GetAngleToPosition(enemyStartPos, a.pos)
+        local angleB = GetAngleToPosition(enemyStartPos, b.pos)
+        
+        local prevAngleDifferenceA = math.abs(targetAngle - angleA)
+        local prevAngleDifferenceB = math.abs(targetAngle - angleB)
+
+        prevAngleDifferenceA = math.min(prevAngleDifferenceA, math.pi - prevAngleDifferenceA)
+        prevAngleDifferenceB = math.min(prevAngleDifferenceB, math.pi - prevAngleDifferenceB)
+        
+        -- Prioritize positions that are closer to a straight line between start and end
+        local importanceA = a.resourceValue * (1 / (distanceA + 0.1)) * (1 / prevAngleDifferenceA)
+        local importanceB = b.resourceValue * (1 / (distanceB + 0.1)) * (1 / prevAngleDifferenceB)
+        
+        return importanceA > importanceB
+    end)
+    local filteredPositions = filterPositions(startPos[1], startPos[3], selectedPos.pos[1], selectedPos.pos[3], filteredZoneTable, tolerance)
+    table.sort(filteredPositions, function(a, b) return a.startDist > b.startDist end)
+    for _, v in filteredPositions do
+        aiBrain:ForkThread(DrawTargetRadius, v.pos, 'cc0000')
+        LOG('Positions returned '..repr(v.pos))
+    end
+    return selectedPos, shortList, filteredPositions
 end
 
 

@@ -253,6 +253,9 @@ VariableKite = function(platoon,unit,target)--basic kiting function.. complicate
     elseif (unit.Role=='Sniper' or unit.Role=='Artillery' or unit.Role=='Silo') and unit.MaxWeaponRange then
         dest=KiteDist(pos,tpos,unit.MaxWeaponRange,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
+    elseif unit.Role=='Shield' and platoon.MaxDirectFireRange > 0 then
+        dest=KiteDist(pos,tpos,platoon.MaxDirectFireRange-math.random(1,3)-mod)
+        dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif unit.MaxWeaponRange then
         dest=KiteDist(pos,tpos,unit.MaxWeaponRange-math.random(1,3)-mod,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
@@ -989,7 +992,7 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                 unitTable.AirSurfaceThreat.TotalThreat = unitTable.AirSurfaceThreat.TotalThreat + unitThreat
                 unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                 RNGINSERT(unitTable.AirSurfaceThreat.Units, {Object = unit, Distance = distance})
-            elseif (unit.Blueprint.CategoriesHash.LAND or unit.Blueprint.CategoriesHash.AMPHIBIOUS) and (unit.Blueprint.CategoriesHash.DIRECTFIRE or unit.Blueprint.CategoriesHash.INDIRECTFIRE) then
+            elseif (unit.Blueprint.CategoriesHash.LAND or unit.Blueprint.CategoriesHash.AMPHIBIOUS) and (unit.Blueprint.CategoriesHash.DIRECTFIRE or unit.Blueprint.CategoriesHash.INDIRECTFIRE) and not unit.Blueprint.CategoriesHash.SCOUT then
                 local unitRange = GetUnitMaxWeaponRange(unit)
                 if unitRange > 35 then
                     unitTable.RangedUnitThreat.TotalThreat = unitTable.RangedUnitThreat.TotalThreat + unitThreat
@@ -1013,6 +1016,10 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                     unitTable.ArtilleryThreat.TotalThreat = unitTable.ArtilleryThreat.TotalThreat + unitThreat
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                     RNGINSERT(unitTable.ArtilleryThreat.Units, {Object = unit, Distance = distance})
+                elseif unit.Blueprint.CategoriesHash.TACTICALMISSILEPLATFORM then
+                    unitTable.DefenseThreat.TotalThreat = unitTable.DefenseThreat.TotalThreat + unitThreat * 0.3
+                    unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat + unitThreat * 0.3
+                    RNGINSERT(unitTable.DefenseThreat.Units, {Object = unit, Distance = distance})
                 else
                     unitTable.DefenseThreat.TotalThreat = unitTable.DefenseThreat.TotalThreat + unitThreat
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat

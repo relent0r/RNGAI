@@ -873,6 +873,7 @@ IntelManager = Class {
             self:ForkThread(self.AdaptiveProductionThread, 'LandAntiSurface')
             self:ForkThread(self.AdaptiveProductionThread, 'AirAntiNaval',false,  20)
             self:ForkThread(self.AdaptiveProductionThread, 'MobileAntiAir',false,  20)
+            self:ForkThread(self.AdaptiveProductionThread, 'ExperimentalArtillery',false,  20)
         end
     end,
 
@@ -1676,6 +1677,44 @@ IntelManager = Class {
                 self.Brain.amanager.Demand.Land.T2.aa = 0
                 self.Brain.amanager.Demand.Land.T2.aa = 0
             end
+        elseif type == 'ExperimentalArtillery' then
+            local t3ArtilleryCount = 0
+            local t3NukeCount = 0
+            local experimentalNovaxCount = 0
+            local experimentalArtilleryCount = 0
+            local experimentalNukeCount = 0
+            for _, v in self.Brain.EnemyIntel.Artillery do
+                if v.object and not v.object.Dead then
+                    t3ArtilleryCount = t3ArtilleryCount + 1
+                end
+            end
+            for _, v in self.Brain.EnemyIntel.SML do
+                if v.object and not v.object.Dead then
+                    t3NukeCount = t3NukeCount+ 1
+                end
+            end
+            for _, v in self.Brain.EnemyIntel.Experimental do
+                if v.object and not v.object.Dead then
+                    if v.object.Blueprint.CategoriesHash.ORBITALSYSTEM then
+                        experimentalNovaxCount = experimentalNovaxCount + 1
+                    elseif v.object.Blueprint.CategoriesHash.ARTILLERY then
+                        experimentalArtilleryCount = experimentalArtilleryCount + 1
+                    elseif v.object.Blueprint.CategoriesHash.NUKE then
+                        experimentalNukeCount = experimentalNukeCount + 1
+                    end
+                end
+            end
+            self.Brain.emanager.Artillery.T3 = t3ArtilleryCount
+            self.Brain.emanager.Artillery.T4 = experimentalArtilleryCount
+            self.Brain.emanager.Satellite.T4 = experimentalNovaxCount
+            self.Brain.emanager.Nuke.T3 = t3NukeCount
+            self.Brain.emanager.Nuke.T4 = experimentalNukeCount
+            LOG('ExperimentalArtillery Count')
+            LOG('t3ArtilleryCount '..t3ArtilleryCount)
+            LOG('t3NukeCount '..t3NukeCount)
+            LOG('experimentalNovaxCount '..experimentalNovaxCount)
+            LOG('experimentalArtilleryCount '..experimentalArtilleryCount)
+            LOG('experimentalNukeCount '..experimentalNukeCount)
         end
     end,
 }
@@ -2845,7 +2884,15 @@ LastKnownThread = function(aiBrain)
                                         end
                                     end
                                 elseif unitCat.STRUCTURE then
-                                    if unitCat.RADAR then
+                                    if unitCat.EXPERIMENTAL and not unitCat.UNTARGETABLE then
+                                        if not aiBrain.EnemyIntel.Experimental[id] then
+                                            aiBrain.EnemyIntel.Experimental[id] = {object = v, position=unitPosition }
+                                        end
+                                    elseif unitCat.TECH3 and unitCat.ARTILLERY then
+                                        if not aiBrain.EnemyIntel.Artillery[id] then
+                                            aiBrain.EnemyIntel.Artillery[id] = {object = v, position=unitPosition }
+                                        end
+                                    elseif unitCat.RADAR then
                                         im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='radar'
                                     elseif unitCat.TACTICALMISSILEPLATFORM then
                                         im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='tml'
@@ -2858,7 +2905,12 @@ LastKnownThread = function(aiBrain)
                                     elseif unitCat.TECH3 and unitCat.ANTIMISSILE and unitCat.SILO then
                                         im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='smd'
                                         if not aiBrain.EnemyIntel.SMD[id] then
-                                            aiBrain.EnemyIntel.SMD[id] = {object = v, Position=unitPosition, Detected=GetGameTimeSeconds() }
+                                            aiBrain.EnemyIntel.SMD[id] = {object = v, Position=unitPosition, Detected=time }
+                                        end
+                                    elseif unitCat.TECH3 and unitCat.NUKE and unitCat.SILO then
+                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='sml'
+                                        if not aiBrain.EnemyIntel.SML[id] then
+                                            aiBrain.EnemyIntel.SML[id] = {object = v, Position=unitPosition, Detected=time }
                                         end
                                     elseif unitCat.FACTORY then
                                         if unitCat.LAND then
@@ -2896,6 +2948,14 @@ LastKnownThread = function(aiBrain)
                             im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].Position=unitPosition
                             im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].time=time
                             im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].recent=true
+                            if unitCat.TECH3 and unitCat.ANTIMISSILE and unitCat.SILO then
+                                if aiBrain.EnemyIntel.SMD[id] and not aiBrain.EnemyIntel.SMD[id].object.Dead and not aiBrain.EnemyIntel.SMD[id].Completed then
+                                    LOG('Fraction Complete on SMD '..repr(aiBrain.EnemyIntel.SMD[id].object:GetFractionComplete()))
+                                    if aiBrain.EnemyIntel.SMD[id].object:GetFractionComplete() >= 1.0 then
+                                        aiBrain.EnemyIntel.SMD[id].Completed = time
+                                    end
+                                end
+                            end
                         end
                     end
                 end

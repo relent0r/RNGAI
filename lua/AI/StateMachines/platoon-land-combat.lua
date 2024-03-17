@@ -344,8 +344,11 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                         if not (v.Role == 'Sniper' or v.Role == 'Silo') and closestTarget>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.ally and approxThreat.enemy and approxThreat.ally > approxThreat.enemy then
                                 IssueClearCommands({v}) 
-                                --IssueMove({v},target:GetPosition())
-                                IssueAggressiveMove({v},targetPos)
+                                if v.Role == 'Shield' then
+                                    IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
+                                else
+                                    IssueAggressiveMove({v},targetPos)
+                                end
                                 continue
                             end
                         end
@@ -363,7 +366,11 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                         if not skipKite then
                             if approxThreat.ally and approxThreat.enemy and approxThreat.ally > approxThreat.enemy*1.5 and not targetCats.INDIRECTFIRE and targetCats.MOBILE and v.MaxWeaponRange <= unitRange then
                                 IssueClearCommands({v})
-                                IssueAggressiveMove({v},targetPos)
+                                if v.Role == 'Shield' then
+                                    IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
+                                else
+                                    IssueAggressiveMove({v},targetPos)
+                                end
                             else
                                 StateUtils.VariableKite(self,v,target)
                             end

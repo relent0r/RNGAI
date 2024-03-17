@@ -335,7 +335,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
             end
             -- not sure about this one. The acu needs to reclaim while its walking to targets and after but I'm not sure how to implement it this time around
-            if IsDestroyed(self.BuilderData.AttackTarget) and cdr.CurrentEnemyInnerCircle < 10 then
+            if (not self.BuilderData.AttackTarget or self.BuilderData.AttackTarget.Dead) and cdr.CurrentEnemyInnerCircle < 10 then
                 ACUFunc.PerformACUReclaim(brain, cdr, 25, false)
             end
             numUnits = GetNumUnitsAroundPoint(brain, categories.LAND + categories.MASSEXTRACTION - categories.SCOUT, targetSearchPosition, targetSearchRange, 'Enemy')

@@ -16,6 +16,16 @@ local ActiveExpansion = function(self, aiBrain, builderManager)
     end
 end
 
+local ShieldResponse = function(self, aiBrain, builderManager)
+    --RNGLOG('LocationType is '..builderManager.LocationType)
+    if aiBrain.emanager.Artillery.T3 > 0 or aiBrain.emanager.Artillery.T4 > 0 or aiBrain.emanager.Satellite.T4 > 0 then
+        LOG('Shield Response is priority function is enabled')
+        return 950
+    else
+        return 0
+    end
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Shield Builder',                   
     BuildersType = 'EngineerBuilder',
@@ -178,6 +188,36 @@ BuilderGroup {
         PlatoonTemplate = 'T23EngineerBuilderRNG',
         Priority = 0,
         PriorityFunction = ActiveExpansion,
+        DelayEqualBuildPlattons = {'Shield', 5},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
+            { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.SHIELD}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3)} },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            NumAssistees = 8,
+            Construction = {
+                DesiresAssist = true,
+                BuildClose = false,
+                AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY},
+                AvoidCategory = categories.STRUCTURE * categories.SHIELD,
+                maxUnits = 1,
+                maxRadius = 35,
+                LocationType = 'LocationType',
+                BuildStructures = {
+                    'T2ShieldDefense',
+                },
+            },
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Shield Expansion Response',
+        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        Priority = 0,
+        PriorityFunction = ShieldResponse,
         DelayEqualBuildPlattons = {'Shield', 5},
         InstanceCount = 1,
         BuilderConditions = {

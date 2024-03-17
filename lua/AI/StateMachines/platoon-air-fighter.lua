@@ -87,7 +87,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local target
             local platPos = self:GetPlatoonPosition()
-            if self.CurrentEnemyThreat > self.CurrentPlatoonThreat and not self.BuilderData.ProtectUnit then
+            if self.CurrentEnemyThreat > self.CurrentPlatoonThreat and not self.BuilderData.ProtectUnit and not self.BuilderData.AttackTarget.Blueprint.CategoriesHash.EXPERIMENTAL then
                 if platPos and VDist3Sq(platPos, self.Home) > 6400 then
                     self:ChangeState(self.Retreating)
                     return
@@ -123,11 +123,14 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     if v.object and not v.object.Dead and v.object.Blueprint.CategoriesHash.AIR then
                         local expPos = v.object:GetPosition()
                         if expPos and GetThreatAtPosition(aiBrain, expPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') < self.CurrentPlatoonThreat
-                        or VDist2(expPos[1], expPos[3], self.Home[1], self.Home[3]) < self.BaseMilitaryArea then
+                        or VDist2(expPos[1], expPos[3], self.Home[1], self.Home[3]) < math.min(self.BaseMilitaryArea, 200) then
                             target = v.object
                             break
                         end
                     end
+                end
+                if target then
+                    LOG('Experimental found for fighter target, id is '..target.UnitId)
                 end
                 if not target or target.Dead then
                     --RNGLOG('FighterBehavior DecideWhatToDo Check targets at max radius')
@@ -140,6 +143,9 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                         Position = target:GetPosition()
                     }
                     --LOG('FighterBehavior found normal target AttackTarget')
+                    if target.Blueprint.CategoriesHash.EXPERIMENTAL then
+                        LOG('Attacking experimental')
+                    end
                     self:ChangeState(self.AttackTarget)
                     return
                 end

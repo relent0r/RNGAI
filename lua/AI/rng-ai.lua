@@ -989,6 +989,17 @@ AIBrain = Class(RNGAIBrainClass) {
         self.emanager = {
             mex = {
 
+            },
+            Artillery = {
+                T3 = 0,
+                T4 = 0
+            },
+            Nuke = {
+                T3 = 0,
+                T4 = 0
+            },
+            Satellite = {
+                T4 = 0
             }
         }
 
@@ -1070,7 +1081,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.Phase = 1
         self.EnemyIntel.TML = {}
         self.EnemyIntel.SMD = {}
+        self.EnemyIntel.SML = {}
         self.EnemyIntel.Experimental = {}
+        self.EnemyIntel.Artillery = {}
         self.EnemyIntel.DirectorData = {
             Strategic = {},
             Energy = {},

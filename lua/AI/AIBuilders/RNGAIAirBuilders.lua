@@ -348,7 +348,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Bomber T1 Attack Engineers',
         PlatoonTemplate = 'RNGAI BomberAttack T1',
-        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 905,
         InstanceCount = 3,
         BuilderType = 'Any',        
@@ -376,7 +375,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Bomber T1 Attack Defense',
         PlatoonTemplate = 'RNGAI BomberAttack T1',
-        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 910,
         InstanceCount = 30,
         BuilderType = 'Any',        
@@ -662,7 +660,6 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGEXP Air Intercept',
         PlatoonTemplate = 'RNGAI AntiAirHunt',
-        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 800,
         InstanceCount = 2,
         BuilderType = 'Any',
