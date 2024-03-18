@@ -162,7 +162,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Shield',
         PlatoonTemplate = 'T2MobileShields',
-        Priority = 747,
+        Priority = 748,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},

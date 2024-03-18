@@ -253,8 +253,8 @@ VariableKite = function(platoon,unit,target)--basic kiting function.. complicate
     elseif (unit.Role=='Sniper' or unit.Role=='Artillery' or unit.Role=='Silo') and unit.MaxWeaponRange then
         dest=KiteDist(pos,tpos,unit.MaxWeaponRange,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
-    elseif unit.Role=='Shield' and platoon.MaxDirectFireRange > 0 then
-        dest=KiteDist(pos,tpos,platoon.MaxDirectFireRange-math.random(1,3)-mod)
+    elseif (unit.Role=='Shield' or unit.Role == 'Stealth') and platoon.MaxDirectFireRange > 0 then
+        dest=KiteDist(pos,tpos,platoon.MaxDirectFireRange-math.random(1,3)-mod,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif unit.MaxWeaponRange then
         dest=KiteDist(pos,tpos,unit.MaxWeaponRange-math.random(1,3)-mod,healthmod)

@@ -113,6 +113,8 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                     unit.Role='Silo'
                 elseif unitCats.xsl0202 or unitCats.xel0305 or unitCats.xrl0305 then
                     unit.Role='Heavy'
+                elseif unitCats.STEALTHFIELD then
+                    unit.Role='Stealth'
                 elseif EntityCategoryContains((categories.SNIPER + categories.INDIRECTFIRE) * categories.LAND + categories.ual0201 + categories.drl0204 + categories.del0204,unit) then
                     unit.Role='Sniper'
                     if EntityCategoryContains(categories.ual0201,unit) then
