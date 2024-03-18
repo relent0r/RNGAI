@@ -228,7 +228,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                     local dz = origin[3] - destination[3]
                     endPoint = true
                     if dx * dx + dz * dz < navigateDistanceCutOff then
-                        local movementPositions = StateUtils.GenerateGridPositions(destination, 5, self.PlatoonCount)
+                        local movementPositions = StateUtils.GenerateGridPositions(destination, 6, self.PlatoonCount)
                         for k, unit in platoonUnits do
                             if not unit.Dead then
                                 IssueMove({platoonUnits[k]}, movementPositions[k])

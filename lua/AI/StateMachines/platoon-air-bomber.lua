@@ -411,65 +411,65 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 local waypoint, length
                 local endPoint = false
                 IssueClearCommands(platoonUnits)
-
-                local cache = { 0, 0, 0 }
-
-                while not IsDestroyed(self) do
-                    local origin = self:GetPlatoonPosition()
-                    local platoonUnits = self:GetPlatoonUnits()
-                    waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 80)
-                    if waypoint == destination then
-                        local dx = origin[1] - destination[1]
-                        local dz = origin[3] - destination[3]
-                        endPoint = true
-                        if dx * dx + dz * dz < navigateDistanceCutOff then
-                            local movementPositions = StateUtils.GenerateGridPositions(destination, 5, self.PlatoonCount)
-                            for k, unit in platoonUnits do
-                                if not unit.Dead then
-                                    IssueMove({platoonUnits[k]}, movementPositions[k])
+                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, destination, 10 , 10000)
+                local pathLength = RNGGETN(path)
+                if pathLength > 1 then
+                    self:LogDebug(string.format('Performing aggressive path move'))
+                    for i=1, pathLength do
+                        local movementPositions = StateUtils.GenerateGridPositions(path[i].pos, 6, self.PlatoonCount)
+                        IssueMove(platoonUnits, movementPositions)
+                        while not IsDestroyed(self) do
+                            coroutine.yield(1)
+                            local platoonPosition = self:GetPlatoonPosition()
+                            if not platoonPosition then
+                                return
+                            end
+                            if self.UnitTarget == 'ENGINEER' then
+                                if aiBrain:GetNumUnitsAroundPoint(categories.ENGINEER - categories.COMMAND, platoonPosition, 45, 'Enemy') > 0 then
+                                    local target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPosition, 'Attack', 45, categories.ENGINEER - categories.COMMAND, {categories.ENGINEER - categories.COMMAND}, false, true)
+                                    if target and not target.Dead then
+                                        self.BuilderData = {
+                                            AttackTarget = target,
+                                            Position = target:GetPosition()
+                                        }
+                                        self:LogDebug(string.format('Bomber on raid has spotted engineer'))
+                                        self:ChangeState(self.AttackTarget)
+                                        return
+                                    end
                                 end
                             end
-                            self:ChangeState(self.DecideWhatToDo)
-                            return
-                        end
-                        
-                    end
-                    -- navigate towards waypoint 
-                    if not waypoint then
-                        self:ChangeState(self.DecideWhatToDo)
-                        return
-                    end
-                    local movementPositions = StateUtils.GenerateGridPositions(waypoint, 5, self.PlatoonCount)
-                    for k, unit in platoonUnits do
-                        if not unit.Dead then
-                            IssueMove({platoonUnits[k]}, movementPositions[k])
-                        end
-                    end
-                    -- check for opportunities
-                    local wx = waypoint[1]
-                    local wz = waypoint[3]
-                    while not IsDestroyed(self) do
-                        WaitTicks(20)
-                        if IsDestroyed(self) then
-                            return
-                        end
-                        local position = self:GetPlatoonPosition()
-                        -- check if we're near our current waypoint
-                        local dx = position[1] - wx
-                        local dz = position[3] - wz
-                        if dx * dx + dz * dz < navigateDistanceCutOff then
-                            --LOG('close to waypoint position in second loop')
-                            --LOG('distance is '..(dx * dx + dz * dz))
-                            --LOG('CutOff is '..navigateDistanceCutOff)
-                            if not endPoint then
+                            local px = path[i].pos[1] - platoonPosition[1]
+                            local pz = path[i].pos[3] - platoonPosition[3]
+                            local pathDistance = px * px + pz * pz
+                            if pathDistance < 3600 then
+                                -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                                 IssueClearCommands(platoonUnits)
+                                break
                             end
-                            break
+                            if builderData.AttackTarget and not builderData.AttackTarget.Dead then
+                                local targetPos = builderData.AttackTarget:GetPosition()
+                                local px = targetPos[1] - platoonPosition[1]
+                                local pz = targetPos[3] - platoonPosition[3]
+                                local targetDistance = px * px + pz * pz
+                                if targetDistance < 14400 then
+                                    self:LogDebug(string.format('Within strike range of target, switch to attack'))
+                                    self:ChangeState(self.AttackTarget)
+                                end
+                            elseif builderData.AttackTarget.Dead then
+                                coroutine.yield(10)
+                                self:ChangeState(self.DecideWhatToDo)
+                                return
+                            end
+                            --RNGLOG('Waiting to reach target loop')
+                            coroutine.yield(10)
                         end
-                        -- check for threats
-                        WaitTicks(10)
                     end
-                    WaitTicks(1)
+                else
+                    self:LogDebug(string.format('Path too short, moving to destination. This shouldnt happen.'))
+                    IssueMove(platoonUnits, destination)
+                    coroutine.yield(25)
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
                 end
             end
             self:ChangeState(self.DecideWhatToDo)
