@@ -2,6 +2,7 @@ local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.l
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local NavUtils = import("/lua/sim/navutils.lua")
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
+local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 local RNGMAX = math.max
 local RNGGETN = table.getn
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
@@ -34,6 +35,38 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             if self.PlatoonData.UnitTarget then
                 self.UnitTarget = self.PlatoonData.UnitTarget
             end
+            if not self.MovementLayer then
+                self.MovementLayer = self:GetNavigationalLayer()
+            end
+            local unitCount = 0
+            local maxPlatoonStrikeDamage = 0
+            local maxPlatoonStrikeRadius = 0
+            local maxPlatoonStrikeRadiusDistance = 0
+            for _, unit in self:GetPlatoonUnits() do
+                if not unit.Dead then
+                    if unit.StrikeDamage > 0 then
+                        maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + unit.StrikeDamage
+                    end
+                    if unit.DamageRadius > maxPlatoonStrikeRadius then
+                        maxPlatoonStrikeRadius = unit.DamageRadius
+                    end
+                    if unit.StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
+                        maxPlatoonStrikeRadiusDistance = unit.StrikeRadiusDistance
+                    end
+                    unitCount = unitCount + 1
+                end
+            end
+            self.PlatoonCount = unitCount
+            if maxPlatoonStrikeDamage > 0 then
+                self.PlatoonStrikeDamage = maxPlatoonStrikeDamage
+            end
+            if maxPlatoonStrikeRadius > 0 then
+                self.PlatoonStrikeRadius = maxPlatoonStrikeRadius
+            end
+            if maxPlatoonStrikeRadiusDistance > 0 then
+                self.PlatoonStrikeRadiusDistance = maxPlatoonStrikeRadiusDistance
+            end
+            self.CurrentPlatoonThreatAntiSurface = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             StartBomberThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
@@ -121,7 +154,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             end
             if not self.PlatoonData.Defensive then
                 self:LogDebug(string.format('Checking for director target'))
-                target = aiBrain:CheckDirectorTargetAvailable('AntiAir', self.CurrentPlatoonThreat, 'BOMBER', self.PlatoonStrikeDamage)
+                target = aiBrain:CheckDirectorTargetAvailable('AntiAir', self.CurrentPlatoonThreatAntiSurface, 'BOMBER', self.PlatoonStrikeDamage)
                 if target then
                     self.BuilderData = {
                         AttackTarget = target,
@@ -408,16 +441,18 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             else
-                local waypoint, length
-                local endPoint = false
                 IssueClearCommands(platoonUnits)
                 local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, destination, 10 , 10000)
                 local pathLength = RNGGETN(path)
-                if pathLength > 1 then
+                if path and pathLength > 1 then
                     self:LogDebug(string.format('Performing aggressive path move'))
                     for i=1, pathLength do
-                        local movementPositions = StateUtils.GenerateGridPositions(path[i].pos, 6, self.PlatoonCount)
-                        IssueMove(platoonUnits, movementPositions)
+                        local movementPositions = StateUtils.GenerateGridPositions(path[i], 6, self.PlatoonCount)
+                        for k, unit in platoonUnits do
+                            if not unit.Dead then
+                                IssueMove({platoonUnits[k]}, movementPositions[k])
+                            end
+                        end
                         while not IsDestroyed(self) do
                             coroutine.yield(1)
                             local platoonPosition = self:GetPlatoonPosition()
@@ -438,8 +473,8 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                     end
                                 end
                             end
-                            local px = path[i].pos[1] - platoonPosition[1]
-                            local pz = path[i].pos[3] - platoonPosition[3]
+                            local px = path[i][1] - platoonPosition[1]
+                            local pz = path[i][3] - platoonPosition[3]
                             local pathDistance = px * px + pz * pz
                             if pathDistance < 3600 then
                                 -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
@@ -655,6 +690,7 @@ BomberThreatThreads = function(aiBrain, platoon)
                     unitCount = unitCount + 1
                 end
             end
+            platoon.CurrentPlatoonThreatAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
             platoon.PlatoonCount = unitCount
             if maxPlatoonStrikeDamage > 0 then
                 platoon.PlatoonStrikeDamage = maxPlatoonStrikeDamage

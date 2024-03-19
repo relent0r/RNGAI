@@ -5531,7 +5531,7 @@ CheckACUSnipe = function(aiBrain, layerType)
     return potentialTarget, requiredCount, acuIndex
 end
 
-CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, defensiveBomber)
+CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid)
     local platPos
     local closestTarget
     local highestPriority = 0

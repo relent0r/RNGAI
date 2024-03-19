@@ -30,6 +30,9 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             else
                 self.LocationType = 'MAIN'
             end
+            if not self.MovementLayer then
+                self.MovementLayer = self:GetNavigationalLayer()
+            end
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             StartGunshipThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)

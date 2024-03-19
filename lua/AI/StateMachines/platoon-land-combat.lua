@@ -54,9 +54,6 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Error)
                 return
             end
-            if not self.MovementLayer then
-                self.MovementLayer = self:GetNavigationalLayer()
-            end
             local aiBrain = self:GetBrain()
             StartLandCombatThreads(aiBrain, self)
 
