@@ -133,7 +133,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 end
             end
             local threat=RUtils.GrabPosDangerRNG(aiBrain,platPos,self.EnemyRadius, true, false, false)
-            if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
+            if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then
                 self:LogDebug(string.format('DecideWhatToDo high threat retreating'))
                 self.retreat=true
                 self:ChangeState(self.Retreating)
@@ -168,9 +168,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 self:LogDebug(string.format('DecideWhatToDo no target look at main base'))
                 local targetThreat
                 local basePosition
-                if aiBrain.BuilderManagers['MAIN'].FactoryManager.LocationActive then
-                    basePosition = aiBrain.BuilderManagers['MAIN'].Position
-                    targetThreat = GetThreatAtPosition(aiBrain, aiBrain.BuilderManagers['MAIN'].Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Air')
+                if aiBrain.BuilderManagers[self.LocationType].FactoryManager.LocationActive then
+                    basePosition = aiBrain.BuilderManagers[self.LocationType].Position
+                    targetThreat = GetThreatAtPosition(aiBrain, aiBrain.BuilderManagers[self.LocationType].Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Air')
                 end
                 if targetThreat > 10 and basePosition and NavUtils.CanPathTo(self.MovementLayer, self.Pos, basePosition) then
                     local targetZone = MAP:GetZoneID(basePosition,self.Zones.Land.index)
@@ -276,7 +276,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             if not approxThreat then
                                 approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, false, false)
                             end
-                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.ally and approxThreat.enemy and approxThreat.ally > approxThreat.enemy then
+                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface then
                                 IssueClearCommands({v}) 
                                 IssueMove({v},target:GetPosition())
                                 continue

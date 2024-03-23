@@ -34,7 +34,6 @@ local NavalExpansionAdjust = function(self, aiBrain, builderManager)
         if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] ~= 'LAND' then
             priority = priority + 200
         end
-        LOG('Returning Naval Expansion Priority of '..priority)
         priority = math.min(priority,1000)
         return priority
     elseif aiBrain.MapWaterRatio < 0.40 then
@@ -45,7 +44,6 @@ local NavalExpansionAdjust = function(self, aiBrain, builderManager)
             priority = priority + 200
         end
         priority = math.min(priority,1000)
-        LOG('Returning Naval Expansion Priority of '..priority)
         return priority
     elseif aiBrain.MapWaterRatio < 0.60 then
         local priority = 675
@@ -55,7 +53,6 @@ local NavalExpansionAdjust = function(self, aiBrain, builderManager)
             priority = priority + 200
         end
         priority = math.min(priority,1000)
-        LOG('Returning Naval Expansion Priority of '..priority)
         return priority
     else
         local priority = 950
@@ -65,7 +62,6 @@ local NavalExpansionAdjust = function(self, aiBrain, builderManager)
             priority = priority + 200
         end
         priority = math.min(priority,1000)
-        LOG('Returning Naval Expansion Priority of '..priority)
         return priority
     end
 end
@@ -74,7 +70,7 @@ local FrigateRaid = function(self, aiBrain, builderManager)
     -- Will return the rush naval build if it can raid mexes
     if aiBrain.EnemyIntel.FrigateRaid and not aiBrain.BrainIntel.AirPlayer then
         --RNGLOG('Frigate Raid priority function is 995')
-        LOG('Returning Naval Frigate Raid Expansion Priority of 1000')
+        --LOG('Returning Naval Frigate Raid Expansion Priority of 1000')
         return 1000
     end
     --RNGLOG('Frigate Raid priority function is 0')
@@ -489,6 +485,7 @@ BuilderGroup {
                 ThreatMax = 5,
                 ThreatRings = 0,
                 ThreatType = 'AntiSurface',
+                TransportWait = 6,
                 BuildStructures = {                    
                     'T1LandFactory',
                     'T1LandFactory',
@@ -524,6 +521,7 @@ BuilderGroup {
                 ThreatMax = 100,
                 ThreatRings = 2,
                 ThreatType = 'AntiSurface',
+                TransportWait = 6,
                 BuildStructures = {                    
                     'T1LandFactory',
                 }

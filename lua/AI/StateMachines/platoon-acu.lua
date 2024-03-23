@@ -297,7 +297,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         self:LogDebug(string.format('Found a close base and the threat is '..threat))
                         if threat > 30 then
                             local realThreat = RUtils.GrabPosDangerRNG(brain,closestPos,120, true, true, false)
-                            if realThreat.enemy > 30 and realThreat.enemy > realThreat.ally then
+                            if realThreat.enemySurface > 30 and realThreat.enemySurface > realThreat.allySurface then
                                 self:LogDebug(string.format('no close base retreat'))
                                 self.BuilderData = {}
                                 self:ChangeState(self.Retreating)
@@ -379,7 +379,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             if threat > 35 then
                                 self:LogDebug(string.format('high threat validate real threat'))
                                 local realThreat = RUtils.GrabPosDangerRNG(brain,closestPos,120, true, true, false)
-                                if realThreat.enemy > 35 and realThreat.enemy > realThreat.ally then
+                                if realThreat.enemySurface > 35 and realThreat.enemySurface > realThreat.allySurface then
                                     self:LogDebug(string.format('high threat retreat'))
                                     self.BuilderData = {}
                                     self:ChangeState(self.Retreating)
@@ -998,7 +998,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             local realThreat = RUtils.GrabPosDangerRNG(brain,targetPos, 45, true, true, false)
                             --RNGLOG('ACU OverCharge Friendly Threat is '..realThreat.ally)
                             --RNGLOG('ACU OverCharge Enemy Threat is '..realThreat.enemy)
-                            if realThreat.enemy > realThreat.ally and realThreat.enemy > cdr.CurrentFriendlyInnerCircle and not cdr.SuicideMode then
+                            if realThreat.enemySurface > realThreat.allySurface and realThreat.enemySurface > cdr.CurrentFriendlyInnerCircle and not cdr.SuicideMode then
                                 --RNGLOG('Enemy Threat too high')
                                 if VDist2Sq(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < 2025 then
                                 --RNGLOG('Threat high and cdr close, retreat')
@@ -1012,7 +1012,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                         coroutine.yield(40)
                                     end
                                     --RNGLOG('cdr retreating due to enemy threat within attacktarget')
-                                    self:LogDebug(string.format('cdr retreating due to enemy threat within attacktarget enemy '..realThreat.enemy..' ally '..realThreat.ally..' friendly inner '..cdr.CurrentFriendlyInnerCircle))
+                                    self:LogDebug(string.format('cdr retreating due to enemy threat within attacktarget enemy '..realThreat.enemySurface..' ally '..realThreat.allySurface..' friendly inner '..cdr.CurrentFriendlyInnerCircle))
                                     self:ChangeState(self.Retreating)
                                     return
                                 end
@@ -1049,6 +1049,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         elseif enemyACUHealth < 7000 and cdr.Health - enemyACUHealth > 3250 and not RUtils.PositionInWater(targetPos) and defenseThreat < 45 then
                             self:LogDebug(string.format('Enemy ACU could be killed or drawn, should we try?, enable snipe mode'))
                             if target and not IsDestroyed(target) then
+                                LOG('ACU Enabling suicide mode')
                                 ACUFunc.SetAcuSnipeMode(cdr, true)
                                 cdr:SetAutoOvercharge(true)
                                 cdr.SnipeMode = true
@@ -1477,7 +1478,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                     cdr.initialized=true
                 end
-                if RUtils.GrabPosDangerRNG(brain,cdr.Position, 40, true, true, false).enemy > 20 then
+                if RUtils.GrabPosDangerRNG(brain,cdr.Position, 40, true, true, false).enemySurface > 20 then
                     self:LogDebug(string.format('Cancel expand, enemy threat greater than 20'))
                     self:ChangeState(self.DecideWhatToDo)
                     return

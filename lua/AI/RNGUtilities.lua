@@ -163,7 +163,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 
                 if closestUnit and not IsDestroyed(closestUnit) then
                     --LOG('Found unit to capture, checking threat at position')
-                    if GrabPosDangerRNG(aiBrain,closestUnit:GetPosition(), 40, true, false, false).enemy < 5 then
+                    if GrabPosDangerRNG(aiBrain,closestUnit:GetPosition(), 40, true, false, false).enemySurface < 5 then
                         --LOG('Attempting to start capture unit ai')
                         self:CaptureUnitAIRNG(closestUnit)
                         return
@@ -3340,7 +3340,7 @@ end
 
 GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, includeAir)
     if pos and radius then
-        local brainThreats = {ally=0,enemy=0,enemyrange=0,allyrange=0}
+        local brainThreats = {allyTotal=0,enemyTotal=0,allySurface=0,enemySurface=0,allyAir=0,enemyAir=0,allySub=0,enemySub=0,enemyrange=0,allyrange=0}
         local enemyMaxRadius = 0
         local allyMaxRadius = 0
         local enemyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Enemy')
@@ -3357,22 +3357,27 @@ GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, inclu
                     mult=1.5
                 end
                 if bp.CategoriesHash.COMMAND then
-                    brainThreats.enemy = brainThreats.enemy + v:EnhancementThreatReturn()
+                    local commanderThreat = v:EnhancementThreatReturn()
+                    brainThreats.enemySurface = brainThreats.enemySurface + commanderThreat
+                    brainThreats.enemyTotal = brainThreats.enemyTotal + commanderThreat
                 else
                     if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil then
-                        brainThreats.enemy = brainThreats.enemy + bp.Defense.SurfaceThreatLevel*mult
+                        brainThreats.enemySurface = brainThreats.enemySurface + bp.Defense.SurfaceThreatLevel*mult
+                        brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.SurfaceThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > enemyMaxRadius then
                             enemyMaxRadius = bp.Weapon[1].MaxRadius
                         end
                     end
                     if includeSub and bp.Defense.SubThreatLevel ~= nil then
-                        brainThreats.enemy = brainThreats.enemy + bp.Defense.SubThreatLevel*mult
+                        brainThreats.enemySub = brainThreats.enemySub + bp.Defense.SubThreatLevel*mult
+                        brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.SubThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > enemyMaxRadius then
                             enemyMaxRadius = bp.Weapon[1].MaxRadius
                         end
                     end
                     if includeAir and bp.Defense.AirThreatLevel ~= nil then
-                        brainThreats.enemy = brainThreats.enemy + bp.Defense.AirThreatLevel*mult
+                        brainThreats.enemyAir = brainThreats.enemyAir + bp.Defense.AirThreatLevel*mult
+                        brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.AirThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > enemyMaxRadius then
                             enemyMaxRadius = bp.Weapon[1].MaxRadius
                         end
@@ -3391,22 +3396,27 @@ GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, inclu
                     mult=0.3
                 end
                 if bp.CategoriesHash.COMMAND then
-                    brainThreats.ally = brainThreats.ally + v:EnhancementThreatReturn()
+                    local commanderThreat = v:EnhancementThreatReturn()
+                    brainThreats.allySurface = brainThreats.allySurface + commanderThreat
+                    brainThreats.allyTotal = brainThreats.allyTotal + commanderThreat
                 else
                     if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil then
-                        brainThreats.ally = brainThreats.ally + bp.Defense.SurfaceThreatLevel*mult
+                        brainThreats.allySurface = brainThreats.allySurface + bp.Defense.SurfaceThreatLevel*mult
+                        brainThreats.allyTotal = brainThreats.allyTotal + bp.Defense.SurfaceThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > allyMaxRadius then
                             allyMaxRadius = bp.Weapon[1].MaxRadius
                         end
                     end
                     if includeSub and bp.Defense.SubThreatLevel ~= nil then
-                        brainThreats.ally = brainThreats.ally + bp.Defense.SubThreatLevel*mult
+                        brainThreats.allySub = brainThreats.allySub + bp.Defense.SubThreatLevel*mult
+                        brainThreats.allyTotal = brainThreats.allyTotal + bp.Defense.SubThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > allyMaxRadius then
                             allyMaxRadius = bp.Weapon[1].MaxRadius
                         end
                     end
                     if includeAir and bp.Defense.AirThreatLevel ~= nil then
-                        brainThreats.ally = brainThreats.ally + bp.Defense.AirThreatLevel*mult
+                        brainThreats.allyAir = brainThreats.allyAir + bp.Defense.AirThreatLevel*mult
+                        brainThreats.allyTotal = brainThreats.allyTotal + bp.Defense.AirThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > allyMaxRadius then
                             allyMaxRadius = bp.Weapon[1].MaxRadius
                         end
@@ -3750,6 +3760,7 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
     if adjacent then
         local unitSize = aiBrain:GetUnitBlueprint(whatToBuild).Physics
         local testUnits  = aiBrain:GetUnitsAroundPoint(category, engPos, radius, 'Ally')
+        LOG('Number of test units found '..table.getn(testUnits))
         local index = aiBrain:GetArmyIndex()
         local closeUnits = {}
         for _, v in testUnits do
@@ -3757,6 +3768,7 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
                 table.insert(closeUnits, v)
             end
         end
+        LOG('Close units found '..table.getn(closeUnits))
         local template = {}
         table.insert(template, {})
         table.insert(template[1], { buildUnit })
@@ -4296,7 +4308,8 @@ GenerateDefensivePointTable = function (aiBrain, baseName, range, position)
         if GetTerrainHeight(v[1], v[3]) >= GetSurfaceHeight(v[1], v[3]) then
             defensivePointTable[2][defensivePointT2Key] = {Position = v, Radius = 15, Enabled = true, AcuHoldPosition = false, Shields = {}, DirectFire = {}, AntiAir = {}, IndirectFire = {}, TMD = {}, TML = {}, AntiSurfaceThreat = 0, AntiAirThreat = 0}
             local pointAngle = GetAngleToPosition(position, v)
-            if not acuHoldPoint or (math.abs(pointCheck - pointAngle) < acuHoldPoint.Angle) then
+            local graphArea = NavUtils.GetLabel('Land', v)
+            if (not acuHoldPoint or (math.abs(pointCheck - pointAngle) < acuHoldPoint.Angle)) and graphArea then
                 acuHoldPoint = { Key = defensivePointT2Key, Angle = math.abs(pointCheck - pointAngle)}
             end
         else
@@ -4629,8 +4642,8 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
     local closestPoint = false
     local closestDistance = false
     local pointTier = 1
-    LOG('Attempting to add defensive unit in defensepoint table at '..locationType)
-    LOG('Unit ID is '..finishedUnit.UnitId)
+    --LOG('Attempting to add defensive unit in defensepoint table at '..locationType)
+    --LOG('Unit ID is '..finishedUnit.UnitId)
     if not finishedUnit.Dead then
         --RNGLOG('Attempting to add defensive unit to defensepoint table at '..locationType)
         --RNGLOG('Unit ID is '..finishedUnit.UnitId)
@@ -4644,21 +4657,21 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
                 end
             end
             if not closestPoint then
-                LOG('AddDefenseUnit No closest point found defensive point dump '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints))
+                --LOG('AddDefenseUnit No closest point found defensive point dump '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints))
             end
-            LOG('ClosestPoint distance is '..math.sqrt(closestDistance)..'radius is '..aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].Radius)
+            --LOG('ClosestPoint distance is '..math.sqrt(closestDistance)..'radius is '..aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].Radius)
             if closestPoint and math.sqrt(closestDistance) <= aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].Radius then
                 --RNGLOG('Adding T1 defensive unit to defensepoint table at key '..closestPoint)
                 if finishedUnit.Blueprint.CategoriesHash.ANTIAIR and not aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiAir[finishedUnit.EntityId] then
                     aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiAir[finishedUnit.EntityId] = finishedUnit
-                    LOG('Added entity id '..finishedUnit.EntityId)
+                    --LOG('Added entity id '..finishedUnit.EntityId)
                     aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiAirThreat = aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiAirThreat + finishedUnit.Blueprint.Defense.AirThreatLevel
-                    LOG('Current air threat as defensive point is '..aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiAirThreat)
+                    --LOG('Current air threat as defensive point is '..aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiAirThreat)
                 elseif finishedUnit.Blueprint.CategoriesHash.DIRECTFIRE and not aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].DirectFire[finishedUnit.EntityId] then
                     aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].DirectFire[finishedUnit.EntityId] = finishedUnit
-                    LOG('Added entity id '..finishedUnit.EntityId)
+                    --LOG('Added entity id '..finishedUnit.EntityId)
                     aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiSurfaceThreat = aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiSurfaceThreat + finishedUnit.Blueprint.Defense.SurfaceThreatLevel
-                    LOG('Current surface threat as defensive point is '..aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiSurfaceThreat)
+                    --LOG('Current surface threat as defensive point is '..aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiSurfaceThreat)
                 end
             end
         elseif finishedUnit.Blueprint.CategoriesHash.TECH2 then
@@ -4672,11 +4685,11 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
                     end
                 end
                 if not closestPoint then
-                    LOG('AddDefenseUnit No closest point found defensive point dump '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints))
+                    --LOG('AddDefenseUnit No closest point found defensive point dump '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints))
                 end
                 if closestPoint and math.sqrt(closestDistance) <= aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].Radius and not aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].TMD[finishedUnit.EntityId] then
                     aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].TMD[finishedUnit.EntityId] = finishedUnit
-                    LOG('Added entity id '..finishedUnit.EntityId)
+                    --LOG('Added entity id '..finishedUnit.EntityId)
                 end
             else
                 for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[2] do
@@ -4687,34 +4700,34 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
                     end
                 end
                 if not closestPoint then
-                    LOG('AddDefenseUnit No closest point found defensive point dump '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints))
+                    --LOG('AddDefenseUnit No closest point found defensive point dump '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints))
                 end
                 LOG('ClosestPoint distance is '..math.sqrt(closestDistance)..'radius is '..aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Radius)
                 if closestPoint and math.sqrt(closestDistance) <= aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Radius then
                     if finishedUnit.Blueprint.CategoriesHash.ANTIMISSILE and not aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TMD[finishedUnit.EntityId] then
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TMD[finishedUnit.EntityId] = finishedUnit
-                        LOG('Added entity id '..finishedUnit.EntityId)
+                        --LOG('Added entity id '..finishedUnit.EntityId)
                     elseif finishedUnit.Blueprint.CategoriesHash.TACTICALMISSILEPLATFORM and not aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TML[finishedUnit.EntityId] then
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TML[finishedUnit.EntityId] = finishedUnit
-                        LOG('Added entity id '..finishedUnit.EntityId)
+                        --LOG('Added entity id '..finishedUnit.EntityId)
                     elseif finishedUnit.Blueprint.CategoriesHash.ANTIAIR and not aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiAir[finishedUnit.EntityId] then
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiAir[finishedUnit.EntityId] = finishedUnit
-                        LOG('Added entity id '..finishedUnit.EntityId)
+                        --LOG('Added entity id '..finishedUnit.EntityId)
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiAirThreat = aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiAirThreat + finishedUnit.Blueprint.Defense.AirThreatLevel
-                        LOG('Current air threat as defensive point is '..aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiAirThreat)
+                        --LOG('Current air threat as defensive point is '..aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiAirThreat)
                     elseif finishedUnit.Blueprint.CategoriesHash.INDIRECTFIRE and not aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].IndirectFire[finishedUnit.EntityId] then
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].IndirectFire[finishedUnit.EntityId] = finishedUnit
-                        LOG('Added entity id '..finishedUnit.EntityId)
+                        --LOG('Added entity id '..finishedUnit.EntityId)
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiSurfaceThreat = aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiSurfaceThreat + finishedUnit.Blueprint.Defense.SurfaceThreatLevel
-                        LOG('Current surface threat as defensive point is '..aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiSurfaceThreat)
+                        --LOG('Current surface threat as defensive point is '..aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiSurfaceThreat)
                     elseif finishedUnit.Blueprint.CategoriesHash.DIRECTFIRE and not aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].DirectFire[finishedUnit.EntityId] then
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].DirectFire[finishedUnit.EntityId] = finishedUnit
-                        LOG('Added entity id '..finishedUnit.EntityId)
+                        --LOG('Added entity id '..finishedUnit.EntityId)
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiSurfaceThreat = aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiSurfaceThreat + finishedUnit.Blueprint.Defense.SurfaceThreatLevel
-                        LOG('Current surface threat as defensive point is '..aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiSurfaceThreat)
+                        --LOG('Current surface threat as defensive point is '..aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiSurfaceThreat)
                     elseif finishedUnit.Blueprint.CategoriesHash.SHIELD and not aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Shields[finishedUnit.EntityId] then
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Shields[finishedUnit.EntityId] = finishedUnit
-                        LOG('Added entity id '..finishedUnit.EntityId)
+                        --LOG('Added entity id '..finishedUnit.EntityId)
                     end
                 end
             end
@@ -4728,8 +4741,8 @@ RemoveDefenseUnit = function(aiBrain, locationType, killedUnit)
     local closestDistance = false
     local pointTier = 1
 
-    LOG('Attempting to remove defensive unit in defensepoint table at '..locationType)
-    LOG('Unit ID is '..killedUnit.UnitId)
+    --LOG('Attempting to remove defensive unit in defensepoint table at '..locationType)
+    --LOG('Unit ID is '..killedUnit.UnitId)
     local unitPos = killedUnit:GetPosition()
     if killedUnit.Blueprint.CategoriesHash.TECH1 then
         for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[1] do
@@ -4746,16 +4759,16 @@ RemoveDefenseUnit = function(aiBrain, locationType, killedUnit)
             if killedUnit.Blueprint.CategoriesHash.ANTIAIR then
                 if aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiAir[killedUnit.EntityId] then
                     aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiAir[killedUnit.EntityId] = nil
-                    LOG('Removed Unit T1AA with entity '..killedUnit.EntityId)
+                    --LOG('Removed Unit T1AA with entity '..killedUnit.EntityId)
                     aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiAirThreat = aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiAirThreat - killedUnit.Blueprint.Defense.AirThreatLevel
-                    LOG('Current Defense threat for T1 at '..closestPoint..' is now '..aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiAirThreat)
+                    --LOG('Current Defense threat for T1 at '..closestPoint..' is now '..aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiAirThreat)
                 end
             elseif killedUnit.Blueprint.CategoriesHash.DIRECTFIRE then
                 if aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].DirectFire[killedUnit.EntityId] then
                     aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].DirectFire[killedUnit.EntityId] = nil
-                    LOG('Removed Unit T1 PD with entity '..killedUnit.EntityId)
+                    --LOG('Removed Unit T1 PD with entity '..killedUnit.EntityId)
                     aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiSurfaceThreat = aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiSurfaceThreat - killedUnit.Blueprint.Defense.SurfaceThreatLevel
-                    LOG('Current Defense threat for T1 at '..closestPoint..' is now '..aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiSurfaceThreat)
+                    --LOG('Current Defense threat for T1 at '..closestPoint..' is now '..aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].AntiSurfaceThreat)
                 end
             end
         end
@@ -4776,7 +4789,7 @@ RemoveDefenseUnit = function(aiBrain, locationType, killedUnit)
                 --RNGLOG('Unit ID is '..finishedUnit.UnitId)
                 if aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].TMD[killedUnit.EntityId] then
                     aiBrain.BuilderManagers[locationType].DefensivePoints[1][closestPoint].TMD[killedUnit.EntityId] = nil
-                    LOG('Removed Unit TMD with entity '..killedUnit.EntityId)
+                    --LOG('Removed Unit TMD with entity '..killedUnit.EntityId)
                 end
             end
         else
@@ -4795,38 +4808,38 @@ RemoveDefenseUnit = function(aiBrain, locationType, killedUnit)
                 if killedUnit.Blueprint.CategoriesHash.ANTIMISSILE then
                     if aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TMD[killedUnit.EntityId] then
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TMD[killedUnit.EntityId] = nil
-                        LOG('Removed Unit TMD with entity '..killedUnit.EntityId)
+                        --LOG('Removed Unit TMD with entity '..killedUnit.EntityId)
                     end
                 elseif killedUnit.Blueprint.CategoriesHash.TACTICALMISSILEPLATFORM then
                     if aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TML[killedUnit.EntityId] then
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TML[killedUnit.EntityId] = nil
-                        LOG('Removed Unit TML with entity '..killedUnit.EntityId)
+                        --LOG('Removed Unit TML with entity '..killedUnit.EntityId)
                     end
                 elseif killedUnit.Blueprint.CategoriesHash.ANTIAIR then
                     if aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiAir[killedUnit.EntityId] then
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiAir[killedUnit.EntityId] = nil
-                        LOG('Removed Unit antiair with entity '..killedUnit.EntityId)
+                        --LOG('Removed Unit antiair with entity '..killedUnit.EntityId)
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiAirThreat = aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiAirThreat - killedUnit.Blueprint.Defense.AirThreatLevel
-                        LOG('Current Air Defense threat for T2 at '..closestPoint..' is now '..aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiAirThreat)
+                        --LOG('Current Air Defense threat for T2 at '..closestPoint..' is now '..aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiAirThreat)
                     end
                 elseif killedUnit.Blueprint.CategoriesHash.INDIRECTFIRE then
                     if aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].IndirectFire[killedUnit.EntityId] then
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].IndirectFire[killedUnit.EntityId] = nil
-                        LOG('Removed Unit indirectfire with entity '..killedUnit.EntityId)
+                        --LOG('Removed Unit indirectfire with entity '..killedUnit.EntityId)
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiSurfaceThreat = aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiSurfaceThreat - killedUnit.Blueprint.Defense.SurfaceThreatLevel
-                        LOG('Current Defense IndirectFire threat for T2 at '..closestPoint..' is now '..aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiSurfaceThreat)
+                        --LOG('Current Defense IndirectFire threat for T2 at '..closestPoint..' is now '..aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiSurfaceThreat)
                     end
                 elseif killedUnit.Blueprint.CategoriesHash.DIRECTFIRE then
                     if aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].DirectFire[killedUnit.EntityId] then
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].DirectFire[killedUnit.EntityId] = nil
-                        LOG('Removed Unit directfire with entity '..killedUnit.EntityId)
+                        --LOG('Removed Unit directfire with entity '..killedUnit.EntityId)
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiSurfaceThreat = aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiSurfaceThreat - killedUnit.Blueprint.Defense.SurfaceThreatLevel
-                        LOG('Current Defense DirectFire threat for T2 at '..closestPoint..' is now '..aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiSurfaceThreat)
+                        --LOG('Current Defense DirectFire threat for T2 at '..closestPoint..' is now '..aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].AntiSurfaceThreat)
                     end
                 elseif killedUnit.Blueprint.CategoriesHash.SHIELD then
                     if aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Shields[killedUnit.EntityId] then
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Shields[killedUnit.EntityId] = nil
-                        LOG('Removed Unit shield with entity '..killedUnit.EntityId)
+                        --LOG('Removed Unit shield with entity '..killedUnit.EntityId)
                     end
                 end
             end
@@ -5515,7 +5528,7 @@ CheckACUSnipe = function(aiBrain, layerType)
                     end
                 end
             end
-        elseif layerType == 'AIRANTINAVY' then
+        elseif layerType == 'AirAntiNavy' then
             if v.AIR and v.AIR.GameTime then
                 if v.AIR.GameTime + 500 > GetGameTimeSeconds() then
                     if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) and PositionInWater(aiBrain.EnemyIntel.ACU[k].Position) then
@@ -5531,7 +5544,7 @@ CheckACUSnipe = function(aiBrain, layerType)
     return potentialTarget, requiredCount, acuIndex
 end
 
-CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid)
+CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval)
     local platPos
     local closestTarget
     local highestPriority = 0
@@ -5547,22 +5560,47 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid)
         if platPos and VDist3Sq(platPos, aiBrain.BrainIntel.StartPos) < (aiBrain.EnemyIntel.ClosestEnemyBase / rangeCheck) then
             for k, v in aiBrain.EnemyIntel.Experimental do
                 if not v.object.Dead then
-                    closestTarget = v.object
+                    local unitCats = v.object.Blueprint.CategoriesHash
+                    if naval then
+                        if not unitCats.HOVER and PositionInWater(v.Position) then
+                            closestTarget = v.object
+                        end
+                    else
+                        closestTarget = v.object
+                    end
                 end
             end
             if not closestTarget then
                 for k, v in aiBrain.prioritypointshighvalue do
                     if not v.unit.Dead and not v.unit.Tractored then
-                        local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
-                        local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
-                        if tempPoint > highestPriority then
-                            if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
-                                --LOG('Set higher priority')
-                                --LOG('Distance '..targetDistance)
-                                --LOG('Priority '..(v.priority + (v.danger or 0)))
-                                --LOG('Point Calculation is '..(v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30))
-                                highestPriority = tempPoint
-                                closestTarget = v.unit
+                        local unitCats = v.object.Blueprint.CategoriesHash
+                        if naval then
+                            if not unitCats.HOVER and PositionInWater(v.Position) then
+                                local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
+                                local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
+                                if tempPoint > highestPriority then
+                                    if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
+                                        --LOG('Set higher priority')
+                                        --LOG('Distance '..targetDistance)
+                                        --LOG('Priority '..(v.priority + (v.danger or 0)))
+                                        --LOG('Point Calculation is '..(v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30))
+                                        highestPriority = tempPoint
+                                        closestTarget = v.unit
+                                    end
+                                end
+                            end
+                        else
+                            local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
+                            local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
+                            if tempPoint > highestPriority then
+                                if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
+                                    --LOG('Set higher priority')
+                                    --LOG('Distance '..targetDistance)
+                                    --LOG('Priority '..(v.priority + (v.danger or 0)))
+                                    --LOG('Point Calculation is '..(v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30))
+                                    highestPriority = tempPoint
+                                    closestTarget = v.unit
+                                end
                             end
                         end
                     end
@@ -6137,7 +6175,7 @@ ConfigurePlatoon = function(platoon)
                             --RNGLOG('Have set units DamageRadius to '..v.DamageRadius)
                         end
                         if v.Blueprint.CategoriesHash.GUNSHIP and weaponBlueprint.RangeCategory == 'UWRC_DirectFire' then
-                            v.ApproxDPS = RUtils.CalculatedDPSRNG(weaponBlueprint) --weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
+                            v.ApproxDPS = CalculatedDPSRNG(weaponBlueprint) --weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
                             maxPlatoonDPS = maxPlatoonDPS + v.ApproxDPS
                         end
                     end
@@ -6241,7 +6279,7 @@ end
 ---@param eng Unit
 ---@return boolean
 ---@return string
-function AIFindNavalAreaNeedsEngineerRNG(aiBrain, locationType, enemyLabelCheck, radius, tMin, tMax, tRings, tType, eng)
+function AIFindNavalAreaNeedsEngineerRNG(aiBrain, locationType, enemyLabelCheck, radius, tMin, tMax, tRings, tType, eng, shortestDistance)
     local pos = aiBrain.BuilderManagers[locationType].Position
     if not pos then
         return false
@@ -6255,9 +6293,20 @@ function AIFindNavalAreaNeedsEngineerRNG(aiBrain, locationType, enemyLabelCheck,
     local closest = false
     local retPos, retName
     local positions = AIUtils.AIFilterAlliedBasesRNG(aiBrain, positions)
+    local shortList = {}
     local labelRejected = false
     for _, v in positions do
-        local distance = VDist3Sq(pos, v.Position)
+        local distance
+        if shortestDistance then
+            local path, msg, pathDistance = NavUtils.PathTo('Amphibious', pos, v.Position)
+            if path then
+                distance = pathDistance
+            end
+        else
+            local mx = v.Position[1] - pos[1]
+            local mz = v.Position[3] - pos[3]
+            distance = mx * mx + mz * mz
+        end
         if enemyLabelCheck then
             local label= NavUtils.GetLabel('Water', {v.Position[1], v.Position[2], v.Position[3]})
             if label and aiBrain.BrainIntel.NavalBaseLabels[label] ~= 'Confirmed' then

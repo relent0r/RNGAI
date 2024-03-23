@@ -233,8 +233,10 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                     if dx * dx + dz * dz < navigateDistanceCutOff then
                         local movementPositions = StateUtils.GenerateGridPositions(destination, 6, self.PlatoonCount)
                         for k, unit in platoonUnits do
-                            if not unit.Dead then
+                            if not unit.Dead and movementPositions[k] then
                                 IssueMove({platoonUnits[k]}, movementPositions[k])
+                            else
+                                IssueMove({platoonUnits[k]}, destination)
                             end
                         end
                         self:ChangeState(self.DecideWhatToDo)
@@ -249,8 +251,10 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 end
                 local movementPositions = StateUtils.GenerateGridPositions(waypoint, 5, self.PlatoonCount)
                 for k, unit in platoonUnits do
-                    if not unit.Dead then
+                    if not unit.Dead and movementPositions[k] then
                         IssueMove({platoonUnits[k]}, movementPositions[k])
+                    else
+                        IssueMove({platoonUnits[k]}, waypoint)
                     end
                 end
                 -- check for opportunities

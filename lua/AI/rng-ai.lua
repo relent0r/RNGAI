@@ -239,7 +239,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.MapDimension = math.max(mapSizeX, mapSizeZ)
         if mapSizeX > 1000 and mapSizeZ > 1000 then
             if self.RNGEXP then
-                if self.MapWaterRatio < 10 then
+                if self.MapWaterRatio < 0.10 then
                     self.DefaultLandRatio = 0.4
                     self.DefaultAirRatio = 0.3
                     self.DefaultNavalRatio = 0.0
@@ -249,7 +249,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.DefaultNavalRatio = 0.2
                 end
             else
-                if self.MapWaterRatio < 10 then
+                if self.MapWaterRatio < 0.10 then
                     self.DefaultLandRatio = 0.65
                     self.DefaultAirRatio = 0.35
                     self.DefaultNavalRatio = 0.0
@@ -262,7 +262,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.MapSize = 20
         elseif mapSizeX > 500 and mapSizeZ > 500 then
             if self.RNGEXP then
-                if self.MapWaterRatio < 10 then
+                if self.MapWaterRatio < 0.10 then
                     self.DefaultLandRatio = 0.65
                     self.DefaultAirRatio = 0.35
                     self.DefaultNavalRatio = 0.0
@@ -272,7 +272,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.DefaultNavalRatio = 0.2
                 end
             else
-                if self.MapWaterRatio < 10 then
+                if self.MapWaterRatio < 0.10 then
                     self.DefaultLandRatio = 0.65
                     self.DefaultAirRatio = 0.35
                     self.DefaultNavalRatio = 0.0
@@ -286,7 +286,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.MapSize = 10
         elseif mapSizeX > 200 and mapSizeZ > 200 then
             if self.RNGEXP then
-                if self.MapWaterRatio < 10 then
+                if self.MapWaterRatio < 0.10 then
                     self.DefaultLandRatio = 0.65
                     self.DefaultAirRatio = 0.35
                     self.DefaultNavalRatio = 0.0
@@ -296,7 +296,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.DefaultNavalRatio = 0.2
                 end
             else
-                if self.MapWaterRatio < 10 then
+                if self.MapWaterRatio < 0.10 then
                     self.DefaultLandRatio = 0.65
                     self.DefaultAirRatio = 0.35
                     self.DefaultNavalRatio = 0.0
@@ -571,9 +571,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=0,
-                            interceptor=80,
-                            bomber=20,
+                            scout=5,
+                            interceptor=95,
+                            bomber=0,
                             total=0
                         },
                         T2 = {
@@ -635,9 +635,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=0,
-                            interceptor=80,
-                            bomber=20,
+                            scout=5,
+                            interceptor=95,
+                            bomber=0,
                             total=0
                         },
                         T2 = {
@@ -702,9 +702,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=0,
-                            interceptor=70,
-                            bomber=20,
+                            scout=5,
+                            interceptor=85,
+                            bomber=0,
                             gunship=10,
                             total=0
                         },
@@ -766,9 +766,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=0,
-                            interceptor=80,
-                            bomber=20,
+                            scout=5,
+                            interceptor=95,
+                            bomber=0,
                             total=0
                         },
                         T2 = {
@@ -831,9 +831,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=0,
-                            interceptor=75,
-                            bomber=25,
+                            scout=5,
+                            interceptor=95,
+                            bomber=0,
                             total=0
                         },
                         T2 = {
@@ -2226,7 +2226,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             numOpponents = numOpponents + 1
                             -- I would rather use army ndexes for the table keys of the enemyStarts so I can easily reference them in queries. To be pondered.
                             local enemyDistance = VDist3Sq(self.BrainIntel.StartPos, startPos)
-                            enemyStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex, Distance = enemyDistance }
+                            enemyStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex, Distance = enemyDistance, WaterLabels = {}}
                             local gridXID, gridZID = im:GetIntelGrid(startPos)
                             if im.MapIntelGrid[gridXID][gridZID].Enabled then
                                 im.MapIntelGrid[gridXID][gridZID].ScoutPriority = 150
@@ -2239,7 +2239,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 self.EnemyIntel.ClosestEnemyBase = enemyDistance
                             end
                         else
-                            allyTempStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex}
+                            allyTempStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex, WaterLabels = {}}
                             allyStarts['ARMY_' .. i] = startPos
                         end
                     end
@@ -2442,7 +2442,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             im.MapIntelStats.ScoutLocationsBuilt = true
-
             if self.RNGDEBUG then
                 RNGLOG('* AI-RNG: EnemyStartLocations : '..repr(self.EnemyIntel.EnemyStartLocations))
             end
@@ -2940,6 +2939,9 @@ AIBrain = Class(RNGAIBrainClass) {
                                 if unitCat.LAND or unitCat.AMPHIBIOUS or unitCat.COMMAND then
                                     landUnits = landUnits + 1
                                     landThreat = landThreat + unit.Blueprint.Defense.SurfaceThreatLevel
+                                    if unit.Blueprint.Defense.AirThreatLevel then
+                                        airThreat = airThreat + unit.Blueprint.Defense.AirThreatLevel
+                                    end
                                     if landUnits == 1 then
                                         local unitPos = unit:GetPosition()
                                         enemyLandAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
@@ -3469,7 +3471,17 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.ProductionRatios.Naval = 0.4
                 end
             elseif not self.EnemyIntel.ChokeFlag then
-                self.ProductionRatios.Naval = self.DefaultNavalRatio
+                local OwnIndex = self:GetArmyIndex()
+                local EnemyArmy = self:GetCurrentEnemy()
+                if EnemyArmy then
+                    EnemyIndex = EnemyArmy:GetArmyIndex()
+                end
+                local labelCount = RNGGETN(self.BrainIntel.NavalBaseLabels)
+                if self.MapWaterRatio > 0.70 and EnemyIndex and self.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] ~= 'LAND' and labelCount and labelCount > 0 then
+                    self.ProductionRatios.Naval = 0.60
+                else
+                    self.ProductionRatios.Naval = self.DefaultNavalRatio
+                end
             end
             if self.BrainIntel.SelfThreat.ExtractorCount > self.BrainIntel.MassSharePerPlayer then
                 if self.EconomyUpgradeSpend < 0.35 then
@@ -4788,7 +4800,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 if self.BuilderManagers[k].FactoryManager then
                                     if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if not f.Upgrading then
+                                            if not f.Dead and not f.Upgrading then
                                                 if EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
                                                     if not f.Offline then
                                                         f.Offline = true
@@ -4806,7 +4818,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                             break
                                         end
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if not f.Upgrading then
+                                            if not f.Dead and not f.Upgrading then
                                                 if EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
                                                     if not f.Offline then
                                                         f.Offline = true
@@ -4824,7 +4836,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                             break
                                         end
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if not f.Upgrading then
+                                            if not f.Dead and not f.Upgrading then
                                                 if EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
                                                     if not f.Offline then
                                                         f.Offline = true
@@ -4854,7 +4866,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 if self.BuilderManagers[k].FactoryManager then
                                     if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if not f.Upgrading then
+                                            if not f.Dead and not f.Upgrading then
                                                 if EntityCategoryContains(categories.TECH1 * categories.AIR, f) then
                                                     if not f.Offline then
                                                         f.Offline = true
@@ -4872,7 +4884,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                             break
                                         end
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if not f.Upgrading then
+                                            if not f.Dead and not f.Upgrading then
                                                 if EntityCategoryContains(categories.TECH2 * categories.AIR, f) then
                                                     if not f.Offline then
                                                         f.Offline = true
@@ -4890,7 +4902,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                             break
                                         end
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if not f.Upgrading then
+                                            if not f.Dead and not f.Upgrading then
                                                 if EntityCategoryContains(categories.TECH3 * categories.AIR, f) then
                                                     if not f.Offline then
                                                         f.Offline = true
@@ -4920,7 +4932,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 if self.BuilderManagers[k].FactoryManager then
                                     if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if not f.Upgrading then
+                                            if not f.Dead and not f.Upgrading then
                                                 if EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
                                                     if not f.Offline then
                                                         f.Offline = true
@@ -4938,7 +4950,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                             break
                                         end
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if not f.Upgrading then
+                                            if not f.Dead and not f.Upgrading then
                                                 if EntityCategoryContains(categories.TECH2 * categories.NAVAL, f) then
                                                     if not f.Offline then
                                                         f.Offline = true
@@ -4957,7 +4969,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                         end
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
                                             if EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
-                                                if not f.Upgrading then
+                                                if not f.Dead and not f.Upgrading then
                                                     if not f.Offline then
                                                         f.Offline = true
                                                         --RNGLOG('Naval T3 Factory Taken offline')
@@ -4984,11 +4996,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('Land Factory Surplus is '..surplus)
                     if self.BuilderManagers then
                         for k, v in self.BuilderManagers do
-                            if self.BuilderManagers[k].FactoryManager then
+                            if v.Layer ~= 'Water' and self.BuilderManagers[k].FactoryManager then
                                 if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
                                     for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                        if not f.Upgrading then
-                                            if EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
+                                        if not f.Dead and not f.Upgrading then
+                                            if EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
                                                 if f.Offline then
                                                     f.Offline = false
                                                     --RNGLOG('Land T1 Factory put online')
@@ -5000,7 +5012,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                     --RNGLOG('Land T2 Factory put online')
                                                     surplus = surplus - 8
                                                 end
-                                            elseif EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
+                                            elseif EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
                                                 if f.Offline then
                                                     f.Offline = false
                                                     --RNGLOG('Land T3 Factory put online')
@@ -5025,11 +5037,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('Air Factory Surplus is '..surplus)
                     if self.BuilderManagers then
                         for k, v in self.BuilderManagers do
-                            if self.BuilderManagers[k].FactoryManager then
+                            if v.Layer ~= 'Water' and self.BuilderManagers[k].FactoryManager then
                                 if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
                                     for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                        if not f.Upgrading then
-                                            if EntityCategoryContains(categories.TECH3 * categories.AIR, f) then
+                                        if not f.Dead and not f.Upgrading then
+                                            if EntityCategoryContains(categories.TECH1 * categories.AIR, f) then
                                                 if f.Offline then
                                                     f.Offline = false
                                                     --RNGLOG('Air T1 Factory put online')
@@ -5041,7 +5053,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                     --RNGLOG('Air T2 Factory put online')
                                                     surplus = surplus - 7
                                                 end
-                                            elseif EntityCategoryContains(categories.TECH1 * categories.AIR, f) then
+                                            elseif EntityCategoryContains(categories.TECH3 * categories.AIR, f) then
                                                 if f.Offline then
                                                     f.Offline = false
                                                     --RNGLOG('Air T3 Factory put online')
@@ -5066,11 +5078,15 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('Naval Factory Surplus is '..surplus)
                     if self.BuilderManagers then
                         for k, v in self.BuilderManagers do
-                            if self.BuilderManagers[k].FactoryManager then
+                            if v.Layer == 'Water' and self.BuilderManagers[k].FactoryManager then
+                                --RNGLOG('Naval Factory Manager has this many factories'..RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList))
                                 if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
                                     for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                        if not f.Upgrading then
-                                            if EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
+                                        --RNGLOG('Naval Factory found')
+                                        if not f.Dead and not f.Upgrading then
+                                            --RNGLOG('Offline check '..repr(f.Offline))
+                                            --RNGLOG('Naval Factory not dead or upgrading')
+                                            if EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
                                                 if f.Offline then
                                                     f.Offline = false
                                                     --RNGLOG('Naval T1 Factory put online')
@@ -5082,7 +5098,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                     --RNGLOG('Naval T2 Factory put online')
                                                     surplus = surplus - 10
                                                 end
-                                            elseif EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
+                                            elseif EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
                                                 if f.Offline then
                                                     f.Offline = false
                                                     --RNGLOG('Naval T3 Factory put online')

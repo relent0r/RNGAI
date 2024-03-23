@@ -2615,6 +2615,16 @@ Platoon = Class(RNGAIPlatoonClass) {
         if eng:IsUnitState('Building') or eng:IsUnitState('Upgrading') or eng:IsUnitState("Enhancing") then
            return
         end
+        if eng:IsUnitState('Attached') then
+            LOG('Engineer Attached to something, try to detach')
+            local localTransports = GetUnitsAroundPoint(aiBrain, categories.TRANSPORTFOCUS, eng:GetPosition(), 10, 'Ally')
+            for _, v in localTransports do
+                if v.EntityId then
+                    LOG('Local transport ID is '..v.EntityId)
+                end
+            end
+            eng:DetachFrom()
+        end
 
         if not self.MovementLayer then
             AIAttackUtils.GetMostRestrictiveLayerRNG(self)
@@ -2644,7 +2654,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 
                 if closestUnit and not IsDestroyed(closestUnit) then
                     --LOG('Found unit to capture, checking threat at position')
-                    if RUtils.GrabPosDangerRNG(aiBrain,closestUnit:GetPosition(), 40).enemy < 5 then
+                    if RUtils.GrabPosDangerRNG(aiBrain,closestUnit:GetPosition(), 40).enemySurface < 5 then
                         --LOG('Attempting to start capture unit ai')
                         self:CaptureUnitAIRNG(closestUnit)
                         return
@@ -2799,7 +2809,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             elseif cons.NearMarkerType == 'Naval Area' then
                 reference, refName = RUtils.AIFindNavalAreaNeedsEngineerRNG(aiBrain, cons.LocationType, cons.ValidateLabel,
-                        (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
+                        (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType, eng, true)
                 -- didn't find a location to build at
                 if not reference or not refName then
                     --RNGLOG('No reference or refname for Naval Area Expansion')
@@ -3248,9 +3258,11 @@ Platoon = Class(RNGAIPlatoonClass) {
         -- Some of this is overly complex as I'm trying to get the power/mass to never stall during that initial bo.
         -- This is just a scripted engineer build, nothing special. But it ended up WAY bigger than I thought it'd be.
         local aiBrain = self:GetBrain()
+        local ecoMultiplier = aiBrain.EcoManager.EcoMultiplier
         local buildingTmpl, buildingTmplFile, baseTmpl, baseTmplFile, baseTmplDefault, templateKey
         local whatToBuild, location, relativeLoc
         local hydroPresent = false
+        local airFactoryBuilt = false
         local buildLocation = false
         local buildMassPoints = {}
         local buildMassDistantPoints = {}
@@ -3328,6 +3340,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         else
             if aiBrain.RNGEXP then
                 buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile[templateKey][factionIndex], 'T1AirFactory', eng, false, nil, nil, true)
+                airFactoryBuilt = true
             else
                 buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile[templateKey][factionIndex], 'T1LandFactory', eng, false, nil, nil, true)
             end
@@ -3413,7 +3426,7 @@ Platoon = Class(RNGAIPlatoonClass) {
         --RNGLOG('CommanderInitializeAIRNG : Close Mass Point table has '..RNGGETN(buildMassPoints)..' after initial build')
         --RNGLOG('CommanderInitializeAIRNG : Distant Mass Point table has '..RNGGETN(buildMassDistantPoints)..' after initial build')
         if hydroPresent then
-            buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)
+            buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 14, true)
             if borderWarning and buildLocation and whatToBuild then
                 IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
                 borderWarning = false
@@ -3424,7 +3437,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
         else
             for i=1, 2 do
-                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 14, true)
                 if borderWarning and buildLocation and whatToBuild then
                     IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
                     borderWarning = false
@@ -3477,7 +3490,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     buildMassPoints[i] = nil
                 end
                 buildMassPoints = aiBrain:RebuildTable(buildMassPoints)
-                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 14, true)
                 --RNGLOG('CommanderInitializeAIRNG : Insert Second energy production '..whatToBuild.. ' at '..repr(buildLocation))
                 if borderWarning and buildLocation and whatToBuild then
                     IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
@@ -3649,7 +3662,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
             for i=1, energyCount do
-                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true)
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 14, true)
                 if buildLocation and whatToBuild then
                     --RNGLOG('CommanderInitializeAIRNG : Execute Build Structure with the following data')
                     --RNGLOG('CommanderInitializeAIRNG : whatToBuild '..whatToBuild)
@@ -3664,7 +3677,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                 else
                     -- This is a backup to avoid a power stall
-                    buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, false, categories.STRUCTURE * categories.FACTORY, 12, true)
+                    buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, false, categories.STRUCTURE * categories.FACTORY, 14, true)
                     if borderWarning and buildLocation and whatToBuild then
                         IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
                         borderWarning = false
@@ -3754,9 +3767,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if aiBrain.MapSize >=20 or aiBrain.BrainIntel.AirPlayer then
                         buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 15, true)
                         if borderWarning and buildLocation and whatToBuild then
+                            airFactoryBuilt = true
                             IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
                             borderWarning = false
                         elseif buildLocation and whatToBuild then
+                            airFactoryBuilt = true
                             aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                         else
                             WARN('No buildLocation or whatToBuild during ACU initialization')
@@ -3780,9 +3795,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 --RNGLOG("Attempt to build air factory")
                                 buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 25, true)
                                 if borderWarning and buildLocation and whatToBuild then
+                                    airFactoryBuilt = true
                                     IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
                                     borderWarning = false
                                 elseif buildLocation and whatToBuild then
+                                    airFactoryBuilt = true
                                     aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                                 else
                                     WARN('No buildLocation or whatToBuild during ACU initialization')
@@ -3838,6 +3855,26 @@ Platoon = Class(RNGAIPlatoonClass) {
                     --RNGLOG('CommanderInitializeAIRNG : closeMarkers 2 or less or UnitBeingAssist is not complete')
                     --RNGLOG('CommanderInitializeAIRNG : closeMarkers '..closeMarkers)
                     --RNGLOG('CommanderInitializeAIRNG : Fraction complete is '..eng.UnitBeingAssist:GetFractionComplete())
+                end
+            end
+            if airFactoryBuilt and aiBrain.EconomyOverTimeCurrent.EnergyIncome < 24 then
+                LOG('Current energy income '..aiBrain.EconomyOverTimeCurrent.EnergyIncome)
+                local energyCount = math.ceil((240 - aiBrain.EconomyOverTimeCurrent.EnergyIncome * 10) / (20 * ecoMultiplier))
+                LOG('Current energy income is less than 200')
+                LOG('Energy count required '..energyCount)
+                for i=1, energyCount do
+                    buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 14, true)
+                    if borderWarning and buildLocation and whatToBuild then
+                        IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                        borderWarning = false
+                    elseif buildLocation and whatToBuild then
+                        aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                    else
+                        WARN('No buildLocation or whatToBuild during ACU initialization')
+                    end
+                end
+                while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                    coroutine.yield(5)
                 end
             end
         end
@@ -6336,7 +6373,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                         if target.Blueprint.CategoriesHash.COMMAND then
                                             local acuPos = target:GetPosition()
                                             local posDanger = RUtils.GrabPosDangerRNG(aiBrain,acuPos, 50)
-                                            if posDanger.enemy > posDanger.ally then
+                                            if posDanger.enemySurface > posDanger.allySurface then
                                                 avoidAcu = true
                                             else
                                                 avoidAcu = false
@@ -7383,7 +7420,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     RNGINSERT(readySmlLaunchers, {Launcher = sml, Count = missileCount})
                     self.ReadySMLCount = readySmlLauncherCount
                 end
-                if not targetsAvailable and missileCount > 1 and GetEconomyStoredRatio(aiBrain, 'MASS') < 0.20 then
+                if not targetsAvailable and missileCount > 1 and aiBrain:GetEconomyStoredRatio('MASS') < 0.20 then
                     LOG('No nuke targets and have at least 2 missiles ready, stop building missiles')
                     sml:SetAutoMode(false)
                 else
@@ -7893,7 +7930,7 @@ Platoon = Class(RNGAIPlatoonClass) {
     end,
 
     MexBuildAIRNG = function(self)
-        -- Dedicated Mex building function.
+        -- Dedicated Mex building function.expansion
         local aiBrain = self:GetBrain()
         local platoonUnits = GetPlatoonUnits(self)
         local cons = self.PlatoonData.Construction
@@ -8086,6 +8123,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             import("/mods/rngai/lua/ai/statemachines/platoon-experimental-land-combat.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         elseif machineType == 'AirExperimental' then
             import("/mods/rngai/lua/ai/statemachines/platoon-experimental-air-combat.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+        elseif machineType == 'TorpedoBomber' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-air-torpedo.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         end
         WaitTicks(50)
     end,

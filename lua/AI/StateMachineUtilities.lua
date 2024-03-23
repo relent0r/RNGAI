@@ -57,7 +57,7 @@ SimpleTarget = function(platoon,aiBrain,guardee)--find enemies in a range and at
         if ViableTargetCheck(unit, unitPos) then
             if not unit.machinepriority then unit.machinepriority={} unit.machinedistance={} end
             if not unit.dangerupdate or not unit.machinedanger or gameTime-unit.dangerupdate>10 then
-                unit.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30, true, false, false).enemy)
+                unit.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30, true, false, false).enemyTotal)
                 unit.dangerupdate=gameTime
             end
             local unithealth = GetTrueHealth(unit, true)
@@ -112,7 +112,7 @@ SimpleNavalTarget = function(platoon, aiBrain)
         if ViableTargetCheck(unit, unitPos, platoon.MaxPlatoonWeaponRange) then
             if not unit.machinepriority then unit.machinepriority={} unit.machinedistance={} end
             if not unit.dangerupdate or not unit.machinedanger or gameTime-unit.dangerupdate>10 then
-                unit.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30, true, true, false).enemy)
+                unit.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30, true, true, false).enemyTotal)
                 unit.dangerupdate=gameTime
             end
             local unithealth = GetTrueHealth(unit, true)
@@ -548,7 +548,7 @@ GetNearExtractorRNG = function(aiBrain, platoon, platoonPosition, enemyPosition,
                             if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition,unitPos) then
                                 if threatCheck then
                                     local threat = RUtils.GrabPosDangerRNG(aiBrain,unitPos,platoon.EnemyRadius, true, false, false)
-                                    if threat.enemy < threat.ally then
+                                    if threat.enemySurface < threat.allySurface then
                                         --RNGLOG('Trueplatoon is going to try retreat towards an enemy unit')
                                         location = unitPos
                                         --RNGLOG('Retreat Position found for mex or engineer')
@@ -564,7 +564,7 @@ GetNearExtractorRNG = function(aiBrain, platoon, platoonPosition, enemyPosition,
                         if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition,unitPos) then
                             if threatCheck then
                                 local threat = RUtils.GrabPosDangerRNG(aiBrain,unitPos,platoon.EnemyRadius, true, false, false)
-                                if threat.enemy < threat.ally then
+                                if threat.enemySurface < threat.allySurface then
                                     --RNGLOG('Trueplatoon is going to try retreat towards an enemy unit')
                                     location = unitPos
                                     --RNGLOG('Retreat Position found for mex or engineer')
@@ -616,7 +616,7 @@ GetClosestUnitRNG = function(aiBrain, platoon, platoonPosition, unitCat, pathChe
                             end
                             if threatCheck then
                                 local threat = RUtils.GrabPosDangerRNG(aiBrain,unitPos,platoon.EnemyRadius, true, false, false)
-                                if threat.enemy > threat.ally then
+                                if threat.enemyTotal > threat.allyTotal then
                                     threatable = false
                                 end
                             end

@@ -191,7 +191,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3TorpedoBomber',
         Priority = 891,
         BuilderConditions = {
-            { UCBC, 'UnitBuildDemand', { 'Air', 'T2', 'torpedo'} },
+            { UCBC, 'UnitBuildDemand', { 'Air', 'T3', 'torpedo'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

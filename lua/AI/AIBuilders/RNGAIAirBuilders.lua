@@ -107,7 +107,7 @@ local BomberResponse = function(self, aiBrain, builderManager, builderData)
         --RNGLOG('Bomber Response for land phase < 2 and enemy air threat low')
         return 890
     end
-    if aiBrain.BasePerimeterMonitor[builderManager.LocationType].LandUnits > 0 and aiBrain.BasePerimeterMonitor[builderManager.LocationType].AirUnits < 3 then
+    if aiBrain.BasePerimeterMonitor[builderManager.LocationType].LandUnits > 0 and aiBrain.BasePerimeterMonitor[builderManager.LocationType].AirUnits < 3 and aiBrain.BasePerimeterMonitor[builderManager.LocationType].AirThreat < 30 then
         --RNGLOG('Bomber Response for Perimeter Monitor is true')
         return 920
     end
@@ -218,7 +218,7 @@ BuilderGroup {
         PriorityFunction = AirDefenseScramble,
         BuilderConditions = { 
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.7 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
         },
         BuilderType = 'Air',
         BuilderData = {
@@ -235,7 +235,7 @@ BuilderGroup {
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.9}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.90, 1.1 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1 }},
         },
         BuilderData = {
             TechLevel = 3
@@ -268,12 +268,12 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Air AntiNavy BaseEnemyArea',
         PlatoonTemplate = 'RNGAI TorpBomberAttack',
-        PlatoonAddBehaviors = { 'AirUnitRefitRNG' },
         Priority = 960,
-        InstanceCount = 4,
+        InstanceCount = 30,
         BuilderType = 'Any',
         BuilderData = {
             SearchRadius = 'BaseEnemyArea',
+            StateMachine = 'TorpedoBomber',
             UnitType = 'TORPEDO',
             PrioritizedCategories = {
                 categories.COMMAND,

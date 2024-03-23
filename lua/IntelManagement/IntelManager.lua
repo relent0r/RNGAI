@@ -1619,12 +1619,14 @@ IntelManager = Class {
                     --RNGLOG('Set game time '..gameTime)
                     self.Brain.TacticalMonitor.TacticalMissions.ACUSnipe[acuIndex]['AIRANTINAVY'] = { GameTime = gameTime, CountRequired = count }
                     self.Brain.amanager.Demand.Air.T2.torpedo = count
+                    self.Brain.amanager.Demand.Air.T3.torpedo = math.ceil(count / 2)
                     self.Brain.EngineerAssistManagerFocusSnipe = true
                 end
                 if navalAttack then
                     --RNGLOG(self.Brain.Nickname)
                     --RNGLOG('numer of navalAttack torps required '..count)
                     self.Brain.amanager.Demand.Air.T2.torpedo = count
+                    self.Brain.amanager.Demand.Air.T3.torpedo = math.ceil(count / 2)
                 end
             else
                 local disableStrike = true
@@ -1638,6 +1640,7 @@ IntelManager = Class {
                 if disableStrike and self.Brain.amanager.Demand.Air.T2.torpedo > 0 then
                     --RNGLOG('No mercy snipe missions, disable demand')
                     self.Brain.amanager.Demand.Air.T2.torpedo = 0
+                    self.Brain.amanager.Demand.Air.T3.torpedo = 0
                     self.Brain.EngineerAssistManagerFocusSnipe = false
                 end
             end
@@ -1709,12 +1712,12 @@ IntelManager = Class {
             self.Brain.emanager.Satellite.T4 = experimentalNovaxCount
             self.Brain.emanager.Nuke.T3 = t3NukeCount
             self.Brain.emanager.Nuke.T4 = experimentalNukeCount
-            LOG('ExperimentalArtillery Count')
-            LOG('t3ArtilleryCount '..t3ArtilleryCount)
-            LOG('t3NukeCount '..t3NukeCount)
-            LOG('experimentalNovaxCount '..experimentalNovaxCount)
-            LOG('experimentalArtilleryCount '..experimentalArtilleryCount)
-            LOG('experimentalNukeCount '..experimentalNukeCount)
+            --LOG('ExperimentalArtillery Count')
+            --LOG('t3ArtilleryCount '..t3ArtilleryCount)
+            --LOG('t3NukeCount '..t3NukeCount)
+            --LOG('experimentalNovaxCount '..experimentalNovaxCount)
+            --LOG('experimentalArtilleryCount '..experimentalArtilleryCount)
+            --LOG('experimentalNukeCount '..experimentalNukeCount)
         end
     end,
 }
@@ -2031,7 +2034,7 @@ function InitialNavalAttackCheck(aiBrain)
         LOG('*AI:RNG NavalAttackCheck is waiting for ScoutLocations to be built')
         coroutine.yield(20)
     end
-    if aiBrain.MapWaterRatio > 0 then
+    if aiBrain.MapWaterRatio > 0.10 then
         LOG('Map Water Ratio is '..aiBrain.MapWaterRatio)
         local factionIndex = aiBrain:GetFactionIndex()
         local navalMarkers = {}
@@ -2073,6 +2076,9 @@ function InitialNavalAttackCheck(aiBrain)
                             local label = NavUtils.GetLabel('Water', {v[1], v[2], v[3]})
                             if label and validNavalLabels[label] then
                                 validNavalLabels[label] = 'Confirmed'
+                                if not b.WaterLabels[label] then
+                                    b.WaterLabels[label] = true
+                                end
                             end
                         end
                     end
@@ -3013,7 +3019,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                         acuPresent = true
                     end
                     unitAddedCount = unitAddedCount + 1
-                    aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=RUtils.GrabPosDangerRNG(aiBrain,v.Position,30, true, false, false).enemy,unit=v.object, ACUPresent=acuPresent, time=timeStamp}
+                    aiBrain.prioritypoints[k]={type='raid',Position=v.Position,priority=priority,danger=RUtils.GrabPosDangerRNG(aiBrain,v.Position,30, true, false, false).enemyTotal,unit=v.object, ACUPresent=acuPresent, time=timeStamp}
                 else
                     local acuPresent = false
                     local priority=0
@@ -3049,7 +3055,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     local statusModifier = 1
                     --RNGLOG('angle of enemy units '..angleOfEnemyUnits)
                     --RNGLOG('distance to main '..im.MapIntelGrid[i][k].DistanceToMain)
-                    im.MapIntelGrid[i][k].EnemyUnitDanger = RUtils.GrabPosDangerRNG(aiBrain,position,30, true, false, false).enemy
+                    im.MapIntelGrid[i][k].EnemyUnitDanger = RUtils.GrabPosDangerRNG(aiBrain,position,30, true, false, false).enemyTotal
                     if aiBrain.GridPresence and aiBrain.GridPresence:GetInferredStatus(position) == 'Allied' then
                         statusModifier = 1.8
                     end
@@ -3129,7 +3135,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                 acuPriority = acuPriority + 100
             end
             unitAddedCount = unitAddedCount + 1
-            aiBrain.prioritypoints['ACU']={type='raid',Position=aiBrain.CDRUnit.Position,priority=acuPriority,danger=RUtils.GrabPosDangerRNG(aiBrain,aiBrain.CDRUnit.Position,30, true, false, false).enemy,unit=nil}
+            aiBrain.prioritypoints['ACU']={type='raid',Position=aiBrain.CDRUnit.Position,priority=acuPriority,danger=RUtils.GrabPosDangerRNG(aiBrain,aiBrain.CDRUnit.Position,30, true, false, false).enemyTotal,unit=nil}
         end
         for k, v in aiBrain.prioritypoints do
             if v.unit.Dead or (v.time and v.time + 60 < timeStamp) then

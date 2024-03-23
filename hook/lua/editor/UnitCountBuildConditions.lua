@@ -571,10 +571,10 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
             end
             if bestPoint then
                 if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5 then
-                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5))
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5))
                     return true
                 else
-                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5))
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5))
                 end
             end
         elseif type == 'AIR' then
@@ -592,10 +592,10 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
             end
             if bestPoint then
                 if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat < aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5 then
-                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
                     return true
                 else
-                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
                 end
             end
         elseif type == 'ANTISURFACEAIR' then
@@ -613,10 +613,10 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
             end
             if bestPoint then
                 if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat < aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5 then
-                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
                     return true
                 else
-                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
                 end
             end
         elseif type == 'NAVAL' then
@@ -634,10 +634,10 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
             end
             if bestPoint then
                 if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5 then
-                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5))
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5))
                     return true
                 else
-                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5))
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5))
                 end
             end
         elseif type == 'LANDNAVAL' then
@@ -655,10 +655,10 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
             end
             if bestPoint then
                 if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < (aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5 or aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5) then
-                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..repr((aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5)..' or land of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5)))
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..repr((aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5)..' or land of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5)))
                     return true
                 else
-                    LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..repr((aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5)..' or land of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5)))
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..repr((aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5)..' or land of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5)))
                 end
             end
         end

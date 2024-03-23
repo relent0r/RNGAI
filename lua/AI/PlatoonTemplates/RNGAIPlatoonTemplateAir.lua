@@ -73,7 +73,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI TorpBomberAttack',
-    Plan = 'AirTorpAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.AIR * categories.ANTINAVY - categories.EXPERIMENTAL, 1, 50, 'Attack', 'GrowthFormation' },
     }

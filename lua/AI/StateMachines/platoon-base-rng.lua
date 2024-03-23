@@ -58,6 +58,21 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                             if unit.StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
                                 maxPlatoonStrikeRadiusDistance = unit.StrikeRadiusDistance
                             end
+                        elseif weapon.WeaponCategory == 'Anti Navy' and unitCats.AIR then
+                            unit.DamageRadius = weapon.DamageRadius
+                            unit.StrikeDamage = weapon.Damage * weapon.MuzzleSalvoSize
+                            if weapon.InitialDamage then
+                                unit.StrikeDamage = unit.StrikeDamage + (weapon.InitialDamage * weapon.MuzzleSalvoSize)
+                            end
+                            unit.StrikeRadiusDistance = weapon.MaxRadius
+                            maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + unit.StrikeDamage
+                            LOG('Torp Bomber Weapon radius is '..repr(weapon.DamageRadius))
+                            if weapon.DamageRadius > 0 or  weapon.DamageRadius < maxPlatoonStrikeRadius then
+                                maxPlatoonStrikeRadius = weapon.DamageRadius
+                            end
+                            if unit.StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
+                                maxPlatoonStrikeRadiusDistance = unit.StrikeRadiusDistance
+                            end
                         end
                     end
                     --LOG('Have set units DamageRadius to '..maxPlatoonStrikeRadius)

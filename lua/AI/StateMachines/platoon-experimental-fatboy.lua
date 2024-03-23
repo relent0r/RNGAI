@@ -531,7 +531,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
-                coroutine.yield(25)
+                coroutine.yield(35)
             end
         end,
     },

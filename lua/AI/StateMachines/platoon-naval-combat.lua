@@ -89,20 +89,24 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             else
                 threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, false, true, false)
             end
-            if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
+            if threat.allyTotal and threat.enemyTotal and threat.allyTotal*1.1 < threat.enemyTotal then
                 self:LogDebug(string.format('Current status at position is '..repr(currentStatus)))
             end
-            if threat.ally and threat.enemy and threat.enemyrange > 0 and (threat.ally*1.1 < threat.enemy and threat.enemyrange >= self.MaxPlatoonWeaponRange or threat.ally*1.4 < threat.enemy) and currentStatus ~= 'Allied' then
+            LOG('Current threat table '..repr(threat))
+            if threat.allySub and threat.enemySub and threat.enemyrange > 0 
+            and (threat.allySub*1.1 < threat.enemySub and threat.enemyrange >= self.MaxPlatoonWeaponRange or threat.allySub*1.3 < threat.enemySub) and currentStatus ~= 'Allied'
+            or threat.allySub and threat.enemySub and threat.allySurface and threat.enemySurface and threat.enemyrange > 0 and (threat.allySurface*1.1 < threat.enemySurface 
+            and threat.allySub*1.1 < threat.enemySub and threat.enemyrange >= self.MaxPlatoonWeaponRange or threat.allySub*1.3 < threat.enemySub and threat.allySurface*1.1 < threat.enemySurface) and currentStatus ~= 'Allied' then
                 self:LogDebug(string.format('Retreating due to threat'))
-                self:LogDebug(string.format('Enemy Threat '..threat.enemy..' max enemy weapon range '..threat.enemyrange))
-                self:LogDebug(string.format('Ally Threat '..threat.ally..' max ally weapon range '..threat.allyrange))
+                self:LogDebug(string.format('Enemy Threat '..threat.enemyTotal..' max enemy weapon range '..threat.enemyrange))
+                self:LogDebug(string.format('Ally Threat '..threat.allyTotal..' max ally weapon range '..threat.allyrange))
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos, true)
                 local basePos = aiBrain.BuilderManagers[closestBase].Position
                 local bx = self.Pos[1] - basePos[1]
                 local bz = self.Pos[3] - basePos[3]
                 local baseDistance = bx * bx + bz * bz
                 if baseDistance > 900 then
-                    self:LogDebug(string.format('DecideWhatToDo Ordered to retreat'))
+                    self:LogDebug(string.format('DecideWhatToDo Ordered to retreat due to local threat'))
                     self:ChangeState(self.Retreating)
                     return
                 else
@@ -123,7 +127,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             local homeDistance = hx * hx + hz * hz
             if homeDistance > 10000 then
                 --LOG('DecideWhatToDo Look for priority points ')
-                local acuSnipeUnit = RUtils.CheckACUSnipe(aiBrain, 'AIRANTINAVY')
+                local acuSnipeUnit = RUtils.CheckACUSnipe(aiBrain, 'AirAntiNavy')
                 if acuSnipeUnit then
                     if not acuSnipeUnit.Dead then
                         local acuTargetPosition = acuSnipeUnit:GetPosition()
@@ -595,7 +599,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                     end
                     if baseRetreat then
                         local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, false)
-                        if threat.ally and threat.enemy and threat.enemyrange > 0 and (threat.ally > threat.enemy*1.1 and threat.enemyrange <= self.MaxPlatoonWeaponRange or threat.ally > threat.enemy*1.4) then
+                        if threat.allyTotal and threat.enemyTotal and threat.enemyrange > 0 and (threat.allyTotal > threat.enemyTotal*1.1 and threat.enemyrange <= self.MaxPlatoonWeaponRange or threat.allySub > threat.enemySub*1.2) then
                             self:ChangeState(self.DecideWhatToDo)
                             return
                         end
@@ -659,7 +663,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                             if not approxThreat then
                                 approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, true, false)
                             end
-                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.ally and approxThreat.enemy and approxThreat.ally > approxThreat.enemy then
+                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allyTotal and approxThreat.enemyTotal and approxThreat.allyTotal > approxThreat.enemyTotal then
                                 IssueClearCommands({v}) 
                                 IssueMove({v},target:GetPosition())
                                 continue

@@ -360,7 +360,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local builderData = self.BuilderData
             local destination = builderData.Position
-            local navigateDistanceCutOff = builderData.CutOff or 3600
+            local navigateDistanceCutOff = builderData.CutOff or 6400
             if not destination then
                 --LOG('no destination BuilderData '..repr(builderData))
                 self:LogWarning(string.format('no destination to navigate to'))
@@ -377,7 +377,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
 
             while not IsDestroyed(self.ExperimentalUnit) do
                 local origin = self.ExperimentalUnit:GetPosition()
-                waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 80)
+                waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 100)
                 if StateUtils.PositionInWater(origin) then
                     self.VentGuardPlatoon = true
                     --LOG('GuardPlatoon Vent has gone true')

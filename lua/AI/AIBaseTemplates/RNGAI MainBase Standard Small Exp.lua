@@ -71,9 +71,6 @@ BaseBuilderTemplate {
         'RNGAI ScoutAirFormer',
         'RNGEXP Air Platoon Builder',
         'RNGAI Air Response Formers',
-
-        -- Sea Unit Builders
-        --'RNGAI Sea Builders T1',
         
         -- Sea Unit Formers
         --'RNGAI Sea Formers',

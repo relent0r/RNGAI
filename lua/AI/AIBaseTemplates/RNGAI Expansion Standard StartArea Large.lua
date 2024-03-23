@@ -69,15 +69,6 @@ BaseBuilderTemplate {
                 'RNGAI ScoutAirFormer',
                 'RNGAI Air Platoon Builder',
 
-                -- Sea Unit Builders --
-                --'RNGAI Sea Builders T1',
-                --'RNGAI Sea Builders T23',
-                --'RNGAI SonarBuilders',
-                --'RNGAI SonarUpgrade',
-
-                -- Sea Unit Formers --
-                --'RNGAI Sea Formers',
-
                 -- Defence Builders --
                 'RNGAI Base Defenses Expansion',
                 --'RNGAI Perimeter Defenses Large',

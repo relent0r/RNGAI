@@ -105,6 +105,9 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.DelayBuildOrder(self,factory,bType,time)
         end
+        if factory.Blueprint.CategoriesHash.NAVAL then
+            LOG('Naval Factory is being delayed')
+        end
         local guards = factory:GetGuards()
         for k,v in guards do
             if not v.Dead and v.AssistPlatoon then
@@ -124,6 +127,14 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         factory.DelayThread = false
         if factory.Offline then
             while factory.Offline and factory and (not factory.Dead) do
+                if factory.Blueprint.CategoriesHash.NAVAL then
+                    LOG('Naval Factory is offline')
+                    local deficit = self.Brain.cmanager.categoryspend.fact['Naval'] - (self.Brain.cmanager.income.r.m * self.Brain.ProductionRatios['Naval'])
+                    LOG('Current naval deficit '..deficit)
+                    LOG('CUrrent income is '..self.Brain.cmanager.income.r.m)
+                    LOG('Naval Production ration is '..self.Brain.ProductionRatios['Naval'])
+                    LOG('Current spend is '..self.Brain.cmanager.categoryspend.fact['Naval'])
+                end
                 --RNGLOG('Factory is offline, wait inside delaybuildorder')
                 coroutine.yield(25)
             end

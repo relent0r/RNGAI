@@ -111,8 +111,8 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             end
             local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, false)
             --RNGLOG('Simple Retreat Threat Stats '..repr(threat))
-            if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
-                self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemy))
+            if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then
+                self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
                 self.retreat=true
                 self:ChangeState(self.Retreating)
                 return
@@ -339,7 +339,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, false, false)
                         end
                         if not (v.Role == 'Sniper' or v.Role == 'Silo') and closestTarget>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
-                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.ally and approxThreat.enemy and approxThreat.ally > approxThreat.enemy then
+                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface then
                                 IssueClearCommands({v}) 
                                 if v.Role == 'Shield' or v.Role == 'Stealth' then
                                     IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
@@ -361,7 +361,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if not skipKite then
-                            if approxThreat.ally and approxThreat.enemy and approxThreat.ally > approxThreat.enemy*1.5 and not targetCats.INDIRECTFIRE and targetCats.MOBILE and v.MaxWeaponRange <= unitRange then
+                            if approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface*1.5 and not targetCats.INDIRECTFIRE and targetCats.MOBILE and v.MaxWeaponRange <= unitRange then
                                 IssueClearCommands({v})
                                 if v.Role == 'Shield' or v.Role == 'Stealth' then
                                     IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))

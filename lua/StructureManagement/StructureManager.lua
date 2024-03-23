@@ -767,6 +767,29 @@ StructureManager = Class {
                 end
             end
         end
+        if not t3AirPass and self.Brain.BrainIntel.AirPlayer and totalAirT3HQCount < 1 and totalAirT2HQCount > 0 and self.Factories.AIR[2].UpgradingCount < 1 and self.Factories.AIR[2].Total > 0 then
+            if self.Brain.EconomyOverTimeCurrent.MassIncome > (2.5 * multiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 100.0 then
+                --RNGLOG('Factory Upgrade Income Over time check passed')
+                if GetEconomyIncome(self.Brain,'MASS') >= (2.5 * multiplier) and GetEconomyIncome(self.Brain,'ENERGY') >= 100.0 then
+                    --RNGLOG('Factory Upgrade Income check passed')
+                    if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.0 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
+                        --RNGLOG('Factory Upgrade efficiency over time check passed')
+                        local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
+                        local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
+                        if MassEfficiency >= 1.0 and EnergyEfficiency >= 1.00 then
+                            --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
+                            local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH2', true)
+                            if factoryToUpgrade and not factoryToUpgrade.Dead then
+                                --RNGLOG('Structure Manager Triggering T3 Air HQ Upgrade')
+                                self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'AIR')
+                                t3AirPass = true
+                                coroutine.yield(30)
+                            end
+                        end
+                    end
+                end
+            end
+        end
         if not t3AirPass and totalAirT3HQCount < 1 and totalAirT2HQCount > 0 and self.Factories.AIR[2].UpgradingCount < 1 and self.Factories.AIR[2].Total > 0 then
             --RNGLOG('Factory T2 Upgrade HQ Check passed')
             if GetGameTimeSeconds() > (600 / multiplier) then
