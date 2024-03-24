@@ -399,7 +399,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             end
             local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, self.dest, 3, false)
             if usedTransports then
-                self:LogDebug(string.format('Platoon used transports'))
+                LOG('No path due to '..repr(reason))
                 self:ChangeState(self.Navigating)
                 return
             else

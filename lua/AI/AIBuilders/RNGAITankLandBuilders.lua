@@ -55,7 +55,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Small',
-        PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
+        PlatoonTemplate = 'T2LandAmphibious',
         Priority = 500, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
@@ -97,7 +97,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Factory Amphib Attack Large',
-        PlatoonTemplate = 'RNGAIT2AmphibAttackQueue',
+        PlatoonTemplate = 'T2LandAmphibious',
         Priority = 550,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
@@ -160,7 +160,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T3 Tank Enemy Nearby',
-        PlatoonTemplate = 'RNGAIT3LandResponse',
+        PlatoonTemplate = 'T3LandBot',
         Priority = 900,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
@@ -202,7 +202,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T3 Tank Enemy Nearby Expansion',
-        PlatoonTemplate = 'RNGAIT3LandResponse',
+        PlatoonTemplate = 'T3LandBot',
         Priority = 900,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},

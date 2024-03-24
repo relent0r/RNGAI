@@ -1439,46 +1439,6 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
-    TestThread = function(self)
-        -- just a test for visually seeing grids
-        local startX, startZ = self:GetArmyStartPos()
-        local engPos = {startX, 0, startZ}
-        local reclaimGrid = {
-            {engPos[1], 0 ,engPos[3]},
-            {engPos[1], 0 ,engPos[3] + 15},
-            {engPos[1] + 15, 0 ,engPos[3] + 15},
-            {engPos[1] + 15, 0, engPos[3]},
-            {engPos[1] + 15, 0, engPos[3] - 15},
-            {engPos[1], 0, engPos[3] - 15},
-            {engPos[1] - 15, 0, engPos[3] - 15},
-            {engPos[1] - 15, 0, engPos[3]},
-            {engPos[1] - 15, 0, engPos[3] + 15},
-            {engPos[1], 0 ,engPos[3] + 25},
-            {engPos[1] + 15, 0 ,engPos[3] + 25},
-            {engPos[1] + 25, 0 ,engPos[3] + 25},
-            {engPos[1] + 25, 0 ,engPos[3] + 15},
-            {engPos[1] + 25, 0, engPos[3]},
-            {engPos[1] + 25, 0, engPos[3] - 15},
-            {engPos[1] + 25, 0, engPos[3] - 25},
-            {engPos[1] + 15, 0, engPos[3] - 25},
-            {engPos[1], 0, engPos[3] - 25},
-            {engPos[1] - 15, 0, engPos[3] - 25},
-            {engPos[1] - 25, 0, engPos[3] - 25},
-            {engPos[1] - 25, 0, engPos[3] - 15},
-            {engPos[1] - 25, 0, engPos[3]},
-            {engPos[1] - 25, 0, engPos[3] + 15},
-            {engPos[1] - 15, 0, engPos[3] + 25},
-            {engPos[1] - 25, 0, engPos[3] + 25},
-        }
-        while true do
-            for k, square in reclaimGrid do
-                DrawCircle(square, 10, '0000FF')
-            end
-            WaitTicks(2)
-        end
-
-    end,
-
     drawMainRestricted = function(self)
         coroutine.yield(100)
         local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(self)
@@ -2449,30 +2409,6 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
-    UnderEnergyThreshold = function(self)
-        if not self.RNG then
-            return RNGAIBrainClass.UnderEnergyThreshold(self)
-        end
-    end,
-
-    OverEnergyThreshold = function(self)
-        if not self.RNG then
-            return RNGAIBrainClass.OverEnergyThreshold(self)
-        end
-    end,
-
-    UnderMassThreshold = function(self)
-        if not self.RNG then
-            return RNGAIBrainClass.UnderMassThreshold(self)
-        end
-    end,
-
-    OverMassThreshold = function(self)
-        if not self.RNG then
-            return RNGAIBrainClass.OverMassThreshold(self)
-        end
-    end,
-
     PickEnemyRNG = function(self)
         while true do
             self:PickEnemyLogicRNG()
@@ -2649,41 +2585,34 @@ AIBrain = Class(RNGAIBrainClass) {
                 for k, v in armyStrengthTable do
                     if v.Brain.Status ~= 'Defeat' then
                         -- Dont' target self
-                        if k == selfIndex then
-                            continue
-                        end
-
-                        -- Ignore allies
-                        if not v.Enemy then
-                            continue
-                        end
-
-                        -- If we have a better candidate; ignore really weak enemies
-                        if enemy and v.Strength < 20 then
-                            continue
-                        end
-
-                        if v.Strength == 0 then
-                            local name = v.Brain.Nickname
-                            --RNGLOG('* AI-RNG: Name is'..name)
-                            --RNGLOG('* AI-RNG: v.strenth is 0')
-                            if name ~= 'civilian' then
-                                --RNGLOG('* AI-RNG: Inserted Name is '..name)
-                                RNGINSERT(enemyTable, v.Brain)
+                        if v.Enemy and k ~= selfIndex then
+                            -- If we have a better candidate; ignore really weak enemies
+                            if enemy and v.Strength < 20 then
+                                continue
                             end
-                            continue
-                        end
 
-                        -- The closer targets are worth more because then we get their mass spots
-                        local distanceWeight = 0.1
-                        local distance = VDist3(self:GetStartVector3f(), v.Position)
-                        local threatWeight = (1 / (distance * distanceWeight)) * v.Strength
-                        --RNGLOG('* AI-RNG: armyStrengthTable Strength is :'..v.Strength)
-                        --RNGLOG('* AI-RNG: Threat Weight is :'..threatWeight)
-                        if not enemy or threatWeight > enemyStrength then
-                            enemy = v.Brain
-                            enemyStrength = threatWeight
-                            --RNGLOG('* AI-RNG: Enemy Strength is'..enemyStrength)
+                            if v.Strength == 0 then
+                                local name = v.Brain.Nickname
+                                --RNGLOG('* AI-RNG: Name is'..name)
+                                --RNGLOG('* AI-RNG: v.strenth is 0')
+                                if name ~= 'civilian' then
+                                    --RNGLOG('* AI-RNG: Inserted Name is '..name)
+                                    RNGINSERT(enemyTable, v.Brain)
+                                end
+                                continue
+                            end
+
+                            -- The closer targets are worth more because then we get their mass spots
+                            local distanceWeight = 0.1
+                            local distance = VDist3(self:GetStartVector3f(), v.Position)
+                            local threatWeight = (1 / (distance * distanceWeight)) * v.Strength
+                            --RNGLOG('* AI-RNG: armyStrengthTable Strength is :'..v.Strength)
+                            --RNGLOG('* AI-RNG: Threat Weight is :'..threatWeight)
+                            if not enemy or threatWeight > enemyStrength then
+                                enemy = v.Brain
+                                enemyStrength = threatWeight
+                                --RNGLOG('* AI-RNG: Enemy Strength is'..enemyStrength)
+                            end
                         end
                     end
                 end

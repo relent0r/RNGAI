@@ -434,10 +434,15 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local lastfinaldist=0
             self.navigating = true
             if not self.path and self.BuilderData.Position and self.BuilderData.CutOff then
-                self.path = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.BuilderData.Position, 1, 150,80)
+                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.BuilderData.Position, 1, 150,80)
+                self.path = path
+                if not path then
+                    LOG('No path due to '..repr(reason))
+                end
             end
             if not self.path then
                 self:LogDebug(string.format('platoon is going to use transport'))
+                
                 self:ChangeState(self.Transporting)
                 return
             end

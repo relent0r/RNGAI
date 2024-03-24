@@ -553,13 +553,6 @@ StructureManager = Class {
         for _, v in self.Factories.NAVAL[3].HQCount do
             totalNavalT3HQCount = totalNavalT3HQCount + v
         end
-        for _, v in self.Brain.BuilderManagers do
-            if v.FactoryManager.LocationType == self.Brain.BrainIntel.ActiveExpansion and v.FactoryManager.LocationActive then
-                --RNGLOG('ActiveExpansion during buildermanager loop is '..v.FactoryManager.LocationType)
-                activeExpansion = v.FactoryManager.LocationType
-                break
-            end
-        end
 
         -- HQ Upgrades
         local mexSpend = self.Brain.EcoManager.TotalMexSpend or 0
@@ -997,6 +990,13 @@ StructureManager = Class {
                         end
                     end
                 end
+            end
+        end
+        for _, v in self.Brain.BuilderManagers do
+            if v.FactoryManager.LocationType == self.Brain.BrainIntel.ActiveExpansion and v.FactoryManager.LocationActive then
+                --RNGLOG('ActiveExpansion during buildermanager loop is '..v.FactoryManager.LocationType)
+                activeExpansion = v.FactoryManager.LocationType
+                break
             end
         end
         if activeExpansion then

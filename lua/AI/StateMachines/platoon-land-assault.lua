@@ -267,6 +267,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             if not path then
                 --LOG('LandAssault trying to take transport')
                 self:LogDebug(string.format('platoon is going to use transport'))
+                LOG('No path due to '..repr(reason))
                 self:ChangeState(self.Transporting)
                 return
             end
