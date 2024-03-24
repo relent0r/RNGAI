@@ -4295,53 +4295,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             coroutine.yield( 2 )
         end
     end,
-
-    AdjacentZoneControlCheck = function(self, aiBrain)
-        local enemyX, enemyZ
-        if aiBrain:GetCurrentEnemy() then
-            enemyX, enemyZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
-        end
-        local selectedPosition = false
-        local selectedZone = false
-        local highestThreat = 0
-        local currentZoneDistanceToHome = VDist3Sq(aiBrain.Zones.Land.zones[self.TargetZone].pos,aiBrain.BuilderManagers['MAIN'].Position)
-       --RNGLOG('Performing defensive adjacent zone check')
-        for k, v in aiBrain.Zones.Land.zones[self.TargetZone].edges do
-            if v.zone.enemylandthreat > 0 then
-                local currentEdgeDistanceToHome = VDist3Sq(v.zone.pos,aiBrain.BuilderManagers['MAIN'].Position)
-                if currentEdgeDistanceToHome < currentZoneDistanceToHome and v.zone.enemylandthreat > highestThreat then
-                    highestThreat = v.zone.enemylandthreat
-                    currentZoneDistanceToHome = currentEdgeDistanceToHome
-                    selectedPosition = v.zone.pos
-                    selectedZone = v.zone.id
-                end
-            end
-        end
-        if selectedPosition then
-           --RNGLOG('Moving to protect zone closer to base')
-            return false, selectedZone, selectedPosition
-        end
-       --RNGLOG('No defensive adjacent zone required')
-       --RNGLOG('Looking to see if we can defend the existing zone')
-        if enemyX and enemyZ then
-            local enemySide = 0
-            for k, v in aiBrain.Zones.Land.zones[self.TargetZone].edges do
-                if v.zone.control > 0 then
-                    local distanceToEnemy = VDist2Sq(v.zone.pos[1],v.zone.pos[3],enemyX, enemyZ)
-                    if enemySide == 0 or distanceToEnemy < enemySide then
-                        enemySide = distanceToEnemy
-                        selectedZone = v.zone.id
-                        selectedPosition = v.midpoint
-                    end
-                end
-            end
-            if selectedZone then
-                return true, selectedZone, selectedPosition
-            end
-        end
-        return false, nil, nil
-    end,
-    
+   
     MassRaidRNG = function(self)
         local aiBrain = self:GetBrain()
         --RNGLOG('Platoon ID is : '..self:GetPlatoonUniqueName())

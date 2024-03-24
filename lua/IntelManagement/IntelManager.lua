@@ -222,7 +222,6 @@ IntelManager = Class {
         self:ForkThread(self.ZoneAlertThreadRNG)
         self:ForkThread(self.ZoneFriendlyIntelMonitorRNG)
         self:ForkThread(self.ConfigureResourcePointZoneID)
-        self:ForkThread(self.ZoneControlMonitorRNG)
         self:ForkThread(self.ZoneIntelAssignment)
         self:ForkThread(self.EnemyPositionAngleAssignment)
         self:ForkThread(self.IntelGridThread, self.Brain)
@@ -323,80 +322,8 @@ IntelManager = Class {
         --RNGLOG('Markers infection completed at '..GetGameTimeSeconds())
     end,
 
-    ZoneControlMonitorRNG = function(self)
-        -- This is doing the maths stuff on understand the zone control level
-        -- The higher the control the more the enemy owns it, the lower the more we do.
-        -- So 0 control means we own it, 2 means the enemy owns it
-        self:WaitForZoneInitialization()
-        local Zones = {
-            'Land',
-        }
-        while self.Brain.Status ~= "Defeat" do
-            for k, v in Zones do
-                for k1, v1 in self.Brain.Zones[v].zones do
-                    local resourcePoints = v1.resourcevalue
-                    local control = 1
-                    local tempMyControl = 0
-                    local tempEnemyControl = 0
-                    -- Work out our control
-                    --RNGLOG('Detailed Control ')
-                    if self.Brain.smanager.mex[v1.id].T1 then
-                        tempMyControl = tempMyControl + self.Brain.smanager.mex[v1.id].T1
-                    end
-                    if self.Brain.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T1 then
-                        tempMyControl = tempMyControl + self.Brain.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T1
-                    end
-                    if self.Brain.smanager.mex[v1.id].T2 then
-                        tempMyControl = tempMyControl + self.Brain.smanager.mex[v1.id].T2
-                    end
-                    if self.Brain.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T2 then
-                        tempMyControl = tempMyControl + self.Brain.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T2
-                    end
-                    if self.Brain.smanager.mex[v1.id].T3 then
-                        tempMyControl = tempMyControl + self.Brain.smanager.mex[v1.id].T3
-                    end
-                    if self.Brain.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T3 then
-                        tempMyControl = tempMyControl + self.Brain.BrainIntel.SelfThreat.AllyExtractorTable[v1.id].T3
-                    end
-                    --[[
-                    if self.Brain.smanager.hydrocarbon[v1.id].hydrocarbon then
-                        tempMyControl = tempMyControl + self.Brain.smanager.hydrocarbon[v1.id].hydrocarbon
-                    end
-                    ]]
-                    --LOG('Total mexes in zone '..v1.id..' are'..tempMyControl)
-                    --LOG('Resource Value of Zone is '..v1.resourcevalue)
-                    tempMyControl = tempMyControl / resourcePoints
-                    --LOG('Resource Value is '..v1.resourcevalue)
-                    --LOG('Control Value after calculation'..tempMyControl)
-                    if tempMyControl > 0 then
-                        control = control - tempMyControl
-                    end
-                    if self.Brain.emanager.mex[v1.id].T1 then
-                        tempEnemyControl = tempEnemyControl + self.Brain.emanager.mex[v1.id].T1
-                    end
-                    if self.Brain.emanager.mex[v1.id].T2 then
-                        tempEnemyControl = tempEnemyControl + self.Brain.emanager.mex[v1.id].T2
-                    end
-                    if self.Brain.emanager.mex[v1.id].T3 then
-                        tempEnemyControl = tempEnemyControl + self.Brain.emanager.mex[v1.id].T3
-                    end
-                    --RNGLOG('Enemy Mexes in zone '..v1.id..' are '..tempMyControl)
-                    --RNGLOG('Weight of zone '..v1.resourcevalue)
-                    tempEnemyControl = tempEnemyControl / resourcePoints
-                    --LOG('Enemy Temp control value after calculation '..tempEnemyControl)
-                    if tempEnemyControl > 0 then
-                        control = control + tempEnemyControl
-                    end
-                    --LOG('Total Control of zone '..v1.id..' is '..control)
-                    v1.control = control
-                end
-            end
-            coroutine.yield(50)
-        end
-    end,
-
     GetClosestZone = function(self, aiBrain, platoon, controlRequired)
-        local control = 1
+        
         if PlatoonExists(aiBrain, platoon) then
             local zoneSet = false
             if aiBrain.ZonesInitialized then
@@ -409,16 +336,17 @@ IntelManager = Class {
                 local platoonPosition = platoon:GetPlatoonPosition()
                 local bestZoneDist
                 local bestZone
+                local control
                 for k, v in zoneSet do
                     if controlRequired then
-                        control = v.control
+                        control = aiBrain.GridPresence:GetInferredStatus(v.pos)
                     end
                     local dx = platoonPosition[1] - v.pos[1]
                     local dz = platoonPosition[3] - v.pos[3]
                     local zoneDist = dx * dx + dz * dz
                     if (not bestZoneDist or zoneDist < bestZoneDist) and NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition, v.pos) then
                         if controlRequired then
-                            if control < 1 then
+                            if control == 'Allied' then
                                 bestZoneDist = zoneDist
                                 bestZone = v.id
                             end
@@ -477,23 +405,21 @@ IntelManager = Class {
                     --RNGLOG('RNGAI : Zone Raid Selection Query Processing')
                     local startPosZones = {}
                     local platoonPosition = platoon:GetPlatoonPosition()
-                    for k, v in aiBrain.Zones.Land.zones do
+                    for k, v in zoneSet do
                         if not v.startpositionclose then
                             if platoonPosition then
                                 local compare
-                                local enemyDistanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],enemyX, enemyZ)
-                                local zoneDistanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],platoonPosition[1], platoonPosition[3])
-                                local enemyModifier = aiBrain.Zones.Land.zones[v.id].enemylandthreat
-                                if not zoneSet[v.id].control then
-                                    --RNGLOG('control is nil, here is the table '..repr(zoneSet[v.id]))
-                                end
+                                local enemyDistanceModifier = VDist2(v.pos[1],v.pos[3],enemyX, enemyZ)
+                                local zoneDistanceModifier = VDist2(v.pos[1],v.pos[3],platoonPosition[1], platoonPosition[3])
+                                local enemyModifier = v.enemylandthreat
+                                local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
                                 if enemyModifier > 0 then
                                     enemyModifier = enemyModifier * 10
                                 end
-                                --RNGLOG('Start Distance Calculation '..( 20000 / enemyDistanceModifier )..' Zone Distance Calculation'..(20000 / zoneDistanceModifier)..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
-                                --RNGLOG('Friendly threat at zone is '..zoneSet[v.id].friendlythreat)
-                                if zoneSet[v.id].control > 0.5 and zoneSet[v.id].friendlythreat < 10 then
-                                    compare = (20000 / zoneDistanceModifier) + ( 20000 / enemyDistanceModifier ) * zoneSet[v.id].resourcevalue * zoneSet[v.id].control - enemyModifier
+                                --RNGLOG('Start Distance Calculation '..( 20000 / enemyDistanceModifier )..' Zone Distance Calculation'..(20000 / zoneDistanceModifier)..' Resource Value '..v.resourcevalue..' Control Value '..status)
+                                --RNGLOG('Friendly threat at zone is '..v.friendlythreat)
+                                if status ~= 'Allied' and v.friendlythreat < 10 then
+                                    compare = (20000 / zoneDistanceModifier) + ( 20000 / enemyDistanceModifier ) * v.resourcevalue - enemyModifier
                                 end
                                 if compare then
                                     --RNGLOG('Compare variable '..compare)
@@ -517,13 +443,14 @@ IntelManager = Class {
                         for k, v in startPosZones do
                             if platoonPosition then
                                 local compare
-                                local enemyDistanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],enemyX, enemyZ)
-                                local zoneDistanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],platoonPosition[1], platoonPosition[3])
-                                --RNGLOG('Start Distance Calculation '..( 20000 / enemyDistanceModifier )..' Zone Distance Calculation'..(20000 / zoneDistanceModifier)..' Resource Value '..zoneSet[v.id].resourcevalue..' Control Value '..zoneSet[v.id].control)
-                                if zoneSet[v.zone.id].control <= 0 then
+                                local enemyDistanceModifier = VDist2(v.pos[1],v.pos[3],enemyX, enemyZ)
+                                local zoneDistanceModifier = VDist2(v.pos[1],v.pos[3],platoonPosition[1], platoonPosition[3])
+                                local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
+                                --RNGLOG('Start Distance Calculation '..( 20000 / enemyDistanceModifier )..' Zone Distance Calculation'..(20000 / zoneDistanceModifier)..' Resource Value '..v.resourcevalue..' Control Value '..status)
+                                if status == 'Allied' then
                                     compare = (20000 / zoneDistanceModifier) + ( 20000 / enemyDistanceModifier )
                                 else
-                                    compare = (20000 / zoneDistanceModifier) + ( 20000 / enemyDistanceModifier ) * zoneSet[v.id].resourcevalue * zoneSet[v.id].control
+                                    compare = (20000 / zoneDistanceModifier) + ( 20000 / enemyDistanceModifier ) * v.resourcevalue
                                 end
                                 if compare then
                                     --RNGLOG('Compare variable '..compare)
@@ -533,7 +460,7 @@ IntelManager = Class {
                                         selection = compare
                                         zoneSelection = v.id
                                         --RNGLOG('Zone Query Select priority 2nd pass start locations'..selection)
-                                        --RNGLOG('Zone target location is '..repr(zoneSet[v.id].pos))
+                                        --RNGLOG('Zone target location is '..repr(v.pos))
                                     end
                                 end
                             end
@@ -545,16 +472,17 @@ IntelManager = Class {
                 elseif type == 'control' then
                     local compare = 0
                    --RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
-                    for k, v in aiBrain.Zones.Land.zones do
-                        local distanceModifier = VDist3(aiBrain.Zones.Land.zones[v.id].pos,aiBrain.BrainIntel.StartPos)
+                    for k, v in zoneSet do
+                        local distanceModifier = VDist3(v.pos,aiBrain.BrainIntel.StartPos)
                         local enemyModifier = 1
                         local startPos = 1
                         local antiairdesire = 1
-                        if zoneSet[v.id].enemylandthreat > 0 then
+                        local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
+                        if v.enemylandthreat > 0 then
                             enemyModifier = enemyModifier + 2
                         end
-                        if zoneSet[v.id].friendlythreat > 0 then
-                            if zoneSet[v.id].enemylandthreat == 0 or zoneSet[v.id].enemylandthreat < zoneSet[v.id].friendlythreat then
+                        if v.friendlythreat > 0 then
+                            if v.enemylandthreat == 0 or v.enemylandthreat < v.friendlythreat then
                                 enemyModifier = enemyModifier - 1
                             else
                                 enemyModifier = enemyModifier + 1
@@ -563,26 +491,26 @@ IntelManager = Class {
                         if enemyModifier < 0 then
                             enemyModifier = 0.5
                         end
-                        local controlValue = zoneSet[v.id].control
-                        if controlValue <= 0 then
+                        local controlValue 1
+                        if status =='Allied' then
                             controlValue = 0.25
                         end
-                        local resourceValue = zoneSet[v.id].resourcevalue or 1
+                        local resourceValue = v.resourcevalue or 1
                         if resourceValue then
-                           --RNGLOG('Current platoon zone '..platoon.Zone..' target zone is '..v.zone.id..' enemythreat is '..zoneSet[v.zone.id].enemylandthreat..' friendly threat is '..zoneSet[v.zone.id].friendlythreat)
-                           --RNGLOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
+                           --RNGLOG('Current platoon zone '..platoon.Zone..' target zone is '..v.zone.id..' enemythreat is '..v.enemylandthreat..' friendly threat is '..v.friendlythreat)
+                           --RNGLOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(v.pos)..' Enemy Modifier is '..enemyModifier)
                         else
                             --RNGLOG('No resource against zone '..v.zone.id)
                         end
-                        if zoneSet[v.id].startpositionclose then
+                        if v.startpositionclose then
                             startPos = 0.7
                         end
-                        if zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlythreat then
-                            if platoon.CurrentPlatoonThreat and platoon.CurrentPlatoonThreat < zoneSet[v.id].enemylandthreat then
+                        if v.enemylandthreat > v.friendlythreat then
+                            if platoon.CurrentPlatoonThreat and platoon.CurrentPlatoonThreat < v.enemylandthreat then
                                 enemyDanger = 0.4
                             end
                         end
-                        if  zoneSet[v.id].friendlyantiairthreat > 5 then
+                        if v.friendlyantiairthreat > 5 then
                             antiairdesire = 0.5
                         end
                        --[[ if aiBrain.RNGDEBUG then
@@ -606,15 +534,16 @@ IntelManager = Class {
                         end
                     end
                     if not selection then
-                        for k, v in aiBrain.Zones.Land.zones do
+                        for k, v in zoneSet do
                             if not v.startpositionclose then
-                                local distanceModifier = VDist2(aiBrain.Zones.Land.zones[v.id].pos[1],aiBrain.Zones.Land.zones[v.id].pos[3],enemyX, enemyZ)
+                                local distanceModifier = VDist2(v.pos[1],v.pos[3],enemyX, enemyZ)
                                 local enemyModifier = 1
-                                if zoneSet[v.id].enemylandthreat > 0 then
+                                local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
+                                if v.enemylandthreat > 0 then
                                     enemyModifier = enemyModifier + 2
                                 end
-                                if zoneSet[v.id].friendlythreat > 0 then
-                                    if zoneSet[v.id].enemylandthreat < zoneSet[v.id].friendlythreat then
+                                if v.friendlythreat > 0 then
+                                    if v.enemylandthreat < v.friendlythreat then
                                         enemyModifier = enemyModifier - 1
                                     else
                                         enemyModifier = enemyModifier + 1
@@ -623,12 +552,12 @@ IntelManager = Class {
                                 if enemyModifier < 0 then
                                     enemyModifier = 0
                                 end
-                                local controlValue = zoneSet[v.id].control
-                                if controlValue <= 0 then
+                                local controlValue = 1
+                                if status == 'Allied' 0 then
                                     controlValue = 0.1
                                 end
-                                local resourceValue = zoneSet[v.id].resourcevalue or 1
-                               --RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(zoneSet[v.zone.id].pos)..' Enemy Modifier is '..enemyModifier)
+                                local resourceValue = v.resourcevalue or 1
+                               --RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(v.pos)..' Enemy Modifier is '..enemyModifier)
                                 compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier
                                --RNGLOG('Compare variable '..compare)
                                 if compare > 0 then
@@ -654,34 +583,33 @@ IntelManager = Class {
                     --local threatRequired
                     local compare = 0
                    --RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
-                    for k, v in aiBrain.Zones.Land.zones do
-                        local distanceModifier = VDist3(aiBrain.Zones.Land.zones[v.id].pos, aiBrain.BrainIntel.StartPos)
+                    for k, v in zoneSet do
+                        local distanceModifier = VDist3(v.pos, aiBrain.BrainIntel.StartPos)
                         local enemyModifier = 1
                         local startPos = 1
-            
-                        if zoneSet[v.id].friendlythreat > 0 and zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlythreat then
-                            enemyModifier = enemyModifier + 0.5
-                        end
-                        enemyModifier = math.max(enemyModifier, 1.0)  -- Ensure enemyModifier is not less than 1
-                        local controlValue = math.min(math.max(zoneSet[v.id].control, 0), 1.75)  -- Clamp controlValue between 0 and 1.75
-                        local resourceValue = zoneSet[v.id].resourcevalue or 1
-                        if zoneSet[v.id].startpositionclose then
-                            startPos = 0.7
-                        end
-                
-                        if zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlythreat then
-                            enemyDanger = 0.4
-                        end
-                
-                        if platoon.Zone == v.id and zoneSet[v.id].enemyairthreat == 0 then
-                            enemyDanger = 0
-                        end
-                
-                        compare = (20000 / distanceModifier) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger
-                
-                        if compare > selection then
-                            selection = compare
-                            zoneSelection = v.id
+                        local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
+                        if status ~= 'Hostile' then
+                            if v.friendlythreat > 0 and v.enemylandthreat > v.friendlythreat then
+                                enemyModifier = enemyModifier + 0.5
+                            end
+                            enemyModifier = math.max(enemyModifier, 1.0)  -- Ensure enemyModifier is not less than 1
+                            local resourceValue = zoneSet[v.id].resourcevalue or 1
+                            if zoneSet[v.id].startpositionclose then
+                                startPos = 0.7
+                            end
+                    
+                            if zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlythreat then
+                                enemyDanger = 0.4
+                            end
+                    
+                            if platoon.Zone == v.id and zoneSet[v.id].enemyairthreat == 0 then
+                                enemyDanger = 0
+                            end
+                            compare = (20000 / distanceModifier) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger
+                            if compare > selection then
+                                selection = compare
+                                zoneSelection = v.id
+                            end
                         end
                     end
                     if zoneSelection then
@@ -714,7 +642,8 @@ IntelManager = Class {
         while self.Brain.Status ~= "Defeat" do
             for k, v in Zones do
                 for k1, v1 in self.Brain.Zones[v].zones do
-                    if not v1.startpositionclose and v1.control < 1 and v1.enemylandthreat > 0 then
+                    local status = self.Brain.GridPresence:GetInferredStatus(v1.pos)
+                    if not v1.startpositionclose and status == 'Allied' and v1.enemylandthreat > 0 then
                         --RNGLOG('Try create zone alert for threat')
                         self.Brain:BaseMonitorZoneThreatRNG(v1.id, v1.enemylandthreat)
                     end
