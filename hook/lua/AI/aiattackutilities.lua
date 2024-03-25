@@ -100,42 +100,6 @@ function PlatoonGeneratePathToRNG(platoonLayer, start, destination, optMaxMarker
     return path, false, distance
 end
 
-function GetPathGraphsRNG()
-    if ScenarioInfo.PathGraphsRNG then
-        return ScenarioInfo.PathGraphsRNG
-    else
-        if ScenarioInfo.MarkersInfectedRNG then
-            ScenarioInfo.PathGraphsRNG = {}
-        else 
-            return false
-        end
-    end
-
-    local markerGroups = {
-        Land = AIUtils.AIGetMarkerLocationsEx(nil, 'Land Path Node') or {},
-        Water = AIUtils.AIGetMarkerLocationsEx(nil, 'Water Path Node') or {},
-        Air = AIUtils.AIGetMarkerLocationsEx(nil, 'Air Path Node') or {},
-        Amphibious = AIUtils.AIGetMarkerLocationsEx(nil, 'Amphibious Path Node') or {},
-    }
-
-    for gk, markerGroup in markerGroups do
-        for mk, marker in markerGroup do
-            --Create stuff if it doesn't exist
-            ScenarioInfo.PathGraphsRNG[gk] = ScenarioInfo.PathGraphsRNG[gk] or {}
-            ScenarioInfo.PathGraphsRNG[gk][marker.graph] = ScenarioInfo.PathGraphsRNG[gk][marker.graph] or {}
-            -- If the marker has no adjacentTo then don't use it. We can't build a path with this node.
-            if not (marker.adjacentTo) then
-                WARN('*AI DEBUG: GetPathGraphsRNG(): Path Node '..marker.name..' has no adjacentTo entry!')
-                continue
-            end
-            --Add the marker to the graph.
-            ScenarioInfo.PathGraphsRNG[gk][marker.graph][marker.name] = {name = marker.name, layer = gk, graphName = marker.graph, position = marker.position, RNGArea = marker.RNGArea, BestArmy = marker.bestarmy ,adjacent = STR_GetTokens(marker.adjacentTo, ' '), color = marker.color}
-        end
-    end
-
-    return ScenarioInfo.PathGraphsRNG or {}
-end
-
 -- Sproutos work
 
 function GetRealThreatAtPosition(aiBrain, position, range )
@@ -167,77 +131,6 @@ function GetRealThreatAtPosition(aiBrain, position, range )
     end
 
     return surthreat, airthreat
-end
-
--- Sproutos work
-function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange, destination, threatMax, airthreatMax, threatType, layer, safeZone)
-
-    local markerlist = {}
-    local VDist2Sq = VDist2Sq
-
-    -- locate the requested markers within markerrange of the supplied location	that the platoon can safely land at
-    for _,v in markerTypes do
-    
-        markerlist = RNGCAT( markerlist, AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, v, destination, markerrange, 0, threatMax, 0, 'AntiSurface') )
-    end
-    --RNGLOG('Marker List is '..repr(markerlist))
-    
-    -- sort the markers by closest distance to final destination
-    if not safeZone then
-        RNGSORT( markerlist, function(a,b) return VDist2Sq( a.Position[1],a.Position[3], destination[1],destination[3] ) < VDist2Sq( b.Position[1],b.Position[3], destination[1],destination[3] )  end )
-    else
-        RNGSORT( markerlist, function(a,b) return VDist2Sq( a.Position[1],a.Position[3], destination[1],destination[3] ) > VDist2Sq( b.Position[1],b.Position[3], destination[1],destination[3] )  end )
-        --RNGLOG('SafeZone Sorted marker list '..repr(markerlist))
-    end
-   
-    -- loop thru each marker -- see if you can form a safe path on the surface 
-    -- and a safe path for the transports -- use the first one that satisfies both
-    for _, v in markerlist do
-
-        -- test the real values for that position
-        local stest, atest = GetRealThreatAtPosition(aiBrain, v.Position, 75 )
-        coroutine.yield(1)
-        --RNGLOG('stest is '..stest..'atest is '..atest)
-
-        if stest <= threatMax and atest <= airthreatMax then
-            --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." FINDSAFEDROP for "..repr(destination).." is testing "..repr(v.Position).." "..v.Name)
-            --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." Position "..repr(v.Position).." says Surface threat is "..stest.." vs "..threatMax.." and Air threat is "..atest.." vs "..airthreatMax )
-            --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." drop distance is "..repr( VDist3(destination, v.Position) ) )
-            -- can the platoon path safely from this marker to the final destination 
-            if NavUtils.CanPathTo(layer, v.Position, destination) then
-                return v.Position, v.Name
-            end
-        end
-    end
-    --RNGLOG('Safe landing Location returning false')
-    return false, nil
-end
-
-function NormalizeVector( v )
-	if v.x then
-		v = {v.x, v.y, v.z}
-    end
-    local length = math.sqrt( math.pow( v[1], 2 ) + math.pow( v[2], 2 ) + math.pow(v[3], 2 ) )
-
-    if length > 0 then
-        local invlength = 1 / length
-        return Vector( v[1] * invlength, v[2] * invlength, v[3] * invlength )
-    else
-        return Vector( 0,0,0 )
-    end
-end
-
-function GetDirectionVector( v1, v2 )
-    return NormalizeVector( Vector(v1[1] - v2[1], v1[2] - v2[2], v1[3] - v2[3]) )
-end
-
-function GetDirectionInDegrees( v1, v2 )
-	local vec = GetDirectionVector( v1, v2)
-
-	if vec[1] >= 0 then
-		return math.acos(vec[3]) * (360/(math.pi*2))
-	end
-	return 360 - (math.acos(vec[3]) * (360/(math.pi*2)))
 end
 
 function AIFindUnitRadiusThreatRNG(aiBrain, alliance, priTable, position, radius, tMin, tMax, tRing)
