@@ -2794,14 +2794,14 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('Platoon Distress Table'..repr(self.BaseMonitor.ZoneAlertTable))
     end,
 
-    BaseMonitorPlatoonDistressRNG = function(self, platoon, threat)
+    PlatoonReinforcementRequestRNG = function(self, platoon, threat, location)
         if not self.BaseMonitor then
             return
         end
 
         local found = false
         if self.BaseMonitor.PlatoonAlertSounded == false then
-            RNGINSERT(self.BaseMonitor.PlatoonDistressTable, {Platoon = platoon, Threat = threat})
+            RNGINSERT(self.BaseMonitor.PlatoonDistressTable, {Platoon = platoon, ThreatType = threatType, LocationType= Location})
         else
             for k, v in self.BaseMonitor.PlatoonDistressTable do
                 -- If already calling for help, don't add another distress call
@@ -2815,10 +2815,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('Platoon doesnt already exist, adding')
                 RNGINSERT(self.BaseMonitor.PlatoonDistressTable, {Platoon = platoon, Threat = threat})
             end
-        end
-        -- Create the distress call if it doesn't exist
-        if not self.BaseMonitor.PlatoonDistressThread then
-            self.BaseMonitor.PlatoonDistressThread = self:ForkThread(self.BaseMonitorPlatoonDistressThreadRNG)
         end
         --RNGLOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
     end,
@@ -3008,71 +3004,6 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             --self.BaseMonitor.ZoneAlertTable = self:RebuildTable(self.BaseMonitor.ZoneAlertTable)
             --RNGLOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
-            --RNGLOG('BaseMonitor time is '..self.BaseMonitor.BaseMonitorTime)
-            WaitSeconds(self.BaseMonitor.BaseMonitorTime)
-        end
-    end,
-
-    BaseMonitorPlatoonDistressThreadRNG = function(self)
-        self.BaseMonitor.PlatoonAlertSounded = true
-        while true do
-            RNGLOG('MassEfficiencyOverTime --'..self.EconomyOverTimeCurrent.MassEfficiencyOverTime)
-            local numPlatoons = 0
-            for k, v in self.BaseMonitor.PlatoonDistressTable do
-                if self:PlatoonExists(v.Platoon) then
-                    local threat = 0
-                    local myThreat = 0
-                    local platoonPos = v.Platoon:GetPlatoonPosition()
-                    if RUtils.PositionOnWater(platoonPos[1], platoonPos[3]) then
-                        threat = GetThreatAtPosition(self, v.Platoon:GetPlatoonPosition(), self.BrainIntel.IMAPConfig.Rings, true, 'AntiSub')
-                        local unitsAtPosition = GetUnitsAroundPoint(self, categories.ANTINAVY * categories.MOBILE,  platoonPos, 60, 'Ally')
-                        for k, v in unitsAtPosition do
-                            if v and not v.Dead then
-                                if v.Blueprint.Defense.SubThreatLevel ~= nil then
-                                    myThreat = myThreat + v.Blueprint.Defense.SubThreatLevel
-                                end
-                            end
-                        end
-                    else
-                        threat = GetThreatAtPosition(self, v.Platoon:GetPlatoonPosition(), self.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
-                        local unitsAtPosition = GetUnitsAroundPoint(self, categories.LAND * categories.MOBILE,  platoonPos, 60, 'Ally')
-                        for k, v in unitsAtPosition do
-                            if v and not v.Dead then
-                                if v.Blueprint.Defense.SurfaceThreatLevel ~= nil then
-                                    myThreat = myThreat + v.Blueprint.Defense.SurfaceThreatLevel
-                                end
-                            end
-                        end
-                    end
-                    --RNGLOG('Platoon Threat Validation')
-                    --RNGLOG('* AI-RNG: Threat of attacker'..threat)
-                    --RNGLOG('* AI-RNG: Threat of platoon'..myThreat)
-                    --RNGLOG('* AI-RNG: Threat of platoon with multiplier'..myThreat * 1.5)
-                    -- Platoons still threatened
-                    if threat and threat > (myThreat * 1.3) then
-                       --RNGLOG('* AI-RNG: Created Threat Alert')
-                        v.Threat = threat
-                        numPlatoons = numPlatoons + 1
-                    -- Platoon not threatened
-                    else
-                        self.BaseMonitor.PlatoonDistressTable[k] = nil
-                        v.Platoon.DistressCall = false
-                    end
-                else
-                    self.BaseMonitor.PlatoonDistressTable[k] = nil
-                end
-            end
-
-            -- If any platoons still want help; continue sounding
-            --RNGLOG('Alerted Platoons '..numPlatoons)
-            if numPlatoons > 0 then
-                self.BaseMonitor.PlatoonAlertSounded = true
-            else
-                self.BaseMonitor.PlatoonAlertSounded = false
-            end
-            self.BaseMonitor.PlatoonDistressTable = self:RebuildTable(self.BaseMonitor.PlatoonDistressTable)
-            --RNGLOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
-            --RNGLOG('Number of platoon alerts currently '..table.getn(self.BaseMonitor.PlatoonDistressTable))
             --RNGLOG('BaseMonitor time is '..self.BaseMonitor.BaseMonitorTime)
             WaitSeconds(self.BaseMonitor.BaseMonitorTime)
         end

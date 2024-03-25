@@ -4177,67 +4177,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             coroutine.yield(1)
             --RNGLOG('Feeder starting loop')
             IssueClearCommands(self:GetPlatoonUnits())
-            if platoonType == 'fighter' then
-                local targetPlatoon = StateUtils.GetClosestPlatoonRNG(self, 'FighterBehavior', 62500)
-                if not targetPlatoon then
-                    --LOG('Feeder No FighterBehavior platoon found, make new platoon')
-                    feederTimeout = feederTimeout + 1
-                    if feederTimeout > 5 then
-                        --RNGLOG('Feeder no target platoon found, starting new airhuntai')
-                        --RNGLOG('Venting to new trueplatoon platoon')
-                        local platoonUnits = GetPlatoonUnits(self)
-                        local ventPlatoon = aiBrain:MakePlatoon('', '')
-                        ventPlatoon.PlanName = 'RNGAI Air Intercept'
-                        ventPlatoon.PlatoonData.AvoidBases =  self.PlatoonData.AvoidBases
-                        ventPlatoon.PlatoonData.SearchRadius =  maxRadius
-                        ventPlatoon.PlatoonData.LocationType = self.PlatoonData.LocationType
-                        ventPlatoon.PlatoonData.PlatoonLimit = self.PlatoonData.PlatoonLimit
-                        ventPlatoon.PlatoonData.PrioritizedCategories = self.PlatoonData.PrioritizedCategories
-                        aiBrain:AssignUnitsToPlatoon(ventPlatoon, self:GetPlatoonUnits(), 'Attack', 'None')
-                        import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, targetPlatoon, self:GetPlatoonUnits())
-                    end
-                else
-                    --RNGLOG('Feeder target platoon found, trying to join')
-                    if not IsDestroyed(targetPlatoon) then
-                        if VDist3Sq(GetPlatoonPosition(self), GetPlatoonPosition(targetPlatoon)) < 900 then
-                            aiBrain:AssignUnitsToPlatoon(targetPlatoon, self:GetPlatoonUnits(), 'Attack', 'None')
-                        else
-                            while PlatoonExists(aiBrain, self) do
-                                coroutine.yield(1)
-                                --RNGLOG('Feeder target moving to found platoon')
-                                if IsDestroyed(targetPlatoon) then
-                                    break
-                                end
-                                local targetPlatPos = GetPlatoonPosition(targetPlatoon)
-                                if targetPlatPos then
-                                    IssueClearCommands(GetPlatoonUnits(self))
-                                    self:AggressiveMoveToLocation(targetPlatPos)
-                                end
-                                local myPlatoonPos = GetPlatoonPosition(self)
-                                local targetPlatoonPos = GetPlatoonPosition(targetPlatoon)
-                                local dx = myPlatoonPos[1] - targetPlatoonPos[1]
-                                local dz = myPlatoonPos[3] - targetPlatoonPos[3]
-                                local platDist = dx * dx + dz * dz
-                                if platDist < 900 then
-                                    if targetPlatoon.HoldingPosition then
-                                        local guardPos = targetPlatoon.HoldingPosition
-                                        local dx = myPlatoonPos[1] - guardPos[1]
-                                        local dz = myPlatoonPos[3] - guardPos[3]
-                                        local guardDist = dx * dx + dz * dz
-                                        if guardDist < 2500 then
-                                            IssueGuard(self:GetPlatoonUnits(), guardPos)
-                                        end
-                                    end
-                                    aiBrain:AssignUnitsToPlatoon(targetPlatoon, self:GetPlatoonUnits(), 'Attack', 'None')
-                                    coroutine.yield(5)
-                                    return
-                                end
-                                coroutine.yield(20)
-                            end
-                        end
-                    end
-                end
-            elseif platoonType == 'tank' then
+            if platoonType == 'tank' then
                 RNGLOG('tank feeder platoon firing')
                 local targetPlatoon = self:GetClosestPlatoonRNG('ZoneControlRNG', 62500)
                 if targetPlatoon then
@@ -6031,6 +5971,10 @@ Platoon = Class(RNGAIPlatoonClass) {
         if machineType == 'ACU' then
             --LOG('Starting ACU State')
             import("/mods/rngai/lua/ai/statemachines/platoon-acu.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+        elseif machineType == 'AirFeeder' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-air-feeder.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+        elseif machineType == 'LandFeeder' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-land-feeder.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         elseif machineType == 'LandCombat' then
             import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         elseif machineType == 'LandAssault' then
