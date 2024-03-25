@@ -24,9 +24,11 @@ BaseBuilderTemplate {
         
                 -- Land Unit Builders T1 --
                 'RNGAI ScoutLandBuilder',
+                'RNGAI LandBuilder T1',
+                'RNGAI LandBuilder T2',
+                'RNGAI LandBuilder T3',
                 'RNGAI Reaction Tanks Expansion',
                 'RNGAI Land AA 2',
-                'RNGAI TankLandBuilder Large Unmarked',
         
                 -- Land Unit Formers T1 --
                 'RNGAI ScoutLandFormer',
@@ -102,15 +104,12 @@ BaseBuilderTemplate {
         end
         --RNGLOG('* AI-RNG: Distance is ', distance)
         --RNGLOG('* AI-RNG: Position is ', repr(location))
-        if (not distance or distance > 1000) and spamBaseCheck then
-            --RNGLOG('* AI-RNG: Expansion return is 10')
-            return 10
-        elseif distance > 500 and spamBaseCheck then
+        if distance > 500 and spamBaseCheck then
             --RNGLOG('* AI-RNG: Expansion return is 25')
-            return 25
+            return 50
         elseif distance > 250 and spamBaseCheck then
             --RNGLOG('* AI-RNG: Expansion return is 50')
-            return 50
+            return 75
         elseif spamBaseCheck then
             --RNGLOG('* AI-RNG: Expansion return is 100')
             return 150

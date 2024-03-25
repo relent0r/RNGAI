@@ -328,7 +328,8 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if self.BuilderData.Retreat then
-                while not self.Dead and VDist3Sq(self:GetPlatoonPosition(), self.Home) > 100 do
+                local platPos = self:GetPlatoonPosition()
+                while not self.Dead and platPos and VDist3Sq(platPos, self.Home) > 100 do
                     coroutine.yield(25)
                 end
             end

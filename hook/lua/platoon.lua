@@ -1436,12 +1436,18 @@ Platoon = Class(RNGAIPlatoonClass) {
         elseif cons.CappingTemplate then
             local relativeTo = RNGCOPY(eng:GetPosition())
             --RNGLOG('relativeTo is'..repr(relativeTo))
+            local cappingRadius
+            if type(cons.Radius) == 'string' then
+                cappingRadius = aiBrain.OperatingAreas[cons.Radius]
+            else
+                cappingRadius = cons.Radius
+            end
             relative = true
             local pos = aiBrain.BuilderManagers[cons.LocationType].Position
             if not pos then
                 pos = relativeTo
             end
-            local refunits=AIUtils.GetOwnUnitsAroundPoint(aiBrain, cons.Categories, pos, cons.Radius, cons.ThreatMin,cons.ThreatMax, cons.ThreatRings)
+            local refunits=AIUtils.GetOwnUnitsAroundPoint(aiBrain, cons.Categories, pos, cappingRadius, cons.ThreatMin,cons.ThreatMax, cons.ThreatRings)
             local reference = RUtils.GetCappingPosition(aiBrain, eng, pos, refunits, baseTmpl, buildingTmpl)
             LOG('Capping template')
             RNGLOG('reference is '..repr(reference))
@@ -1471,8 +1477,8 @@ Platoon = Class(RNGAIPlatoonClass) {
         elseif cons.FireBase and cons.FireBaseRange then
             --DUNCAN - pulled out and uses alt finder
             reference, refName = AIUtils.AIFindFirebaseLocation(aiBrain, cons.LocationType, cons.FireBaseRange, cons.NearMarkerType,
-                                                cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType,
-                                                cons.MarkerUnitCount, cons.MarkerUnitCategory, cons.MarkerRadius)
+                cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType,
+                cons.MarkerUnitCount, cons.MarkerUnitCategory, cons.MarkerRadius)
             if not reference or not refName then
                 self:PlatoonDisband()
                 return
@@ -1486,7 +1492,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --DUNCAN - pulled out and uses alt finder
                 --RNGLOG('Aggressive Expansion Triggered')
                 reference, refName = AIUtils.AIFindAggressiveBaseLocationRNG(aiBrain, cons.LocationType, cons.EnemyRange,
-                                                    cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
+                    cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
                 if not reference or not refName then
                     --RNGLOG('No reference or refName from firebaselocaiton finder')
                     self:PlatoonDisband()
@@ -1513,16 +1519,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                 -- didn't find a location to build at
                 if not reference or not refName then
                     --RNGLOG('No reference or refname for Naval Area Expansion')
-                    self:PlatoonDisband()
-                    return
-                end
-            elseif cons.NearMarkerType == 'Unmarked Expansion' then
-                reference, refName = RUtils.AIFindUnmarkedExpansionMarkerNeedsEngineerRNG(aiBrain, cons.LocationType,
-                        (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
-                -- didn't find a location to build at
-                --RNGLOG('refName is : '..refName)
-                if not reference or not refName then
-                    --RNGLOG('Unmarked Expansion Builder reference or refName missing')
                     self:PlatoonDisband()
                     return
                 end

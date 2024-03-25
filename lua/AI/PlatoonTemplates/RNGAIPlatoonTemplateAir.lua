@@ -79,6 +79,16 @@ PlatoonTemplate {
     }
 }
 
+
+
+PlatoonTemplate {
+    Name = 'T4ExperimentalAirRNG',
+    Plan = 'StateMachineAIRNG',
+    GlobalSquads = {
+        { categories.AIR * categories.EXPERIMENTAL * categories.MOBILE - categories.SATELLITE, 1, 1, 'attack', 'none' },
+    },
+}
+
 PlatoonTemplate {
     Name = 'T2AirMissile',
     FactionSquads = {

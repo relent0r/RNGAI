@@ -257,7 +257,7 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',
     Builder {
         BuilderName = 'RNGAI T4 Exp Land',
-        PlatoonTemplate = 'StateMachineAIRNG',
+        PlatoonTemplate = 'T4ExperimentalLandRNG',
         Priority = 1000,
         FormRadius = 10000,
         InstanceCount = 50,
@@ -266,7 +266,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            StateMachine = 'LandExperimental'
+            StateMachine = 'LandExperimental',
             ThreatWeights = {
                 TargetThreatType = 'Commander',
             },
@@ -282,7 +282,7 @@ BuilderGroup {
         FormRadius = 10000,
         InstanceCount = 50,
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL * categories.ARTILLERY } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -296,7 +296,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T4 Exp Air',
-        PlatoonTemplate = 'StateMachineAIRNG',
+        PlatoonTemplate = 'T4ExperimentalAirRNG',
         Priority = 1000,
         FormRadius = 10000,
         InstanceCount = 50,
@@ -305,7 +305,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
-            StateMachine = 'AirExperimental'
+            StateMachine = 'AirExperimental',
             ThreatWeights = {
                 TargetThreatType = 'Commander',
             },

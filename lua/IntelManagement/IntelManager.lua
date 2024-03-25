@@ -490,7 +490,7 @@ IntelManager = Class {
                         if enemyModifier < 0 then
                             enemyModifier = 0.5
                         end
-                        local controlValue 1
+                        local controlValue = 1
                         if status =='Allied' then
                             controlValue = 0.25
                         end
@@ -549,7 +549,7 @@ IntelManager = Class {
                                     enemyModifier = 0
                                 end
                                 local controlValue = 1
-                                if status == 'Allied' 0 then
+                                if status == 'Allied' then
                                     controlValue = 0.1
                                 end
                                 local resourceValue = v.resourcevalue or 1
@@ -585,7 +585,11 @@ IntelManager = Class {
                         local startPos = 1
                         local antiairdesire = 1
                         local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
+                        local controlValue = 1
                         if status == 'Hostile' and v.friendlythreat == 0 then continue end
+                        if status == 'Contested' or status == 'Unoccupied' then
+                            controlValue = 1.5
+                        end
                         if v.friendlythreat == 0 and v.enemylandthreat > 0 then
                             enemyModifier = enemyModifier - 0.25
                         end

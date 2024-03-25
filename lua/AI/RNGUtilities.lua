@@ -807,25 +807,6 @@ function EngineerTryRepair(aiBrain, eng, whatToBuild, pos)
     return false
 end
 
-function AIFindUnmarkedExpansionMarkerNeedsEngineerRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
-    local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
-    if not pos then
-        return false
-    end
-
-    local validPos = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Unmarked Expansion', pos, radius, tMin, tMax, tRings, tType)
-    --RNGLOG('Valid Unmarked Expansion Markers '..repr(validPos))
-
-    local retPos, retName
-    if eng then
-        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, validPos)
-    else
-        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, validPos)
-    end
-
-    return retPos, retName
-end
-
 function AIFindLargeExpansionMarkerNeedsEngineerRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
     local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
     if not pos then
@@ -1319,40 +1300,6 @@ function ManualBuildStructure(aiBrain, eng, structureType, tech, position)
         aiBrain:BuildStructure(eng, blueprintID, position, false)
     end
 end]]
-
-
-function CreateMarkers(markerType, newMarkers)
--- markerType = string e.g "Marker Area"
--- newMarkers = a table of new marker positions e.g {{123,12,123}}
---[[    
-    for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
-        if v.type == 'Expansion Area' then
-            if string.find(k, 'ExpansionArea') then
-                WARN('* AI-RNG: ValidateMapAndMarkers: MarkerType: [\''..v.type..'\'] Has wrong Index Name ['..k..']. (Should be [Expansion Area xx]!!!)')
-            elseif not string.find(k, 'Expansion Area') then
-                WARN('* AI-RNG: ValidateMapAndMarkers: MarkerType: [\''..v.type..'\'] Has wrong Index Name ['..k..']. (Should be [Expansion Area xx]!!!)')
-            end
-        end
-    end
-]]
-    --RNGLOG('Marker Dump'..repr(Scenario.MasterChain._MASTERCHAIN_.Markers))
-    for index, markerPosition in newMarkers do    
-        --RNGLOG('markerType is : '..markerType..' Index is : '..index)
-        --local markerName = markerType..' '..index
-        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index] = { }
-        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].color = 'ff000000'
-        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].hint = true
-        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].orientation = { 0, 0, 0 }
-        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].prop = "/env/common/props/markers/M_Expansion_prop.bp"
-        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].type = markerType
-        Scenario.MasterChain._MASTERCHAIN_.Markers[markerType..' '..index].position = markerPosition
-    end
-    for k, v in Scenario.MasterChain._MASTERCHAIN_.Markers do
-        if v.type == 'Unmarked Expansion' then
-            --RNGLOG('Unmarked Expansion Marker at :'..repr(v.position))
-        end
-    end
-end
 
 function GeneratePointsAroundPosition(position,radius,num)
     -- Courtesy of chp2001

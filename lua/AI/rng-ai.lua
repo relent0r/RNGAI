@@ -2288,6 +2288,10 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('Start Locations are '..repr(startLocations))
                 self.EnemyIntel.EnemyStartLocations = enemyStarts
                 self.BrainIntel.AllyStartLocations = allyTempStarts
+                -- Create structure threat so inferred threat logic will function at game start
+                for _, v in enemyStarts do
+                    self:AssignThreatAtPosition(v.Position, 200, 0.005, 'StructuresNotMex')
+                end
             end
             local perimeterMap = {
                 baseRestrictedArea, 

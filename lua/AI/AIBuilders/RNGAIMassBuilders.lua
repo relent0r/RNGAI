@@ -429,7 +429,7 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.80, 0.85 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 150 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -466,7 +466,7 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.90 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 150 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -503,7 +503,7 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 80 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -539,7 +539,7 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 500 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 500, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -573,7 +573,7 @@ BuilderGroup {
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 0, 0}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.20}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION, 150, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION, 80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -613,7 +613,7 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -649,7 +649,7 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 500 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 500, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -691,7 +691,7 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 'BaseDMZArea' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.95, 1.05 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'MAIN', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 'BaseDMZArea', 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'MAIN', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 'BaseDMZArea' } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -704,7 +704,7 @@ BuilderGroup {
                 Categories = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
                 NearDefensivePoints = false,
                 NoPause = true,
-                Radius = 150,
+                Radius = 'BaseDMZArea',
                 BuildStructures = {
                     'MassStorage',
                     'MassStorage',
@@ -713,70 +713,6 @@ BuilderGroup {
 
                 },
                 LocationType = 'MAIN',
-            }
-        }
-    },
-}
-
-BuilderGroup {
-    BuilderGroupName = 'RNGEXP Crazyrush Builder',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
-    BuildersType = 'EngineerBuilder',
-    Builder {
-        BuilderName = 'RNGEXP T1 Mex Adjacency Engineer',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 900,
-        InstanceCount = 12,
-        BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MASSEXTRACTION}},
-            { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { -0.1, 0.1 }},
-            { EBC, 'LessThanEconStorageRatioRNG', { 1, 1.1 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 200, categories.MASSEXTRACTION}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION, 100, 'ueb1103' } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'Mass',
-            Construction = {
-                AdjacencyCategory = categories.MASSEXTRACTION,
-                AdjacencyDistance = 100,
-                BuildClose = false,
-                ThreatMin = -1000,
-                ThreatMax = 5,
-                ThreatRings = 0,
-                BuildStructures = {
-                    'T1Resource',
-                }
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGEXP T1 Mex Adjacency Engineer Distant',
-        PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 400,
-        InstanceCount = 12,
-        BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MASSEXTRACTION}},
-            { MABC, 'MassMarkerLessThanDistanceRNG',  { 500 }},
-            { EBC, 'LessThanEconStorageRatioRNG', { 0.2, 1.1 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 200, categories.MASSEXTRACTION}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION, 500, 'ueb1103' } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'Mass',
-            Construction = {
-                AdjacencyPriority = categories.MASSEXTRACTION,
-                AdjacencyDistance = 500,
-                BuildClose = false,
-                ThreatMin = -3,
-                ThreatMax = 0,
-                ThreatRings = 0,
-                BuildStructures = {
-                    'T1Resource',
-                }
             }
         }
     },

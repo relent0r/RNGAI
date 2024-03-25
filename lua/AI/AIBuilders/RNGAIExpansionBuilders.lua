@@ -279,37 +279,6 @@ BuilderGroup {
             NeedGuard = false,
         }
     },
-    --[[
-    Builder {
-        BuilderName = 'RNGAI T1 Unmarked Expansion Area 1000 Small',
-        PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 600,
-        InstanceCount = 2,
-        BuilderConditions = {
-            { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'UnmarkedExpansionNeedsEngineerRNG', { 'LocationType', 1000, -1000, 0, 2, 'AntiSurface' } },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                BuildClose = false,
-                BaseTemplate = ExBaseTmpl,
-                ExpansionBase = true,
-                NearMarkerType = 'Unmarked Expansion',
-                LocationRadius = 1000, -- radius from LocationType to build
-                LocationType = 'LocationType',
-                ThreatMin = -1000,
-                ThreatMax = 5,
-                ThreatRings = 0,
-                ThreatType = 'AntiSurface',
-                BuildStructures = {                    
-                    'T1LandFactory',
-                }
-            },
-            NeedGuard = true,
-        }
-    },]]
     Builder {
         BuilderName = 'RNGAI T1 Large Expansion Area 1000 Small',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
@@ -479,7 +448,6 @@ BuilderGroup {
                 AggressiveExpansion = true, -- This is picked up so that a modified firebase function runs to pick the expansion closest to the enemy
                 NearMarkerType = 'Aggressive',
                 EnemyRange = 250,
-                --NearMarkerType = true, -- This is so the engineerbuildai will still pick up the expansion bool, the aggressive base check uses 3 types of expansion markers.
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
                 ThreatMax = 5,
@@ -799,35 +767,4 @@ BuilderGroup {
             NeedGuard = false,
         }
     },
-    --[[
-    Builder {
-        BuilderName = 'RNGAI T1 Unmarked Expansion Area 1000 Large',
-        PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 600,
-        InstanceCount = 2,
-        BuilderConditions = {
-            { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'UnmarkedExpansionNeedsEngineerRNG', { 'LocationType', 1000, -1000, 10, 1, 'AntiSurface' } },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                BuildClose = false,
-                BaseTemplate = ExBaseTmpl,
-                ExpansionBase = true,
-                NearMarkerType = 'Unmarked Expansion',
-                LocationRadius = 1000, -- radius from LocationType to build
-                LocationType = 'LocationType',
-                ThreatMin = -1000,
-                ThreatMax = 10,
-                ThreatRings = 0,
-                ThreatType = 'AntiSurface',
-                BuildStructures = {                    
-                    'T1LandFactory',
-                }
-            },
-            NeedGuard = true,
-        }
-    },]]
 }
