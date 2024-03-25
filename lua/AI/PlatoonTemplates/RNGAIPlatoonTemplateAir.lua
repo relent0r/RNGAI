@@ -21,7 +21,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI AirScoutForm',
-    Plan = 'ScoutingAIRNG',
+    Plan = 'AirScoutingAIRNG',
     GlobalSquads = {
         { categories.AIR * categories.SCOUT * (categories.TECH1 + categories.TECH3), 1, 1, 'scout', 'None' },
     }
@@ -29,7 +29,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI AirScoutSingle',
-    Plan = 'ScoutingAIRNG',
+    Plan = 'AirScoutingAIRNG',
     GlobalSquads = {
         { categories.AIR * categories.SCOUT * (categories.TECH1 + categories.TECH3), 1, 1, 'scout', 'None' },
     }
@@ -77,14 +77,6 @@ PlatoonTemplate {
     GlobalSquads = {
         { categories.MOBILE * categories.AIR * categories.ANTINAVY - categories.EXPERIMENTAL, 1, 50, 'Attack', 'GrowthFormation' },
     }
-}
-
-PlatoonTemplate {
-    Name = 'T4ExperimentalAirRNG',
-    Plan = 'ExperimentalAIHubRNG',
-    GlobalSquads = {
-        { categories.AIR * categories.EXPERIMENTAL * categories.MOBILE - categories.SATELLITE, 1, 1, 'attack', 'none' },
-    },
 }
 
 PlatoonTemplate {

@@ -533,7 +533,7 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
         BuilderName = 'RNGAI Frequent Land Attack T1 Expansion Large',
-        PlatoonTemplate = 'RNGAI LandAttack Medium',
+        PlatoonTemplate = 'LandCombatStateMachineRNG',
         Priority = 600,
         InstanceCount = 4,
         BuilderType = 'Any',
@@ -542,24 +542,10 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) }}, -- stop building after we decent reach tech2 capability
         },
         BuilderData = {
+            StateMachine = 'LandAssault',
             NeverGuardBases = true,
             NeverGuardEngineers = false,
             UseFormation = 'AttackFormation',
-            ThreatWeights = {
-                IgnoreStrongerTargetsIfWeakerThan = 10, -- If the platoon is weaker than this threat level
-                IgnoreStrongerTargetsRatio = 5, -- If platoon is weaker than the above threat then ignore stronger threats if stronger by this ratio. (so if they are 100?) 
-                PrimaryThreatTargetType = 'StructuresNotMex', -- Primary type of threat to find targets
-                SecondaryThreatTargetType = 'Land', -- Secondary type of threat to find targets
-                SecondaryThreatWeight = 1,
-                WeakAttackThreatWeight = 2, -- If the platoon is weaker than the target threat then decrease by this factor
-                StrongAttackThreatWeight = 5, -- If the platoon is stronger than the target threat then increase by this factor
-                VeryNearThreatWeight = 20, -- If the target is very close increase by this factor, default radius is 25
-                NearThreatWeight = 10, -- If the target is close increase by this factor, default radius is 75
-                MidThreatWeight = 5, -- If the target is mid range increase by this factor, default radius is 150
-                FarThreatWeight = 1, -- if the target is far awat increase by this factor default radius is 300. There is also a VeryFar which is -1
-                TargetCurrentEnemy = false, -- Take the current enemy into account when finding targets
-                IgnoreCommanderStrength = false, -- Do we ignore the ACU's antisurface threat when picking an attack location
-            },
         },         
     },
     Builder {
@@ -1141,7 +1127,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Frequent Land Attack T1 Large',
-        PlatoonTemplate = 'RNGAI LandAttack Medium',
+        PlatoonTemplate = 'LandCombatStateMachineRNG',
         Priority = 500,
         InstanceCount = 12,
         BuilderType = 'Any',
@@ -1150,6 +1136,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'MAIN', 3, categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) }}, -- stop building after we decent reach tech2 capability
         },
         BuilderData = {
+            StateMachine = 'LandAssault',
             NeverGuardBases = true,
             NeverGuardEngineers = false,
             UseFormation = 'AttackFormation',

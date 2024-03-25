@@ -75,3 +75,6 @@ local side = determineSideOfLine(testPoint, lineStart, lineEnd)
 
 -- Print the result
 print("Test point is on the:", side, "side of the line")
+
+-- This required reintegration
+local distressLocation = aiBrain:BaseMonitorDistressLocationRNG(position, distressRange, aiBrain.BaseMonitor.PoolDistressThreshold, 'Land')

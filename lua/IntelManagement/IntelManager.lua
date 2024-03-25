@@ -476,7 +476,6 @@ IntelManager = Class {
                         local distanceModifier = VDist3(v.pos,aiBrain.BrainIntel.StartPos)
                         local enemyModifier = 1
                         local startPos = 1
-                        local antiairdesire = 1
                         local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
                         if v.enemylandthreat > 0 then
                             enemyModifier = enemyModifier + 2
@@ -510,9 +509,6 @@ IntelManager = Class {
                                 enemyDanger = 0.4
                             end
                         end
-                        if v.friendlyantiairthreat > 5 then
-                            antiairdesire = 0.5
-                        end
                        --[[ if aiBrain.RNGDEBUG then
                             if distanceModifier and resourceValue and controlValue and enemyModifier then
                                 RNGLOG('distanceModifier '..distanceModifier)
@@ -521,7 +517,7 @@ IntelManager = Class {
                                 RNGLOG('enemyModifier '..enemyModifier)
                             end
                         end]]
-                        compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger * antiairdesire
+                        compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger
                         if aiBrain.RNGDEBUG and compare then
                             --RNGLOG('Compare variable '..compare)
                         end
@@ -587,29 +583,46 @@ IntelManager = Class {
                         local distanceModifier = VDist3(v.pos, aiBrain.BrainIntel.StartPos)
                         local enemyModifier = 1
                         local startPos = 1
+                        local antiairdesire = 1
                         local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
-                        if status ~= 'Hostile' then
-                            if v.friendlythreat > 0 and v.enemylandthreat > v.friendlythreat then
-                                enemyModifier = enemyModifier + 0.5
+                        if status == 'Hostile' and v.friendlythreat == 0 then continue end
+                        if v.friendlythreat == 0 and v.enemylandthreat > 0 then
+                            enemyModifier = enemyModifier - 0.25
+                        end
+                        if v.friendlythreat > 0 and v.enemylandthreat > v.friendlythreat then
+                            enemyModifier = enemyModifier + 0.5
+                        end
+                        enemyModifier = math.max(enemyModifier, 1.0)  -- Ensure enemyModifier is not less than 1
+                        if v.friendlyantiairthreat > 5 then
+                            antiairdesire = antiairdesire - 0.5
+                        end
+                        if v.enemyairthreat > 0 then
+                            antiairdesire = antiairdesire + 1.0
+                        end
+                        if v.enemyairthreat > 0 then
+                            if v.friendlyantiairthreat > 0 then
+                                antiairdesire = antiairdesire + 1.5
+                            elseif v.friendlythreat > 0 then
+                                antiairdesire = antiairdesire + 2.0
+                            else
+                                antiairdesire = antiairdesire + 1.0
                             end
-                            enemyModifier = math.max(enemyModifier, 1.0)  -- Ensure enemyModifier is not less than 1
-                            local resourceValue = zoneSet[v.id].resourcevalue or 1
-                            if zoneSet[v.id].startpositionclose then
-                                startPos = 0.7
-                            end
-                    
-                            if zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlythreat then
-                                enemyDanger = 0.4
-                            end
-                    
-                            if platoon.Zone == v.id and zoneSet[v.id].enemyairthreat == 0 then
-                                enemyDanger = 0
-                            end
-                            compare = (20000 / distanceModifier) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger
-                            if compare > selection then
-                                selection = compare
-                                zoneSelection = v.id
-                            end
+                        end
+                        local resourceValue = zoneSet[v.id].resourcevalue or 1
+                        if zoneSet[v.id].startpositionclose then
+                            startPos = 0.7
+                        end
+                        if zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlythreat then
+                            enemyDanger = 0.4
+                        end
+                
+                        if platoon.Zone == v.id and zoneSet[v.id].enemyairthreat == 0 then
+                            enemyDanger = 0
+                        end
+                        compare = (20000 / distanceModifier) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger * antiairdesire
+                        if compare > selection then
+                            selection = compare
+                            zoneSelection = v.id
                         end
                     end
                     if zoneSelection then
