@@ -256,7 +256,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     end
                     if not target and threatTable.ExperimentalThreat.TotalThreat > 0 then
                         for _, enemyUnit in threatTable.ExperimentalThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored then
+                            if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored and enemyUnit.Object:GetFractionComplete() >= 1 then
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object) or 10
                                 if unitRange > self.MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
@@ -267,7 +267,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                         RetreatReason = 'ExperimentalThreat',
                                         AttackTarget = enemyUnit.Object
                                     }
-                                    self:LogDebug(string.format('Experimental has naval threat that outranges it, retreat'))
+                                    self:LogDebug(string.format('Experimental has experimental threat that outranges it, retreat'))
                                     self:ChangeState(self.Retreating)
                                 end
                                 if not closestUnit or (enemyUnit.Distance < closestUnitDistance and closestUnitDistance > 25) then
@@ -282,7 +282,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         self:LogDebug(string.format('Artillery Threat '..threatTable.ArtilleryThreat.TotalThreat))
                         self:LogDebug(string.format('Ranged Threat '..threatTable.RangedUnitThreat.TotalThreat))
                         for _, enemyUnit in threatTable.ArtilleryThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored then
+                            if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored and enemyUnit.Object:GetFractionComplete() >= 1 then
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object) or 10
                                 --LOG('Artillery Range is greater than Experimental')
                                 if unitRange > self.MaxPlatoonWeaponRange then

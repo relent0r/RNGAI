@@ -72,7 +72,7 @@ AIPlatoonAirFeederBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if targetPlatoon and not IsDestroyed(targetPlatoon) then
-                if VDist3Sq(GetPlatoonPosition(self), GetPlatoonPosition(targetPlatoon)) < 900 then
+                if VDist3Sq(self:GetPlatoonPosition(), targetPlatoon:GetPlatoonPosition()) < 900 then
                     aiBrain:AssignUnitsToPlatoon(targetPlatoon, self:GetPlatoonUnits(), 'Attack', 'None')
                 else
                     self.BuilderData = {
@@ -133,7 +133,7 @@ AIPlatoonAirFeederBehavior = Class(AIPlatoonRNG) {
                             IssueGuard(platUnits, guardPos)
                         end
                     end
-                    aiBrain:AssignUnitsToPlatoon(targetPlatoon, platUnits, 'Attack', 'None')
+                    aiBrain:AssignUnitsToPlatoon(builderData.TargetPlatoon, platUnits, 'Attack', 'None')
                     coroutine.yield(5)
                     return
                 end

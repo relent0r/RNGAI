@@ -216,7 +216,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                         self:LogDebug(string.format('Ranged Threat '..threatTable.RangedUnitThreat.TotalThreat))
                         
                         for _, enemyUnit in threatTable.ArtilleryThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) then
+                            if not IsDestroyed(enemyUnit.Object) and enemyUnit.Object:GetFractionComplete() >= 1 then
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object)
                                 --LOG('Artillery Range is greater than FATBOY')
                                 if unitRange > self.MaxPlatoonWeaponRange then

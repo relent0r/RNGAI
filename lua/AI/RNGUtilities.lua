@@ -3684,7 +3684,7 @@ function AIBuildBaseTemplateFromLocationRNG(baseTemplate, location)
     return baseT
 end
 
-function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit, eng, adjacent, category, radius, relative)
+function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit, eng, adjacent, category, radius, relative, increaseSearch)
     -- A small note that caught me out.
     -- Always set the engineers position to zero in the build location otherwise youll get buildings are super strange angles
     -- and you wont understand why. I think the 3rd param is actually rotation not height.
@@ -3705,8 +3705,13 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
     end
     
     if adjacent then
+        local searchRadius = radius
+        if increaseSearch then
+            searchRadius = radius + increaseSearch
+        end
+        LOG('searchRadius is '..searchRadius)
         local unitSize = aiBrain:GetUnitBlueprint(whatToBuild).Physics
-        local testUnits  = aiBrain:GetUnitsAroundPoint(category, engPos, radius, 'Ally')
+        local testUnits  = aiBrain:GetUnitsAroundPoint(category, engPos, searchRadius, 'Ally')
         LOG('Number of test units found '..table.getn(testUnits))
         local index = aiBrain:GetArmyIndex()
         local closeUnits = {}

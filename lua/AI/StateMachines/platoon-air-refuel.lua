@@ -86,9 +86,6 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                     return
                                 end
                                 IssueClearCommands({unit})
-                                if table.getn({unit}) == 0 then
-                                    --LOG('unit table is zero '..repr(unit))
-                                end
                                 safecall("Unable to IssueTransportLoad units are "..repr(unit), IssueTransportLoad, {unit}, closest )
                                 --RNGLOG('Transport load issued')
                                 if EntityCategoryContains(categories.AIRSTAGINGPLATFORM - categories.MOBILE, closest) and not closest.AirStaging then
