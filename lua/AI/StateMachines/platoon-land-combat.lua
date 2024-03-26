@@ -69,6 +69,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             else
                 self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 55)
             end
+            self.CurrentPlatoonThreatAntiSurface = 0
+            self.CurrentPlatoonThreatAntiNavy = 0
+            self.CurrentPlatoonThreatAntiAir = 0
             if self.Vented then
                 --LOG('Vented LandCombatPlatoon Starting')
             end
@@ -109,8 +112,13 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, false)
+            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, true)
             --RNGLOG('Simple Retreat Threat Stats '..repr(threat))
+            if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
+                self:LogDebug(string.format('DecideWhatToDo we have no antiair threat and there are air units around'))
+                local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
+                aiBrain:PlatoonReinforcementRequestRNG(self, 'AntiAir', closestBase)
+            end
             if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then
                 self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
                 self.retreat=true
@@ -762,6 +770,7 @@ end
 StartLandCombatThreads = function(brain, platoon)
     brain:ForkThread(LandCombatPositionThread, platoon)
     brain:ForkThread(StateUtils.ZoneUpdate, platoon)
+    brain:ForkThread(ThreatThread, platoon)
 end
 
 ---@param aiBrain AIBrain
@@ -769,24 +778,6 @@ end
 LandCombatPositionThread = function(aiBrain, platoon)
     local UnitCategories = categories.ANTIAIR
     while aiBrain:PlatoonExists(platoon) do
-
-        --[[local platPos = GetPlatoonPosition(platoon)
-        local enemyThreat = 0
-        if GetNumUnitsAroundPoint(brain, UnitCategories, platPos, 80, 'Enemy') > 0 then
-            local enemyUnits = GetUnitsAroundPoint(brain, UnitCategories, GetPlatoonPosition(platoon), 80, 'Enemy')
-            for _, v in enemyUnits do
-                if v and not IsDestroyed(v) then
-                    if v.Blueprint.Defense.AirThreatLevel then
-                        enemyThreat = enemyThreat + v.Blueprint.Defense.AirThreatLevel
-                    end
-                end
-            end
-            self.CurrentEnemyThreat = enemyThreat
-            self.CurrentPlatoonThreat = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
-            if self.CurrentEnemyThreat > self.CurrentPlatoonThreat and not self.BuilderData.ProtectACU then
-                platoon:ChangeState(self.DecideWhatToDo)
-            end
-        end]]
         local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, platoon)
         if platBiasUnit and not platBiasUnit.Dead then
             platoon.Pos=platBiasUnit:GetPosition()
@@ -794,5 +785,27 @@ LandCombatPositionThread = function(aiBrain, platoon)
             platoon.Pos=GetPlatoonPosition(platoon)
         end
         coroutine.yield(15)
+    end
+end
+
+ThreatThread = function(aiBrain, platoon)
+    while aiBrain:PlatoonExists(platoon) do
+        if IsDestroyed(platoon) then
+            return
+        end
+        local currentPlatoonCount = 0
+        local platoonUnits = platoon:GetPlatoonUnits()
+        for _, unit in platoonUnits do
+            currentPlatoonCount = currentPlatoonCount + 1
+        end
+        if currentPlatoonCount > platoon.PlatoonLimit then
+            platoon.PlatoonFull = true
+        else
+            platoon.PlatoonFull = false
+        end
+        platoon.CurrentPlatoonThreatAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+        platoon.CurrentPlatoonThreatAntiNavy = platoon:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
+        platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
+        coroutine.yield(35)
     end
 end

@@ -13,7 +13,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI AntiAirFeeder',
-    Plan = 'FeederPlatoon',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.AIR * categories.MOBILE * categories.ANTIAIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) - categories.BOMBER - categories.GROUNDATTACK - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.ANTINAVY, 1, 100, 'Attack', 'none' },
     }

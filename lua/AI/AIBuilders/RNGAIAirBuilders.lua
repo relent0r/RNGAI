@@ -327,6 +327,7 @@ BuilderGroup {
         InstanceCount = 30,
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'AirFeeder',
             PlatoonType = 'fighter',
             PlatoonSearchRange = 'BaseDMZArea',
             AvoidBases = true,
@@ -687,6 +688,7 @@ BuilderGroup {
         InstanceCount = 30,
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'AirFeeder',
             PlatoonType = 'fighter',
             PlatoonSearchRange = 'BaseDMZArea',
             AvoidBases = true,

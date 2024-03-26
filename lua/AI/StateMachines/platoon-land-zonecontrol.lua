@@ -76,7 +76,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             self.ScoutSupported = true
             self.ScoutUnit = false
             self.atkPri = {}
-            self.CurrentPlatoonThreat = false
+            self.CurrentPlatoonThreatAntiSurface = 0
+            self.CurrentPlatoonThreatAntiNavy = 0
+            self.CurrentPlatoonThreatAntiAir = 0
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
             StartZoneControlThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
@@ -119,7 +121,12 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, false)
+            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, true)
+            if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
+                self:LogDebug(string.format('DecideWhatToDo we have no antiair threat and there are air units around'))
+                local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
+                aiBrain:PlatoonReinforcementRequestRNG(self, 'AntiAir', closestBase)
+            end
             if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then
                 self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
                 self.retreat=true
@@ -684,6 +691,7 @@ end
 StartZoneControlThreads = function(brain, platoon)
     brain:ForkThread(ZoneControlPositionThread, platoon)
     brain:ForkThread(StateUtils.ZoneUpdate, platoon)
+    brain:ForkThread(ThreatThread, platoon)
 end
 
 ---@param aiBrain AIBrain
@@ -697,5 +705,27 @@ ZoneControlPositionThread = function(aiBrain, platoon)
             platoon.Pos=GetPlatoonPosition(platoon)
         end
         coroutine.yield(5)
+    end
+end
+
+ThreatThread = function(aiBrain, platoon)
+    while aiBrain:PlatoonExists(platoon) do
+        if IsDestroyed(platoon) then
+            return
+        end
+        local currentPlatoonCount = 0
+        local platoonUnits = platoon:GetPlatoonUnits()
+        for _, unit in platoonUnits do
+            currentPlatoonCount = currentPlatoonCount + 1
+        end
+        if currentPlatoonCount > platoon.PlatoonLimit then
+            platoon.PlatoonFull = true
+        else
+            platoon.PlatoonFull = false
+        end
+        platoon.CurrentPlatoonThreatAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+        platoon.CurrentPlatoonThreatAntiNavy = platoon:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
+        platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
+        coroutine.yield(35)
     end
 end
