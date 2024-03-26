@@ -5132,7 +5132,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     continue
                 end
                 if not v.UnitBeingBuilt then continue end
-                if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
+                if v.UnitBeingBuilt.Blueprint.CategoriesHash.ENGINEER then continue end
+                if v.UnitBeingBuilt.Blueprint.CategoriesHash.TRANSPORTFOCUS and self:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then continue end
                 --if RNGGETN(units) == 1 then continue end
                 if v:IsPaused() then continue end
                 --RNGLOG('pausing AIR')

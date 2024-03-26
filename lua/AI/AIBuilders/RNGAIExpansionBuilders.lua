@@ -433,7 +433,6 @@ BuilderGroup {
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'LessThanGameTimeSecondsRNG', { 600 } },
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.AIR}},
-
             { MIBC, 'CanBuildAggressivebaseRNG', { 'LocationType', 250, -1000, 5, 1, 'AntiSurface'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

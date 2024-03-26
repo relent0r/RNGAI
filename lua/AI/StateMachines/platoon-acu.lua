@@ -630,10 +630,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     -- check if we're near our current waypoint
                     local dx = position[1] - wx
                     local dz = position[3] - wz
-                    if dx * dx + dz * dz < navigateDistanceCutOff then
+                    local distance = dx * dx + dz * dz
+                    if distance < navigateDistanceCutOff then
                         --LOG('close to waypoint position in second loop')
                         --LOG('distance is '..(dx * dx + dz * dz))
                         --LOG('CutOff is '..navigateDistanceCutOff)
+                        if distance < 9 then
+                            IssueMove({cdr}, destination)
+                            WaitTicks(100)
+                        end
                         if not endPoint then
                             IssueClearCommands({cdr})
                         end
