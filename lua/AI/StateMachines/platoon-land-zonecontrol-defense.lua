@@ -80,7 +80,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             self.ScoutSupported = true
             self.ScoutUnit = false
             self.atkPri = {}
-            self.CurrentPlatoonThreat = false
+            self.CurrentPlatoonThreatAntiAir = 0
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
             self.ExcludeFromMerge = true
             RUtils.ConfigurePlatoon(self)

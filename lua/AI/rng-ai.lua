@@ -1847,7 +1847,6 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     BaseMonitorThreadRNG = function(self)
-        
         while true do
             if self.BaseMonitor.BaseMonitorStatus == 'ACTIVE' then
                 self:BaseMonitorCheckRNG()
@@ -1890,9 +1889,11 @@ AIBrain = Class(RNGAIBrainClass) {
 
             -- Monitor platoons for help
             PlatoonDistressTable = {},
+            PlatoonReinforcementTable = {},
             ZoneAlertTable = {},
             PlatoonDistressThread = false,
             PlatoonAlertSounded = false,
+            PlatoonReinforcementRequired = false,
             ZoneAlertSounded = false,
         }
         self:ForkThread(self.BaseMonitorThreadRNG)
@@ -2800,10 +2801,11 @@ AIBrain = Class(RNGAIBrainClass) {
         end
 
         local found = false
-        if self.BaseMonitor.PlatoonAlertSounded == false then
-            RNGINSERT(self.BaseMonitor.PlatoonDistressTable, {Platoon = platoon, ThreatType = threatType, LocationType= Location})
+        if self.BaseMonitor.PlatoonReinforcementRequired == false then
+            RNGINSERT(self.BaseMonitor.PlatoonReinforcementTable, {Platoon = platoon, ThreatType = threatType, LocationType = Location, UnitsAssigned = {}})
+            self.BaseMonitor.PlatoonReinforcementRequired = true
         else
-            for k, v in self.BaseMonitor.PlatoonDistressTable do
+            for k, v in self.BaseMonitor.PlatoonReinforcementTable do
                 -- If already calling for help, don't add another distress call
                 if table.equal(v.Platoon, platoon) then
                     --RNGLOG('platoon.BuilderName '..platoon.BuilderName..'already exist as '..v.Platoon.BuilderName..' skipping')
@@ -2813,10 +2815,10 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             if not found then
                 --RNGLOG('Platoon doesnt already exist, adding')
-                RNGINSERT(self.BaseMonitor.PlatoonDistressTable, {Platoon = platoon, Threat = threat})
+                RNGINSERT(self.BaseMonitor.PlatoonReinforcementTable, {Platoon = platoon, ThreatType = threatType, LocationType = Location, UnitsAssigned = {}})
             end
         end
-        --RNGLOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonDistressTable))
+        --RNGLOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonReinforcementTable))
     end,
 
     BasePerimeterMonitorRNG = function(self)
