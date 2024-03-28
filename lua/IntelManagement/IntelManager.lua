@@ -39,6 +39,7 @@ local RNGPI = math.pi
 local RNGCAT = table.cat
 local RNGCOPY = table.copy
 local RNGTableEmpty = table.empty
+local WeakValueTable = { __mode = 'v' }
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 IntelManager = Class {
@@ -2317,7 +2318,7 @@ CreateIntelGrid = function(aiBrain)
         for z = 1, n do 
             intelGrid[x][z] = { }
             intelGrid[x][z].Position = { }
-            intelGrid[x][z].Radars = { }
+            intelGrid[x][z].Radars = setmetatable({}, WeakValueTable)
             intelGrid[x][z].Size = { }
             intelGrid[x][z].DistanceToMain = 0
             intelGrid[x][z].AssignedScout = false
@@ -2338,7 +2339,7 @@ CreateIntelGrid = function(aiBrain)
             intelGrid[x][z].ACUThreat = 0
             intelGrid[x][z].AdjacentGrids = {}
             intelGrid[x][z].Graphs = { }
-            intelGrid[x][z].EnemyUnits = { }
+            intelGrid[x][z].EnemyUnits = setmetatable({}, WeakValueTable)
             intelGrid[x][z].EnemyUnitsDanger = 0
             intelGrid[x][z].Graphs.MAIN = { GraphChecked = false, Land = false, Amphibious = false, NoGraph = false }
             local cx = fx * (x - 0.5)
@@ -2661,7 +2662,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                         if VDist3Sq(b:GetPosition(), v.position) < v.range * v.range then
                             --LOG('EnemyIntelTML there is an extractor that is in range')
                             if not b.TMLInRange then
-                                b.TMLInRange = {}
+                                b.TMLInRange = setmetatable({}, WeakValueTable)
                             end
                             b.TMLInRange[v.object.EntityId] = v.object
                             --LOG('EnemyIntelTML added TML unit '..repr(b.TMLInRange))
@@ -2741,7 +2742,6 @@ LastKnownThread = function(aiBrain)
         RNGLOG('Waiting for MapIntelGrid to exist...')
         coroutine.yield(20)
     end
-    local WeakValueTable = { __mode = 'v' }
     local sm = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua').GetStructureManager(aiBrain)
     while not aiBrain.emanager.enemies do coroutine.yield(20) end
     while aiBrain.Status ~= "Defeat" do
