@@ -2741,6 +2741,7 @@ LastKnownThread = function(aiBrain)
         RNGLOG('Waiting for MapIntelGrid to exist...')
         coroutine.yield(20)
     end
+    local WeakValueTable = { __mode = 'v' }
     local sm = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua').GetStructureManager(aiBrain)
     while not aiBrain.emanager.enemies do coroutine.yield(20) end
     while aiBrain.Status ~= "Defeat" do
@@ -2766,7 +2767,7 @@ LastKnownThread = function(aiBrain)
                 end
                 if im.MapIntelGrid[gridXID][gridZID] then
                     if not im.MapIntelGrid[gridXID][gridZID].EnemyUnits then
-                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits = {}
+                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits = setmetatable({}, WeakValueTable)
                         im.MapIntelGrid[gridXID][gridZID].EnemyUnitsDanger = 0
                     end
                     if not unitCat.UNTARGETABLE then

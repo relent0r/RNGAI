@@ -13,6 +13,8 @@ local RNGINSERT = table.insert
 local RNGREMOVE = table.remove
 local RNGSORT = table.sort
 
+local WeakValueTable = { __mode = 'v' }
+
 StructureManager = Class {
     Create = function(self, brain)
         self.Brain = brain
@@ -1179,7 +1181,7 @@ StructureManager = Class {
                         local defenseRadius = v.Blueprint.Weapon[1].MaxRadius - 2
                         if VDist3Sq(upgradedFactory:GetPosition(), v:GetPosition()) < defenseRadius * defenseRadius then
                             if not upgradedFactory.TMDInRange then
-                                upgradedFactory.TMDInRange = {}
+                                upgradedFactory.TMDInRange = setmetatable({}, WeakValueTable)
                             end
                             --LOG('Found TMD that is protecting this unit, add to TMDInRange table')
                             upgradedFactory.TMDInRange[v.EntityId] = v
@@ -1574,7 +1576,7 @@ StructureManager = Class {
                         local defenseRadius = v.Blueprint.Weapon[1].MaxRadius - 2
                         if VDist3Sq(upgradedExtractor:GetPosition(), v:GetPosition()) < defenseRadius * defenseRadius then
                             if not upgradedExtractor.TMDInRange then
-                                upgradedExtractor.TMDInRange = {}
+                                upgradedExtractor.TMDInRange = setmetatable({}, WeakValueTable)
                             end
                             --LOG('Found TMD that is protecting this unit, add to TMDInRange table')
                             upgradedExtractor.TMDInRange[v.EntityId] = v

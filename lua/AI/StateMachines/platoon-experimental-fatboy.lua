@@ -657,14 +657,14 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
             local closestAPlatPos
             local AlliedPlatoons = aiBrain:GetPlatoonsList()
             for _,aPlat in AlliedPlatoons do
-                if aPlat.EntityId ~= self.EntityId then
-                    local aPlatAirThreat = aPlat:CalculatePlatoonThreat('Air', categories.ALLUNITS)
-                    if aPlatAirThreat > self.CurrentEnemyThreat / 2 then
+                if not table.equal(aPlat, self) then
+                    local aPlatSurfaceThreat = aPlat:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+                    if aPlatSurfaceThreat > self.CurrentEnemyThreat / 2 then
                         local aPlatPos = GetPlatoonPosition(aPlat)
                         local aPlatDistance = VDist2Sq(experimentalPosition[1],experimentalPosition[3],aPlatPos[1],aPlatPos[3])
                         local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],self.Home[1],self.Home[3])
                         if aPlatToHomeDistance < distanceToHome then
-                            local platoonValue = aPlatDistance * aPlatDistance / aPlatAirThreat
+                            local platoonValue = aPlatDistance * aPlatDistance / aPlatSurfaceThreat
                             if not closestPlatoonValue or platoonValue <= closestPlatoonValue then
                                 if NavUtils.CanPathTo(self.MovementLayer, experimentalPosition, aPlatPos) then
                                     closestPlatoon = aPlat
