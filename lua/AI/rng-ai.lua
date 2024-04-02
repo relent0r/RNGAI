@@ -2795,14 +2795,14 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('Platoon Distress Table'..repr(self.BaseMonitor.ZoneAlertTable))
     end,
 
-    PlatoonReinforcementRequestRNG = function(self, platoon, threat, location)
+    PlatoonReinforcementRequestRNG = function(self, platoon, threatType, location)
         if not self.BaseMonitor then
             return
         end
 
         local found = false
         if self.BaseMonitor.PlatoonReinforcementRequired == false then
-            RNGINSERT(self.BaseMonitor.PlatoonReinforcementTable, {Platoon = platoon, ThreatType = threatType, LocationType = Location, UnitsAssigned = {}})
+            RNGINSERT(self.BaseMonitor.PlatoonReinforcementTable, {Platoon = platoon, ThreatType = threatType, LocationType = location, UnitsAssigned = {}})
             self.BaseMonitor.PlatoonReinforcementRequired = true
         else
             for k, v in self.BaseMonitor.PlatoonReinforcementTable do
@@ -2815,7 +2815,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             if not found then
                 --RNGLOG('Platoon doesnt already exist, adding')
-                RNGINSERT(self.BaseMonitor.PlatoonReinforcementTable, {Platoon = platoon, ThreatType = threatType, LocationType = Location, UnitsAssigned = {}})
+                RNGINSERT(self.BaseMonitor.PlatoonReinforcementTable, {Platoon = platoon, ThreatType = threatType, LocationType = location, UnitsAssigned = {}})
             end
         end
         --RNGLOG('Platoon Distress Table'..repr(self.BaseMonitor.PlatoonReinforcementTable))

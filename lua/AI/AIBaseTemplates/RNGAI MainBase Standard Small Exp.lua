@@ -89,7 +89,7 @@ BaseBuilderTemplate {
 
         --Strategic Builders
         'RNGAI SML Builders',
-        'RNGAI Strategic Artillery Builders Small',
+        'RNGAI Strategic Artillery Builders',
         'RNGAI Strategic Formers',
 
         --Experimentals --

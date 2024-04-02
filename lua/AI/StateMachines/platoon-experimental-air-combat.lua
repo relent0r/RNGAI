@@ -234,6 +234,26 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     end
                     local closestUnit
                     local closestUnitDistance
+                    if not target and threatTable.CommanderThreat.TotalThreat > 0 then
+                        for _, enemyUnit in threatTable.CommanderThreat.Units do
+                            if not IsDestroyed(enemyUnit.Object) then
+                                if not closestUnit or enemyUnit.Distance < closestUnitDistance then
+                                    closestUnit = enemyUnit.Object
+                                    closestUnitDistance = enemyUnit.Distance
+                                end
+                            end
+                        end
+                    end
+                    if not target and threatTable.ExperimentalThreat.TotalThreat > 0 then
+                        for _, enemyUnit in threatTable.ExperimentalThreat.Units do
+                            if not IsDestroyed(enemyUnit.Object) then
+                                if not closestUnit or enemyUnit.Distance < closestUnitDistance then
+                                    closestUnit = enemyUnit.Object
+                                    closestUnitDistance = enemyUnit.Distance
+                                end
+                            end
+                        end
+                    end
                     if not target and threatTable.DefenseThreat.TotalThreat > 0 then
                         for _, enemyUnit in threatTable.DefenseThreat.Units do
                             if not IsDestroyed(enemyUnit.Object) then
@@ -303,14 +323,18 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                 return
             end
             if not target then
+                self:LogDebug(string.format('No target, searching for standard experimental target'))
                 target, _ = StateUtils.FindExperimentalTargetRNG(aiBrain, self, experimentalPosition)
             end
             if target and not IsDestroyed(target) then
+                self:LogDebug(string.format('Target found'))
                 --LOG('We have a target from FindExperimentalTargetRNG')
                 local targetPos = target:GetPosition()
                 local dx = targetPos[1] - experimentalPosition[1]
                 local dz = targetPos[3] - experimentalPosition[3]
                 local distance = dx * dx + dz * dz
+                self:LogDebug(string.format('Target is '..repr(target.UnitId)))
+                self:LogDebug(string.format('Target distance is '..distance))
                 if distance > self.MaxPlatoonWeaponRange * self.MaxPlatoonWeaponRange then
                     self.BuilderData = {
                         Position = targetPos,
@@ -377,7 +401,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
 
             while not IsDestroyed(self.ExperimentalUnit) do
                 local origin = self.ExperimentalUnit:GetPosition()
-                waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 100)
+                waypoint, length = NavUtils.DirectionTo('Air', origin, destination, 120)
                 if StateUtils.PositionInWater(origin) then
                     self.VentGuardPlatoon = true
                     --LOG('GuardPlatoon Vent has gone true')
@@ -410,7 +434,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                     local position = self.ExperimentalUnit:GetPosition()
-                    if self.EnemyThreatTable.TotalSuroundingThreat > 15 and not StateUtils.PositionInWater(position) then
+                    if self.EnemyThreatTable.TotalSuroundingThreat > 50 then
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end

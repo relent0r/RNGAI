@@ -5312,7 +5312,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             local validTarget, nukePosTable = RUtils.GetNukeStrikePositionRNG(aiBrain, readySmlLauncherCount, readySmlLaunchers, experimentalPresent)
             if validTarget then
-                LOG('NukeAIRNG : Valid nuke target, table is '..repr(nukePosTable))
+                --LOG('NukeAIRNG : Valid nuke target, table is '..repr(nukePosTable))
                 targetsAvailable = true
                 for _, firingPosition in nukePosTable do
                     table.insert(aiBrain.BrainIntel.SMLTargetPositions, {Position = firingPosition.IMAPPos, Time=GetGameTimeSeconds()})

@@ -198,6 +198,30 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.Retreating)
                     return
                 end
+                if experimentalHealthPercent < 0.35 and not self.SuicideModeActive then
+                    local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, experimentalPosition)
+                    if closestBase then
+                        local basePosition = aiBrain.BuilderManagers[closestBase].Position
+                        local dx = basePosition[1] - experimentalPosition[1]
+                        local dz = basePosition[3] - experimentalPosition[3]
+                        local distance = dx * dx + dz * dz
+                        if distance > 14400 then
+                            self.BuilderData = {
+                                Position = aiBrain.BuilderManagers[closestBase].Position,
+                                CutOff = 625,
+                            }
+                            self:ChangeState(self.Retreating)
+                            return
+                        end
+                    end
+                    self.BuilderData = {
+                        Retreat = true,
+                        RetreatReason = 'LowHealth'
+                    }
+                    self:LogDebug(string.format('Experimental retreating due to very low health '))
+                    self:ChangeState(self.Retreating)
+                    return
+                end
                 if threatTable.TotalSuroundingThreat > 25 then
                     local antiAirSupportNeeded = false
                     if threatTable.AirSurfaceThreat.TotalThreat > 200 and self.CurrentAntiAirThreat < 50 and not self.SuicideModeActive or experimentalHealthPercent < 0.40 and threatTable.AirSurfaceThreat.TotalThreat > 100 and not self.SuicideModeActive then
@@ -313,7 +337,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                         overRangedThreat = overRangedThreat + enemyUnit.Blueprint.Defense.SurfaceThreatLevel
                                     end
                                 end
-                                if overRangedCount > 3 and overRangedThreat > 60 and not self.SuicideModeActive then
+                                if overRangedCount > 3 and overRangedThreat > 85 and not self.SuicideModeActive then
                                     self.BuilderData = {
                                         Retreat = true,
                                         RetreatReason = 'ArtilleryThreat',
@@ -507,7 +531,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     end
                     --LOG('Current TotalSuroundingThreat '..repr(self.EnemyThreatTable.TotalSuroundingThreat))
                     -- check for threats
-                    WaitTicks(20)
+                    WaitTicks(30)
                 end
                 WaitTicks(1)
             end
@@ -573,7 +597,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     local smartPos = { x, GetTerrainHeight( x, y), y }
                     -- check if the move position is new or target has moved
                     local expTargetBlocked = aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental.WeaponArc)
-                    if targetDistance < self.MaxPlatoonWeaponRangeSq and maxPlatoonRange > targetMaxWeaponRange and not expTargetBlocked then
+                    if targetDistance < self.MaxPlatoonWeaponRangeSq and maxPlatoonRange >= targetMaxWeaponRange and not expTargetBlocked then
                         IssueAggressiveMove({experimental}, targetPosition)
                         coroutine.yield(45)
                     elseif not expTargetBlocked and VDist2Sq( smartPos[1], smartPos[3], experimental.smartPos[1], experimental.smartPos[3] ) > 9 or targetDistance > self.MaxPlatoonWeaponRangeSq then

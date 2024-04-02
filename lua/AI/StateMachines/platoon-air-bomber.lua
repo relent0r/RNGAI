@@ -156,9 +156,23 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.AttackTarget)
                         return
                     else
-                        self:LogDebug(string.format('Bomber navigating to snipe ACU'))
-                        self:ChangeState(self.Navigating)
-                        return
+                        local targetValidated = true
+                        local targetThreat = aiBrain:GetThreatAtPosition(targetPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
+                        if targetThreat > self.CurrentPlatoonThreatAntiSurface * 2 then
+                            local potentialThreat = self:CalculatePlatoonThreatAroundPosition('Surface', categories.AIR, self.Pos, 30)
+                            if targetThreat > potentialThreat then
+                                local closestBase, closestBaseDistance = StateUtils.GetClosestBaseRNG(aiBrain, self, targetPosition)
+                                if closestBase and closestBaseDistance > 14400 then 
+                                    self:LogDebug(string.format('Target has high air threat and is fare from a base'))
+                                    targetValidated = false
+                                end
+                            end
+                        end
+                        if targetValidated then
+                            self:LogDebug(string.format('Bomber navigating to high priority target'))
+                            self:ChangeState(self.Navigating)
+                            return
+                        end
                     end
                 end
             end
@@ -710,7 +724,7 @@ BomberThreatThreads = function(aiBrain, platoon)
                     unitCount = unitCount + 1
                 end
             end
-            platoon.CurrentPlatoonThreatAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+            platoon.CurrentPlatoonThreatAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.AIR)
             platoon.PlatoonCount = unitCount
             if maxPlatoonStrikeDamage > 0 then
                 platoon.PlatoonStrikeDamage = maxPlatoonStrikeDamage

@@ -655,7 +655,7 @@ GetClosestBaseRNG = function(aiBrain, platoon, platoonPosition, naval)
             end
         end
         if closestBase then
-            return closestBase
+            return closestBase, closestBaseDistance
         end
     end
 end
@@ -1076,6 +1076,16 @@ function ExperimentalAirTargetLocalCheckRNG(aiBrain, position, platoon, maxRange
             TotalThreat = 0,
             Units = {}
         },
+        ExperimentalThreat = {
+            TotalThreat = 0,
+            TotalCount = 0,
+            Units = {}
+        },
+        CommandThreat = {
+            TotalThreat = 0,
+            TotalCount = 0,
+            Units = {}
+        },
     }
     local targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS - categories.INSIGNIFICANTUNIT, position, maxRange, 'Enemy')
     for _, unit in targetUnits do
@@ -1093,7 +1103,15 @@ function ExperimentalAirTargetLocalCheckRNG(aiBrain, position, platoon, maxRange
             if unitTable.ClosestUnitDistance == 0 or unitTable.ClosestUnitDistance > distance then
                 unitTable.ClosestUnitDistance = distance
             end
-            if unit.Blueprint.CategoriesHash.AIR and (unit.Blueprint.CategoriesHash.ANTIAIR or unit.Blueprint.CategoriesHash.GROUNDATTACK) then
+            if unit.Blueprint.CategoriesHash.COMMAND then
+                unitTable.CommandThreat.TotalThreat = unitTable.CommandThreat.TotalThreat + unitThreat
+                unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
+                RNGINSERT(unitTable.CommandThreat.Units, {Object = unit, Distance = distance})
+            elseif unit.Blueprint.CategoriesHash.EXPERIMENTAL and (unit.Blueprint.CategoriesHash.LAND or unit.Blueprint.CategoriesHash.AMPHIBIOUS) then
+                unitTable.ExperimentalThreat.TotalThreat = unitTable.ExperimentalThreat.TotalThreat + unitThreat
+                unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
+                RNGINSERT(unitTable.ExperimentalThreat.Units, {Object = unit, Distance = distance})
+            elseif unit.Blueprint.CategoriesHash.AIR and (unit.Blueprint.CategoriesHash.ANTIAIR or unit.Blueprint.CategoriesHash.GROUNDATTACK) then
                 unitTable.AirThreat.TotalThreat = unitTable.AirThreat.TotalThreat + unitThreat
                 unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                 RNGINSERT(unitTable.AirThreat.Units, {Object = unit, Distance = distance})
@@ -1179,26 +1197,27 @@ FindExperimentalTargetRNG = function(aiBrain, platoon, experimentalPosition)
                 --RNGLOG('Base Position with '..base.Threat..' threat')
                 local unitsAtBase = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, z.Position, 100, 'Enemy')
                 local massValue = 0
-                local highestValueUnit = 0
-                local notDeadUnit = false
+                local massUnitValue = 0
+                local highestMassValueUnit = 0
+                local targetUnit
 
                 for _, unit in unitsAtBase do
                     if not unit.Dead then
                         if unit.Blueprint.Economy.BuildCostMass then
                             if unit.Blueprint.CategoriesHash.DEFENSE then
                                 massValue = massValue + (unit.Blueprint.Economy.BuildCostMass * 1.5)
+                                massUnitValue = (unit.Blueprint.Economy.BuildCostMass * 1.5)
                             elseif unit.Blueprint.CategoriesHash.TECH3 and unit.Blueprint.CategoriesHash.ANTIMISSILE and unit.Blueprint.CategoriesHash.SILO then
-                                massValue = massValue + (unit.Blueprint.Economy.BuildCostMass * 2)
+                                massValue = massValue + (unit.Blueprint.Economy.BuildCostMass * 3)
+                                massUnitValue = (unit.Blueprint.Economy.BuildCostMass * 3)
                             else
                                 massValue = massValue + unit.Blueprint.Economy.BuildCostMass
+                                massUnitValue = (unit.Blueprint.Economy.BuildCostMass)
                             end
                         end
-                        if massValue > highestValueUnit then
-                            highestValueUnit = massValue
-                            notDeadUnit = unit
-                        end
-                        if not notDeadUnit then
-                            notDeadUnit = unit
+                        if (not targetUnit) or massUnitValue > highestMassValueUnit then
+                            highestMassValueUnit = massUnitValue
+                            targetUnit = unit
                         end
                     end
                 end
@@ -1207,13 +1226,13 @@ FindExperimentalTargetRNG = function(aiBrain, platoon, experimentalPosition)
                     if massValue > highestMassValue then
                         bestBase = z
                         highestMassValue = massValue
-                        bestUnit = notDeadUnit
+                        bestUnit = targetUnit
                     elseif massValue == highestMassValue then
                         local dist1 = VDist2Sq(experimentalPosition[1], experimentalPosition[3], z.Position[1], z.Position[3])
                         local dist2 = VDist2Sq(experimentalPosition[1], experimentalPosition[3], bestBase.Position[1], bestBase.Position[3])
                         if dist1 < dist2 then
                             bestBase = z
-                            bestUnit = notDeadUnit
+                            bestUnit = targetUnit
                         end
                     end
                 end

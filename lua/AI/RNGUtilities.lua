@@ -5511,7 +5511,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval)
         end
         if platPos and VDist3Sq(platPos, aiBrain.BrainIntel.StartPos) < (aiBrain.EnemyIntel.ClosestEnemyBase / rangeCheck) then
             for k, v in aiBrain.EnemyIntel.Experimental do
-                if not v.object.Dead then
+                if not v.object.Dead and v.object:GetFractionComplete() > 0.9 then
                     local unitCats = v.object.Blueprint.CategoriesHash
                     if naval then
                         if not unitCats.HOVER and PositionInWater(v.Position) then
@@ -6541,15 +6541,14 @@ GetCustomUnitReplacement = function(self, template, templateName, faction)
     return retTemplate
 end
 
-CalculateDistanceSquared = function(x1, y1, z1, x2, y2, z2)
+CalculateSMDDistanceSquared = function(x1, z1, x2, z2)
     local dx = x2 - x1
-    local dy = y2 - y1
     local dz = z2 - z1
-    return dx * dx + dy * dy + dz * dz
+    return dx * dx + dz * dz
 end
 
 IsWithinInterceptionRadiusSquared = function(position1, position2, radius)
-    local distanceSquared = CalculateDistanceSquared(position1[1], position1[2], position1[3], position2[1], position2[2], position2[3])
+    local distanceSquared = CalculateSMDDistanceSquared(position1[1], position1[3], position2[1], position2[3])
     return distanceSquared <= (radius * radius)
 end
 
@@ -6581,7 +6580,7 @@ FindSMDBetweenPositions = function(start, finish, smdTable, radius, stepDistance
     local dx = finish[1] - start[1]
     local dy = finish[2] - start[2]
     local dz = finish[3] - start[3]
-    local distanceSquared = CalculateDistanceSquared(start[1], start[2], start[3], finish[1], finish[2], finish[3])
+    local distanceSquared = CalculateSMDDistanceSquared(start[1], start[3], finish[1], finish[3])
     
     -- Normalize direction vector
     local magnitudeSquared = dx * dx + dy * dy + dz * dz
@@ -6624,7 +6623,7 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
         end
         return false
     end
-    LOG('GetNukeStrikePosition Started')
+    --LOG('GetNukeStrikePosition Started')
     -- Look for commander first
     local ALLBPS = __blueprints
     local im = IntelManagerRNG.GetIntelManager(aiBrain)
@@ -6637,22 +6636,26 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
     local missileCost
     local missileRadius
     local smdRadius
+    local experimentalLauncherAvailable = false
     local gameTime = GetGameTimeSeconds()
     for _, sml in smlLaunchers do
-        if sml and not sml.Dead then
-            local smlMissileCost, smlMissileRadius = GetMissileDetails(ALLBPS, sml.UnitId)
+        if sml.Launcher and not sml.Launcher.Dead then
+            local smlMissileCost, smlMissileRadius = GetMissileDetails(ALLBPS, sml.Launcher.UnitId)
             if not missileCost or smlMissileCost > missileCost then
                 missileCost = smlMissileCost
             end
             if not missileRadius or smlMissileRadius > missileRadius then
                 missileRadius = smlMissileRadius
             end
+            if sml.Launcher.Blueprint.CategoriesHash.EXPERIMENTAL then
+                experimentalLauncherAvailable = true
+            end
         end
     end
     if maxMissiles == 0 then
         return {}
     end
-    LOG('GetNukeStrikePosition Max Missiles '..maxMissiles)
+    --LOG('GetNukeStrikePosition Max Missiles '..maxMissiles)
 
     --RNGLOG('SML Missile cost is '..missileCost)
     --RNGLOG('SML Missile radius is '..missileRadius)
@@ -6664,30 +6667,30 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
     if not table.empty(knownSMDUnits) then
         for _, v in knownSMDUnits do
             if not v.object.Dead and v.object.Blueprint.Weapon[1].MaxRadius then
-                LOG('knownSMD unit '..repr(v.object:GetPosition()))
+                --LOG('knownSMD unit '..repr(v.object:GetPosition()))
                 smdRadius = v.Blueprint.Weapon[1].MaxRadius
                 break
             else
-                LOG('SMD is dead')
+                --LOG('SMD is dead')
             end
         end
     end
-    LOG('Missile Cost is '..missileCost)
-    LOG('Missile Radius is '..missileRadius)
-    LOG('Known SMD units '..repr(knownSMDUnits))
+    --LOG('Missile Cost is '..missileCost)
+    --LOG('Missile Radius is '..missileRadius)
+    --LOG('Known SMD units '..repr(knownSMDUnits))
     if not smdRadius then
         smdRadius = ALLBPS['ueb4302'].Weapon[1].MaxRadius or 90
     end
-    LOG('GetNukeStrikePosition smd radius'..smdRadius)
+    --LOG('GetNukeStrikePosition smd radius'..smdRadius)
 
     for k, v in aiBrain.EnemyIntel.ACU do
         if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.LastSpotted ~= 0 then
-            if HaveUnitVisual(aiBrain, v.Unit, true) and not FindSMDAtPosition(v.Position, knownSMDUnits, smdRadius) then
+            if HaveUnitVisual(aiBrain, v.Unit, true) and (not FindSMDAtPosition(v.Position, knownSMDUnits, smdRadius) or experimentalLauncherAvailable)  then
                 RNGINSERT(targetPositions, {v.Position, type = 'COMMAND'})
             end
         end
     end
-    LOG('GetNukeStrikePosition targetpositions after acu check'..repr(targetPositions))
+    --LOG('GetNukeStrikePosition targetpositions after acu check'..repr(targetPositions))
 
     --RNGLOG(' ACUs detected are '..table.getn(targetPositions))
 
@@ -6695,18 +6698,18 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
         local targetFound = false
         for _, pos in targetPositions do
             for _, v in smlLaunchers do
-                local antiNukes = FindSMDBetweenPositions(v:GetPosition(), pos, knownSMDUnits, smdRadius, 45)
-                if antinukes < 1 then
+                local antiNukes = FindSMDBetweenPositions(v.Launcher:GetPosition(), pos, knownSMDUnits, smdRadius, 45)
+                if antinukes < 1 or experimentalLauncherAvailable then
                     targetFound = true
-                    LOG('Adding firing position for acu')
-                    table.insert(firingPositions, { Launcher = v, Position = pos[1],  TimeStamp = gameTime })
+                    --LOG('Adding firing position for acu')
+                    table.insert(firingPositions, { Launcher = v.Launcher, Position = pos[1],  TimeStamp = gameTime })
                     missilesConsumed = missilesConsumed + 1
                     break
                 end
             end
         end
         if targetFound and missilesConsumed >= maxMissiles then
-            RNGLOG('Valid Nuke Target Position with no Anti Nukes is '..repr(firingPositions))
+            --RNGLOG('Valid Nuke Target Position with no Anti Nukes is '..repr(firingPositions))
             return true, firingPositions
         end
     end
@@ -6723,7 +6726,7 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
                     local tz = v.Position[3] - z.Position[3]
                     local targetDistance = tx * tx + tz * tz
                     if targetDistance < missileRadius * missileRadius then
-                        LOG('Attempting to nuke a position that has recently been nuked, skipping')
+                        --LOG('Attempting to nuke a position that has recently been nuked, skipping')
                         skip = true
                         break
                     end
@@ -6754,7 +6757,8 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
             for iz, offsetZ in lookAroundTable do
                 local searchPos = {finalTarget.position[1] + offsetX*squareRadius, 0, finalTarget.position[3]+offsetZ*squareRadius}
                 local smdPresent, _ = FindSMDAtPosition(searchPos, knownSMDUnits, smdRadius)
-                if not smdPresent then
+                if not smdPresent or experimentalLauncherAvailable then
+                    --LOG('No SMD at position '..repr(searchPos))
                     local unitsAtLocation = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, searchPos, missileRadius, 'Enemy')
                     local currentValue = 0
                     --LOG('Number of units at location with structure category is '..table.getn(unitsAtLocation))
@@ -6779,27 +6783,32 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
                                 if not experimental then
                                     smdBetweenPos, smd = FindSMDBetweenPositions(v.Launcher:GetPosition(), searchPos, knownSMDUnits, smdRadius, 45)
                                 end
-                                if not smdBetweenPos then
+                                if not smdBetweenPos or experimentalLauncherAvailable then
                                     --LOG('No SMD between positions for target pos '..repr(searchPos))
                                     --LOG('Adding firing position for searchtargetarea')
+                                    --LOG('SMD positions known '..repr(knownSMDUnits))
                                     table.insert(finalShortList, { Launcher = v.Launcher, Position = searchPos,  MassValue = currentValue, TimeStamp = gameTime, EntityId = v.Launcher.EntityId, IMAP = finalTarget.position})
                                     missileAllocated = true
                                     break
+                                else
+                                    --LOG('Found SMD along path to position I was trying to nuke, switch to different position')
                                 end
                             end
                         end
                     end
+                else
+                    --LOG('Found SMD at position I was trying to nuke, switch to different position')
                 end
             end
             --LOG('missileAllocated current max value is '..maxValue)
         end
         RNGSORT( finalShortList, function(a,b) return a.MassValue > b.MassValue  end )
-        LOG('Looping through final shortlist for highest mass value')
+        --LOG('Looping through final shortlist for highest mass value')
         for k, v in finalShortList do
             for _, l in smlLaunchers do
                 if v.EntityId == l.Launcher.EntityId and l.Count > 0 then
-                    LOG('Adding final position for launcher '..v.EntityId)
-                    LOG('Mass value of position is '..v.MassValue)
+                    --LOG('Adding final position for launcher '..v.EntityId)
+                    --LOG('Mass value of position is '..v.MassValue)
                     table.insert(firingPositions, finalShortList[k])
                     l.Count = l.Count - 1
                 end
@@ -6812,7 +6821,7 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
         --RNGLOG('Best pos position is '..repr(bestPos))
         return true, firingPositions
     end
-    RNGLOG('No target list any firing positions '..repr(firingPositions))
+    --RNGLOG('No target list any firing positions '..repr(firingPositions))
     return false
 end
 

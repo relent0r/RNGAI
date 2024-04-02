@@ -59,21 +59,22 @@ AIPlatoonAirFeederBehavior = Class(AIPlatoonRNG) {
                 if self.FeederTimeout > 5 then
                     --RNGLOG('Feeder no target platoon found, starting new airhuntai')
                     --RNGLOG('Venting to new trueplatoon platoon')
-                    local platoonUnits = GetPlatoonUnits(self)
+                    local platoonUnits = self:GetPlatoonUnits()
                     local ventPlatoon = aiBrain:MakePlatoon('', '')
                     ventPlatoon.PlanName = 'RNGAI Air Intercept'
                     ventPlatoon.PlatoonData.AvoidBases =  self.PlatoonData.AvoidBases
-                    ventPlatoon.PlatoonData.SearchRadius =  maxRadius
+                    ventPlatoon.PlatoonData.SearchRadius =  self.MaxRadius
                     ventPlatoon.PlatoonData.LocationType = self.PlatoonData.LocationType
                     ventPlatoon.PlatoonData.PlatoonLimit = self.PlatoonData.PlatoonLimit
                     ventPlatoon.PlatoonData.PrioritizedCategories = self.PlatoonData.PrioritizedCategories
-                    aiBrain:AssignUnitsToPlatoon(ventPlatoon, self:GetPlatoonUnits(), 'Attack', 'None')
-                    import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, targetPlatoon, self:GetPlatoonUnits())
+                    aiBrain:AssignUnitsToPlatoon(ventPlatoon, platoonUnits, 'Attack', 'None')
+                    import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, targetPlatoon, platoonUnits)
                 end
             end
             if targetPlatoon and not IsDestroyed(targetPlatoon) then
                 if VDist3Sq(self:GetPlatoonPosition(), targetPlatoon:GetPlatoonPosition()) < 900 then
-                    aiBrain:AssignUnitsToPlatoon(targetPlatoon, self:GetPlatoonUnits(), 'Attack', 'None')
+                    local platoonUnits = self:GetPlatoonUnits()
+                    aiBrain:AssignUnitsToPlatoon(targetPlatoon, platoonUnits, 'Attack', 'None')
                 else
                     self.BuilderData = {
                         Position = targetPlatoon:GetPlatoonPosition(),

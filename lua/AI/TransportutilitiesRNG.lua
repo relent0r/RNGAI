@@ -1073,12 +1073,11 @@ function SendPlatoonWithTransports(aiBrain, platoon, destination, attempts, bSki
                 local atest, stest
                 local landpath,  landpathlength, landreason, lastlocationtested, path, pathlength, reason
 				-- locate the requested markers within markerrange of the supplied location	that the platoon can safely land at
-				local markerRadius = math.min(aiBrain.BrainIntel.IMAPConfig.IMAPSize * 3, 128)
-				markerlist = NavUtils.DirectionsFromWithThreatThreshold(layer, destination, markerRadius, aiBrain, NavUtils.ThreatFunctions.AntiAir, threatMax, aiBrain.IMAPConfig.Rings)
+				markerlist = NavUtils.DirectionsFromWithThreatThreshold(layer, destination, markerrange, aiBrain, NavUtils.ThreatFunctions.AntiAir, threatMax, aiBrain.IMAPConfig.Rings)
 				-- sort the markers by closest distance to final destination
 				if not table.empty(markerlist) then
 					if TransportDialog then                    
-						LOG("*AI DEBUG "..aiBrain.Nickname.." "..transportplatoon.BuilderName.." Safe Drop radius is  "..markerRadius.." number of positions to test is "..table.getn(markerlist))
+						LOG("*AI DEBUG "..aiBrain.Nickname.." "..transportplatoon.BuilderName.." Safe Drop radius is  "..markerrange.." number of positions to test is "..table.getn(markerlist))
 					end
 					TableSort( markerlist, function(a,b) local VDist2Sq = VDist2Sq return VDist2Sq( a[1],a[3], destination[1],destination[3] ) < VDist2Sq( b[1],b[3], destination[1],destination[3] )  end )
 
@@ -1143,6 +1142,10 @@ function SendPlatoonWithTransports(aiBrain, platoon, destination, attempts, bSki
 								end
 							end
 						end
+					end
+				else
+					if TransportDialog then                    
+						LOG("*AI DEBUG "..aiBrain.Nickname.." "..transportplatoon.BuilderName.." There are no alternative markers to attempt to transport to.")
 					end
 				end
 				return false, nil
