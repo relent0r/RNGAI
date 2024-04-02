@@ -130,7 +130,7 @@ RNGLandResourceSet = Class(ZoneSet){
                 end
             end
             --LOG('Resource Group value '..table.getn(resourceGroup))
-            self:AddZone({pos={x,GetSurfaceHeight(x,z),z}, component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), weight=best.weight, startpositionclose=startPos, enemylandthreat=0, enemyantiairthreat=0, friendlythreat=0, friendlyantiairthreat=0, resourcevalue=table.getn(resourceGroup), resourcemarkers=resourceGroup, zonealert=false, control=1, enemystartdata = { }, allystartdata = { },  bestarmy = false})
+            self:AddZone({pos={x,GetSurfaceHeight(x,z),z}, component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), weight=best.weight, startpositionclose=startPos, enemylandthreat=0, enemyantiairthreat=0, friendlythreat=0, friendlyantiairthreat=0, resourcevalue=table.getn(resourceGroup), resourcemarkers=resourceGroup, zonealert=false, control=1, enemystartdata = { }, allystartdata = { },  bestarmy = false, teamvalue = 1})
         end
     end,
 }

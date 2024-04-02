@@ -225,6 +225,7 @@ IntelManager = Class {
         self:ForkThread(self.ConfigureResourcePointZoneID)
         self:ForkThread(self.ZoneIntelAssignment)
         self:ForkThread(self.EnemyPositionAngleAssignment)
+        self:ForkThread(self.ZoneDistanceValue)
         self:ForkThread(self.IntelGridThread, self.Brain)
         self:ForkThread(self.TacticalIntelCheck)
         if self.Debug then
@@ -885,6 +886,31 @@ IntelManager = Class {
         end
     end,
 
+    ZoneDistanceValue = function(self)
+        self:WaitForZoneInitialization()
+        self:WaitForMarkerInfection()
+        WaitTicks(100)
+        self:SetTeamDistanceCheck()
+        if not RNGTableEmpty(self.Brain.Zones.Land.zones) then
+            local teamAveragePositions = self:GetTeamAveragePositions()
+            for c, b in self.Brain.Zones.Land.zones do
+                if teamAveragePositions['Ally'] and teamAveragePositions['Enemy'] then
+                    local ax = teamAveragePositions['Ally'].x - b.pos[1]
+                    local az = teamAveragePositions['Ally'].z - b.pos[3]
+                    local allyPosDist = ax * ax + az * az
+                    local ex = teamAveragePositions['Enemy'].x - b.pos[1]
+                    local ez = teamAveragePositions['Enemy'].z - b.pos[3]
+                    local enemyPosDist = ex * ex + ez * ez
+                    b.teamvalue = RUtils.CalculateRelativeDistanceValue(math.sqrt(enemyPosDist), math.sqrt(allyPosDist))
+                    LOG('Zone team value at position '..repr(b.pos)..' set as '..b.teamvalue)
+                else
+                    b.teamvalue = 1
+                    LOG('Zone team value at position '..repr(b.pos)..' set as '..b.teamvalue)
+                end
+            end
+        end
+    end,
+
     SetTeamDistanceCheck = function(self)
         local furtherestPlayer = false
         local selfIndex = self.Brain:GetArmyIndex()
@@ -920,6 +946,17 @@ IntelManager = Class {
                 --RNGLOG('The difference between positions is '..(closestDistance - furtherestPlayerDistance))
             end
         end
+    end,
+
+    GetTeamAveragePositions = function(self)
+        local teamTable = {}
+        if self.Brain.BrainIntel.AllyCount > 0 then
+            teamTable['Ally'] = RUtils.CalculateAveragePosition(self.Brain.BrainIntel.AllyStartLocations, self.Brain.BrainIntel.AllyCount)
+        end
+        if self.Brain.BrainIntel.EnemyCount > 0 then
+            teamTable['Enemy'] = RUtils.CalculateAveragePosition(self.Brain.BrainIntel.EnemyStartLocations, self.Brain.BrainIntel.EnemyCount)
+        end
+        return teamTable
     end,
 
     IntelGridThread = function(self, aiBrain)
