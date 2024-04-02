@@ -869,7 +869,7 @@ function ReturnTransportsToPool( aiBrain, units, move )
                 IssueClearCommands(v)
                 if VDist3( baseposition, unitposition ) > 100 then
                     -- this requests a path for the transport with a threat allowance of 20 - which is kinda steep sometimes
-					local safePath, reason = NavUtils.PathToWithThreatThreshold('Air', unitposition, baseposition, aiBrain, NavUtils.ThreatFunctions.AntiAir, 50, aiBrain.IMAPConfig.Rings)
+					local safePath, reason = NavUtils.PathToWithThreatThreshold('Air', unitposition, baseposition, aiBrain, NavUtils.ThreatFunctions.AntiAir, 50, aiBrain.BrainIntel.IMAPConfig.Rings)
                     if safePath then
                         if TransportDialog then
                             LOG("*AI DEBUG "..aiBrain.Nickname.." "..returnpool.BuilderName.." Transport "..v.EntityId.." gets RTB path of "..repr(safePath))
@@ -1037,7 +1037,7 @@ function SendPlatoonWithTransports(aiBrain, platoon, destination, attempts, bSki
 			-- I'm thinking of mixing the two values so that it will error on the side of caution
 			local GetRealThreatAtPosition = function( position, range )
                 
-				local IMAPblocks = aiBrain.IMAPConfig.Rings or 1
+				local IMAPblocks = aiBrain.BrainIntel.IMAPConfig.Rings or 1
 				local sfake = GetThreatAtPosition( aiBrain, position, IMAPblocks, true, 'AntiSurface' )
 				local afake = GetThreatAtPosition( aiBrain, position, IMAPblocks, true, 'AntiAir' )
                 airthreat = 0
@@ -1069,11 +1069,11 @@ function SendPlatoonWithTransports(aiBrain, platoon, destination, attempts, bSki
 			-- a local function to find an alternate Drop point which satisfies both transports and platoon for threat and a path to the goal
 			local FindSafeDropZoneWithPath = function( platoon, transportplatoon, markerrange, destination, threatMax, airthreatMax, threatType, layer)
 				
-				local markerlist = {}
                 local atest, stest
                 local landpath,  landpathlength, landreason, lastlocationtested, path, pathlength, reason
 				-- locate the requested markers within markerrange of the supplied location	that the platoon can safely land at
-				markerlist = NavUtils.DirectionsFromWithThreatThreshold(layer, destination, markerrange, aiBrain, NavUtils.ThreatFunctions.AntiAir, threatMax, aiBrain.IMAPConfig.Rings)
+				local markerRadius = math.min(aiBrain.BrainIntel.IMAPConfig.IMAPSize * 3, 128)
+				local markerlist = NavUtils.DirectionsFromWithThreatThreshold(layer, destination, markerRadius, aiBrain, NavUtils.ThreatFunctions.AntiAir, threatMax, aiBrain.BrainIntel.IMAPConfig.Rings)
 				-- sort the markers by closest distance to final destination
 				if not table.empty(markerlist) then
 					if TransportDialog then                    
@@ -1101,7 +1101,7 @@ function SendPlatoonWithTransports(aiBrain, platoon, destination, attempts, bSki
 							landpath = false
 							landpathlength = 0
 							-- can the platoon path safely from this marker to the final destination 
-							landpath, landreason, landpathlength = NavUtils.PathToWithThreatThreshold(layer, destination, lastlocationtested, aiBrain, NavUtils.ThreatFunctions.AntiSurface, threatMax, aiBrain.IMAPConfig.Rings)
+							landpath, landreason, landpathlength = NavUtils.PathToWithThreatThreshold(layer, destination, lastlocationtested, aiBrain, NavUtils.ThreatFunctions.AntiSurface, threatMax, aiBrain.BrainIntel.IMAPConfig.Rings)
 							-- can the transports reach that marker ?
 							if landpath then
 								if TransportDialog then                    
@@ -1109,7 +1109,7 @@ function SendPlatoonWithTransports(aiBrain, platoon, destination, attempts, bSki
 								end
 								path = false
 								pathlength = 0
-								path, reason, pathlength = NavUtils.PathToWithThreatThreshold('Air', lastlocationtested, GetPlatoonPosition(platoon), aiBrain, NavUtils.ThreatFunctions.AntiAir, airthreatMax, aiBrain.IMAPConfig.Rings)
+								path, reason, pathlength = NavUtils.PathToWithThreatThreshold('Air', lastlocationtested, GetPlatoonPosition(platoon), aiBrain, NavUtils.ThreatFunctions.AntiAir, airthreatMax, aiBrain.BrainIntel.IMAPConfig.Rings)
 								if path then
 									if TransportDialog then
 										LOG("*AI DEBUG "..aiBrain.Nickname.." "..repr(platoon.BuilderName).." gets path to "..repr(destination).." from landing at "..repr(lastlocationtested).." path length is "..pathlength.." using threatmax of "..threatMax)
@@ -1282,7 +1282,7 @@ function SendPlatoonWithTransports(aiBrain, platoon, destination, attempts, bSki
 			end
 
 			-- path from where we are to the destination - use inflated threat to get there --
-			path = NavUtils.PathToWithThreatThreshold(MovementLayer, GetPlatoonPosition(platoon), destination, aiBrain, NavUtils.ThreatFunctions.AntiSurface,  mythreat * 1.25, aiBrain.IMAPConfig.Rings)
+			path = NavUtils.PathToWithThreatThreshold(MovementLayer, GetPlatoonPosition(platoon), destination, aiBrain, NavUtils.ThreatFunctions.AntiSurface,  mythreat * 1.25, aiBrain.BrainIntel.IMAPConfig.Rings)
 
 			if PlatoonExists( aiBrain, platoon ) then
 				-- if no path then fail otherwise use it
@@ -1694,7 +1694,7 @@ function UseTransports( aiBrain, transports, location, UnitPlatoon, IsEngineer )
 		if platpos then
 			local airthreatMax = counter * 4.2
 			airthreatMax = airthreatMax + ( airthreatMax * math.log10(counter))
-            local safePath, reason, pathlength = NavUtils.PathToWithThreatThreshold('Air', platpos, location, aiBrain, NavUtils.ThreatFunctions.AntiAir,  airthreatMax, aiBrain.IMAPConfig.Rings)
+            local safePath, reason, pathlength = NavUtils.PathToWithThreatThreshold('Air', platpos, location, aiBrain, NavUtils.ThreatFunctions.AntiAir,  airthreatMax, aiBrain.BrainIntel.IMAPConfig.Rings)
             if TransportDialog then
                 if not safePath then
                     LOG("*AI DEBUG "..aiBrain.Nickname.." "..UnitPlatoon.BuilderName.." "..transports.BuilderName.." no safe path to "..repr(location).." using threat of "..airthreatMax)
@@ -2275,7 +2275,7 @@ function TransportReturnToBase(unit, aiBrain)
 					returnPos = aiBrain.BuilderManagers[bestBaseName].Position
 					IssueStop ( {unit} )
 					IssueClearCommands( {unit} )
-					local safePath, reason = NavUtils.PathToWithThreatThreshold('Air', platPos, returnPos, aiBrain, NavUtils.ThreatFunctions.AntiAir, 50, aiBrain.IMAPConfig.Rings)
+					local safePath, reason = NavUtils.PathToWithThreatThreshold('Air', platPos, returnPos, aiBrain, NavUtils.ThreatFunctions.AntiAir, 50, aiBrain.BrainIntel.IMAPConfig.Rings)
 					if safePath then
 						-- use path
 						for _,p in safePath do

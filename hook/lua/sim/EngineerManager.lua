@@ -89,7 +89,7 @@ EngineerManager = Class(RNGEngineerManager) {
                 if not table.empty(units) then
                     for _, v in units do
                         if not v.TMDInRange then
-                            v.TMDInRange = {}
+                            v.TMDInRange = setmetatable({}, WeakValueTable)
                         end
                         v.TMDInRange[finishedUnit.EntityId] = finishedUnit
                         table.insert(finishedUnit.UnitsDefended, v)

@@ -702,7 +702,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             local closestAPlatPos
             local AlliedPlatoons = aiBrain:GetPlatoonsList()
             for _,aPlat in AlliedPlatoons do
-                if aPlat.EntityId ~= self.EntityId then
+                if not table.equal(aPlat, self) then
                     local aPlatAirThreat = aPlat:CalculatePlatoonThreat('Air', categories.ALLUNITS)
                     if aPlatAirThreat > self.CurrentEnemyThreat / 2 then
                         local aPlatPos = GetPlatoonPosition(aPlat)
