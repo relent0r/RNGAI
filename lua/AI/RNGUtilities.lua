@@ -6882,7 +6882,7 @@ GetStartRaidPositions = function(aiBrain, startPos, enemyIndex)
     table.sort(filteredZoneTable, function(a, b) return a.startDist < b.startDist end)
     local shortList = {}
     local shortListCount = math.min(RNGGETN(filteredZoneTable), 5)
-    LOG('shortListCount is '..repr(shortListCount))
+    --LOG('shortListCount is '..repr(shortListCount))
     if shortListCount == 0 then
         coroutine.yield(5)
         return
@@ -6893,11 +6893,11 @@ GetStartRaidPositions = function(aiBrain, startPos, enemyIndex)
         end
     end
     
-    LOG('Dump shortList '..repr(shortList))
+    --LOG('Dump shortList '..repr(shortList))
     table.sort(shortList, function(a, b) return a.resourceValue > b.resourceValue end)
-    LOG('Dump shortList by resource value '..repr(shortList))
+    --LOG('Dump shortList by resource value '..repr(shortList))
     local selectedPos = shortList[math.random(1,shortListCount)]
-    LOG('shortList random pos is '..repr(selectedPos))
+    --LOG('shortList random pos is '..repr(selectedPos))
     local targetAngle = GetAngleToPosition(selectedPos.pos, startPos)
     table.sort(filteredZoneTable, function(a, b)
         local distanceA = VDist2(startPos[1], startPos[3], a.pos[1], a.pos[3])
@@ -6921,10 +6921,10 @@ GetStartRaidPositions = function(aiBrain, startPos, enemyIndex)
     end)
     local filteredPositions = filterPositions(startPos[1], startPos[3], selectedPos.pos[1], selectedPos.pos[3], filteredZoneTable, tolerance)
     table.sort(filteredPositions, function(a, b) return a.startDist > b.startDist end)
-    for _, v in filteredPositions do
-        aiBrain:ForkThread(DrawTargetRadius, v.pos, 'cc0000')
-        LOG('Positions returned '..repr(v.pos))
-    end
+    --for _, v in filteredPositions do
+    --    aiBrain:ForkThread(DrawTargetRadius, v.pos, 'cc0000')
+    --    LOG('Positions returned '..repr(v.pos))
+    --end
     return selectedPos, shortList, filteredPositions
 end
 

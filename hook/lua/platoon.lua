@@ -2529,6 +2529,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 eng.UnitBeingAssist = assistee.UnitBeingBuilt or assistee.UnitBeingAssist or assistee
                                 --RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
                                 IssueGuard({eng}, eng.UnitBeingAssist)
+                                airFactoryBuilt = true
                                 coroutine.yield(30)
                                 while eng and not eng.Dead and not eng:IsIdleState() do
                                     if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
@@ -2554,10 +2555,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
             if airFactoryBuilt and aiBrain.EconomyOverTimeCurrent.EnergyIncome < 24 then
-                LOG('Current energy income '..aiBrain.EconomyOverTimeCurrent.EnergyIncome)
+                --LOG('Current energy income '..aiBrain.EconomyOverTimeCurrent.EnergyIncome)
                 local energyCount = math.ceil((240 - aiBrain.EconomyOverTimeCurrent.EnergyIncome * 10) / (20 * ecoMultiplier))
-                LOG('Current energy income is less than 200')
-                LOG('Energy count required '..energyCount)
+                --LOG('Current energy income is less than 240')
+                --LOG('Energy count required '..energyCount)
                 for i=1, energyCount do
                     buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true, 4)
                     if borderWarning and buildLocation and whatToBuild then

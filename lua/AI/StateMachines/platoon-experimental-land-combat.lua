@@ -793,8 +793,8 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
             for _,aPlat in AlliedPlatoons do
                 if not table.equal(aPlat, self) then
                     local aPlatSurfaceThreat = aPlat:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
-                    if aPlatSurfaceThreat > self.CurrentEnemyThreat / 2 then
-                        local aPlatPos = GetPlatoonPosition(aPlat)
+                    if aPlatSurfaceThreat > self.EnemyThreatTable.TotalSuroundingThreat / 2 then
+                        local aPlatPos = aPlat:GetPlatoonPosition()
                         local aPlatDistance = VDist2Sq(experimentalPosition[1],experimentalPosition[3],aPlatPos[1],aPlatPos[3])
                         local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],self.Home[1],self.Home[3])
                         if aPlatToHomeDistance < distanceToHome then

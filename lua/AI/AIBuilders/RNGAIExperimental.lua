@@ -262,11 +262,31 @@ BuilderGroup {
         FormRadius = 10000,
         InstanceCount = 50,
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL - categories.uel0401 } },
         },
         BuilderType = 'Any',
         BuilderData = {
             StateMachine = 'LandExperimental',
+            ThreatWeights = {
+                TargetThreatType = 'Commander',
+            },
+            UseMoveOrder = true,
+            LocationType = 'LocationType',
+            PrioritizedCategories = { 'EXPERIMENTAL LAND', 'COMMAND', 'FACTORY LAND', 'MASSPRODUCTION', 'ENERGYPRODUCTION', 'STRUCTURE STRATEGIC', 'STRUCTURE' },
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T4 Exp FatBoy',
+        PlatoonTemplate = 'T4ExperimentalLandRNG',
+        Priority = 1000,
+        FormRadius = 10000,
+        InstanceCount = 50,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL * categories.uel0401 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'FatBoy',
             ThreatWeights = {
                 TargetThreatType = 'Commander',
             },

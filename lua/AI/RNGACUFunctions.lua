@@ -428,15 +428,6 @@ function CDRThreatAssessmentRNG(cdr)
             if aiBrain.EnemyIntel.Phase > 2 then
                 cdr.Confidence = cdr.Confidence * 0.7
             end
-            if cdr.Confidence then
-                LOG('Current Confidence is '..cdr.Confidence)
-            end
-            if cdr.DistanceToHome < math.max(aiBrain.OperatingAreas['BaseRestrictedArea'], 160) then
-                LOG('ACU is closer to home')
-                LOG('Distance is '..cdr.DistanceToHome)
-                LOG('Max base range would be '..(math.max(120, cdr.DefaultRange * cdr.Confidence)))
-                LOG('If we manipulated it due to being close to base it would be '..(math.max(120, cdr.DefaultRange * (cdr.Confidence * 1.5))))
-            end
             if aiBrain.RNGEXP then
                 cdr.MaxBaseRange = 80
             else
@@ -454,7 +445,6 @@ function CDRThreatAssessmentRNG(cdr)
                 else
                     cdr.MaxBaseRange = math.min(180, cdr.DefaultRange * cdr.Confidence)
                 end
-                LOG('Current Max base range is '..cdr.MaxBaseRange)
             end
             aiBrain.ACUSupport.ACUMaxSearchRadius = cdr.MaxBaseRange
            --RNGLOG('Current CDR Max Base Range '..cdr.MaxBaseRange)
