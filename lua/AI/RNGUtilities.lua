@@ -6928,22 +6928,23 @@ GetStartRaidPositions = function(aiBrain, startPos, enemyIndex)
     return selectedPos, shortList, filteredPositions
 end
 
-function CalculateAveragePosition(positions, playerCount)
-    local totalX, totalY = 0, 0
+CalculateAveragePosition = function(positions, playerCount)
+    local totalX, totalZ = 0, 0
     for _, pos in positions do
-        totalX = totalX + pos[1]
-        totalZ = totalZ + pos[3]
+        totalX = totalX + pos.Position[1]
+        totalZ = totalZ + pos.Position[3]
     end
     local averageX = totalX / playerCount
-    local averageY = totalZ / playerCount
-    return {x = averageX, y = averageY}
+    local averageZ = totalZ / playerCount
+    return {x = averageX, z = averageZ}
 end
 
-function CalculateRelativeDistanceValue(a_distance, b_distance):
+CalculateRelativeDistanceValue = function(a_distance, b_distance)
     d_total = a_distance + b_distance
     
-    if d_total == 0:
+    if d_total == 0 then
         return 1  -- Both distances are 0
+    end
     
     normalized_distance = (2 * a_distance) / d_total
     

@@ -58,7 +58,7 @@ RNGLandResourceSet = Class(ZoneSet){
         local armyStarts = {}
         local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
         local mapCenterPoint = { (ScenarioInfo.size[1] / 2), 0 ,(ScenarioInfo.size[2] / 2) }
-        local zoneRadius = 50 * 50
+        local zoneRadius = 45 * 45
         if maxmapdimension < 512 then
             zoneRadius = 35 * 35
         end
@@ -92,7 +92,7 @@ RNGLandResourceSet = Class(ZoneSet){
             for _, v1 in markers do
                 if not v1.claimed then
                     for _, v2 in markers do
-                        if (not v2.claimed) and VDist2Sq(v1.position[1], v1.position[3], v2.position[1], v2.position[3]) < zoneRadius then
+                        if (not v2.claimed) and (v1 ~= v2) and VDist2Sq(v1.position[1], v1.position[3], v2.position[1], v2.position[3]) < zoneRadius then
                             v1.weight = v1.weight + 1
                             v1.aggX = v1.aggX + v2.position[1]
                             v1.aggZ = v1.aggZ + v2.position[3]

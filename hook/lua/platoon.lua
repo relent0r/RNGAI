@@ -2555,23 +2555,77 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
             if airFactoryBuilt and aiBrain.EconomyOverTimeCurrent.EnergyIncome < 24 then
-                --LOG('Current energy income '..aiBrain.EconomyOverTimeCurrent.EnergyIncome)
-                local energyCount = math.ceil((240 - aiBrain.EconomyOverTimeCurrent.EnergyIncome * 10) / (20 * ecoMultiplier))
-                --LOG('Current energy income is less than 240')
-                --LOG('Energy count required '..energyCount)
-                for i=1, energyCount do
-                    buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true, 4)
-                    if borderWarning and buildLocation and whatToBuild then
-                        IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
-                        borderWarning = false
-                    elseif buildLocation and whatToBuild then
-                        aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
-                    else
-                        WARN('No buildLocation or whatToBuild during ACU initialization')
+                if aiBrain:IsAnyEngineerBuilding(categories.STRUCTURE * categories.HYDROCARBON) then
+                    local assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
+                    local assistee = false
+                    --RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
+                    local assistListCount = 0
+                    while not not RNGTableEmpty(assistList) do
+                        coroutine.yield( 15 )
+                        assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
+                        assistListCount = assistListCount + 1
+                        --RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
+                        if assistListCount > 10 then
+                            --RNGLOG('assistListCount is still empty after 7.5 seconds')
+                            break
+                        end
                     end
-                end
-                while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
-                    coroutine.yield(5)
+                    if not RNGTableEmpty(assistList) then
+                        -- only have one unit in the list; assist it
+                        local low = false
+                        local bestUnit = false
+                        for k,v in assistList do
+                            --DUNCAN - check unit is inside assist range 
+                            local unitPos = v:GetPosition()
+                            local UnitAssist = v.UnitBeingBuilt or v.UnitBeingAssist or v
+                            local NumAssist = RNGGETN(UnitAssist:GetGuards())
+                            local dist = VDist2Sq(engPos[1], engPos[3], unitPos[1], unitPos[3])
+                            --RNGLOG('CommanderInitializeAIRNG : Assist distance for commander assist is '..dist)
+                            -- Find the closest unit to assist
+                            if (not low or dist < low) and NumAssist < 20 and dist < 225 then
+                                low = dist
+                                bestUnit = v
+                            end
+                        end
+                        assistee = bestUnit
+                    end
+                    if assistee  then
+                        IssueClearCommands({eng})
+                        eng.UnitBeingAssist = assistee.UnitBeingBuilt or assistee.UnitBeingAssist or assistee
+                        --RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
+                        IssueGuard({eng}, eng.UnitBeingAssist)
+                        coroutine.yield(30)
+                        while eng and not eng.Dead and not eng:IsIdleState() do
+                            if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
+                                break
+                            end
+                            -- stop if our target is finished
+                            if eng.UnitBeingAssist:GetFractionComplete() == 1 and not eng.UnitBeingAssist:IsUnitState('Upgrading') then
+                                IssueClearCommands({eng})
+                                break
+                            end
+                            coroutine.yield(30)
+                        end
+                    end
+                else
+                    --LOG('Current energy income '..aiBrain.EconomyOverTimeCurrent.EnergyIncome)
+                    local energyCount = math.ceil((240 - aiBrain.EconomyOverTimeCurrent.EnergyIncome * 10) / (20 * ecoMultiplier))
+                    --LOG('Current energy income is less than 240')
+                    --LOG('Energy count required '..energyCount)
+                    for i=1, energyCount do
+                        buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true, 4)
+                        if borderWarning and buildLocation and whatToBuild then
+                            IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                            borderWarning = false
+                        elseif buildLocation and whatToBuild then
+                            aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                        else
+                            WARN('No buildLocation or whatToBuild during ACU initialization')
+                        end
+                    end
+                    while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                        coroutine.yield(5)
+                    end
                 end
             end
         end

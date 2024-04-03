@@ -734,7 +734,7 @@ IntelManager = Class {
                     end
                 end
                 for k2, v2 in self.Brain.Zones[v].zones do
-                    for k3, v3 in friendlyThreatantisurface do
+                    for k3, v3 in friendlyThreatAntiSurface do
                         if k2 == k3 then
                             self.Brain.Zones[v].zones[k2].friendlythreatantisurface = v3
                         end
@@ -849,7 +849,7 @@ IntelManager = Class {
         self:WaitForZoneInitialization()
         self:WaitForMarkerInfection()
         WaitTicks(100)
-        self:SetTeamDistanceCheck()
+        self:CalculateAirSlot()
         if not RNGTableEmpty(self.Brain.Zones.Land.zones) then
             if not RNGTableEmpty(self.Brain.EnemyIntel.EnemyStartLocations) then
                 for k, v in self.Brain.EnemyIntel.EnemyStartLocations do
@@ -890,10 +890,10 @@ IntelManager = Class {
         self:WaitForZoneInitialization()
         self:WaitForMarkerInfection()
         WaitTicks(100)
-        self:SetTeamDistanceCheck()
         if not RNGTableEmpty(self.Brain.Zones.Land.zones) then
             local teamAveragePositions = self:GetTeamAveragePositions()
-            for c, b in self.Brain.Zones.Land.zones do
+            LOG('teamAveragePositions '..repr(teamAveragePositions))
+            for _, b in self.Brain.Zones.Land.zones do
                 if teamAveragePositions['Ally'] and teamAveragePositions['Enemy'] then
                     local ax = teamAveragePositions['Ally'].x - b.pos[1]
                     local az = teamAveragePositions['Ally'].z - b.pos[3]
@@ -902,6 +902,14 @@ IntelManager = Class {
                     local ez = teamAveragePositions['Enemy'].z - b.pos[3]
                     local enemyPosDist = ex * ex + ez * ez
                     b.teamvalue = RUtils.CalculateRelativeDistanceValue(math.sqrt(enemyPosDist), math.sqrt(allyPosDist))
+                    if enemyPosDist > allyPosDist then
+                        self.Brain:ForkThread(DrawTargetRadius, b.pos, 'aa44ff44')
+                        LOG('This should be greater than 1')
+                    end
+                    if enemyPosDist < allyPosDist then
+                        self.Brain:ForkThread(DrawTargetRadius, b.pos, 'cc0000')
+                        LOG('This should be less than 1')
+                    end
                     LOG('Zone team value at position '..repr(b.pos)..' set as '..b.teamvalue)
                 else
                     b.teamvalue = 1
@@ -911,7 +919,7 @@ IntelManager = Class {
         end
     end,
 
-    SetTeamDistanceCheck = function(self)
+    CalculateAirSlot = function(self)
         local furtherestPlayer = false
         local selfIndex = self.Brain:GetArmyIndex()
         if self.Brain.BrainIntel.AllyCount > 2 and self.Brain.EnemyIntel.EnemyCount > 0 then
@@ -953,8 +961,8 @@ IntelManager = Class {
         if self.Brain.BrainIntel.AllyCount > 0 then
             teamTable['Ally'] = RUtils.CalculateAveragePosition(self.Brain.BrainIntel.AllyStartLocations, self.Brain.BrainIntel.AllyCount)
         end
-        if self.Brain.BrainIntel.EnemyCount > 0 then
-            teamTable['Enemy'] = RUtils.CalculateAveragePosition(self.Brain.BrainIntel.EnemyStartLocations, self.Brain.BrainIntel.EnemyCount)
+        if self.Brain.EnemyIntel.EnemyCount > 0 then
+            teamTable['Enemy'] = RUtils.CalculateAveragePosition(self.Brain.EnemyIntel.EnemyStartLocations, self.Brain.EnemyIntel.EnemyCount)
         end
         return teamTable
     end,
@@ -2000,7 +2008,7 @@ end
 DrawTargetRadius = function(self, position, colour)
     --RNGLOG('Draw Target Radius points')
     local counter = 0
-    while counter < 60 do
+    while counter < 120 do
         DrawCircle(position, 3, colour)
         counter = counter + 1
         coroutine.yield( 2 )
