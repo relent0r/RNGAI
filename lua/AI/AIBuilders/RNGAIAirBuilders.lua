@@ -169,7 +169,7 @@ BuilderGroup {
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI Factory Intie Enemy Threat T2',
-        PlatoonTemplate = 'RNGAIT2FighterAeon',
+        PlatoonTemplate = 'T2FighterBomber',
         Priority = 0,
         PriorityFunction = AirDefenseMode,
         BuilderConditions = { 
@@ -185,7 +185,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Factory Swift Wind Response',
-        PlatoonTemplate = 'RNGAIT2FighterAeon',
+        PlatoonTemplate = 'T2FighterBomber',
         Priority = 885,
         BuilderConditions = { 
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
@@ -225,6 +225,7 @@ BuilderGroup {
             TechLevel = 3
         },
     },
+    --[[
     Builder {
         BuilderName = 'RNGAI T3 Air Attack Queue',
         PlatoonTemplate = 'RNGAIT3AirAttackQueue',
@@ -240,7 +241,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 3
         },
-    },
+    },]]
 }
 
 BuilderGroup {
@@ -652,219 +653,5 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
         },
         BuilderType = 'Air',
-    },
-}
-
-BuilderGroup {
-    BuilderGroupName = 'RNGEXP Air Platoon Builder',
-    BuildersType = 'PlatoonFormBuilder', -- A PlatoonFormBuilder is for builder groups of units.
-    Builder {
-        BuilderName = 'RNGEXP Air Intercept',
-        PlatoonTemplate = 'RNGAI AntiAirHunt',
-        Priority = 800,
-        InstanceCount = 2,
-        BuilderType = 'Any',
-        BuilderData = {
-            AvoidBases = true,
-            NeverGuardEngineers = true,
-            PlatoonLimit = 25,
-            PrioritizedCategories = {
-                categories.EXPERIMENTAL * categories.AIR - categories.UNTARGETABLE,
-                categories.GROUNDATTACK * categories.AIR,
-                categories.BOMBER * categories.AIR,
-                categories.ANTIAIR * categories.AIR,
-            },
-        },
-        BuilderConditions = {
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'ANTIAIR', AntiAirUnits } },
-            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
-            --{ UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK } },
-         },
-    },
-    Builder {
-        BuilderName = 'RNGEXP Air Feeder',
-        PlatoonTemplate = 'RNGAI AntiAirFeeder',
-        Priority = 750,
-        InstanceCount = 30,
-        BuilderType = 'Any',
-        BuilderData = {
-            StateMachine = 'AirFeeder',
-            PlatoonType = 'fighter',
-            PlatoonSearchRange = 'BaseDMZArea',
-            AvoidBases = true,
-            SearchRadius = 'BaseEnemyArea',
-            LocationType = 'LocationType',
-            NeverGuardEngineers = true,
-            PlatoonLimit = 18,
-            PrioritizedCategories = {
-                categories.EXPERIMENTAL * categories.AIR - categories.UNTARGETABLE,
-                categories.GROUNDATTACK * categories.AIR,
-                categories.BOMBER * categories.AIR,
-                categories.ANTIAIR * categories.AIR,
-            },
-        },
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, AntiAirUnits } },
-         },
-    },
-    Builder {
-        BuilderName = 'RNGEXP Bomber Attack MassRaid',
-        PlatoonTemplate = 'RNGAI BomberAttack',
-        Priority = 900,
-        InstanceCount = 2,
-        BuilderType = 'Any',        
-        BuilderConditions = { 
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
-        },
-        BuilderData = {
-            AvoidBases = true,
-            SearchRadius = 'BaseEnemyArea',
-            UnitType = 'BOMBER',
-            PlatoonLimit = 18,
-            PrioritizedCategories = {
-                categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
-                categories.MASSEXTRACTION,
-                categories.ENGINEER * categories.TECH2,
-                categories.ENGINEER * categories.TECH3,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3),
-                categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                categories.STRUCTURE * categories.DEFENSE,
-                categories.STRUCTURE,
-                categories.MOBILE * categories.LAND,
-                categories.NAVAL * categories.CRUISER,
-                categories.NAVAL - (categories.T1SUBMARINE + categories.T2SUBMARINE),
-            },
-        },
-    },
-    Builder {
-        BuilderName = 'RNGEXP Gunship Attack T1',
-        PlatoonTemplate = 'RNGAI GunShipAttack',
-        Priority = 890,
-        InstanceCount = 5,
-        BuilderType = 'Any',
-        BuilderConditions = { 
-            { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.MOBILE * categories.GROUNDATTACK * categories.TECH1 } },
-            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
-        },
-        BuilderData = {
-            SearchRadius = 'BaseEnemyArea',
-            AvoidBases = true,
-            LocationType = 'LocationType',
-            StateMachine = 'Gunship',
-            UnitType = 'GUNSHIP',
-            PlatoonLimit = 18,
-            TargetSearchPriorities = {
-                categories.ENGINEER,
-                categories.MASSEXTRACTION,
-                categories.RADAR * categories.STRUCTURE,
-                categories.ENERGYSTORAGE,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                categories.ALLUNITS,
-            },
-            PrioritizedCategories = {
-                categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.MOBILE * categories.LAND,
-                categories.ENGINEER,
-                categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.MASSEXTRACTION,
-                categories.ALLUNITS - (categories.T1SUBMARINE + categories.T2SUBMARINE),
-            },
-        },
-    },
-    Builder {
-        BuilderName = 'RNGEXP Gunship Attack T2T3',
-        PlatoonTemplate = 'RNGAI GunShipAttack',
-        Priority = 890,
-        InstanceCount = 5,
-        BuilderType = 'Any',
-        BuilderConditions = { 
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'AIR', categories.AIR * categories.MOBILE * categories.GROUNDATTACK * (categories.TECH2 + categories.TECH3) } },
-            { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
-        },
-        BuilderData = {
-            SearchRadius = 'BaseEnemyArea',
-            UnitType = 'GUNSHIP',
-            PlatoonLimit = 18,
-            LocationType = 'LocationType',
-            StateMachine = 'Gunship',
-            TargetSearchPriorities = {
-                categories.MOBILE * categories.LAND,
-                categories.MASSEXTRACTION,
-                categories.RADAR * categories.STRUCTURE,
-                categories.ENERGYSTORAGE,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                categories.ALLUNITS,
-            },
-            PrioritizedCategories = {
-                categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.STRUCTURE * categories.ANTIAIR,
-                categories.MOBILE * categories.LAND,
-                categories.ENGINEER,
-                categories.MASSEXTRACTION,
-                categories.RADAR * categories.STRUCTURE,
-                categories.ENERGYSTORAGE,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                categories.ALLUNITS - (categories.T1SUBMARINE + categories.T2SUBMARINE),
-            },
-        },
-    },
-    Builder {
-        BuilderName = 'RNGEXP Bomber Attack Enemy',
-        PlatoonTemplate = 'RNGAI BomberAttack',
-        Priority = 890,
-        InstanceCount = 3,
-        BuilderType = 'Any',        
-        BuilderConditions = { 
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
-        },
-        BuilderData = {
-            SearchRadius = 'BaseEnemyArea',
-            IgnoreCivilian = true,
-            UnitType = 'BOMBER',
-            PlatoonLimit = 18,
-            PrioritizedCategories = {
-                categories.RADAR * categories.STRUCTURE,
-                categories.ENGINEER * categories.TECH1,
-                categories.MOBILE * categories.ANTIAIR,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                categories.MOBILE * categories.LAND,
-                categories.MASSEXTRACTION,
-                categories.STRUCTURE,
-                categories.MOBILE * categories.LAND,
-                categories.NAVAL - (categories.T1SUBMARINE + categories.T2SUBMARINE),
-            },
-        },
-    },
-    Builder {
-        BuilderName = 'RNGEXP Bomber Attack Excess',
-        PlatoonTemplate = 'RNGAI BomberAttack',
-        Priority = 700,
-        InstanceCount = 20,
-        BuilderType = 'Any',        
-        BuilderConditions = { 
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'BOMBER', categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
-        },
-        BuilderData = {
-            SearchRadius = 'BaseEnemyArea',
-            UnitType = 'BOMBER',
-            PlatoonLimit = 18,
-            PrioritizedCategories = {
-       --         categories.TECH3 * categories.ANTIMISSILE * categories.SILO * categories.STRUCTURE,
-                categories.TECH3 * categories.NUKE * categories.SILO * categories.STRUCTURE,
-                categories.TECH3 * categories.ARTILLERY * categories.STRUCTURE,
-                categories.ENERGYSTORAGE,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                categories.MASSEXTRACTION,
-                categories.ENGINEER * categories.MOBILE,
-                categories.MOBILE * categories.ANTIAIR,
-                categories.STRUCTURE,
-                categories.MOBILE * categories.LAND,
-                categories.NAVAL - (categories.T1SUBMARINE + categories.T2SUBMARINE),
-            },
-            DistressRange = 130,
-            DistressReactionTime = 6,
-            ThreatSupport = 0,
-        },
     },
 }

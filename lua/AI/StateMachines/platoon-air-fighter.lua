@@ -62,8 +62,8 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             else
                 self.LocationType = 'MAIN'
             end
-            self.CurrentEnemyThreat = 0
-            self.CurrentPlatoonThreat = 0
+            self.CurrentEnemyThreatAntiAir = 0
+            self.CurrentPlatoonThreatAntiAir = 0
             self.AttackPriorities = self.PlatoonData.PrioritizedCategories or {categories.AIR - categories.UNTARGETABLE}
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             StartFighterThreads(aiBrain, self)
@@ -87,7 +87,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local target
             local platPos = self:GetPlatoonPosition()
-            if self.CurrentEnemyThreat > self.CurrentPlatoonThreat and not self.BuilderData.ProtectUnit and not self.BuilderData.AttackTarget.Blueprint.CategoriesHash.EXPERIMENTAL then
+            if self.CurrentEnemyThreatAntiAir > self.CurrentPlatoonThreatAntiAir and not self.BuilderData.ProtectUnit and not self.BuilderData.AttackTarget.Blueprint.CategoriesHash.EXPERIMENTAL then
                 if platPos and VDist3Sq(platPos, self.Home) > 6400 then
                     self:ChangeState(self.Retreating)
                     return
@@ -397,7 +397,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             for _,aPlat in AlliedPlatoons do
                 if not table.equal(aPlat, self) then
                     local aPlatAirThreat = aPlat:CalculatePlatoonThreat('Air', categories.ALLUNITS)
-                    if aPlatAirThreat > self.CurrentEnemyThreat / 2 then
+                    if aPlatAirThreat > self.CurrentEnemyThreatAntiAir / 2 then
                         local aPlatPos = aPlat:GetPlatoonPosition()
                         local aPlatDistance = VDist2Sq(platPos[1],platPos[3],aPlatPos[1],aPlatPos[3])
                         local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],self.Home[1],self.Home[3])
@@ -566,18 +566,18 @@ FighterThreatThreads = function(aiBrain, platoon)
                     end
                 end
             end
-            platoon.CurrentEnemyThreat = enemyThreat
-            --LOG('CurrentEnemyThreat '..platoon.CurrentEnemyThreat)
-            platoon.CurrentPlatoonThreat = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
-            --LOG('CurrentPlatoonThreat '..platoon.CurrentPlatoonThreat)
-            if not platoon.BuilderData.Retreat and platoon.CurrentEnemyThreat > platoon.CurrentPlatoonThreat * 1.3 and not platoon.BuilderData.ProtectACU then
+            platoon.CurrentEnemyThreatAntiAir = enemyThreat
+            --LOG('CurrentEnemyThreatAntiAir '..platoon.CurrentEnemyThreatAntiAir)
+            platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
+            --LOG('CurrentPlatoonThreat '..platoon.CurrentPlatoonThreatAntiAir)
+            if not platoon.BuilderData.Retreat and platoon.CurrentEnemyThreatAntiAir > platoon.CurrentPlatoonThreatAntiAir * 1.3 and not platoon.BuilderData.ProtectACU then
                 if VDist3Sq(platPos, platoon.Home) > 6400 then
                     platoon.BuilderData = {}
                     platoon:ChangeState(platoon.DecideWhatToDo)
                 end
             end
         end
-        if platoon.CurrentPlatoonThreat < 15 and aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
+        if platoon.CurrentPlatoonThreatAntiAir < 15 and aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
             platoon.MaxRadius = platoon.BaseRestrictedArea * 1.5
         elseif aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
             platoon.MaxRadius = platoon.BaseMilitaryArea

@@ -269,8 +269,8 @@ IntelManager = Class {
                 if z.enemylandthreat > 0 then
                     DrawCircle(z.pos,math.max(20,z.enemylandthreat),'d62d20')
                 end
-                if z.friendlythreat > 0 then
-                    DrawCircle(z.pos,math.max(20,z.friendlythreat),'aa44ff44')
+                if z.friendlythreatantisurface > 0 then
+                    DrawCircle(z.pos,math.max(20,z.friendlythreatantisurface),'aa44ff44')
                 else
                     DrawCircle(z.pos,10,'aaffffff')
                 end
@@ -419,8 +419,8 @@ IntelManager = Class {
                                     enemyModifier = enemyModifier * 10
                                 end
                                 --RNGLOG('Start Distance Calculation '..( 20000 / enemyDistanceModifier )..' Zone Distance Calculation'..(20000 / zoneDistanceModifier)..' Resource Value '..v.resourcevalue..' Control Value '..status)
-                                --RNGLOG('Friendly threat at zone is '..v.friendlythreat)
-                                if status ~= 'Allied' and v.friendlythreat < 10 then
+                                --RNGLOG('Friendly threat at zone is '..v.friendlythreatantisurface)
+                                if status ~= 'Allied' and v.friendlythreatantisurface < 10 then
                                     compare = (20000 / zoneDistanceModifier) + ( 20000 / enemyDistanceModifier ) * v.resourcevalue - enemyModifier
                                 end
                                 if compare then
@@ -482,8 +482,8 @@ IntelManager = Class {
                         if v.enemylandthreat > 0 then
                             enemyModifier = enemyModifier + 2
                         end
-                        if v.friendlythreat > 0 then
-                            if v.enemylandthreat == 0 or v.enemylandthreat < v.friendlythreat then
+                        if v.friendlythreatantisurface > 0 then
+                            if v.enemylandthreat == 0 or v.enemylandthreat < v.friendlythreatantisurface then
                                 enemyModifier = enemyModifier - 1
                             else
                                 enemyModifier = enemyModifier + 1
@@ -498,7 +498,7 @@ IntelManager = Class {
                         end
                         local resourceValue = v.resourcevalue or 1
                         if resourceValue then
-                           --RNGLOG('Current platoon zone '..platoon.Zone..' target zone is '..v.zone.id..' enemythreat is '..v.enemylandthreat..' friendly threat is '..v.friendlythreat)
+                           --RNGLOG('Current platoon zone '..platoon.Zone..' target zone is '..v.zone.id..' enemythreat is '..v.enemylandthreat..' friendly threat is '..v.friendlythreatantisurface)
                            --RNGLOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(v.pos)..' Enemy Modifier is '..enemyModifier)
                         else
                             --RNGLOG('No resource against zone '..v.zone.id)
@@ -506,8 +506,8 @@ IntelManager = Class {
                         if v.startpositionclose then
                             startPos = 0.7
                         end
-                        if v.enemylandthreat > v.friendlythreat then
-                            if platoon.CurrentPlatoonThreat and platoon.CurrentPlatoonThreat < v.enemylandthreat then
+                        if v.enemylandthreat > v.friendlythreatantisurface then
+                            if platoon.CurrentPlatoonThreatAntiSurface and platoon.CurrentPlatoonThreatAntiSurface < v.enemylandthreat then
                                 enemyDanger = 0.4
                             end
                         end
@@ -540,8 +540,8 @@ IntelManager = Class {
                                 if v.enemylandthreat > 0 then
                                     enemyModifier = enemyModifier + 2
                                 end
-                                if v.friendlythreat > 0 then
-                                    if v.enemylandthreat < v.friendlythreat then
+                                if v.friendlythreatantisurface > 0 then
+                                    if v.enemylandthreat < v.friendlythreatantisurface then
                                         enemyModifier = enemyModifier - 1
                                     else
                                         enemyModifier = enemyModifier + 1
@@ -588,14 +588,14 @@ IntelManager = Class {
                         local antiairdesire = 1
                         local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
                         local controlValue = 1
-                        if status == 'Hostile' and v.friendlythreat == 0 then continue end
+                        if status == 'Hostile' and v.friendlythreatantisurface == 0 then continue end
                         if status == 'Contested' or status == 'Unoccupied' then
                             controlValue = 1.5
                         end
-                        if v.friendlythreat == 0 and v.enemylandthreat > 0 then
+                        if v.friendlythreatantisurface == 0 and v.enemylandthreat > 0 then
                             enemyModifier = enemyModifier - 0.25
                         end
-                        if v.friendlythreat > 0 and v.enemylandthreat > v.friendlythreat then
+                        if v.friendlythreatantisurface > 0 and v.enemylandthreat > v.friendlythreatantisurface then
                             enemyModifier = enemyModifier + 0.5
                         end
                         enemyModifier = math.max(enemyModifier, 1.0)  -- Ensure enemyModifier is not less than 1
@@ -608,7 +608,7 @@ IntelManager = Class {
                         if v.enemyairthreat > 0 then
                             if v.friendlyantiairthreat > 0 then
                                 antiairdesire = antiairdesire + 1.5
-                            elseif v.friendlythreat > 0 then
+                            elseif v.friendlythreatantisurface > 0 then
                                 antiairdesire = antiairdesire + 2.0
                             else
                                 antiairdesire = antiairdesire + 1.0
@@ -618,7 +618,7 @@ IntelManager = Class {
                         if zoneSet[v.id].startpositionclose then
                             startPos = 0.7
                         end
-                        if zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlythreat then
+                        if zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlythreatantisurface then
                             enemyDanger = 0.4
                         end
                 
@@ -712,18 +712,18 @@ IntelManager = Class {
             }
             local AlliedPlatoons = self.Brain:GetPlatoonsList()
             for k, v in Zones do
-                local friendlyThreat = {}
+                local friendlyThreatAntiSurface = {}
                 local friendlyantiairthreat = {}
                 for k1, v1 in AlliedPlatoons do
                     if not v1.MovementLayer then
                         AIAttackUtils.GetMostRestrictiveLayerRNG(v1)
                     end
                     if not v1.Dead then
-                        if v1.Zone and v1.CurrentPlatoonThreat then
-                            if not friendlyThreat[v1.Zone] then
-                                friendlyThreat[v1.Zone] = 0
+                        if v1.Zone and v1.CurrentPlatoonThreatAntiSurface then
+                            if not friendlyThreatAntiSurface[v1.Zone] then
+                                friendlyThreatAntiSurface[v1.Zone] = 0
                             end
-                            friendlyThreat[v1.Zone] = friendlyThreat[v1.Zone] + v1.CurrentPlatoonThreat
+                            friendlyThreatAntiSurface[v1.Zone] = friendlyThreatAntiSurface[v1.Zone] + v1.CurrentPlatoonThreatAntiSurface
                         end
                         if v1.Zone and v1.CurrentPlatoonThreatAntiAir then
                             if not friendlyantiairthreat[v1.Zone] then
@@ -734,9 +734,9 @@ IntelManager = Class {
                     end
                 end
                 for k2, v2 in self.Brain.Zones[v].zones do
-                    for k3, v3 in friendlyThreat do
+                    for k3, v3 in friendlyThreatantisurface do
                         if k2 == k3 then
-                            self.Brain.Zones[v].zones[k2].friendlythreat = v3
+                            self.Brain.Zones[v].zones[k2].friendlythreatantisurface = v3
                         end
                     end
                     for k3, v3 in friendlyantiairthreat do
@@ -3110,7 +3110,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
             else
                 friendlyThreat = 1
             end
-           --RNGLOG('prioritypoint friendly threat is '..friendlyThreat)
+           --RNGLOG('prioritypoint friendly threat is '.antisurface)
            --RNGLOG('prioritypoint enemy threat is '..enemyThreat)
            --RNGLOG('Priority Based on threat would be '..(healthdanger * (enemyThreat / friendlyThreat)))
            --RNGLOG('Instead is it '..healthdanger)

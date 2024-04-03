@@ -15,7 +15,7 @@ BuilderGroup {
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI Factory LandScout T1 Burst',
-        PlatoonTemplate = 'RNGAIT1LandScoutBurst',
+        PlatoonTemplate = 'T1LandScout',
         Priority = 895,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },

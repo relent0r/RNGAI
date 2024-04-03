@@ -111,7 +111,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Factory Sub Enemy Threat T1',
-        PlatoonTemplate = 'RNGAIT1SeaSubQueue',
+        PlatoonTemplate = 'T1SeaSub',
         Priority = 0,
         PriorityFunction = SeaDefenseMode,
         BuilderConditions = { 
@@ -211,7 +211,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Factory Sub Enemy Threat T2',
-        PlatoonTemplate = 'RNGAIT2SeaSubQueue',
+        PlatoonTemplate = 'T2SubKiller',
         Priority = 0,
         PriorityFunction = SeaDefenseMode,
         BuilderConditions = { 
@@ -222,6 +222,7 @@ BuilderGroup {
         },
         BuilderType = 'Sea',
     },
+    --[[
     Builder { 
         BuilderName = 'RNGAI Sea Ranged T2 Queue',
         PlatoonTemplate = 'RNGAIT2SeaAttackRangedQueue',
@@ -234,6 +235,7 @@ BuilderGroup {
         },
         BuilderType = 'Sea',
     },
+    ]]
     Builder {
         BuilderName = 'RNGAI T3 Battleship',
         PlatoonTemplate = 'T3SeaBattleship',
@@ -251,7 +253,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Factory Sub Enemy Threat T3',
-        PlatoonTemplate = 'RNGAIT3SeaSubQueue',
+        PlatoonTemplate = 'T3SubKiller',
         Priority = 0,
         PriorityFunction = SeaDefenseMode,
         BuilderConditions = { 
@@ -262,6 +264,7 @@ BuilderGroup {
         },
         BuilderType = 'Sea',
     },
+    --[[
     Builder { 
         BuilderName = 'RNGAI Sea T3 Queue',
         PlatoonTemplate = 'RNGAIT3SeaAttackQueue',
@@ -288,7 +291,7 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
         BuilderType = 'Sea',
-    },
+    },]]
 }
 
 BuilderGroup {

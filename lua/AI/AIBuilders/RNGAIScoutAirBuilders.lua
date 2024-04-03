@@ -26,7 +26,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Factory AirScout T1 Burst',
-        PlatoonTemplate = 'RNGAIT1AirScoutBurst',
+        PlatoonTemplate = 'T1AirScout',
         Priority = 895,
         BuilderConditions = {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},

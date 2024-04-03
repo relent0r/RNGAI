@@ -66,6 +66,7 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
+    --[[
     Builder {
         BuilderName = 'RNGAI Factory T3 Amphib Attack Small',
         PlatoonTemplate = 'RNGAIT3AmphibAttackQueue',
@@ -79,7 +80,7 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
-    },
+    },]]
 }
 
 BuilderGroup {
@@ -111,6 +112,7 @@ BuilderGroup {
             TechLevel = 2
         },
     },
+    --[[
     Builder {
         BuilderName = 'RNGAI Factory T3 Amphib Attack Large',
         PlatoonTemplate = 'RNGAIT3AmphibAttackQueue',
@@ -127,7 +129,7 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 3
         },
-    },
+    },]]
 }
 
 BuilderGroup {
@@ -328,6 +330,7 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
+    --[[
     Builder {
         BuilderName = 'RNGAI Factory Land Expansion',
         PlatoonTemplate = 'RNGAIT1LandAttackQueueExp',
@@ -353,12 +356,13 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
-    },
+    },]]
 }
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Islands',
     BuildersType = 'FactoryBuilder',
+    --[[
     Builder {
         BuilderName = 'RNGAI Factory Land T1 Island Expansion',
         PlatoonTemplate = 'RNGAIT1LandAttackQueueExp',
@@ -372,7 +376,7 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
-    },
+    },]]
 }
 -- Land Formers
 

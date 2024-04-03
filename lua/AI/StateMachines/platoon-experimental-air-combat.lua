@@ -704,7 +704,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             for _,aPlat in AlliedPlatoons do
                 if not table.equal(aPlat, self) then
                     local aPlatAirThreat = aPlat:CalculatePlatoonThreat('Air', categories.ALLUNITS)
-                    if aPlatAirThreat > self.CurrentEnemyThreat / 2 then
+                    if aPlatAirThreat > self.CurrentEnemyThreatAntiAir / 2 then
                         local aPlatPos = GetPlatoonPosition(aPlat)
                         local aPlatDistance = VDist2Sq(experimentalPosition[1],experimentalPosition[3],aPlatPos[1],aPlatPos[3])
                         local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],self.Home[1],self.Home[3])
