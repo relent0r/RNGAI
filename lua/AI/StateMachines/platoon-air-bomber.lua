@@ -200,7 +200,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            if not target then
+            if not target and not self.PlatoonData.Defensive then
                 self:LogDebug(string.format('Checking priority points'))
                 if not table.empty(aiBrain.prioritypoints) then
                     local pointHighest = 0
@@ -246,7 +246,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            if not target then
+            if not target and not self.PlatoonData.Defensive then
                 if aiBrain:GetCurrentEnemy() then
                     local enemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
                     if enemyIndex then

@@ -354,7 +354,7 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1 - categories.ANTINAVY } },
         },
         BuilderData = {
             StaticCategories = true,
@@ -382,7 +382,7 @@ BuilderGroup {
         BuilderType = 'Any',        
         BuilderConditions = { 
             { TBC, 'LandThreatAtBaseOwnZones', { }},
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER * categories.TECH1 - categories.ANTINAVY } },
         },
         BuilderData = {
             Defensive = true,
@@ -482,7 +482,7 @@ BuilderGroup {
         InstanceCount = 20,
         BuilderType = 'Any',        
         BuilderConditions = { 
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER - categories.daa0206 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.BOMBER - categories.BOMB - categories.ANTINAVY } },
         },
         BuilderData = {
             SearchRadius = 'BaseEnemyArea',

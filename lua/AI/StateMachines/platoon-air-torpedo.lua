@@ -563,6 +563,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                     if target then
                         if not self:CanAttackTarget('attack', target) then
                             self:LogDebug(string.format('Can no longer attack target, could have been picked up by transport or gone on land'))
+                            self.BuilderData = {}
                             self:ChangeState(self.DecideWhatToDo)
                             return
                         end

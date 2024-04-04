@@ -3484,20 +3484,6 @@ PlatoonReclaimQueryRNGRNG = function(aiBrain,platoon)
     end
 end
 
-RenderBrainIntelRNG = function(aiBrain)
-
-    while aiBrain.Status ~= "Defeat" do
-        for _,expansion in aiBrain.BrainIntel.ExpansionWatchTable do
-            if expansion.Position then
-                DrawCircle(expansion.Position,math.min(10,expansion.Commander/8),'FF9999FF')
-                DrawCircle(expansion.Position,math.min(10,expansion.Land/8),'FF99FF99')
-                DrawCircle(expansion.Position,math.min(10,expansion.Structures/8),'FF999999')
-            end
-        end
-        coroutine.yield(2)
-    end
-end
-
 function MexUpgradeManagerRNG(aiBrain)
     local homebasex,homebasey = aiBrain:GetArmyStartPos()
     local VDist3Sq = VDist3Sq
@@ -3584,9 +3570,7 @@ AIFindDynamicExpansionPointRNG = function(aiBrain, locationType, radius, threatM
     if aiBrain.BrainIntel.DynamicExpansionPositions then
         for k, v in aiBrain.BrainIntel.DynamicExpansionPositions do
            --RNGLOG('Dynamic Expansion data '..repr(v))
-            if not aiBrain.BuilderManagers[v.Zone] then
-               --RNGLOG('No existing builder manager for zone')
-               --RNGLOG('Distance is '..VDist3Sq(pos, v.Position)..' needs to be under '..radius)
+            if not aiBrain.BuilderManagers['DYNAMIC_'..v.Zone] then
                 if VDist3Sq(pos, v.Position) < radius and GetThreatAtPosition( aiBrain, v.Position, threatRings, true, threatType) < threatMax then
                     retPos = v.Position
                     retName = 'DYNAMIC_'..v.Zone
@@ -6089,11 +6073,6 @@ ConfigurePlatoon = function(platoon)
     local maxPlatoonDPS = 0
     local maxPlatoonStrikeRadius = 20
     local maxPlatoonStrikeRadiusDistance = 0
-    platoon.UnitRatios = {
-        DIRECTFIRE = 0,
-        INDIRECTFIRE = 0,
-        ANTIAIR = 0,
-    }
     if platoonUnits > 0 then
         for k, v in platoonUnits do
             if not v.Dead then
@@ -6564,8 +6543,6 @@ FindSMDAtPosition = function(position, smdTable, radius)
         end
     end
     if not table.empty(smdList) then
-        LOG('We found at SMD at postion '..repr(position))
-        LOG('smdList '..repr(smdList))
         return true, smdList
     end
     return false
@@ -6601,9 +6578,7 @@ FindSMDBetweenPositions = function(start, finish, smdTable, radius, stepDistance
         -- Check if current point intersects with any defense system
         for _, defense in smdTable do
             if not defense.object.Dead then
-                LOG('Checking if smd is within range of target, current range is '..repr(VDist3(defense.Position, {currentX, currentY, currentZ})))
                 if ( defense.Detected < gameTime - 240 and defense.Completed and defense.Completed < gameTime - 240 ) and IsWithinInterceptionRadiusSquared(defense.Position, {currentX, currentY, currentZ}, radius) then
-                    LOG('We found an smd on the flight path '..repr(defense.Position))
                     return true, defense.Position
                 end
             end

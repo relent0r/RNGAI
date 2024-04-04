@@ -175,12 +175,12 @@ function LessThanLandExpansions(aiBrain, expansionCount)
             count = count + 1
         end
         if count >= expansionCount then
-            --RNGLOG('We have 1 expansion called '..v.BaseType)
+            RNGLOG('We have  '..count..' expansions '..'more than the expansion limit of '..expansionCount)
             return false
         end
-        --RNGLOG('Expansion Base Type is '..v.BaseType)
+        RNGLOG('Expansion Base Type is '..v.BaseType)
     end
-    --RNGLOG('We have no expansions count '..count..' expansion max '..expansionCount)
+    RNGLOG('We have no expansions count '..count..' expansion max '..expansionCount)
     return true
 end
 
@@ -1231,14 +1231,17 @@ function UnitsLessAtLocationRNG( aiBrain, locationType, unitCount, testCat )
 end
 
 function DynamicExpansionAvailableRNG(aiBrain)
-    local expansionCount = 0
-    if aiBrain.BrainIntel.DynamicExpansionPositions and RNGGETN(aiBrain.BrainIntel.DynamicExpansionPositions) > 0 then
+
+    if aiBrain.BrainIntel.DynamicExpansionPositions and not table.empty(aiBrain.BrainIntel.DynamicExpansionPositions) then
         for k, v in aiBrain.BrainIntel.DynamicExpansionPositions do
-            if aiBrain.BuilderManagers[v.Zone] then
-                continue
+            if not aiBrain.BuilderManagers['DYNAMIC_'..v.Zone] then
+                for _, b in aiBrain.BuilderManagers do
+                    if v.RNGArea and b.RNGArea == v.RNGArea then
+                        return false
+                    end
+                end
+                return true
             end
-           --RNGLOG('DynamicExpansionAvailableRNG is true')
-            return true
         end
     end
     return false

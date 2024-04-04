@@ -362,21 +362,51 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Islands',
     BuildersType = 'FactoryBuilder',
-    --[[
     Builder {
-        BuilderName = 'RNGAI Factory Land T1 Island Expansion',
-        PlatoonTemplate = 'RNGAIT1LandAttackQueueExp',
+        BuilderName = 'RNGAI Factory Land T1 AntiAir Island Expansion',
+        PlatoonTemplate = 'T1LandAA',
         Priority = 700, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
             { TBC, 'ThreatPresentInGraphRNG', {'LocationType', 'StructuresNotMex'} },
+            { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'Air'} },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }}, -- stop building after we decent reach tech2 capability
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.3, 'LAND'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
-    },]]
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Land T1 Tank Island Expansion',
+        PlatoonTemplate = 'T1LandDFTank',
+        Priority = 705, -- After Second Engie Group
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
+            { TBC, 'ThreatPresentInGraphRNG', {'LocationType', 'StructuresNotMex'} },
+            { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'Land'} },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }}, -- stop building after we decent reach tech2 capability
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.3, 'LAND'}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Land T1 Artillery Island Expansion',
+        PlatoonTemplate = 'T1LandArtillery',
+        Priority = 700, -- After Second Engie Group
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
+            { TBC, 'ThreatPresentInGraphRNG', {'LocationType', 'StructuresNotMex'} },
+            { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'Defensive'} },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }}, -- stop building after we decent reach tech2 capability
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.3, 'LAND'}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
 }
 -- Land Formers
 
@@ -774,7 +804,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Zone Control',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 800,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 3,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 4,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             --{ UCBC, 'LessThanGameTimeSecondsRNG', { 300 } }, -- don't build after 5 minutes

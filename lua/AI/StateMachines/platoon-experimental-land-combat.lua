@@ -128,7 +128,6 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
             
             self.AntiAirSupportRequested = false
             self.SuicideModeActive = false
-            self.UnitRatios = {}
             self.SupportT1MobileScout = 0
             self.SupportT2MobileAA = 3
             self.SupportT3MobileAA = 0
@@ -597,7 +596,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     local smartPos = { x, GetTerrainHeight( x, y), y }
                     -- check if the move position is new or target has moved
                     local expTargetBlocked = aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental.WeaponArc)
-                    if targetDistance < self.MaxPlatoonWeaponRangeSq and maxPlatoonRange >= targetMaxWeaponRange and not expTargetBlocked then
+                    if (targetDistance < self.MaxPlatoonWeaponRangeSq and maxPlatoonRange >= targetMaxWeaponRange or target.Blueprint.CategoriesHash.EXPERIMENTAL) and not expTargetBlocked then
                         IssueAggressiveMove({experimental}, targetPosition)
                         coroutine.yield(45)
                     elseif not expTargetBlocked and VDist2Sq( smartPos[1], smartPos[3], experimental.smartPos[1], experimental.smartPos[3] ) > 9 or targetDistance > self.MaxPlatoonWeaponRangeSq then

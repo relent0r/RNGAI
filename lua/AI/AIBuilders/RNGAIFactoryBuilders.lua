@@ -491,7 +491,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.95 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.0 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.AIR }},
             { UCBC, 'MinimumFactoryCheckRNG', { 'LocationType', 'Air'}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
@@ -728,7 +728,7 @@ BuilderGroup {
         PriorityFunction = AirDefenseScramble,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.85 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.0 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, categories.FACTORY * categories.AIR }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},

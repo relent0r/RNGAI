@@ -97,7 +97,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Retreating)
                 return
             end
-            if brain.IntelManager.StrategyFlags.EnemyAirSnipeThreat or (cdr.CurrentEnemyAirThreat > 50 and cdr.CurrentFriendlyAntiAirThreat < 30) then
+            self:LogDebug(string.format('Current ACU enemy air threat is '..cdr.CurrentEnemyAirThreat))
+            if brain.IntelManager.StrategyFlags.EnemyAirSnipeThreat or (cdr.CurrentEnemyAirThreat > 25 and cdr.CurrentFriendlyAntiAirThreat < 20) then
                 if brain.BrainIntel.SelfThreat.AntiAirNow < brain.EnemyIntel.EnemyThreatCurrent.AntiAir then
                     cdr.EnemyAirPresent = true
                     if not cdr.AtHoldPosition then
@@ -700,6 +701,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if not endPoint and (not cdr.GunUpgradeRequired) and (not cdr.HighThreatUpgradeRequired) and cdr.Health > 6000 and (not builderData.Retreat or (cdr.CurrentEnemyInnerCircle < 10 and cdr.CurrentEnemyThreat < 50)) and GetEconomyStoredRatio(brain, 'MASS') < 0.70 then
+                        self:LogDebug(string.format('ACU attempting to perform reclaim check while navigating'))
                         ACUFunc.PerformACUReclaim(brain, cdr, 25, waypoint)
                         --LOG('acu performed reclaim')
                     end

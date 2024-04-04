@@ -34,6 +34,7 @@ local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.l
 local DebugArrayRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').DebugArrayRNG
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
+local MarkerUtils = import("/lua/sim/MarkerUtilities.lua")
 local AIBehaviors = import('/lua/ai/AIBehaviors.lua')
 local PlatoonGenerateSafePathToRNG = import('/lua/AI/aiattackutilities.lua').PlatoonGenerateSafePathToRNG
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
@@ -1160,7 +1161,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.MapOwnership = 0
         self.BrainIntel.AirStagingRequired = false
         self.BrainIntel.CurrentIntelAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, self.MapCenterPoint)
-        self.BrainIntel.ExpansionWatchTable = {}
         self.BrainIntel.DynamicExpansionPositions = {}
         self.BrainIntel.IMAPConfig = {
             OgridRadius = 0,
@@ -1280,7 +1280,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(Mapping.SetMarkerInformation)
         self:CalculateMassMarkersRNG()
         self:ForkThread(self.SetupIntelTriggersRNG)
-        self:ForkThread(IntelManagerRNG.ExpansionIntelScanRNG)
         self:ForkThread(IntelManagerRNG.InitialNavalAttackCheck)
         self:ForkThread(self.DynamicExpansionRequiredRNG)
         self.ZonesInitialized = false
@@ -1798,6 +1797,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     if not self.GraphZones[v.RNGArea] then
                         self.GraphZones[v.RNGArea] = {}
                         self.GraphZones[v.RNGArea].MassMarkers = {}
+                        self.GraphZones[v.RNGArea].FriendlyAntiAirThreat = 0
+                        self.GraphZones[v.RNGArea].FriendlySurfaceDirectFireThreat = 0
+                        self.GraphZones[v.RNGArea].FriendlySurfaceInDirectFireThreat = 0
+                        self.GraphZones[v.RNGArea].FriendlyAntiNavalThreat = 0
                         if self.GraphZones[v.RNGArea].MassMarkersInZone == nil then
                             self.GraphZones[v.RNGArea].MassMarkersInZone = 0
                         end
@@ -2157,18 +2160,18 @@ AIBrain = Class(RNGAIBrainClass) {
             self.IntelData.AirLowPriScouts = 0
             
             local myArmy = ScenarioInfo.ArmySetup[self.Name]
-            if self.BrainIntel.ExpansionWatchTable then
-                for _, v in self.BrainIntel.ExpansionWatchTable do
-                    -- Add any expansion table locations to the must scout table
-                    --RNGLOG('Expansion of type '..v.Type..' found, seeting scout location')
-                    local gridXID, gridZID = im:GetIntelGrid(v.Position)
-                    if im.MapIntelGrid[gridXID][gridZID].Enabled then
-                        im.MapIntelGrid[gridXID][gridZID].MustScout = true
-                        --RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridZID)
-                        --RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridZID]))
-                        --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
+            local markerTypes = {'Expansion Area', 'Large Expansion Area', 'Spawn'}
+            for c, t in markerTypes do
+                    local markers = MarkerUtils.GetMarkersByType(t)
+                    for k, v in markers do
+                        local gridXID, gridZID = im:GetIntelGrid(v.Position)
+                        if im.MapIntelGrid[gridXID][gridZID].Enabled then
+                            im.MapIntelGrid[gridXID][gridZID].MustScout = true
+                            RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridZID)
+                            RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridZID]))
+                            self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
+                        end
                     end
-                end
             end
             if ScenarioInfo.Options.TeamSpawn == 'fixed' then
                 -- Spawn locations were fixed. We know exactly where our opponents are.
@@ -2795,14 +2798,14 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('Platoon Distress Table'..repr(self.BaseMonitor.ZoneAlertTable))
     end,
 
-    PlatoonReinforcementRequestRNG = function(self, platoon, threat, location, currentLabel)
+    PlatoonReinforcementRequestRNG = function(self, platoon, threatType, location, currentLabel)
         if not self.BaseMonitor then
             return
         end
 
         local found = false
         if self.BaseMonitor.PlatoonReinforcementRequired == false then
-            RNGINSERT(self.BaseMonitor.PlatoonReinforcementTable, {Platoon = platoon, ThreatType = threatType, LocationType = Location, PlatoonLabel = currentLabel, UnitsAssigned = {}})
+            RNGINSERT(self.BaseMonitor.PlatoonReinforcementTable, {Platoon = platoon, ThreatType = threatType, LocationType = location, PlatoonLabel = currentLabel, UnitsAssigned = {}})
             self.BaseMonitor.PlatoonReinforcementRequired = true
         else
             for k, v in self.BaseMonitor.PlatoonReinforcementTable do
@@ -3711,10 +3714,11 @@ AIBrain = Class(RNGAIBrainClass) {
         for _, t in threatTypes do
             local rawThreats = GetThreatsAroundPosition(self, self.BuilderManagers.MAIN.Position, 16, true, t)
             for _, raw in rawThreats do
+                local position = {raw[1], GetSurfaceHeight(raw[1], raw[2]),raw[2]}
                 potentialThreats[raw[1]] = potentialThreats[raw[1]] or { }
                 potentialThreats[raw[1]][raw[2]] = potentialThreats[raw[1]][raw[2]] or { }
                 potentialThreats[raw[1]][raw[2]][t] = raw[3]
-                potentialThreats[raw[1]][raw[2]].Position = potentialThreats[raw[1]][raw[2]].Position or {raw[1], GetSurfaceHeight(raw[1], raw[2]),raw[2]}
+                potentialThreats[raw[1]][raw[2]].Position = potentialThreats[raw[1]][raw[2]].Position or position
                 potentialThreats[raw[1]][raw[2]].UpdateTime = potentialThreats[raw[1]][raw[2]].UpdateTime or currentGameTime
                 --local threatRow = {posX=raw[1], posZ=raw[2], rThreat=raw[3], rThreatType=t}
                 threatTotals[t] = threatTotals[t] + raw[3]
@@ -3744,11 +3748,15 @@ AIBrain = Class(RNGAIBrainClass) {
                             z.PositionOnWater = true
                         else
                             z.PositionOnWater = false
+                            if not z.LandLabel then
+                                z.LandLabel = NavUtils.GetLabel('Land', z.Position) or 0
+                                LOG('Land Label from threats set as '..z.LandLabel)
+                            end
                         end
                     end
                 end
             end
-            --RNGLOG(repr(potentialThreats))
+            RNGLOG('potentialThreats '..repr(potentialThreats))
             self.EnemyIntel.EnemyThreatLocations = potentialThreats
             --RNGLOG('* AI-RNG: second table pass :'..repr(potentialThreats))
             --RNGLOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
@@ -5398,10 +5406,10 @@ AIBrain = Class(RNGAIBrainClass) {
                 coroutine.yield(30)
             else
                 if self.EngineerAssistManagerBuildPowerRequired > math.max(minAssistPower, 5) then
-                    LOG('Decreasing build power by 1 due to lower requirements')
-                    LOG('minAssistPower '..minAssistPower)
-                    LOG('Current build power '..self.EngineerAssistManagerBuildPower)
-                    LOG('Current build power required '..self.EngineerAssistManagerBuildPowerRequired)
+                    --LOG('Decreasing build power by 1 due to lower requirements')
+                    --LOG('minAssistPower '..minAssistPower)
+                    --LOG('Current build power '..self.EngineerAssistManagerBuildPower)
+                    --LOG('Current build power required '..self.EngineerAssistManagerBuildPowerRequired)
                     self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired - 2.5
                 end
                 --self.EngineerAssistManagerActive = false
@@ -5988,30 +5996,31 @@ AIBrain = Class(RNGAIBrainClass) {
         while true do
             local structureThreat
             local potentialExpansionZones = {}
-            for k, v in self.BrainIntel.ExpansionWatchTable do
+            local zoneSet = self.Zones.Land.zones
+            for k, v in zoneSet do
                 local invalidZone = false
-                if v.Zone then
-                    if self.GraphZones then
-                        if self.GraphZones[v.Zone].MassMarkersInZone > 5 then
-                            for c, b in self.BuilderManagers do
-                                if b.GraphArea and b.GraphArea == v.Zone then
-                                    invalidZone = true
-                                    break
-                                end
+                if self.GraphZones then
+                    local graphArea = NavUtils.GetLabel('Land', v.pos)
+                    if self.GraphZones[graphArea].MassMarkersInZone > 5 then
+                        for c, b in self.BuilderManagers do
+                            if b.GraphArea and b.GraphArea == graphArea then
+                                invalidZone = true
+                                break
                             end
-                        else
-                            invalidZone = true
                         end
+                    else
+                        invalidZone = true
                     end
-                    if not invalidZone then
-                        if not potentialExpansionZones[v.Zone] then
-                            potentialExpansionZones[v.Zone] = {}
-                            potentialExpansionZones[v.Zone].Expansions = {}
-                            RNGINSERT(potentialExpansionZones[v.Zone].Expansions, v)
-                        end
+                end
+                if not invalidZone then
+                    if not potentialExpansionZones[v.id] then
+                        potentialExpansionZones[v.id] = {}
+                        potentialExpansionZones[v.id].Zones = {}
+                        RNGINSERT(potentialExpansionZones[v.id].Zones, v.pos)
                     end
                 end
             end
+
             --RNGLOG('These are the potentialExpansionZones')
             --RNGLOG('Mass Markers Per Zone')
             local foundMarker = false
@@ -6019,20 +6028,13 @@ AIBrain = Class(RNGAIBrainClass) {
             self.BrainIntel.DynamicExpansionPositions = {}
             --RNGLOG('Graph Zones '..repr(self.GraphZones))
             for k, v in potentialExpansionZones do
-                if v.Expansions then
-                    for c, b in v.Expansions do
-                       --RNGLOG('Position for expansion is ')
-                       --RNGLOG(repr(b.Position))
-                        local distance, highest
-                        for n, m in self.GraphZones[k].MassMarkers do
-                            distance = VDist2Sq(b.Position[1], b.Position[3], m.position[1], m.position[3])
-                            if not highest or distance > highest then
-                                loc = m.position
-                                highest = distance
-                            end
-                        end
-                        if loc then
-                           --RNGLOG('Mass Marker Found')
+                if not table.empty(v.Zones) then
+                    local zoneCopy = table.copy(v.Zones)
+                    local startPos = self.BrainIntel.StartPos
+                    table.sort(zoneCopy,function(k1,k2) return VDist2Sq(k1[1],k1[3],startPos[1],startPos[3])<VDist2Sq(k2[1],k2[3],startPos[1],startPos[3]) end)
+                    for c, zonePos in zoneCopy do
+                        if zonePos then
+                            loc = zonePos
                             foundMarker = true
                             break
                         else
@@ -6040,11 +6042,13 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                 end
-                table.insert(self.BrainIntel.DynamicExpansionPositions, {Zone = k, Position = loc})
+                if loc then
+                    local graphArea = NavUtils.GetLabel('Land', loc)
+                    table.insert(self.BrainIntel.DynamicExpansionPositions, {Zone = k, Position = loc, RNGArea = graphArea })
+                end
             end
             if foundMarker then
-               --RNGLOG('Marker we could have a dynamic expansion on the following positions')
-               --RNGLOG(repr(self.BrainIntel.DynamicExpansionPositions))
+               RNGLOG(repr(self.BrainIntel.DynamicExpansionPositions))
             end
             coroutine.yield(100)
         end
@@ -7064,7 +7068,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.MapOwnership = 0
         self.BrainIntel.AirStagingRequired = false
         self.BrainIntel.CurrentIntelAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, self.MapCenterPoint)
-        self.BrainIntel.ExpansionWatchTable = {}
         self.BrainIntel.DynamicExpansionPositions = {}
         self.BrainIntel.IMAPConfig = {
             OgridRadius = 0,
@@ -7185,7 +7188,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(Mapping.SetMarkerInformation)
         self:CalculateMassMarkersRNG()
         self:ForkThread(self.SetupIntelTriggersRNG)
-        self:ForkThread(IntelManagerRNG.ExpansionIntelScanRNG)
         self:ForkThread(IntelManagerRNG.InitialNavalAttackCheck)
         self:ForkThread(self.DynamicExpansionRequiredRNG)
         self.ZonesInitialized = false

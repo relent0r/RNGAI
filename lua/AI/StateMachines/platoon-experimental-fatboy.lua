@@ -121,7 +121,6 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                 }
             end
             
-            self.UnitRatios = {}
             self.SupportT1MobileScout = 0
             self.SupportT2MobileAA = 3
             self.SupportT3MobileAA = 0

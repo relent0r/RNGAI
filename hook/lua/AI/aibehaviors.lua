@@ -115,7 +115,6 @@ ZoneUpdate = function(platoon)
         elseif platoon.MovementLayer == 'Water' then
             --SetZone(PlatoonPosition, aiBrain.Zones.Water.index)
         end
-        platoon:GetPlatoonRatios()
         WaitTicks(30)
     end
 end

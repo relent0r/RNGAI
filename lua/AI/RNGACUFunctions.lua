@@ -890,7 +890,6 @@ function PerformACUReclaim(aiBrain, cdr, minimumReclaim, nextWaypoint)
         aiBrain:ForkThread(drawRect, cdr)
     end
     if reclaimRect then
-        local reclaimed = false
         local closeReclaim = {}
         for c, b in reclaimRect do
             if not IsProp(b) then continue end
@@ -916,7 +915,6 @@ function PerformACUReclaim(aiBrain, cdr, minimumReclaim, nextWaypoint)
             if nextWaypoint then
                 IssueMove({cdr}, nextWaypoint)
             end
-            reclaimed = true
         end
         if reclaiming then
             coroutine.yield(3)

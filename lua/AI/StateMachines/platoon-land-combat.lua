@@ -721,11 +721,6 @@ AssignToUnitsMachine = function(data, platoon, units)
             categories.STRUCTURE,
             categories.ALLUNITS,
         }
-        platoon.UnitRatios = {
-            DIRECTFIRE = 0,
-            INDIRECTFIRE = 0,
-            ANTIAIR = 0,
-        }
         if data.Vented then
             --LOG('This is a state machine that was vented from ACU support')
             platoon.Vented = true

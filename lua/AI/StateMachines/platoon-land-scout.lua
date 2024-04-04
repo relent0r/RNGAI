@@ -664,11 +664,6 @@ AssignToUnitsMachine = function(data, platoon, units)
         if not platoon.LocationType then
             platoon.LocationType = platoon.PlatoonData.LocationType or 'MAIN'
         end
-        platoon.UnitRatios = {
-            DIRECTFIRE = 0,
-            INDIRECTFIRE = 0,
-            ANTIAIR = 0,
-        }
         local platoonUnits = GetPlatoonUnits(platoon)
         if platoonUnits then
             for _, v in platoonUnits do

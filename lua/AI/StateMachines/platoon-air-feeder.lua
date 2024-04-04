@@ -68,7 +68,7 @@ AIPlatoonAirFeederBehavior = Class(AIPlatoonRNG) {
                     ventPlatoon.PlatoonData.PlatoonLimit = self.PlatoonData.PlatoonLimit
                     ventPlatoon.PlatoonData.PrioritizedCategories = self.PlatoonData.PrioritizedCategories
                     aiBrain:AssignUnitsToPlatoon(ventPlatoon, platoonUnits, 'Attack', 'None')
-                    import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, targetPlatoon, platoonUnits)
+                    import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, ventPlatoon, platoonUnits)
                 end
             end
             if targetPlatoon and not IsDestroyed(targetPlatoon) then

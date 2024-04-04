@@ -118,7 +118,7 @@ RNGNavalResourceSet = Class(ZoneSet){
             for _, v1 in markers do
                 if not v1.claimed then
                     for _, v2 in markers do
-                        if (not v2.claimed) and VDist2Sq(v1.position[1], v1.position[3], v2.position[1], v2.position[3]) < zoneRadius then
+                        if (not v2.claimed) and (v1 ~= v2) and VDist2Sq(v1.position[1], v1.position[3], v2.position[1], v2.position[3]) < zoneRadius then
                             v1.weight = v1.weight + 1
                             v1.aggX = v1.aggX + v2.position[1]
                             v1.aggZ = v1.aggZ + v2.position[3]
@@ -152,7 +152,7 @@ RNGNavalResourceSet = Class(ZoneSet){
                 end
             end
             --LOG('Resource Group value '..table.getn(resourceGroup))
-            self:AddZone({pos={x,GetSurfaceHeight(x,z),z}, component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), weight=best.weight, startpositionclose=startPos, enemynavalthreat=0, enemyantiairthreat=0, friendlynavalthreat=0, friendlyantiairthreat=0, resourcevalue=table.getn(resourceGroup), resourcemarkers=resourceGroup, zonealert=false, control=1})
+            self:AddZone({pos={x,GetSurfaceHeight(x,z),z}, component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), weight=best.weight, startpositionclose=startPos, enemynavalthreat=0, enemyantiairthreat=0, friendlynavalthreat=0, friendlyantiairthreat=0, resourcevalue=table.getn(resourceGroup), resourcemarkers=resourceGroup, zonealert=false, control=1, bestarmy = false, teamvalue = 1, platoonassigned = {}})
         end
     end,
 }

@@ -301,6 +301,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.ANTIAIR, self:GetPlatoonPosition(), 100, 'Enemy')
             local enemyAirThreat = 0
             local platoonThreat = self:CalculatePlatoonThreatAroundPosition('Surface', categories.GROUNDATTACK, self:GetPlatoonPosition(), 35)
+            self:LogDebug(string.format('Gunship is retreating'))
             for _, v in enemyUnits do
                 if v and not v.Dead then
                     local cats = v.Blueprint.CategoriesHash
@@ -329,8 +330,10 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             end
             if self.BuilderData.Retreat then
                 local platPos = self:GetPlatoonPosition()
-                while not self.Dead and platPos and VDist3Sq(platPos, self.Home) > 100 do
+                while not self.Dead and platPos and VDist3Sq(platPos, self.Home) > 400 do
+                    self:LogDebug(string.format('Gunship is in retreat mode, waiting until it arrives home, distance from home is '..VDist3Sq(platPos, self.Home)))
                     coroutine.yield(25)
+                    platPos = self:GetPlatoonPosition()
                 end
             end
             if self.Dead then

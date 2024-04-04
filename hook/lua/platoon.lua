@@ -2915,11 +2915,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         local maxPlatoonDPS = 0
         local maxPlatoonStrikeRadius = 20
         local maxPlatoonStrikeRadiusDistance = 0
-        self.UnitRatios = {
-            DIRECTFIRE = 0,
-            INDIRECTFIRE = 0,
-            ANTIAIR = 0,
-        }
         if platoonUnits > 0 then
             for k, v in platoonUnits do
                 if not v.Dead then
@@ -3226,24 +3221,26 @@ Platoon = Class(RNGAIPlatoonClass) {
                     bestMarker = bestOption
                 end
             else
-                if not table.empty(aiBrain.BrainIntel.ExpansionWatchTable) and (not self.EarlyRaidSet) then
-                    for k, v in aiBrain.BrainIntel.ExpansionWatchTable do
-                        local distSq = VDist2Sq(v.Position[1], v.Position[3], platLoc[1], platLoc[3])
-                        if distSq > (avoidClosestRadius * avoidClosestRadius) and NavUtils.CanPathTo(self.MovementLayer, platLoc, v.Position) then
-                            if GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > self.CurrentPlatoonThreat then
-                                continue
+                if not self.EarlyRaidSet then
+                    for k, v in aiBrain.Zones.Land.zones do
+                        if v.resourcevalue > 1 then
+                            local distSq = VDist2Sq(v.pos[1], v.pos[3], platLoc[1], platLoc[3])
+                            if distSq > (avoidClosestRadius * avoidClosestRadius) and NavUtils.CanPathTo(self.MovementLayer, platLoc, v.pos) then
+                                if GetThreatAtPosition(aiBrain, v.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > self.CurrentPlatoonThreat then
+                                    continue
+                                end
+                                if not v.platoonassigned then
+                                    bestMarker = v
+                                    v.platoonassigned = self
+                                    --RNGLOG('Expansion Best marker selected is index '..k..' at '..repr(bestMarker.Position))
+                                    break
+                                end
+                            else
+                                --RNGLOG('Cant Graph to expansion marker location')
                             end
-                            if not v.PlatoonAssigned then
-                                bestMarker = v
-                                aiBrain.BrainIntel.ExpansionWatchTable[k].PlatoonAssigned = self
-                                --RNGLOG('Expansion Best marker selected is index '..k..' at '..repr(bestMarker.Position))
-                                break
-                            end
-                        else
-                            --RNGLOG('Cant Graph to expansion marker location')
+                            coroutine.yield(1)
+                            --RNGLOG('Distance to marker '..k..' is '..VDist2(v.Position[1],v.Position[3],platLoc[1], platLoc[3]))
                         end
-                        coroutine.yield(1)
-                        --RNGLOG('Distance to marker '..k..' is '..VDist2(v.Position[1],v.Position[3],platLoc[1], platLoc[3]))
                     end
                 end
             end
@@ -3310,7 +3307,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             if self.PlatoonData.FrigateRaid then
                 raidPosition = bestMarker.RaidPosition
             else
-                raidPosition = bestMarker.Position
+                raidPosition = bestMarker.Position or bestMarker.pos
             end
             self.LastMarker[2] = self.LastMarker[1]
             self.LastMarker[1] = bestMarker.Position
@@ -4782,37 +4779,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         self.planData = planData
         self.BuilderName = plan
         self:ForkAIThread(self[plan])
-    end,
-
-    GetPlatoonRatios = function(self)
-        ALLPBS = __blueprints
-        local directFire = 0
-        local indirectFire = 0
-        local antiAir = 0
-        local total = 0
-
-        for k, v in GetPlatoonUnits(self) do
-            if not v.Dead then
-                if v.Blueprint.CategoriesHash.DIRECTFIRE then
-                    directFire = directFire + 1
-                elseif v.Blueprint.CategoriesHash.INDIRECTFIRE then
-                    indirectFire = indirectFire + 1
-                elseif v.Blueprint.CategoriesHash.ANTIAIR then
-                    antiAir = antiAir + 1
-                end
-                total = total + 1
-            end
-        end
-        if directFire > 0 then
-            self.UnitRatios.DIRECTFIRE = directFire / total * 100
-        end
-        if indirectFire > 0 then
-            self.UnitRatios.INDIRECTFIRE = indirectFire / total * 100
-        end
-        if antiAir > 0 then
-            self.UnitRatios.ANTIAIR = antiAir / total * 100
-        end
-
     end,
     -- For Debugging
 

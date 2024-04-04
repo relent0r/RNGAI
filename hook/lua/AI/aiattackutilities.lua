@@ -68,7 +68,7 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
             -- Ideally the platoon needs to either be more powerful, or we need to completely change strategy.
             -- This returned the grid location of the threat that blocked the path which allows missions to clear it if possible.
             -- I'm thinking long range unit triggers, bomber, tml etc. Or just eco.
-            LOG('Threats returned '..repr(threats))
+            --LOG('Threats returned '..repr(threats))
         end
         LOG('No path from '..repr(start)..' to '..repr(destination)..' reason is '..repr(msg)..' platoon layer was '..platoonLayer)
         return false, msg, distance, threats

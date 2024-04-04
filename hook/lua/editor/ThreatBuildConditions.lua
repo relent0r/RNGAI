@@ -158,6 +158,36 @@ function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
     return false
 end
 
+function ThreatPresentOnLabelRNG(aiBrain, locationtype, tType)
+    local factoryManager = aiBrain.BuilderManagers[locationtype].FactoryManager
+    if not factoryManager then
+        return false
+    end
+    local graphArea = aiBrain.BuilderManagers[locationtype].GraphArea
+    if not graphArea then
+        WARN('Missing RNGArea for expansion land node or no path markers')
+        return false
+    end
+    local gameTime = GetGameTimeSeconds()
+    if not table.empty(aiBrain.EnemyIntel.EnemyThreatLocations) then
+        for _, x in aiBrain.EnemyIntel.EnemyThreatLocations do
+            for _, z in x do
+                if tType == 'Defensive' then
+                    if z.LandLabel == graphArea and z.LandDefStructureCount and z.LandDefStructureCount > 0 and (gameTime - z.UpdateTime) < 45 then
+                        LOG('ThreatPresentOnLabelRNG Defensive threat present')
+                        return true
+                    end
+                elseif z[tType] and z[tType] > 0 and z.LandLabel == graphArea and (gameTime - z.UpdateTime) < 45 then
+                    LOG('ThreatPresentOnLabelRNG Threat is present in graph area of type '..tType)
+                    return true
+                end
+            end
+        end
+    end
+    RNGLOG('ThreatPresentOnLabelRNG No threat in graph area')
+    return false
+end
+
 function LandThreatAtBaseOwnZones(aiBrain)
     -- used for bomber response former
     if aiBrain.BasePerimeterMonitor['MAIN'].LandUnits > 0 or aiBrain.EnemyIntel.HighPriorityTargetAvailable then

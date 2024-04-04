@@ -773,37 +773,8 @@ ZoneUpdate = function(aiBrain, platoon)
         elseif platoon.MovementLayer == 'Water' then
             --SetZone(PlatoonPosition, aiBrain.Zones.Water.index)
         end
-        GetPlatoonRatios(platoon)
+        platoon.Label = NavUtils.GetLabel(platoon.MovementLayer, platPos)
         WaitTicks(30)
-    end
-end
-
-GetPlatoonRatios = function(platoon)
-    local directFire = 0
-    local indirectFire = 0
-    local antiAir = 0
-    local total = 0
-
-    for k, v in GetPlatoonUnits(platoon) do
-        if not v.Dead then
-            if v.Blueprint.CategoriesHash.DIRECTFIRE then
-                directFire = directFire + 1
-            elseif v.Blueprint.CategoriesHash.INDIRECTFIRE then
-                indirectFire = indirectFire + 1
-            elseif v.Blueprint.CategoriesHash.ANTIAIR then
-                antiAir = antiAir + 1
-            end
-            total = total + 1
-        end
-    end
-    if directFire > 0 then
-        platoon.UnitRatios.DIRECTFIRE = directFire / total * 100
-    end
-    if indirectFire > 0 then
-        platoon.UnitRatios.INDIRECTFIRE = indirectFire / total * 100
-    end
-    if antiAir > 0 then
-        platoon.UnitRatios.ANTIAIR = antiAir / total * 100
     end
 end
 

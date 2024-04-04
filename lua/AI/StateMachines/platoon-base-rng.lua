@@ -147,8 +147,10 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                 elseif unitCats.SHIELD then
                     unit.Role='Shield'
                 end
-                unit:RemoveCommandCap('RULEUCC_Reclaim')
-                unit:RemoveCommandCap('RULEUCC_Repair')
+                if not unitCats.ENGINEER then
+                    unit:RemoveCommandCap('RULEUCC_Reclaim')
+                    unit:RemoveCommandCap('RULEUCC_Repair')
+                end
             end
         end
         if maxPlatoonStrikeDamage > 0 then

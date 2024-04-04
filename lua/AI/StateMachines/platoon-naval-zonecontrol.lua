@@ -690,11 +690,6 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIPlatoonNavalZoneControlBehavior)
-        platoon.UnitRatios = {
-            DIRECTFIRE = 0,
-            INDIRECTFIRE = 0,
-            ANTIAIR = 0,
-        }
         local platoonUnits = platoon:GetPlatoonUnits()
         if platoonUnits then
             for _, unit in platoonUnits do

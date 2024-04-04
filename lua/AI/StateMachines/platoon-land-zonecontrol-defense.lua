@@ -588,11 +588,6 @@ AssignToUnitsMachine = function(data, platoon, units)
         local platoonthreat=0
         local platoonhealth=0
         local platoonhealthtotal=0
-        platoon.UnitRatios = {
-            DIRECTFIRE = 0,
-            INDIRECTFIRE = 0,
-            ANTIAIR = 0,
-        }
         if data.ZoneType then
             platoon.ZoneType = data.ZoneType
         else
