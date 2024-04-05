@@ -1449,8 +1449,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             local refunits=AIUtils.GetOwnUnitsAroundPoint(aiBrain, cons.Categories, pos, cappingRadius, cons.ThreatMin,cons.ThreatMax, cons.ThreatRings)
             local reference = RUtils.GetCappingPosition(aiBrain, eng, pos, refunits, baseTmpl, buildingTmpl)
-            LOG('Capping template')
-            RNGLOG('reference is '..repr(reference))
+            --LOG('Capping template')
+            --RNGLOG('reference is '..repr(reference))
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
             RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
             --RNGLOG('baseTmpList is :'..repr(baseTmplList))
@@ -1883,11 +1883,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local aiBrain = eng.Brain
                 local multiplier = aiBrain.EcoManager.EcoMultiplier
                 if aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt then
-                    LOG('StructuresBeingBuilt exist on engineer manager '..repr(aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt))
+                    --LOG('StructuresBeingBuilt exist on engineer manager '..repr(aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt))
                     local structuresBeingBuilt = aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt
                     local queuedStructures = aiBrain.BuilderManagers[locationType].EngineerManager.QueuedStructures
                     local unitBp = unit.Blueprint
-                    LOG('Unit tech category is '..repr(unitBp.TechCategory))
+                    --LOG('Unit tech category is '..repr(unitBp.TechCategory))
                     local unitsBeingBuilt = 0
                     --if structuresBeingBuilt['QUEUED'][unitBp.TechCategory] then
                     if structuresBeingBuilt[unitBp.TechCategory] and not structuresBeingBuilt[unitBp.TechCategory][unit.EntityId] then
@@ -1901,28 +1901,28 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 end
                             end
                         end
-                        LOG('Number of high value units being built '..unitsBeingBuilt)
-                        LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
-                        LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (250 * multiplier)))
+                        --LOG('Number of high value units being built '..unitsBeingBuilt)
+                        --LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
+                        --LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (250 * multiplier)))
                         if unitsBeingBuilt > 0 and aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (250 * multiplier) then
-                            LOG('Too many high value units being built, abort this one')
+                            --LOG('Too many high value units being built, abort this one')
                             if queuedStructures[unitBp.TechCategory][eng.EntityId] then
-                                LOG('Deleting engineer entry in queue')
+                                --LOG('Deleting engineer entry in queue')
                                 queuedStructures[unitBp.TechCategory][eng.EntityId] = nil
                             else
-                                LOG('There is no entry for this high value unit in the engineer manager queue table')
+                                --LOG('There is no entry for this high value unit in the engineer manager queue table')
                             end
                             eng.ProcessBuild = eng:ForkThread(eng.PlatoonHandle.WaitForIdleDisband, unit)
                         else
-                            LOG('Tech category exist but unit entity does not, adding to table')
+                            --LOG('Tech category exist but unit entity does not, adding to table')
                             if queuedStructures[unitBp.TechCategory][eng.EntityId] then
-                                LOG('Deleting engineer entry in queue')
+                                --LOG('Deleting engineer entry in queue')
                                 queuedStructures[unitBp.TechCategory][eng.EntityId] = nil
                             else
-                                LOG('There is no entry for this high value unit in the engineer manager queue table')
+                                --LOG('There is no entry for this high value unit in the engineer manager queue table')
                             end
                             structuresBeingBuilt[unitBp.TechCategory][unit.EntityId] = unit
-                            LOG('Have added the following unit to the structuresBeingBuilt table '..repr(structuresBeingBuilt[unitBp.TechCategory]))
+                            --LOG('Have added the following unit to the structuresBeingBuilt table '..repr(structuresBeingBuilt[unitBp.TechCategory]))
                         end
                     end
                 end
@@ -2652,11 +2652,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         if (not eng) or eng.Dead or (not eng.PlatoonHandle) or eng.Combat or eng.Active or eng.Upgrading then
             return
         end
-        --[[
-        if eng.EngineerBuildQueue[1][1] == 'ueb1106' or eng.EngineerBuildQueue[2][1] == 'ueb1106' or eng.EngineerBuildQueue[3][1] == 'ueb1106' or eng.EngineerBuildQueue[4][1] == 'ueb1106' then
-            LOG('Engineer Just built mass storage, start of procesbuildcommand')
-            LOG('Queue '..repr(eng.EngineerBuildQueue))
-        end]]
         local ALLBPS = __blueprints
         local aiBrain = eng.PlatoonHandle:GetBrain()
         local transportWait = eng.PlatoonHandle.PlatoonData.TransportWait or 2
@@ -2901,7 +2896,9 @@ Platoon = Class(RNGAIPlatoonClass) {
         AIAttackUtils.GetMostRestrictiveLayerRNG(self)
         self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
         if self.MovementLayer == 'Water' or self.MovementLayer == 'Amphibious' then
-            self.CurrentPlatoonThreatAntiSurface = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+            self.CurrentPlatoonThreatDirectFireAntiSurface = self:CalculatePlatoonThreat('Surface', categories.DIRECTFIRE)
+            self.CurrentPlatoonThreatIndirectFireAntiSurface = self:CalculatePlatoonThreat('Surface', categories.INDIRECTFIRE)
+            self.CurrentPlatoonThreatAntiSurface = self.CurrentPlatoonThreatDirectFireAntiSurface + self.CurrentPlatoonThreatIndirectFireAntiSurface
             self.CurrentPlatoonThreatAntiNavy = self:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
             self.CurrentPlatoonThreatAntiAir = self:CalculatePlatoonThreat('Air', categories.ALLUNITS)
         end
@@ -5296,9 +5293,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             readySmlLaunchers = {}
             readySmlLauncherCount = 0
             local experimentalPresent = false
-            LOG('NukeAIRNG : Waiting 5 seconds')
+            --LOG('NukeAIRNG : Waiting 5 seconds')
             coroutine.yield(50)
-            LOG('NukeAIRNG : Performing loop')
+            --LOG('NukeAIRNG : Performing loop')
             platoonUnits = GetPlatoonUnits(self)
             for _, sml in platoonUnits do
                 if not sml or sml:BeenDestroyed() then
@@ -5306,7 +5303,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     return
                 end
 
-                LOG('NukeAIRNG : Issuing Clear Commands')
+                --LOG('NukeAIRNG : Issuing Clear Commands')
                 IssueClearCommands({sml})
                 local missileCount = sml:GetNukeSiloAmmoCount() or 0
                 --RNGLOG('NukeAIRNG : SML has '..missileCount..' missiles')
@@ -5316,7 +5313,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     self.ReadySMLCount = readySmlLauncherCount
                 end
                 if not targetsAvailable and missileCount > 1 and aiBrain:GetEconomyStoredRatio('MASS') < 0.20 then
-                    LOG('No nuke targets and have at least 2 missiles ready, stop building missiles')
+                    --LOG('No nuke targets and have at least 2 missiles ready, stop building missiles')
                     sml:SetAutoMode(false)
                 else
                     sml:SetAutoMode(true)
@@ -5343,9 +5340,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                 coroutine.yield(70)
             else
                 targetsAvailable = false
-                LOG('NukeAIRNG : No available targets or nukePos is null')
+                --LOG('NukeAIRNG : No available targets or nukePos is null')
             end
-            LOG('NukeAIRNG : Waiting 1 seconds')
+            --LOG('NukeAIRNG : Waiting 1 seconds')
             local gameTime = GetGameTimeSeconds()
             local rebuildTable = false
             for k, v in aiBrain.BrainIntel.SMLTargetPositions do

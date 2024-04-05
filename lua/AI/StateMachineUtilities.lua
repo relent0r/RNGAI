@@ -1304,6 +1304,7 @@ function GetClosestTargetByIMAP(aiBrain, platoon, position, threatType, searchFi
     end
     --LOG('threatcandidates '..repr(enemyThreat))
     if not table.empty(threatcandidates) then
+        table.sort(threatcandidates, function(a,b ) return a.Distance < b.Distance end)
         local gameTime = GetGameTimeSeconds()
         local targetCandidates = {}
         for _, grid in threatcandidates do

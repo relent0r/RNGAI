@@ -3863,7 +3863,7 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
         end
         return circlePoints
     end
-    LOG('Platoon Strike radius is '..repr(platoon.PlatoonStrikeRadius))
+    --LOG('Platoon Strike radius is '..repr(platoon.PlatoonStrikeRadius))
     local pointTable = DrawCirclePoints(8, platoon.PlatoonStrikeRadius, targetPosition)
     local maxDamage = target.Blueprint.Economy.BuildCostMass
     local setPointPos = false
@@ -5498,7 +5498,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval)
                 if not v.object.Dead and v.object:GetFractionComplete() > 0.9 then
                     local unitCats = v.object.Blueprint.CategoriesHash
                     if naval then
-                        if not unitCats.HOVER and PositionInWater(v.Position) then
+                        if not unitCats.HOVER and not unitCats.AIR and PositionInWater(v.position) then
                             closestTarget = v.object
                         end
                     else
@@ -6059,7 +6059,9 @@ ConfigurePlatoon = function(platoon)
     AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
     platoon.CurrentPlatoonThreat = platoon:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
     if platoon.MovementLayer == 'Water' or platoon.MovementLayer == 'Amphibious' then
-        platoon.CurrentPlatoonThreatAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+        platoon.CurrentPlatoonThreatDirectFireAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.DIRECTFIRE)
+        platoon.CurrentPlatoonThreatIndirectFireAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.INDIRECTFIRE)
+        platoon.CurrentPlatoonThreatAntiSurface = platoon.CurrentPlatoonThreatDirectFireAntiSurface + platoon.CurrentPlatoonThreatIndirectFireAntiSurface
         platoon.CurrentPlatoonThreatAntiNavy = platoon:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
         platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
     end
@@ -6238,41 +6240,44 @@ function AIFindNavalAreaNeedsEngineerRNG(aiBrain, locationType, enemyLabelCheck,
             local mz = v.Position[3] - pos[3]
             distance = mx * mx + mz * mz
         end
-        if enemyLabelCheck then
-            local label= NavUtils.GetLabel('Water', {v.Position[1], v.Position[2], v.Position[3]})
-            if label and aiBrain.BrainIntel.NavalBaseLabels[label] ~= 'Confirmed' then
-                labelRejected = true
-            end
-        end
-        if not labelRejected and not aiBrain.BuilderManagers[v.Name] then
-            local closeToExisting = false
-            for _, b in aiBrain.BuilderManagers do
-                if b.Layer == 'Water' then
-                    local rx = v.Position[1] - b.Position[1]
-                    local rz = v.Position[3] - b.Position[3]
-                    local posDistance = rx * rx + rz * rz
-                    if posDistance < 10000 then
-                        closeToExisting = true
-                        break
-                    end
+        if distance then
+            if enemyLabelCheck then
+                local label= NavUtils.GetLabel('Water', {v.Position[1], v.Position[2], v.Position[3]})
+                if label and aiBrain.BrainIntel.NavalBaseLabels[label] ~= 'Confirmed' then
+                    labelRejected = true
                 end
             end
-            if not closeToExisting and (not closest or distance < closest) then
-                closest = distance
-                retPos = v.Position
-                retName = v.Name
-            end
-        elseif not labelRejected then
-            local managers = aiBrain.BuilderManagers[v.Name]
-            if managers.EngineerManager:GetNumUnits('Engineers') == 0 and managers.FactoryManager:GetNumFactories() == 0 then
-                if not closest or distance < closest then
+            if not labelRejected and not aiBrain.BuilderManagers[v.Name] then
+                local closeToExisting = false
+                for _, b in aiBrain.BuilderManagers do
+                    if b.Layer == 'Water' then
+                        local rx = v.Position[1] - b.Position[1]
+                        local rz = v.Position[3] - b.Position[3]
+                        local posDistance = rx * rx + rz * rz
+                        if posDistance < 10000 then
+                            closeToExisting = true
+                            break
+                        end
+                    end
+                end
+                if not closeToExisting and (not closest or distance < closest) then
                     closest = distance
                     retPos = v.Position
                     retName = v.Name
                 end
+            elseif not labelRejected then
+                local managers = aiBrain.BuilderManagers[v.Name]
+                if managers.EngineerManager:GetNumUnits('Engineers') == 0 and managers.FactoryManager:GetNumFactories() == 0 then
+                    if not closest or distance < closest then
+                        closest = distance
+                        retPos = v.Position
+                        retName = v.Name
+                    end
+                end
             end
         end
     end
+    LOG('Naval Area returned '..repr(retPos)..' name '..repr(retName))
     return retPos, retName
 end
 

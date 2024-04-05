@@ -43,7 +43,7 @@ BaseBuilderTemplate {
         'RNGAI ScoutLandBuilder',
         --'RNGAI LabLandBuilder', -- Remove to use queue
         'RNGAI TankLandBuilder Small',
-        'RNGAI Land AA 2',
+        'RNGAI Land AntiAir Response',
         'RNGAI Reaction Tanks',
         'RNGAI T3 AttackLandBuilder Small',
 

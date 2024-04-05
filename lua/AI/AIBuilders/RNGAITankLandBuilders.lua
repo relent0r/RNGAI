@@ -217,7 +217,7 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI Land AA 2',
+    BuilderGroupName = 'RNGAI Land AntiAir Response',
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Mobile AA Response',
@@ -368,7 +368,6 @@ BuilderGroup {
         Priority = 700, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
-            { TBC, 'ThreatPresentInGraphRNG', {'LocationType', 'StructuresNotMex'} },
             { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'Air'} },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }}, -- stop building after we decent reach tech2 capability
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.3, 'LAND'}},
@@ -383,7 +382,6 @@ BuilderGroup {
         Priority = 705, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
-            { TBC, 'ThreatPresentInGraphRNG', {'LocationType', 'StructuresNotMex'} },
             { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'Land'} },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }}, -- stop building after we decent reach tech2 capability
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.3, 'LAND'}},
@@ -762,7 +760,6 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderType = 'Any',
         BuilderConditions = {
---            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.ANTIAIR - categories.INDIRECTFIRE} },
               { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ANTIAIR - categories.INDIRECTFIRE} },
         },
         BuilderData = {

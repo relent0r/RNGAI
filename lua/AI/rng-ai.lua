@@ -1797,7 +1797,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     if not self.GraphZones[v.RNGArea] then
                         self.GraphZones[v.RNGArea] = {}
                         self.GraphZones[v.RNGArea].MassMarkers = {}
-                        self.GraphZones[v.RNGArea].FriendlyAntiAirThreat = 0
+                        self.GraphZones[v.RNGArea].FriendlyLandAntiAirThreat = 0
                         self.GraphZones[v.RNGArea].FriendlySurfaceDirectFireThreat = 0
                         self.GraphZones[v.RNGArea].FriendlySurfaceInDirectFireThreat = 0
                         self.GraphZones[v.RNGArea].FriendlyAntiNavalThreat = 0
@@ -2167,9 +2167,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         local gridXID, gridZID = im:GetIntelGrid(v.Position)
                         if im.MapIntelGrid[gridXID][gridZID].Enabled then
                             im.MapIntelGrid[gridXID][gridZID].MustScout = true
-                            RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridZID)
-                            RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridZID]))
-                            self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
+                            --RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridZID)
+                            --RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridZID]))
+                            --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
                         end
                     end
             end
@@ -3750,13 +3750,12 @@ AIBrain = Class(RNGAIBrainClass) {
                             z.PositionOnWater = false
                             if not z.LandLabel then
                                 z.LandLabel = NavUtils.GetLabel('Land', z.Position) or 0
-                                LOG('Land Label from threats set as '..z.LandLabel)
+                                --LOG('Land Label from threats set as '..z.LandLabel)
                             end
                         end
                     end
                 end
             end
-            RNGLOG('potentialThreats '..repr(potentialThreats))
             self.EnemyIntel.EnemyThreatLocations = potentialThreats
             --RNGLOG('* AI-RNG: second table pass :'..repr(potentialThreats))
             --RNGLOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
@@ -6046,9 +6045,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     local graphArea = NavUtils.GetLabel('Land', loc)
                     table.insert(self.BrainIntel.DynamicExpansionPositions, {Zone = k, Position = loc, RNGArea = graphArea })
                 end
-            end
-            if foundMarker then
-               RNGLOG(repr(self.BrainIntel.DynamicExpansionPositions))
             end
             coroutine.yield(100)
         end

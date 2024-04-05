@@ -190,7 +190,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             end
             if not targetZone then
                 self:LogDebug(string.format('DecideWhatToDo no target zone, look for one'))
-                targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType)
+                targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType, true)
                 if targetZone then
                     self:LogDebug(string.format('DecideWhatToDo Target zone '..targetZone))
                     --LOG('Target Zone friendlyairthreat '..repr(aiBrain.Zones.Land.zones[targetZone].friendlyantiairthreat))
@@ -653,6 +653,7 @@ ZoneControlThreatThread = function(aiBrain, platoon)
         coroutine.yield(15)
         if platoon.Pos then
             platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
+            LOG('Defensive aa platoon has '..platoon.CurrentPlatoonThreatAntiAir..' threat and has label '..repr(platoon.Label)..' with zone '..repr(platoon.Zone))
             local targetThreat = GetThreatAtPosition(aiBrain, platoon.Pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
             if not platoon.retreat and targetThreat > 0 then
                 platoon:LogDebug(string.format('ZoneControlThreatThread found imap threat, looking for closest unit'))

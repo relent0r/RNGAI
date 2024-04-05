@@ -502,7 +502,8 @@ BuilderGroup {
         Priority = 750,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'LessThanLandExpansions', { 3 } },
+            --{ UCBC, 'LessThanLandExpansions', { 3 } },
+            { UCBC, 'RequirePresenceOnLabelRNG', {} },
             { UCBC, 'DynamicExpansionAvailableRNG', { } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

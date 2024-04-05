@@ -158,7 +158,7 @@ function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
     return false
 end
 
-function ThreatPresentOnLabelRNG(aiBrain, locationtype, tType)
+function ThreatPresentOnLabelRNG(aiBrain, locationtype, tType, ratioRequired)
     local factoryManager = aiBrain.BuilderManagers[locationtype].FactoryManager
     if not factoryManager then
         return false
@@ -170,7 +170,8 @@ function ThreatPresentOnLabelRNG(aiBrain, locationtype, tType)
     end
     local gameTime = GetGameTimeSeconds()
     if not table.empty(aiBrain.EnemyIntel.EnemyThreatLocations) then
-        for _, x in aiBrain.EnemyIntel.EnemyThreatLocations do
+        local threatTotal = 0
+        for k, x in aiBrain.EnemyIntel.EnemyThreatLocations do
             for _, z in x do
                 if tType == 'Defensive' then
                     if z.LandLabel == graphArea and z.LandDefStructureCount and z.LandDefStructureCount > 0 and (gameTime - z.UpdateTime) < 45 then
@@ -178,13 +179,28 @@ function ThreatPresentOnLabelRNG(aiBrain, locationtype, tType)
                         return true
                     end
                 elseif z[tType] and z[tType] > 0 and z.LandLabel == graphArea and (gameTime - z.UpdateTime) < 45 then
-                    LOG('ThreatPresentOnLabelRNG Threat is present in graph area of type '..tType)
+                    --LOG('ThreatPresentOnLabelRNG Threat is present in graph area of type '..tType)
+                    threatTotal = threatTotal + z[tType]
                     return true
                 end
             end
         end
+        if tType == 'Air' and aiBrain.GraphZones and aiBrain.GraphZones[graphArea].FriendlyLandAntiAirThreat < threatTotal then
+            return true
+        end
+        if tType == 'Land' and aiBrain.GraphZones and aiBrain.GraphZones[graphArea].FriendlySurfaceDirectFireThreat < threatTotal then
+            return true
+        end
     end
-    RNGLOG('ThreatPresentOnLabelRNG No threat in graph area')
+    if tType == 'Air' and aiBrain.GraphZones then
+        if aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface and aiBrain.GraphZones[graphArea].FriendlyLandAntiAirThreat then
+            if aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface > 10 and aiBrain.GraphZones[graphArea].FriendlyLandAntiAirThreat < 10 then
+                LOG('Requesting Minimum antiair support')
+                return true
+            end
+        end
+    end
+    --RNGLOG('ThreatPresentOnLabelRNG No threat in graph area')
     return false
 end
 

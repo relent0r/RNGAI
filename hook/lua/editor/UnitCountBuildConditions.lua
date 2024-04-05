@@ -184,6 +184,34 @@ function LessThanLandExpansions(aiBrain, expansionCount)
     return true
 end
 
+function RequirePresenceOnLabelRNG(aiBrain, expansionCount)
+    if aiBrain.GraphZones then
+        for id, v in aiBrain.GraphZones do
+            local baseDetected = false
+            if v.MassMarkersInZone > 5 then
+                for _, b in aiBrain.BuilderManagers do
+                    if not v.BaseType then
+                        continue
+                    end
+                    if v.BaseType ~= 'Naval Area' and v.BaseType ~= 'FLOATING' then
+                        if v.RNGArea and v.RNGArea == id then
+                            --LOG('Found base in label '..id..' base name is '..v.BaseType)
+                            baseDetected = true
+                            break
+                        end
+                    end
+                end
+            end
+            if not baseDetected then
+                --LOG('RequirePresenceOnLabelRNG returning true')
+                return true
+            end
+        end
+    end
+    --LOG('RequirePresenceOnLabelRNG returning false')
+    return false
+end
+
 --    Uveso Function          { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * (categories.TECH1 + categories.TECH2 + categories.TECH2)  }},
 function HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG(aiBrain, locationType, numReq, category, constructionCat)
     local numUnits

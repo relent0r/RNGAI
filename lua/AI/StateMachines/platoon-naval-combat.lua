@@ -92,7 +92,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             if threat.allyTotal and threat.enemyTotal and threat.allyTotal*1.1 < threat.enemyTotal then
                 self:LogDebug(string.format('Current status at position is '..repr(currentStatus)))
             end
-            LOG('Current threat table '..repr(threat))
+            --LOG('Current threat table '..repr(threat))
             if threat.allySub and threat.enemySub and threat.enemyrange > 0 
             and (threat.allySub*1.1 < threat.enemySub and threat.enemyrange >= self.MaxPlatoonWeaponRange or threat.allySub*1.3 < threat.enemySub) and currentStatus ~= 'Allied'
             or threat.allySub and threat.enemySub and threat.allySurface and threat.enemySurface and threat.enemyrange > 0 and (threat.allySurface*1.1 < threat.enemySurface 
@@ -765,7 +765,9 @@ ThreatThread = function(aiBrain, platoon)
         else
             platoon.PlatoonFull = false
         end
-        platoon.CurrentPlatoonThreatAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+        platoon.CurrentPlatoonThreatDirectFireAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.DIRECTFIRE)
+        platoon.CurrentPlatoonThreatIndirectFireAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.INDIRECTFIRE)
+        platoon.CurrentPlatoonThreatAntiSurface = platoon.CurrentPlatoonThreatDirectFireAntiSurface + platoon.CurrentPlatoonThreatIndirectFireAntiSurface
         platoon.CurrentPlatoonThreatAntiNavy = platoon:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
         platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
         coroutine.yield(35)

@@ -60,7 +60,7 @@ BaseBuilderTemplate {
 
         -- Land Unit Builders --
         'RNGAI TankLandBuilder Large',
-        'RNGAI Land AA 2',
+        'RNGAI Land AntiAir Response',
         'RNGAI T3 AttackLandBuilder Large',
         'RNGAI Island Large FormBuilders',
 

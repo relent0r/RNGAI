@@ -945,6 +945,7 @@ function SetMarkerInformation(aiBrain)
     --RNGLOG('Dump Resource MarkerChain '..repr(AdaptiveResourceMarkerTableRNG))
     ScenarioInfo.MarkersInfectedRNG = true
 end
+
 function InfectMarkersRNG(aiBrain,marker,nodekey)
     --RNGLOG('InfectMarkersRNG triggered')
     if marker then

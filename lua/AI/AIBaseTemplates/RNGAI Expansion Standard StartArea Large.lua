@@ -37,13 +37,13 @@ BaseBuilderTemplate {
                 'RNGAI TankLandBuilder Large',
                 'RNGAI T3 AttackLandBuilder Large',
                 'RNGAI TankLandBuilder Islands',
+                'RNGAI Land AntiAir Response',
         
                 -- Land Unit Formers T1 --
                 'RNGAI ScoutLandFormer',
                 'RNGAI Land Mass Raid',
                 'RNGAI Land FormBuilders Expansion Large',
                 'RNGAI Land Response Formers',
-                'RNGAI Land AA 2',
                 'RNGAI Island Large FormBuilders',
         
                 -- Land Factory Builders --

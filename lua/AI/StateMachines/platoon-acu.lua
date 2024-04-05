@@ -250,6 +250,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
 
                             if stageExpansion then
+                                LOG('ExpansionDump from query '..repr(stageExpansion))
                                 self.BuilderData = {
                                     Expansion = true,
                                     Position = stageExpansion.Expansion.Position,
@@ -1431,14 +1432,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local whatToBuild = brain:DecideWhatToBuild(cdr, 'T1Resource', buildingTmpl)
             --LOG('ACU Looping through markers')
             local massMarkerCount = 0
-            local adaptiveResourceMarkers = GetMarkersRNG()
+            local expansionMarkerCount = 0
             local MassMarker = {}
             cdr.EngineerBuildQueue = {}
             local object = self.BuilderData.ExpansionData
             --LOG('Object '..repr(object))
             if object then
-                for _, v in adaptiveResourceMarkers do
+                for _, v in object.Expansion.Extractors do
                     if v.type == 'Mass' then
+                        expansionMarkerCount = expansionMarkerCount + 1
                         RNGINSERT(MassMarker, {Position = v.position, Distance = VDist3Sq( v.position, object.Expansion.Position ) })
                     end
                 end
@@ -1492,7 +1494,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
                 --LOG('Mass markers should be built unless they are already taken')
                 cdr.EngineerBuildQueue={}
-                if object.Expansion.MassPoints > 1 then
+                if expansionMarkerCount > 1 then
                     --LOG('ACU Object has more than 1 mass points and is called '..object.Expansion.Name)
                     local alreadyHaveExpansion = false
                     for k, manager in brain.BuilderManagers do
@@ -1509,7 +1511,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             brain:AddBuilderManagers(object.Expansion.Position, 60, object.Expansion.Name, true)
                             local baseValues = {}
                             local highPri = false
-                            local markerType = false
+                            local markerType
                             local abortBuild = false
                             if object.Expansion.Type == 'Blank Marker' then
                                 markerType = 'Start Location'
@@ -1544,9 +1546,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             -- The actual factory building part
                             local baseTmplDefault = import('/lua/BaseTemplates.lua')
                             local factoryCount = 0
-                            if object.Expansion.MassPoints > 2 then
+                            if expansionMarkerCount > 2 then
                                 factoryCount = 2
-                            elseif object.Expansion.MassPoints > 1 then
+                            elseif expansionMarkerCount > 1 then
                                 factoryCount = 1
                             end
                             for i=1, factoryCount do
