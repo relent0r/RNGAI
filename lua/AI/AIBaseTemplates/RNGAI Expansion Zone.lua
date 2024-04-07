@@ -1,12 +1,12 @@
 --[[
-    File    :   /lua/AI/AIBaseTemplates/RNGAI Expansion Dynamic.lua
+    File    :   /lua/AI/AIBaseTemplates/RNGAI Expansion Zone.lua
     Author  :   relentless
     Summary :
         Expansion Template
 ]]
 
 BaseBuilderTemplate {
-    BaseTemplateName = 'RNGAI Expansion Standard Dynamic',
+    BaseTemplateName = 'RNGAI Expansion Zone',
     Builders = {       
                 -- Intel Builders --
                 'RNGAI RadarBuilders Expansion',
@@ -23,7 +23,10 @@ BaseBuilderTemplate {
         
                 -- Land Unit Builders T1 --
                 'RNGAI ScoutLandBuilder',
-                'RNGAI TankLandBuilder Islands',
+                'RNGAI Reaction Tanks Expansion',
+                'RNGAI LandBuilder T1',
+                'RNGAI LandBuilder T2',
+                'RNGAI LandBuilder T3',
         
                 -- Land Unit Formers T1 --
                 'RNGAI ScoutLandFormer',
@@ -75,27 +78,26 @@ BaseBuilderTemplate {
         if not aiBrain.RNG then
             return -1
         end
-        if markerType ~= 'Dynamic' then
+        if markerType ~= 'Zone Expansion' then
             return -1
         end
-        
-        local threatCutoff = 10 -- value of overall threat that determines where enemy bases are
-        local distance = import('/lua/ai/AIUtilities.lua').GetThreatDistance( aiBrain, location, threatCutoff )
-        --RNGLOG('* AI-RNG: Distance is ', distance)
-        if not distance or distance > 1000 then
-            --RNGLOG('* AI-RNG: Expansion return is 10')
-            return 10
-        elseif distance > 500 then
-            --RNGLOG('* AI-RNG: Expansion return is 25')
-            return 25
-        elseif distance > 250 then
-            --RNGLOG('* AI-RNG: Expansion return is 50')
-            return 50
-        else
-            --RNGLOG('* AI-RNG: Expansion return is 100')
-            return 100
+        local EnemyIndex
+        local OwnIndex = aiBrain:GetArmyIndex()
+        local EnemyArmy = aiBrain:GetCurrentEnemy()
+        if EnemyArmy then
+            EnemyIndex = EnemyArmy:GetArmyIndex()
         end
-        --RNGLOG('* AI-RNG: Expansion return default 0')
+        if aiBrain.BuilderManagers['MAIN'].GraphArea then
+            local NavUtils = import('/lua/sim/NavUtils.lua')
+            local mainBaseLabel = aiBrain.BuilderManagers['MAIN'].GraphArea
+            LOG('Non Island Main base has GraphArea of '..mainBaseLabel)
+            local label = NavUtils.GetLabel('Land', location)
+            LOG('Non Island Expansion GraphArea is '..label)
+            if mainBaseLabel == label then
+                LOG('Return 100 priority')
+                return 100
+            end
+        end
         return -1
     end,
 }

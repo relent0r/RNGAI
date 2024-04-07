@@ -1161,7 +1161,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.MapOwnership = 0
         self.BrainIntel.AirStagingRequired = false
         self.BrainIntel.CurrentIntelAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, self.MapCenterPoint)
-        self.BrainIntel.DynamicExpansionPositions = {}
         self.BrainIntel.IMAPConfig = {
             OgridRadius = 0,
             IMAPSize = 0,
@@ -1281,7 +1280,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self:CalculateMassMarkersRNG()
         self:ForkThread(self.SetupIntelTriggersRNG)
         self:ForkThread(IntelManagerRNG.InitialNavalAttackCheck)
-        self:ForkThread(self.DynamicExpansionRequiredRNG)
         self.ZonesInitialized = false
         self:ForkThread(self.ZoneSetup)
         self.IntelManager = IntelManagerRNG.CreateIntelManager(self)
@@ -1771,6 +1769,8 @@ AIBrain = Class(RNGAIBrainClass) {
             if zone then
                 --RNGLOG('Zone set for builder manager')
                 self.BuilderManagers[baseName].Zone = zone
+                self.Zones.Land.zones[zone].BuilderManager = self.BuilderManagers[baseName]
+                LOG('Allocation BuilderManager to zone, basename is '..baseName)
                 --RNGLOG('Zone is '..self.BuilderManagers[baseName].Zone)
                 zoneSet = true
             else
@@ -2841,7 +2841,7 @@ AIBrain = Class(RNGAIBrainClass) {
         ]]
         coroutine.yield(Random(5,20))
         local baseRestrictedArea = self.OperatingAreas['BaseRestrictedArea']
-        local perimeterMonitorRadius = baseRestrictedArea * 1.3
+        local perimeterMonitorRadius
         self.BasePerimeterMonitor = {}
         if self.RNGDEBUG then
             self:ForkThread(self.drawMainRestricted)
@@ -2861,6 +2861,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 local enemyAirAngle = false
                 local enemyNavalAngle = false
                 local unitCat
+                if k == 'MAIN' then
+                    perimeterMonitorRadius = baseRestrictedArea * 1.3
+                else
+                    perimeterMonitorRadius = baseRestrictedArea
+                end
                 if v.FactoryManager.LocationActive and self.BuilderManagers[k].FactoryManager and not RNGTableEmpty(self.BuilderManagers[k].FactoryManager.FactoryList) then
                     if not self.BasePerimeterMonitor[k] then
                         self.BasePerimeterMonitor[k] = {}
@@ -5981,75 +5986,6 @@ AIBrain = Class(RNGAIBrainClass) {
         --LOG('Civ units '..repr(civUnits))
     end,
 
-    DynamicExpansionRequiredRNG = function(self)
-
-        -- What does this shit do?
-        -- Its going to look at the expansion table which holds information on expansion markers.
-        -- Then its going to see what the mass value of the graph zone is so we can see if its even worth looking
-        -- Then if its worth it we'll see if we have an expansion in this zone and if not then we should look to establish a presense
-        -- But what if an enemy already has structure threat around the expansion marker?
-        -- Then we are going to try and create a dynamic expansion in the zone somewhere so we can try and take it.
-        -- By default if someone already has the expansion marker the AI will give up. But that doesn't stop humans and it shouldn't stop us.
-        -- When debuging, dont repr the expansions as they might have a unit assigned to them.
-        coroutine.yield(Random(300,500))
-        while true do
-            local structureThreat
-            local potentialExpansionZones = {}
-            local zoneSet = self.Zones.Land.zones
-            for k, v in zoneSet do
-                local invalidZone = false
-                if self.GraphZones then
-                    local graphArea = NavUtils.GetLabel('Land', v.pos)
-                    if self.GraphZones[graphArea].MassMarkersInZone > 5 then
-                        for c, b in self.BuilderManagers do
-                            if b.GraphArea and b.GraphArea == graphArea then
-                                invalidZone = true
-                                break
-                            end
-                        end
-                    else
-                        invalidZone = true
-                    end
-                end
-                if not invalidZone then
-                    if not potentialExpansionZones[v.id] then
-                        potentialExpansionZones[v.id] = {}
-                        potentialExpansionZones[v.id].Zones = {}
-                        RNGINSERT(potentialExpansionZones[v.id].Zones, v.pos)
-                    end
-                end
-            end
-
-            --RNGLOG('These are the potentialExpansionZones')
-            --RNGLOG('Mass Markers Per Zone')
-            local foundMarker = false
-            local loc = false
-            self.BrainIntel.DynamicExpansionPositions = {}
-            --RNGLOG('Graph Zones '..repr(self.GraphZones))
-            for k, v in potentialExpansionZones do
-                if not table.empty(v.Zones) then
-                    local zoneCopy = table.copy(v.Zones)
-                    local startPos = self.BrainIntel.StartPos
-                    table.sort(zoneCopy,function(k1,k2) return VDist2Sq(k1[1],k1[3],startPos[1],startPos[3])<VDist2Sq(k2[1],k2[3],startPos[1],startPos[3]) end)
-                    for c, zonePos in zoneCopy do
-                        if zonePos then
-                            loc = zonePos
-                            foundMarker = true
-                            break
-                        else
-                           --RNGLOG('No marker found for expansion in zone '..k)
-                        end
-                    end
-                end
-                if loc then
-                    local graphArea = NavUtils.GetLabel('Land', loc)
-                    table.insert(self.BrainIntel.DynamicExpansionPositions, {Zone = k, Position = loc, RNGArea = graphArea })
-                end
-            end
-            coroutine.yield(100)
-        end
-    end,
-
         --- Called by a unit of this army when it is killed
     ---@param self AIBrain
     ---@param unit Unit
@@ -7064,7 +7000,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.MapOwnership = 0
         self.BrainIntel.AirStagingRequired = false
         self.BrainIntel.CurrentIntelAngle = RUtils.GetAngleToPosition(self.BrainIntel.StartPos, self.MapCenterPoint)
-        self.BrainIntel.DynamicExpansionPositions = {}
         self.BrainIntel.IMAPConfig = {
             OgridRadius = 0,
             IMAPSize = 0,
@@ -7185,7 +7120,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self:CalculateMassMarkersRNG()
         self:ForkThread(self.SetupIntelTriggersRNG)
         self:ForkThread(IntelManagerRNG.InitialNavalAttackCheck)
-        self:ForkThread(self.DynamicExpansionRequiredRNG)
         self.ZonesInitialized = false
         self:ForkThread(self.ZoneSetup)
         self.IntelManager = IntelManagerRNG.CreateIntelManager(self)

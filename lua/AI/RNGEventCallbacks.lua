@@ -147,7 +147,7 @@ function OnTransfered(transferedUnits, toArmy, captured)
                     local closestBase
                     local closestBaseDistance
                     for c, b in brain.BuilderManagers do
-                        if c ~= 'FLOATING' and b.FactoryManager and b.FactoryManager.Active then
+                        if c ~= 'FLOATING' and b.FactoryManager and b.FactoryManager.LocationActive then
                             distanceToBase = VDist3Sq(b.Position, v:GetPosition())
                             --LOG('Distance to factory manager '..c..' '..math.sqrt(distanceToBase))
                             if distanceToBase < 14400 and (not closestBase or distanceToBase < closestBaseDistance) then

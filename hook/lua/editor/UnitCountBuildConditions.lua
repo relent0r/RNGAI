@@ -175,12 +175,12 @@ function LessThanLandExpansions(aiBrain, expansionCount)
             count = count + 1
         end
         if count >= expansionCount then
-            RNGLOG('We have  '..count..' expansions '..'more than the expansion limit of '..expansionCount)
+            --RNGLOG('We have  '..count..' expansions '..'more than the expansion limit of '..expansionCount)
             return false
         end
-        RNGLOG('Expansion Base Type is '..v.BaseType)
+        --RNGLOG('Expansion Base Type is '..v.BaseType)
     end
-    RNGLOG('We have no expansions count '..count..' expansion max '..expansionCount)
+    --RNGLOG('We have no expansions count '..count..' expansion max '..expansionCount)
     return true
 end
 
@@ -1258,23 +1258,6 @@ function UnitsLessAtLocationRNG( aiBrain, locationType, unitCount, testCat )
 	return false
 end
 
-function DynamicExpansionAvailableRNG(aiBrain)
-
-    if aiBrain.BrainIntel.DynamicExpansionPositions and not table.empty(aiBrain.BrainIntel.DynamicExpansionPositions) then
-        for k, v in aiBrain.BrainIntel.DynamicExpansionPositions do
-            if not aiBrain.BuilderManagers['DYNAMIC_'..v.Zone] then
-                for _, b in aiBrain.BuilderManagers do
-                    if v.RNGArea and b.RNGArea == v.RNGArea then
-                        return false
-                    end
-                end
-                return true
-            end
-        end
-    end
-    return false
-end
-
 function GreaterThanFactoryCountRNG(aiBrain, count, category, navalOnly)
     local factoryCount = 0
     for _, v in aiBrain.BuilderManagers do
@@ -1645,6 +1628,20 @@ function RequireRadarUpgradeRNG(aiBrain, locationType, radarTech)
         end
     end
     return true
+end
+
+function ZoneAvailableRNG(aiBrain)
+    local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
+    local im = IntelManagerRNG.GetIntelManager(aiBrain)
+    if not table.empty(im.ZoneExpansions.Pathable) then
+        for _, v in im.ZoneExpansions.Pathable do
+            if v.ZoneID and aiBrain.Zones.Land.zones[v.ZoneID].lastexpansionattempt + 30 < GetGameTimeSeconds() then
+                LOG('Zone available for expansion')
+                return true
+            end
+        end
+    end
+    return false
 end
 
 --[[

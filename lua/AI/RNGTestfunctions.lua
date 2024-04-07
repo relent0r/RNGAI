@@ -78,3 +78,25 @@ print("Test point is on the:", side, "side of the line")
 
 -- This required reintegration
 local distressLocation = aiBrain:BaseMonitorDistressLocationRNG(position, distressRange, aiBrain.BaseMonitor.PoolDistressThreshold, 'Land')
+
+function Testrallypointpositions(pos)
+    LOG('Land Factory')
+    local rallyPointOptions = NavUtils.DirectionsFrom('Land', factoryPos, 30)
+    local fx = factoryPos[1] - opponentStart[1]
+    local fz = factoryPos[3] - opponentStart[3]
+    local factoryDistance = fx * fx + fz * fz
+    for _, v in rallyPointOptions do
+        local rx = v[1] - opponentStart[1]
+        local rz = v[3] - opponentStart[3]
+        local rallyDistance = rx * rx + rz * rz
+        local frx = v[1] - factoryPos[1]
+        local frz = v[3] - factoryPos[3]
+        local rallyFactoryPosDistance = frx * frx + frz * frz
+        if rallyFactoryPosDistance > 64 and rallyFactoryPosDistance < 60 * 60 and rallyDistance < factoryDistance and self.Brain:GetNumUnitsAroundPoint(categories.STRUCTURE, v, 8, 'Ally') < 1 then
+            LOG('Found point at distance of '..math.sqrt(rallyFactoryPosDistance))
+            position = v
+            break
+        end
+    end
+    --RNGLOG('Air Rally Position is :'..repr(position))
+end

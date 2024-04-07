@@ -3556,9 +3556,10 @@ function MexUpgradeManagerRNG(aiBrain)
     end
 end
 
-AIFindDynamicExpansionPointRNG = function(aiBrain, locationType, radius, threatMin, threatMax, threatRings, threatType)
+AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius)
+    local im = IntelManagerRNG.GetIntelManager(aiBrain)
     local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
-    local retPos, retName
+    local retPos, retName, refZone
     radius = radius * radius
 
     if not pos then
@@ -3567,22 +3568,20 @@ AIFindDynamicExpansionPointRNG = function(aiBrain, locationType, radius, threatM
        --RNGLOG('Location Pos is '..repr(pos))
     end
    --RNGLOG('Checking if Dynamic Expansions Table Exist')
-    if aiBrain.BrainIntel.DynamicExpansionPositions then
-        for k, v in aiBrain.BrainIntel.DynamicExpansionPositions do
-           --RNGLOG('Dynamic Expansion data '..repr(v))
-            if not aiBrain.BuilderManagers['DYNAMIC_'..v.Zone] then
-                if VDist3Sq(pos, v.Position) < radius and GetThreatAtPosition( aiBrain, v.Position, threatRings, true, threatType) < threatMax then
-                    retPos = v.Position
-                    retName = 'DYNAMIC_'..v.Zone
-                    break
-                end
+    if not table.empty(im.ZoneExpansions.Pathable) then
+        for _, v in im.ZoneExpansions.Pathable do
+            local skipPos = false
+            if v and VDist3Sq(pos, v.Position) < radius then
+                retPos = aiBrain.Zones.Land.zones[v.ZoneID].pos
+                retName = 'ZONE_'..v.ZoneID
+                refZone = v.ZoneID
+                break
             end
         end
-    else
-       --RNGLOG('Dynamic Expansions table doesnt exist')
     end
     if retPos then
-        return retPos, retName
+        RNGLOG('Returning zone expansion position '..repr(retPos)..' with name '..repr(retName))
+        return retPos, retName, refZone
     end
     return false
 end
@@ -6277,7 +6276,6 @@ function AIFindNavalAreaNeedsEngineerRNG(aiBrain, locationType, enemyLabelCheck,
             end
         end
     end
-    LOG('Naval Area returned '..repr(retPos)..' name '..repr(retName))
     return retPos, retName
 end
 

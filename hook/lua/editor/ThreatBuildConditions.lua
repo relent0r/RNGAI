@@ -176,12 +176,11 @@ function ThreatPresentOnLabelRNG(aiBrain, locationtype, tType, ratioRequired)
                 if tType == 'Defensive' then
                     if z.LandLabel == graphArea and z.LandDefStructureCount and z.LandDefStructureCount > 0 and (gameTime - z.UpdateTime) < 45 then
                         LOG('ThreatPresentOnLabelRNG Defensive threat present')
-                        return true
+                        threatTotal = threatTotal + z.LandDefStructureThreat
                     end
                 elseif z[tType] and z[tType] > 0 and z.LandLabel == graphArea and (gameTime - z.UpdateTime) < 45 then
                     --LOG('ThreatPresentOnLabelRNG Threat is present in graph area of type '..tType)
                     threatTotal = threatTotal + z[tType]
-                    return true
                 end
             end
         end
@@ -189,6 +188,10 @@ function ThreatPresentOnLabelRNG(aiBrain, locationtype, tType, ratioRequired)
             return true
         end
         if tType == 'Land' and aiBrain.GraphZones and aiBrain.GraphZones[graphArea].FriendlySurfaceDirectFireThreat < threatTotal then
+            return true
+        end
+        if tType == 'Defensive' and aiBrain.GraphZones and aiBrain.GraphZones[graphArea].FriendlySurfaceInDirectFireThreat < threatTotal then
+            LOG('ThreatPresentOnLabelRNG returning true as we need more threat')
             return true
         end
     end

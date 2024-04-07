@@ -137,7 +137,7 @@ BuilderGroup {
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Tank Enemy Nearby',
-        PlatoonTemplate = 'RNGAIT1LandResponse',
+        PlatoonTemplate = 'T1LandDFTank',
         Priority = 880,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
@@ -365,12 +365,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Land T1 AntiAir Island Expansion',
         PlatoonTemplate = 'T1LandAA',
-        Priority = 700, -- After Second Engie Group
+        Priority = 705, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
             { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'Air'} },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }}, -- stop building after we decent reach tech2 capability
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.3, 'LAND'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -384,7 +383,6 @@ BuilderGroup {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
             { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'Land'} },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }}, -- stop building after we decent reach tech2 capability
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.3, 'LAND'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -393,13 +391,12 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Land T1 Artillery Island Expansion',
         PlatoonTemplate = 'T1LandArtillery',
-        Priority = 700, -- After Second Engie Group
+        Priority = 710, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
             { TBC, 'ThreatPresentInGraphRNG', {'LocationType', 'StructuresNotMex'} },
             { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'Defensive'} },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }}, -- stop building after we decent reach tech2 capability
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.3, 'LAND'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

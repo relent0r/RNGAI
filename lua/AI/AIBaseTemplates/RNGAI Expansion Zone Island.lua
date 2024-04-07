@@ -1,12 +1,12 @@
 --[[
-    File    :   /lua/AI/AIBaseTemplates/RNGAI Expansion Standard Small.lua
+    File    :   /lua/AI/AIBaseTemplates/RNGAI Expansion Zone Island.lua
     Author  :   relentless
     Summary :
         Expansion Template
 ]]
 
 BaseBuilderTemplate {
-    BaseTemplateName = 'RNGAI Expansion Standard Aggressive',
+    BaseTemplateName = 'RNGAI Expansion Zone Island',
     Builders = {       
                 -- Intel Builders --
                 'RNGAI RadarBuilders Expansion',
@@ -23,9 +23,7 @@ BaseBuilderTemplate {
         
                 -- Land Unit Builders T1 --
                 'RNGAI ScoutLandBuilder',
-                'RNGAI LandBuilder T1',
-                'RNGAI LandBuilder T2',
-                'RNGAI LandBuilder T3',
+                'RNGAI TankLandBuilder Islands',
         
                 -- Land Unit Formers T1 --
                 'RNGAI ScoutLandFormer',
@@ -61,13 +59,13 @@ BaseBuilderTemplate {
         },
         
         MassToFactoryValues = {
-            T1LandValue = 6,
+            T1LandValue = 5,
             T2LandValue = 15,
             T3LandValue = 22.5,
-            T1AirValue = 6,
+            T1AirValue = 5,
             T2AirValue = 15,
             T3AirValue = 22.5,
-            T1NavalValue = 6,
+            T1NavalValue = 5,
             T2NavalValue = 15,
             T3NavalValue = 22.5,
         },
@@ -77,27 +75,20 @@ BaseBuilderTemplate {
         if not aiBrain.RNG then
             return -1
         end
-        if markerType ~= 'Aggressive' then
+        if markerType ~= 'Zone Expansion' then
             return -1
         end
-        
-        local threatCutoff = 10 -- value of overall threat that determines where enemy bases are
-        local distance = import('/lua/ai/AIUtilities.lua').GetThreatDistance( aiBrain, location, threatCutoff )
-        --RNGLOG('* AI-RNG: Distance is ', distance)
-        if not distance or distance > 1000 then
-            --RNGLOG('* AI-RNG: Expansion return is 10')
-            return 10
-        elseif distance > 500 then
-            --RNGLOG('* AI-RNG: Expansion return is 25')
-            return 25
-        elseif distance > 250 then
-            --RNGLOG('* AI-RNG: Expansion return is 50')
-            return 50
-        else
-            --RNGLOG('* AI-RNG: Expansion return is 100')
-            return 100
+        if aiBrain.BuilderManagers['MAIN'].GraphArea then
+            local NavUtils = import('/lua/sim/NavUtils.lua')
+            local mainBaseLabel = aiBrain.BuilderManagers['MAIN'].GraphArea
+            LOG('Island Main base has GraphArea of '..mainBaseLabel)
+            local label = NavUtils.GetLabel('Land', location)
+            LOG('Island Expansion GraphArea is '..label)
+            if mainBaseLabel ~= label then
+                LOG('Return 100 priority')
+                return 100
+            end
         end
-        --RNGLOG('* AI-RNG: Expansion return default 0')
         return -1
     end,
 }

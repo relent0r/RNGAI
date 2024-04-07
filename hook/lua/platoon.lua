@@ -1498,12 +1498,19 @@ Platoon = Class(RNGAIPlatoonClass) {
                     self:PlatoonDisband()
                     return
                 end
-            elseif cons.DynamicExpansion then
-                reference, refName = RUtils.AIFindDynamicExpansionPointRNG(aiBrain, cons.LocationType,
-                        (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
-                if not reference or not refName then
+            elseif cons.ZoneExpansion then
+                LOG('Get Zone Expansion point')
+                reference, refName, refZone = RUtils.AIFindZoneExpansionPointRNG(aiBrain, cons.LocationType, (cons.LocationRadius or 100))
+                LOG('References returned '..repr(reference)..' name '..repr(refName))
+                if not reference or not refName or aiBrain.Zones.Land.zones[refZone].lastexpansionattempt + 30 > GetGameTimeSeconds() then
                     self:PlatoonDisband()
                     return
+                end
+                if reference and refZone and refName then
+                    aiBrain.Zones.Land.zones[refZone].lastexpansionattempt = GetGameTimeSeconds()
+                    aiBrain.Zones.Land.zones[refZone].engineerallocated = eng
+                    LOG('allocated engineer to zone '..repr(aiBrain.Zones.Land.zones[refZone].engineerallocated.UnitId))
+                    LOG('Last expansion attempt was '..repr(aiBrain.Zones.Land.zones[refZone].lastexpansionattempt))
                 end
             elseif cons.NearMarkerType == 'Expansion Area' then
                 reference, refName = RUtils.AIFindExpansionAreaNeedsEngineerRNG(aiBrain, cons.LocationType,
@@ -2672,6 +2679,9 @@ Platoon = Class(RNGAIPlatoonClass) {
         if removeLastBuild then
             table.remove(eng.EngineerBuildQueue, 1)
         end
+        if eng.PlatoonHandle.BuilderName == 'RNGAI T1 Dynamic Expansion Large' then
+            LOG('Engineer for dynamic expansion processing build command')
+        end
         eng.ProcessBuildDone = false
         IssueClearCommands({eng})
         local commandDone = false
@@ -2697,6 +2707,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             
 
             if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation, transportWait) then
+                if eng.PlatoonHandle.BuilderName == 'RNGAI T1 Dynamic Expansion Large' then
+                    LOG('Engineer for dynamic expansion processing build command has completed move with safe path')
+                end
                 if not eng or eng.Dead or not eng.PlatoonHandle or not PlatoonExists(aiBrain, eng.PlatoonHandle) then
                     if eng then eng.ProcessBuild = nil end
                     return
@@ -2740,6 +2753,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                     if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                         if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, PlatoonPos, 45, 'Enemy') > 0 then
+                            if eng.PlatoonHandle.BuilderName == 'RNGAI T1 Dynamic Expansion Large' then
+                                LOG('Engineer for dynamic expansion enemy action being taken')
+                            end
                             local actionTaken = RUtils.EngineerEnemyAction(aiBrain, eng)
                         end
                     end
@@ -2764,6 +2780,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                         table.remove(eng.EngineerBuildQueue, 1)
                         break
                     end
+                end
+                if eng.PlatoonHandle.BuilderName == 'RNGAI T1 Dynamic Expansion Large' then
+                    LOG('Engineer for dynamic expansion trying to perform build')
                 end
                 -- check to see if we need to reclaim or capture...
                 RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation, 10)
@@ -2844,20 +2863,46 @@ Platoon = Class(RNGAIPlatoonClass) {
         local engPos = eng:GetPosition()
         local validateHighValue = false
         local buildingUnit
+        local reclaimInitiated = false
 
         --DUNCAN - Trying to stop commander leaving projects, also added moving as well.
         while not eng.Dead and not eng.PlatoonHandle.UsingTransport and (eng.ProcessBuild ~= nil
                   or not eng:IsIdleState()
                  ) do
             coroutine.yield(30)
+            if eng.PlatoonHandle.BuilderName == 'RNGAI T1 Dynamic Expansion Large' then
+                LOG('Engineer for dynamic expansion waiting for not building')
+                if eng.ProcessBuild ~= nil then
+                    LOG('Engineer for dynamic expansion eng.ProcessBuild is not nil')
+                end
+                if not eng:IsIdleState() then
+                    LOG('Engineer for dynamic expansion engineer is not idle')
+                end
+            end
             if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                 if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
                     local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE - categories.SCOUT, engPos, 10, 'Enemy')
-                    local enemyEngPos = enemyEngineer[1]:GetPosition()
-                    if VDist2Sq(engPos[1], engPos[3], enemyEngPos[1], enemyEngPos[3]) < 100 then
+                    local closestDistance
+                    local closestEngineer
+                    for _, unit in enemyEngineer do
+                        local enemyEngPos = unit:GetPosition()
+                        local engDistance = VDist2Sq(engPos[1], engPos[3], enemyEngPos[1], enemyEngPos[3])
+                        if not closestEngineer or engDistance < closestDistance then
+                            closestEngineer = unit
+                            closestDistance = engDistance
+                            if closestDistance < 100 then
+                                break
+                            end
+                        end
+                    end
+                    if closestEngineer and closestDistance < 100 then
+                        if eng.PlatoonHandle.BuilderName == 'RNGAI T1 Dynamic Expansion Large' then
+                            LOG('Engineer for dynamic expansion ordered to reclaim during WatchForNotBuilding')
+                        end
                         IssueStop({eng})
                         IssueClearCommands({eng})
                         IssueReclaim({eng}, enemyEngineer[1])
+                        reclaimInitiated = true
                     end
                 end
             end
@@ -2875,6 +2920,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --RNGLOG('Forking Process Build Command with table remove')
                 eng.ProcessBuild = eng:ForkThread(eng.PlatoonHandle.ProcessBuildCommandRNG, true)
             end
+        end
+        if reclaimInitiated then
+            eng.ProcessBuild = eng:ForkThread(eng.PlatoonHandle.ProcessBuildCommandRNG)
         end
     end,
 

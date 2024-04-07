@@ -52,6 +52,11 @@ IntelManager = Class {
         self.ZoneIntel = {
             Assignment = { }
         }
+        self.ZoneExpansions = { 
+            Pathable = {},
+            NonPathable = {},
+            ClosestToEnemy = {}
+        }
         self.MapIntelGridXRes = 0
         self.MapIntelGridZRes = 0
         self.MapIntelGridSize = 0
@@ -229,6 +234,7 @@ IntelManager = Class {
         self:ForkThread(self.ZoneDistanceValue)
         self:ForkThread(self.ZoneLabelAssignment)
         self:ForkThread(self.IntelGridThread, self.Brain)
+        self:ForkThread(self.ZoneExpansionThreadRNG)
         self:ForkThread(self.TacticalIntelCheck)
         if self.Debug then
             self:ForkThread(self.IntelDebugThread)
@@ -331,6 +337,118 @@ IntelManager = Class {
             coroutine.yield(20)
         end
         --RNGLOG('Markers infection completed at '..GetGameTimeSeconds())
+    end,
+
+    ZoneExpansionThreadRNG = function(self)
+
+        -- What does this shit do?
+        -- Its going to look at the expansion table which holds information on expansion markers.
+        -- Then its going to see what the mass value of the graph zone is so we can see if its even worth looking
+        -- Then if its worth it we'll see if we have an expansion in this zone and if not then we should look to establish a presense
+        -- But what if an enemy already has structure threat around the expansion marker?
+        -- Then we are going to try and create a dynamic expansion in the zone somewhere so we can try and take it.
+        -- By default if someone already has the expansion marker the AI will give up. But that doesn't stop humans and it shouldn't stop us.
+        -- When debuging, dont repr the expansions as they might have a unit assigned to them.
+        self:WaitForZoneInitialization()
+        self:WaitForNavmeshGeneration()
+        self:WaitForMarkerInfection()
+        coroutine.yield(Random(250,350))
+        local weightageValues = {
+            teamValue = 0.5,
+            massValue = 0.2,
+            graphValue = 0.2,
+            enemyLand = 0.1,
+            enemyAir = 0.1,
+            bestArmy = 0.05,
+            friendlyantisurfacethreat = 0.05,
+            friendlylandantiairthreat = 0.05
+        }
+        local mainBasePos = self.Brain.BrainIntel.StartPos
+        local aiBrain = self.Brain
+
+        while true do
+            local zoneSet = aiBrain.Zones.Land.zones
+            local zonePriorityList = {}
+            local gameTime = GetGameTimeSeconds()
+            local labelBaseValues = {}
+            for k, v in zoneSet do
+                local graphLabel = aiBrain.GraphZones[v.label]
+                local bx = mainBasePos[1] - v.pos[1]
+                local bz = mainBasePos[3] - v.pos[3]
+                local mainBaseDistance = bx * bx + bz * bz
+                if v.BuilderManager.FactoryManager.LocationActive then
+                    if not labelBaseValues[v.BuilderManager.GraphArea] then
+                        labelBaseValues[v.BuilderManager.GraphArea] = {}
+                    end
+                    if v.resourcevalue then
+                        labelBaseValues[v.BuilderManager.GraphArea][v.id] = v.resourcevalue
+                    end
+                end
+                local closeEnemyStart = false
+                local closeAllyStart = false
+                local edgeSkip = false
+                for _, e in  v.enemystartdata do
+                    if e.startdistance < 10000 then
+                        closeEnemyStart = true
+                        break
+                    end
+                end
+                for _, a in  v.allystartdata do
+                    if a.startdistance < 10000 then
+                        closeAllyStart = true
+                        break
+                    end
+                end
+                
+                if not closeEnemyStart and not closeAllyStart then
+                    --[[
+                    if mainBaseDistance > 10000 then
+                        LOG('Expansion is further than 160')
+                    end
+                    if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) then
+                        LOG('No factory manager or v.BuilderManagerDisabled')
+                    end
+                    if (not v.engineerallocated or v.engineerallocated.Dead) then
+                        LOG('No engineer allocated or the engineer is dead')
+                    end
+                    if (v.lastexpansionattempt == 0 or v.lastexpansionattempt + 30 < gameTime) then
+                        LOG('lastexpansion attempt is 0 or longer than 30 seconds ago')
+                    end]]
+                    if mainBaseDistance > 10000 then
+                        for _, e in v.edges do
+                            if zoneSet[e.zone].resourcevalue > v.resourcevalue and v.resourcevalue < 2 then
+                                edgeSkip = true
+                                break
+                            end
+                        end
+                        if not edgeSkip then
+                            if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) and (not v.engineerallocated or v.engineerallocated.Dead) and (v.lastexpansionattempt == 0 or v.lastexpansionattempt + 30 < gameTime) then
+                                --LOG('Expansion passed first check')
+                                if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, v.pos, 30, 'Ally') < 1 then
+                                    --LOG('Expansion passed factory structure check')
+                                    local priorityScore = (
+                                        v.teamvalue * weightageValues['teamValue'] +
+                                        v.resourcevalue * weightageValues['massValue'] +
+                                        graphLabel.MassMarkersInZone * weightageValues['graphValue'] -
+                                        v.enemylandthreat * weightageValues['enemyLand'] -
+                                        v.enemyantiairthreat * weightageValues['enemyAir'] +
+                                        v.friendlyantisurfacethreat * weightageValues['friendlyantisurfacethreat'] -
+                                        v.friendlylandantiairthreat * weightageValues['friendlylandantiairthreat']
+                                    )
+                                    table.insert(zonePriorityList, {ZoneID = v.id, Position = v.pos, Priority = priorityScore})
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            if not table.empty(zonePriorityList) then
+                table.sort(zonePriorityList, function(a, b) return a.Priority > b.Priority end)
+                self.ZoneExpansions.Pathable = zonePriorityList
+                --LOG('Zone expansion priority list '..repr(self.ZoneExpansions.Pathable))
+            end
+            coroutine.yield(100)
+        end
     end,
 
     GetClosestZone = function(self, aiBrain, platoon, controlRequired)
@@ -754,18 +872,13 @@ IntelManager = Class {
                             friendlyThreatIndirecFireAntiSurface[v1.Zone] = friendlyThreatIndirecFireAntiSurface[v1.Zone] + v1.CurrentPlatoonThreatIndirectFireAntiSurface
                         end
                         if v1.Zone and v1.CurrentPlatoonThreatAntiAir then
-                            LOG('Platoon has antiair threat')
                             if not friendlyantiairthreat[v1.Zone] then
                                 friendlyantiairthreat[v1.Zone] = 0
                             end
                             friendlyantiairthreat[v1.Zone] = friendlyantiairthreat[v1.Zone] + v1.CurrentPlatoonThreatAntiAir
-                            if v1.CurrentPlatoonThreatAntiAir > 0 then
-                                LOG('Zone '..repr(v1.Zone)..' this much antiair threat '..repr(friendlyantiairthreat[v1.Zone]..' just added from platoon '..v1.CurrentPlatoonThreatAntiAir..' of type '..repr(v1.PlatoonData.StateMachine)))
-                            end
                         end
                     end
                 end
-                LOG('Dumping friendlyantiairthreat '..repr(friendlyantiairthreat))
                 for k2, v2 in self.Brain.Zones[v].zones do
                     for k3, v3 in friendlyThreatAntiSurface do
                         if k2 == k3 then
@@ -2547,26 +2660,29 @@ TacticalThreatAnalysisRNG = function(aiBrain)
         for k, unit in defensiveUnits do
             if not aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount then
                 aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount = 0
+                aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureThreat = 0
                 aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureMaxRange = 0
             end
             if not aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount then
                 aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount = 0
+                aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureThreat = 0
+                aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureMaxRange = 0
             end
             if aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]]['StructuresNotMex'] then
                     if unit.Object.Blueprint.Defense.SurfaceThreatLevel > 0 then
                         aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount = aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount + 1
+                        aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureThreat = aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureThreat + unit.Object.Blueprint.Defense.SurfaceThreatLevel
                         if unit.Object.Blueprint.Weapon[1].MaxRadius and unit.Object.Blueprint.Weapon[1].MaxRadius > aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureMaxRange then
                             aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureMaxRange = unit.Object.Blueprint.Weapon[1].MaxRadius
                         end
                     elseif unit.Object.Blueprint.Defense.AirThreatLevel > 0 then
                         aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount = aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount + 1
+                        aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureThreat = aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureThreat + unit.Object.Blueprint.Defense.AirThreatLevel
                     end
                     if aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount + aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount > 5 then
                         aiBrain.EnemyIntel.EnemyFireBaseDetected = true
                     end
                 end
-                LOG('Have Land Defensive Structure Count of '..aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount..' at imap '..repr(unit.IMAP))
-                LOG('Have Air Defensive Structure Count of '..aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount..' at imap '..repr(unit.IMAP))
             end
         end
 

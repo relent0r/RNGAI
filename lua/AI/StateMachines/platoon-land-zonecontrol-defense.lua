@@ -653,10 +653,10 @@ ZoneControlThreatThread = function(aiBrain, platoon)
         coroutine.yield(15)
         if platoon.Pos then
             platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
-            LOG('Defensive aa platoon has '..platoon.CurrentPlatoonThreatAntiAir..' threat and has label '..repr(platoon.Label)..' with zone '..repr(platoon.Zone))
+            --LOG('Defensive aa platoon has '..platoon.CurrentPlatoonThreatAntiAir..' threat and has label '..repr(platoon.Label)..' with zone '..repr(platoon.Zone))
             local targetThreat = GetThreatAtPosition(aiBrain, platoon.Pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
             if not platoon.retreat and targetThreat > 0 then
-                platoon:LogDebug(string.format('ZoneControlThreatThread found imap threat, looking for closest unit'))
+                --platoon:LogDebug(string.format('ZoneControlThreatThread found imap threat, looking for closest unit'))
                 local target = StateUtils.GetClosestUnitRNG(aiBrain, platoon, platoon.Pos, (categories.STRUCTURE * categories.DEFENSE) + (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, platoon.EnemyRadius, 'Enemy')
                 if target and not target.Dead then
                     local targetRange = RUtils.GetTargetRange(target) or 45
@@ -664,10 +664,10 @@ ZoneControlThreatThread = function(aiBrain, platoon)
                     local rx = platoon.Pos[1] - targetPos[1]
                     local rz = platoon.Pos[3] - targetPos[3]
                     local tmpDistance = rx * rx + rz * rz
-                    platoon:LogDebug(string.format('Have enemy unit, tmp distance is '..tmpDistance))
-                    platoon:LogDebug(string.format('Range check is targetRange '..targetRange))
+                    --platoon:LogDebug(string.format('Have enemy unit, tmp distance is '..tmpDistance))
+                    --platoon:LogDebug(string.format('Range check is targetRange '..targetRange))
                     if tmpDistance < math.max(2025, targetRange * targetRange) then
-                        platoon:LogDebug(string.format('ZoneControlThreatThread found close threat, retreating'))
+                        --platoon:LogDebug(string.format('ZoneControlThreatThread found close threat, retreating'))
                         platoon.retreat=true
                         platoon.BuilderData = { RetreatTarget = target }
                         platoon:ChangeState(platoon.Retreating)
