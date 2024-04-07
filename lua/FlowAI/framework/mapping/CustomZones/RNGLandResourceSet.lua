@@ -57,7 +57,6 @@ RNGLandResourceSet = Class(ZoneSet){
        --RNGLOG('GenerateZoneList for custom Zone')
         local armyStarts = {}
         local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
-        local mapCenterPoint = { (ScenarioInfo.size[1] / 2), 0 ,(ScenarioInfo.size[2] / 2) }
         local zoneRadius = 45 * 45
         if maxmapdimension < 512 then
             zoneRadius = 35 * 35
@@ -78,6 +77,9 @@ RNGLandResourceSet = Class(ZoneSet){
                 end
             end
         end
+        for _, v in markers do
+            v.component = MAP:GetComponent(v.position,self.layer)
+        end
         local complete = (RNGGETN(markers) == 0)
        --RNGLOG('Starting GenerateZoneList Loop')
         while not complete do
@@ -92,7 +94,7 @@ RNGLandResourceSet = Class(ZoneSet){
             for _, v1 in markers do
                 if not v1.claimed then
                     for _, v2 in markers do
-                        if (not v2.claimed) and (v1 ~= v2) and VDist2Sq(v1.position[1], v1.position[3], v2.position[1], v2.position[3]) < zoneRadius then
+                        if (not v2.claimed) and (v1 ~= v2) and v1.component == v2.component and VDist2Sq(v1.position[1], v1.position[3], v2.position[1], v2.position[3]) < zoneRadius then
                             v1.weight = v1.weight + 1
                             v1.aggX = v1.aggX + v2.position[1]
                             v1.aggZ = v1.aggZ + v2.position[3]

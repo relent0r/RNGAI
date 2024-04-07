@@ -416,7 +416,10 @@ IntelManager = Class {
                     end]]
                     if mainBaseDistance > 10000 then
                         for _, e in v.edges do
-                            if zoneSet[e.zone].resourcevalue > v.resourcevalue and v.resourcevalue < 2 then
+                            local rx = v.pos[1] - e.zone.pos[1]
+                            local rz = v.pos[3] - e.zone.pos[3]
+                            local edgeDistance = rx * rx + rz * rz
+                            if e.zone.resourcevalue > v.resourcevalue and v.resourcevalue < 2  or e.zone.BuilderManager.FactoryManager.LocationActive and edgeDistance < 10000 then
                                 edgeSkip = true
                                 break
                             end
@@ -435,7 +438,7 @@ IntelManager = Class {
                                         v.friendlyantisurfacethreat * weightageValues['friendlyantisurfacethreat'] -
                                         v.friendlylandantiairthreat * weightageValues['friendlylandantiairthreat']
                                     )
-                                    table.insert(zonePriorityList, {ZoneID = v.id, Position = v.pos, Priority = priorityScore})
+                                    table.insert(zonePriorityList, {ZoneID = v.id, Position = v.pos, Priority = priorityScore, Label = v.label })
                                 end
                             end
                         end
@@ -447,7 +450,7 @@ IntelManager = Class {
                 self.ZoneExpansions.Pathable = zonePriorityList
                 --LOG('Zone expansion priority list '..repr(self.ZoneExpansions.Pathable))
             end
-            coroutine.yield(100)
+            coroutine.yield(50)
         end
     end,
 

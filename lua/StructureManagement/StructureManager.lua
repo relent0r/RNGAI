@@ -994,71 +994,81 @@ StructureManager = Class {
                 end
             end
         end
+        local expansionPass = false
         for _, v in self.Brain.BuilderManagers do
             if v.FactoryManager.LocationType == self.Brain.BrainIntel.ActiveExpansion and v.FactoryManager.LocationActive then
                 --RNGLOG('ActiveExpansion during buildermanager loop is '..v.FactoryManager.LocationType)
                 activeExpansion = v.FactoryManager.LocationType
-                break
-            end
-        end
-        if activeExpansion then
-            --RNGLOG('Active Expansion is '..activeExpansion)
-            local activeExpansionPass = false
-            if (totalLandT2HQCount > 0 or totalLandT3HQCount > 0) and self.Factories.LAND[1].Total > 0 and self.Factories.LAND[2].Total < 11 then
-                --RNGLOG('Factory T1 Upgrade Support Check passed')
-                --RNGLOG('Performing Upgrade Check '..activeExpansion)
-                --RNGLOG('T2 Factory count at active expansion '..self:LocationFactoryCountRNG(self.Brain, categories.LAND * categories.FACTORY * categories.TECH2, activeExpansion))
-                if self:LocationFactoryCountRNG(self.Brain, categories.LAND * categories.FACTORY * categories.TECH2, activeExpansion) < 2 then
-                    if self.Factories.LAND[1].UpgradingCount < 2 then
-                        --RNGLOG('Factory T1 Upgrade Less than 1 Factory Upgrading')
-                        local t2Rush = false
-                        if RUtils.DefensiveClusterCheck(self.Brain, self.Brain.BuilderManagers[activeExpansion].FactoryManager.Location) then
-                            --RNGLOG('DefensiveClusterCheck detected close to expansion')
-                            t2Rush = true
+                --RNGLOG('Active Expansion is '..activeExpansion)
+                local activeExpansionPass = false
+                if (totalLandT2HQCount > 0 or totalLandT3HQCount > 0) and self.Factories.LAND[1].Total > 0 and self.Factories.LAND[2].Total < 11 then
+                    --RNGLOG('Factory T1 Upgrade Support Check passed')
+                    --RNGLOG('Performing Upgrade Check '..activeExpansion)
+                    --RNGLOG('T2 Factory count at active expansion '..self:LocationFactoryCountRNG(self.Brain, categories.LAND * categories.FACTORY * categories.TECH2, activeExpansion))
+                    if self:LocationFactoryCountRNG(self.Brain, categories.LAND * categories.FACTORY * categories.TECH2, activeExpansion) < 2 then
+                        if self.Factories.LAND[1].UpgradingCount < 2 then
+                            --RNGLOG('Factory T1 Upgrade Less than 1 Factory Upgrading')
+                            local t2Rush = false
+                            if RUtils.DefensiveClusterCheck(self.Brain, v.FactoryManager.Location) then
+                                --RNGLOG('DefensiveClusterCheck detected close to expansion')
+                                t2Rush = true
+                            end
+                            if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.0 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 or t2Rush then
+                                --RNGLOG('Factory Upgrade efficiency over time check passed')
+                                local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
+                                local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
+                                if MassEfficiency >= 1.0 and EnergyEfficiency >= 1.0 or t2Rush then
+                                    --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
+                                    local factoryToUpgrade = self:GetClosestFactory(activeExpansion, 'LAND', 'TECH1')
+                                    if factoryToUpgrade and not factoryToUpgrade.Dead then
+                                        --RNGLOG('Structure Manager Triggering T2 Land Support Upgrade')
+                                        self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
+                                        activeExpansionPass = true
+                                        coroutine.yield(30)
+                                    end
+                                end
+                            end
                         end
-                        if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.0 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 or t2Rush then
-                            --RNGLOG('Factory Upgrade efficiency over time check passed')
-                            local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
-                            local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
-                            if MassEfficiency >= 1.0 and EnergyEfficiency >= 1.0 or t2Rush then
-                                --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
+                        if self.Factories.LAND[1].UpgradingCount < 2 then
+                            --RNGLOG('Factory T1 Upgrade Less than 2 Factory Upgrading')
+                            if GetEconomyStored(self.Brain, 'MASS') >= 1300 and GetEconomyStored(self.Brain, 'ENERGY') >= 3990 then
                                 local factoryToUpgrade = self:GetClosestFactory(activeExpansion, 'LAND', 'TECH1')
                                 if factoryToUpgrade and not factoryToUpgrade.Dead then
-                                    --RNGLOG('Structure Manager Triggering T2 Land Support Upgrade')
+                                    --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
                                     self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                     activeExpansionPass = true
                                     coroutine.yield(30)
                                 end
-                            end
-                        end
-                    end
-                    if self.Factories.LAND[1].UpgradingCount < 2 then
-                        --RNGLOG('Factory T1 Upgrade Less than 2 Factory Upgrading')
-                        if GetEconomyStored(self.Brain, 'MASS') >= 1300 and GetEconomyStored(self.Brain, 'ENERGY') >= 3990 then
-                            local factoryToUpgrade = self:GetClosestFactory(activeExpansion, 'LAND', 'TECH1')
-                            if factoryToUpgrade and not factoryToUpgrade.Dead then
-                                --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
-                                self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
-                                activeExpansionPass = true
-                                coroutine.yield(30)
                             end
                         end
                     end
                 end
-            end
-            if not activeExpansionPass and totalLandT3HQCount > 0 and self.Factories.LAND[2].Total > 0 then
-                if self:LocationFactoryCountRNG(self.Brain, categories.LAND * categories.FACTORY * categories.TECH2, activeExpansion) > 0 then
-                    if self.Factories.LAND[2].UpgradingCount < 2 then
-                        --RNGLOG('Factory T1 Upgrade Less than 1 Factory Upgrading')
-                        if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.0 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
-                            --RNGLOG('Factory Upgrade efficiency over time check passed')
-                            local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
-                            local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
-                            if MassEfficiency >= 1.0 and EnergyEfficiency >= 1.0 then
-                                --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
+                if not activeExpansionPass and totalLandT3HQCount > 0 and self.Factories.LAND[2].Total > 0 then
+                    if self:LocationFactoryCountRNG(self.Brain, categories.LAND * categories.FACTORY * categories.TECH2, activeExpansion) > 0 then
+                        if self.Factories.LAND[2].UpgradingCount < 2 then
+                            --RNGLOG('Factory T1 Upgrade Less than 1 Factory Upgrading')
+                            if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.0 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
+                                --RNGLOG('Factory Upgrade efficiency over time check passed')
+                                local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
+                                local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
+                                if MassEfficiency >= 1.0 and EnergyEfficiency >= 1.0 then
+                                    --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
+                                    local factoryToUpgrade = self:GetClosestFactory(activeExpansion, 'LAND', 'TECH2')
+                                    if factoryToUpgrade and not factoryToUpgrade.Dead then
+                                        --RNGLOG('Structure Manager Triggering T2 Land Support Upgrade')
+                                        self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
+                                        activeExpansionPass = true
+                                        coroutine.yield(30)
+                                    end
+                                end
+                            end
+                        end
+                        if self.Factories.LAND[2].UpgradingCount < 2 then
+                            --RNGLOG('Factory T1 Upgrade Less than 2 Factory Upgrading')
+                            if GetEconomyStored(self.Brain, 'MASS') >= 1300 and GetEconomyStored(self.Brain, 'ENERGY') >= 3990 then
                                 local factoryToUpgrade = self:GetClosestFactory(activeExpansion, 'LAND', 'TECH2')
                                 if factoryToUpgrade and not factoryToUpgrade.Dead then
-                                    --RNGLOG('Structure Manager Triggering T2 Land Support Upgrade')
+                                    --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
                                     self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                     activeExpansionPass = true
                                     coroutine.yield(30)
@@ -1066,15 +1076,84 @@ StructureManager = Class {
                             end
                         end
                     end
-                    if self.Factories.LAND[2].UpgradingCount < 2 then
-                        --RNGLOG('Factory T1 Upgrade Less than 2 Factory Upgrading')
-                        if GetEconomyStored(self.Brain, 'MASS') >= 1300 and GetEconomyStored(self.Brain, 'ENERGY') >= 3990 then
-                            local factoryToUpgrade = self:GetClosestFactory(activeExpansion, 'LAND', 'TECH2')
-                            if factoryToUpgrade and not factoryToUpgrade.Dead then
-                                --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
-                                self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
-                                activeExpansionPass = true
-                                coroutine.yield(30)
+                end
+            elseif v.FactoryManager.LocationType and v.FactoryManager.LocationActive then
+                local locationType = v.FactoryManager.LocationType
+
+                if not expansionPass then
+                    if (totalLandT2HQCount > 0 or totalLandT3HQCount > 0) and self.Factories.LAND[1].Total > 0 and self.Factories.LAND[2].Total < 11 then
+                        --RNGLOG('Factory T1 Upgrade Support Check passed')
+                        --RNGLOG('Performing Upgrade Check '..activeExpansion)
+                        --RNGLOG('T2 Factory count at active expansion '..self:LocationFactoryCountRNG(self.Brain, categories.LAND * categories.FACTORY * categories.TECH2, activeExpansion))
+                        if self:LocationFactoryCountRNG(self.Brain, categories.LAND * categories.FACTORY * categories.TECH2, locationType) < 2 then
+                            if self.Factories.LAND[1].UpgradingCount < 2 then
+                                --RNGLOG('Factory T1 Upgrade Less than 1 Factory Upgrading')
+                                local t2Rush = false
+                                if RUtils.DefensiveClusterCheck(self.Brain, v.FactoryManager.Location) then
+                                    --RNGLOG('DefensiveClusterCheck detected close to expansion')
+                                    t2Rush = true
+                                end
+                                if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.0 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 or t2Rush then
+                                    --RNGLOG('Factory Upgrade efficiency over time check passed')
+                                    local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
+                                    local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
+                                    if MassEfficiency >= 1.0 and EnergyEfficiency >= 1.0 or t2Rush then
+                                        --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
+                                        local factoryToUpgrade = self:GetClosestFactory(locationType, 'LAND', 'TECH1')
+                                        if factoryToUpgrade and not factoryToUpgrade.Dead then
+                                            --RNGLOG('Structure Manager Triggering T2 Land Support Upgrade')
+                                            self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
+                                            expansionPass = true
+                                            coroutine.yield(30)
+                                        end
+                                    end
+                                end
+                            end
+                            if self.Factories.LAND[1].UpgradingCount < 2 then
+                                --RNGLOG('Factory T1 Upgrade Less than 2 Factory Upgrading')
+                                if GetEconomyStored(self.Brain, 'MASS') >= 1300 and GetEconomyStored(self.Brain, 'ENERGY') >= 3990 then
+                                    local factoryToUpgrade = self:GetClosestFactory(locationType, 'LAND', 'TECH1')
+                                    if factoryToUpgrade and not factoryToUpgrade.Dead then
+                                        --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
+                                        self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
+                                        expansionPass = true
+                                        coroutine.yield(30)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    if not expansionPass and totalLandT3HQCount > 0 and self.Factories.LAND[2].Total > 0 then
+                        if self:LocationFactoryCountRNG(self.Brain, categories.LAND * categories.FACTORY * categories.TECH2, locationType) > 0 then
+                            if self.Factories.LAND[2].UpgradingCount < 2 then
+                                --RNGLOG('Factory T1 Upgrade Less than 1 Factory Upgrading')
+                                if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.0 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
+                                    --RNGLOG('Factory Upgrade efficiency over time check passed')
+                                    local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
+                                    local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
+                                    if MassEfficiency >= 1.0 and EnergyEfficiency >= 1.0 then
+                                        --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
+                                        local factoryToUpgrade = self:GetClosestFactory(locationType, 'LAND', 'TECH2')
+                                        if factoryToUpgrade and not factoryToUpgrade.Dead then
+                                            --RNGLOG('Structure Manager Triggering T2 Land Support Upgrade')
+                                            self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
+                                            expansionPass = true
+                                            coroutine.yield(30)
+                                        end
+                                    end
+                                end
+                            end
+                            if self.Factories.LAND[2].UpgradingCount < 2 then
+                                --RNGLOG('Factory T1 Upgrade Less than 2 Factory Upgrading')
+                                if GetEconomyStored(self.Brain, 'MASS') >= 1300 and GetEconomyStored(self.Brain, 'ENERGY') >= 3990 then
+                                    local factoryToUpgrade = self:GetClosestFactory(locationType, 'LAND', 'TECH2')
+                                    if factoryToUpgrade and not factoryToUpgrade.Dead then
+                                        --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
+                                        self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
+                                        expansionPass = true
+                                        coroutine.yield(30)
+                                    end
+                                end
                             end
                         end
                     end

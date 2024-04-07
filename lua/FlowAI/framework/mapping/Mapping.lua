@@ -209,11 +209,11 @@ GameMap = Class({
         self.numZoneSets = 0
         local END = GetSystemTimeSecondsOnlyForProfileUse()
         --RNGLOG(string.format('FlowAI framework: CreateMapMarkers() finished, runtime: %.2f seconds.', END - START ))
-        local drawStuffz = false
+        local drawStuffz = true
         if drawStuffz then
             ForkThread(
                 function()
-                    local zoneSetCopy = self:GetZoneSet('RNGNavalResourceSet',2)
+                    local zoneSetCopy = self:GetZoneSet('RNGLandResourceSet',2)
                     coroutine.yield(100)
                     while true do
                         --self:DrawLayer(2)
