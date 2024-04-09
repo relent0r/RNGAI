@@ -367,83 +367,90 @@ IntelManager = Class {
         local aiBrain = self.Brain
 
         while true do
+            local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
             local zoneSet = aiBrain.Zones.Land.zones
             local zonePriorityList = {}
             local gameTime = GetGameTimeSeconds()
             local labelBaseValues = {}
             for k, v in zoneSet do
-                local graphLabel = aiBrain.GraphZones[v.label]
-                local bx = mainBasePos[1] - v.pos[1]
-                local bz = mainBasePos[3] - v.pos[3]
-                local mainBaseDistance = bx * bx + bz * bz
-                if v.BuilderManager.FactoryManager.LocationActive then
-                    if not labelBaseValues[v.BuilderManager.GraphArea] then
-                        labelBaseValues[v.BuilderManager.GraphArea] = {}
-                    end
-                    if v.resourcevalue then
-                        labelBaseValues[v.BuilderManager.GraphArea][v.id] = v.resourcevalue
-                    end
-                end
-                local closeEnemyStart = false
-                local closeAllyStart = false
-                local edgeSkip = false
-                for _, e in  v.enemystartdata do
-                    if e.startdistance < 10000 then
-                        closeEnemyStart = true
-                        break
-                    end
-                end
-                for _, a in  v.allystartdata do
-                    if a.startdistance < 10000 then
-                        closeAllyStart = true
-                        break
-                    end
-                end
-                
-                if not closeEnemyStart and not closeAllyStart then
-                    --[[
-                    if mainBaseDistance > 10000 then
-                        LOG('Expansion is further than 160')
-                    end
-                    if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) then
-                        LOG('No factory manager or v.BuilderManagerDisabled')
-                    end
-                    if (not v.engineerallocated or v.engineerallocated.Dead) then
-                        LOG('No engineer allocated or the engineer is dead')
-                    end
-                    if (v.lastexpansionattempt == 0 or v.lastexpansionattempt + 30 < gameTime) then
-                        LOG('lastexpansion attempt is 0 or longer than 30 seconds ago')
-                    end]]
-                    if mainBaseDistance > 10000 then
-                        for _, e in v.edges do
-                            local rx = v.pos[1] - e.zone.pos[1]
-                            local rz = v.pos[3] - e.zone.pos[3]
-                            local edgeDistance = rx * rx + rz * rz
-                            if e.zone.resourcevalue > v.resourcevalue and v.resourcevalue < 2  or e.zone.BuilderManager.FactoryManager.LocationActive and edgeDistance < 10000 then
-                                edgeSkip = true
+                if v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
+                    local graphLabel = aiBrain.GraphZones[v.label]
+                    local markersInGraph = graphLabel.MassMarkersInZone or 1
+                    if markersInGraph > 2 then
+                        local bx = mainBasePos[1] - v.pos[1]
+                        local bz = mainBasePos[3] - v.pos[3]
+                        local mainBaseDistance = bx * bx + bz * bz
+                        if v.BuilderManager.FactoryManager.LocationActive then
+                            if not labelBaseValues[v.BuilderManager.GraphArea] then
+                                labelBaseValues[v.BuilderManager.GraphArea] = {}
+                            end
+                            if v.resourcevalue then
+                                labelBaseValues[v.BuilderManager.GraphArea][v.id] = v.resourcevalue
+                            end
+                        end
+                        local closeEnemyStart = false
+                        local closeAllyStart = false
+                        local edgeSkip = false
+                        for _, e in  v.enemystartdata do
+                            if e.startdistance < 10000 then
+                                closeEnemyStart = true
                                 break
                             end
                         end
-                        if not edgeSkip then
-                            if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) and (not v.engineerallocated or v.engineerallocated.Dead) and (v.lastexpansionattempt == 0 or v.lastexpansionattempt + 30 < gameTime) then
-                                --LOG('Expansion passed first check')
-                                if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, v.pos, 30, 'Ally') < 1 then
-                                    --LOG('Expansion passed factory structure check')
-                                    local priorityScore = (
-                                        v.teamvalue * weightageValues['teamValue'] +
-                                        v.resourcevalue * weightageValues['massValue'] +
-                                        graphLabel.MassMarkersInZone * weightageValues['graphValue'] -
-                                        v.enemylandthreat * weightageValues['enemyLand'] -
-                                        v.enemyantiairthreat * weightageValues['enemyAir'] +
-                                        v.friendlyantisurfacethreat * weightageValues['friendlyantisurfacethreat'] -
-                                        v.friendlylandantiairthreat * weightageValues['friendlylandantiairthreat']
-                                    )
-                                    table.insert(zonePriorityList, {ZoneID = v.id, Position = v.pos, Priority = priorityScore, Label = v.label })
+                        for _, a in  v.allystartdata do
+                            if a.startdistance < 10000 then
+                                closeAllyStart = true
+                                break
+                            end
+                        end
+                        
+                        if not closeEnemyStart and not closeAllyStart then
+                            --[[
+                            if mainBaseDistance > 10000 then
+                                LOG('Expansion is further than 160')
+                            end
+                            if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) then
+                                LOG('No factory manager or v.BuilderManagerDisabled')
+                            end
+                            if (not v.engineerallocated or v.engineerallocated.Dead) then
+                                LOG('No engineer allocated or the engineer is dead')
+                            end
+                            if (v.lastexpansionattempt == 0 or v.lastexpansionattempt + 30 < gameTime) then
+                                LOG('lastexpansion attempt is 0 or longer than 30 seconds ago')
+                            end]]
+                            if mainBaseDistance > 10000 then
+                                for _, e in v.edges do
+                                    local rx = v.pos[1] - e.zone.pos[1]
+                                    local rz = v.pos[3] - e.zone.pos[3]
+                                    local edgeDistance = rx * rx + rz * rz
+                                    if e.zone.resourcevalue > v.resourcevalue and v.resourcevalue < 2  or e.zone.BuilderManager.FactoryManager.LocationActive and edgeDistance < 10000 then
+                                        edgeSkip = true
+                                        break
+                                    end
+                                end
+                                if not edgeSkip then
+                                    if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) and (not v.engineerallocated or v.engineerallocated.Dead) and (v.lastexpansionattempt == 0 or v.lastexpansionattempt + 30 < gameTime) then
+                                        --LOG('Expansion passed first check')
+                                        if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, v.pos, 30, 'Ally') < 1 then
+                                            --LOG('Expansion passed factory structure check')
+                                            local priorityScore = (
+                                                v.teamvalue * weightageValues['teamValue'] +
+                                                v.resourcevalue * weightageValues['massValue'] +
+                                                markersInGraph * weightageValues['graphValue'] -
+                                                v.enemylandthreat * weightageValues['enemyLand'] -
+                                                v.enemyantiairthreat * weightageValues['enemyAir'] +
+                                                v.friendlyantisurfacethreat * weightageValues['friendlyantisurfacethreat'] -
+                                                v.friendlylandantiairthreat * weightageValues['friendlylandantiairthreat']
+                                            )
+                                            table.insert(zonePriorityList, {ZoneID = v.id, Position = v.pos, Priority = priorityScore, Label = v.label })
+                                        end
+                                    end
                                 end
                             end
                         end
                     end
                 end
+                coroutine.yield(1)
             end
             if not table.empty(zonePriorityList) then
                 table.sort(zonePriorityList, function(a, b) return a.Priority > b.Priority end)
@@ -502,6 +509,7 @@ IntelManager = Class {
         --A multiplier to adjacent edges if you would. We know how many and of what tier extractors we have in a zone. Actually getting an engineer to expand by zone would be interesting.
        --RNGLOG('RNGAI : Zone Selection Query Received for '..platoon.BuilderName)
         if PlatoonExists(aiBrain, platoon) then
+            local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
             local zoneSet
             local zoneSelection = 999
             local selection
@@ -538,35 +546,37 @@ IntelManager = Class {
                     local startPosZones = {}
                     local platoonPosition = platoon:GetPlatoonPosition()
                     for k, v in zoneSet do
-                        if not v.startpositionclose then
-                            if platoonPosition then
-                                local compare
-                                local enemyDistanceModifier = VDist2(v.pos[1],v.pos[3],enemyX, enemyZ)
-                                local zoneDistanceModifier = VDist2(v.pos[1],v.pos[3],platoonPosition[1], platoonPosition[3])
-                                local enemyModifier = v.enemylandthreat
-                                local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
-                                if enemyModifier > 0 then
-                                    enemyModifier = enemyModifier * 10
-                                end
-                                --RNGLOG('Start Distance Calculation '..( 20000 / enemyDistanceModifier )..' Zone Distance Calculation'..(20000 / zoneDistanceModifier)..' Resource Value '..v.resourcevalue..' Control Value '..status)
-                                --RNGLOG('Friendly threat at zone is '..v.friendlyantisurfacethreat)
-                                if status ~= 'Allied' and v.friendlyantisurfacethreat < 10 then
-                                    compare = (20000 / zoneDistanceModifier) + ( 20000 / enemyDistanceModifier ) * v.resourcevalue - enemyModifier
-                                end
-                                if compare then
-                                    --RNGLOG('Compare variable '..compare)
-                                end
-                                if compare > 0 then
-                                    if not selection or compare > selection then
-                                        selection = compare
-                                        zoneSelection = v.id
-                                        --RNGLOG('Zone Query Select priority 1st pass'..selection)
-                                        --RNGLOG('Zone target location is '..repr(zoneSet[v.id].pos))
+                        if v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
+                            if not v.startpositionclose then
+                                if platoonPosition then
+                                    local compare
+                                    local enemyDistanceModifier = VDist2(v.pos[1],v.pos[3],enemyX, enemyZ)
+                                    local zoneDistanceModifier = VDist2(v.pos[1],v.pos[3],platoonPosition[1], platoonPosition[3])
+                                    local enemyModifier = v.enemylandthreat
+                                    local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
+                                    if enemyModifier > 0 then
+                                        enemyModifier = enemyModifier * 10
+                                    end
+                                    --RNGLOG('Start Distance Calculation '..( 20000 / enemyDistanceModifier )..' Zone Distance Calculation'..(20000 / zoneDistanceModifier)..' Resource Value '..v.resourcevalue..' Control Value '..status)
+                                    --RNGLOG('Friendly threat at zone is '..v.friendlyantisurfacethreat)
+                                    if status ~= 'Allied' and v.friendlyantisurfacethreat < 10 then
+                                        compare = (20000 / zoneDistanceModifier) + ( 20000 / enemyDistanceModifier ) * v.resourcevalue - enemyModifier
+                                    end
+                                    if compare then
+                                        --RNGLOG('Compare variable '..compare)
+                                    end
+                                    if compare > 0 then
+                                        if not selection or compare > selection then
+                                            selection = compare
+                                            zoneSelection = v.id
+                                            --RNGLOG('Zone Query Select priority 1st pass'..selection)
+                                            --RNGLOG('Zone target location is '..repr(zoneSet[v.id].pos))
+                                        end
                                     end
                                 end
+                            else
+                                table.insert( startPosZones, v )
                             end
-                        else
-                            table.insert( startPosZones, v )
                         end
                     end
                     if selection then
@@ -605,94 +615,98 @@ IntelManager = Class {
                     local compare = 0
                    --RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
                     for k, v in zoneSet do
-                        local distanceModifier = VDist3(v.pos,aiBrain.BrainIntel.StartPos)
-                        local enemyModifier = 1
-                        local startPos = 1
-                        local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
-                        if v.enemylandthreat > 0 then
-                            enemyModifier = enemyModifier + 2
-                        end
-                        if v.friendlyantisurfacethreat > 0 then
-                            if v.enemylandthreat == 0 or v.enemylandthreat < v.friendlyantisurfacethreat then
-                                enemyModifier = enemyModifier - 1
+                        if v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
+                            local distanceModifier = VDist3(v.pos,aiBrain.BrainIntel.StartPos)
+                            local enemyModifier = 1
+                            local startPos = 1
+                            local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
+                            if v.enemylandthreat > 0 then
+                                enemyModifier = enemyModifier + 2
+                            end
+                            if v.friendlyantisurfacethreat > 0 then
+                                if v.enemylandthreat == 0 or v.enemylandthreat < v.friendlyantisurfacethreat then
+                                    enemyModifier = enemyModifier - 1
+                                else
+                                    enemyModifier = enemyModifier + 1
+                                end
+                            end
+                            if enemyModifier < 0 then
+                                enemyModifier = 0.5
+                            end
+                            local controlValue = 1
+                            if status =='Allied' then
+                                controlValue = 0.25
+                            end
+                            local resourceValue = v.resourcevalue or 1
+                            if resourceValue then
+                            --RNGLOG('Current platoon zone '..platoon.Zone..' target zone is '..v.zone.id..' enemythreat is '..v.enemylandthreat..' friendly threat is '..v.friendlyantisurfacethreat)
+                            --RNGLOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(v.pos)..' Enemy Modifier is '..enemyModifier)
                             else
-                                enemyModifier = enemyModifier + 1
+                                --RNGLOG('No resource against zone '..v.zone.id)
                             end
-                        end
-                        if enemyModifier < 0 then
-                            enemyModifier = 0.5
-                        end
-                        local controlValue = 1
-                        if status =='Allied' then
-                            controlValue = 0.25
-                        end
-                        local resourceValue = v.resourcevalue or 1
-                        if resourceValue then
-                           --RNGLOG('Current platoon zone '..platoon.Zone..' target zone is '..v.zone.id..' enemythreat is '..v.enemylandthreat..' friendly threat is '..v.friendlyantisurfacethreat)
-                           --RNGLOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(v.pos)..' Enemy Modifier is '..enemyModifier)
-                        else
-                            --RNGLOG('No resource against zone '..v.zone.id)
-                        end
-                        if v.startpositionclose then
-                            startPos = 0.7
-                        end
-                        if v.enemylandthreat > v.friendlyantisurfacethreat then
-                            if platoon.CurrentPlatoonThreatAntiSurface and platoon.CurrentPlatoonThreatAntiSurface < v.enemylandthreat then
-                                enemyDanger = 0.4
+                            if v.startpositionclose then
+                                startPos = 0.7
                             end
-                        end
-                       --[[ if aiBrain.RNGDEBUG then
-                            if distanceModifier and resourceValue and controlValue and enemyModifier then
-                                RNGLOG('distanceModifier '..distanceModifier)
-                                RNGLOG('resourceValue '..resourceValue)
-                                RNGLOG('controlValue '..controlValue)
-                                RNGLOG('enemyModifier '..enemyModifier)
+                            if v.enemylandthreat > v.friendlyantisurfacethreat then
+                                if platoon.CurrentPlatoonThreatAntiSurface and platoon.CurrentPlatoonThreatAntiSurface < v.enemylandthreat then
+                                    enemyDanger = 0.4
+                                end
                             end
-                        end]]
-                        compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger * v.teamvalue
-                        if aiBrain.RNGDEBUG and compare then
-                            --RNGLOG('Compare variable '..compare)
-                        end
-                        if compare > 0 then
-                            if not selection or compare > selection then
-                                selection = compare
-                                zoneSelection = v.id
-                               --RNGLOG('Zone Control Query Select priority '..selection)
+                        --[[ if aiBrain.RNGDEBUG then
+                                if distanceModifier and resourceValue and controlValue and enemyModifier then
+                                    RNGLOG('distanceModifier '..distanceModifier)
+                                    RNGLOG('resourceValue '..resourceValue)
+                                    RNGLOG('controlValue '..controlValue)
+                                    RNGLOG('enemyModifier '..enemyModifier)
+                                end
+                            end]]
+                            compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger * v.teamvalue
+                            if aiBrain.RNGDEBUG and compare then
+                                --RNGLOG('Compare variable '..compare)
+                            end
+                            if compare > 0 then
+                                if not selection or compare > selection then
+                                    selection = compare
+                                    zoneSelection = v.id
+                                --RNGLOG('Zone Control Query Select priority '..selection)
+                                end
                             end
                         end
                     end
                     if not selection then
                         for k, v in zoneSet do
-                            if not v.startpositionclose then
-                                local distanceModifier = VDist2(v.pos[1],v.pos[3],enemyX, enemyZ)
-                                local enemyModifier = 1
-                                local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
-                                if v.enemylandthreat > 0 then
-                                    enemyModifier = enemyModifier + 2
-                                end
-                                if v.friendlyantisurfacethreat > 0 then
-                                    if v.enemylandthreat < v.friendlyantisurfacethreat then
-                                        enemyModifier = enemyModifier - 1
-                                    else
-                                        enemyModifier = enemyModifier + 1
+                            if v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
+                                if not v.startpositionclose then
+                                    local distanceModifier = VDist2(v.pos[1],v.pos[3],enemyX, enemyZ)
+                                    local enemyModifier = 1
+                                    local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
+                                    if v.enemylandthreat > 0 then
+                                        enemyModifier = enemyModifier + 2
                                     end
-                                end
-                                if enemyModifier < 0 then
-                                    enemyModifier = 0
-                                end
-                                local controlValue = 1
-                                if status == 'Allied' then
-                                    controlValue = 0.1
-                                end
-                                local resourceValue = v.resourcevalue or 1
-                               --RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(v.pos)..' Enemy Modifier is '..enemyModifier)
-                                compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * v.teamvalue
-                               --RNGLOG('Compare variable '..compare)
-                                if compare > 0 then
-                                    if not selection or compare > selection then
-                                        selection = compare
-                                        zoneSelection = v.id
-                                       --RNGLOG('Zone Control Query Select priority '..selection)
+                                    if v.friendlyantisurfacethreat > 0 then
+                                        if v.enemylandthreat < v.friendlyantisurfacethreat then
+                                            enemyModifier = enemyModifier - 1
+                                        else
+                                            enemyModifier = enemyModifier + 1
+                                        end
+                                    end
+                                    if enemyModifier < 0 then
+                                        enemyModifier = 0
+                                    end
+                                    local controlValue = 1
+                                    if status == 'Allied' then
+                                        controlValue = 0.1
+                                    end
+                                    local resourceValue = v.resourcevalue or 1
+                                --RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(v.pos)..' Enemy Modifier is '..enemyModifier)
+                                    compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * v.teamvalue
+                                --RNGLOG('Compare variable '..compare)
+                                    if compare > 0 then
+                                        if not selection or compare > selection then
+                                            selection = compare
+                                            zoneSelection = v.id
+                                        --RNGLOG('Zone Control Query Select priority '..selection)
+                                        end
                                     end
                                 end
                             end
@@ -713,56 +727,58 @@ IntelManager = Class {
                     local platoonLabel = platoon.Label
                    --RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
                     for k, v in zoneSet do
-                        if requireSameLabel and platoonLabel and v.label > 0 and platoonLabel ~= v.label then
-                            continue
-                        end
-                        local distanceModifier = VDist3(v.pos, aiBrain.BrainIntel.StartPos)
-                        local enemyModifier = 1
-                        local startPos = 1
-                        local antiairdesire = 1
-                        local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
-                        local controlValue = 1
-                        if status == 'Hostile' and v.friendlyantisurfacethreat == 0 then continue end
-                        if status == 'Contested' or status == 'Unoccupied' then
-                            controlValue = 1.5
-                        end
-                        if v.friendlyantisurfacethreat == 0 and v.enemylandthreat > 0 then
-                            enemyModifier = enemyModifier - 0.25
-                        end
-                        if v.friendlyantisurfacethreat > 0 and v.enemylandthreat > v.friendlyantisurfacethreat then
-                            enemyModifier = enemyModifier + 0.5
-                        end
-                        enemyModifier = math.max(enemyModifier, 1.0)  -- Ensure enemyModifier is not less than 1
-                        if v.friendlyantiairthreat > 5 then
-                            antiairdesire = antiairdesire - 0.5
-                        end
-                        if v.enemyairthreat > 0 then
-                            antiairdesire = antiairdesire + 1.0
-                        end
-                        if v.enemyairthreat > 0 then
-                            if v.friendlyantiairthreat > 0 then
-                                antiairdesire = antiairdesire + 1.5
-                            elseif v.friendlyantisurfacethreat > 0 then
-                                antiairdesire = antiairdesire + 2.0
-                            else
+                        if v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
+                            if requireSameLabel and platoonLabel and v.label > 0 and platoonLabel ~= v.label then
+                                continue
+                            end
+                            local distanceModifier = VDist3(v.pos, aiBrain.BrainIntel.StartPos)
+                            local enemyModifier = 1
+                            local startPos = 1
+                            local antiairdesire = 1
+                            local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
+                            local controlValue = 1
+                            if status == 'Hostile' and v.friendlyantisurfacethreat == 0 then continue end
+                            if status == 'Contested' or status == 'Unoccupied' then
+                                controlValue = 1.5
+                            end
+                            if v.friendlyantisurfacethreat == 0 and v.enemylandthreat > 0 then
+                                enemyModifier = enemyModifier - 0.25
+                            end
+                            if v.friendlyantisurfacethreat > 0 and v.enemylandthreat > v.friendlyantisurfacethreat then
+                                enemyModifier = enemyModifier + 0.5
+                            end
+                            enemyModifier = math.max(enemyModifier, 1.0)  -- Ensure enemyModifier is not less than 1
+                            if v.friendlyantiairthreat > 5 then
+                                antiairdesire = antiairdesire - 0.5
+                            end
+                            if v.enemyairthreat > 0 then
                                 antiairdesire = antiairdesire + 1.0
                             end
-                        end
-                        local resourceValue = zoneSet[v.id].resourcevalue or 1
-                        if zoneSet[v.id].startpositionclose then
-                            startPos = 0.7
-                        end
-                        if zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlyantisurfacethreat then
-                            enemyDanger = 0.4
-                        end
-                
-                        if platoon.Zone == v.id and zoneSet[v.id].enemyairthreat == 0 then
-                            enemyDanger = 0
-                        end
-                        compare = (20000 / distanceModifier) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger * antiairdesire * v.teamvalue
-                        if compare > selection then
-                            selection = compare
-                            zoneSelection = v.id
+                            if v.enemyairthreat > 0 then
+                                if v.friendlyantiairthreat > 0 then
+                                    antiairdesire = antiairdesire + 1.5
+                                elseif v.friendlyantisurfacethreat > 0 then
+                                    antiairdesire = antiairdesire + 2.0
+                                else
+                                    antiairdesire = antiairdesire + 1.0
+                                end
+                            end
+                            local resourceValue = zoneSet[v.id].resourcevalue or 1
+                            if zoneSet[v.id].startpositionclose then
+                                startPos = 0.7
+                            end
+                            if zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlyantisurfacethreat then
+                                enemyDanger = 0.4
+                            end
+                    
+                            if platoon.Zone == v.id and zoneSet[v.id].enemyairthreat == 0 then
+                                enemyDanger = 0
+                            end
+                            compare = (20000 / distanceModifier) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger * antiairdesire * v.teamvalue
+                            if compare > selection then
+                                selection = compare
+                                zoneSelection = v.id
+                            end
                         end
                     end
                     if zoneSelection then
@@ -938,15 +954,15 @@ IntelManager = Class {
                     for k3, v3 in labelThreat do
                         if k2 == k3 and v3.friendlydirectfireantisurfacethreat then
                             self.Brain.GraphZones[k2].FriendlySurfaceDirectFireThreat = v3.friendlydirectfireantisurfacethreat
-                            LOG('Assigned FriendlySurfaceDirectFireThreat to graphzone '..k2..' of '..self.Brain.GraphZones[k2].FriendlySurfaceDirectFireThreat)
+                            --LOG('Assigned FriendlySurfaceDirectFireThreat to graphzone '..k2..' of '..self.Brain.GraphZones[k2].FriendlySurfaceDirectFireThreat)
                         end
                         if k2 == k3 and v3.friendlyindirectantisurfacethreat then
                             self.Brain.GraphZones[k2].FriendlySurfaceInDirectFireThreat = v3.friendlyindirectantisurfacethreat
-                            LOG('Assigned FriendlySurfaceInDirectFireThreat to graphzone '..k2..' of '..self.Brain.GraphZones[k2].FriendlySurfaceInDirectFireThreat)
+                            --LOG('Assigned FriendlySurfaceInDirectFireThreat to graphzone '..k2..' of '..self.Brain.GraphZones[k2].FriendlySurfaceInDirectFireThreat)
                         end
                         if k2 == k3 and v3.friendlyantiairthreat then
                             self.Brain.GraphZones[k2].FriendlyLandAntiAirThreat = v3.friendlyantiairthreat
-                            LOG('Assigned FriendlyLandAntiAirThreat to graphzone '..k2..' of '..self.Brain.GraphZones[k2].FriendlyLandAntiAirThreat)
+                            --LOG('Assigned FriendlyLandAntiAirThreat to graphzone '..k2..' of '..self.Brain.GraphZones[k2].FriendlyLandAntiAirThreat)
                         end
                     end
                 end
@@ -2196,7 +2212,7 @@ function InitialNavalAttackCheck(aiBrain)
             end
             if not table.empty(validNavalLabels) then
                 aiBrain.BrainIntel.NavalBaseLabels = validNavalLabels
-                LOG('Label Table '..repr(validNavalLabels))
+                --LOG('Label Table '..repr(validNavalLabels))
             end
         end
         if markers then
@@ -2313,25 +2329,27 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
         WARN('Water label failure position was '..repr(location))
     end
     local centerPoint = aiBrain.MapCenterPoint
+    local im = GetIntelManager(aiBrain)
     local mainBaseToCenter = VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3])
     local bestExpansions = {}
     local options = {}
     local currentGameTime = GetGameTimeSeconds()
     -- Note, the expansions zones are land only. Need to fix this to include amphib zone.
     if label then
-        local markerTypes = {'Expansion Area', 'Large Expansion Area', 'Spawn'}
-        for c, t in markerTypes do
-            local markers = MarkerUtils.GetMarkersByType(t)
-            for k, expansion in markers do
-                local expLabel, reason = NavUtils.GetLabel('Land', location)
+        if not table.empty(im.ZoneExpansions.Pathable) then
+            for _, expansion in im.ZoneExpansions.Pathable do
+                local skipPos = false
+                local expLabel, reason = NavUtils.GetLabel('Land', expansion.Position)
                 if expLabel == label then
                     local expansionDistance = VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3])
                     if expansionDistance < radius * radius then
                         --RNGLOG('Expansion Zone is within radius')
                         if type == 'acu' or VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]) < (VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]) + 900) then
+                            local zone = aiBrain.Zones.Land.zones[expansion.ZoneID]
                             --RNGLOG('Expansion has '..expansion.MassPoints..' mass points')
                             --RNGLOG('Expansion is '..expansion.Name..' at '..repr(expansion.Position))
-                            local extractorCount = RNGGETN(expansion.Extractors)
+                            local extractorCount = zone.resourcevalue
+                            LOG('Extractor Count from zone is '..extractorCount)
                             if extractorCount > 1 then
                                 -- Lets ponder this a bit more, the acu is strong, but I don't want him to waste half his hp on civilian PD's
                                 if type == 'acu' and GetThreatAtPosition( aiBrain, expansion.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 5 then
@@ -2342,7 +2360,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                                     --RNGLOG('ACU Location has enough masspoints to indicate its already taken')
                                     continue
                                 end
-                                RNGINSERT(options, {Expansion = expansion, Value = extractorCount * extractorCount, Key = k, Distance = expansionDistance})
+                                RNGINSERT(options, {Expansion = expansion, Value = extractorCount * extractorCount, Key = zone.id, Distance = expansionDistance})
                             end
                         else
                             --RNGLOG('Expansion is beyond the center point')
@@ -2377,7 +2395,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                 if VDist2Sq(MainPos[1], MainPos[3], v.Expansion.Position[1], v.Expansion.Position[3]) > 10000 then
                     local alreadySecure = false
                     for k, b in aiBrain.BuilderManagers do
-                        if k == v.Expansion.Name and not table.empty(aiBrain.BuilderManagers[k].FactoryManager.FactoryList) then
+                        if b.Zone == v.Key and not table.empty(aiBrain.BuilderManagers[k].FactoryManager.FactoryList) then
                            --RNGLOG('Already a builder manager with factory present, set')
                             alreadySecure = true
                             break
@@ -2598,8 +2616,8 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                     AntiSurface = z['AntiSurface'] or 0
                                 })
                             elseif EntityCategoryContains( CategoriesDefense, unit) then
-                                RNGLOG('Inserting Enemy Defensive Structure '..unit.UnitId)
-                                RNGLOG('Position '..repr(unit:GetPosition()))
+                                --RNGLOG('Inserting Enemy Defensive Structure '..unit.UnitId)
+                               -- RNGLOG('Position '..repr(unit:GetPosition()))
                                 RNGINSERT(
                                     defensiveUnits, { 
                                     EnemyIndex = unitIndex, 
@@ -3034,7 +3052,7 @@ LastKnownThread = function(aiBrain)
                             im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].recent=true
                             if unitCat.TECH3 and unitCat.ANTIMISSILE and unitCat.SILO then
                                 if aiBrain.EnemyIntel.SMD[id] and not aiBrain.EnemyIntel.SMD[id].object.Dead and not aiBrain.EnemyIntel.SMD[id].Completed then
-                                    LOG('Fraction Complete on SMD '..repr(aiBrain.EnemyIntel.SMD[id].object:GetFractionComplete()))
+                                    --LOG('Fraction Complete on SMD '..repr(aiBrain.EnemyIntel.SMD[id].object:GetFractionComplete()))
                                     if aiBrain.EnemyIntel.SMD[id].object:GetFractionComplete() >= 1.0 then
                                         aiBrain.EnemyIntel.SMD[id].Completed = time
                                     end

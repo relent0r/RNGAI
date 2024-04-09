@@ -132,7 +132,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 aiBrain:PlatoonReinforcementRequestRNG(self, 'AntiAir', closestBase, label)
             end
             if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then
-                if threat.allyrange > threat.enemyrange and threat.allySurface*2 > threat.enemySurface then
+                if threat.allyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*2 > threat.enemySurface then
                     rangedAttack = true
                 else
                     self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))

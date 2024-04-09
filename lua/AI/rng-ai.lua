@@ -1481,7 +1481,6 @@ AIBrain = Class(RNGAIBrainClass) {
     ZoneSetup = function(self)
         WaitTicks(1)
         self.Zones.Land = MAP:GetZoneSet('RNGLandResourceSet',1)
-        
         self.Zones.Naval = MAP:GetZoneSet('RNGNavalResourceSet',2)
         self.ZoneCount = {
             Land = table.getn(self.Zones.Land.zones),
@@ -1656,7 +1655,7 @@ AIBrain = Class(RNGAIBrainClass) {
             Position = position,
             Layer = baseLayer,
             GraphArea = false,
-            BaseType = MarkerUtilities.GetMarker(baseName).Type or 'MAIN',
+            BaseType = RUtils.GetBaseType(baseName) or 'MAIN',
         }
         self.NumBases = self.NumBases + 1
         if baseLayer == 'Water' then
@@ -1769,7 +1768,11 @@ AIBrain = Class(RNGAIBrainClass) {
             if zone then
                 --RNGLOG('Zone set for builder manager')
                 self.BuilderManagers[baseName].Zone = zone
-                self.Zones.Land.zones[zone].BuilderManager = self.BuilderManagers[baseName]
+                if baseLayer == 'Water' then
+                    self.Zones.Naval.zones[zone].BuilderManager = self.BuilderManagers[baseName]
+                else
+                    self.Zones.Land.zones[zone].BuilderManager = self.BuilderManagers[baseName]
+                end
                 LOG('Allocation BuilderManager to zone, basename is '..baseName)
                 --RNGLOG('Zone is '..self.BuilderManagers[baseName].Zone)
                 zoneSet = true
@@ -3295,6 +3298,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 self:EnemyThreatCheckRNG(ALLBPS)
                 self:TacticalMonitorRNG(ALLBPS)
             end
+            local managerCount = 0
+            for _, v in self.BuilderManagers do
+                managerCount = managerCount + 1
+            end
+            LOG('Current builder manager count '..managerCount)
             coroutine.yield(self.TacticalMonitor.TacticalMonitorTime)
         end
     end,
@@ -6932,6 +6940,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.TML = {}
         self.EnemyIntel.SMD = {}
         self.EnemyIntel.Experimental = {}
+        self.EnemyIntel.Artillery = {}
         self.EnemyIntel.DirectorData = {
             Strategic = {},
             Energy = {},
@@ -7128,7 +7137,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.StructureManager:Run()
         self:ForkThread(IntelManagerRNG.CreateIntelGrid, self.IntelManager)
         self:ForkThread(self.CreateFloatingEngineerBase, self.BrainIntel.StartPos)
-        if true then
+        if self.RNGDEBUG then
             self:ForkThread(self.LogDataThreadRNG)
         end
         self:ForkThread(self.WatchForCampaignStart)

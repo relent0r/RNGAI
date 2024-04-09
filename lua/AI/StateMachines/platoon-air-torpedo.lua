@@ -82,10 +82,10 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
             end
             self.CurrentPlatoonThreatAntiNavy = self:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
-            LOG('Starting torpedo bomber')
-            LOG('Strike Damage is '..repr(self.PlatoonStrikeDamage))
-            LOG('Strike Radius is '..repr(self.PlatoonStrikeRadius))
-            LOG('Strike Radius Distance is '..repr(self.PlatoonStrikeRadiusDistance))
+            --LOG('Starting torpedo bomber')
+            --LOG('Strike Damage is '..repr(self.PlatoonStrikeDamage))
+            --LOG('Strike Radius is '..repr(self.PlatoonStrikeRadius))
+            --LOG('Strike Radius Distance is '..repr(self.PlatoonStrikeRadiusDistance))
             StartTorpedoThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -647,7 +647,7 @@ TorpedoThreatThreads = function(aiBrain, platoon)
                 if not unit.Dead then
                     local fuel = unit:GetFuelRatio()
                     local health = unit:GetHealthPercent()
-                    if not unit.Loading and (fuel < 0.3 or health < 0.5) then
+                    if not unit.Loading and ((fuel > -1 and fuel < 0.3) or health < 0.5) then
                         --LOG('Bomber needs refuel')
                         if not aiBrain.BrainIntel.AirStagingRequired and aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) < 1 then
                             aiBrain.BrainIntel.AirStagingRequired = true

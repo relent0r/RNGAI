@@ -72,6 +72,7 @@ BaseBuilderTemplate {
         NoGuards = true,
     },
     ExpansionFunction = function(aiBrain, location, markerType)
+        LOG('Expansion Function run for markerType '..repr(markerType)..' location '..repr(location))
         if not aiBrain.RNG then
             return -1
         end

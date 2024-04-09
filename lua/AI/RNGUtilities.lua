@@ -1,6 +1,7 @@
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
+local MarkerUtils = import("/lua/sim/MarkerUtilities.lua")
 --local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
@@ -2918,7 +2919,7 @@ function GetEnemyUnitsInRect( aiBrain, x1, z1, x2, z2 )
 end
 
 function AIGetSortedMassLocationsThreatRNG(aiBrain, minDist, maxDist, tMin, tMax, tRings, tType, position)
-    local GetMarkersByType = import("/lua/sim/MarkerUtilities.lua").GetMarkersByType
+    local GetMarkersByType = MarkerUtils.GetMarkersByType
 
     local threatCheck = false
     local maxDistance = 2000
@@ -3285,9 +3286,9 @@ end
 
 -- TruePlatoon Support functions
 
-GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, includeAir)
+GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, includeAir, includeStructure)
     if pos and radius then
-        local brainThreats = {allyTotal=0,enemyTotal=0,allySurface=0,enemySurface=0,allyAir=0,enemyAir=0,allySub=0,enemySub=0,enemyrange=0,allyrange=0}
+        local brainThreats = {allyTotal=0,enemyTotal=0,allySurface=0,enemySurface=0,allyStructure=0,enemyStructure=0,allyAir=0,enemyAir=0,allySub=0,enemySub=0,enemyrange=0,allyrange=0}
         local enemyMaxRadius = 0
         local allyMaxRadius = 0
         local enemyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Enemy')
@@ -3314,6 +3315,9 @@ GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, inclu
                         if bp.Weapon[1].MaxRadius > enemyMaxRadius then
                             enemyMaxRadius = bp.Weapon[1].MaxRadius
                         end
+                        if includeStructure and bp.CategoriesHash.STRUCTURE then
+                            brainThreats.enemyStructure = brainThreats.enemyStructure + bp.Defense.SurfaceThreatLevel
+                        end
                     end
                     if includeSub and bp.Defense.SubThreatLevel ~= nil then
                         brainThreats.enemySub = brainThreats.enemySub + bp.Defense.SubThreatLevel*mult
@@ -3325,6 +3329,13 @@ GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, inclu
                     if includeAir and bp.Defense.AirThreatLevel ~= nil then
                         brainThreats.enemyAir = brainThreats.enemyAir + bp.Defense.AirThreatLevel*mult
                         brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.AirThreatLevel*mult
+                        if bp.Weapon[1].MaxRadius > enemyMaxRadius then
+                            enemyMaxRadius = bp.Weapon[1].MaxRadius
+                        end
+                    end
+                    if includeStructure and bp.CategoriesHash.STRUCTURE and bp.Defense.SurfaceThreatLevel ~= nil then
+                        brainThreats.enemyStructure = brainThreats.enemyStructure + bp.Defense.SurfaceThreatLevel*mult
+                        brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.SurfaceThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > enemyMaxRadius then
                             enemyMaxRadius = bp.Weapon[1].MaxRadius
                         end
@@ -3352,6 +3363,9 @@ GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, inclu
                         brainThreats.allyTotal = brainThreats.allyTotal + bp.Defense.SurfaceThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > allyMaxRadius then
                             allyMaxRadius = bp.Weapon[1].MaxRadius
+                        end
+                        if includeStructure and bp.CategoriesHash.STRUCTURE then
+                            brainThreats.allyStructure = brainThreats.allyStructure + bp.Defense.SurfaceThreatLevel
                         end
                     end
                     if includeSub and bp.Defense.SubThreatLevel ~= nil then
@@ -3692,7 +3706,7 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
         if increaseSearch then
             searchRadius = radius + increaseSearch
         end
-        LOG('searchRadius is '..searchRadius)
+        ----LOG('searchRadius is '..searchRadius)
         local unitSize = aiBrain:GetUnitBlueprint(whatToBuild).Physics
         local testUnits  = aiBrain:GetUnitsAroundPoint(category, engPos, searchRadius, 'Ally')
         LOG('Number of test units found '..table.getn(testUnits))
@@ -3703,7 +3717,7 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
                 table.insert(closeUnits, v)
             end
         end
-        LOG('Close units found '..table.getn(closeUnits))
+        --LOG('Close units found '..table.getn(closeUnits))
         local template = {}
         table.insert(template, {})
         table.insert(template[1], { buildUnit })
@@ -6285,7 +6299,7 @@ function GetMarkerFromPosition(refPosition, markerType)
     if markerType == 'Mass' or markerType == 'Hydrocarbon'then
         markers = GetMarkersRNG()
     else
-        markers = import("/lua/sim/markerutilities.lua").GetMarkersByType(markerType)
+        markers = MarkerUtils.GetMarkersByType(markerType)
     end
     for _, v in markers do
         local position = v.Position or v.position
@@ -6324,16 +6338,25 @@ end
 
 function SetCoreResources(aiBrain, position, baseName)
     coroutine.yield(50)
-    local MarkerUtilities = import("/lua/sim/markerutilities.lua")
-    local resources = {}
-    local refMarker = MarkerUtilities.GetMarker(baseName)
-    local resourceTable = GetResourcesFromMarker(refMarker)
+    aiBrain:WaitForZoneInitialization()
+    local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
+    local targetZone = MAP:GetZoneID(position,aiBrain.Zones.Land.index)
+    if not targetZone then
+        WARN('No zone returned trying to get core resources for base')
+        return
+    end
+    local resourceTable = table.copy(aiBrain.Zones.Land[targetZone].resourcemarkers)
     if resourceTable then
         if aiBrain.BuilderManagers[baseName] then
             aiBrain.BuilderManagers[baseName].CoreResources = resourceTable
         end
+    elseif string.find(baseName, 'Naval Area') then
+        return {}
     else
         WARN('No resource table found in GetCoreResources')
+        LOG('Zone attempted '..repr(targetZone))
+        LOG('ZoneTable '..repr(aiBrain.Zones.Land[targetZone]))
+        return
     end
 end
 
@@ -6927,6 +6950,24 @@ CalculateRelativeDistanceValue = function(a_distance, b_distance)
     normalized_distance = (2 * a_distance) / d_total
     
     return normalized_distance
+end
+
+GetBaseType = function(baseName)
+    local baseType
+    if not baseName then
+        WARN('No base name provided for GetBaseType')
+        return
+    end
+    if string.find(baseName, 'ZONE') then
+        baseType = 'Zone Area'
+    else
+        baseType = MarkerUtils.GetMarker(baseName).Type
+    end
+    if not baseType then
+        LOG('baseName provided was '..repr(baseName))
+    end
+    LOG('Returning baseType '..repr(baseType))
+    return baseType
 end
 
 

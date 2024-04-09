@@ -51,7 +51,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                             end
                             unit.StrikeRadiusDistance = weapon.MaxRadius
                             maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + unit.StrikeDamage
-                            LOG('Bomber Weapon radius is '..repr(weapon.DamageRadius))
+                            --LOG('Bomber Weapon radius is '..repr(weapon.DamageRadius))
                             if weapon.DamageRadius > 0 or  weapon.DamageRadius < maxPlatoonStrikeRadius then
                                 maxPlatoonStrikeRadius = weapon.DamageRadius
                             end
@@ -66,7 +66,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                             end
                             unit.StrikeRadiusDistance = weapon.MaxRadius
                             maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + unit.StrikeDamage
-                            LOG('Torp Bomber Weapon radius is '..repr(weapon.DamageRadius))
+                            --LOG('Torp Bomber Weapon radius is '..repr(weapon.DamageRadius))
                             if weapon.DamageRadius > 0 or  weapon.DamageRadius < maxPlatoonStrikeRadius then
                                 maxPlatoonStrikeRadius = weapon.DamageRadius
                             end

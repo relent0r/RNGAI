@@ -112,7 +112,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             end
             if self.BuilderData.Expansion then
                 if self.BuilderData.ExpansionBuilt then
-                    local expansionPosition = self.BuilderData.ExpansionData.Expansion.Position
+                    local expansionPosition = brain.Zones.Land.zones[self.BuilderData.ExpansionData].pos
                     local enemyThreat = GetThreatAtPosition(brain, expansionPosition, brain.BrainIntel.IMAPConfig.Rings, true, 'Land')
                     if enemyThreat > 0 then
                         self.BuilderData = { 
@@ -254,9 +254,12 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 self.BuilderData = {
                                     Expansion = true,
                                     Position = stageExpansion.Expansion.Position,
-                                    ExpansionData = stageExpansion,
+                                    ExpansionData = stageExpansion.Key,
                                     CutOff = 225
-                                    }
+                                }
+                                LOG('Allocation CDR to zone for expansion')
+                                brain.Zones.Land.zones[stageExpansion.Key].engineerallocated = cdr
+                                brain.Zones.Land.zones[stageExpansion.Key].lastexpansionattempt = GetGameTimeSeconds()
                                 self:LogDebug(string.format('We have found a position to expand to, navigating'))
                                 self:ChangeState(self.Navigating)
                                 return
@@ -1435,13 +1438,13 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local expansionMarkerCount = 0
             local MassMarker = {}
             cdr.EngineerBuildQueue = {}
-            local object = self.BuilderData.ExpansionData
+            local object = brain.Zones.Land.zones[self.BuilderData.ExpansionData]
             --LOG('Object '..repr(object))
             if object then
-                for _, v in object.Expansion.Extractors do
+                for _, v in object.resourcemarkers do
                     if v.type == 'Mass' then
                         expansionMarkerCount = expansionMarkerCount + 1
-                        RNGINSERT(MassMarker, {Position = v.position, Distance = VDist3Sq( v.position, object.Expansion.Position ) })
+                        RNGINSERT(MassMarker, {Position = v.position, Distance = VDist3Sq( v.position, object.pos ) })
                     end
                 end
                 RNGSORT(MassMarker, function(a,b) return a.Distance < b.Distance end)
@@ -1506,21 +1509,16 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if not alreadyHaveExpansion then
-                        if not brain.BuilderManagers[object.Expansion.Name] then
+                        if not brain.BuilderManagers['ZONE_'..object.id] then
                         --RNGLOG('There is no manager at this expansion, creating builder manager')
-                            brain:AddBuilderManagers(object.Expansion.Position, 60, object.Expansion.Name, true)
+                            brain:AddBuilderManagers(object.pos, 60, 'ZONE_'..object.id, true)
                             local baseValues = {}
                             local highPri = false
                             local markerType
                             local abortBuild = false
-                            if object.Expansion.Type == 'Blank Marker' then
-                                markerType = 'Start Location'
-                            else
-                                markerType = object.Expansion.Type
-                            end
 
                             for templateName, baseData in BaseBuilderTemplates do
-                                local baseValue = baseData.ExpansionFunction(brain, object.Expansion.Position, markerType)
+                                local baseValue = baseData.ExpansionFunction(brain, object.pos, 'Zone Expansion')
                                 RNGINSERT(baseValues, { Base = templateName, Value = baseValue })
                                 --SPEW('*AI DEBUG: AINewExpansionBase(): Scann next Base. baseValue= ' .. repr(baseValue) .. ' ('..repr(templateName)..')')
                                 if not highPri or baseValue > highPri then
@@ -1539,9 +1537,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             local pick = validNames[ Random(1, RNGGETN(validNames)) ]
                             cdr.BuilderManagerData.EngineerManager:RemoveUnitRNG(cdr)
                             --RNGLOG('Adding CDR to expansion manager')
-                            brain.BuilderManagers[object.Expansion.Name].EngineerManager:AddUnitRNG(cdr, true)
+                            brain.BuilderManagers['ZONE_'..object.id].EngineerManager:AddUnitRNG(cdr, true)
                             --SPEW('*AI DEBUG: AINewExpansionBase(): ARMY ' .. brain:GetArmyIndex() .. ': Expanding using - ' .. pick .. ' at location ' .. baseName)
-                            import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(brain, object.Expansion.Name, pick)
+                            import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(brain, 'ZONE_'..object.id, pick)
 
                             -- The actual factory building part
                             local baseTmplDefault = import('/lua/BaseTemplates.lua')
@@ -1557,11 +1555,11 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 end
                                 
                                 local whatToBuild = brain:DecideWhatToBuild(cdr, 'T1LandFactory', buildingTmpl)
-                                if CanBuildStructureAt(brain, whatToBuild, object.Expansion.Position) then
-                                    local newEntry = {whatToBuild, {object.Expansion.Position[1], object.Expansion.Position[3], 0}, false, Position=object.Expansion.Position}
+                                if CanBuildStructureAt(brain, whatToBuild, object.pos) then
+                                    local newEntry = {whatToBuild, {object.pos[1], object.pos[3], 0}, false, Position=object.pos}
                                     RNGINSERT(cdr.EngineerBuildQueue, newEntry)
                                 else
-                                    local location = brain:FindPlaceToBuild('T1LandFactory', whatToBuild, baseTmplDefault['BaseTemplates'][factionIndex], true, cdr, nil, object.Expansion.Position[1], object.Expansion.Position[3])
+                                    local location = brain:FindPlaceToBuild('T1LandFactory', whatToBuild, baseTmplDefault['BaseTemplates'][factionIndex], true, cdr, nil, object.pos[1], object.pos[3])
                                     --LOG('Findplacetobuild location '..repr(location))
                                     local relativeLoc = {location[1], 0, location[2]}
                                     --LOG('Current CDR position '..repr(cdr.Position))
@@ -1613,14 +1611,16 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                             cdr.EngineerBuildQueue={}
                             self.BuilderData.ExpansionBuilt = true
-                        elseif brain.BuilderManagers[object.Expansion.Name].FactoryManager:GetNumFactories() == 0 then
+                            object.engineerallocated = false
+                            LOG('Expansion build, deallocating cdr')
+                        elseif brain.BuilderManagers['ZONE_'..object.id].FactoryManager:GetNumFactories() == 0 then
                             local abortBuild = false
-                            brain.BuilderManagers[object.Expansion.Name].EngineerManager:AddUnitRNG(cdr, true)
+                            brain.BuilderManagers['ZONE_'..object.id].EngineerManager:AddUnitRNG(cdr, true)
                             local baseTmplDefault = import('/lua/BaseTemplates.lua')
                             local factoryCount = 0
-                            if object.Expansion.MassPoints > 2 then
+                            if object.resourcevalue > 2 then
                                 factoryCount = 2
-                            elseif object.Expansion.MassPoints > 1 then
+                            elseif object.resourcevalue > 1 then
                                 factoryCount = 1
                             end
                             for i=1, factoryCount do
@@ -1629,11 +1629,11 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 end
                                 
                                 local whatToBuild = brain:DecideWhatToBuild(cdr, 'T1LandFactory', buildingTmpl)
-                                if CanBuildStructureAt(brain, whatToBuild, object.Expansion.Position) then
-                                    local newEntry = {whatToBuild, {object.Expansion.Position[1], object.Expansion.Position[3], 0}, false, Position=object.Expansion.Position}
+                                if CanBuildStructureAt(brain, whatToBuild, object.pos) then
+                                    local newEntry = {whatToBuild, {object.pos[1], object.pos[3], 0}, false, Position=object.pos}
                                     RNGINSERT(cdr.EngineerBuildQueue, newEntry)
                                 else
-                                    local location = brain:FindPlaceToBuild('T1LandFactory', whatToBuild, baseTmplDefault['BaseTemplates'][factionIndex], true, cdr, nil, object.Expansion.Position[1], object.Expansion.Position[3])
+                                    local location = brain:FindPlaceToBuild('T1LandFactory', whatToBuild, baseTmplDefault['BaseTemplates'][factionIndex], true, cdr, nil, object.pos[1], object.pos[3])
                                     local relativeLoc = {location[1], 0, location[2]}
                                     relativeLoc = {relativeLoc[1] + cdr.Position[1], relativeLoc[2] + cdr.Position[2], relativeLoc[3] + cdr.Position[3]}
                                     local newEntry = {whatToBuild, {relativeLoc[1], relativeLoc[3], 0}, false, Position=relativeLoc}
@@ -1681,6 +1681,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                             cdr.EngineerBuildQueue={}
                             self.BuilderData.ExpansionBuilt = true
+                            LOG('Expansion build, deallocating cdr')
+                            object.engineerallocated = false
                         --RNGLOG('There is a manager here but no factories')
                         end
                     end

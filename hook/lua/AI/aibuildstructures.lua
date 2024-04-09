@@ -643,6 +643,7 @@ function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructio
         -- Iterate through bases finding the value of each expansion
         local baseValues = {}
         local highPri = false
+        LOG('Expansion being created, construction data is '..repr(constructionData))
         for templateName, baseData in BaseBuilderTemplates do
             local baseValue = baseData.ExpansionFunction(aiBrain, position, constructionData.NearMarkerType)
             table.insert(baseValues, { Base = templateName, Value = baseValue })

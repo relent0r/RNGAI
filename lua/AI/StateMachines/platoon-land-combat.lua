@@ -91,6 +91,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 --LOG('Vented LandCombatPlatoon Deciding what to do')
             end
             local aiBrain = self:GetBrain()
+            local rangedAttack = false
             if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
                 local enemyAcuPosition = aiBrain.BrainIntel.SuicideModeTarget:GetPosition()
                 local rx = self.Pos[1] - enemyAcuPosition[1]
@@ -121,16 +122,25 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 aiBrain:PlatoonReinforcementRequestRNG(self, 'AntiAir', closestBase, label)
             end
             if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then
-                self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
-                self.retreat=true
-                self:ChangeState(self.Retreating)
-                return
+                if threat.allyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*2 > threat.enemySurface then
+                    rangedAttack = true
+                else
+                    self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
+                    self.retreat=true
+                    self:ChangeState(self.Retreating)
+                    return
+                end
             else
                 self.retreat=false
             end
             if StateUtils.SimpleTarget(self,aiBrain) then
-                self:ChangeState(self.CombatLoop)
-                return
+                if rangedAttack then
+                    self:ChangeState(self.RangedCombatLoop)
+                    return
+                else
+                    self:ChangeState(self.CombatLoop)
+                    return
+                end
             end
             if VDist3Sq(self.Pos, aiBrain.BuilderManagers[self.LocationType].Position) < 14400 then
                 --LOG('DecideWhatToDo HighPriority Targets')
@@ -393,6 +403,76 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
+    RangedCombatLoop = State {
+
+        StateName = 'RangedCombatLoop',
+
+        --- The platoon searches for a target
+        ---@param self AIPlatoonLandCombatBehavior
+        Main = function(self)
+            local aiBrain = self:GetBrain()
+            local units=GetPlatoonUnits(self)
+            if not aiBrain.BrainIntel.SuicideModeActive then
+                for k,unit in self.targetcandidates do
+                    if not unit or unit.Dead or not unit.machineworth then 
+                        --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
+                        table.remove(self.targetcandidates,k) 
+                    end
+                end
+            end
+            local target
+            local closestTarget
+            local targetPos
+            for _,v in units do
+                if v and not v.Dead then
+                    local unitPos = v:GetPosition()
+                    if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
+                        target = aiBrain.BrainIntel.SuicideModeTarget
+                    else
+                        for l, m in self.targetcandidates do
+                            if m and not m.Dead then
+                                local enemyPos = m:GetPosition()
+                                local rx = unitPos[1] - enemyPos[1]
+                                local rz = unitPos[3] - enemyPos[3]
+                                local tmpDistance = rx * rx + rz * rz
+                                if not closestTarget or tmpDistance < closestTarget then
+                                    target = m
+                                    closestTarget = tmpDistance
+                                end
+                            end
+                        end
+                    end
+                    if target then
+                        local skipKite = false
+                        local unitRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
+                        targetPos = target:GetPosition()
+                        local targetCats = target.Blueprint.CategoriesHash
+                        if v.Role == 'Artillery' or v.Role == 'Silo' or v.Role == 'Sniper' then
+                            if targetCats.DIRECTFIRE and targetCats.STRUCTURE and targetCats.DEFENSE then
+                                if v.MaxWeaponRange > unitRange then
+                                    skipKite = true
+                                    if not v:IsUnitState("Attacking") then
+                                        IssueClearCommands({v})
+                                        IssueAttack({v}, target)
+                                    end
+                                end
+                            end
+                        end
+                        if not skipKite then
+                            StateUtils.VariableKite(self,v,target, true)
+                        end
+                    end
+                end
+            end
+            if target and not target.Dead and targetPos and aiBrain:CheckBlockingTerrain(self.Pos, targetPos, 'none') then
+                IssueMove(units, targetPos)
+            end
+            coroutine.yield(30)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
     Transporting = State {
 
         StateName = 'Transporting',
@@ -408,7 +488,6 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             end
             local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, self.dest, 3, false)
             if usedTransports then
-                LOG('No path due to '..repr(reason))
                 self:ChangeState(self.Navigating)
                 return
             else
@@ -641,7 +720,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                         if targetRange < self.MaxPlatoonWeaponRange then
                             attackStructure = true
                             for _, v in platUnits do
-                                self:LogDebug('Role is '..repr(v.Role))
+                                --self:LogDebug('Role is '..repr(v.Role))
                                 if v.Role == 'Artillery' or v.Role == 'Silo' and not v:IsUnitState("Attacking") then
                                     IssueClearCommands({v})
                                     IssueAttack({v},target)

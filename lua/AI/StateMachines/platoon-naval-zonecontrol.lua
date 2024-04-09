@@ -268,9 +268,9 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             self.dest = attackPosition
             local path = self.path
             if not path then
-                self:LogDebug(string.format('No path for naval platoon '..reason))
-                self:LogDebug(string.format('BuilderData '..repr(self.BuilderData)))
-                self:LogDebug(string.format('Current Pos '..repr(self.Pos)))
+                --self:LogDebug(string.format('No path for naval platoon '..reason))
+                --self:LogDebug(string.format('BuilderData '..repr(self.BuilderData)))
+                --self:LogDebug(string.format('Current Pos '..repr(self.Pos)))
             end
             local bAggroMove = self.PlatoonData.AggressiveMove or false
             local platUnits = self:GetPlatoonUnits()
@@ -285,8 +285,8 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             end
             
             for i=1, pathNodesCount do
-                self:LogDebug(string.format('Moving to destination. i: '..i..' coords '..repr(path[i])))
-                self:LogDebug(string.format('Current platoon pos is '..repr(self.Pos)))
+                --self:LogDebug(string.format('Moving to destination. i: '..i..' coords '..repr(path[i])))
+                --self:LogDebug(string.format('Current platoon pos is '..repr(self.Pos)))
                 if bAggroMove then
                     self:AggressiveMoveToLocation(path[i])
                 elseif i ~= pathNodesCount then
@@ -307,10 +307,10 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                         local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, self.Pos, 'Attack', searchRange, (categories.MOBILE * (categories.NAVAL + categories.AMPHIBIOUS) + categories.STRUCTURE * categories.ANTINAVY) - categories.AIR - categories.SCOUT - categories.WALL, categoryList, false)
                         IssueClearCommands(self:GetSquadUnits('Attack'))
                         self:LogDebug(string.format('Enemy found while pathing'))
-                        self:LogDebug(string.format('Our antisurface threat '..repr(self.CurrentPlatoonThreatAntiSurface)))
-                        self:LogDebug(string.format('enemy antisurface threat '..repr(totalThreat['AntiSurface'])))
-                        self:LogDebug(string.format('Our antinavy threat '..repr(self.CurrentPlatoonThreatAntiNavy)))
-                        self:LogDebug(string.format('enemy threat '..repr(totalThreat['AntiNaval'])))
+                        --self:LogDebug(string.format('Our antisurface threat '..repr(self.CurrentPlatoonThreatAntiSurface)))
+                        --self:LogDebug(string.format('enemy antisurface threat '..repr(totalThreat['AntiSurface'])))
+                        --self:LogDebug(string.format('Our antinavy threat '..repr(self.CurrentPlatoonThreatAntiNavy)))
+                        --self:LogDebug(string.format('enemy threat '..repr(totalThreat['AntiNaval'])))
                         if (self.CurrentPlatoonThreatAntiSurface < totalThreat['AntiSurface'] and self.CurrentPlatoonThreatAntiNavy < totalThreat['AntiNaval'] or self.CurrentPlatoonThreatAntiNavy < totalThreat['AntiNaval']) and (target and not target.Dead or acuUnit) then
                             self:LogDebug(string.format('High threat taking action'))
                             if target and not target.Dead then
@@ -475,7 +475,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             else
                 mainBasePos = aiBrain.BuilderManagers['MAIN'].Position
             end
-            self:LogDebug(string.format('Naval attack platoon ordered to retreat, main base pos is '..repr(mainBasePos)))
+            --self:LogDebug(string.format('Naval attack platoon ordered to retreat, main base pos is '..repr(mainBasePos)))
             self:SetPlatoonFormationOverride('NoFormation')
             self:Stop()
             self:MoveToLocation(mainBasePos, false)

@@ -462,9 +462,6 @@ StructureManager = Class {
                 if v.Layer == 'Water' then
                     --RNGLOG('Found Water manager')
                     local baseDistance = VDist3Sq(v.Position, self.Brain.BuilderManagers['MAIN'].Position)
-                    --RNGLOG('Distance to main is '..baseDistance)
-                    --RNGLOG('Factory List '..repr(v.FactoryManager.FactoryList))
-                    --RNGLOG('Base name is '..v.BaseType)
                     if not closestBase or baseDistance < closestBase then
                         local factoryList = v.FactoryManager.FactoryList
                         if factoryList then
@@ -1438,22 +1435,15 @@ StructureManager = Class {
 
     StructureTMLCheck = function(self, structure)
         local defended = true
-        if structure.TMLInRange then
-            --LOG('TMLInRange table found '..repr(structure.TMLInRange))
-        end
         if structure.TMLInRange and not table.empty(structure.TMLInRange) then
             --LOG('TMLInRange is greater than 0')
             for k, v in structure.TMLInRange do
                 if not self.Brain.EnemyIntel.TML[k] or self.Brain.EnemyIntel.TML[k].object.Dead then
-                    --LOG('No Entry for TML, dump table '..repr(self.Brain.EnemyIntel.TML))
                     structure.TMLInRange[k] = nil
                     continue
                 end    
             end
             if not structure.TMDInRange then
-                --LOG('Not TML defended Entity '..structure.EntityId)
-                --LOG('Unit ID is '..structure.UnitId)
-                --LOG('Unit Position is '..repr(structure:GetPosition()))
                 defended = false
             end
         end
@@ -1468,7 +1458,6 @@ StructureManager = Class {
         local lowestUnit = false
         local base = aiBrain.BuilderManagers['MAIN']
         local BasePosition = aiBrain.BuilderManagers['MAIN'].Position
-        --LOG('BasePosition is '..repr(BasePosition))
         if extractorTable then
             --LOG('extractorTable present in upgrade validation')                
             if not allTiers then
@@ -1478,10 +1467,9 @@ StructureManager = Class {
                             UnitPos = c:GetPosition()
                             DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
                             if not c.InitialPosCompleted then
-                                for _, v in base.CoreResources.Extractors do
+                                for _, v in base.CoreResources do
                                     local pos = v.Position or v.position
                                     if UnitPos[1] == pos[1] and UnitPos[3] == pos[3] then
-                                        --LOG('Found Main Base Extractor '..repr(v))
                                         c.MAINBASE = true
                                         break
                                     end
@@ -1503,10 +1491,9 @@ StructureManager = Class {
                             UnitPos = c:GetPosition()
                             DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
                             if not c.InitialPosCompleted then
-                                for _, v in base.CoreResources.Extractors do
+                                for _, v in base.CoreResources do
                                     local pos = v.Position or v.position
                                     if UnitPos[1] == pos[1] and UnitPos[3] == pos[3] then
-                                        --LOG('Found Main Base Extractor '..repr(v))
                                         c.MAINBASE = true
                                         break
                                     end
@@ -1527,10 +1514,9 @@ StructureManager = Class {
                             UnitPos = c:GetPosition()
                             DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
                             if not c.InitialPosCompleted then
-                                for _, v in base.CoreResources.Extractors do
+                                for _, v in base.CoreResources do
                                     local pos = v.Position or v.position
                                     if UnitPos[1] == pos[1] and UnitPos[3] == pos[3] then
-                                        --LOG('Found Main Base Extractor '..repr(v))
                                         c.MAINBASE = true
                                         break
                                     end
@@ -1804,7 +1790,6 @@ StructureManager = Class {
                 unit.TMLInRange = {}
             end
             unit.TMLInRange[tml.object.EntityId] = tml.object
-            --LOG('ValidateTML added TML unit '..repr(unit.TMLInRange))
         end
     end,
 }

@@ -42,7 +42,7 @@ local NavUtils = import("/lua/sim/navutils.lua")
 
 local AIRTRANSPORTS = categories.AIR * categories.TRANSPORTFOCUS
 local ENGINEERS = categories.ENGINEER
-local TransportDialog = true
+local TransportDialog = false
 
 -- this function will create the TransportPool platoon and put the reference to it in the brain
 function CreateTransportPool( aiBrain )
@@ -1072,7 +1072,8 @@ function SendPlatoonWithTransports(aiBrain, platoon, destination, attempts, bSki
                 local atest, stest
                 local landpath,  landpathlength, landreason, lastlocationtested, path, pathlength, reason
 				-- locate the requested markers within markerrange of the supplied location	that the platoon can safely land at
-				local markerRadius = math.min(aiBrain.BrainIntel.IMAPConfig.IMAPSize * 3, 128)
+				local imapSize = aiBrain.BrainIntel.IMAPConfig.IMAPSize or 32
+				local markerRadius = math.min(imapSize * 3, 128)
 				local markerlist = NavUtils.DirectionsFromWithThreatThreshold(layer, destination, markerRadius, aiBrain, NavUtils.ThreatFunctions.AntiAir, threatMax, aiBrain.BrainIntel.IMAPConfig.Rings)
 				-- sort the markers by closest distance to final destination
 				if not table.empty(markerlist) then

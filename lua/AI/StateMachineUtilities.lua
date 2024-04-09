@@ -19,7 +19,7 @@ CrossP = function(vec1,vec2,n)--cross product
     return {x,y,z}
 end
 
-SimpleTarget = function(platoon,aiBrain,guardee)--find enemies in a range and attack them- lots of complicated stuff here
+SimpleTarget = function(platoon, aiBrain)--find enemies in a range and attack them- lots of complicated stuff here
     local function ViableTargetCheck(unit, unitPosition)
         if unit.Dead or not unit then return false end
         if platoon.MovementLayer=='Amphibious' then
@@ -40,9 +40,6 @@ SimpleTarget = function(platoon,aiBrain,guardee)--find enemies in a range and at
     --RNGLOG('machinedata.id '..repr(id))
     local position=platoon.Pos
     if not position then return false end
-    if guardee and not guardee.Dead then
-        position=guardee:GetPosition()
-    end
     if platoon.PlatoonData.Defensive and VDist2Sq(position[1], position[3], platoon.Home[1], platoon.Home[3]) < 14400 then
         --RNGLOG('Defensive Posture Targets')
         platoon.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE - categories.WALL - categories.INSIGNIFICANTUNIT, platoon.Home, 120, 'Enemy')
@@ -205,7 +202,7 @@ SimplePriority = function(self,aiBrain)--use the aibrain priority table to do th
     end
 end
 
-VariableKite = function(platoon,unit,target)--basic kiting function.. complicated as heck
+VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride)--basic kiting function.. complicated as heck
     local function KiteDist(pos1,pos2,distance,healthmod)
         local vec={}
         local dist=VDist3(pos1,pos2)
@@ -253,8 +250,14 @@ VariableKite = function(platoon,unit,target)--basic kiting function.. complicate
     elseif (unit.Role=='Sniper' or unit.Role=='Artillery' or unit.Role=='Silo') and unit.MaxWeaponRange then
         dest=KiteDist(pos,tpos,unit.MaxWeaponRange,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
+    elseif maxPlatoonRangeOverride and (unit.Role=='Shield' or unit.Role == 'Stealth') and platoon.MaxDirectFireRange > 0 then
+        dest=KiteDist(pos,tpos,platoon.MaxDirectFireRange-math.random(1,3)-mod,healthmod)
+        dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif (unit.Role=='Shield' or unit.Role == 'Stealth') and platoon.MaxDirectFireRange > 0 then
         dest=KiteDist(pos,tpos,platoon.MaxDirectFireRange-math.random(1,3)-mod,healthmod)
+        dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
+    elseif maxPlatoonRangeOverride then
+        dest=KiteDist(pos,tpos,platoon.MaxPlatoonWeaponRange,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif unit.MaxWeaponRange then
         dest=KiteDist(pos,tpos,unit.MaxWeaponRange-math.random(1,3)-mod,healthmod)

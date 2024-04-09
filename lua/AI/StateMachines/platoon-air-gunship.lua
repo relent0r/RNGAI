@@ -423,7 +423,7 @@ GunshipThreatThreads = function(aiBrain, platoon)
                 if not unit.Dead then
                     local fuel = unit:GetFuelRatio()
                     local health = unit:GetHealthPercent()
-                    if not unit.Loading and (fuel < 0.3 or health < 0.5) then
+                    if not unit.Loading and ((fuel > -1 and fuel < 0.3) or health < 0.5) then
                         --LOG('Gunship needs refuel')
                         if not aiBrain.BrainIntel.AirStagingRequired and aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) < 1 then
                             aiBrain.BrainIntel.AirStagingRequired = true

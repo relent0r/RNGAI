@@ -158,9 +158,16 @@ function CanBuildOnHydroLessThanDistanceRNG(aiBrain, locationType, distance, thr
 end
 
 function NavalBaseLimitRNG(aiBrain, limit)
-    local expBaseCount = aiBrain:GetManagerCount('Naval Area')
-    --LOG('Naval base count is '..expBaseCount)
-    return CompareBody(expBaseCount, limit, '<')
+    local count = 0
+    for k, v in aiBrain.BuilderManagers do
+        if v.Layer == 'Water' then
+            if v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) > 0 then
+                count = count + 1
+            end
+        end
+    end
+    LOG('Naval base count is '..count)
+    return CompareBody(count, limit, '<')
 end
 
 function LessThanLandExpansions(aiBrain, expansionCount)
@@ -171,7 +178,7 @@ function LessThanLandExpansions(aiBrain, expansionCount)
         if not v.BaseType then
             continue
         end
-        if v.BaseType ~= 'MAIN' and v.BaseType ~= 'Naval Area' and v.BaseType ~= 'FLOATING' and not string.find(v.BaseType, 'DYNAMIC_') then
+        if v.BaseType ~= 'MAIN' and v.BaseType ~= 'Naval Area' and v.BaseType ~= 'FLOATING' then
             count = count + 1
         end
         if count >= expansionCount then
@@ -1131,9 +1138,9 @@ function EngineerManagerUnitsAtActiveExpansionRNG(aiBrain, compareType, numUnits
 end
 
 -- { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 'Naval Area', 3,  categories.FACTORY * categories.STRUCTURE * categories.TECH3 }},
-function ExistingNavalExpansionFactoryGreaterRNG( aiBrain, markerType, numReq, category )
+function ExistingNavalExpansionFactoryGreaterRNG( aiBrain, numReq, category )
     for k,v in aiBrain.BuilderManagers do
-        if v.FactoryManager.LocationActive and markerType == v.BaseType and v.FactoryManager.FactoryList then
+        if v.FactoryManager.LocationActive and v.Layer == 'Water' and v.FactoryManager.FactoryList then
             if numReq > EntityCategoryCount(category, v.FactoryManager.FactoryList) then
                 --RNGLOG('ExistingExpansionFactoryGreater = false')
 				return false
@@ -1588,10 +1595,17 @@ function ExpansionBaseCheckRNG(aiBrain)
 end
 
 function ExpansionBaseCountRNG(aiBrain, compareType, checkNum)
-    local expBaseCount = aiBrain:GetManagerCount('Start Location')
-    expBaseCount = expBaseCount + aiBrain:GetManagerCount('Expansion Area')
-    --LOG('*AI DEBUG: Expansion base count is ' .. expBaseCount .. ' checkNum is ' .. checkNum)
-    return CompareBody(expBaseCount, checkNum, compareType)
+    local count = 0
+    for k, v in aiBrain.BuilderManagers do
+        if v.BaseType and v.Layer ~= 'Water' and k ~= 'FLOATING' and k ~= 'MAIN' then
+            if v.EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) <= 0 and v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) <= 0 then
+                continue
+            end
+            count = count + 1
+        end
+    end
+    LOG('Expansion base count '..count)
+    return count
 end
 
 function RequireTMDCheckRNG(aiBrain)
