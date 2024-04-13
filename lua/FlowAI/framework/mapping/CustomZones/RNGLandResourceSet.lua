@@ -119,7 +119,6 @@ RNGLandResourceSet = Class(ZoneSet){
                 zoneList[k] = nil
             end
             for _, v in startLocations do
-                LOG('Add start location '..repr(v))
                 zoneList[head] = {pos=v.Position, component=MAP:GetComponent(v.Position,self.layer), weight=table.getn(v.resourcemarkers), startpositionclose=true, enemylandthreat=0, enemyantiairthreat=0, friendlyantisurfacethreat=0, friendlylandantiairthreat=0, friendlydirectfireantisurfacethreat=0, friendlyindirectantisurfacethreat=0,resourcevalue=table.getn(v.resourcemarkers), resourcemarkers=v.resourcemarkers, zonealert=false, control=1, enemystartdata = { }, allystartdata = { },  bestarmy = false, teamvalue = 1, platoonassigned = false, label = 0, BuilderManager = {}, lastexpansionattempt = 0, engineerallocated = false}
                 head = head + 1
             end
@@ -127,23 +126,10 @@ RNGLandResourceSet = Class(ZoneSet){
             return zoneList, head - 1
         end
         -- Step 1: Get a set of markers that are in the layer we're currently interested in.
-       RNGLOG('GenerateZoneList for custom Zone')
-        local armyStarts = {}
         local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
         local threshold = 400 + maxmapdimension
         local zoneRadius = threshold
 
-        --if maxmapdimension < 512 then
-        --    zoneRadius = 35 * 35
-        --end
-        --RNGLOG('Zone Radius is '..zoneRadius)
-        for i = 1, 16 do
-            local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
-            local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
-            if army and startPos then
-                table.insert(armyStarts, startPos)
-            end
-        end
         local markers = {}
         for _, marker in GetMarkers() do
             if marker.type == 'Mass' then
@@ -191,13 +177,6 @@ RNGLandResourceSet = Class(ZoneSet){
             best.claimed = true
             local x = best.aggX/best.weight
             local z = best.aggZ/best.weight
-            for _, p in armyStarts do
-                if VDist2Sq(p[1], p[3],x, z) < (zoneRadius) then
-                   --RNGLOG('Start Position Taken '..repr(p))
-                    startPos = true
-                    break
-                end
-            end
 
             -- Claim nearby points
             for _, v in markers do
@@ -213,7 +192,6 @@ RNGLandResourceSet = Class(ZoneSet){
         end
         local finalZonesList, zoneCount = AssimilateZones(initialZones, initialZoneCount)
         for i=1, zoneCount do
-            LOG('Adding zone '..repr(finalZonesList[i]))
             self:AddZone(finalZonesList[i])
         end
     end,

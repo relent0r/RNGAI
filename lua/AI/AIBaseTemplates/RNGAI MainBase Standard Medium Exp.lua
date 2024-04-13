@@ -80,7 +80,7 @@ BaseBuilderTemplate {
         'RNGAI SMD Builders',
 
         -- Expansions --
-        'RNGAI Engineer Expansion Builders Small',
+        'RNGAI Engineer Naval Expansion Builders Small',
 
         -- SACU Builders --
         'RNGAI Gate Builders',

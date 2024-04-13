@@ -710,7 +710,7 @@ LandScoutThreatThread = function(aiBrain, platoon)
             local enemyUnits = GetUnitsAroundPoint(aiBrain, unitCatCheck, platPos, checkRadius, 'Enemy')
             for _, v in enemyUnits do
                 if platoon.StateName ~= 'AttackTarget' and scout.UnitId == 'xsl0101' and not v.Dead and EntityCategoryContains((categories.ENGINEER - categories.COMMAND) + categories.SCOUT + categories.MASSEXTRACTION , v) then
-                    --LOG('Seraphim scout vs engineer')
+                    --LOG('Seraphim scout vsself.engineer')
                     unitToAttack = v
                 elseif platoon.StateName ~= 'Retreating' and not v.Dead then
                     unitToRetreat = v

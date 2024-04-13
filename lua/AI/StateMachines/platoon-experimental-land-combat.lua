@@ -270,7 +270,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                         AttackTarget = target,
                                         Position = target:GetPosition()
                                     }
-                                    self:LogDebug(string.format('Experimental ACU in range, going for suicide distance is '..repr(enemyUnit.Distance)..' cutoff is '..repr((self.MaxPlatoonWeaponRangeSq + 35 * 35))))
+                                    self:LogDebug(string.format('Experimental ACU in range, going for suicide distance is '..tostring(enemyUnit.Distance)..' cutoff is '..tostring((self.MaxPlatoonWeaponRangeSq + 35 * 35))))
                                     self:ChangeState(self.SuicideMode)
                                     return
                                 end
@@ -790,7 +790,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
             local closestAPlatPos
             local AlliedPlatoons = aiBrain:GetPlatoonsList()
             for _,aPlat in AlliedPlatoons do
-                if not table.equal(aPlat, self) then
+                if not aPlat.Dead and not table.equal(aPlat, self) then
                     local aPlatSurfaceThreat = aPlat:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                     if aPlatSurfaceThreat > self.EnemyThreatTable.TotalSuroundingThreat / 2 then
                         local aPlatPos = aPlat:GetPlatoonPosition()

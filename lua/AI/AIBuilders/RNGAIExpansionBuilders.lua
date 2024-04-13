@@ -78,7 +78,7 @@ local FrigateRaid = function(self, aiBrain, builderManager)
 end
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI Engineer Expansion Builders Small',
+    BuilderGroupName = 'RNGAI Engineer Zone Expansion Builders',
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Zone Expansion',
@@ -87,7 +87,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'ZoneAvailableRNG', { 'LocationType', 250, -1000, 0, 2, 'AntiSurface' } },
+            { UCBC, 'ZoneAvailableRNG', { 'LocationType' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Any',
@@ -103,10 +103,6 @@ BuilderGroup {
                 ExpansionRadius = 120, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
                 LocationRadius = 1000,
                 LocationType = 'LocationType',
-                ThreatMin = -1000,
-                ThreatMax = 100,
-                ThreatRings = 2,
-                ThreatType = 'AntiSurface',
                 BuildStructures = {                    
                     'T1LandFactory',
                 }
@@ -114,6 +110,11 @@ BuilderGroup {
             NeedGuard = true,
         }
     },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Engineer Naval Expansion Builders Small',
+    BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Naval Expansion Area FrigateRaid',
         PlatoonTemplate = 'EngineerBuilderT12RNG',
@@ -187,42 +188,8 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI Engineer Expansion Builders Large',
+    BuilderGroupName = 'RNGAI Engineer Naval Expansion Builders Large',
     BuildersType = 'EngineerBuilder',
-    Builder {
-        BuilderName = 'RNGAI Zone Expansion',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 995,
-        InstanceCount = 2,
-        BuilderConditions = {
-            { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'ZoneAvailableRNG', { 'LocationType', 250, -1000, 0, 2, 'AntiSurface' } },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'Expansion',
-            TransportWait = 5,
-            Construction = {
-                BuildClose = false,
-                BaseTemplate = ExBaseTmpl,
-                ExpansionBase = true,
-                ZoneExpansion = true,
-                NearMarkerType = 'Zone Expansion',
-                ExpansionRadius = 120, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
-                LocationRadius = 1000,
-                LocationType = 'LocationType',
-                ThreatMin = -1000,
-                ThreatMax = 100,
-                ThreatRings = 2,
-                ThreatType = 'AntiSurface',
-                BuildStructures = {                    
-                    'T1LandFactory',
-                }
-            },
-            NeedGuard = true,
-        }
-    },
     Builder {
         BuilderName = 'RNGAI T1 Naval Expansion Area FrigateRaid Large',
         PlatoonTemplate = 'EngineerBuilderT12RNG',

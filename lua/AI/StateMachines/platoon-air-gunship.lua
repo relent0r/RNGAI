@@ -67,7 +67,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             end
             if aiBrain.BasePerimeterMonitor[self.LocationType].AirUnits > 0 and homeDist > 900 then
                 --LOG('gunship retreating due to perimeter monitor at '..repr(self.LocationType))
-                self:LogDebug(string.format('Gunship retreating due to perimeter monitor at '..repr(self.LocationType)))
+                self:LogDebug(string.format('Gunship retreating due to perimeter monitor at '..tostring(self.LocationType)))
                 self:ChangeState(self.Retreating)
                 return
             end

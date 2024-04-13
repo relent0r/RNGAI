@@ -166,7 +166,7 @@ function NavalBaseLimitRNG(aiBrain, limit)
             end
         end
     end
-    LOG('Naval base count is '..count)
+    --LOG('Naval base count is '..count)
     return CompareBody(count, limit, '<')
 end
 
@@ -201,7 +201,7 @@ function RequirePresenceOnLabelRNG(aiBrain, expansionCount)
                         continue
                     end
                     if v.BaseType ~= 'Naval Area' and v.BaseType ~= 'FLOATING' then
-                        if v.RNGArea and v.RNGArea == id then
+                        if v.GraphArea and v.GraphArea == id then
                             --LOG('Found base in label '..id..' base name is '..v.BaseType)
                             baseDetected = true
                             break
@@ -286,16 +286,6 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
         BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
         BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
-    elseif aiBrain:PBMHasPlatoonList() then
-        for k,v in aiBrain.PBM.Locations do
-            if v.LocationType == locType then
-                baseposition = v.Location
-                radius = v.Radius
-                BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
-                BASEPOSTITIONS[AIName][locType] = {baseposition, radius}
-                break
-            end
-        end
     end
     if not baseposition then
         --RNGLOG('No Base Position for GetUnitsBeingBuildlocation')
@@ -341,16 +331,6 @@ function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, b
         radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
         BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
         BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
-    elseif aiBrain:PBMHasPlatoonList() then
-        for k,v in aiBrain.PBM.Locations do
-            if v.LocationType == locType then
-                baseposition = v.Location
-                radius = v.Radius
-                BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
-                BASEPOSTITIONS[AIName][locType] = {baseposition, radius}
-                break
-            end
-        end
     end
     if not baseposition then
         return false
@@ -395,16 +375,6 @@ function StartLocationNeedsEngineerRNG( aiBrain, locationType, locationRadius, t
     return false
 end
 
-function LargeExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
-    local pos, name = RUtils.AIFindLargeExpansionMarkerNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
-    if pos then
-        --RNGLOG('LargeExpansionNeedsEngineer is True')
-        return true
-    end
-    --RNGLOG('LargeExpansionNeedsEngineer is False')
-    return false
-end
-
 function NavalAreaNeedsEngineerRNG(aiBrain, locationType, validateLabel, locationRadius, threatMin, threatMax, threatRings, threatType)
     local pos, name = RUtils.AIFindNavalAreaNeedsEngineerRNG(aiBrain, locationType, validateLabel, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
@@ -422,14 +392,6 @@ function UnmarkedExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadiu
         return true
     end
     --RNGLOG('UnmarkedExpansionNeedsEngineer is False')
-    return false
-end
-
-function ExpansionAreaNeedsEngineerRNG(aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
-    local pos, name = RUtils.AIFindExpansionAreaNeedsEngineerRNG(aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
-    if pos then
-        return true
-    end
     return false
 end
 
@@ -765,16 +727,6 @@ function HaveUnitRatioAtLocationRNG(aiBrain, locType, ratio, categoryNeed, compa
         radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
         BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
         BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
-    elseif aiBrain:PBMHasPlatoonList() then
-        for k,v in aiBrain.PBM.Locations do
-            if v.LocationType == locType then
-                baseposition = v.Location
-                radius = v.Radius
-                BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
-                BASEPOSTITIONS[AIName][locType] = {baseposition, radius}
-                break
-            end
-        end
     end
     if not baseposition then
         return false
@@ -880,16 +832,6 @@ function HaveUnitRatioVersusEnemyRNG(aiBrain, ratio, locType, radius, categoryOw
         radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
         BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
         BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
-    elseif aiBrain:PBMHasPlatoonList() then
-        for k,v in aiBrain.PBM.Locations do
-            if v.LocationType == locType then
-                baseposition = v.Location
-                radius = v.Radius
-                BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
-                BASEPOSTITIONS[AIName][locType] = {baseposition, radius}
-                break
-            end
-        end
     end
     if not baseposition then
         return false

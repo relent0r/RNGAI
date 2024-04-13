@@ -412,7 +412,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         if targetRange < self.MaxPlatoonWeaponRange then
                             attackStructure = true
                             for _, v in platUnits do
-                                --self:LogDebug('Role is '..repr(v.Role))
                                 if v.Role == 'Artillery' or v.Role == 'Silo' and not v:IsUnitState("Attacking") then
                                     IssueClearCommands({v})
                                     IssueAttack({v},target)
@@ -420,7 +419,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, true)
+                    local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, true)
                     if attackStructure then
                         self:LogDebug(string.format('Non Artillery retreating'))
                         for _, v in platUnits do
@@ -481,7 +480,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local brain = self:GetBrain()
             local builderData = self.BuilderData
             if not builderData.Position then
-                --LOG('BuilderData '..repr(self.BuilderData))
                 WARN('No position passed to ZoneControl')
                 return false
             end
@@ -538,7 +536,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.BuilderData.Position, 1, 150,80)
                 self.path = path
                 if not path then
-                    LOG('No path due to '..repr(reason))
+                    LOG('No path due to '..tostring(reason))
                 end
             end
             if not self.path then
@@ -582,13 +580,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     self.navigating=false
                     self.path=nil
                     coroutine.yield(20)
-                    self:LogDebug(string.format('Navigating path failure or path in water, decidewhattodo'))
-                    if (self.dest and not NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.dest)) then
-                        self:LogDebug(string.format('CanPathTo failure'))
-                        self:LogDebug(string.format(self.MovementLayer))
-                        self:LogDebug(string.format(repr(self.Pos)))
-                        self:LogDebug(string.format(repr(self.dest)))
-                    end
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
@@ -667,11 +658,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 IssueClearCommands(platoonUnits)
                 if self.path then
                     nodenum=RNGGETN(self.path)
-                    --LOG('nodenum while zone control is pathing is '..repr(nodenum))
-                    self:LogDebug(string.format('ZoneControl nodenum while pathing >= 3 will spreadmove'..nodenum))
                     if nodenum>=3 then
-                        self:LogDebug(string.format('ZoneControl spreadmove at node '..nodenum))
-                        --RNGLOG('self.path[3] '..repr(self.path[3]))
                         self.dest={self.path[3][1],self.path[3][2],self.path[3][3]}
                         IssueMove(attack, self.dest)
                         StateUtils.SpreadMove(supportsquad,StateUtils.Midpoint(self.path[1],self.path[2],0.2))
@@ -679,11 +666,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         StateUtils.SpreadMove(aa,StateUtils.Midpoint(self.path[1],self.path[2],0.1))
                     else
                         self:LogDebug(string.format('ZoneControl final movement'..nodenum))
-                        if self.BuilderData.Position then
-                            --LOG('Distance to end pos is '..VDist3(self.Pos, self.BuilderData.Position))
-                        else
-                            --LOG('No builder data position at end of path')
-                        end
                         self.dest=self.BuilderData.Position
                         self:MoveToLocation(self.dest,false)
                     end

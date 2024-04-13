@@ -117,7 +117,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                 import("/lua/scenariotriggers.lua").CreateUnitBuiltTrigger(factoryWorkFinish, self.ExperimentalUnit.ExternalFactory, categories.ALLUNITS)
                 self.ExperimentalUnit.ExternalFactory.EngineerManager = {
                     Task = nil,
-                    Engineers = {}
+                   self.engineers = {}
                 }
             end
             
@@ -656,7 +656,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
             local closestAPlatPos
             local AlliedPlatoons = aiBrain:GetPlatoonsList()
             for _,aPlat in AlliedPlatoons do
-                if not table.equal(aPlat, self) then
+                if not aPlat.Dead and not table.equal(aPlat, self) then
                     local aPlatSurfaceThreat = aPlat:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                     if aPlatSurfaceThreat > self.EnemyThreatTable.TotalSuroundingThreat / 2 then
                         local aPlatPos = aPlat:GetPlatoonPosition()

@@ -34,7 +34,7 @@ BaseBuilderTemplate {
                 'RNGAI Land Response Formers',
 
                 -- Land Factory Builders --
-                --'RNGAI Factory Builder Land',
+                'RNGAI Factory Builder Land Expansion',
                
                 -- Defence Builders --
                 'RNGAI Base Defenses Expansion',
@@ -45,17 +45,17 @@ BaseBuilderTemplate {
     NonCheatBuilders = { },
     BaseSettings = {
         EngineerCount = {
-            Tech1 = 6,
-            Tech2 = 4,
-            Tech3 = 2,
+            Tech1 = 12,
+            Tech2 = 8,
+            Tech3 = 4,
             SCU = 0,
         },
         
         FactoryCount = {
-            Land = 3,
-            Air = 0,
+            Land = 8,
+            Air = 1,
             Sea = 0,
-            Gate = 0,
+            Gate = 1,
         },
         
         MassToFactoryValues = {
@@ -88,11 +88,8 @@ BaseBuilderTemplate {
         if aiBrain.BuilderManagers['MAIN'].GraphArea then
             local NavUtils = import('/lua/sim/NavUtils.lua')
             local mainBaseLabel = aiBrain.BuilderManagers['MAIN'].GraphArea
-            LOG('Non Island Main base has GraphArea of '..mainBaseLabel)
             local label = NavUtils.GetLabel('Land', location)
-            LOG('Non Island Expansion GraphArea is '..label)
             if mainBaseLabel == label then
-                LOG('Return 100 priority')
                 return 100
             end
         end

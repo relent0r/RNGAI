@@ -90,9 +90,8 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                 threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, false, true, false)
             end
             if threat.allyTotal and threat.enemyTotal and threat.allyTotal*1.1 < threat.enemyTotal then
-                self:LogDebug(string.format('Current status at position is '..repr(currentStatus)))
+                self:LogDebug(string.format('Current status at position is '..tostring(currentStatus)))
             end
-            --LOG('Current threat table '..repr(threat))
             if threat.allySub and threat.enemySub and threat.enemyrange > 0 
             and (threat.allySub*1.1 < threat.enemySub and threat.enemyrange >= self.MaxPlatoonWeaponRange or threat.allySub*1.3 < threat.enemySub) and currentStatus ~= 'Allied'
             or threat.allySub and threat.enemySub and threat.allySurface and threat.enemySurface and threat.enemyrange > 0 and (threat.allySurface*1.1 < threat.enemySurface 
@@ -197,7 +196,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                     else
-                        self:LogDebug(string.format('Have attack position but cant path to it, position is '..repr(closestTargetPos)))
+                        self:LogDebug(string.format('Have attack position but cant path to it, position is '..tostring(closestTargetPos)))
                     end
                 else
                     self:LogDebug(string.format('No targetCandidate table'))

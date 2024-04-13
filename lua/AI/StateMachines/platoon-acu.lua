@@ -130,7 +130,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 local alreadyHaveExpansion = false
                 for k, manager in brain.BuilderManagers do
                     if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and not table.empty(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
-                        self:LogDebug(string.format('We already have an expansion with a factory '..repr(k)))
+                        self:LogDebug(string.format('We already have an expansion with a factory '..tostring(k)))
                         alreadyHaveExpansion = true
                         break
                     end
@@ -196,7 +196,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         --LOG('Move to closest base for enhancement')
                         --LOG('Current distance is '..VDist3Sq(self.BuilderData.Position, cdr.Position))
                         --LOG('Should be less than 2209')
-                        self:LogDebug(string.format('We are not in range for enhancement and will navigate to the position '..repr(self.BuilderData.Position)))
+                        self:LogDebug(string.format('We are not in range for enhancement and will navigate to the position '..tostring(self.BuilderData.Position)))
                         self:ChangeState(self.Navigating)
                         return
                     end
@@ -250,14 +250,12 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
 
                             if stageExpansion then
-                                LOG('ExpansionDump from query '..repr(stageExpansion))
                                 self.BuilderData = {
                                     Expansion = true,
                                     Position = stageExpansion.Expansion.Position,
                                     ExpansionData = stageExpansion.Key,
                                     CutOff = 225
                                 }
-                                LOG('Allocation CDR to zone for expansion')
                                 brain.Zones.Land.zones[stageExpansion.Key].engineerallocated = cdr
                                 brain.Zones.Land.zones[stageExpansion.Key].lastexpansionattempt = GetGameTimeSeconds()
                                 self:LogDebug(string.format('We have found a position to expand to, navigating'))
@@ -332,7 +330,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local targetSearchRange = cdr.MaxBaseRange
             if self.BuilderData.DefendExpansion then
                 if GetGameTimeSeconds() - self.BuilderData.Time < 30 then
-                    --LOG('Defending Expansion '..repr(self.BuilderData.Position))
                     targetSearchPosition = self.BuilderData.Position
                     targetSearchRange = 120
                 else
@@ -570,21 +567,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 local waypoint, length
                 
                 if builderData.SupportPlatoon and not IsDestroyed(builderData.SupportPlatoon) then
-                    --LOG('destination move to platoon '..repr(destination))
                     destination = builderData.SupportPlatoon:GetPlatoonPosition()
-                    --LOG('Current distance is '..VDist3Sq(origin, destination))
-                    --LOG('Cutoff is '..navigateDistanceCutOff)
                     waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 50)
                 else
-                    --LOG('destination move to '..repr(destination))
-                    --LOG('Current distance is '..VDist3Sq(origin, destination))
-                    --LOG('Cutoff is '..navigateDistanceCutOff)
                     waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 50)
                 end
                 if builderData.Retreat then
                     cdr:SetAutoOvercharge(true)
                 end
-                self:LogDebug(string.format('Length is '..repr(length)))
+                self:LogDebug(string.format('Length is '..tostring(length)))
 
                 -- something odd happened: no direction found
                 if not waypoint then
@@ -592,7 +583,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     if cdr.EnemyNavalPresent then
                         cdr.EnemyNavalPresent = nil
                     end
-                    --LOG('No waypoint break out of Navigating')
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
@@ -871,14 +861,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         local location = brain:FindPlaceToBuild('T2EnergyProduction', 'uab1201', baseTmplFile[templateKey][factionIndex], relative, eng, nil, engPos[1], engPos[3])
                         local reference
                         if location then
-                            --LOG('Findplacetobuild location '..repr(location))
                             local relativeLoc = {location[1], 0, location[2]}
-                            --LOG('Current CDR position '..repr(cdr.Position))
                             reference = {relativeLoc[1] + cdr.Position[1], relativeLoc[2] + cdr.Position[2], relativeLoc[3] + cdr.Position[3]}
-                            --LOG('Findplacetobuild relative location '..repr(relativeLoc))
                         else
-                            --LOG('Can find place to build t2 energy in buildstructure')
-                            --LOG('Wipe BuilderData in in build')
                             self.BuilderData = {}
                             self:ChangeState(self.DecideWhatToDo)
                             return
@@ -1060,7 +1045,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         elseif enemyACUHealth < 7000 and cdr.Health - enemyACUHealth > 3250 and not RUtils.PositionInWater(targetPos) and defenseThreat < 45 then
                             self:LogDebug(string.format('Enemy ACU could be killed or drawn, should we try?, enable snipe mode'))
                             if target and not IsDestroyed(target) then
-                                LOG('ACU Enabling suicide mode')
                                 ACUFunc.SetAcuSnipeMode(cdr, true)
                                 cdr:SetAutoOvercharge(true)
                                 cdr.SnipeMode = true
@@ -1244,10 +1228,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             end
             if cdr.Health > 5000 and distanceToHome > 6400 and not baseRetreat then
                 if cdr.GunUpgradeRequired and cdr.CurrentEnemyThreat < 15 and not cdr.EnemyCDRPresent then
-                    --LOG('Trying to retreat to extractor')
-                    --LOG('Current status '..repr(brain.GridPresence:GetInferredStatus(cdr.Position)))
                     if brain.GridPresence:GetInferredStatus(cdr.Position) ~= 'Hostile' then
-                        --LOG('GunUpgrade checking for extractor pos')
                         local extractors = brain:GetListOfUnits(categories.MASSEXTRACTION, true)
                         local closestDistance
                         local closestExtractor
@@ -1612,7 +1593,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             cdr.EngineerBuildQueue={}
                             self.BuilderData.ExpansionBuilt = true
                             object.engineerallocated = false
-                            LOG('Expansion build, deallocating cdr')
                         elseif brain.BuilderManagers['ZONE_'..object.id].FactoryManager:GetNumFactories() == 0 then
                             local abortBuild = false
                             brain.BuilderManagers['ZONE_'..object.id].EngineerManager:AddUnitRNG(cdr, true)
@@ -1681,7 +1661,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                             cdr.EngineerBuildQueue={}
                             self.BuilderData.ExpansionBuilt = true
-                            LOG('Expansion build, deallocating cdr')
                             object.engineerallocated = false
                         --RNGLOG('There is a manager here but no factories')
                         end
@@ -1751,7 +1730,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         local wantedEnhancementBP = cdr.Blueprint.Enhancements[enhancement]
                         local enhancementName = enhancement
                         if not wantedEnhancementBP then
-                            SPEW('* RNGAI: no enhancement found for  = '..repr(enhancement))
+                            SPEW('* RNGAI: no enhancement found for  = '..tostring(enhancement))
                         elseif cdr:HasEnhancement(enhancement) then
                             NextEnhancement = false
                         elseif ACUFunc.EnhancementEcoCheckRNG(brain, cdr, wantedEnhancementBP, enhancementName) then
@@ -1807,7 +1786,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         local enhancementPaused = false
                         local lastTick
                         local lastProgress
-                        LOG('Enhancement is '..NextEnhancement)
                         while not cdr.Dead and not cdr:HasEnhancement(NextEnhancement) do
                             -- note eta will be in ticks not seconds
                             local eta = -1
@@ -1862,7 +1840,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     cdr.GunUpgradePresent = true
                                 end
                                 if not ACUFunc.CDRHpUpgradeCheck(brain, cdr) then
-                                    LOG('HighThreatUpgrade is now present')
                                     cdr.HighThreatUpgradeRequired = false
                                     cdr.HighThreatUpgradePresent = true
                                 end

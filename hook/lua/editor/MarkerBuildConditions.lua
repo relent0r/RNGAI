@@ -89,11 +89,19 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
             return false
         end
         local position = engineerManager.Location
+        local amphibGraphArea = aiBrain.BuilderManagers[locationType].AmphibGraphArea
         local adaptiveResourceMarkers = GetMarkersRNG()
+        local noTransportsAvailable
+        if locationType ~= 'FLOATING' then
+            noTransportsAvailable = aiBrain.TransportPool and table.getn(aiBrain.TransportPool) < 1
+        end
         MassMarkerRNG = {}
         for _, v in adaptiveResourceMarkers do
             if v.type == 'Mass' then
-                if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
+                if noTransportsAvailable and amphibGraphArea ~= v.AmphibGraphArea then
+                    continue 
+                end
+                    if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
                     table.insert(MassMarkerRNG, {Position = v.position, Distance = VDist3( v.position, position ) })
                 end
             end

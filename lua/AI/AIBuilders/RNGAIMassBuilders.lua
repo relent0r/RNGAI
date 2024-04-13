@@ -104,6 +104,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {

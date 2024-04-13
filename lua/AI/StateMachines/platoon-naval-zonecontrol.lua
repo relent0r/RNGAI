@@ -148,7 +148,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                             self:ChangeState(self.Navigating)
                             return
                         else
-                            self:LogDebug(string.format('No path or no entries in path returned'..repr(self.Pos)))
+                            self:LogDebug(string.format('No path or no entries in path returned'..tostring(self.Pos)))
                         end
                     else
                         if StateUtils.SimpleNavalTarget(self,aiBrain) then
@@ -158,9 +158,9 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 else
-                    self:LogDebug(string.format('Have attack position but cant path to it, movement layer is '..repr(self.MovementLayer)))
-                    self:LogDebug(string.format('Attack Position is '..repr(attackPosition)))
-                    self:LogDebug(string.format('Current platoon position is '..repr(self.Pos)))
+                    self:LogDebug(string.format('Have attack position but cant path to it, movement layer is '..tostring(self.MovementLayer)))
+                    self:LogDebug(string.format('Attack Position is '..tostring(attackPosition)))
+                    self:LogDebug(string.format('Current platoon position is '..tostring(self.Pos)))
                 end
             end
             if not target then
@@ -209,7 +209,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                                 self:ChangeState(self.Navigating)
                                 return
                             else
-                                self:LogDebug(string.format('No path or no entries in path returned'..repr(self.Pos)))
+                                self:LogDebug(string.format('No path or no entries in path returned'..tostring(self.Pos)))
                             end
                         else
                             self:LogDebug(string.format('target is close, combat loop'))
@@ -218,7 +218,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                     else
-                        self:LogDebug(string.format('Have attack position but cant path to it, position is '..repr(closestTargetPos)))
+                        self:LogDebug(string.format('Have attack position but cant path to it, position is '..tostring(closestTargetPos)))
                     end
                 else
                     self:LogDebug(string.format('No targetCandidate table'))

@@ -32,7 +32,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         elseif self.UseCenterPoint then
             -- use BuilderManager location
             rally = AIUtils.AIGetClosestMarkerLocationRNG(self, rallyType, position[1], position[3])
-            local expPoint = AIUtils.AIGetClosestMarkerLocationRNG(self, 'Expansion Area', position[1], position[3])
+            local expPoint = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(self.Brain):GetClosestZone(self.Brain, false, {position[1], 0, position[3]}, false, 2)
 
             if expPoint and rally then
                 local rallyPointDistance = VDist2(position[1], position[3], rally[1], rally[3])
@@ -105,9 +105,6 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.DelayBuildOrder(self,factory,bType,time)
         end
-        if factory.Blueprint.CategoriesHash.NAVAL then
-            LOG('Naval Factory is being delayed')
-        end
         local guards = factory:GetGuards()
         for k,v in guards do
             if not v.Dead and v.AssistPlatoon then
@@ -127,14 +124,6 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         factory.DelayThread = false
         if factory.Offline then
             while factory.Offline and factory and (not factory.Dead) do
-                if factory.Blueprint.CategoriesHash.NAVAL then
-                    LOG('Naval Factory is offline')
-                    local deficit = self.Brain.cmanager.categoryspend.fact['Naval'] - (self.Brain.cmanager.income.r.m * self.Brain.ProductionRatios['Naval'])
-                    LOG('Current naval deficit '..deficit)
-                    LOG('CUrrent income is '..self.Brain.cmanager.income.r.m)
-                    LOG('Naval Production ration is '..self.Brain.ProductionRatios['Naval'])
-                    LOG('Current spend is '..self.Brain.cmanager.categoryspend.fact['Naval'])
-                end
                 --RNGLOG('Factory is offline, wait inside delaybuildorder')
                 coroutine.yield(25)
             end
@@ -162,6 +151,16 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                 self:SetupNewFactory(unit, 'Gate')
             end
             self.LocationActive = true
+            if self.LocationType then
+                local zone = self.Brain.BuilderManagers[self.LocationType].Zone
+                LOG('Factory manager is in zone '..tostring(zone))
+                if zone then
+                    if self.Brain.Zones.Land.zones[zone].engineerallocated then
+                        LOG('Factory is built, setting engineerallocated in zone to nil '..tostring(self.Brain.Zones.Land.zones[zone].engineerallocated.UnitId))
+                        self.Brain.Zones.Land.zones[zone].engineerallocated = nil
+                    end
+                end
+            end
         end
     end,
 
@@ -747,7 +746,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                 -- if we don't have a template use a dummy.
                 if not Squad then
                     -- this will only happen if we have a empty template. Warn the programmer!
-                    SPEW('*AI WARNING: No faction squad found for '..templateName..'. using Dummy! '..repr(templateData.FactionSquads) )
+                    SPEW('*AI WARNING: No faction squad found for '..templateName..'. using Dummy! '..tostring(templateData.FactionSquads) )
                     Squad = { "NoOriginalUnit", 1, 1, "attack", "none" }
                 end
                 local replacement = self:GetCustomReplacement(Squad, templateName, faction)

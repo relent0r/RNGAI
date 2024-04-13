@@ -1160,20 +1160,18 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI Factory Builder Land Large Expansion',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
+    BuilderGroupName = 'RNGAI Factory Builder Land Expansion',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNG Factory Builder Land T1 MainBase Large Expansion',
+        BuilderName = 'RNG Factory Builder Land T1 Expansion Primary',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
-
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.60}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.1 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND }},
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -1189,47 +1187,17 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNG Factory Builder Land T1 Large Expansion',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 800,
-        DelayEqualBuildPlattons = {'Factories', 3},
-        BuilderConditions = {
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.80}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
-            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
-            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
-         },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            Construction = {
-                LocationType = 'LocationType',
-                BuildClose = false,
-                BuildStructures = {
-                    'T1LandFactory',
-                },
-            }
-        }
-    },
-}
-
-BuilderGroup {
-    BuilderGroupName = 'RNGAI Factory Builder Land Expansion',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
-    BuildersType = 'EngineerBuilder',
-    Builder {
-        BuilderName = 'RNG Factory Builder Land T1 Expansion',
+        BuilderName = 'RNG Factory Builder Land T1 Expansion Active',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         PriorityFunction = ActiveExpansion,
         Priority = 0,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
-            --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 105, 1050 } },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND'} },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH2 }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND }},
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -1240,6 +1208,57 @@ BuilderGroup {
                 BuildClose = true,
                 BuildStructures = {
                     'T1LandFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Land T2 Expansion Active',
+        PlatoonTemplate = 'EngineerBuilderT23RNG',
+        PriorityFunction = ActiveExpansion,
+        Priority = 0,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND'} },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH3 }},
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            Construction = {
+                LocationType = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    'T2SupportLandFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Land T3 Expansion Active',
+        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PriorityFunction = ActiveExpansion,
+        Priority = 0,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND'} },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            Construction = {
+                LocationType = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    'T3SupportLandFactory',
                 },
             }
         }
@@ -1251,7 +1270,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
-            { TBC, 'ThreatPresentInGraphRNG', {'LocationType', 'StructuresNotMex'} },
+            { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'StructuresNotMex'} },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },

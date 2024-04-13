@@ -114,7 +114,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 end
             end
             local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, true)
-            --RNGLOG('Simple Retreat Threat Stats '..repr(threat))
+            self:LogDebug(string.format('DecideWhatToDo Danger Check, EnemySurface is '..threat.enemySurface..' ally surface is '..threat.allySurface))
             if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
                 self:LogDebug(string.format('DecideWhatToDo we have no antiair threat and there are air units around'))
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
@@ -609,7 +609,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                 ---[[
                                 if self.dest then
                                     IssueClearCommands({v})
-                                    if v.Sniper then
+                                    if v.Role=='Sniper' then
                                         IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
                                     else
                                         IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
@@ -618,7 +618,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                     snum=snum+1
                                 else
                                     IssueClearCommands({v})
-                                    if v.Sniper or v.Support then
+                                    if v.Role=='Sniper' or v.Role=='Support' then
                                         IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
                                     else
                                         IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
@@ -728,14 +728,14 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, true)
+                    local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, true)
                     if attackStructure then
                         for _, v in platUnits do
                             if v.Role ~= 'Artillery' and v.Role ~= 'Silo' then
                                 if zoneRetreat then
                                     IssueMove({v}, aiBrain.Zones.Land.zones[zoneRetreat].pos)
                                 else
-                                    IssueMove({v}, aiBrain.Zones.Land.zones[zoneRetreat].pos)
+                                    IssueMove({v}, self.Home)
                                 end
                             end
                         end

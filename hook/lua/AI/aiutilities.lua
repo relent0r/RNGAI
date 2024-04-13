@@ -14,37 +14,6 @@ local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local RNGINSERT = table.insert
 local RNGGETN = table.getn
 
-function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
-    local markerList = {}
-    --RNGLOG('* AI-RNG: Marker Type for AIGetMarkerLocationsNotFriendly is '..markerType)
-    if markerType == 'Start Location' then
-        local tempMarkers = AIGetMarkerLocationsRNG(aiBrain, 'Spawn')
-        for k, v in tempMarkers do
-            local ecoStructures = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSPRODUCTION), v.Position, 30, 'Ally')
-            local ecoThreat = 0
-            for _, v in ecoStructures do
-                local bp = v.Blueprint
-                local ecoStructThreat = bp.Defense.EconomyThreatLevel
-                --RNGLOG('* AI-RNG: Eco Structure'..ecoStructThreat)
-                ecoThreat = ecoThreat + ecoStructThreat
-            end
-            if ecoThreat < 10 then
-                table.insert(markerList, {Position = v.Position, Name = v.Name})
-            end
-        end
-    else
-        local markers = Scenario.MasterChain._MASTERCHAIN_.Markers
-        if markers then
-            for k, v in markers do
-                if v.type == markerType then
-                    table.insert(markerList, {Position = v.Position, Name = k})
-                end
-            end
-        end
-    end
-    return markerList
-end
-
 function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGeneratePath, transportWait)
     local ALLBPS = __blueprints
     if not destination then
@@ -102,9 +71,6 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
         -- Skip the last move... we want to return and do a build
         unit.WaitingForTransport = true
         bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, unit.PlatoonHandle, destination, transportWait, true)
-        if unit.PlatoonHandle.BuilderName == 'RNGAI Engineer Reclaim T1 Excess Expansion' then
-            LOG('used transports response '..repr(bUsedTransports)..' for unit '..repr(unit.EntityId))
-        end
         unit.WaitingForTransport = false
 
         if bUsedTransports then

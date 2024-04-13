@@ -121,7 +121,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             if self.ExperimentalUnit.ExternalFactory then
                 self.ExperimentalUnit.ExternalFactory.EngineerManager = {
                     Task = nil,
-                    Engineers = {}
+                   self.engineers = {}
                 }
             end
             if self.ExperimentalUnit.Blueprint.CategoriesHash.BOMBER then
@@ -180,11 +180,11 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     end
                     --LOG('Shield is in caution our threat table is '..repr(threatTable))
                 end
-                self:LogDebug(string.format('Total Surrounding threat is '..repr(threatTable.TotalSuroundingThreat)))
-                self:LogDebug(string.format('Air Surrounding threat is '..repr(threatTable.AirThreat.TotalThreat)))
-                self:LogDebug(string.format('AirSurface Surrounding threat is '..repr(threatTable.AirSurfaceThreat.TotalThreat)))
-                self:LogDebug(string.format('Defense Surrounding threat is '..repr(threatTable.DefenseThreat.TotalThreat)))
-                self:LogDebug(string.format('Current experimental health percent is '..repr(experimentalHealthPercent)))
+                self:LogDebug(string.format('Total Surrounding threat is '..tostring(threatTable.TotalSuroundingThreat)))
+                self:LogDebug(string.format('Air Surrounding threat is '..tostring(threatTable.AirThreat.TotalThreat)))
+                self:LogDebug(string.format('AirSurface Surrounding threat is '..tostring(threatTable.AirSurfaceThreat.TotalThreat)))
+                self:LogDebug(string.format('Defense Surrounding threat is '..tostring(threatTable.DefenseThreat.TotalThreat)))
+                self:LogDebug(string.format('Current experimental health percent is '..tostring(experimentalHealthPercent)))
                 if experimentalHealthPercent < 0.20 and not self.SuicideMode then
                     self.BuilderData = {
                         Retreat = true,
@@ -701,7 +701,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             local closestAPlatPos
             local AlliedPlatoons = aiBrain:GetPlatoonsList()
             for _,aPlat in AlliedPlatoons do
-                if not table.equal(aPlat, self) then
+                if not aPlat.Dead and not table.equal(aPlat, self) then
                     local aPlatAirThreat = aPlat:CalculatePlatoonThreat('Air', categories.ALLUNITS)
                     if aPlatAirThreat > self.EnemyThreatTable.AirThreat.TotalThreat / 2 then
                         local aPlatPos = aPlat:GetPlatoonPosition()

@@ -120,7 +120,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'EngineerBuilderRNGMex',
-    Plan = 'MexBuildAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.ENGINEER * categories.TECH1 - categories.COMMAND , 1, 1, 'support', 'None' }
     },

@@ -808,24 +808,6 @@ function EngineerTryRepair(aiBrain, eng, whatToBuild, pos)
     return false
 end
 
-function AIFindLargeExpansionMarkerNeedsEngineerRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
-    local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
-    if not pos then
-        return false
-    end
-
-    local validPos = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Large Expansion Area', pos, radius, tMin, tMax, tRings, tType)
-
-    local retPos, retName
-    if eng then
-        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, validPos)
-    else
-        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, validPos)
-    end
-
-    return retPos, retName
-end
-
 function AIFindStartLocationNeedsEngineerRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
     local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
     if not pos then
@@ -849,23 +831,6 @@ function AIFindStartLocationNeedsEngineerRNG(aiBrain, locationType, radius, tMin
         retPos, retName = AIUtils.AIFindMarkerNeedsEngineerThreatRNG(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, validPos)
     else
         retPos, retName = AIUtils.AIFindMarkerNeedsEngineerThreatRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, validPos)
-    end
-
-    return retPos, retName
-end
-
-function AIFindExpansionAreaNeedsEngineerRNG(aiBrain, locationType, radius, tMin, tMax, tRings, tType, eng)
-    local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
-    if not pos then
-        return false
-    end
-    local positions = AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, 'Expansion Area', pos, radius, tMin, tMax, tRings, tType)
-
-    local retPos, retName
-    if eng then
-        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, eng:GetPosition(), radius, tMin, tMax, tRings, tType, positions)
-    else
-        retPos, retName = AIUtils.AIFindMarkerNeedsEngineerRNG(aiBrain, pos, radius, tMin, tMax, tRings, tType, positions)
     end
 
     return retPos, retName
@@ -3573,6 +3538,7 @@ end
 AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius)
     local im = IntelManagerRNG.GetIntelManager(aiBrain)
     local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
+    local zoneSet = aiBrain.Zones.Land.zones
     local retPos, retName, refZone
     radius = radius * radius
 
@@ -3585,8 +3551,11 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius)
     if not table.empty(im.ZoneExpansions.Pathable) then
         for _, v in im.ZoneExpansions.Pathable do
             local skipPos = false
-            if v and VDist3Sq(pos, v.Position) < radius then
-                retPos = aiBrain.Zones.Land.zones[v.ZoneID].pos
+            if v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive and (not zoneSet[v.ZoneID].engineerallocated or zoneSet[v.ZoneID].engineerallocated.Dead) then
+                if zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive then
+                    LOG('Selecting base that already has an active factory manager')
+                end
+                retPos = zoneSet[v.ZoneID].pos
                 retName = 'ZONE_'..v.ZoneID
                 refZone = v.ZoneID
                 break
@@ -3661,8 +3630,11 @@ function GetTemplateReplacementRNG(aiBrain, building, faction, buildingTmpl)
     return retTemplate
 end
 
-function AIBuildBaseTemplateFromLocationRNG(baseTemplate, location)
+function AIBuildBaseTemplateFromLocationRNG(baseTemplate, location, zoneExpansionCheck)
     local baseT = {}
+    if zoneExpansionCheck then
+        LOG('Build Function for zone expansion, location '..repr(location))
+    end
     if location and baseTemplate then
         for templateNum, template in baseTemplate do
             baseT[templateNum] = {}
@@ -3709,7 +3681,7 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
         ----LOG('searchRadius is '..searchRadius)
         local unitSize = aiBrain:GetUnitBlueprint(whatToBuild).Physics
         local testUnits  = aiBrain:GetUnitsAroundPoint(category, engPos, searchRadius, 'Ally')
-        LOG('Number of test units found '..table.getn(testUnits))
+        --LOG('Number of test units found '..table.getn(testUnits))
         local index = aiBrain:GetArmyIndex()
         local closeUnits = {}
         for _, v in testUnits do

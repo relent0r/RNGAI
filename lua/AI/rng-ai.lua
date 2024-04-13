@@ -347,6 +347,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerBuildPowerDesired = 5
         self.EngineerAssistManagerBuildPowerRequired = 0
         self.EngineerAssistManagerBuildPower = 0
+        self.EngineerAssistManagerBuildPowerTech1 = 0
+        self.EngineerAssistManagerBuildPowerTech2 = 0
+        self.EngineerAssistManagerBuildPowerTech3 = 0
         self.EngineerAssistManagerFocusCategory = false
         self.EngineerAssistManagerFocusAirUpgrade = false
         self.EngineerAssistManagerFocusHighValue = false
@@ -1700,18 +1703,21 @@ AIBrain = Class(RNGAIBrainClass) {
 
     GetGraphArea = function(self, position, baseName, baseLayer)
         -- This will set the graph area of the factory manager so we don't need to look it up every time
-        -- Needs to wait a while for the RNGArea properties to be populated
+        -- Needs to wait a while for the GraphArea properties to be populated
         --LOG('Get Graph Area for baseLayer '..repr(baseLayer))
         --LOG('baseName is '..repr(baseName))
         local graphAreaSet = false
         while not graphAreaSet do
             local graphArea
+            local amphibGraphArea
             if baseLayer then
                 if baseLayer == 'Water' then
                     graphArea = NavUtils.GetLabel('Water', position)
+                    amphibGraphArea = NavUtils.GetLabel('Amphibious', position)
                     --LOG('GetLabel returned the following graph area for position '..repr(position)..' on water '..repr(graphArea))
                 else
                     graphArea = NavUtils.GetLabel('Land', position)
+                    amphibGraphArea = NavUtils.GetLabel('Amphibious', position)
                     --LOG('GetLabel returned the following graph area for position '..repr(position)..' on land '..repr(graphArea))
                 end
                 
@@ -1726,6 +1732,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 --LOG('Graph Area for buildermanager is '..graphArea)
                 graphAreaSet = true
                 self.BuilderManagers[baseName].GraphArea = graphArea
+                self.BuilderManagers[baseName].AmphibGraphArea = amphibGraphArea
             end
             if not graphAreaSet then
                 --LOG('Graph Area not set yet')
@@ -1751,7 +1758,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     GetBaseZone = function(self, position, baseName, baseLayer)
         -- This will set the zone of the factory manager so we don't need to look it up every time
-        -- Needs to wait a while for the RNGArea properties to be populated
+        -- Needs to wait a while for the GraphArea properties to be populated
         local zone
         local zoneSet = false
         while not zoneSet do
@@ -1766,11 +1773,14 @@ AIBrain = Class(RNGAIBrainClass) {
                 WARN('Missing zone for builder manager land node or no path markers')
             end
             if zone then
-                --RNGLOG('Zone set for builder manager')
                 self.BuilderManagers[baseName].Zone = zone
+                RNGLOG('Zone set for builder manager '..zone)
                 if baseLayer == 'Water' then
                     self.Zones.Naval.zones[zone].BuilderManager = self.BuilderManagers[baseName]
                 else
+                    if not self.Zones.Land.zones[zone].BuilderManager then
+                        LOG('BuilderManager not present, what is this zone '..repr(self.Zones.Land.zones[zone]))
+                    end
                     self.Zones.Land.zones[zone].BuilderManager = self.BuilderManagers[baseName]
                 end
                 LOG('Allocation BuilderManager to zone, basename is '..baseName)
@@ -1795,21 +1805,21 @@ AIBrain = Class(RNGAIBrainClass) {
         
         for _, v in massMarkers do
             if v.type == 'Mass' then
-                if v.RNGArea and not self.GraphZones.FirstRun and not self.GraphZones.HasRun then
+                if v.GraphArea and not self.GraphZones.FirstRun and not self.GraphZones.HasRun then
                     graphCheck = true
-                    if not self.GraphZones[v.RNGArea] then
-                        self.GraphZones[v.RNGArea] = {}
-                        self.GraphZones[v.RNGArea].MassMarkers = {}
-                        self.GraphZones[v.RNGArea].FriendlyLandAntiAirThreat = 0
-                        self.GraphZones[v.RNGArea].FriendlySurfaceDirectFireThreat = 0
-                        self.GraphZones[v.RNGArea].FriendlySurfaceInDirectFireThreat = 0
-                        self.GraphZones[v.RNGArea].FriendlyAntiNavalThreat = 0
-                        if self.GraphZones[v.RNGArea].MassMarkersInZone == nil then
-                            self.GraphZones[v.RNGArea].MassMarkersInZone = 0
+                    if not self.GraphZones[v.GraphArea] then
+                        self.GraphZones[v.GraphArea] = {}
+                        self.GraphZones[v.GraphArea].MassMarkers = {}
+                        self.GraphZones[v.GraphArea].FriendlyLandAntiAirThreat = 0
+                        self.GraphZones[v.GraphArea].FriendlySurfaceDirectFireThreat = 0
+                        self.GraphZones[v.GraphArea].FriendlySurfaceInDirectFireThreat = 0
+                        self.GraphZones[v.GraphArea].FriendlyAntiNavalThreat = 0
+                        if self.GraphZones[v.GraphArea].MassMarkersInZone == nil then
+                            self.GraphZones[v.GraphArea].MassMarkersInZone = 0
                         end
                     end
-                    RNGINSERT(self.GraphZones[v.RNGArea].MassMarkers, v)
-                    self.GraphZones[v.RNGArea].MassMarkersInZone = self.GraphZones[v.RNGArea].MassMarkersInZone + 1
+                    RNGINSERT(self.GraphZones[v.GraphArea].MassMarkers, v)
+                    self.GraphZones[v.GraphArea].MassMarkersInZone = self.GraphZones[v.GraphArea].MassMarkersInZone + 1
                     local massPointDistance = VDist3Sq(v.position, self.BrainIntel.StartPos)
                     if massPointDistance < 2500 then
                         coreMassMarkers = coreMassMarkers + 1
@@ -2163,18 +2173,14 @@ AIBrain = Class(RNGAIBrainClass) {
             self.IntelData.AirLowPriScouts = 0
             
             local myArmy = ScenarioInfo.ArmySetup[self.Name]
-            local markerTypes = {'Expansion Area', 'Large Expansion Area', 'Spawn'}
-            for c, t in markerTypes do
-                    local markers = MarkerUtils.GetMarkersByType(t)
-                    for k, v in markers do
-                        local gridXID, gridZID = im:GetIntelGrid(v.Position)
-                        if im.MapIntelGrid[gridXID][gridZID].Enabled then
-                            im.MapIntelGrid[gridXID][gridZID].MustScout = true
-                            --RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridZID)
-                            --RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridZID]))
-                            --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
-                        end
-                    end
+            for c, t in self.Zones.Land.zones do
+                local gridXID, gridZID = im:GetIntelGrid(t.pos)
+                if im.MapIntelGrid[gridXID][gridZID].Enabled then
+                    im.MapIntelGrid[gridXID][gridZID].MustScout = true
+                    --RNGLOG('Intel Grid ID : X'..gridXID..' Y: '..gridZID)
+                    --RNGLOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridZID]))
+                    --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
+                end
             end
             if ScenarioInfo.Options.TeamSpawn == 'fixed' then
                 -- Spawn locations were fixed. We know exactly where our opponents are.
@@ -2340,24 +2346,6 @@ AIBrain = Class(RNGAIBrainClass) {
                             --RNGLOG('Perimeter Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridZID]))
                             --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
                         end
-                    end
-                end
-            end
-            
-            local massLocations = RUtils.AIGetMassMarkerLocations(self, true)
-        
-            for _, start in startLocations do
-                local markersStartPos = AIUtils.AIGetMarkersAroundLocationRNG(self, 'Mass', start.Position, 30)
-                for _, marker in markersStartPos do
-                    --RNGLOG('* AI-RNG: Start Mass Marker ..'..repr(marker))
-                    RNGINSERT(startPosMarkers, marker)
-                end
-            end
-            for k, massMarker in massLocations do
-                for c, startMarker in startPosMarkers do
-                    if massMarker.Position == startMarker.Position then
-                        --RNGLOG('* AI-RNG: Removing Mass Marker Position : '..repr(massMarker.Position))
-                        table.remove(massLocations, k)
                     end
                 end
             end
@@ -2646,28 +2634,30 @@ AIBrain = Class(RNGAIBrainClass) {
         local selfEnemy = self:GetCurrentEnemy()
         if selfEnemy then
             local enemyIndex = selfEnemy:GetArmyIndex()
-            local closest = 9999999
+            local closest
             local expansionName
             local mainDist = VDist2Sq(self.BuilderManagers['MAIN'].Position[1], self.BuilderManagers['MAIN'].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
             --RNGLOG('Main base Position '..repr(self.BuilderManagers['MAIN'].Position))
             --RNGLOG('Enemy base position '..repr(armyStrengthTable[enemyIndex].Position))
             for k, v in self.BuilderManagers do
                 --RNGLOG('build k is '..k)
-                if (string.find(k, 'Expansion Area')) or (string.find(k, 'ARMY_')) then
+                if v.Layer ~= 'Water' then
                     if v.FactoryManager.LocationActive and v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) > 0 then
-                        local exDistance = VDist2Sq(self.BuilderManagers[k].Position[1], self.BuilderManagers[k].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
-                        --RNGLOG('Distance to Enemy for '..k..' is '..exDistance)
-                        if (exDistance < closest) and (mainDist > exDistance) then
-                            expansionName = k
-                            closest = exDistance
+                        if NavUtils.CanPathTo(self.MovementLayer, self.BuilderManagers[k].Position, armyStrengthTable[enemyIndex].Position) then
+                            local exDistance = VDist2Sq(self.BuilderManagers[k].Position[1], self.BuilderManagers[k].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
+                            --RNGLOG('Distance to Enemy for '..k..' is '..exDistance)
+                            if not closest or (exDistance < closest) and (mainDist > exDistance) then
+                                expansionName = k
+                                closest = exDistance
+                            end
                         end
                     end
                 end
             end
-            if closest < 9999999 and expansionName then
-                --RNGLOG('Closest Base to Enemy is '..expansionName..' at a distance of '..closest)
+            if closest and expansionName then
+                RNGLOG('Closest Base to Enemy is '..expansionName..' at a distance of '..closest)
                 self.BrainIntel.ActiveExpansion = expansionName
-                --RNGLOG('Active Expansion is '..self.BrainIntel.ActiveExpansion)
+                RNGLOG('Active Expansion is '..self.BrainIntel.ActiveExpansion)
             end
             local waterNodePos, waterNodeName, waterNodeDist = AIUtils.AIGetClosestMarkerLocationRNG(self, 'Water Path Node', armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
             if waterNodePos then
@@ -3302,7 +3292,7 @@ AIBrain = Class(RNGAIBrainClass) {
             for _, v in self.BuilderManagers do
                 managerCount = managerCount + 1
             end
-            LOG('Current builder manager count '..managerCount)
+            --LOG('Current builder manager count '..managerCount)
             coroutine.yield(self.TacticalMonitor.TacticalMonitorTime)
         end
     end,
@@ -5787,7 +5777,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 totalAntiAirThreat = totalAntiAirThreat + unit.Blueprint.Defense.AirThreatLevel
                                 armyAir.T3.asf=armyAir.T3.asf+1
                                 armyAirType.asf=armyAirType.asf+1
-                            elseif unitCat.BOMBER then
+                            elseif unitCat.BOMBER and not unitCat.ANTINAVY then
                                 armyAir.T3.bomber=armyAir.T3.bomber+1
                                 armyAirType.bomber=armyAirType.bomber+1
                             elseif unitCat.GROUNDATTACK and not unitCat.EXPERIMENTAL then
@@ -6216,6 +6206,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerBuildPowerDesired = 5
         self.EngineerAssistManagerBuildPowerRequired = 0
         self.EngineerAssistManagerBuildPower = 0
+        self.EngineerAssistManagerBuildPowerTech1 = 0
+        self.EngineerAssistManagerBuildPowerTech2 = 0
+        self.EngineerAssistManagerBuildPowerTech3 = 0
         self.EngineerAssistManagerFocusCategory = false
         self.EngineerAssistManagerFocusAirUpgrade = false
         self.EngineerAssistManagerFocusHighValue = false

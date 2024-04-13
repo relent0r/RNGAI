@@ -369,7 +369,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
             { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'Air'} },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }}, -- stop building after we decent reach tech2 capability
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }}, -- stop building after we decent reach tech2 capability
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -382,7 +382,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
             { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'Land'} },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }}, -- stop building after we decent reach tech2 capability
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }}, -- stop building after we decent reach tech2 capability
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -394,9 +394,47 @@ BuilderGroup {
         Priority = 710, -- After Second Engie Group
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
-            { TBC, 'ThreatPresentInGraphRNG', {'LocationType', 'StructuresNotMex'} },
             { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'Defensive'} },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }}, -- stop building after we decent reach tech2 capability
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }}, -- stop building after we decent reach tech2 capability
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Land T2 AntiAir Island Expansion',
+        PlatoonTemplate = 'T2LandAA',
+        Priority = 706, -- After Second Engie Group
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
+            { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'Air'} },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH3 }}, -- stop building after we decent reach tech2 capability
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Land T2 Tank Island Expansion',
+        PlatoonTemplate = 'T2LandAmphibious',
+        Priority = 706, -- After Second Engie Group
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
+            { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'Land'} },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH3 }}, -- stop building after we decent reach tech2 capability
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Land T2 MML Island Expansion',
+        PlatoonTemplate = 'T2LandArtillery',
+        Priority = 711, -- After Second Engie Group
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
+            { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'Defensive'} },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH3 }}, -- stop building after we decent reach tech2 capability
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -557,150 +595,6 @@ BuilderGroup {
     },
 }
 
-BuilderGroup {
-    BuilderGroupName = 'RNGAI Land FormBuilders Expansion Large',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
-    BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
-    Builder {
-        BuilderName = 'RNGAI Frequent Land Attack T1 Expansion Large',
-        PlatoonTemplate = 'LandCombatStateMachineRNG',
-        Priority = 600,
-        InstanceCount = 4,
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.DIRECTFIRE * categories.TECH1 - categories.ENGINEER } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) }}, -- stop building after we decent reach tech2 capability
-        },
-        BuilderData = {
-            StateMachine = 'LandAssault',
-            NeverGuardBases = true,
-            NeverGuardEngineers = false,
-            UseFormation = 'AttackFormation',
-        },         
-    },
-    Builder {
-        BuilderName = 'RNGAI Mass Raid Expansions Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name.
-        Priority = 600,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 2,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {     
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER } },
-        },
-        BuilderData = {
-            StateMachine = 'ZoneControl',
-            ZoneType     = 'raid',
-            IncludeWater = false,
-            IgnoreFriendlyBase = true,
-            LocationType = 'LocationType',
-            MaxPathDistance = 'BaseEnemyArea', -- custom property to set max distance before a transport will be requested only used by GuardMarker plan
-            FindHighestThreat = true,			-- Don't find high threat targets
-            MaxThreatThreshold = 6000,			-- If threat is higher than this, do not attack
-            MinThreatThreshold = 50,		    -- If threat is lower than this, do not attack
-            AvoidBases = true,
-            AvoidBasesRadius = 120,
-            AggressiveMove = false,      
-            AvoidClosestRadius = 5,
-            UseFormation = 'AttackFormation',
-            TargetSearchPriorities = { 
-                categories.MOBILE * categories.LAND
-            },
-            SetWeaponPriorities = true,
-            PrioritizedCategories = {  
-                categories.ENGINEER,
-                categories.MASSEXTRACTION,
-                categories.SCOUT,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                categories.ENERGYSTORAGE, 
-                categories.MOBILE * categories.LAND,
-                categories.STRUCTURE * categories.DEFENSE,
-                categories.STRUCTURE,
-                categories.ALLUNITS - categories.INSIGNIFICANTUNIT,
-            },
-            DistressRange = 120,
-            DistressReactionTime = 6,
-            ThreatSupport = 0,
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI Spam Common Expansion Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
-        Priority = 600,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 30,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-        },
-        BuilderData = {
-            StateMachine = 'LandAssault',
-            SearchRadius = 'BaseEnemyArea',
-            LocationType = 'LocationType',
-            UseFormation = 'None',
-            AggressiveMove = true,
-            PlatoonLimit = 18,
-            TargetSearchPriorities = {
-                categories.EXPERIMENTAL,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                categories.ENERGYSTORAGE,
-                categories.MASSEXTRACTION,
-                categories.MASSFABRICATION,
-                categories.ALLUNITS - categories.NAVAL - categories.AIR,
-            },
-            PrioritizedCategories = {
-                categories.COMMAND,
-                categories.EXPERIMENTAL,
-                categories.STRUCTURE * categories.DEFENSE,
-                categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.MOBILE * categories.LAND,
-                categories.ENGINEER,
-                categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.MASSEXTRACTION,
-                categories.ALLUNITS - categories.NAVAL - categories.AIR,
-            },
-            DistressRange = 120,
-            DistressReactionTime = 6,
-            ThreatSupport = 0,
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI Spam Aeon Expansion Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'LandCombatHoverStateMachineRNG',                          -- Template Name. 
-        Priority = 650,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 30,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 5, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
-        },
-        BuilderData = {
-            StateMachine = 'LandAssault',
-            SearchRadius = 'BaseEnemyArea',
-            LocationType = 'LocationType',
-            UseFormation = 'None',
-            AggressiveMove = true,
-            ThreatSupport = 0,
-            PlatoonLimit = 18,
-            TargetSearchPriorities = {
-                categories.EXPERIMENTAL,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                categories.ENERGYSTORAGE,
-                categories.MASSEXTRACTION,
-                categories.MASSFABRICATION,
-            },
-            PrioritizedCategories = {
-                categories.COMMAND,
-                categories.EXPERIMENTAL,
-                categories.STRUCTURE * categories.DEFENSE,
-                categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.MOBILE * categories.LAND,
-                categories.ENGINEER,
-                categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.MASSEXTRACTION,
-                categories.ALLUNITS,
-            },
-        },
-    },
-}
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI Land Response Formers',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
@@ -754,7 +648,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Response BaseMilitary ANTIAIR Area',
         PlatoonTemplate = 'LandAntiAirStateMachineRNG',
         Priority = 1000,
-        InstanceCount = 3,
+        InstanceCount = 6,
         BuilderType = 'Any',
         BuilderConditions = {
               { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ANTIAIR - categories.INDIRECTFIRE} },
@@ -1010,180 +904,6 @@ BuilderGroup {
             DistressReactionTime = 6,
             ThreatSupport = 5,
         },
-    },
-}
-
-BuilderGroup {
-    BuilderGroupName = 'RNGAI Land FormBuilders Large',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
-    BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
-    Builder {
-        BuilderName = 'RNGAI Trueplatoon Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
-        Priority = 690,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 8,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
-        },
-        BuilderData = {
-            UseFormation = 'None',
-            LocationType = 'LocationType',
-            StateMachine = 'LandCombat'
-            },
-    },
-    Builder {
-        BuilderName = 'RNGAI Spam Assault Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
-        Priority = 550,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 30,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
-        },
-        BuilderData = {
-            StateMachine = 'LandAssault',
-            SearchRadius = 'BaseEnemyArea',
-            LocationType = 'LocationType',
-            UseFormation = 'None',
-            PlatoonLimit = 18,
-            AggressiveMove = true,
-            TargetSearchPriorities = {
-                categories.EXPERIMENTAL * categories.LAND,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                categories.ENERGYSTORAGE,
-                categories.MASSEXTRACTION,
-                categories.MASSFABRICATION,
-                categories.ALLUNITS - categories.NAVAL - categories.AIR,
-            },
-            PrioritizedCategories = {
-                categories.COMMAND,
-                categories.EXPERIMENTAL,
-                categories.STRUCTURE * categories.DEFENSE,
-                categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.MOBILE * categories.LAND,
-                categories.ENGINEER,
-                categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.MASSEXTRACTION,
-                categories.ALLUNITS - categories.NAVAL - categories.AIR,
-            },
-            DistressRange = 120,
-            DistressReactionTime = 6,
-            ThreatSupport = 0,
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI Spam Intelli Amphib Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'LandCombatAmphibStateMachineRNG',                          -- Template Name. 
-        Priority = 710,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 20,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.LAND * ( categories.AMPHIBIOUS + categories.HOVER ) - categories.ENGINEER - categories.EXPERIMENTAL}},
-        },
-        BuilderData = {
-            StateMachine = 'LandAssault',
-            SearchRadius = 'BaseEnemyArea',
-            LocationType = 'LocationType',
-            UseFormation = 'None',
-            AggressiveMove = true,
-            PlatoonLimit = 15,
-            TargetSearchPriorities = {
-                categories.EXPERIMENTAL * categories.LAND,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                categories.ENERGYSTORAGE,
-                categories.MASSEXTRACTION,
-                categories.MASSFABRICATION,
-                categories.STRUCTURE,
-                categories.ALLUNITS,
-            },
-            PrioritizedCategories = {
-                categories.COMMAND,
-                categories.EXPERIMENTAL,
-                categories.STRUCTURE * categories.DEFENSE,
-                categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.MOBILE * categories.LAND,
-                categories.ENGINEER,
-                categories.MOBILE * categories.LAND * categories.ANTIAIR,
-                categories.MASSEXTRACTION,
-                categories.ALLUNITS,
-            },
-            DistressRange = 120,
-            DistressReactionTime = 6,
-            ThreatSupport = 2,
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI Ranged Attack T2 Large',                              -- Random Builder Name.
-        PlatoonTemplate = 'RNGAI LandAttack Small Ranged',                          -- Template Name. 
-        Priority = 800,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 10,                                                      -- Number of platoons that will be formed.
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.LAND * categories.INDIRECTFIRE * categories.MOBILE * categories.TECH2}},
-        },
-        BuilderData = {
-            StateMachine = 'LandAssault',
-            RangedAttack = true,
-            SearchRadius = 'BaseEnemyArea',                                               -- Searchradius for new target.
-            LocationType = 'LocationType',
-            GetTargetsFromBase = false,                                         -- Get targets from base position (true) or platoon position (false)
-            RequireTransport = false,                                           -- If this is true, the unit is forced to use a transport, even if it has a valid path to the destination.
-            AggressiveMove = true,                                              -- If true, the unit will attack everything while moving to the target.
-            AttackEnemyStrength = 200,                                          -- Compare platoon to enemy strenght. 100 will attack equal, 50 weaker and 150 stronger enemies.
-            TargetSearchPriorities = {
-                categories.STRUCTURE,
-                categories.MOBILE * categories.LAND,
-            },
-            PrioritizedCategories = {                                           -- Attack these targets.
-                categories.STRUCTURE * categories.DEFENSE,
-                categories.MASSEXTRACTION,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                categories.STRUCTURE * categories.ANTIAIR,
-                categories.COMMAND,
-                categories.MASSFABRICATION,
-                categories.SHIELD,
-                categories.STRUCTURE,
-                categories.ALLUNITS,
-            },
-            UseFormation = 'GrowthFormation',
-            DistressRange = 120,
-            DistressReactionTime = 6,
-            ThreatSupport = 5,
-        },
-    },
-    Builder {
-        BuilderName = 'RNGAI Frequent Land Attack T1 Large',
-        PlatoonTemplate = 'LandCombatStateMachineRNG',
-        Priority = 500,
-        InstanceCount = 12,
-        BuilderType = 'Any',
-        BuilderConditions = {
-            { UCBC, 'ScalePlatoonSizeRNG', { 'LocationType', 'LAND', categories.MOBILE * categories.LAND * categories.TECH1 - categories.ENGINEER } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'MAIN', 3, categories.FACTORY * categories.LAND * ( categories.TECH2 + categories.TECH3 ) }}, -- stop building after we decent reach tech2 capability
-        },
-        BuilderData = {
-            StateMachine = 'LandAssault',
-            NeverGuardBases = true,
-            NeverGuardEngineers = false,
-            UseFormation = 'AttackFormation',
-            ThreatWeights = {
-                IgnoreStrongerTargetsIfWeakerThan = 10, -- If the platoon is weaker than this threat level
-                IgnoreStrongerTargetsRatio = 5, -- If platoon is weaker than the above threat then ignore stronger threats if stronger by this ratio. (so if they are 100?) 
-                PrimaryThreatTargetType = 'StructuresNotMex', -- Primary type of threat to find targets
-                SecondaryThreatTargetType = 'Land', -- Secondary type of threat to find targets
-                SecondaryThreatWeight = 1,
-                WeakAttackThreatWeight = 2, -- If the platoon is weaker than the target threat then decrease by this factor
-                StrongAttackThreatWeight = 5, -- If the platoon is stronger than the target threat then increase by this factor
-                VeryNearThreatWeight = 20, -- If the target is very close increase by this factor, default radius is 25
-                NearThreatWeight = 10, -- If the target is close increase by this factor, default radius is 75
-                MidThreatWeight = 5, -- If the target is mid range increase by this factor, default radius is 150
-                FarThreatWeight = 1, -- if the target is far awat increase by this factor default radius is 300. There is also a VeryFar which is -1
-                TargetCurrentEnemy = false, -- Take the current enemy into account when finding targets
-                IgnoreCommanderStrength = false, -- Do we ignore the ACU's antisurface threat when picking an attack location
-            },
-        },         
     },
 }
 

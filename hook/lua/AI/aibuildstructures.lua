@@ -14,6 +14,9 @@ function AddToBuildQueueRNG(aiBrain, builder, whatToBuild, buildLocation, relati
     end
     -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
     --RUtils.EngineerTryReclaimCaptureArea(aiBrain, builder, {buildLocation[1], buildLocation[3], buildLocation[2]}) 
+    if builder.PlatoonHandle.BuilderName == 'RNGAI Zone Expansion' then
+        LOG('Engineer Performing initial build at '..repr(buildLocation)..' for engineer '..tostring(builder.EntityId))
+    end
     if borderWarning then
         --LOG('BorderWarning build')
         IssueBuildMobile({builder}, {buildLocation[1], buildLocation[3], buildLocation[2]}, whatToBuild, {})
@@ -104,12 +107,12 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
         end
         local FactionIndexToName = {[1] = 'UEF', [2] = 'AEON', [3] = 'CYBRAN', [4] = 'SERAPHIM', [5] = 'NOMADS', [6] = 'ARM', [7] = 'CORE' }
         local AIFactionName = FactionIndexToName[factionIndex]
-        SPEW('*AIExecuteBuildStructure: We cant decide whatToBuild! AI-faction: '..AIFactionName..', Building Type: '..repr(buildingType)..', engineer-faction: '..repr(builder.factionCategory))
+        SPEW('*AIExecuteBuildStructure: We cant decide whatToBuild! AI-faction: '..AIFactionName..', Building Type: '..tostring(buildingType)..', engineer-faction: '..tostring(builder.factionCategory))
         -- Get the UnitId for the actual buildingType
         local BuildUnitWithID
         for Key, Data in buildingTemplate do
             if Data[1] and Data[2] and Data[1] == buildingType then
-                SPEW('*AIExecuteBuildStructure: Found template: '..repr(Data[1])..' - Using UnitID: '..repr(Data[2]))
+                SPEW('*AIExecuteBuildStructure: Found template: '..tostring(Data[1])..' - Using UnitID: '..tostring(Data[2]))
                 BuildUnitWithID = Data[2]
                 break
             end
@@ -117,7 +120,7 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
         -- If we can't find a template, then return
         if not BuildUnitWithID then
             AntiSpamList[buildingType] = true
-            WARN('*AIExecuteBuildStructure: No '..repr(builder.factionCategory)..' unit found for template: '..repr(buildingType)..'! ')
+            WARN('*AIExecuteBuildStructure: No '..tostring(builder.factionCategory)..' unit found for template: '..tostring(buildingType)..'! ')
             return false
         end
         -- get the needed tech level to build buildingType
@@ -132,10 +135,10 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
         end
         -- If we can't find a techlevel for the building we want to build, then return
         if not NeedTech then
-            WARN('*AIExecuteBuildStructure: Can\'t find techlevel for BuildUnitWithID: '..repr(BuildUnitWithID))
+            WARN('*AIExecuteBuildStructure: Can\'t find techlevel for BuildUnitWithID: '..tostring(BuildUnitWithID))
             return false
         else
-            SPEW('*AIExecuteBuildStructure: Need engineer with Techlevel ('..NeedTech..') for BuildUnitWithID: '..repr(BuildUnitWithID))
+            SPEW('*AIExecuteBuildStructure: Need engineer with Techlevel ('..NeedTech..') for BuildUnitWithID: '..tostring(BuildUnitWithID))
         end
         -- get the actual tech level from the builder
         local BC = builder:GetBlueprint().CategoriesHash
@@ -148,17 +151,17 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
         end
         -- If we can't find a techlevel for the building we  want to build, return
         if not HasTech then
-            WARN('*AIExecuteBuildStructure: Can\'t find techlevel for engineer: '..repr(builder:GetBlueprint().BlueprintId))
+            WARN('*AIExecuteBuildStructure: Can\'t find techlevel for engineer: '..tostring(builder:GetBlueprint().BlueprintId))
             return false
         else
-            SPEW('*AIExecuteBuildStructure: Engineer ('..repr(builder:GetBlueprint().BlueprintId)..') has Techlevel ('..HasTech..')')
+            SPEW('*AIExecuteBuildStructure: Engineer ('..tostring(builder:GetBlueprint().BlueprintId)..') has Techlevel ('..HasTech..')')
         end
 
         if HasTech < NeedTech then
-            WARN('*AIExecuteBuildStructure: TECH'..HasTech..' Unit "'..BuildUnitWithID..'" is assigned to build TECH'..NeedTech..' buildplatoon! ('..repr(buildingType)..')')
+            WARN('*AIExecuteBuildStructure: TECH'..HasTech..' Unit "'..BuildUnitWithID..'" is assigned to build TECH'..NeedTech..' buildplatoon! ('..tostring(buildingType)..')')
             return false
         else
-            SPEW('*AIExecuteBuildStructure: Engineer with Techlevel ('..HasTech..') can build TECH'..NeedTech..' BuildUnitWithID: '..repr(BuildUnitWithID))
+            SPEW('*AIExecuteBuildStructure: Engineer with Techlevel ('..HasTech..') can build TECH'..NeedTech..' BuildUnitWithID: '..tostring(BuildUnitWithID))
         end
 
         HasFaction = builder.factionCategory
@@ -167,17 +170,17 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
             WARN('*AIExecuteBuildStructure: AI-faction: '..AIFactionName..', ('..HasFaction..') engineers can\'t build ('..NeedFaction..') structures!')
             return false
         else
-            SPEW('*AIExecuteBuildStructure: AI-faction: '..AIFactionName..', Engineer with faction ('..HasFaction..') can build faction ('..NeedFaction..') - BuildUnitWithID: '..repr(BuildUnitWithID))
+            SPEW('*AIExecuteBuildStructure: AI-faction: '..AIFactionName..', Engineer with faction ('..HasFaction..') can build faction ('..NeedFaction..') - BuildUnitWithID: '..tostring(BuildUnitWithID))
         end
 
         local IsRestricted = import('/lua/game.lua').IsRestricted
         if IsRestricted(BuildUnitWithID, aiBrain:GetArmyIndex()) then
-            WARN('*AIExecuteBuildStructure: Unit is Restricted!!! Building Type: '..repr(buildingType)..', faction: '..repr(builder.factionCategory)..' - Unit:'..BuildUnitWithID)
+            WARN('*AIExecuteBuildStructure: Unit is Restricted!!! Building Type: '..tostring(buildingType)..', faction: '..tostring(builder.factionCategory)..' - Unit:'..BuildUnitWithID)
             AntiSpamList[buildingType] = true
             return false
         end
 
-        WARN('*AIExecuteBuildStructure: DecideWhatToBuild call failed for Building Type: '..repr(buildingType)..', faction: '..repr(builder.factionCategory)..' - Unit:'..BuildUnitWithID)
+        WARN('*AIExecuteBuildStructure: DecideWhatToBuild call failed for Building Type: '..tostring(buildingType)..', faction: '..tostring(builder.factionCategory)..' - Unit:'..BuildUnitWithID)
         return false
     end
     -- find a place to build it (ignore enemy locations if it's a resource)
@@ -231,6 +234,9 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
             end
         end
     end
+    if builder.PlatoonHandle.BuilderName == 'RNGAI Zone Expansion' then
+        LOG('Engineer inside AIExecuteBuildStructureRNG, current location is '..repr(location)..' for engineer '..tostring(builder.EntityId))
+    end
     -- if we have no place to build, then maybe we have a modded/new buildingType. Lets try 'T1LandFactory' as dummy and search for a place to build near base
     if not location and not IsResource(buildingType) and builder.BuilderManagerData and builder.BuilderManagerData.EngineerManager then
         --RNGLOG('*AIExecuteBuildStructure: Find no place to Build! - buildingType '..repr(buildingType)..' - ('..builder.factionCategory..') Trying again with T1LandFactory and RandomIter. Searching near base...')
@@ -267,6 +273,9 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
             --RNGLOG('Scenario Info 1, 3 '..repr(ScenarioInfo.size))
             --RNGLOG('BorderWarning is true, location is '..repr(relativeLoc))
             borderWarning = true
+        end
+        if builder.PlatoonHandle.BuilderName == 'RNGAI Zone Expansion' then
+            LOG('Engineer inside AIExecuteBuildStructureRNG, current build location is '..repr(NormalToBuildLocation(relativeLoc))..' for engineer '..tostring(builder.EntityId))
         end
         -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
         AddToBuildQueueRNG(aiBrain, builder, whatToBuild, NormalToBuildLocation(relativeLoc), false, borderWarning)
@@ -590,98 +599,60 @@ function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructio
         position = {position[1], position[2], position[3]}
     end
     -- PBM Style expansion bases here
-    if aiBrain.HasPlatoonList then
-        -- Figure out what type of builders to import
-            local expansionTypes = constructionData.ExpansionTypes
-        if not expansionTypes then
-            expansionTypes = { 'Air', 'Land', 'Sea', 'Gate' }
-        end
-
-        -- Check if it already exists
-        for k,v in aiBrain.PBM.Locations do
-            if v.LocationType == baseName then
-                return
-            end
-        end
-        aiBrain:PBMAddBuildLocation(position, radius, baseName, true)
-
-        for num, typeString in expansionTypes do
-            for bNum, builder in aiBrain.PBM.Platoons[typeString] do
-                if builder.LocationType == 'MAIN' and CheckExpansionType(typeString, ScenarioInfo.BuilderTable[typeString][builder.BuilderName].ExpansionExclude)  then
-                    local pltnTable = {}
-                    for dField, data in builder do
-                        if dField == 'LocationType' then
-                            pltnTable[dField] = baseName
-                        elseif dField == 'PlatoonHandle' then
-                            pltnTable[dField] = false
-                        elseif dField == 'PlatoonTimeOutThread' then
-                            pltnTable[dField] = nil
-                        else
-                            pltnTable[dField] = data
-                        end
-                    end
-                    table.insert(aiBrain.PBM.Platoons[typeString], pltnTable)
-                    aiBrain.PBM.NeedSort[typeString] = true
-                end
-            end
-        end
-
-    else
-        if not aiBrain.BuilderManagers or aiBrain.BuilderManagers[baseName] or not builder.BuilderManagerData then
-            --LOG('*AI DEBUG: ARMY ' .. aiBrain:GetArmyIndex() .. ': New Engineer for expansion base - ' .. baseName)
-            builder.BuilderManagerData.EngineerManager:RemoveUnitRNG(builder)
-            aiBrain.BuilderManagers[baseName].EngineerManager:AddUnitRNG(builder, true)
-            return
-        end
-
-        aiBrain:AddBuilderManagers(position, radius, baseName, true)
-
-        -- Move the engineer to the new base managers
+    if not aiBrain.BuilderManagers or aiBrain.BuilderManagers[baseName] or not builder.BuilderManagerData then
+        --LOG('*AI DEBUG: ARMY ' .. aiBrain:GetArmyIndex() .. ': New Engineer for expansion base - ' .. baseName)
         builder.BuilderManagerData.EngineerManager:RemoveUnitRNG(builder)
         aiBrain.BuilderManagers[baseName].EngineerManager:AddUnitRNG(builder, true)
+        return
+    end
 
-        -- Iterate through bases finding the value of each expansion
-        local baseValues = {}
-        local highPri = false
-        LOG('Expansion being created, construction data is '..repr(constructionData))
-        for templateName, baseData in BaseBuilderTemplates do
-            local baseValue = baseData.ExpansionFunction(aiBrain, position, constructionData.NearMarkerType)
-            table.insert(baseValues, { Base = templateName, Value = baseValue })
-            --SPEW('*AI DEBUG: AINewExpansionBase(): Scann next Base. baseValue= ' .. repr(baseValue) .. ' ('..repr(templateName)..')')
-            if not highPri or baseValue > highPri then
-                --SPEW('*AI DEBUG: AINewExpansionBase(): Possible next Base. baseValue= ' .. repr(baseValue) .. ' ('..repr(templateName)..')')
-                highPri = baseValue
-            end
+    aiBrain:AddBuilderManagers(position, radius, baseName, true)
+
+    -- Move the engineer to the new base managers
+    builder.BuilderManagerData.EngineerManager:RemoveUnitRNG(builder)
+    aiBrain.BuilderManagers[baseName].EngineerManager:AddUnitRNG(builder, true)
+
+    -- Iterate through bases finding the value of each expansion
+    local baseValues = {}
+    local highPri = false
+    LOG('Expansion being created, position is '..repr(position))
+    for templateName, baseData in BaseBuilderTemplates do
+        local baseValue = baseData.ExpansionFunction(aiBrain, position, constructionData.NearMarkerType)
+        table.insert(baseValues, { Base = templateName, Value = baseValue })
+        --SPEW('*AI DEBUG: AINewExpansionBase(): Scann next Base. baseValue= ' .. repr(baseValue) .. ' ('..repr(templateName)..')')
+        if not highPri or baseValue > highPri then
+            --SPEW('*AI DEBUG: AINewExpansionBase(): Possible next Base. baseValue= ' .. repr(baseValue) .. ' ('..repr(templateName)..')')
+            highPri = baseValue
         end
+    end
 
-        -- Random to get any picks of same value
-        local validNames = {}
-        for k,v in baseValues do
-            if v.Value == highPri then
-                table.insert(validNames, v.Base)
-            end
+    -- Random to get any picks of same value
+    local validNames = {}
+    for k,v in baseValues do
+        if v.Value == highPri then
+            table.insert(validNames, v.Base)
         end
-        --SPEW('*AI DEBUG: AINewExpansionBase(): validNames for Expansions ' .. repr(validNames))
-        local pick = validNames[ Random(1, table.getn(validNames)) ]
+    end
+    --SPEW('*AI DEBUG: AINewExpansionBase(): validNames for Expansions ' .. repr(validNames))
+    local pick = validNames[ Random(1, table.getn(validNames)) ]
 
-        -- Error if no pick
-        if not pick then
-            RNGLOG('*AI DEBUG: ARMY ' .. aiBrain:GetArmyIndex() .. ': Layer Preference - ' .. per .. ' - yielded no base types at - ' .. locationType)
-        end
+    -- Error if no pick
+    if not pick then
+        RNGLOG('*AI DEBUG: ARMY ' .. aiBrain:GetArmyIndex() .. ': Layer Preference - ' .. per .. ' - yielded no base types at - ' .. locationType)
+    end
 
-        -- Setup base
-        --SPEW('*AI DEBUG: AINewExpansionBase(): ARMY ' .. aiBrain:GetArmyIndex() .. ': Expanding using - ' .. pick .. ' at location ' .. baseName)
-        import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(aiBrain, baseName, pick)
+    -- Setup base
+    --SPEW('*AI DEBUG: AINewExpansionBase(): ARMY ' .. aiBrain:GetArmyIndex() .. ': Expanding using - ' .. pick .. ' at location ' .. baseName)
+    import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(aiBrain, baseName, pick)
 
-        -- If air base switch to building an air factory rather than land
-        if (string.find(pick, 'Air') or string.find(pick, 'Water')) then
-            local numToChange = BaseBuilderTemplates[pick].BaseSettings.FactoryCount.Land
-            for k,v in constructionData.BuildStructures do
-                if constructionData.BuildStructures[k] == 'T1LandFactory' and numToChange <= 0 then
-                    constructionData.BuildStructures[k] = 'T1AirFactory'
-                elseif constructionData.BuildStructures[k] == 'T1LandFactory' and numToChange > 0 then
-                    numToChange = numToChange - 1
-                end
+    -- If air base switch to building an air factory rather than land
+    if (string.find(pick, 'Air') or string.find(pick, 'Water')) then
+        local numToChange = BaseBuilderTemplates[pick].BaseSettings.FactoryCount.Land
+        for k,v in constructionData.BuildStructures do
+            if constructionData.BuildStructures[k] == 'T1LandFactory' and numToChange <= 0 then
+                constructionData.BuildStructures[k] = 'T1AirFactory'
+            elseif constructionData.BuildStructures[k] == 'T1LandFactory' and numToChange > 0 then
+                numToChange = numToChange - 1
             end
         end
     end

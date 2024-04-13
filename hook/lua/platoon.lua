@@ -1382,7 +1382,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --LOG('TMD Reference '..repr(reference))
                 relative = true
                 buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
-                RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+                RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
             else
                 relative = false
                 reference = RUtils.GetDefensivePointRNG(aiBrain, cons.LocationType or 'MAIN', cons.Tier or 2, cons.Type)
@@ -1390,14 +1390,14 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --baseTmpl = baseTmplFile[cons.BaseTemplate][factionIndex]
                 -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
                 buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
-                RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+                RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
                 --RNGLOG('baseTmplList '..repr(baseTmplList))
             end
         elseif cons.OrderedTemplate then
             local relativeTo = RNGCOPY(eng:GetPosition())
             --RNGLOG('relativeTo is'..repr(relativeTo))
             relative = true
-            local tmpReference = aiBrain:FindPlaceToBuild('T2EnergyProduction', 'uab1201', baseTmplDefault['BaseTemplates'][factionIndex], relative, eng, nil, relativeTo[1], relativeTo[3])
+            local tmpReference = aiBrain:FindPlaceToBuild('T3EnergyProduction', 'ueb1301', baseTmplDefault['BaseTemplates'][factionIndex], relative, eng, nil, relativeTo[1], relativeTo[3])
             if tmpReference then
                 reference = eng:CalculateWorldPositionFromRelative(tmpReference)
             else
@@ -1410,7 +1410,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             --RNGLOG('reference is '..repr(reference))
             --RNGLOG('World Pos '..repr(tmpReference))
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
-            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
             --RNGLOG('baseTmpList is :'..repr(baseTmplList))
         elseif cons.CappingTemplate then
             local relativeTo = RNGCOPY(eng:GetPosition())
@@ -1431,7 +1431,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             --LOG('Capping template')
             --RNGLOG('reference is '..repr(reference))
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
-            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
             --RNGLOG('baseTmpList is :'..repr(baseTmplList))
         elseif cons.NearPerimeterPoints then
             --RNGLOG('NearPerimeterPoints')
@@ -1440,7 +1440,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             relative = false
             baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
             for k,v in reference do
-                RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, v))
+                RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, v))
             end
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrdered
         elseif cons.NearBasePatrolPoints then
@@ -1448,7 +1448,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             reference = AIUtils.GetBasePatrolPoints(aiBrain, cons.LocationType or 'MAIN', cons.Radius or 100)
             baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
             for k,v in reference do
-                RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, v))
+                RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, v))
             end
             -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
             buildFunction = AIBuildStructures.AIBuildBaseTemplateOrdered
@@ -1478,40 +1478,27 @@ Platoon = Class(RNGAIPlatoonClass) {
                     return
                 end
             elseif cons.ZoneExpansion then
-                LOG('Get Zone Expansion point')
                 reference, refName, refZone = RUtils.AIFindZoneExpansionPointRNG(aiBrain, cons.LocationType, (cons.LocationRadius or 100))
-                LOG('References returned '..repr(reference)..' name '..repr(refName))
                 if not reference or not refName or aiBrain.Zones.Land.zones[refZone].lastexpansionattempt + 30 > GetGameTimeSeconds() then
                     self:PlatoonDisband()
                     return
                 end
                 if reference and refZone and refName then
+                    LOG('Zone reference for expansion is '..repr(reference))
+                    LOG('Zone reference is '..refZone)
                     aiBrain.Zones.Land.zones[refZone].lastexpansionattempt = GetGameTimeSeconds()
                     aiBrain.Zones.Land.zones[refZone].engineerallocated = eng
-                    if aiBrain.Zones.Land.zones[refZone].resourcevalue > 3 then
+                    --[[if aiBrain.Zones.Land.zones[refZone].resourcevalue > 3 then
                         local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
                         local smInstance = StructureManagerRNG.GetStructureManager(aiBrain)
                         if eng.Blueprint.CategoriesHash.TECH2 and smInstance.Factories.LAND[2].HQCount > 0 then
-                            LOG('Added extra t2 support land factory to high value expansion')
                             table.insert(cons.BuildStructures, 'T2SupportLandFactory')
                         elseif eng.Blueprint.CategoriesHash.TECH3 and smInstance.Factories.LAND[3].HQCount > 0 then
-                            LOG('Added extra t3 support land factory to high value expansion')
                             table.insert(cons.BuildStructures, 'T3SupportLandFactory')
                         else
-                            LOG('Added extra land factory to high value expansion')
                             table.insert(cons.BuildStructures, 'T1LandFactory')
                         end
-                    end
-                    LOG('allocated engineer to zone '..repr(aiBrain.Zones.Land.zones[refZone].engineerallocated.UnitId))
-                    LOG('Last expansion attempt was '..repr(aiBrain.Zones.Land.zones[refZone].lastexpansionattempt))
-                end
-            elseif cons.NearMarkerType == 'Expansion Area' then
-                reference, refName = RUtils.AIFindExpansionAreaNeedsEngineerRNG(aiBrain, cons.LocationType,
-                        (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
-                -- didn't find a location to build at
-                if not reference or not refName then
-                    self:PlatoonDisband()
-                    return
+                    end]]
                 end
             elseif cons.NearMarkerType == 'Naval Area' then
                 reference, refName = RUtils.AIFindNavalAreaNeedsEngineerRNG(aiBrain, cons.LocationType, cons.ValidateLabel,
@@ -1519,16 +1506,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                 -- didn't find a location to build at
                 if not reference or not refName then
                     --RNGLOG('No reference or refname for Naval Area Expansion')
-                    self:PlatoonDisband()
-                    return
-                end
-            elseif cons.NearMarkerType == 'Large Expansion Area' then
-                reference, refName = RUtils.AIFindLargeExpansionMarkerNeedsEngineerRNG(aiBrain, cons.LocationType,
-                        (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType)
-                -- didn't find a location to build at
-                --RNGLOG('refName is : '..refName)
-                if not reference or not refName then
-                    --RNGLOG('Large Expansion Builder reference or refName missing')
                     self:PlatoonDisband()
                     return
                 end
@@ -1563,7 +1540,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
 
-            if not cons.BaseTemplate and (cons.NearMarkerType == 'Naval Area' or cons.NearMarkerType == 'Defensive Point' or cons.NearMarkerType == 'Expansion Area') then
+            if not cons.BaseTemplate and (cons.NearMarkerType == 'Naval Area' or cons.NearMarkerType == 'Defensive Point') then
                 baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
             end
             if cons.ExpansionBase and refName then
@@ -1571,7 +1548,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 AIBuildStructures.AINewExpansionBaseRNG(aiBrain, refName, reference, eng, cons)
             end
             relative = false
-            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference, cons.ZoneExpansion))
             -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
             --buildFunction = AIBuildStructures.AIBuildBaseTemplateOrdered
             buildFunction = AIBuildStructures.AIBuildBaseTemplateRNG
@@ -1584,7 +1561,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             cons.MarkerUnitCategory, cons.MarkerRadius, cons.MarkerUnitCount, (cons.ThreatMin or 0), (cons.ThreatMax or 1),
                             (cons.ThreatRings or 1), (cons.ThreatType or 'AntiSurface'))
 
-            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
 
             buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
         elseif cons.NearMarkerType and cons.NearMarkerType == 'Naval Defensive Point' then
@@ -1596,7 +1573,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             cons.MarkerUnitCategory, cons.MarkerRadius, cons.MarkerUnitCount, (cons.ThreatMin or 0), (cons.ThreatMax or 1),
                             (cons.ThreatRings or 1), (cons.ThreatType or 'AntiSurface'))
 
-            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
 
             buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
         elseif cons.NearMarkerType and (cons.NearMarkerType == 'Rally Point' or cons.NearMarkerType == 'Protected Experimental Construction') then
@@ -1613,7 +1590,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             if not reference then
                 reference = pos
             end
-            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
             buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
         elseif cons.NearMarkerType then
             --WARN('*Data weird for builder named - ' .. self.BuilderName)
@@ -1622,7 +1599,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 cons.ThreatMax = 1000000
                 cons.ThreatRings = 0
             end
-            if not cons.BaseTemplate and (cons.NearMarkerType == 'Defensive Point' or cons.NearMarkerType == 'Expansion Area') then
+            if not cons.BaseTemplate and (cons.NearMarkerType == 'Defensive Point' ) then
                 baseTmpl = baseTmplFile['ExpansionBaseTemplates'][factionIndex]
             end
             relative = false
@@ -1632,7 +1609,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             if cons.ExpansionBase and refName then
                 AIBuildStructures.AINewExpansionBaseRNG(aiBrain, refName, reference, (cons.ExpansionRadius or 100), cons.ExpansionTypes, nil, cons)
             end
-            RNGINSERT(baseTmplList, AIBuildStructures.AIBuildBaseTemplateFromLocation(baseTmpl, reference))
+            RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
             buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
         elseif cons.AdjacencyPriority then
             relative = false
@@ -2672,9 +2649,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         if removeLastBuild then
             table.remove(eng.EngineerBuildQueue, 1)
         end
-        if eng.PlatoonHandle.BuilderName == 'RNGAI T1 Dynamic Expansion Large' then
-            LOG('Engineer for dynamic expansion processing build command')
-        end
         eng.ProcessBuildDone = false
         IssueClearCommands({eng})
         local commandDone = false
@@ -2682,6 +2656,9 @@ Platoon = Class(RNGAIPlatoonClass) {
         while not eng.Dead and not commandDone and not table.empty(eng.EngineerBuildQueue) do
             local whatToBuild = eng.EngineerBuildQueue[1][1]
             local buildLocation = {eng.EngineerBuildQueue[1][2][1], 0, eng.EngineerBuildQueue[1][2][2]}
+            if eng.PlatoonHandle.BuilderName == 'RNGAI Zone Expansion' then
+                LOG('Build Location for structure in expansion is '..repr(buildLocation))
+            end
             if GetTerrainHeight(buildLocation[1], buildLocation[3]) > GetSurfaceHeight(buildLocation[1], buildLocation[3]) then
                 --land
                 buildLocation[2] = GetTerrainHeight(buildLocation[1], buildLocation[3])
@@ -2700,9 +2677,6 @@ Platoon = Class(RNGAIPlatoonClass) {
             
 
             if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation, transportWait) then
-                if eng.PlatoonHandle.BuilderName == 'RNGAI T1 Dynamic Expansion Large' then
-                    LOG('Engineer for dynamic expansion processing build command has completed move with safe path')
-                end
                 if not eng or eng.Dead or not eng.PlatoonHandle or not PlatoonExists(aiBrain, eng.PlatoonHandle) then
                     if eng then eng.ProcessBuild = nil end
                     return
@@ -2746,9 +2720,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                     if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                         if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, PlatoonPos, 45, 'Enemy') > 0 then
-                            if eng.PlatoonHandle.BuilderName == 'RNGAI T1 Dynamic Expansion Large' then
-                                LOG('Engineer for dynamic expansion enemy action being taken')
-                            end
                             local actionTaken = RUtils.EngineerEnemyAction(aiBrain, eng)
                         end
                     end
@@ -2773,9 +2744,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                         table.remove(eng.EngineerBuildQueue, 1)
                         break
                     end
-                end
-                if eng.PlatoonHandle.BuilderName == 'RNGAI T1 Dynamic Expansion Large' then
-                    LOG('Engineer for dynamic expansion trying to perform build')
                 end
                 -- check to see if we need to reclaim or capture...
                 RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation, 10)
@@ -2863,15 +2831,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                   or not eng:IsIdleState()
                  ) do
             coroutine.yield(30)
-            if eng.PlatoonHandle.BuilderName == 'RNGAI T1 Dynamic Expansion Large' then
-                LOG('Engineer for dynamic expansion waiting for not building')
-                if eng.ProcessBuild ~= nil then
-                    LOG('Engineer for dynamic expansion eng.ProcessBuild is not nil')
-                end
-                if not eng:IsIdleState() then
-                    LOG('Engineer for dynamic expansion engineer is not idle')
-                end
-            end
             if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                 if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
                     local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE - categories.SCOUT, engPos, 10, 'Enemy')
@@ -2889,9 +2848,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                     end
                     if closestEngineer and closestDistance < 100 then
-                        if eng.PlatoonHandle.BuilderName == 'RNGAI T1 Dynamic Expansion Large' then
-                            LOG('Engineer for dynamic expansion ordered to reclaim during WatchForNotBuilding')
-                        end
                         IssueStop({eng})
                         IssueClearCommands({eng})
                         IssueReclaim({eng}, enemyEngineer[1])
@@ -5495,24 +5451,59 @@ Platoon = Class(RNGAIPlatoonClass) {
             coroutine.yield(1)
             --RNGLOG('aiBrain.EngineerAssistManagerEngineerCount '..aiBrain.EngineerAssistManagerEngineerCount)
             local totalBuildRate = 0
-            local platoonCount = RNGGETN(GetPlatoonUnits(self))
-            
-            for _, eng in GetPlatoonUnits(self) do
+            local tech1Engineers = {}
+            local tech2Engineers = {}
+            local tech3Engineers = {}
+            local totalTech1BuilderRate = 0
+            local totalTech2BuilderRate = 0
+            local totalTech3BuilderRate = 0
+            local platoonCount = 0
+            local platUnits = GetPlatoonUnits(self)
+            for _, eng in platUnits do
                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
                     if aiBrain.RNGDEBUG then
                         eng:SetCustomName('I am at the start of the assist manager loop')
                     end
+                    bp = eng.Blueprint
+                    if bp.CategoriesHash.TECH1 then
+                        totalTech1BuilderRate = totalTech1BuilderRate + bp.Economy.BuildRate
+                        table.insert(tech1Engineers, eng)
+                    elseif bp.CategoriesHash.TECH2 then
+                        totalTech2BuilderRate = totalTech2BuilderRate + bp.Economy.BuildRate
+                        table.insert(tech2Engineers, eng)
+                    elseif bp.CategoriesHash.TECH3 then
+                        totalTech3BuilderRate = totalTech3BuilderRate + bp.Economy.BuildRate
+                        table.insert(tech3Engineers, eng)
+                    end
+                    totalBuildRate = totalBuildRate + bp.Economy.BuildRate
+                    eng.Active = true
+                    platoonCount = platoonCount + 1
+                end
+            end
+            aiBrain.EngineerAssistManagerBuildPower = totalBuildRate
+            aiBrain.EngineerAssistManagerBuildPowerTech1 = totalTech1BuilderRate
+            aiBrain.EngineerAssistManagerBuildPowerTech2 = totalTech2BuilderRate
+            aiBrain.EngineerAssistManagerBuildPowerTech3 = totalTech3BuilderRate
+            for _, engineers in ipairs({tech1Engineers, tech2Engineers, tech3Engineers}) do
+                for _, eng in ipairs(engineers) do
                     if aiBrain.EngineerAssistManagerBuildPower > aiBrain.EngineerAssistManagerBuildPowerRequired then
+                        LOG('Removing Engineer for assist platoon')
+                        bp = eng.Blueprint
+                        if bp.CategoriesHash.TECH1 then
+                            LOG('Tech1')
+                        elseif bp.CategoriesHash.TECH2 then
+                            LOG('Tech2')
+                        elseif bp.CategoriesHash.TECH3 then
+                            LOG('Tech3')
+                        end
                         self:EngineerAssistRemoveRNG(aiBrain, eng)
-                        platoonCount = platoonCount - 1
                     else
-                        totalBuildRate = totalBuildRate + eng.Blueprint.Economy.BuildRate
-                        eng.Active = true
+                        -- If the power requirement is met, break out of the loop
+                        break
                     end
                 end
             end
 
-            aiBrain.EngineerAssistManagerBuildPower = totalBuildRate
             aiBrain.EngineerAssistManagerEngineerCount = platoonCount
             if aiBrain.EngineerAssistManagerBuildPower <= 0 then
                 --RNGLOG('No Engineers in platoon, disbanding for '..aiBrain.Nickname)
@@ -5722,8 +5713,15 @@ Platoon = Class(RNGAIPlatoonClass) {
             if eng:IsPaused() then
                 eng:SetPaused( false )
             end
-            aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - eng.Blueprint.Economy.BuildRate
-            IssueStop({eng})
+            local bp = eng.Blueprint
+            aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - bp.Economy.BuildRate
+            if bp.CategoriesHash.TECH1 then
+                aiBrain.EngineerAssistManagerBuildPowerTech1 = aiBrain.EngineerAssistManagerBuildPowerTech1 - bp.Economy.BuildRate
+            elseif bp.CategoriesHash.TECH2 then
+                aiBrain.EngineerAssistManagerBuildPowerTech2 = aiBrain.EngineerAssistManagerBuildPowerTech2 - bp.Economy.BuildRate
+            elseif bp.CategoriesHash.TECH3 then
+                aiBrain.EngineerAssistManagerBuildPowerTech3 = aiBrain.EngineerAssistManagerBuildPowerTech3 - bp.Economy.BuildRate
+            end
             IssueClearCommands({eng})
             if eng.BuilderManagerData.EngineerManager then
                 --eng:SetCustomName('Running TaskFinished')
@@ -5862,184 +5860,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
     end,
 
-    MexBuildAIRNG = function(self)
-        -- Dedicated Mex building function.expansion
-        local aiBrain = self:GetBrain()
-        local platoonUnits = GetPlatoonUnits(self)
-        local cons = self.PlatoonData.Construction
-        local buildingTmpl, buildingTmplFile, baseTmpl, baseTmplFile, baseTmplDefault
-        local eng=platoonUnits[1]
-        eng.Active = true
-        local VDist2Sq = VDist2Sq
-        self:Stop()
-        if not eng or eng.Dead then
-            coroutine.yield(1)
-            self:PlatoonDisband()
-            return
-        end
-        local factionIndex = aiBrain:GetFactionIndex()
-        buildingTmplFile = import(cons.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
-        buildingTmpl = buildingTmplFile[(cons.BuildingTemplate or 'BuildingTemplates')][factionIndex]
-
-        --RNGLOG("*AI DEBUG: Setting up Callbacks for " .. eng.EntityId)
-        self.SetupMexBuildAICallbacksRNG(eng)
-        local whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
-        -- wait in case we're still on a base
-        if not eng.Dead then
-            local count = 0
-            while eng:IsUnitState('Attached') and count < 2 do
-                coroutine.yield(60)
-                count = count + 1
-            end
-        end
-        --eng:SetCustomName('MexBuild Platoon Checking for expansion mex')
-        --RNGLOG('MexBuild Platoon Checking for expansion mex')
-        while not aiBrain.expansionMex do coroutine.yield(20) end
-        --eng:SetCustomName('MexBuild Platoon has found aiBrain.expansionMex')
-        local markerTable=RNGCOPY(aiBrain.expansionMex)
-        local enemyPos
-        if aiBrain:GetCurrentEnemy() then
-            local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
-            enemyPos = aiBrain.EnemyIntel.EnemyStartLocations[EnemyIndex].Position
-        else
-            enemyPos = aiBrain.MapCenterPoint
-        end
-        local zoneMarkers = {}
-        for k, v in aiBrain.Zones.Land.zones do
-            LOG('Inserting zone data position '..repr(v.pos)..' resource markers '..repr(v.resourcemarkers)..' resourcevalue '..repr(v.resourcevalue)..' zone id '..repr(v.id))
-            table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
-        end
-        LOG('zoneMarkers table '..repr(zoneMarkers))
-        if eng.Dead then self:PlatoonDisband() end
-        while PlatoonExists(aiBrain, self) and eng and not eng.Dead do
-            coroutine.yield(1)
-            local platoonPos=GetPlatoonPosition(self)
-            local success
-            eng.EngineerBuildQueue = {}
-            table.sort(zoneMarkers,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],platoonPos[1],platoonPos[3])/VDist2Sq(enemyPos[1],enemyPos[3],a.Position[1],a.Position[3])/a.ResourceValue/a.ResourceValue<VDist2Sq(b.Position[1],b.Position[3],platoonPos[1],platoonPos[3])/VDist2Sq(enemyPos[1],enemyPos[3],b.Position[1],b.Position[3])/b.ResourceValue/b.ResourceValue end)
-            local currentmexpos=nil
-            local curZoneindex=nil
-            local curMarkerIndex=nil
-            for i,v in zoneMarkers do
-                for j, m in v.ResourceMarkers do
-                    if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
-                        currentmexpos=v.Position
-                        curZoneindex=i
-                        curMarkerIndex=j
-                        --RNGLOG('We can build at mex, breaking loop '..repr(currentmexpos))
-                        break
-                    end
-                end
-            end
-            if not currentmexpos then 
-                eng.Active = false
-                self:PlatoonDisband()
-                return
-            end
-            --RNGLOG('currentmexpos has data')
-            --LOG('Threat at mass point position'..GetThreatAtPosition(aiBrain, currentmexpos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface'))
-            if GetThreatAtPosition(aiBrain, currentmexpos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 2 then
-                --LOG('Threat too high, removing from markerTable')
-                table.remove(markerTable[curZoneindex],curMarkerIndex) 
-                --RNGLOG('No path to currentmexpos')
-                coroutine.yield(1)
-                continue
-            else
-                eng.EngineerBuildQueue = {}
-                for _=0,3,1 do
-                    if not currentmexpos then break end
-                    if zoneMarkers[curZoneindex].ResourceValue > 1 then
-                        local markers = table.copy(zoneMarkers[curZoneindex].ResourceMarkers)
-                        table.sort(markers,function(a,b) return(VDist2Sq(a.position[1],a.position[3],currentmexpos[1],currentmexpos[3]))end)
-                        for k, massMarker in markers do
-                            if VDist2Sq(massMarker.position[1],massMarker.position[3],currentmexpos[1],currentmexpos[3]) < 625 then
-                                if CanBuildStructureAt(aiBrain, 'ueb1103', v.position) then
-                                    RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.position, 5)
-                                    RUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, massMarker.position)
-                                    --eng:SetCustomName('MexBuild Platoon attempting to build in for loop')
-                                    if massMarker.BorderWarning then
-                                        --RNGLOG('Border Warning on mass point marker')
-                                        IssueBuildMobile({eng}, massMarker.position, whatToBuild, {})
-                                    else
-                                        aiBrain:BuildStructure(eng, whatToBuild, {massMarker.position[1], massMarker.position[3], 0}, false)
-                                    end
-                                    local newEntry = {whatToBuild, {massMarker.position[1], massMarker.position[3], 0}, false,Position=massMarker.position}
-                                    RNGINSERT(eng.EngineerBuildQueue, newEntry)
-                                    currentmexpos=massMarker.position
-                                end
-                            end
-                        end
-                    else
-                        break
-                    end
-                end
-                success = AIUtils.EngineerMoveWithSafePathCHP(aiBrain, eng, currentmexpos, whatToBuild)
-                if not success then
-                    table.remove(markerTable,curindex) 
-                    --RNGLOG('No path to currentmexpos')
-                    coroutine.yield(1)
-                    continue 
-                end
-            end
-            if eng.Dead then
-                return
-            end
-            --LOG('Mex build run')
-            
-            while not eng.Dead and 0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving") do
-                coroutine.yield(1)
-                --RNGLOG('MexBuildAI waiting for mex build completion')
-                --RNGLOG('Engineer build queue length is '..table.getn(eng.EngineerBuildQueue))
-                local platPos = GetPlatoonPosition(self)
-                if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
-                    if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, platPos, 30, 'Enemy') > 0 then
-                        local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, platPos, 30, 'Enemy')
-                        if enemyUnits then
-                            local enemyUnitPos
-                            for _, unit in enemyUnits do
-                                enemyUnitPos = unit:GetPosition()
-                                if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, unit) then
-                                    if VDist3Sq(enemyUnitPos, platPos) < 144 then
-                                        --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
-                                        if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
-                                            if VDist3Sq(platPos, enemyUnitPos) < 156 then
-                                                IssueClearCommands({eng})
-                                                IssueReclaim({eng}, unit)
-                                                coroutine.yield(60)
-                                                break
-                                            end
-                                        end
-                                    end
-                                elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, unit) then
-                                    --RNGLOG('MexBuild found enemy unit, try avoid it')
-                                    if VDist3Sq(platPos, enemyUnitPos) < 156 and unit and not unit.Dead and unit:GetFractionComplete() == 1 then
-                                        --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
-                                        IssueClearCommands({eng})
-                                        IssueReclaim({eng}, unit)
-                                        coroutine.yield(60)
-                                        break
-                                    else
-                                        IssueClearCommands({eng})
-                                        IssueMove({eng}, RUtils.AvoidLocation(enemyUnitPos, platPos, 50))
-                                        coroutine.yield(60)
-                                        break
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-                coroutine.yield(20)
-            end
-            --RNGLOG('MexBuildAI assuming build is complete')
-            --RNGLOG('Engineer build queue length is '..table.getn(eng.EngineerBuildQueue))
-            IssueClearCommands({eng})
-            eng.EngineerBuildQueue = {}
-            eng.Active = false
-            coroutine.yield(20)
-        end
-    end,
-
     StateMachineAIRNG = function(self)
         local machineType = self.PlatoonData.StateMachine
 
@@ -6080,6 +5900,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             import("/mods/rngai/lua/ai/statemachines/platoon-air-torpedo.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         elseif machineType == 'StaticArtillery' then
             import("/mods/rngai/lua/ai/statemachines/platoon-structure-artillery.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+        elseif machineType == 'MexBuild' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-engineer-resource.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         end
         WaitTicks(50)
     end,

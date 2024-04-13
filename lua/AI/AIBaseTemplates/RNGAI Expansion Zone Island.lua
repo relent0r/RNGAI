@@ -49,10 +49,10 @@ BaseBuilderTemplate {
         },
         
         FactoryCount = {
-            Land = 3,
-            Air = 0,
+            Land = 8,
+            Air = 1,
             Sea = 0,
-            Gate = 0,
+            Gate = 1,
         },
         
         MassToFactoryValues = {
@@ -78,11 +78,8 @@ BaseBuilderTemplate {
         if aiBrain.BuilderManagers['MAIN'].GraphArea then
             local NavUtils = import('/lua/sim/NavUtils.lua')
             local mainBaseLabel = aiBrain.BuilderManagers['MAIN'].GraphArea
-            LOG('Island Main base has GraphArea of '..mainBaseLabel)
             local label = NavUtils.GetLabel('Land', location)
-            LOG('Island Expansion GraphArea is '..label)
             if mainBaseLabel ~= label then
-                LOG('Return 100 priority')
                 return 100
             end
         end

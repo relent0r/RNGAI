@@ -69,7 +69,7 @@ function AssignTransportToPool( unit, aiBrain )
         CreateTransportPool( aiBrain)
     end
 	if TransportDialog then
-		LOG("*AI DEBUG TRANSPORT "..repr(unit.PlatoonHandle.BuilderName).." Transport "..repr(unit.EntityId).." AssignTransportToPool" )
+		LOG("*AI DEBUG TRANSPORT "..tostring(unit.PlatoonHandle.BuilderName).." Transport "..tostring(unit.EntityId).." AssignTransportToPool" )
 	end
 
     -- this sets up the OnTransportDetach callback so that this function runs EVERY time a transport drops units
@@ -89,9 +89,9 @@ function AssignTransportToPool( unit, aiBrain )
 	end
 
     -- if the unit is not already in the transport Pool --
-	if not unit.Dead and (not unit.PlatoonHandle != aiBrain.TransportPool) then
+	if not unit.Dead and (not unit.PlatoonHandle ~= aiBrain.TransportPool) then
         if TransportDialog then
-            LOG("*AI DEBUG TRANSPORT "..repr(unit.PlatoonHandle.BuilderName).." Transport "..unit.EntityId.." starts assigning to Transport Pool" )
+            LOG("*AI DEBUG TRANSPORT "..tostring(unit.PlatoonHandle.BuilderName).." Transport "..unit.EntityId.." starts assigning to Transport Pool" )
         end
 		IssueClearCommands(unit)
 		-- if not in need of repair or fuel -- 
@@ -117,7 +117,7 @@ function AssignTransportToPool( unit, aiBrain )
     unit.Assigning = false    
     
     if TransportDialog then
-        LOG("*AI DEBUG TRANSPORT "..repr(unit.PlatoonHandle.BuilderName).." Transport "..unit.EntityId.." now available to Transport Pool" )
+        LOG("*AI DEBUG TRANSPORT "..tostring(unit.PlatoonHandle.BuilderName).." Transport "..unit.EntityId.." now available to Transport Pool" )
     end
 
 end
@@ -178,8 +178,8 @@ function CheckTransportPool( aiBrain )
 				v.WatchTravelThread = nil
 			end
 			if platoon and PlatoonExists(aiBrain,platoon) then
-				if platoon != ArmyPool and platoon != RefuelPool and platoon != StructurePool then
-					LOG('*AI DEBUG Disbanding platoon that belongs to unit '..repr(v.EntityId))
+				if platoon ~= ArmyPool and platoon ~= RefuelPool and platoon ~= StructurePool then
+					LOG('*AI DEBUG Disbanding platoon that belongs to unit '..tostring(v.EntityId))
 					aiBrain:DisbandPlatoon(platoon)
 				end
 			end

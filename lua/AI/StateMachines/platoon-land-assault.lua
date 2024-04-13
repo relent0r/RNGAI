@@ -461,7 +461,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 if rx * rx + rz * rz < targetRange * targetRange then
                     self:MoveToLocation(RUtils.AvoidLocation(targetPos, self.Pos, avoidRange), false)
                 else
-                    local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, true)
+                    local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, true)
                     if zoneRetreat then
                         self:MoveToLocation(aiBrain.Zones.Land.zones[zoneRetreat].pos, false)
                     else

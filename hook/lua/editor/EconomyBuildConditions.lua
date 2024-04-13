@@ -301,7 +301,7 @@ end
 
 
 
-function MassIncomeToFactoryRNG(aiBrain, compareType, factoryDrain)
+function MassIncomeToFactoryRNG(aiBrain, compareType, factoryDrain, requireBuilt)
 
     local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
 
@@ -318,6 +318,9 @@ function MassIncomeToFactoryRNG(aiBrain, compareType, factoryDrain)
     local t3NavalFactories = 0
 
     for _, v in factoryList do
+        if requireBuilt and v:GetFractionComplete() ~= 1 then
+            continue
+        end
         if v.Blueprint.CategoriesHash.TECH1 then
             if v.Blueprint.CategoriesHash.LAND then
                 t1LandFactories = t1LandFactories + 1
@@ -388,7 +391,7 @@ function LessThanEconIncomeOverTimeRNG(aiBrain, massIncome, energyIncome)
     return false
 end
 
-function GreaterThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
+function GreaterThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType, requireBuilt)
     local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
     if not factoryManager then
         WARN('*AI WARNING: FactoryCapCheck - Invalid location - ' .. locationType)
@@ -422,10 +425,10 @@ function GreaterThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
     end
     --RNGLOG('Total Factory Drain '..repr(factoryDrain))
 
-    return MassIncomeToFactoryRNG(aiBrain,'>', factoryDrain)
+    return MassIncomeToFactoryRNG(aiBrain,'>', factoryDrain, requireBuilt)
 end
 
-function LessThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
+function LessThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType,requireBuilt)
     local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
     if not factoryManager then
         WARN('*AI WARNING: FactoryCapCheck - Invalid location - ' .. locationType)
@@ -459,7 +462,7 @@ function LessThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
     end
     --RNGLOG('Total Factory Drain '..repr(factoryDrain))
 
-    return MassIncomeToFactoryRNG(aiBrain,'<', factoryDrain)
+    return MassIncomeToFactoryRNG(aiBrain,'<', factoryDrain, requireBuilt)
 end
 
 function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)

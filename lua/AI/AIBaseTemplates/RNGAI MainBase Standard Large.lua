@@ -16,7 +16,8 @@ BaseBuilderTemplate {
         'RNGAI ACU Build Assist',
 
         -- Expansion Builders --
-        'RNGAI Engineer Expansion Builders Large',
+        'RNGAI Engineer Naval Expansion Builders Large',
+        'RNGAI Engineer Zone Expansion Builders',
 
         -- Engineer Builders --
         'RNGAI Engineer Builder',
@@ -67,7 +68,7 @@ BaseBuilderTemplate {
 
         -- Land Unit Formers T1 --
         'RNGAI Land Mass Raid',
-        'RNGAI Land FormBuilders Large',
+        'RNGAI Land FormBuilders',
         'RNGAI Mass Hunter Labs FormBuilders',
         'RNGAI Land Response Formers',
 
@@ -116,10 +117,10 @@ BaseBuilderTemplate {
     },
     BaseSettings = {
         EngineerCount = {
-            Tech1 = 25,
-            Tech2 = 18,
-            Tech3 = 12,
-            SCU = 10,
+            Tech1 = 45,
+            Tech2 = 35,
+            Tech3 = 25,
+            SCU = 16,
         },
         FactoryCount = {
             Land = 12,

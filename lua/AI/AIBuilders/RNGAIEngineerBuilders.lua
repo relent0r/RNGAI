@@ -721,7 +721,7 @@ BuilderGroup {
                 --{ UCBC, 'HaveGreaterThanUnitsInCategoryBeingUpgradedRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.LAND}},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
-                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
+                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType', true }},
             },
         BuilderData = {
             JobType = 'ReclaimStructure',
@@ -741,7 +741,7 @@ BuilderGroup {
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH2 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.TECH3 * categories.SUPPORTFACTORY * categories.LAND }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH3 * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
-                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
+                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType', true }},
             },
         BuilderData = {
             JobType = 'ReclaimStructure',
@@ -760,7 +760,7 @@ BuilderGroup {
         BuilderConditions = {
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 3, categories.TECH3 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH3 * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
-                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
+                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType', true }},
             },
         BuilderData = {
             JobType = 'ReclaimStructure',
@@ -1035,7 +1035,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'EngineerAssistManagerNeedsEngineers', {} },
+            { UCBC, 'EngineerAssistManagerNeedsEngineers', { } },
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 180 } },
         },
         BuilderData = {
@@ -1052,8 +1052,8 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'EngineerAssistManagerNeedsEngineers', {} },
-            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH2 }},
+            { UCBC, 'EngineerAssistManagerNeedsEngineers', { } },
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH2 }},
         },
         BuilderData = {
             JobType = 'Assist',
@@ -1069,8 +1069,8 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
         InstanceCount = 1,
         BuilderConditions = {
+            { UCBC, 'EngineerAssistManagerNeedsEngineers', { } },
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH3 }},
-            { UCBC, 'EngineerAssistManagerNeedsEngineers', {} },
         },
         BuilderData = {
             JobType = 'Assist',

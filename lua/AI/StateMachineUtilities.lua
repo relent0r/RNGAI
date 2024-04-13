@@ -37,7 +37,6 @@ SimpleTarget = function(platoon, aiBrain)--find enemies in a range and attack th
         end
     end
     local id=platoon.machinedata.id
-    --RNGLOG('machinedata.id '..repr(id))
     local position=platoon.Pos
     if not position then return false end
     if platoon.PlatoonData.Defensive and VDist2Sq(position[1], position[3], platoon.Home[1], platoon.Home[3]) < 14400 then
@@ -63,7 +62,6 @@ SimpleTarget = function(platoon, aiBrain)--find enemies in a range and attack th
             unit.machinedistance[id]=VDist3(position,unitPos)
             unit.machinepriority[id]=unit.machineworth/math.max(30,unit.machinedistance[id])/unit.machinedanger
             table.insert(platoon.targetcandidates,unit)
-            --RNGLOG('CheckPriority On Units '..repr(unit.chppriority))
         end
     end
     if not table.empty(platoon.targetcandidates) then
@@ -96,7 +94,6 @@ SimpleNavalTarget = function(platoon, aiBrain)
         end
     end
     local id=platoon.machinedata.id
-    --RNGLOG('machinedata.id '..repr(id))
     local position=platoon.Pos
     local searchRadius = math.max(platoon.EnemyRadius, platoon.MaxPlatoonWeaponRange)
     if not position then return false end
@@ -118,7 +115,6 @@ SimpleNavalTarget = function(platoon, aiBrain)
             unit.machinedistance[id]=VDist3(position,unitPos)
             unit.machinepriority[id]=unit.machineworth/math.max(30,unit.machinedistance[id])/unit.machinedanger
             table.insert(platoon.targetcandidates,unit)
-            --RNGLOG('CheckPriority On Units '..repr(unit.chppriority))
         end
     end
     if not table.empty(platoon.targetcandidates) then
@@ -141,8 +137,6 @@ SimplePriority = function(self,aiBrain)--use the aibrain priority table to do th
             self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
             self.navigating=true
             self.raid=true
-            --SwitchState(self,'raid')
-            --RNGLOG('Simple Priority is moving to '..repr(self.dest))
             return true
         end
     end
@@ -158,9 +152,7 @@ SimplePriority = function(self,aiBrain)--use the aibrain priority table to do th
             point = v
         end
     end
-    if point then
-       --RNGLOG('point pos '..repr(point.Position)..' with a priority of '..point.priority)
-    else
+    if not point then
         --RNGLOG('No priority found')
         return false
     end
@@ -186,8 +178,6 @@ SimplePriority = function(self,aiBrain)--use the aibrain priority table to do th
             self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
             self.navigating=true
             self.raid=true
-            --SwitchState(self,'raid')
-            --RNGLOG('Simple Priority is moving to '..repr(self.dest))
             return true
         elseif point.type=='garrison' then
             --SwitchState(platoon,'garrison')
@@ -266,7 +256,7 @@ VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride)--basic kit
         dest=KiteDist(pos,tpos,platoon.MaxPlatoonWeaponRange+5-math.random(1,3)-mod,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     end
-    if VDist3Sq(pos,dest)>6 then
+    if VDist3Sq(pos,dest)>9 then
         IssueClearCommands({unit})
         IssueMove({unit},dest)
         return
@@ -396,8 +386,6 @@ MainBaseCheck = function(self, aiBrain)
         self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
         self.navigating=true
         self.raid=true
-        --SwitchState(self,'raid')
-        --RNGLOG('Simple Priority is moving to '..repr(self.dest))
         return true
     end
 end
@@ -441,8 +429,7 @@ CHPMergePlatoon = function(self,radius)
     local platoonCount = RNGGETN(platoonUnits)
     if platoonCount<1 or platoonCount>30 then return end
     for i, p in ps1 do
-        if not p or p==self or not aiBrain:PlatoonExists(p) or not p.machinedata.name or not p.machinedata.name==self.machinedata.name or VDist3Sq(platoonPos,GetPlatoonPosition(p))>best or RNGGETN(p:GetPlatoonUnits())>30 then  
-            --RNGLOG('merge table removed '..repr(i)..' merge table now holds '..repr(RNGGETN(ps)))
+        if not p or p==self or not aiBrain:PlatoonExists(p) or not p.machinedata.name or not p.machinedata.name==self.machinedata.name or VDist3Sq(platoonPos,GetPlatoonPosition(p))>best or RNGGETN(p:GetPlatoonUnits())>30 then
         else
             RNGINSERT(ps,p)
         end
@@ -459,7 +446,6 @@ CHPMergePlatoon = function(self,radius)
                 return
             else
                 local units = ps[1]:GetPlatoonUnits()
-                --RNGLOG('ps=1 merging '..repr(ps[1].machinedata)..'into '..repr(self.machinedata))
                 local validUnits = {}
                 local bValidUnits = false
                 for _,u in units do
@@ -486,7 +472,6 @@ CHPMergePlatoon = function(self,radius)
                     continue
                 else
                     local units = other:GetPlatoonUnits()
-                    --RNGLOG('ps>1 merging '..repr(other.machinedata)..'into '..repr(self.machinedata))
                     local validUnits = {}
                     local bValidUnits = false
                     for _,u in units do
@@ -745,13 +730,10 @@ end
 
 ZoneUpdate = function(aiBrain, platoon)
     local function SetZone(pos, zoneIndex)
-        --RNGLOG('Set zone with the following params position '..repr(pos)..' zoneIndex '..zoneIndex)
         if not pos then
-            --RNGLOG('No Pos in Zone Update function')
             return false
         end
         local zoneID = MAP:GetZoneID(pos,zoneIndex)
-        -- zoneID <= 0 => not in a zone
         if zoneID > 0 then
             platoon.Zone = zoneID
         else
@@ -759,7 +741,6 @@ ZoneUpdate = function(aiBrain, platoon)
             for k, v in searchPoints do
                 zoneID = MAP:GetZoneID(v,zoneIndex)
                 if zoneID > 0 then
-                    --RNGLOG('We found a zone when we couldnt before '..zoneID)
                     platoon.Zone = zoneID
                     break
                 end
@@ -1141,15 +1122,11 @@ FindExperimentalTargetRNG = function(aiBrain, platoon, experimentalPosition)
     -- Needs more logic for ACU's that are in bases or firebases.
     for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
         if v.LAND.GameTime and v.LAND.GameTime + 650 > GetGameTimeSeconds() then
-            --RNGLOG('ACU Table for index '..k..' table '..repr(aiBrain.EnemyIntel.ACU))
             if RUtils.HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
                 if not RUtils.PositionInWater(aiBrain.EnemyIntel.ACU[k].Position) then
                     bestUnit = aiBrain.EnemyIntel.ACU[k].Unit
-                    --RNGLOG('Experimental strike : ACU Target mission found and target set')
                 end
                 break
-            else
-                --RNGLOG('Experimental strike : ACU Target mission found but target not visible')
             end
         end
     end
@@ -1214,7 +1191,6 @@ FindExperimentalTargetRNG = function(aiBrain, platoon, experimentalPosition)
         end
     end
     if bestBase and bestUnit then
-        --RNGLOG('Best base '..bestBase.Threat..' threat '..' at '..repr(bestBase.Position))
         return bestUnit, bestBase
     end
 
@@ -1282,7 +1258,6 @@ function GetClosestTargetByIMAP(aiBrain, platoon, position, threatType, searchFi
     local threatcandidates = {}
     local enemyThreat = aiBrain:GetThreatsAroundPosition(position, 16, true, threatType)
     local platoonWeaponRange = platoon.MaxPlatoonWeaponRange
-    --LOG('enemyThreatTable '..repr(enemyThreat))
     for _, threat in enemyThreat do
         local tx = position[1] - threat[1]
         local tz = position[3] - threat[2]
@@ -1305,7 +1280,6 @@ function GetClosestTargetByIMAP(aiBrain, platoon, position, threatType, searchFi
             end
         end
     end
-    --LOG('threatcandidates '..repr(enemyThreat))
     if not table.empty(threatcandidates) then
         table.sort(threatcandidates, function(a,b ) return a.Distance < b.Distance end)
         local gameTime = GetGameTimeSeconds()
@@ -1357,4 +1331,38 @@ function GetClosestTargetByIMAP(aiBrain, platoon, position, threatType, searchFi
             end
         end
     end
+end
+
+function GetBuildableUnitId(aiBrain, unit, category)
+    local Game = import("/lua/game.lua")
+    local armyIndex = aiBrain:GetArmyIndex()
+    local bluePrints = EntityCategoryGetUnitList(category)
+    local blueprintOptions = {}
+    if unit.CanBuild then
+        for _, v in bluePrints do
+            if unit:CanBuild(v) and not(Game.IsRestricted(v, armyIndex)) then
+                table.insert(blueprintOptions, v)
+            end
+        end
+    end
+    return blueprintOptions
+end
+
+SetupMexBuildAICallbacksRNG = function(eng)
+    if eng and not eng.Dead and not eng.MexBuildDoneCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
+        import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(MexBuildAIDoneRNG, eng, categories.ALLUNITS)
+        eng.MexBuildDoneCallbackSet = true
+    end
+end
+
+MexBuildAIDoneRNG = function(unit, params)
+    if unit.Active then return end
+    if not unit.PlatoonHandle then return end
+    if not unit.PlatoonHandle.PlanName == 'MexBuildAIRNG' then return end
+    --RNGLOG("*AI DEBUG: MexBuildAIRNG removing queue item")
+    --RNGLOG('Queue Size is '..RNGGETN(unit.EngineerBuildQueue))
+    if unit.EngineerBuildQueue and not table.empty(unit.EngineerBuildQueue) then
+        table.remove(unit.EngineerBuildQueue, 1)
+    end
+    --RNGLOG('Queue size after remove '..RNGGETN(unit.EngineerBuildQueue))
 end

@@ -354,8 +354,8 @@ IntelManager = Class {
         self:WaitForMarkerInfection()
         coroutine.yield(Random(250,350))
         local weightageValues = {
-            teamValue = 0.5,
-            massValue = 0.2,
+            teamValue = 0.4,
+            massValue = 0.3,
             graphValue = 0.2,
             enemyLand = 0.1,
             enemyAir = 0.1,
@@ -372,11 +372,15 @@ IntelManager = Class {
             local zonePriorityList = {}
             local gameTime = GetGameTimeSeconds()
             local labelBaseValues = {}
+            local labelResourceValue = {}
+
             for k, v in zoneSet do
-                if v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
+                if v.label and v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
                     local graphLabel = aiBrain.GraphZones[v.label]
                     local markersInGraph = graphLabel.MassMarkersInZone or 1
                     if markersInGraph > 2 then
+                        labelResourceValue[v.label] = labelResourceValue[v.label] or {}
+                        table.insert(labelResourceValue[v.label], {ZoneID = v.id, ResourceValue = v.resourcevalue})
                         local bx = mainBasePos[1] - v.pos[1]
                         local bz = mainBasePos[3] - v.pos[3]
                         local mainBaseDistance = bx * bx + bz * bz
@@ -405,25 +409,12 @@ IntelManager = Class {
                         end
                         
                         if not closeEnemyStart and not closeAllyStart then
-                            --[[
-                            if mainBaseDistance > 10000 then
-                                LOG('Expansion is further than 160')
-                            end
-                            if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) then
-                                LOG('No factory manager or v.BuilderManagerDisabled')
-                            end
-                            if (not v.engineerallocated or v.engineerallocated.Dead) then
-                                LOG('No engineer allocated or the engineer is dead')
-                            end
-                            if (v.lastexpansionattempt == 0 or v.lastexpansionattempt + 30 < gameTime) then
-                                LOG('lastexpansion attempt is 0 or longer than 30 seconds ago')
-                            end]]
                             if mainBaseDistance > 10000 then
                                 for _, e in v.edges do
                                     local rx = v.pos[1] - e.zone.pos[1]
                                     local rz = v.pos[3] - e.zone.pos[3]
                                     local edgeDistance = rx * rx + rz * rz
-                                    if e.zone.resourcevalue > v.resourcevalue and v.resourcevalue < 2  or e.zone.BuilderManager.FactoryManager.LocationActive and edgeDistance < 10000 then
+                                    if e.zone.resourcevalue > v.resourcevalue and v.resourcevalue < 2  or (e.zone.BuilderManager.FactoryManager.LocationActive or e.zone.engineerallocated and not e.zone.engineerallocated.Dead) and edgeDistance < 10000 then
                                         edgeSkip = true
                                         break
                                     end
@@ -431,19 +422,17 @@ IntelManager = Class {
                                 if not edgeSkip then
                                     if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) and (not v.engineerallocated or v.engineerallocated.Dead) and (v.lastexpansionattempt == 0 or v.lastexpansionattempt + 30 < gameTime) then
                                         --LOG('Expansion passed first check')
-                                        if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, v.pos, 30, 'Ally') < 1 then
-                                            --LOG('Expansion passed factory structure check')
-                                            local priorityScore = (
-                                                v.teamvalue * weightageValues['teamValue'] +
-                                                v.resourcevalue * weightageValues['massValue'] +
-                                                markersInGraph * weightageValues['graphValue'] -
-                                                v.enemylandthreat * weightageValues['enemyLand'] -
-                                                v.enemyantiairthreat * weightageValues['enemyAir'] +
-                                                v.friendlyantisurfacethreat * weightageValues['friendlyantisurfacethreat'] -
-                                                v.friendlylandantiairthreat * weightageValues['friendlylandantiairthreat']
-                                            )
-                                            table.insert(zonePriorityList, {ZoneID = v.id, Position = v.pos, Priority = priorityScore, Label = v.label })
-                                        end
+                                        --LOG('Expansion passed factory structure check')
+                                        local priorityScore = (
+                                            v.teamvalue * weightageValues['teamValue'] +
+                                            v.resourcevalue * weightageValues['massValue'] +
+                                            markersInGraph * weightageValues['graphValue'] -
+                                            v.enemylandthreat * weightageValues['enemyLand'] -
+                                            v.enemyantiairthreat * weightageValues['enemyAir'] +
+                                            v.friendlyantisurfacethreat * weightageValues['friendlyantisurfacethreat'] -
+                                            v.friendlylandantiairthreat * weightageValues['friendlylandantiairthreat']
+                                        )
+                                        table.insert(zonePriorityList, {ZoneID = v.id, Position = v.pos, Priority = priorityScore, Label = v.label, ResourceValue = v.resourcevalue, TeamValue = v.teamvalue })
                                     end
                                 end
                             end
@@ -452,27 +441,69 @@ IntelManager = Class {
                 end
                 coroutine.yield(1)
             end
-            if not table.empty(zonePriorityList) then
-                table.sort(zonePriorityList, function(a, b) return a.Priority > b.Priority end)
-                self.ZoneExpansions.Pathable = zonePriorityList
-                --LOG('Zone expansion priority list '..repr(self.ZoneExpansions.Pathable))
+            local filteredList = {}
+            for _, zone in ipairs(zonePriorityList) do
+                if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zone.Position, 30, 'Enemy') < 1 then
+                    if zone.ResourceValue < 3 then
+                        if zone.TeamValue < 0.8 or zone.TeamValue > 1.2 then
+                            local higherValueExists = false
+                            for _, resValue in ipairs(labelResourceValue[zone.Label] or {}) do
+                                if resValue.ResourceValue >= 3 then
+                                    if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zoneSet[resValue.ZoneID].pos, 30, 'Ally') < 1 
+                                    and aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zoneSet[resValue.ZoneID].pos, 30, 'Enemy') < 1 then
+                                        higherValueExists = true
+                                        break
+                                    end
+                                    if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive then
+                                        higherValueExists = true
+                                        break
+                                    end
+                                end
+                            end
+                            if not higherValueExists then
+                                table.insert(filteredList, zone)
+                            end
+                        end
+                    else
+                        if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zone.Position, 30, 'Ally') < 1 then
+                            table.insert(filteredList, zone)
+                        end
+                    end
+                end
+            end
+            if not table.empty(filteredList) then
+                table.sort(filteredList, function(a, b) return a.Priority > b.Priority end)
+                self.ZoneExpansions.Pathable = filteredList
+                self.Brain:ForkThread(self.DrawInfection, filteredList[1].Position)
             end
             coroutine.yield(50)
         end
     end,
 
-    GetClosestZone = function(self, aiBrain, platoon, controlRequired)
-        
-        if PlatoonExists(aiBrain, platoon) then
+    GetClosestZone = function(self, aiBrain, platoon, position, controlRequired, minimumResourceValue)
+            
             local zoneSet = false
             if aiBrain.ZonesInitialized then
-                if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
+                if platoon then
+                    if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
+                        zoneSet = self.Brain.Zones.Land.zones
+                    elseif platoon.MovementLayer == 'Air' then
+                        zoneSet = self.Brain.Zones.Air.zones
+                    end
+                else
                     zoneSet = self.Brain.Zones.Land.zones
-                elseif platoon.MovementLayer == 'Air' then
-                    zoneSet = self.Brain.Zones.Air.zones
                 end
                 local startPosZones = {}
-                local platoonPosition = platoon:GetPlatoonPosition()
+                local originPosition
+                if platoon then
+                    originPosition = platoon:GetPlatoonPosition()
+                elseif position then
+                    originPosition = position
+                end
+                if not originPosition then
+                    WARN('No originPosition for GetClosestZone')
+                    return
+                end
                 local bestZoneDist
                 local bestZone
                 local control
@@ -480,10 +511,13 @@ IntelManager = Class {
                     if controlRequired then
                         control = aiBrain.GridPresence:GetInferredStatus(v.pos)
                     end
-                    local dx = platoonPosition[1] - v.pos[1]
-                    local dz = platoonPosition[3] - v.pos[3]
+                    if minimumResourceValue and v.resourcevalue < minimumResourceValue then
+                        continue
+                    end
+                    local dx = originPosition[1] - v.pos[1]
+                    local dz = originPosition[3] - v.pos[3]
                     local zoneDist = dx * dx + dz * dz
-                    if (not bestZoneDist or zoneDist < bestZoneDist) and NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition, v.pos) then
+                    if (not bestZoneDist or zoneDist < bestZoneDist) and NavUtils.CanPathTo(platoon.MovementLayer, originPosition, v.pos) then
                         if controlRequired then
                             if control == 'Allied' then
                                 bestZoneDist = zoneDist
@@ -501,7 +535,6 @@ IntelManager = Class {
             else
                 WARN('Mapping Zones are not initialized, unable to query zone information')
             end
-        end
     end,
 
     SelectZoneRNG = function(self, aiBrain, platoon, type, requireSameLabel)
@@ -1135,12 +1168,13 @@ IntelManager = Class {
     end,
 
     ZoneDistanceValue = function(self)
+        -- This sets the team values for zones. Greater than 1 means that its closer to us than the enemy, less than 1 means its closer to the enemy than us.
+        -- Positions are based on a team average. Could produce strange results if the team is spread in strange ways.
         self:WaitForZoneInitialization()
         self:WaitForMarkerInfection()
         WaitTicks(100)
         if not RNGTableEmpty(self.Brain.Zones.Land.zones) then
             local teamAveragePositions = self:GetTeamAveragePositions()
-            LOG('teamAveragePositions '..repr(teamAveragePositions))
             for _, b in self.Brain.Zones.Land.zones do
                 if teamAveragePositions['Ally'] and teamAveragePositions['Enemy'] then
                     local ax = teamAveragePositions['Ally'].x - b.pos[1]
@@ -1152,16 +1186,12 @@ IntelManager = Class {
                     b.teamvalue = RUtils.CalculateRelativeDistanceValue(math.sqrt(enemyPosDist), math.sqrt(allyPosDist))
                     if enemyPosDist > allyPosDist then
                         self.Brain:ForkThread(DrawTargetRadius, b.pos, 'aa44ff44')
-                        LOG('This should be greater than 1')
                     end
                     if enemyPosDist < allyPosDist then
                         self.Brain:ForkThread(DrawTargetRadius, b.pos, 'cc0000')
-                        LOG('This should be less than 1')
                     end
-                    LOG('Zone team value at position '..repr(b.pos)..' set as '..b.teamvalue)
                 else
                     b.teamvalue = 1
-                    LOG('Zone team value at position '..repr(b.pos)..' set as '..b.teamvalue)
                 end
             end
         end
@@ -2076,7 +2106,6 @@ function ProcessSourceOnDeath(targetBrain, targetUnit)
             data.targetcat = 'Structure'
             if targetCat.DEFENSE and not targetCat.WALL then
                 local locationType = targetUnit.BuilderManagerData.LocationType
-                LOG('BuilderManagerData '..repr(targetUnit.BuilderManagerData))
                 if locationType then
                     RUtils.RemoveDefenseUnit(targetBrain, locationType, targetUnit)
                 else
@@ -2383,7 +2412,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
             end
         end
     else
-        WARN('No RNGArea in path node, either its not created yet or the marker analysis hasnt happened')
+        WARN('No GraphArea in path node, either its not created yet or the marker analysis hasnt happened')
     end
     --RNGLOG('We have '..RNGGETN(bestExpansions)..' expansions to pick from')
     if not table.empty(bestExpansions) then
@@ -3136,20 +3165,13 @@ TruePlatoonPriorityDirector = function(aiBrain)
                             priority = priority * statusModifier
                             unitAddedCount = unitAddedCount + 1
                             aiBrain.prioritypoints[c..i..k]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object,time=b.time}
-                            --LOG('Added priority point of id '..c..i..k)
                             if im.MapIntelGrid[i][k].DistanceToMain < baseRestrictedArea or priority > 250 then
                                 if b.type == 'tank' or b.type == 'arty' then
                                     priority = priority + 100
                                 end
                                 aiBrain.prioritypointshighvalue[c..i..k]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object,time=b.time}
-                                --RNGLOG('HighPriority target added '..repr(aiBrain.prioritypointshighvalue[c..i..k]))
-                                --RNGLOG('Unit is '..b.object.UnitId)
                             end
                         end
-                        --RNGLOG('Added prioritypoints entry of '..repr(aiBrain.prioritypoints[c]))
-                        --RNGLOG('Angle Priority was '..anglePriority)
-                        --RNGLOG('Distance to main was '..im.MapIntelGrid[i][k].DistanceToMain)
-                        --RNGLOG('EnemyUnitGrid Danger is '..im.MapIntelGrid[i][k].EnemyUnitDanger)
                     end
                 end
             end

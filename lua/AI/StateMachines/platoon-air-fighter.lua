@@ -395,7 +395,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             local platPos = self:GetPlatoonPosition()
             local distanceToHome = VDist2Sq(platPos[1], platPos[3], self.Home[1], self.Home[3])
             for _,aPlat in AlliedPlatoons do
-                if not table.equal(aPlat, self) then
+                if not aPlat.Dead and not table.equal(aPlat, self) then
                     local aPlatAirThreat = aPlat:CalculatePlatoonThreat('Air', categories.ALLUNITS)
                     if aPlatAirThreat > self.CurrentEnemyThreatAntiAir / 2 then
                         local aPlatPos = aPlat:GetPlatoonPosition()

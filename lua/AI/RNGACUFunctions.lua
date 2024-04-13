@@ -793,7 +793,7 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
         'Shield'
     }
     if not enhancement.BuildTime then
-        WARN('* RNGAI: EcoGoodForUpgrade: Enhancement has no buildtime: '..repr(enhancement))
+        WARN('* RNGAI: EcoGoodForUpgrade: Enhancement has no buildtime: '..tostring(enhancement))
     end
     --RNGLOG('Enhancement EcoCheck for '..enhancementName)
     for k, v in priorityUpgrades do

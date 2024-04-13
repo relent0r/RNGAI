@@ -89,7 +89,8 @@ BaseBuilderTemplate {
         'RNGAI SMD Builders',
 
         -- Expansions --
-        'RNGAI Engineer Expansion Builders Small',
+        'RNGAI Engineer Naval Expansion Builders Small',
+        'RNGAI Engineer Zone Expansion Builders',
 
         -- SACU Builders --
         'RNGAI Gate Builders',
@@ -108,10 +109,10 @@ BaseBuilderTemplate {
     },
     BaseSettings = {
         EngineerCount = {
-            Tech1 = 25,
-            Tech2 = 18,
-            Tech3 = 12,
-            SCU = 8,
+            Tech1 = 45,
+            Tech2 = 35,
+            Tech3 = 25,
+            SCU = 16,
         },
         FactoryCount = {
             Land = 20,
