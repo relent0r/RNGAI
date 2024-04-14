@@ -121,7 +121,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             if self.ExperimentalUnit.ExternalFactory then
                 self.ExperimentalUnit.ExternalFactory.EngineerManager = {
                     Task = nil,
-                   self.engineers = {}
+                    Engineers = {}
                 }
             end
             if self.ExperimentalUnit.Blueprint.CategoriesHash.BOMBER then

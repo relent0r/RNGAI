@@ -117,7 +117,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                 import("/lua/scenariotriggers.lua").CreateUnitBuiltTrigger(factoryWorkFinish, self.ExperimentalUnit.ExternalFactory, categories.ALLUNITS)
                 self.ExperimentalUnit.ExternalFactory.EngineerManager = {
                     Task = nil,
-                   self.engineers = {}
+                    Engineers = {}
                 }
             end
             

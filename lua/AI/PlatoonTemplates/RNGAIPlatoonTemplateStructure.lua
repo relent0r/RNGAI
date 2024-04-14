@@ -15,7 +15,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'T4SatelliteExperimentalRNG',
-    Plan = 'SatelliteAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.SATELLITE, 1, 1, 'attack', 'none' },
     }
@@ -23,7 +23,15 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'T3ArtilleryStructureRNG',
-    Plan = 'ArtilleryAIRNG',
+    Plan = 'StateMachineAIRNG',
+    GlobalSquads = {
+        { categories.ARTILLERY * categories.STRUCTURE * categories.TECH3, 1, 1, 'artillery', 'none' }
+    }
+}
+
+PlatoonTemplate {
+    Name = 'T3NukeStructureRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.ARTILLERY * categories.STRUCTURE * categories.TECH3, 1, 1, 'artillery', 'none' }
     }

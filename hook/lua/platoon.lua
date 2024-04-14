@@ -5087,140 +5087,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
     end,
 
-    SatelliteAIRNG = function(self)
-
-        local function GetPlatoonDPS(platoon)
-            local totalDdps = 0
-            for _, unit in GetPlatoonUnits(platoon) do
-                if unit and not unit.Dead then
-                    local unitDps = RUtils.CalculatedDPSRNG(unit.Blueprint.Weapon[1])
-                    totalDdps = totalDdps + unitDps
-                end
-            end
-            return totalDdps
-        end
-
-        local aiBrain = self:GetBrain()
-        local data = self.PlatoonData
-        local atkPri = {}
-        local atkPriTable = {}
-        if data.PrioritizedCategories then
-            for k,v in data.PrioritizedCategories do
-                RNGINSERT(atkPri, v)
-                RNGINSERT(atkPriTable, v)
-            end
-        end
-
-        RNGINSERT(atkPri, categories.ALLUNITS)
-        RNGINSERT(atkPriTable, categories.ALLUNITS)
-
-        local maxRadius = data.SearchRadius or 50
-        local maxRadius
-        if type(data.SearchRadius) == 'string' then
-            maxRadius = aiBrain.OperatingAreas[data.SearchRadius]
-        else
-            maxRadius = data.SearchRadius or 50
-        end
-        local oldTarget = false
-        local target = false
-       --('Novax AI starting')
-        
-        while PlatoonExists(aiBrain, self) do
-            coroutine.yield(1)
-            self:MergeNovaxRNG('SatelliteAIRNG', 80)
-            local merged = true
-            if merged then
-                --RNGLOG('Satellite has merged with new one')
-                self.MaxPlatoonDPS = GetPlatoonDPS(self)
-                --RNGLOG('Max platoon dps is '..self.MaxPlatoonDPS)
-            end
-            target = aiBrain:CheckDirectorTargetAvailable('Strategic', nil, 'SATELLITE', nil, self.MaxPlatoonDPS)
-            if not target then
-                target = AIUtils.AIFindUndefendedBrainTargetInRangeRNG(aiBrain, self, 'Attack', maxRadius, atkPri)
-            end
-            local targetRotation = 0
-            if target and target ~= oldTarget and not target.Dead then
-                -- Pondering over if getting the target position would be useful for calling in air strike on target if shielded.
-                --local targetpos = target:GetPosition()
-                local originalHealth = target:GetHealth()
-                self:Stop()
-                self:AttackTarget(target)
-                while (target and not target.Dead) or targetRotation < 6 do
-                    --RNGLOG('Novax Target Rotation is '..targetRotation)
-                    targetRotation = targetRotation + 1
-                    coroutine.yield(100)
-                    if target.Dead then
-                        break
-                    end
-                end
-                if target and not target.Dead then
-                    local currentHealth = target:GetHealth()
-                    --RNGLOG('Target is not dead at end of loop with health '..currentHealth)
-                    if currentHealth == originalHealth then
-                        --RNGLOG('Enemy Unit Health no change, setting to old target')
-                        oldTarget = target
-                    end
-                end
-            end
-            coroutine.yield(100)
-            self:Stop()
-            --RNGLOG('End of Satellite loop')
-        end
-    end,
-
-    MergeNovaxRNG = function(self, planName, radius)
-        local aiBrain = self:GetBrain()
-        if not aiBrain then
-            return false
-        end
-
-        local platPos = self:GetPlatoonPosition()
-        if not platPos then
-            return false
-        end
-
-        local radiusSq = radius*radius
-        AlliedPlatoons = aiBrain:GetPlatoonsList()
-        local bMergedPlatoons = false
-        for _,aPlat in AlliedPlatoons do
-            if aPlat.PlanName ~= planName then
-                continue
-            end
-            if aPlat == self then
-                continue
-            end
-            local allyPlatPos = aPlat:GetPlatoonPosition()
-            if not allyPlatPos or not aiBrain:PlatoonExists(aPlat) then
-                continue
-            end
-            -- Radius for platoon. I need to look further at this one. 
-            -- I'd rather the Novax platoons acts independantly until they need to kill something that requires multiple.
-            -- With this current logic they will work indepedantly until they get targets that place them with 80 units of each other.
-            if VDist2Sq(platPos[1], platPos[3], allyPlatPos[1], allyPlatPos[3]) <= radiusSq then
-                local units = aPlat:GetPlatoonUnits()
-                local validUnits = {}
-                local bValidUnits = false
-                for _,u in units do
-                    if not u.Dead and not u:IsUnitState('Attached') then
-                        table.insert(validUnits, u)
-                        bValidUnits = true
-                    end
-                end
-                if not bValidUnits then
-                    continue
-                end
-                --LOG("*AI DEBUG: Merging platoons " .. self.BuilderName .. ": (" .. platPos[1] .. ", " .. platPos[3] .. ") and " .. aPlat.BuilderName .. ": (" .. allyPlatPos[1] .. ", " .. allyPlatPos[3] .. ")")
-                aiBrain:AssignUnitsToPlatoon(self, validUnits, 'Attack', 'GrowthFormation')
-                bMergedPlatoons = true
-            end
-        end
-        if bMergedPlatoons then
-            self:Stop()
-            self:SetAIPlan(planName)
-        end
-        return bMergedPlatoons
-    end,
-
     TransferAIRNG = function(self)
         local aiBrain = self:GetBrain()
         local moveToLocation = false
@@ -5250,173 +5116,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
         if PlatoonExists(aiBrain, self) then
             self:PlatoonDisband()
-        end
-    end,
-
-    NUKEAIRNG = function(self)
-        --RNGLOG('NukeAIRNG starting')
-        local aiBrain = self:GetBrain()
-        local unit
-        local readySmlLaunchers
-        local readySmlLauncherCount
-        coroutine.yield(50)
-        --RNGLOG('NukeAIRNG initial wait complete')
-        local platoonUnits = GetPlatoonUnits(self)
-        self.PlatoonStrikeDamage = 0
-        self.PlatoonDamageRadius = 0
-        for _, sml in platoonUnits do
-            if not sml or sml.Dead or sml:BeenDestroyed() then
-                self:PlatoonDisbandNoAssign()
-                return
-            end
-            local smlWeapon = sml.Blueprint.Weapon
-            for _, weapon in smlWeapon do
-                if weapon.DamageType == 'Nuke' then
-                    if weapon.NukeInnerRingRadius > self.PlatoonDamageRadius then
-                        self.PlatoonDamageRadius = weapon.NukeInnerRingRadius
-                    end
-                    if weapon.NukeInnerRingDamage > self.PlatoonStrikeDamage then
-                        self.PlatoonStrikeDamage = weapon.NukeInnerRingDamage
-                    end
-                    break
-                end
-            end
-            sml:SetAutoMode(true)
-            IssueClearCommands({sml})
-        end
-        local targetsAvailable = true
-        while PlatoonExists(aiBrain, self) do
-            --RNGLOG('NukeAIRNG main loop beginning')
-            readySmlLaunchers = {}
-            readySmlLauncherCount = 0
-            local experimentalPresent = false
-            --LOG('NukeAIRNG : Waiting 5 seconds')
-            coroutine.yield(50)
-            --LOG('NukeAIRNG : Performing loop')
-            platoonUnits = GetPlatoonUnits(self)
-            for _, sml in platoonUnits do
-                if not sml or sml:BeenDestroyed() then
-                    self:PlatoonDisbandNoAssign()
-                    return
-                end
-
-                --LOG('NukeAIRNG : Issuing Clear Commands')
-                IssueClearCommands({sml})
-                local missileCount = sml:GetNukeSiloAmmoCount() or 0
-                --RNGLOG('NukeAIRNG : SML has '..missileCount..' missiles')
-                if missileCount > 0 then
-                    readySmlLauncherCount = readySmlLauncherCount + 1
-                    RNGINSERT(readySmlLaunchers, {Launcher = sml, Count = missileCount})
-                    self.ReadySMLCount = readySmlLauncherCount
-                end
-                if not targetsAvailable and missileCount > 1 and aiBrain:GetEconomyStoredRatio('MASS') < 0.20 then
-                    --LOG('No nuke targets and have at least 2 missiles ready, stop building missiles')
-                    sml:SetAutoMode(false)
-                else
-                    sml:SetAutoMode(true)
-                end
-                experimentalPresent = sml.Blueprint.CategoriesHash.EXPERIMENTAL or false
-            end
-            --RNGLOG('NukeAIRNG : readySmlLauncherCount '..readySmlLauncherCount)
-            if readySmlLauncherCount < 1 then
-                aiBrain.BrainIntel.SMLReady = false
-                coroutine.yield(60)
-                continue
-            else
-                aiBrain.BrainIntel.SMLReady = true
-            end
-            local validTarget, nukePosTable = RUtils.GetNukeStrikePositionRNG(aiBrain, readySmlLauncherCount, readySmlLaunchers, experimentalPresent)
-            if validTarget then
-                --LOG('NukeAIRNG : Valid nuke target, table is '..repr(nukePosTable))
-                targetsAvailable = true
-                for _, firingPosition in nukePosTable do
-                    table.insert(aiBrain.BrainIntel.SMLTargetPositions, {Position = firingPosition.IMAPPos, Time=GetGameTimeSeconds()})
-                    LOG('Triggering launch for '..repr(firingPosition.Launcher.EntityId))
-                    IssueNuke({firingPosition.Launcher}, firingPosition.Position)
-                end
-                coroutine.yield(70)
-            else
-                targetsAvailable = false
-                --LOG('NukeAIRNG : No available targets or nukePos is null')
-            end
-            --LOG('NukeAIRNG : Waiting 1 seconds')
-            local gameTime = GetGameTimeSeconds()
-            local rebuildTable = false
-            for k, v in aiBrain.BrainIntel.SMLTargetPositions do
-                if v.Time > gameTime - 180 then
-                    aiBrain.BrainIntel.SMLTargetPositions[k] = nil
-                    rebuildTable = true
-                end
-            end
-            if rebuildTable then
-                aiBrain.BrainIntel.SMLTargetPositions = aiBrain:RebuildTable(aiBrain.BrainIntel.SMLTargetPositions)
-            end
-            coroutine.yield(10)
-        end
-    end,
-
-    ArtilleryAIRNG = function(self)
-        local aiBrain = self:GetBrain()
-        local target = false
-        --RNGLOG('Initialize atkPri table')
-        local atkPri = { categories.STRUCTURE * categories.STRATEGIC,
-                         categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                         categories.COMMAND,
-                         categories.STRUCTURE * categories.FACTORY,
-                         categories.EXPERIMENTAL * categories.LAND,
-                         categories.STRUCTURE * categories.SHIELD,
-                         categories.STRUCTURE * categories.DEFENSE,
-                         categories.ALLUNITS,
-                        }
-        local atkPriTable = {}
-        --RNGLOG('Adding Target Priorities')
-        for k,v in atkPri do
-            RNGINSERT(atkPriTable, v)
-        end
-        --RNGLOG('Setting artillery priorities')
-
-        -- Set priorities on the unit so if the target has died it will reprioritize before the platoon does
-        local unit = false
-        for k,v in self:GetPlatoonUnits() do
-            if not v.Dead then
-                unit = v
-                break
-            end
-        end
-        if not unit then
-            return
-        end
-        --RNGLOG('Set unit priorities')
-        unit:SetTargetPriorities(atkPriTable)
-        local weapon = unit.Blueprint.Weapon[1]
-        local maxRadius = weapon.MaxRadius
-        --RNGLOG('Starting Platoon Loop')
-
-        while aiBrain:PlatoonExists(self) do
-            coroutine.yield(1)
-            local targetRotation = 0
-            if not target or target.Dead then
-                target = aiBrain:CheckDirectorTargetAvailable(false, false)
-            end
-            if not target or target.Dead then
-                --RNGLOG('No Director Target, checking for normal target')
-                target = self:FindPrioritizedUnit('artillery', 'Enemy', true, GetPlatoonPosition(self), maxRadius)
-            end
-            if target and not target.Dead then
-                self:Stop()
-                self:AttackTarget(target)
-                while (target and not target.Dead) do
-                    --RNGLOG('Arty Target Rotation is '..targetRotation)
-                    targetRotation = targetRotation + 1
-                    coroutine.yield(200)
-                    if target.Dead or (targetRotation > 6) then
-                        --RNGLOG('Target Dead ending loop')
-                        break
-                    end
-                end
-            end
-            target = false
-            coroutine.yield(100)
         end
     end,
 
@@ -5902,6 +5601,30 @@ Platoon = Class(RNGAIPlatoonClass) {
             import("/mods/rngai/lua/ai/statemachines/platoon-structure-artillery.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
         elseif machineType == 'MexBuild' then
             import("/mods/rngai/lua/ai/statemachines/platoon-engineer-resource.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+        elseif machineType == 'StrategicArtillery' then
+            local aiBrain = self:GetBrain()
+            local artilleryPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed('ArtilleryStateMachine')
+            if not artilleryPlatoonAvailable then
+                artilleryPlatoonAvailable = aiBrain:MakePlatoon('ArtilleryStateMachine', '')
+                artilleryPlatoonAvailable:UniquelyNamePlatoon('ArtilleryStateMachine')
+            end
+            import("/mods/rngai/lua/ai/statemachines/platoon-structure-artillery.lua").AssignToUnitsMachine({ }, artilleryPlatoonAvailable, self:GetPlatoonUnits())
+        elseif machineType == 'Novax' then
+            local aiBrain = self:GetBrain()
+            local novaxPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed('NovaxStateMachine')
+            if not novaxPlatoonAvailable then
+                novaxPlatoonAvailable = aiBrain:MakePlatoon('NovaxStateMachine', '')
+                novaxPlatoonAvailable:UniquelyNamePlatoon('NovaxStateMachine')
+            end
+            import("/mods/rngai/lua/ai/statemachines/platoon-structure-novax.lua").AssignToUnitsMachine({ }, novaxPlatoonAvailable, self:GetPlatoonUnits())
+        elseif machineType == 'Nuke' then
+            local aiBrain = self:GetBrain()
+            local nukePlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed('NukeStateMachine')
+            if not nukePlatoonAvailable then
+                nukePlatoonAvailable = aiBrain:MakePlatoon('NukeStateMachine', '')
+                nukePlatoonAvailable:UniquelyNamePlatoon('NukeStateMachine')
+            end
+            import("/mods/rngai/lua/ai/statemachines/platoon-structure-nuke.lua").AssignToUnitsMachine({ }, nukePlatoonAvailable, self:GetPlatoonUnits())
         end
         WaitTicks(50)
     end,

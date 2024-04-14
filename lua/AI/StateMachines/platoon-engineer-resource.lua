@@ -26,6 +26,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local aiBrain = self:GetBrain()
             self.LocationType = self.BuilderData.LocationType
+            self.StartCycle = 0
             self.MovementLayer = self:GetNavigationalLayer()
             local platoonUnits = self:GetPlatoonUnits()
             for _,eng in platoonUnits do
@@ -49,7 +50,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             self:Stop()
             if not self.eng or self.eng.Dead then
                 coroutine.yield(1)
-                self:PlatoonDisband()
+                self:ExitStateMachine()
                 return
             end
             --RNGLOG("*AI DEBUG: Setting up Callbacks for " .. eng.EntityId)
@@ -102,7 +103,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 enemyPos = aiBrain.MapCenterPoint
             end
 
-            local success
             eng.EngineerBuildQueue = {}
             table.sort(self.ZoneMarkers,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],platoonPos[1],platoonPos[3])/VDist2Sq(enemyPos[1],enemyPos[3],a.Position[1],a.Position[3])/a.ResourceValue/a.ResourceValue<VDist2Sq(b.Position[1],b.Position[3],platoonPos[1],platoonPos[3])/VDist2Sq(enemyPos[1],enemyPos[3],b.Position[1],b.Position[3])/b.ResourceValue/b.ResourceValue end)
             local currentmexpos=nil
@@ -125,6 +125,29 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 if zoneFound then
                     break
                 end
+            end
+            if not zoneFound then
+                if self.StartCycle > 3 then
+                    LOG('Start Cycle is greater than 3, disband platoon')
+                    self:ExitStateMachine()
+                end
+                local zoneMarkers = {}
+                for _, v in aiBrain.Zones.Land.zones do
+                    if v.resourcevalue > 0 then
+                        table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+                    end
+                end
+                for _, v in aiBrain.Zones.Naval.zones do
+                    --LOG('Inserting zone data position '..repr(v.pos)..' resource markers '..repr(v.resourcemarkers)..' resourcevalue '..repr(v.resourcevalue)..' zone id '..repr(v.id))
+                    if v.resourcevalue > 0 then
+                        table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+                    end
+                end
+                self.ZoneMarkers = zoneMarkers
+                self.StartCycle = self.StartCycle + 1
+                LOG('Start Cycle incremented due to no markers found '..self.StartCycle)
+                self:ChangeState(self.DecideWhatToDo)
+                return
             end
             if aiBrain:GetThreatAtPosition(currentmexpos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 2 then
                 table.remove(self.ZoneMarkers[self.CurentZoneIndex],self.CurrentMarkerIndex)
@@ -181,7 +204,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            if eng.Dead then self:PlatoonDisband() end
+            if eng.Dead then return end
             self:LogDebug(string.format('No Action Taken in decide what to do loop'))
             coroutine.yield(10)
             self:ChangeState(self.DecideWhatToDo)

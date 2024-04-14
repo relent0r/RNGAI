@@ -248,28 +248,17 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI Strategic Formers',
     BuildersType = 'PlatoonFormBuilder',
-    --[[Builder {
-        BuilderName = 'RNGAI SML Former',
-        PlatoonTemplate = 'T3NukeRNG',
-        Priority = 400,
-        InstanceCount = 10,
-        FormRadius = 10000,
-        BuilderConditions = {
-            { UCBC, 'HaveGreaterThanArmyPoolWithCategoryRNG', { 0, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) } },
-        },
-        BuilderType = 'Any',
-    },]]
     Builder {
-        BuilderName = 'RNGAI SML Merger',
-        PlatoonTemplate = 'AddToSMLPlatoonRNG',
+        BuilderName = 'RNGAI Strategic Missile Launcher',
+        PlatoonTemplate = 'T3NukeStructureRNG',
         Priority = 10,
-        InstanceCount = 1,
+        InstanceCount = 5,
         FormRadius = 10000,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanArmyPoolWithCategoryRNG', { 0, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) } },
         },
         BuilderData = {
-            PlatoonPlan = 'NUKEAIRNG',
+            StateMachine = 'Nuke',
             LocationType = 'LocationType'
         },
         BuilderType = 'Any',
@@ -278,10 +267,14 @@ BuilderGroup {
         BuilderName = 'RNGAI T3 Artillery Former',
         PlatoonTemplate = 'T3ArtilleryStructureRNG',
         Priority = 10,
-        InstanceCount = 100,
+        InstanceCount = 5,
         FormRadius = 10000,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanArmyPoolWithCategoryRNG', { 0, categories.STRUCTURE * categories.ARTILLERY * (categories.TECH3 + categories.EXPERIMENTAL) } },
+        },
+        BuilderData = {
+            StateMachine = 'StrategicArtillery',
+            LocationType = 'LocationType'
         },
         BuilderType = 'Any',
     },

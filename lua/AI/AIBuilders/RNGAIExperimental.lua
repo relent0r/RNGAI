@@ -363,7 +363,8 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             SearchRadius = 6000,
-            UnitType = 'SATELLITE',
+            StateMachine = 'Novax',
+            LocationType = 'LocationType',
             PrioritizedCategories = { 
                 categories.STRUCTURE * categories.ANTIMISSILE * categories.TECH3, 
                 categories.MASSEXTRACTION * categories.STRUCTURE * categories.TECH3,

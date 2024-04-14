@@ -1589,11 +1589,15 @@ end
 function ZoneAvailableRNG(aiBrain)
     local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
     local im = IntelManagerRNG.GetIntelManager(aiBrain)
+    local gameTime = GetGameTimeSeconds()
     if not table.empty(im.ZoneExpansions.Pathable) then
         for _, v in im.ZoneExpansions.Pathable do
-            if v.ZoneID and aiBrain.Zones.Land.zones[v.ZoneID].lastexpansionattempt + 30 < GetGameTimeSeconds() then
-                LOG('Zone available for expansion')
-                return true
+            if v.ZoneID then
+                local zone = aiBrain.Zones.Land.zones[v.ZoneID]
+                if (not zone.BuilderManager.FactoryManager.LocationActive or zone.BuilderManagerDisabled) and (not zone.engineerallocated or zone.engineerallocated.Dead) and (zone.lastexpansionattempt == 0 or zone.lastexpansionattempt + 30 < gameTime) then
+                    LOG('Zone available for expansion')
+                    return true
+                end
             end
         end
     end

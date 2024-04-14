@@ -188,7 +188,7 @@ RNGLandResourceSet = Class(ZoneSet){
                 end
             end
             initialZoneCount = initialZoneCount + 1
-            table.insert(initialZones, {pos={x,GetSurfaceHeight(x,z),z}, component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), weight=best.weight, startpositionclose=startPos, enemylandthreat=0, enemyantiairthreat=0, friendlyantisurfacethreat=0, friendlylandantiairthreat=0, friendlydirectfireantisurfacethreat=0, friendlyindirectantisurfacethreat=0,resourcevalue=table.getn(resourceGroup), resourcemarkers=resourceGroup, zonealert=false, control=1, enemystartdata = { }, allystartdata = { },  bestarmy = false, teamvalue = 1, platoonassigned = false, label = 0, BuilderManager = {}, lastexpansionattempt = 0, engineerallocated = false})
+            table.insert(initialZones, {pos={x,GetSurfaceHeight(x,z),z}, component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), weight=best.weight, startpositionclose=startPos, enemylandthreat=0, enemyantiairthreat=0, friendlyantisurfacethreat=0, friendlylandantiairthreat=0, friendlydirectfireantisurfacethreat=0, friendlyindirectantisurfacethreat=0,resourcevalue=table.getn(resourceGroup), resourcemarkers=resourceGroup, zonealert=false, control=1, enemystartdata = { }, allystartdata = { },  bestarmy = false, teamvalue = 1, platoonassigned = false, label = 0, BuilderManager = false, lastexpansionattempt = 0, engineerallocated = false})
         end
         local finalZonesList, zoneCount = AssimilateZones(initialZones, initialZoneCount)
         for i=1, zoneCount do

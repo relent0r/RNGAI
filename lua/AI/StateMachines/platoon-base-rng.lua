@@ -118,6 +118,25 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
             if not unit.MaxWeaponRange then
                 unit.MaxWeaponRange = 0
             end
+            if unitCats.SATELLITE then
+                if not self.NovaxUnits then
+                    self.NovaxUnits = {}
+                end
+                if not self.NovaxUnits[unit.EntityId] then
+                    self.NovaxUnits[unit.EntityId] = {Unit = unit, CurrentTarget = nil, CurrentTargetHealth = nil }
+                end
+            end
+            if unitCats.ARTILLERY and unitCats.STRUCTURE and unitCats.TECH3 then
+                if unit.Blueprint.Weapon[1].MaxRadius > self.MaxPlatoonWeaponRange then
+                    self.MaxPlatoonWeaponRange = unit.Blueprint.Weapon[1].MaxRadius
+                end
+                if not self.ArtilleryUnits then
+                    self.ArtilleryUnits = {}
+                end
+                if not self.ArtilleryUnits[unit.EntityId] then
+                    self.ArtilleryUnits[unit.EntityId] = {Unit = unit, CurrentTarget = nil }
+                end
+            end
             if (unit.Sync.Regen>0) or not unit.initialized then
                 unit.initialized=true
                 if unitCats.ARTILLERY and unitCats.MOBILE and not unitCats.EXPERIMENTAL then
