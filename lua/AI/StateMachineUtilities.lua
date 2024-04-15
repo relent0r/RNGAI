@@ -1366,3 +1366,44 @@ MexBuildAIDoneRNG = function(unit, params)
     end
     --RNGLOG('Queue size after remove '..RNGGETN(unit.EngineerBuildQueue))
 end
+
+GreaterThanEconEfficiencyRNG = function (aiBrain, MassEfficiency, EnergyEfficiency)
+
+    local EnergyEfficiencyOverTime = math.min(aiBrain:GetEconomyIncome('ENERGY') / aiBrain:GetEconomyRequested('ENERGY'), 2)
+    local MassEfficiencyOverTime = math.min(aiBrain:GetEconomyIncome('MASS') / aiBrain:GetEconomyRequested('MASS'), 2)
+    --RNGLOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
+    if (MassEfficiencyOverTime >= MassEfficiency and EnergyEfficiencyOverTime >= EnergyEfficiency) then
+        --RNGLOG('GreaterThanEconEfficiencyOverTime Returned True')
+        return true
+    end
+    --RNGLOG('GreaterThanEconEfficiencyOverTime Returned False')
+    return false
+end
+
+function CanBuildOnMassMexPlatoon(aiBrain, engPos, distance)
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+    --distance = distance * distance
+    local MassMarker = {}
+    local massPoints = aiBrain.GridDeposits:GetResourcesWithinDistance('Mass', engPos, distance, 'Amphibious')
+    for _, v in massPoints do
+        if v.type == 'Mass' then
+            if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
+                local mexBorderWarn = false
+                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
+                    mexBorderWarn = true
+                end 
+                local mexDistance = VDist2Sq( v.position[1],v.position[3], engPos[1], engPos[3] )
+                if mexDistance < distance and aiBrain:CanBuildStructureAt('ueb1103', v.position) and NavUtils.CanPathTo('Amphibious', engPos, v.position) then
+                    --RNGLOG('mexDistance '..mexDistance)
+                    table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v, BorderWarning = mexBorderWarn})
+                end
+            end
+        end
+    end
+    table.sort(MassMarker, function(a,b) return a.Distance < b.Distance end)
+    if not table.empty(MassMarker) then
+        return true, MassMarker
+    else
+        return false
+    end
+end

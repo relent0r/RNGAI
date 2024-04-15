@@ -3,6 +3,7 @@ local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
+local NavUtils = import('/lua/sim/NavUtils.lua')
 local ALLBPS = __blueprints
 
 local RNGINSERT = table.insert
@@ -225,7 +226,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local pos = eng:GetPosition()
             local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, pos, builderData.Position, 10 , 10000)
             local result, navReason
-            local whatToBuildM = builderData.WhatToBuild
+            local whatToBuildM = self.ExtractorBuildID
             local bUsedTransports
             if reason ~= 'PathOK' then
                 -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
@@ -293,14 +294,14 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     IssueClearCommands({eng})
                     for i=currentPathNode, pathLength do
                         if i>=3 then
-                            local bool,markers=MABC.CanBuildOnMassMexPlatoon(aiBrain, path[i], 25)
+                            local bool,markers=StateUtils.CanBuildOnMassMexPlatoon(aiBrain, path[i], 25)
                             if bool then
-                                --RNGLOG('We can build on a mass marker within 30')
+                                LOG('We can build on a mass marker within 30')
                                 --local massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, waypointPath)
                                 --RNGLOG('Mass Marker'..repr(massMarker))
                                 --RNGLOG('Attempting second mass marker')
                                 
-                                local buildQueueReset = eng.EnginerBuildQueue
+                                local buildQueueReset = eng.EnginerBuildQueue or {}
                                 eng.EnginerBuildQueue = {}
                                 for _,massMarker in markers do
                                     RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
@@ -326,14 +327,16 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         if (i - math.floor(i/2)*2)==0 or VDist3Sq(builderData.Position,path[i])<40*40 then continue end
                         IssueMove({eng}, path[i])
                     end
-                    for k, v in eng.EngineerBuildQueue do
-                        if eng.EngineerBuildQueue[k].PathPoint then
-                            continue
-                        end
-                        if eng.EngineerBuildQueue[k][5] then
-                            IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
-                        else
-                            aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                    if eng.EngineerBuildQueue then
+                        for k, v in eng.EngineerBuildQueue do
+                            if eng.EngineerBuildQueue[k].PathPoint then
+                                continue
+                            end
+                            if eng.EngineerBuildQueue[k][5] then
+                                IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
+                            else
+                                aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                            end
                         end
                     end
                     while not IsDestroyed(eng) do
@@ -458,7 +461,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     IssueMove({eng}, builderData.Position)
                 end
                 coroutine.yield(10)
-                self:ChangeState(self.Constructing)
+                self:ChangeState(self.CheckForOtherTask)
                 return
             end
         end,
@@ -474,7 +477,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local eng = self.eng
             local aiBrain = self:GetBrain()
 
-            while not eng.Dead and 0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving") do
+            while not IsDestroyed(eng) and 0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving") do
                 coroutine.yield(1)
                 --RNGLOG('MexBuildAI waiting for mex build completion')
                 --RNGLOG('Engineer build queue length is '..table.getn(eng.EngineerBuildQueue))

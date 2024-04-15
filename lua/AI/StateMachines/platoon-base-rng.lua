@@ -208,4 +208,41 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
         self:GetBrain():DisbandPlatoon(self)
     end,
 
+        --- This disbands the state machine platoon and sets engineers back to a manager.
+    ---@param self AIPlatoon
+    ExitStateMachine = function(self)
+        if IsDestroyed(self) then
+            return
+        end
+
+        local brain = self:GetBrain()
+        local platUnits = self:GetPlatoonUnits()
+        if platUnits then
+            for _, unit in platUnits do
+                if unit.Blueprint.CategoriesHash.ENGINEER then
+                    unit.PlatoonHandle = nil
+                    unit.AssistSet = nil
+                    unit.AssistPlatoon = nil
+                    unit.UnitBeingAssist = nil
+                    unit.ReclaimInProgress = nil
+                    unit.CaptureInProgress = nil
+                    if unit:IsPaused() then
+                        unit:SetPaused(false)
+                    end
+                    if not unit.Dead and unit.BuilderManagerData then
+                        if unit.BuilderManagerData.EngineerManager then
+                            unit.BuilderManagerData.EngineerManager:TaskFinishedRNG(unit)
+                        end
+                    end
+                    unit:SetCustomName('EngineerDisbanded')
+                end
+                if not unit.Dead then
+                    IssueStop({ unit })
+                    IssueClearCommands({ unit })
+                end
+            end
+        end
+        brain:DisbandPlatoon(self)
+    end,
+
 }

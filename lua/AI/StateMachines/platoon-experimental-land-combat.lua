@@ -790,7 +790,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
             local closestAPlatPos
             local AlliedPlatoons = aiBrain:GetPlatoonsList()
             for _,aPlat in AlliedPlatoons do
-                if not aPlat.Dead and not table.equal(aPlat, self) then
+                if not aPlat.Dead and not table.equal(aPlat, self) and aPlat.CalculatePlatoonThreat then
                     local aPlatSurfaceThreat = aPlat:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                     if aPlatSurfaceThreat > self.EnemyThreatTable.TotalSuroundingThreat / 2 then
                         local aPlatPos = aPlat:GetPlatoonPosition()

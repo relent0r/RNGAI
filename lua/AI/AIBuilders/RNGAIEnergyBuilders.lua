@@ -15,7 +15,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Trend OverTime',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 1000,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 3},
@@ -55,7 +55,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Trend Instant',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 1050,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 3},
@@ -236,7 +236,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Scale Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 900,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 3},
@@ -337,7 +337,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Hydro 250',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 780,
         DelayEqualBuildPlattons = {'Energy', 3},
         InstanceCount = 2,

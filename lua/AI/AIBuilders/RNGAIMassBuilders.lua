@@ -16,7 +16,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 45',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 1005,
         InstanceCount = 2,
         BuilderConditions = { 
@@ -41,7 +41,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 80',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 950,
         InstanceCount = 3,
         BuilderConditions = { 
@@ -66,7 +66,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 120',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 992,
         InstanceCount = 3,
         BuilderConditions = { 
@@ -148,7 +148,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 240',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 800,
         InstanceCount = 4,
         BuilderConditions = { 
@@ -177,7 +177,7 @@ BuilderGroup {
 
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 480',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 700,
         InstanceCount = 4,
         BuilderConditions = { 
@@ -209,7 +209,7 @@ BuilderGroup {
 
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 2000',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 300,
         InstanceCount = 4,
         BuilderConditions = { 
@@ -287,7 +287,7 @@ BuilderGroup {
     
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 2000 Floating',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 910,
         InstanceCount = 5,
         BuilderConditions = {
@@ -312,7 +312,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 2000 Floating Excess',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 890,
         InstanceCount = 10,
         BuilderConditions = {
@@ -367,7 +367,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 150 Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 700,
         InstanceCount = 2,
         BuilderConditions = {
@@ -391,7 +391,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 2000 Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 550,
         InstanceCount = 2,
         BuilderConditions = {
@@ -420,7 +420,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Single',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 930,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 1,
@@ -457,7 +457,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 925,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 1,
@@ -530,7 +530,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Distant',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 400,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
@@ -604,7 +604,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 925,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
@@ -640,7 +640,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Distant Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 400,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
@@ -682,7 +682,7 @@ BuilderGroup {
     
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Floating',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 905,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 1,

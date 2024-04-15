@@ -69,6 +69,19 @@ local MinimumAntiAirThreat = function(self, aiBrain, builderManager, builderData
 
 end
 
+local AggressiveExpansion = function(self, aiBrain, builderManager)
+    --RNGLOG('LocationType is '..builderManager.LocationType)
+    if aiBrain.BrainIntel.AggressiveExpansion == builderManager.LocationType then
+        --RNGLOG('Active Expansion is set'..builderManager.LocationType)
+        --RNGLOG('Active Expansion builders are set to 900')
+        return 950
+    else
+        --RNGLOG('Disable Air Intie Pool Builder')
+        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        return 0
+    end
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Builder',
     BuildersType = 'FactoryBuilder',
@@ -357,6 +370,18 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Builder Expansion',
     BuildersType = 'FactoryBuilder',
     Builder {
+        BuilderName = 'RNGAI Factory Engineer T1 Aggression Count',
+        PlatoonTemplate = 'T1BuildEngineer',
+        PriorityFunction = AggressiveExpansion,
+        Priority = 0,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 2 of them.
+            { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Expansion Count',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 870,
@@ -485,6 +510,9 @@ BuilderGroup {
             },
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'FinishUnit',
             Assist = {
                 AssistLocation = 'LocationType',
                 BeingBuiltCategories = categories.STRUCTURE * (categories.FACTORY + categories.ENERGYPRODUCTION + categories.MASSEXTRACTION),
@@ -1427,6 +1455,9 @@ BuilderGroup {
             },
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'FinishUnit',
             Assist = {
                 AssistLocation = 'LocationType',
                 BeingBuiltCategories = categories.STRUCTURE * (categories.FACTORY + categories.MASSEXTRACTION + categories.MASSFABRICATION + categories.ENERGYPRODUCTION),

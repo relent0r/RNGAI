@@ -11,16 +11,6 @@ local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
-local AggressiveExpansion = function(self, aiBrain, builderManager)
-    if aiBrain.coinFlip == 1 then
-        --RNGLOG('Aggressive Expansion is true'..' coin flip is '..aiBrain.coinFlip)
-        return 1000
-    else
-        --RNGLOG('Aggressive Expansion is false '..' coin flip is '..aiBrain.coinFlip)
-        return 0
-    end
-end
-
 local NavalExpansionAdjust = function(self, aiBrain, builderManager)
     if aiBrain.BrainIntel.AirPlayer then
         return 0

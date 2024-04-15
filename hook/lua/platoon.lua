@@ -1269,7 +1269,11 @@ Platoon = Class(RNGAIPlatoonClass) {
             if captureUnit then
                 self.PlatoonData.StateMachine = 'CaptureUnit'
                 self.PlatoonData.CaptureUnit = captureUnit
+                self.PlatoonData.Task = 'CaptureUnit'
+                self.PlatoonData.PreAllocatedTask = true
                 self:StateMachineAIRNG(self)
+                LOG('Return after StateMachine initialized')
+                return
             end
         end
 
@@ -4469,20 +4473,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
     end,
 
-    GuardAttackSquadRNG = function(self, aiBrain)
-        while PlatoonExists(aiBrain, self) do
-            coroutine.yield(1)
-            if not table.empty(self:GetSquadUnits('Attack')) and not table.empty(self:GetSquadUnits('Guard')) then
-                self:Stop('Guard')
-                self:MoveToLocation(GetPlatoonPosition(self), false, 'Guard')
-                coroutine.yield(30)
-            else
-                return
-            end
-            coroutine.yield(5)
-        end
-    end,
-
     ManagerEngineerAssistAIRNG = function(self)
         local aiBrain = self:GetBrain()
         local eng = GetPlatoonUnits(self)[1]
@@ -5514,7 +5504,6 @@ Platoon = Class(RNGAIPlatoonClass) {
             import("/mods/rngai/lua/ai/statemachines/platoon-structure-nuke.lua").AssignToUnitsMachine({ }, nukePlatoonAvailable, self:GetPlatoonUnits())
         elseif machineType == 'PreAllocatedTask' then
             import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
-        end
         end
         WaitTicks(50)
     end,

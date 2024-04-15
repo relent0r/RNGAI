@@ -49,7 +49,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Defence Engineer Restricted Breach Land',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
@@ -90,7 +90,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Defence Engineer Restricted Breach Air',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
@@ -425,7 +425,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Engineer Reclaim Enemy Walls',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         PlatoonAIPlan = 'ReclaimUnitsAIRNG',
         Priority = 400,
         BuilderConditions = {
@@ -447,7 +447,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Defence Restricted Breach Land Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {
@@ -485,7 +485,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Defence Restricted Breach Air Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
@@ -514,7 +514,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Defence Restricted Breach Sea Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {

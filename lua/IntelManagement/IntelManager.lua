@@ -361,7 +361,9 @@ IntelManager = Class {
             enemyAir = 0.1,
             bestArmy = 0.05,
             friendlyantisurfacethreat = 0.05,
-            friendlylandantiairthreat = 0.05
+            friendlylandantiairthreat = 0.05,
+            enemyStartAngle = 0.3,
+            enemyStartDistance = 0.2
         }
         local mainBasePos = self.Brain.BrainIntel.StartPos
         local aiBrain = self.Brain
@@ -544,7 +546,7 @@ IntelManager = Class {
         if PlatoonExists(aiBrain, platoon) then
             local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
             local zoneSet
-            local zoneSelection = 999
+            local zoneSelection
             local selection
             local enemyMexmodifier = 0.1
             local enemyDanger = 1.0

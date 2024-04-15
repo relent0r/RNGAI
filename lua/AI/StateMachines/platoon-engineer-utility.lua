@@ -1,4 +1,13 @@
 AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
+local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
+local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
+local NavUtils = import('/lua/sim/NavUtils.lua')
+local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+
+local RNGINSERT = table.insert
+local RNGGETN = table.getn
+
+local ALLBPS = __blueprints
 
 ---@class AIPlatoonEngineerBehavior : AIPlatoon
 ---@field RetreatCount number 
@@ -19,7 +28,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             self.LocationType = self.BuilderData.LocationType
             self.MovementLayer = self:GetNavigationalLayer()
-            self:LogDebug(string.format('Welcome to the engineer state machine'))
+            self:LogDebug(string.format('Welcome to the engineer utility state machine'))
             local platoonUnits = self:GetPlatoonUnits()
             for _, eng in platoonUnits do
                 if not eng.BuilderManagerData then
@@ -29,7 +38,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                    eng.BuilderManagerData.EngineerManager = aiBrain.BuilderManagers['FLOATING'].EngineerManager
                 end
                 if eng:IsUnitState('Attached') then
-                    LOG('Engineer Attached to something, try to detach')
                     if aiBrain:GetNumUnitsAroundPoint(categories.TRANSPORTFOCUS, eng:GetPosition(), 10, 'Ally') > 0 then
                         eng:DetachFrom()
                         coroutine.yield(20)
@@ -41,9 +49,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local blueprints = StateUtils.GetBuildableUnitId(aiBrain, self.eng, categories.MASSEXTRACTION * categories.STRUCTURE)
             local whatToBuild = blueprints[1]
             self.ExtractorBuildID = whatToBuild
+            self:LogDebug(string.format('Start Complete'))
             self:ChangeState(self.DecideWhatToDo)
             return
-
         end,
     },
 
@@ -74,6 +82,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     import("/mods/rngai/lua/ai/statemachines/platoon-engineer-reclaim.lua").AssignToUnitsMachine({ StateMachine = 'Reclaim', LocationType = 'FLOATING' }, plat, {unit})
                     return
                 elseif data.Task == 'CaptureUnit' then
+                    LOG('CaptureUnit triggered')
                     self:LogDebug(string.format('PreAllocatedTask is CaptureUnit'))
                     if not unit.CaptureDoneCallbackSet then
                         self:LogDebug(string.format('No Capture Callback set on engineer, setting '))
@@ -83,7 +92,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     local captureUnit = self.PlatoonData.CaptureUnit
                     if not IsDestroyed(captureUnit) and RUtils.GrabPosDangerRNG(aiBrain,captureUnit:GetPosition(), 40).enemySurface < 5 then
                         self.BuilderData = {
-                            CaptureUnit = captureUnit
+                            CaptureUnit = captureUnit,
                             Position = captureUnit:GetPosition()
                         }
                         self:LogDebug(string.format('Capture Unit Data set'))
@@ -125,12 +134,12 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if unitBeingFinished and not unitBeingFinished.Dead then
-                        unitBeingFinishedPosition = unitBeingFinished:GetPosition()
+                        local unitBeingFinishedPosition = unitBeingFinished:GetPosition()
                         self.BuilderData = {
-                            FinishUnit = unitBeingFinished
+                            FinishUnit = unitBeingFinished,
                             Position = unitBeingFinishedPosition
                         }
-                        self:LogDebug(string.format('Capture Unit Data set'))
+                        self:LogDebug(string.format('Finish Unit Data is set'))
                         local rx = engPos[1] - unitBeingFinishedPosition[1]
                         local rz = engPos[3] - unitBeingFinishedPosition[3]
                         local unitBeingFinishedDistance = rx * rx + rz * rz
@@ -253,14 +262,14 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     IssueClearCommands({eng})
                     for i=currentPathNode, pathLength do
                         if i>=3 then
-                            local bool,markers=MABC.CanBuildOnMassMexPlatoon(aiBrain, path[i], 25)
+                            local bool,markers=StateUtils.CanBuildOnMassMexPlatoon(aiBrain, path[i], 25)
                             if bool then
-                                --RNGLOG('We can build on a mass marker within 30')
+                                LOG('We can build on a mass marker within 30')
                                 --local massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, waypointPath)
                                 --RNGLOG('Mass Marker'..repr(massMarker))
                                 --RNGLOG('Attempting second mass marker')
                                 
-                                local buildQueueReset = eng.EnginerBuildQueue
+                                local buildQueueReset = eng.EnginerBuildQueue or {}
                                 eng.EnginerBuildQueue = {}
                                 for _,massMarker in markers do
                                     RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
@@ -286,14 +295,16 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         if (i - math.floor(i/2)*2)==0 or VDist3Sq(builderData.Position,path[i])<40*40 then continue end
                         IssueMove({eng}, path[i])
                     end
-                    for k, v in eng.EngineerBuildQueue do
-                        if eng.EngineerBuildQueue[k].PathPoint then
-                            continue
-                        end
-                        if eng.EngineerBuildQueue[k][5] then
-                            IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
-                        else
-                            aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                    if eng.EngineerBuildQueue then
+                        for k, v in eng.EngineerBuildQueue do
+                            if eng.EngineerBuildQueue[k].PathPoint then
+                                continue
+                            end
+                            if eng.EngineerBuildQueue[k][5] then
+                                IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
+                            else
+                                aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                            end
                         end
                     end
                     while not IsDestroyed(eng) do
@@ -516,7 +527,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local finishUnit = builderData.FinishUnit
             local pos = eng:GetPosition()
             if finishUnit and not IsDestroyed(finishUnit) then
-                import('/lua/scenariotriggers.lua').CreateUnitCapturedTrigger(nil, captureUnitCallback, captureUnit)
                 IssueClearCommands({eng})
                 IssueRepair(self:GetPlatoonUnits(), finishUnit)
                 local count = 0
@@ -530,8 +540,12 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 end
             end
             self.BuilderData = {}
+            if StateUtils.GreaterThanEconEfficiencyRNG(aiBrain, 0.8, 1.0) then
+                self:ChangeState(self.DecideWhatToDo)
+                return
+            end
             coroutine.yield(10)
-            self:ChangeState(self.DecideWhatToDo)
+            self:ExitStateMachine()
             return
         end,
     },

@@ -141,10 +141,12 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
 
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
         if self.PlatoonData.Construction.CheckCivUnits then
-            local captureUnit = CheckForCivilianUnitCapture(aiBrain, eng, self.MovementLayer)
+            local captureUnit = CheckForCivilianUnitCapture(aiBrain, self, platoon.MovementLayer)
             if captureUnit then
                 platoon.PlatoonData.StateMachine = 'CaptureUnit'
                 platoon.PlatoonData.CaptureUnit = captureUnit
+                platoon.PlatoonData.Task = 'CaptureUnit'
+                platoon.PlatoonData.PreAllocatedTask = true
                 platoon:StateMachineAIRNG(self)
             end
         end
@@ -6926,7 +6928,7 @@ CheckForCivilianUnitCapture = function(aiBrain, eng, movementLayer)
         local closestDistance
         local engPos = eng:GetPosition()
         for _, v in aiBrain.EnemyIntel.CivilianCaptureUnits do
-            if not IsDestroyed(v.Unit) and v.Risk == 'Low' and (not v.EngineerAssigned or v.EngineerAssigned.Dead) and v.CaptureAttempts < 3 and NavUtils.CanPathTo(self.MovementLayer,engPos,v.Position) then
+            if not IsDestroyed(v.Unit) and v.Risk == 'Low' and (not v.EngineerAssigned or v.EngineerAssigned.Dead) and v.CaptureAttempts < 3 and NavUtils.CanPathTo(movementLayer,engPos,v.Position) then
                 local distance = VDist3Sq(engPos, v.Position)
                 if not closestDistance or distance < closestDistance then
                     --LOG('filtering closest unit, current distance is '..math.sqrt(distance))

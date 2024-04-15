@@ -55,6 +55,20 @@ local ActiveExpansion = function(self, aiBrain, builderManager)
     end
 end
 
+local AggressiveExpansion = function(self, aiBrain, builderManager)
+    --RNGLOG('LocationType is '..builderManager.LocationType)
+    if aiBrain.BrainIntel.AggressiveExpansion == builderManager.LocationType then
+        --RNGLOG('Active Expansion is set'..builderManager.LocationType)
+        --RNGLOG('Active Expansion builders are set to 900')
+        return 950
+    else
+        --RNGLOG('Disable Air Intie Pool Builder')
+        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        return 0
+    end
+end
+
+
 local NavalAdjust = function(self, aiBrain, builderManager)
     if aiBrain.MapWaterRatio > 0.60 then
         --RNGLOG('NavalExpansionAdjust return 200')
@@ -1195,6 +1209,32 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND'} },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH2 }},
+            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            Construction = {
+                LocationType = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    'T1LandFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNG Factory Builder Land T1 Expansion Aggressive',
+        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PriorityFunction = AggressiveExpansion,
+        Priority = 0,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND'} },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH2 }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
