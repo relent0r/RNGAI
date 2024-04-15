@@ -141,35 +141,11 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
 
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
         if self.PlatoonData.Construction.CheckCivUnits then
-            if aiBrain.EnemyIntel.CivilianCaptureUnits and RNGGETN(aiBrain.EnemyIntel.CivilianCaptureUnits) > 0 then
-                --LOG('We have capturable units')
-                local closestUnit
-                local closestDistance
-                local engPos = eng:GetPosition()
-                for _, v in aiBrain.EnemyIntel.CivilianCaptureUnits do
-                    if not IsDestroyed(v.Unit) and v.Risk == 'Low' and (not v.EngineerAssigned or v.EngineerAssigned.Dead) and v.CaptureAttempts < 3 and NavUtils.CanPathTo(self.MovementLayer,engPos,v.Position) then
-                        local distance = VDist3Sq(engPos, v.Position)
-                        if not closestDistance or distance < closestDistance then
-                            --LOG('filtering closest unit, current distance is '..math.sqrt(distance))
-                            local unitValue = closestUnit.Blueprint.Economy.BuildCostEnergy.BuildCostMass or 50
-                            local distanceMult = math.sqrt(distance)
-                            if unitValue / distanceMult > 0.2 then
-                                --LOG('Found right value unit '..(unitValue / distanceMult))
-                                closestUnit = v.Unit
-                                closestDistance = distance
-                            end
-                        end
-                    end
-                end
-                
-                if closestUnit and not IsDestroyed(closestUnit) then
-                    --LOG('Found unit to capture, checking threat at position')
-                    if GrabPosDangerRNG(aiBrain,closestUnit:GetPosition(), 40, true, false, false).enemySurface < 5 then
-                        --LOG('Attempting to start capture unit ai')
-                        self:CaptureUnitAIRNG(closestUnit)
-                        return
-                    end
-                end
+            local captureUnit = CheckForCivilianUnitCapture(aiBrain, eng, self.MovementLayer)
+            if captureUnit then
+                platoon.PlatoonData.StateMachine = 'CaptureUnit'
+                platoon.PlatoonData.CaptureUnit = captureUnit
+                platoon:StateMachineAIRNG(self)
             end
         end
         coroutine.yield(1)
@@ -6940,6 +6916,36 @@ GetBaseType = function(baseName)
     end
     LOG('Returning baseType '..repr(baseType))
     return baseType
+end
+
+CheckForCivilianUnitCapture = function(aiBrain, eng, movementLayer)
+
+    if aiBrain.EnemyIntel.CivilianCaptureUnits and not table.empty(aiBrain.EnemyIntel.CivilianCaptureUnits) then
+        --LOG('We have capturable units')
+        local closestUnit
+        local closestDistance
+        local engPos = eng:GetPosition()
+        for _, v in aiBrain.EnemyIntel.CivilianCaptureUnits do
+            if not IsDestroyed(v.Unit) and v.Risk == 'Low' and (not v.EngineerAssigned or v.EngineerAssigned.Dead) and v.CaptureAttempts < 3 and NavUtils.CanPathTo(self.MovementLayer,engPos,v.Position) then
+                local distance = VDist3Sq(engPos, v.Position)
+                if not closestDistance or distance < closestDistance then
+                    --LOG('filtering closest unit, current distance is '..math.sqrt(distance))
+                    local unitValue = closestUnit.Blueprint.Economy.BuildCostEnergy.BuildCostMass or 50
+                    local distanceMult = math.sqrt(distance)
+                    if unitValue / distanceMult > 0.2 then
+                        --LOG('Found right value unit '..(unitValue / distanceMult))
+                        closestUnit = v.Unit
+                        closestDistance = distance
+                    end
+                end
+            end
+        end
+        
+        if closestUnit and not IsDestroyed(closestUnit) then
+            return closestUnit
+        end
+    end
+
 end
 
 

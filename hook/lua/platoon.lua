@@ -127,51 +127,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         self:PlatoonDisband()
     end,
 
-    CaptureUnitAIRNG = function(self, captureUnit)
-        local aiBrain = self:GetBrain()
-        local eng = self:GetPlatoonUnits()[1]
-        if eng and not eng.Dead and not eng.CaptureDoneCallbackSet and eng.PlatoonHandle and PlatoonExists(eng:GetAIBrain(), eng.PlatoonHandle) then
-            import('/lua/ScenarioTriggers.lua').CreateUnitStopCaptureTrigger(eng.PlatoonHandle.EngineerCaptureDoneRNG, eng)
-            eng.CaptureDoneCallbackSet = true
-        end
-        if captureUnit and not IsDestroyed(captureUnit) then
-            if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, captureUnit:GetPosition()) then
-                --eng:SetCustomName('CaptureUnitAIRNG')
-                local captureUnitCallback = function(unit, captor)
-                    local aiBrain = captor:GetAIBrain()
-                    --LOG('*AI DEBUG: ENGINEER: I was Captured by '..aiBrain.Nickname..'!')
-                    if unit and (unit.Blueprint.CategoriesHash.MOBILE and unit.Blueprint.CategoriesHash.LAND 
-                    and not unit.Blueprint.CategoriesHash.ENGINEER) then
-                        if unit:TestToggleCaps('RULEUTC_ShieldToggle') then
-                            --LOG('Enable shield for '..unit.UnitId)
-                            unit:SetScriptBit('RULEUTC_ShieldToggle', true)
-                            if unit.MyShield then
-                                unit.MyShield:TurnOn()
-                            end
-                        end
-                        if unit and not IsDestroyed(unit) then
-                            local capturedPlatoon = aiBrain:MakePlatoon('', '')
-                            capturedPlatoon.PlanName = 'Captured Platoon'
-                            aiBrain:AssignUnitsToPlatoon(capturedPlatoon, {unit}, 'Attack', 'None')
-                            import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ }, capturedPlatoon, unit)
-                        end
-                    end
-                    captor.CaptureComplete = true
-                end
-                if captureUnit and not IsDestroyed(captureUnit) then
-                    import('/lua/scenariotriggers.lua').CreateUnitCapturedTrigger(nil, captureUnitCallback, captureUnit)
-                    IssueClearCommands({eng})
-                    IssueCapture({eng}, captureUnit)
-                    while aiBrain:PlatoonExists(self) and not eng.CaptureComplete do
-                        coroutine.yield(30)
-                    end
-                    eng.CaptureComplete = nil
-                end
-            end
-        end
-        self:PlatoonDisband()
-    end,
-
     RepairAIRNG = function(self)
         local aiBrain = self:GetBrain()
         if not self.PlatoonData or not self.PlatoonData.LocationType then
@@ -1310,35 +1265,11 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
 
         if cons.CheckCivUnits then
-            if aiBrain.EnemyIntel.CivilianCaptureUnits and not table.empty(aiBrain.EnemyIntel.CivilianCaptureUnits) then
-                --LOG('We have capturable units')
-                local closestUnit
-                local closestDistance
-                local engPos = eng:GetPosition()
-                for _, v in aiBrain.EnemyIntel.CivilianCaptureUnits do
-                    if not IsDestroyed(v.Unit) and v.Risk == 'Low' and (not v.EngineerAssigned or v.EngineerAssigned.Dead) and v.CaptureAttempts < 3 and NavUtils.CanPathTo(self.MovementLayer,engPos,v.Position) then
-                        local distance = VDist3Sq(engPos, v.Position)
-                        if not closestDistance or distance < closestDistance then
-                            --LOG('filtering closest unit, current distance is '..math.sqrt(distance))
-                            local unitValue = closestUnit.Blueprint.Economy.BuildCostEnergy.BuildCostMass or 50
-                            local distanceMult = math.sqrt(distance)
-                            if unitValue / distanceMult > 0.2 then
-                                --LOG('Found right value unit '..(unitValue / distanceMult))
-                                closestUnit = v.Unit
-                                closestDistance = distance
-                            end
-                        end
-                    end
-                end
-                
-                if closestUnit and not IsDestroyed(closestUnit) then
-                    --LOG('Found unit to capture, checking threat at position')
-                    if RUtils.GrabPosDangerRNG(aiBrain,closestUnit:GetPosition(), 40).enemySurface < 5 then
-                        --LOG('Attempting to start capture unit ai')
-                        self:CaptureUnitAIRNG(closestUnit)
-                        return
-                    end
-                end
+            local captureUnit = RUtils.CheckForCivilianUnitCapture(aiBrain, eng, self.MovementLayer)
+            if captureUnit then
+                self.PlatoonData.StateMachine = 'CaptureUnit'
+                self.PlatoonData.CaptureUnit = captureUnit
+                self:StateMachineAIRNG(self)
             end
         end
 
@@ -4719,50 +4650,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
     end,
 
-    FinishStructureAIRNG = function(self)
-        local aiBrain = self:GetBrain()
-
-        if not self.PlatoonData or not self.PlatoonData.Assist then
-            WARN('* AI-RNG: FinishStructureAIRNG missing data' )
-            self:PlatoonDisband()
-            return
-        end
-        local assistData = self.PlatoonData.Assist
-        local eng = self:GetPlatoonUnits()[1]
-        local unitBeingFinished
-        local engineerManager = aiBrain.BuilderManagers[assistData.AssistLocation].EngineerManager
-        if not engineerManager then
-            WARN('* AI-RNG: FinishStructureAIRNG cant find engineer manager' )
-            self:PlatoonDisband()
-            return
-        end
-        local unfinishedUnits = aiBrain:GetUnitsAroundPoint(assistData.BeingBuiltCategories, engineerManager.Location, engineerManager.Radius, 'Ally')
-        for k,v in unfinishedUnits do
-            if v:GetFractionComplete() < 1 and RNGGETN(v:GetGuards()) < 1 then
-                --LOG('No Guards for strucutre '..repr(v:GetGuards()))
-                self:Stop()
-                if not v.Dead and not v:BeenDestroyed() then
-                    unitBeingFinished = v
-                    IssueRepair(self:GetPlatoonUnits(), v)
-                end
-                break
-            end
-        end
-        local count = 0
-        repeat
-            coroutine.yield(20)
-            if not aiBrain:PlatoonExists(self) then
-                return
-            end
-            if unitBeingFinished and not unitBeingFinished.Dead and not unitBeingFinished:BeenDestroyed() and unitBeingFinished:GetFractionComplete() == 1 then
-                break
-            end
-            count = count + 1
-            if eng:IsIdleState() then break end
-        until count >= 90
-        self:PlatoonDisband()
-    end,
-
     SetAIPlanRNG = function(self, plan, currentPlan, planData)
         if not self[plan] then return end
         if self.AIThread then
@@ -5625,6 +5512,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                 nukePlatoonAvailable:UniquelyNamePlatoon('NukeStateMachine')
             end
             import("/mods/rngai/lua/ai/statemachines/platoon-structure-nuke.lua").AssignToUnitsMachine({ }, nukePlatoonAvailable, self:GetPlatoonUnits())
+        elseif machineType == 'PreAllocatedTask' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
+        end
         end
         WaitTicks(50)
     end,

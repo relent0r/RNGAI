@@ -58,6 +58,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 return
             end
             local aiBrain = self:GetBrain()
+            local data = self.PlatoonData
             self.LastActive = GetGameTimeSeconds()
             -- how should we handle multipleself.engineers?
             local unit = self:GetPlatoonUnits()[1]
@@ -65,56 +66,108 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             unit.DesiresAssist = false
             unit.NumAssistees = nil
             unit.MinNumAssistees = nil
-            localself.engineerManager = unit.BuilderManagerData.EngineerManager
-            local builder =self.engineerManager:GetHighestBuilder('Any', {unit})
-            --BuilderValidation could go here?
-            -- if theself.engineer is too far away from the builder then return to base and dont take up a builder instance.
-            if not builder then
-                self:ChangeState(self.CheckForOtherTask)
-                return
-            end
-            self.Priority = builder:GetPriority()
-            self.BuilderName = builder:GetBuilderName()
-            self:SetPlatoonData(builder:GetBuilderData(self.LocationType))
-            -- This isn't going to work because its recording the life and death of the platoon so it wont clear until the platoon is disbanded
-            -- StoreHandle should be doing more than it is. It can allowself.engineers to detect when something is queued to be built via categories?
-            builder:StoreHandle(self)
-            if self.PlatoonData.Construction then
-                local reference
-                local relative
-                local buildFunction
-                local cons = self.PlatoonData.Construction
-                local baseTmplList = {}
-                local FactionToIndex  = { UEF = 1, AEON = 2, CYBRAN = 3, SERAPHIM = 4, NOMADS = 5}
-                local factionIndex = cons.FactionIndex or FactionToIndex[unit.factionCategory]
-                local buildingTmplFile = import(cons.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
-                local baseTmplFile = import(cons.BaseTemplateFile or '/lua/BaseTemplates.lua')
-                local baseTmplDefault = import('/lua/BaseTemplates.lua')
-                local buildingTmpl = buildingTmplFile[(cons.BuildingTemplate or 'BuildingTemplates')][factionIndex]
-                local baseTmpl = baseTmplFile[(cons.BaseTemplate or 'BaseTemplates')][factionIndex]
-                if cons.NearDefensivePoints then
-                    if cons.Type == 'TMD' then
-                        local tmdPositions = RUtils.GetTMDPosition(aiBrain, unit, cons.LocationType)
-                        for _, v in tmdPositions do
-                            reference = v
-                            break
+            if data.PreAllocatedTask then
+                self:LogDebug(string.format('PreAllocatedTask detected, task is '..tostring(data.Task)))
+                if data.Task == 'Reclaim' then
+                    local plat = aiBrain:MakePlatoon('', '')
+                    aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'support', 'None')
+                    import("/mods/rngai/lua/ai/statemachines/platoon-engineer-reclaim.lua").AssignToUnitsMachine({ StateMachine = 'Reclaim', LocationType = 'FLOATING' }, plat, {unit})
+                    return
+                elseif data.Task == 'CaptureUnit' then
+                    self:LogDebug(string.format('PreAllocatedTask is CaptureUnit'))
+                    if not unit.CaptureDoneCallbackSet then
+                        self:LogDebug(string.format('No Capture Callback set on engineer, setting '))
+                        import('/lua/ScenarioTriggers.lua').CreateUnitStopCaptureTrigger(unit.PlatoonHandle.EngineerCaptureDoneRNG, unit)
+                        unit.CaptureDoneCallbackSet = true
+                    end
+                    local captureUnit = self.PlatoonData.CaptureUnit
+                    if not IsDestroyed(captureUnit) and RUtils.GrabPosDangerRNG(aiBrain,captureUnit:GetPosition(), 40).enemySurface < 5 then
+                        self.BuilderData = {
+                            CaptureUnit = captureUnit
+                            Position = captureUnit:GetPosition()
+                        }
+                        self:LogDebug(string.format('Capture Unit Data set'))
+                        local captureUnitPos = captureUnit:GetPosition()
+                        local rx = engPos[1] - captureUnitPos[1]
+                        local rz = engPos[3] - captureUnitPos[3]
+                        local captureUnitDistance = rx * rx + rz * rz
+                        if captureUnitDistance < 900 then
+                            self:ChangeState(self.CaptureUnit)
+                            return
+                        else
+                            self:ChangeState(self.NavigateToTaskLocation)
+                            return
                         end
                     else
-                        reference = RUtils.GetDefensivePointRNG(aiBrain, cons.LocationType or 'MAIN', cons.Tier or 2, cons.Type)
+                        self.BuilderData = {}
+                        coroutine.yield(10)
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
                     end
-                    buildFunction = AIBuildStructures.AIBuildBaseTemplateOrderedRNG
-                    RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
-                else
-                    RNGINSERT(baseTmplList, baseTmpl)
-                    relative = true
-                    reference = true
-                    buildFunction = AIBuildStructures.AIExecuteBuildStructureRNG
+                elseif data.Task == 'FinishUnit' then
+                    local unitBeingFinished
+                    local assistData = self.PlatoonData.Assist
+                    local engineerManager = aiBrain.BuilderManagers[assistData.AssistLocation].EngineerManager
+                    if not engineerManager then
+                        coroutine.yield(10)
+                        WARN('* AI-RNG: FinishStructure StateMachine cant find engineer manager' )
+                        self:ExitStateMachine()
+                        return
+                    end
+                    local unfinishedUnits = aiBrain:GetUnitsAroundPoint(assistData.BeingBuiltCategories, engineerManager.Location, engineerManager.Radius, 'Ally')
+                    for k,v in unfinishedUnits do
+                        if v:GetFractionComplete() < 1 and RNGGETN(v:GetGuards()) < 1 then
+                            --LOG('No Guards for strucutre '..repr(v:GetGuards()))
+                            if not v.Dead and not v:BeenDestroyed() then
+                                unitBeingFinished = v
+                                break
+                            end
+                        end
+                    end
+                    if unitBeingFinished and not unitBeingFinished.Dead then
+                        unitBeingFinishedPosition = unitBeingFinished:GetPosition()
+                        self.BuilderData = {
+                            FinishUnit = unitBeingFinished
+                            Position = unitBeingFinishedPosition
+                        }
+                        self:LogDebug(string.format('Capture Unit Data set'))
+                        local rx = engPos[1] - unitBeingFinishedPosition[1]
+                        local rz = engPos[3] - unitBeingFinishedPosition[3]
+                        local unitBeingFinishedDistance = rx * rx + rz * rz
+                        if unitBeingFinishedDistance < 900 then
+                            self:ChangeState(self.FinishUnit)
+                            return
+                        else
+                            self:ChangeState(self.NavigateToTaskLocation)
+                            return
+                        end
+                    else
+                        self.BuilderData = {}
+                        coroutine.yield(10)
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
+                elseif data.Task == 'ReclaimStructure' then
+
                 end
-                if cons.BuildClose then
-                    closeToBuilder = unit
+            else
+                localself.engineerManager = unit.BuilderManagerData.EngineerManager
+                local builder = self.engineerManager:GetHighestBuilder('Any', {unit})
+                --BuilderValidation could go here?
+                -- if theself.engineer is too far away from the builder then return to base and dont take up a builder instance.
+                if not builder then
+                    self:ChangeState(self.CheckForOtherTask)
+                    return
                 end
+                self.Priority = builder:GetPriority()
+                self.BuilderName = builder:GetBuilderName()
+                self:SetPlatoonData(builder:GetBuilderData(self.LocationType))
+                -- This isn't going to work because its recording the life and death of the platoon so it wont clear until the platoon is disbanded
+                -- StoreHandle should be doing more than it is. It can allowself.engineers to detect when something is queued to be built via categories?
+                builder:StoreHandle(self)
             end
-            self:ChangeState(self.NavigateToTaskLocation)
+            coroutine.yield(10)
+            self:ChangeState(self.DecideWhatToDo)
             return
         end,
     },
@@ -401,6 +454,87 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
+    CaptureUnit = State {
+
+        StateName = 'CaptureUnit',
+
+        --- Check for reclaim or assist or expansion specific things based on distance from base.
+        ---@param self AIPlatoonEngineerBehavior
+        Main = function(self)
+            local aiBrain = self:GetBrain()
+            local eng = self.eng
+            local builderData = self.BuilderData
+            local captureUnit = builderData.CaptureUnit
+            local pos = eng:GetPosition()
+            local captureUnitCallback = function(unit, captor)
+                local aiBrain = captor:GetAIBrain()
+                --LOG('*AI DEBUG: ENGINEER: I was Captured by '..aiBrain.Nickname..'!')
+                if unit and (unit.Blueprint.CategoriesHash.MOBILE and unit.Blueprint.CategoriesHash.LAND 
+                and not unit.Blueprint.CategoriesHash.ENGINEER) then
+                    if unit:TestToggleCaps('RULEUTC_ShieldToggle') then
+                        --LOG('Enable shield for '..unit.UnitId)
+                        unit:SetScriptBit('RULEUTC_ShieldToggle', true)
+                        if unit.MyShield then
+                            unit.MyShield:TurnOn()
+                        end
+                    end
+                    if unit and not IsDestroyed(unit) then
+                        local capturedPlatoon = aiBrain:MakePlatoon('', '')
+                        capturedPlatoon.PlanName = 'Captured Platoon'
+                        aiBrain:AssignUnitsToPlatoon(capturedPlatoon, {unit}, 'Attack', 'None')
+                        import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ }, capturedPlatoon, unit)
+                    end
+                end
+                captor.CaptureComplete = true
+            end
+            if captureUnit and not IsDestroyed(captureUnit) then
+                import('/lua/scenariotriggers.lua').CreateUnitCapturedTrigger(nil, captureUnitCallback, captureUnit)
+                IssueClearCommands({eng})
+                IssueCapture({eng}, captureUnit)
+                while aiBrain:PlatoonExists(self) and not eng.CaptureComplete do
+                    coroutine.yield(30)
+                end
+                eng.CaptureComplete = nil
+            end
+            self.BuilderData = {}
+            coroutine.yield(10)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
+    FinishUnit = State {
+
+        StateName = 'FinishUnit',
+
+        --- Check for reclaim or assist or expansion specific things based on distance from base.
+        ---@param self AIPlatoonEngineerBehavior
+        Main = function(self)
+            local aiBrain = self:GetBrain()
+            local eng = self.eng
+            local builderData = self.BuilderData
+            local finishUnit = builderData.FinishUnit
+            local pos = eng:GetPosition()
+            if finishUnit and not IsDestroyed(finishUnit) then
+                import('/lua/scenariotriggers.lua').CreateUnitCapturedTrigger(nil, captureUnitCallback, captureUnit)
+                IssueClearCommands({eng})
+                IssueRepair(self:GetPlatoonUnits(), finishUnit)
+                local count = 0
+                while count < 90 do
+                    coroutine.yield(30)
+                    if finishUnit and not finishUnit.Dead and not IsDestroyed(finishUnit) and finishUnit:GetFractionComplete() == 1 then
+                        break
+                    end
+                    count = count + 1
+                    if eng:IsIdleState() then break end
+                end
+            end
+            self.BuilderData = {}
+            coroutine.yield(10)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
 }
 
 ---@param data { Behavior: 'AIBehavior' }
@@ -412,7 +546,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIPlatoonEngineerBehavior)
-        platoon.BuilderData = data.BuilderData
+        platoon.PlatoonData = data.PlatoonData
         local platoonUnits = platoon:GetPlatoonUnits()
         if platoonUnits then
             for _, unit in platoonUnits do
