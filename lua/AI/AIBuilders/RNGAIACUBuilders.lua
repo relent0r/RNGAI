@@ -774,6 +774,9 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssisteeType = categories.ENGINEER,
                 AssistRange = 35,
@@ -794,6 +797,9 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistLocation = 'LocationType',
                 AssisteeType = categories.STRUCTURE,
@@ -814,6 +820,9 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssisteeType = categories.FACTORY,
                 AssistRange = 30,

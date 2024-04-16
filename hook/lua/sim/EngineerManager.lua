@@ -101,17 +101,6 @@ EngineerManager = Class(RNGEngineerManager) {
             end
             self:AddUnitRNG(finishedUnit)
         end
-        local guards = unit:GetGuards()
-        for k,v in guards do
-            if not v.Dead and v.AssistPlatoon then
-                if self.Brain:PlatoonExists(v.AssistPlatoon) and not v.Active then
-                    v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
-                else
-                    v.AssistPlatoon = nil
-                end
-            end
-        end
-        --self.Brain:RemoveConsumption(self.LocationType, unit)
     end,
 
     CreateFloatingEM = function(self, brain, location)
@@ -372,16 +361,6 @@ EngineerManager = Class(RNGEngineerManager) {
     end,
 
     RemoveUnitRNG = function(self, unit)
-        local guards = unit:GetGuards()
-        for k,v in guards do
-            if not v.Dead and v.AssistPlatoon then
-                if self.Brain:PlatoonExists(v.AssistPlatoon) then
-                    v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
-                else
-                    v.AssistPlatoon = nil
-                end
-            end
-        end
 
         local found = false
         for k,v in self.ConsumptionUnits do

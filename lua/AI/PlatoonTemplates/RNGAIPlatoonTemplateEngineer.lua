@@ -1,12 +1,4 @@
 PlatoonTemplate {
-    Name = 'T1EngineerAssistRNG',
-    Plan = 'ManagerEngineerAssistAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * categories.TECH1, 1, 1, 'support', 'None' }
-    },
-}
-
-PlatoonTemplate {
     Name = 'EngineerAssistManagerT1RNG',
     Plan = 'PlatoonMergeRNG',
     GlobalSquads = {
@@ -40,7 +32,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'T123EngineerAssistRNG',
-    Plan = 'ManagerEngineerAssistAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.ENGINEER * (categories.TECH1 + categories.TECH2 + categories.TECH3), 1, 1, 'support', 'None' }
     },
@@ -48,7 +40,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'T23EngineerAssistRNG',
-    Plan = 'ManagerEngineerAssistAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.ENGINEER * (categories.TECH2 + categories.TECH3), 1, 1, 'support', 'None' }
     },
@@ -56,15 +48,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'T12EngineerAssistRNG',
-    Plan = 'ManagerEngineerAssistAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * (categories.TECH1 + categories.TECH2), 1, 1, 'support', 'None' }
-    },
-}
-
-PlatoonTemplate {
-    Name = 'T12EconAssistRNG',
-    Plan = 'ManagerEngineerAssistAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.ENGINEER * (categories.TECH1 + categories.TECH2), 1, 1, 'support', 'None' }
     },
@@ -72,7 +56,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'T3SACUEngineerAssistRNG',
-    Plan = 'ManagerEngineerAssistAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.ENGINEER * (categories.TECH3 + categories.SUBCOMMANDER) - categories.ENGINEERSTATION - categories.COMMAND, 1, 1, 'support', 'None' }
     },
@@ -104,7 +88,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'CommanderAssistRNG',
-    Plan = 'ManagerEngineerAssistAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.COMMAND, 1, 1, 'support', 'None' },
     },

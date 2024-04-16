@@ -105,16 +105,6 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.DelayBuildOrder(self,factory,bType,time)
         end
-        local guards = factory:GetGuards()
-        for k,v in guards do
-            if not v.Dead and v.AssistPlatoon then
-                if self.Brain:PlatoonExists(v.AssistPlatoon) and not v.Active then
-                    v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
-                else
-                    v.AssistPlatoon = nil
-                end
-            end
-        end
         if factory.DelayThread then
             return
         end
@@ -197,19 +187,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.FactoryDestroyed(self, factory)
         end
-        --RNGLOG('Factory Destroyed '..factory.UnitId)
-        --RNGLOG('We have '..table.getn(self.FactoryList) ' at the start of the FactoryDestroyed function')
-        local guards = factory:GetGuards()
         local factoryDestroyed = false
-        for k,v in guards do
-            if not v.Dead and v.AssistPlatoon then
-                if self.Brain:PlatoonExists(v.AssistPlatoon) then
-                    v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
-                else
-                    v.AssistPlatoon = nil
-                end
-            end
-        end
         for k,v in self.FactoryList do
             if (not v.EntityId) or v.Dead then
                 --RNGLOG('Removing factory from FactoryList'..v.UnitId)

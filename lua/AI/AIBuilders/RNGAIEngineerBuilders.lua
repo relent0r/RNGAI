@@ -484,6 +484,9 @@ BuilderGroup {
         },
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistLocation = 'LocationType',
                 AssisteeType = categories.FACTORY,
@@ -532,6 +535,9 @@ BuilderGroup {
             },
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -557,6 +563,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -580,6 +589,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -605,6 +617,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -630,6 +645,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -655,6 +673,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -943,7 +964,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Engineer Assist Factory Naval',
-        PlatoonTemplate = 'T12EconAssistRNG',
+        PlatoonTemplate = 'T12EngineerAssistRNG',
         DelayEqualBuildPlattons = {'Assist', 3},
         Priority = 500,
         InstanceCount = 8,
@@ -953,6 +974,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistFactoryUnit = true,
@@ -1411,6 +1435,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
@@ -1434,6 +1461,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
@@ -1477,6 +1507,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -1501,6 +1534,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -1526,6 +1562,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',

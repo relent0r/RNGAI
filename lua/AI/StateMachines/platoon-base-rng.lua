@@ -137,6 +137,15 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                     self.ArtilleryUnits[unit.EntityId] = {Unit = unit, CurrentTarget = nil }
                 end
             end
+            if unitCats.TACTICALMISSILEPLATFORM and unitCats.STRUCTURE and unitCats.TECH2 then
+                if not unit.terraincallbackset then
+                    local missileTerrainCallbackRNG = import('/mods/RNGAI/lua/AI/RNGEventCallbacks.lua').MissileCallbackRNG
+                    unit:AddMissileImpactTerrainCallback(missileTerrainCallbackRNG)
+                    unit.terraincallbackset = true
+                end
+                unit:SetAutoMode(true)
+                IssueClearCommands({unit})
+            end
             if (unit.Sync.Regen>0) or not unit.initialized then
                 unit.initialized=true
                 if unitCats.ARTILLERY and unitCats.MOBILE and not unitCats.EXPERIMENTAL then
