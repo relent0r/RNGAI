@@ -799,7 +799,7 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',
     Builder {
         BuilderName = 'RNGAI T2 TML Silo',
-        PlatoonTemplate = 'AddToTMLPlatoonRNG',
+        PlatoonTemplate = 'T2TMLStructureRNG',
         Priority = 1,
         InstanceCount = 1000,
         FormRadius = 100,
@@ -809,6 +809,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanArmyPoolWithCategoryRNG', { 0, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM * categories.TECH2 } },
         },
         BuilderData = {
+            StateMachine = 'TML',
             PlatoonPlan = 'TMLAIRNG',
             LocationType = 'LocationType'
         },

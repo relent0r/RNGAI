@@ -201,3 +201,23 @@ BuilderGroup {
         BuilderType = 'Any',
     },
 }
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Intel Formers',
+    BuildersType = 'PlatoonFormBuilder',
+    Builder {
+        BuilderName = 'RNGAI Optics Former',
+        PlatoonTemplate = 'T3OpticsStructureRNG',
+        Priority = 10,
+        InstanceCount = 1,
+        FormRadius = 10000,
+        BuilderConditions = {
+            { UCBC, 'HaveGreaterThanArmyPoolWithCategoryRNG', { 0, categories.AEON * categories.OPTICS * categories.STRUCTURE } },
+        },
+        BuilderData = {
+            StateMachine = 'Optics',
+            LocationType = 'LocationType'
+        },
+        BuilderType = 'Any',
+    },
+}

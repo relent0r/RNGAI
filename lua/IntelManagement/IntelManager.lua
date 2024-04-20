@@ -55,7 +55,7 @@ IntelManager = Class {
         self.ZoneExpansions = { 
             Pathable = {},
             NonPathable = {},
-            ClosestToEnemy = {}
+            ClosestToEnemy = {},
         }
         self.MapIntelGridXRes = 0
         self.MapIntelGridZRes = 0
@@ -66,6 +66,10 @@ IntelManager = Class {
             IntelCoverage = 0,
             MustScoutArea = false,
             PerimeterExpired = false
+        }
+        self.MapMaximumValues = {
+            MaximumResourceValue = 0,
+            MaxumumGraphValue = 0
         }
         self.StrategyFlags = {
             T3BomberRushActivated = false,
@@ -333,7 +337,7 @@ IntelManager = Class {
 
     WaitForMarkerInfection = function(self)
         --RNGLOG('Wait for marker infection at '..GetGameTimeSeconds())
-        while not ScenarioInfo.MarkersInfectedRNG do
+        while not self.Brain.MarkersInfectedRNG do
             coroutine.yield(20)
         end
         --RNGLOG('Markers infection completed at '..GetGameTimeSeconds())
@@ -355,7 +359,8 @@ IntelManager = Class {
         coroutine.yield(Random(250,350))
         local weightageValues = {
             teamValue = 0.4,
-            massValue = 0.3,
+            massValue = 0.4,
+            distanceValue = 0.5,
             graphValue = 0.2,
             enemyLand = 0.1,
             enemyAir = 0.1,
@@ -365,11 +370,21 @@ IntelManager = Class {
             enemyStartAngle = 0.3,
             enemyStartDistance = 0.2
         }
+        local maxTeamValue = 2
+        local maxResourceValue = self.MapMaximumValues.MaximumResourceValue
+        local maxGraphValue = self.MapMaximumValues.MaximumGraphValue
+        local maxEnemyLandThreat = 25
+        local maxEnemyAirThreat = 25
+        local maxFriendlyLandThreat = 25
+        local maxFriendlyAirThreat = 25
+
         local mainBasePos = self.Brain.BrainIntel.StartPos
         local aiBrain = self.Brain
 
         while true do
             local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+            local maxDistance = math.max(playableArea[2],playableArea[4])
+            maxDistance = maxDistance * maxDistance
             local zoneSet = aiBrain.Zones.Land.zones
             local zonePriorityList = {}
             local gameTime = GetGameTimeSeconds()
@@ -379,7 +394,7 @@ IntelManager = Class {
             for k, v in zoneSet do
                 if v.label and v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
                     local graphLabel = aiBrain.GraphZones[v.label]
-                    local markersInGraph = graphLabel.MassMarkersInZone or 1
+                    local markersInGraph = graphLabel.MassMarkersInGraph or 1
                     if markersInGraph > 2 then
                         labelResourceValue[v.label] = labelResourceValue[v.label] or {}
                         table.insert(labelResourceValue[v.label], {ZoneID = v.id, ResourceValue = v.resourcevalue})
@@ -423,16 +438,23 @@ IntelManager = Class {
                                 end
                                 if not edgeSkip then
                                     if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) and (not v.engineerallocated or v.engineerallocated.Dead) and (v.lastexpansionattempt == 0 or v.lastexpansionattempt + 30 < gameTime) then
-                                        --LOG('Expansion passed first check')
-                                        --LOG('Expansion passed factory structure check')
+                                        local normalizedDistanceValue = mainBaseDistance / maxDistance
+                                        local normalizedTeamValue = v.teamvalue / maxTeamValue
+                                        local normalizedResourceValue = v.resourcevalue / maxResourceValue
+                                        local normalizedMarkersInGraphValue = markersInGraph  / maxGraphValue
+                                        local normalizedEnemyLandThreatValue = v.enemylandthreat / maxEnemyLandThreat
+                                        local normalizedEnemyAirThreatValue = v.enemyantiairthreat / maxEnemyAirThreat
+                                        local normalizedFriendLandThreatValue = v.friendlyantisurfacethreat / maxFriendlyLandThreat
+                                        local normalizedFriendAirThreatValue = v.friendlylandantiairthreat / maxFriendlyAirThreat
                                         local priorityScore = (
-                                            v.teamvalue * weightageValues['teamValue'] +
-                                            v.resourcevalue * weightageValues['massValue'] +
-                                            markersInGraph * weightageValues['graphValue'] -
-                                            v.enemylandthreat * weightageValues['enemyLand'] -
-                                            v.enemyantiairthreat * weightageValues['enemyAir'] +
-                                            v.friendlyantisurfacethreat * weightageValues['friendlyantisurfacethreat'] -
-                                            v.friendlylandantiairthreat * weightageValues['friendlylandantiairthreat']
+                                            normalizedTeamValue * weightageValues['teamValue'] +
+                                            normalizedResourceValue * weightageValues['massValue'] -
+                                            normalizedDistanceValue * weightageValues['distanceValue'] +
+                                            normalizedMarkersInGraphValue * weightageValues['graphValue'] -
+                                            normalizedEnemyLandThreatValue * weightageValues['enemyLand'] -
+                                            normalizedEnemyAirThreatValue * weightageValues['enemyAir'] +
+                                            normalizedFriendLandThreatValue * weightageValues['friendlyantisurfacethreat'] -
+                                            normalizedFriendAirThreatValue * weightageValues['friendlylandantiairthreat']
                                         )
                                         table.insert(zonePriorityList, {ZoneID = v.id, Position = v.pos, Priority = priorityScore, Label = v.label, ResourceValue = v.resourcevalue, TeamValue = v.teamvalue })
                                     end
@@ -758,7 +780,32 @@ IntelManager = Class {
                     --local zoneCount = aiBrain.BuilderManagers['MAIN'].PathableZones.PathableZoneCount
                     --local totalMobileAARequired = math.ceil(zoneCount * (enemyThreat.Air / selfThreat.AirNow)) or 1
                     --local threatRequired
-                    local compare = 0
+                    local weightageValues = {
+                        teamValue = 0.3,
+                        massValue = 0.2,
+                        enemyLand = 0.1,
+                        enemyAir = 0.5,
+                        friendlyantisurfacethreat = 0.05,
+                        friendlylandantiairthreat = 0.05,
+                        startPos = 0.3,
+                        control = 0.3,
+                    }
+                    local originPos
+                    local maxTeamValue = 2
+                    local maxResourceValue = self.MapMaximumValues.MaximumResourceValue
+                    if maxResourceValue == 0 then
+                        maxResourceValue = 1
+                    end
+                    if platoon then
+                        originPos = platoon.Pos
+                    else
+                        originPos = aiBrain.BrainIntel.StartPos
+                    end
+                    local maxEnemyLandThreat = 25
+                    local maxEnemyAirThreat = 25
+                    local maxFriendlyLandThreat = 25
+                    local maxFriendlyAirThreat = 25
+
                     local platoonLabel = platoon.Label
                    --RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
                     for k, v in zoneSet do
@@ -766,52 +813,38 @@ IntelManager = Class {
                             if requireSameLabel and platoonLabel and v.label > 0 and platoonLabel ~= v.label then
                                 continue
                             end
-                            local distanceModifier = VDist3(v.pos, aiBrain.BrainIntel.StartPos)
-                            local enemyModifier = 1
+                            local distanceModifier = VDist3Sq(originPos, v.pos)
                             local startPos = 1
-                            local antiairdesire = 1
                             local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
                             local controlValue = 1
                             if status == 'Hostile' and v.friendlyantisurfacethreat == 0 then continue end
                             if status == 'Contested' or status == 'Unoccupied' then
                                 controlValue = 1.5
                             end
-                            if v.friendlyantisurfacethreat == 0 and v.enemylandthreat > 0 then
-                                enemyModifier = enemyModifier - 0.25
+                            if v.startpositionclose then
+                                startPos = 1.5
                             end
-                            if v.friendlyantisurfacethreat > 0 and v.enemylandthreat > v.friendlyantisurfacethreat then
-                                enemyModifier = enemyModifier + 0.5
-                            end
-                            enemyModifier = math.max(enemyModifier, 1.0)  -- Ensure enemyModifier is not less than 1
-                            if v.friendlyantiairthreat > 5 then
-                                antiairdesire = antiairdesire - 0.5
-                            end
-                            if v.enemyairthreat > 0 then
-                                antiairdesire = antiairdesire + 1.0
-                            end
-                            if v.enemyairthreat > 0 then
-                                if v.friendlyantiairthreat > 0 then
-                                    antiairdesire = antiairdesire + 1.5
-                                elseif v.friendlyantisurfacethreat > 0 then
-                                    antiairdesire = antiairdesire + 2.0
-                                else
-                                    antiairdesire = antiairdesire + 1.0
-                                end
-                            end
-                            local resourceValue = zoneSet[v.id].resourcevalue or 1
-                            if zoneSet[v.id].startpositionclose then
-                                startPos = 0.7
-                            end
-                            if zoneSet[v.id].enemylandthreat > zoneSet[v.id].friendlyantisurfacethreat then
-                                enemyDanger = 0.4
-                            end
-                    
-                            if platoon.Zone == v.id and zoneSet[v.id].enemyairthreat == 0 then
-                                enemyDanger = 0
-                            end
-                            compare = (20000 / distanceModifier) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger * antiairdesire * v.teamvalue
-                            if compare > selection then
-                                selection = compare
+                            local normalizedTeamValue = v.teamvalue / maxTeamValue
+                            local normalizedResourceValue = v.resourcevalue / maxResourceValue
+                            local normalizedEnemyLandThreatValue = v.enemylandthreat / maxEnemyLandThreat
+                            local normalizedEnemyAirThreatValue = v.enemyantiairthreat / maxEnemyAirThreat
+                            local normalizedFriendLandThreatValue = v.friendlyantisurfacethreat / maxFriendlyLandThreat
+                            local normalizedFriendAirThreatValue = v.friendlylandantiairthreat / maxFriendlyAirThreat
+                            local normalizedStartPosValue = startPos
+                            local normalizedControlValue = controlValue
+                            local priorityScore = (
+                                normalizedTeamValue * weightageValues['teamValue'] +
+                                normalizedResourceValue * weightageValues['massValue'] -
+                                normalizedEnemyLandThreatValue * weightageValues['enemyLand'] -
+                                normalizedStartPosValue * weightageValues['startPos'] +
+                                normalizedControlValue * weightageValues['control'] +
+                                normalizedEnemyAirThreatValue * weightageValues['enemyAir'] +
+                                normalizedFriendLandThreatValue * weightageValues['friendlyantisurfacethreat'] -
+                                normalizedFriendAirThreatValue * weightageValues['friendlylandantiairthreat']
+                            )
+
+                            if priorityScore > selection then
+                                selection = priorityScore
                                 zoneSelection = v.id
                             end
                         end
@@ -1088,115 +1121,106 @@ IntelManager = Class {
         -- Will also set data for intel based scout production.
         
         self:WaitForZoneInitialization()
-        coroutine.yield(Random(5,20))
-        local Zones = {
-            'Land',
-        }
-        for k, v in Zones do
-            for k1, v1 in self.Brain.Zones[v].zones do
-                self.ZoneIntel.Assignment[k1] = { Zone = k1, Position = v1.pos, RadarCoverage = false, RadarUnits = { }, ScoutUnit = false, StartPosition = v1.startpositionclose}
-            end
-        end
-        RNGLOG('Zone Intel Assignment Complete')
-        --RNGLOG('Initial Zone Assignment Table '..repr(self.ZoneIntel.Assignment))
-    end,
-
-    ZoneLabelAssignment = function(self)
-        -- Will setup table for scout assignment to zones
-        -- I did this because I didn't want to assign units directly to the zones since it makes it hard to troubleshoot
-        -- replaces the previous expansion scout assignment so that all mass points can be monitored
-        -- Will also set data for intel based scout production.
-        
-        self:WaitForZoneInitialization()
         self:WaitForNavmeshGeneration()
+        while not self.MapIntelStats.ScoutLocationsBuilt do
+            LOG('*AI:RNG NavalAttackCheck is waiting for ScoutLocations to be built')
+            coroutine.yield(20)
+        end
         coroutine.yield(Random(5,20))
+        local teamAveragePositions = self:GetTeamAveragePositions()
+        self:CalculateAirSlot()
+        local maximumResourceValue = 0
         local Zones = {
             'Land',
             'Naval'
         }
         for k, v in Zones do
             for k1, v1 in self.Brain.Zones[v].zones do
-                if v1.label < 1 then
-                    local label = NavUtils.GetLabel(v, v1.pos)
-                    if label then
-                        v1.label = label
-                        LOG('Assigned label '..label..' to zone id '..v1.id)
-                    end
+                self.ZoneIntel.Assignment[k1] = self:ZoneSetIntelAssignment(k1, v1)
+                v1.label = self:ZoneSetLabelAssignment(v, v1.pos)
+                if v1.resourcevalue > maximumResourceValue then
+                    maximumResourceValue = v1.resourcevalue
+                end
+                v1.teamvalue = self:ZoneSetDistanceValue(v1, teamAveragePositions)
+                local enemyStartData, allyStartData = self:SetEnemyPositionAngleAssignment(v1)
+                v1.enemystartdata = {}
+                for k, v in enemyStartData do
+                    v1.enemystartdata[k] = { startangle = v.startangle, startdistance = v.startdistance}
+                end
+                
+                v1.allystartdata = {}
+                for k, v in allyStartData do
+                    v1.allystartdata[k] = { startangle = v.startangle, startdistance = v.startdistance}
                 end
             end
         end
-        RNGLOG('Zone Label Assignment Complete')
+        self.MapMaximumValues.MaximumResourceValue = maximumResourceValue
+        --RNGLOG('Initial Zone Assignment Table '..repr(self.ZoneIntel.Assignment))
     end,
 
-    EnemyPositionAngleAssignment = function(self)
-        self:WaitForZoneInitialization()
-        self:WaitForMarkerInfection()
-        WaitTicks(100)
-        self:CalculateAirSlot()
-        if not RNGTableEmpty(self.Brain.Zones.Land.zones) then
-            if not RNGTableEmpty(self.Brain.EnemyIntel.EnemyStartLocations) then
-                for k, v in self.Brain.EnemyIntel.EnemyStartLocations do
-                    for c, b in self.Brain.Zones.Land.zones do
-                        b.enemystartdata[v.Index] = { }
-                        b.enemystartdata[v.Index].startangle = RUtils.GetAngleToPosition(v.Position, b.pos)
-                        b.enemystartdata[v.Index].startdistance = VDist3Sq(v.Position, b.pos)
-                        
-                    end
-                end
-            end
-            if not RNGTableEmpty(self.Brain.BrainIntel.AllyStartLocations) then
-                for k, v in self.Brain.BrainIntel.AllyStartLocations do
-                    for c, b in self.Brain.Zones.Land.zones do
-                        b.allystartdata[v.Index] = { }
-                        b.allystartdata[v.Index].startangle = RUtils.GetAngleToPosition(v.Position, b.pos)
-                        b.allystartdata[v.Index].startdistance = VDist3Sq(v.Position, b.pos)
-                    end
-                end
-            end
-        end
-        
-        if self.Brain.RNGDEBUG then
-            for c, b in self.Brain.Zones.Land.zones do
-                RNGLOG('-- Zone Angle Loop --')
-                RNGLOG('Zone Position : '..repr(b.pos))
-                for v, n in b.enemystartdata do
-                    RNGLOG('Player Index '..v)
-                    RNGLOG('Start Angle : '..repr(n.startangle))
-                    RNGLOG('Start Distance : '..repr(n.startdistance))
-                end
-                RNGLOG('---------------------')
-            end
-        end
+    ZoneSetIntelAssignment = function(self, key, zone)
+        local IntelAssignment = { Zone = key, Position = zone.pos, RadarCoverage = false, RadarUnits = { }, ScoutUnit = false, StartPosition = zone.startpositionclose}
+        return IntelAssignment
     end,
 
-    ZoneDistanceValue = function(self)
+    ZoneSetLabelAssignment = function (self, movementLayer, zonePos)
+        if movementLayer == 'Naval' then
+            movementLayer = 'Water'
+        end
+        local label = NavUtils.GetLabel(movementLayer, zonePos) or 0
+        return label
+    end,
+
+    SetEnemyPositionAngleAssignment = function(self, zone)
+
+        local enemyStartData = { }
+        local allyStartData = { }
+        local aiBrain = self.Brain
+        if not RNGTableEmpty(aiBrain.EnemyIntel.EnemyStartLocations) then
+            for k, v in aiBrain.EnemyIntel.EnemyStartLocations do
+                enemyStartData[k] = { }
+                enemyStartData[k].startangle = RUtils.GetAngleToPosition(v.Position, zone.pos)
+                enemyStartData[k].startdistance = VDist3Sq(v.Position, zone.pos)
+            end
+        else
+            WARN('AI-RNG : No Enemy Start Locations are present')
+        end
+        if not RNGTableEmpty(aiBrain.BrainIntel.AllyStartLocations) then
+            for k, v in aiBrain.BrainIntel.AllyStartLocations do
+                allyStartData[k] = { }
+                allyStartData[k].startangle = RUtils.GetAngleToPosition(v.Position, zone.pos)
+                allyStartData[k].startdistance = VDist3Sq(v.Position, zone.pos)
+            end
+        else
+            WARN('AI-RNG : No Ally Start Locations are present')
+        end
+        return enemyStartData, allyStartData
+
+    end,
+
+    ZoneSetDistanceValue = function(self, zone, teamAveragePositions)
         -- This sets the team values for zones. Greater than 1 means that its closer to us than the enemy, less than 1 means its closer to the enemy than us.
-        -- Positions are based on a team average. Could produce strange results if the team is spread in strange ways.
-        self:WaitForZoneInitialization()
-        self:WaitForMarkerInfection()
-        WaitTicks(100)
-        if not RNGTableEmpty(self.Brain.Zones.Land.zones) then
-            local teamAveragePositions = self:GetTeamAveragePositions()
-            for _, b in self.Brain.Zones.Land.zones do
-                if teamAveragePositions['Ally'] and teamAveragePositions['Enemy'] then
-                    local ax = teamAveragePositions['Ally'].x - b.pos[1]
-                    local az = teamAveragePositions['Ally'].z - b.pos[3]
-                    local allyPosDist = ax * ax + az * az
-                    local ex = teamAveragePositions['Enemy'].x - b.pos[1]
-                    local ez = teamAveragePositions['Enemy'].z - b.pos[3]
-                    local enemyPosDist = ex * ex + ez * ez
-                    b.teamvalue = RUtils.CalculateRelativeDistanceValue(math.sqrt(enemyPosDist), math.sqrt(allyPosDist))
-                    if enemyPosDist > allyPosDist then
-                        self.Brain:ForkThread(DrawTargetRadius, b.pos, 'aa44ff44')
-                    end
-                    if enemyPosDist < allyPosDist then
-                        self.Brain:ForkThread(DrawTargetRadius, b.pos, 'cc0000')
-                    end
-                else
-                    b.teamvalue = 1
-                end
+        -- Positions are based on a team average. Could produce strange results if the team is spread in strange ways
+
+        local teamValue
+        if teamAveragePositions['Ally'] and teamAveragePositions['Enemy'] then
+            local ax = teamAveragePositions['Ally'].x - zone.pos[1]
+            local az = teamAveragePositions['Ally'].z - zone.pos[3]
+            local allyPosDist = ax * ax + az * az
+            local ex = teamAveragePositions['Enemy'].x - zone.pos[1]
+            local ez = teamAveragePositions['Enemy'].z - zone.pos[3]
+            local enemyPosDist = ex * ex + ez * ez
+            teamValue = RUtils.CalculateRelativeDistanceValue(math.sqrt(enemyPosDist), math.sqrt(allyPosDist))
+            if enemyPosDist > allyPosDist then
+                self.Brain:ForkThread(DrawTargetRadius, zone.pos, 'aa44ff44')
             end
+            if enemyPosDist < allyPosDist then
+                self.Brain:ForkThread(DrawTargetRadius, zone.pos, 'cc0000')
+            end
+        else
+            teamValue = 1
         end
+        return teamValue
     end,
 
     CalculateAirSlot = function(self)

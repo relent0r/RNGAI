@@ -49,6 +49,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local blueprints = StateUtils.GetBuildableUnitId(aiBrain, self.eng, categories.MASSEXTRACTION * categories.STRUCTURE)
             local whatToBuild = blueprints[1]
             self.ExtractorBuildID = whatToBuild
+            self.ReclaimCount = 0
+            self.StateMachineTimeout = 0
             self:LogDebug(string.format('Start Complete'))
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -83,8 +85,10 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     return
                 elseif data.Task == 'ReclaimStructure' then
                     local radius = aiBrain.BuilderManagers[data.LocationType].EngineerManager.Radius
-                    local reclaimunit = false
+                    local reclaimunit
                     local distance = false
+                    local ownIndex = aiBrain:GetArmyIndex()
+                    LOG('Engineer Utility StateMachine Reclaim Structure')
                     if data.JobType == 'ReclaimT1Power' then
                         local centerExtractors = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.MASSEXTRACTION, aiBrain.BuilderManagers[data.LocationType].FactoryManager.Location, 80, 'Ally')
                         for _,v in centerExtractors do
@@ -92,9 +96,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                 local pgens = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH1, v:GetPosition(), 2.5, 'Ally')
                                 for _, b in pgens do
                                     local bPos = b:GetPosition()
-                                    if not b.Dead and (not reclaimunit or VDist3Sq(unitPos, bPos) < distance) and unitPos and VDist3Sq(aiBrain.BuilderManagers[data.LocationType].FactoryManager.Location, bPos) < (radius * radius) then
+                                    if not b.Dead and (not reclaimunit or VDist3Sq(engPos, bPos) < distance) and engPos and VDist3Sq(aiBrain.BuilderManagers[data.LocationType].FactoryManager.Location, bPos) < (radius * radius) then
                                         reclaimunit = b
-                                        distance = VDist3Sq(unitPos, bPos)
+                                        distance = VDist3Sq(engPos, bPos)
                                     end
                                 end
                             end
@@ -102,35 +106,48 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     end
                     if not reclaimunit then
                         for num,cat in data.Reclaim do
-                            reclaimables = aiBrain:GetListOfUnits(cat, false)
+                            local reclaimables = aiBrain:GetListOfUnits(cat, false)
                             for k,v in reclaimables do
                                 local vPos = v:GetPosition()
-                                if not v.Dead and (not reclaimunit or VDist3Sq(unitPos, vPos) < distance) and unitPos and not v:IsUnitState('Upgrading') and VDist3Sq(aiBrain.BuilderManagers[data.LocationType].FactoryManager.Location, vPos) < (radius * radius) then
+                                if not v.Dead and (not reclaimunit or VDist3Sq(engPos, vPos) < distance) and engPos and not v:IsUnitState('Upgrading') and VDist3Sq(aiBrain.BuilderManagers[data.LocationType].FactoryManager.Location, vPos) < (radius * radius) then
                                     reclaimunit = v
-                                    distance = VDist3Sq(unitPos, vPos)
+                                    distance = VDist3Sq(engPos, vPos)
                                 end
                             end
                             if reclaimunit then break end
                         end
                     end
                     if reclaimunit and not IsDestroyed(reclaimunit) then
+                        LOG('Engineer Utility StateMachine have reclaim unit, id is '..tostring(reclaimunit.UnitId))
                         local reclaimUnitPos = reclaimunit:GetPosition()
-                        self.BuiderData = {
+                        self.BuilderData = {
                             ReclaimStructure = reclaimunit,
-                            Position = reclaimUnitPos
+                            Position = reclaimUnitPos,
+                            ReclaimMax = data.ReclaimMax or 1
                         }
-                        local rx = engPos[1] - unitBeingFinishedPosition[1]
-                        local rz = engPos[3] - unitBeingFinishedPosition[3]
+                        local rx = engPos[1] - reclaimUnitPos[1]
+                        local rz = engPos[3] - reclaimUnitPos[3]
                         local unitBeingFinishedDistance = rx * rx + rz * rz
-                        if unitBeingFinishedDistance < 900 then
+                        if unitBeingFinishedDistance < 3600 then
+                            LOG('Engineer Utility StateMachine close can go straight to reclaimstructure')
                             self:ChangeState(self.ReclaimStructure)
                             return
                         else
+                            LOG('Engineer Utility StateMachine at distance, must navigate')
                             self:ChangeState(self.NavigateToTaskLocation)
                             return
                         end
+                    else
+                        self.StateMachineTimeout = self.StateMachineTimeout + 1
+                        self.BuilderData = {}
+                        coroutine.yield(10)
+                        if self.StateMachineTimeout > 5 then
+                            self:ExitStateMachine()
+                        else
+                            self:ChangeState(self.DecideWhatToDo)
+                            return
+                        end
                     end
-
                 elseif data.Task == 'CaptureUnit' then
                     LOG('CaptureUnit triggered')
                     self:LogDebug(string.format('PreAllocatedTask is CaptureUnit'))
@@ -150,7 +167,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         local rx = engPos[1] - captureUnitPos[1]
                         local rz = engPos[3] - captureUnitPos[3]
                         local captureUnitDistance = rx * rx + rz * rz
-                        if captureUnitDistance < 900 then
+                        if captureUnitDistance < 3600 then
                             self:ChangeState(self.CaptureUnit)
                             return
                         else
@@ -164,6 +181,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                 elseif data.Task == 'FinishUnit' then
+                    LOG('Engineer FinishUnit StateMachine')
                     local unitBeingFinished
                     local assistData = self.PlatoonData.Assist
                     local engineerManager = aiBrain.BuilderManagers[assistData.AssistLocation].EngineerManager
@@ -193,31 +211,44 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         local rx = engPos[1] - unitBeingFinishedPosition[1]
                         local rz = engPos[3] - unitBeingFinishedPosition[3]
                         local unitBeingFinishedDistance = rx * rx + rz * rz
-                        if unitBeingFinishedDistance < 900 then
+                        if unitBeingFinishedDistance < 3600 then
+                            LOG('Engineer FinishUnit StateMachine set FinishUnit')
                             self:ChangeState(self.FinishUnit)
                             return
                         else
+                            LOG('Engineer FinishUnit StateMachine navigating')
                             self:ChangeState(self.NavigateToTaskLocation)
                             return
                         end
                     else
+                        self.StateMachineTimeout = self.StateMachineTimeout + 1
                         self.BuilderData = {}
                         coroutine.yield(10)
-                        self:ChangeState(self.DecideWhatToDo)
-                        return
+                        if self.StateMachineTimeout > 5 then
+                            self:ExitStateMachine()
+                        else
+                            self:ChangeState(self.DecideWhatToDo)
+                            return
+                        end
                     end
                 elseif data.Task == 'EngineerAssist' then
+                    LOG('Engineer Assist StateMachine')
                     local assistData = data.Assist
                     if not assistData.AssistLocation then
                         WARN('*AI WARNING: Builder '..repr(self.BuilderName)..' is missing AssistLocation')
+                        coroutine.yield(10)
+                        self:ExitStateMachine()
                         return
                     end
                     if not assistData.AssisteeType then
                         WARN('*AI WARNING: Builder '..repr(self.BuilderName)..' is missing AssisteeType')
+                        coroutine.yield(10)
+                        self:ExitStateMachine()
                         return
                     end
                     local assistee = false
-                    local assistRange = assistData.AssistRange * assistData.AssistRange or 80 * 80
+                    local assistRange = assistData.AssistRange or 80
+                    assistRange = assistRange * assistRange
                     local beingBuilt = assistData.BeingBuiltCategories or { categories.ALLUNITS }
                     local assisteeCat = assistData.AssisteeCategory or categories.ALLUNITS
                     local tier
@@ -226,14 +257,14 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         local assistList = RUtils.GetAssisteesRNG(aiBrain, assistData.AssistLocation, assistData.AssisteeType, category, assisteeCat)
                         if not table.empty(assistList) then
                             -- only have one unit in the list; assist it
-                            local low = false
-                            local bestUnit = false
+                            local low
+                            local bestUnit
                             local highestTier = 0
                             for k,v in assistList do
                                 local unitPos = v:GetPosition()
                                 local UnitAssist = v.UnitBeingBuilt or v.UnitBeingAssist or v
                                 local NumAssist = RNGGETN(UnitAssist:GetGuards())
-                                local dist = VDist2Sq(platoonPos[1], platoonPos[3], unitPos[1], unitPos[3])
+                                local dist = VDist2Sq(engPos[1], engPos[3], unitPos[1], unitPos[3])
                                 local unitCat = v.Blueprint.CategoriesHash
                                 -- Find the closest unit to assist
                                 if assistData.AssistClosestUnit then
@@ -272,6 +303,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if assistee  then
+                        LOG('Engineer Assist StateMachine assistee found')
                         local assisteePosition = assistee:GetPosition()
                         self.BuilderData = {
                             AssistUnit = assistee,
@@ -284,7 +316,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         local rx = engPos[1] - assisteePosition[1]
                         local rz = engPos[3] - assisteePosition[3]
                         local assisteeDistance = rx * rx + rz * rz
-                        if assisteeDistance < 900 then
+                        if assisteeDistance < 3600 then
+                            LOG('Engineer EngineerAssist StateMachine trigger state')
                             self:ChangeState(self.EngineerAssist)
                             return
                         else
@@ -293,14 +326,18 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         end
                     else
                         self.AssistPlatoon = nil
-                        eng.UnitBeingAssist = nil
+                        unit.UnitBeingAssist = nil
                         -- stop the platoon from endless assisting
-                        self:PlatoonDisband()
+                        self:ExitStateMachine()
                     end
                 end
+            elseif data.BuildCategory then
+                local blueprints = StateUtils.GetBuildableUnitId(aiBrain, self.eng, data.BuildCategory)
+                local whatToBuild = blueprints[1]
             else
-                localself.engineerManager = unit.BuilderManagerData.EngineerManager
-                local builder = self.engineerManager:GetHighestBuilder('Any', {unit})
+                LOG('Utility Engineer looking for highest builder')
+                local engineerManager = unit.BuilderManagerData.EngineerManager
+                local builder = engineerManager:GetHighestBuilder('Any', {unit})
                 --BuilderValidation could go here?
                 -- if theself.engineer is too far away from the builder then return to base and dont take up a builder instance.
                 if not builder then
@@ -332,14 +369,17 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local builderData = self.BuilderData
             local pos = eng:GetPosition()
             local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, pos, builderData.Position, 10 , 10000)
+            self:LogDebug(string.format('Navigating to position, path reason is '..tostring(reason)))
             local result, navReason
             local whatToBuildM = self.ExtractorBuildID
             local bUsedTransports
             if reason ~= 'PathOK' then
+                self:LogDebug(string.format('Path is not ok '))
                 -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
                 if reason == 'NoGraph' then
                     result = true
                 elseif VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) < 300*300 then
+                    self:LogDebug(string.format('Distance is less than 300'))
                     --SPEW('* AI-RNG: engineerMoveWithSafePath(): executing CanPathTo(). LUA GenerateSafePathTo returned: ('..repr(reason)..') '..VDist2Sq(pos[1], pos[3], destination[1], destination[3]))
                     -- be really sure we don't try a pathing with a destoryed c-object
                     if IsDestroyed(eng) then
@@ -347,6 +387,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                     result, navReason = NavUtils.CanPathTo('Amphibious', pos, builderData.Position)
+                    self:LogDebug(string.format('Can we path to it '..tostring(result)))
                 end 
             end
             if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 300 * 300
@@ -356,6 +397,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 if VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 350 * 350 then
                     needTransports = true
                 end
+                if needTransports then
+                    self:LogDebug(string.format('We need a transport'))
+                end
 
                 -- Skip the last move... we want to return and do a build
                eng.WaitingForTransport = true
@@ -363,11 +407,13 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                eng.WaitingForTransport = false
 
                 if bUsedTransports then
+                    self:LogDebug(string.format('Used a transport'))
                     coroutine.yield(10)
                     self:ChangeState(self.Constructing)
                     return
                 elseif VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 512 * 512 then
                     -- If over 512 and no transports dont try and walk!
+                    self:LogDebug(string.format('No transport available and distance is greater than 512, decide what to do'))
                     coroutine.yield(10)
                     self:ChangeState(self.DecideWhatToDo)
                     return
@@ -379,23 +425,13 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, builderData.Position)
                 end
                 if path then
-                    --RNGLOG('We have a path')
-                    if not whatToBuildM then
-                        local cons = eng.PlatoonHandle.PlatoonData.Construction
-                        local buildingTmpl, buildingTmplFile, baseTmpl, baseTmplFile, baseTmplDefault
-                        local factionIndex = aiBrain:GetFactionIndex()
-                        buildingTmplFile = import(cons.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
-                        baseTmplFile = import(cons.BaseTemplateFile or '/lua/BaseTemplates.lua')
-                        baseTmplDefault = import('/lua/BaseTemplates.lua')
-                        buildingTmpl = buildingTmplFile[(cons.BuildingTemplate or 'BuildingTemplates')][factionIndex]
-                        baseTmpl = baseTmplFile[(cons.BaseTemplate or 'BaseTemplates')][factionIndex]
-                        whatToBuildM = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
-                    end
+                    self:LogDebug(string.format('We are going to walk to the destination (a transport might have brought us)'))
                     --RNGLOG('* AI-RNG: engineerMoveWithSafePath(): path 0 true')
                     -- Move to way points (but not to destination... leave that for the final command)
                     --RNGLOG('We are issuing move commands for the path')
                     local dist
                     local pathLength = RNGGETN(path)
+                    self:LogDebug(string.format('Path length is '..tostring(pathLength)))
                     local brokenPathMovement = false
                     local currentPathNode = 1
                     IssueClearCommands({eng})
@@ -403,13 +439,12 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         if i>=3 then
                             local bool,markers=StateUtils.CanBuildOnMassMexPlatoon(aiBrain, path[i], 25)
                             if bool then
-                                LOG('We can build on a mass marker within 30')
                                 --local massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, waypointPath)
                                 --RNGLOG('Mass Marker'..repr(massMarker))
                                 --RNGLOG('Attempting second mass marker')
-                                
-                                local buildQueueReset = eng.EnginerBuildQueue or {}
-                                eng.EnginerBuildQueue = {}
+                                LOG('Trying to builder on mass marker along path, current build queue length is '..table.getn(eng.EngineerBuildQueue))
+                                local buildQueueReset = eng.EngineerBuildQueue or {}
+                                eng.EngineerBuildQueue = {}
                                 for _,massMarker in markers do
                                     RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
                                     RUtils.EngineerTryRepair(aiBrain, eng, whatToBuildM, massMarker.Position)
@@ -420,7 +455,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                         RNGINSERT(eng.EngineerBuildQueue, newEntry)
                                     else
                                         aiBrain:BuildStructure(eng, whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false)
-                                        local newEntry = {whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false,Position=massMarker.Position, true, PathPoint=i}
+                                        local newEntry = {whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false,Position=massMarker.Position, false, PathPoint=i}
                                         RNGINSERT(eng.EngineerBuildQueue, newEntry)
                                     end
                                 end
@@ -428,13 +463,16 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                     for k, v in buildQueueReset do
                                         RNGINSERT(eng.EngineerBuildQueue, v)
                                     end
+                                    LOG('Rebuild original build queue, current length is '..table.getn(eng.EngineerBuildQueue))
                                 end
                             end
                         end
                         if (i - math.floor(i/2)*2)==0 or VDist3Sq(builderData.Position,path[i])<40*40 then continue end
+                        self:LogDebug(string.format('We are issuing the move command to path node '..tostring(i)))
                         IssueMove({eng}, path[i])
                     end
                     if eng.EngineerBuildQueue then
+                        LOG('Looping through Build Queue and replaying build commands'..table.getn(eng.EngineerBuildQueue))
                         for k, v in eng.EngineerBuildQueue do
                             if eng.EngineerBuildQueue[k].PathPoint then
                                 continue
@@ -498,11 +536,13 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                 currentPathNode = currentPathNode + 1
                             end
                         end
-                        if VDist3Sq(builderData.Position, pos) < 100 then
+                        if VDist3Sq(builderData.Position, pos) < 3600 then
+                            self:LogDebug(string.format('We are within 60 units of destination, break from while loop'))
                             break
                         end
                         coroutine.yield(15)
                         if eng:IsIdleState() then
+                            self:LogDebug(string.format('We are idle for some reason, go back to decide what to do'))
                           self:ChangeState(self.DecideWhatToDo)
                           return
                         end
@@ -565,10 +605,22 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 else
+                    LOG('Engineer still trying to move directly to path, navreason during CanPathTo was '..tostring(navReason))
+                    LOG('reason during GenerateSafePath was '..tostring(reason))
+                    if reason == 'TooMuchThreat' then
+                        LOG('Engineer Utility StateMachine threat too high along path, exit and look for another task')
+                        coroutine.yield(30)
+                        self:ExitStateMachine()
+                        return
+                    end
                     IssueMove({eng}, builderData.Position)
                 end
+                if IsDestroyed(self) then
+                    return
+                end
                 coroutine.yield(10)
-                self:ChangeState(self.CheckForOtherTask)
+                self:LogDebug(string.format('Set to constructing state'))
+                self:ChangeState(self.Constructing)
                 return
             end
         end,
@@ -590,7 +642,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     local rx = pos[1] - builderData.Position[1]
                     local rz = pos[3] - builderData.Position[3]
                     local captureUnitDistance = rx * rx + rz * rz
-                    if captureUnitDistance < 900 then
+                    if captureUnitDistance < 3600 then
                         self:ChangeState(self.CaptureUnit)
                         return
                     else
@@ -604,7 +656,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     local rx = pos[1] - builderData.Position[1]
                     local rz = pos[3] - builderData.Position[3]
                     local captureUnitDistance = rx * rx + rz * rz
-                    if captureUnitDistance < 900 then
+                    if captureUnitDistance < 3600 then
                         self:ChangeState(self.FinishUnit)
                         return
                     else
@@ -613,12 +665,12 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                 end
-            elseif if builderData.ReclaimStructure then
+            elseif builderData.ReclaimStructure then
                 if not builderData.ReclaimStructure.Dead then
                     local rx = pos[1] - builderData.Position[1]
                     local rz = pos[3] - builderData.Position[3]
                     local captureUnitDistance = rx * rx + rz * rz
-                    if captureUnitDistance < 900 then
+                    if captureUnitDistance < 3600 then
                         self:ChangeState(self.ReclaimStructure)
                         return
                     else
@@ -627,12 +679,12 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                 end
-            elseif if builderData.AssistUnit then
+            elseif builderData.AssistUnit then
                 if not builderData.AssistUnit.Dead then
                     local rx = pos[1] - builderData.Position[1]
                     local rz = pos[3] - builderData.Position[3]
                     local assistUnitDistance = rx * rx + rz * rz
-                    if assistUnitDistance < 900 then
+                    if assistUnitDistance < 3600 then
                         self:ChangeState(self.EngineerAssist)
                         return
                     else
@@ -642,6 +694,10 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
+            self.BuilderData = {}
+            coroutine.yield(5)
+            self:ChangeState(self.DecideWhatToDo)
+            return
         end,
     },
 
@@ -681,6 +737,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             if captureUnit and not IsDestroyed(captureUnit) then
                 import('/lua/scenariotriggers.lua').CreateUnitCapturedTrigger(nil, captureUnitCallback, captureUnit)
                 IssueClearCommands({eng})
+                LOG('Engineer Capture Unit StateMachine issuing capture')
                 IssueCapture({eng}, captureUnit)
                 while aiBrain:PlatoonExists(self) and not eng.CaptureComplete do
                     coroutine.yield(30)
@@ -707,6 +764,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local finishUnit = builderData.FinishUnit
             local pos = eng:GetPosition()
             if finishUnit and not IsDestroyed(finishUnit) then
+                LOG('Engineer FinishUnit StateMachine issuing repair')
                 IssueClearCommands({eng})
                 IssueRepair(self:GetPlatoonUnits(), finishUnit)
                 local count = 0
@@ -720,10 +778,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 end
             end
             self.BuilderData = {}
-            if StateUtils.GreaterThanEconEfficiencyRNG(aiBrain, 0.8, 1.0) then
-                self:ChangeState(self.DecideWhatToDo)
-                return
-            end
             coroutine.yield(5)
             self:ExitStateMachine()
             return
@@ -744,17 +798,24 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local pos = eng:GetPosition()
             local allIdle
             local counter = 0
+            local engineers = self:GetPlatoonUnits()
+            LOG('Reclaim Structure Engineer starting, reclaim unit is '..tostring(reclaimUnit.UnitId))
+            if not reclaimUnit then
+                LOG('Whats wrong with the builderData '..repr(builderData))
+                LOG('Whats wrong with the reclaim structure '..repr(builderData.ReclaimStructure))
+            end
             if reclaimUnit and not reclaimUnit.Dead then
+                LOG('Reclaim Structure Engineer reclaim unit is valid')
                 local unitDestroyed = false
                 local reclaimUnitPos = reclaimUnit:GetPosition()
                 -- Set ReclaimInProgress to prevent repairing (see RepairAI)
                 reclaimUnit.ReclaimInProgress = true
-                reclaimCount = reclaimCount + 1
+                self.ReclaimCount = self.ReclaimCount + 1
                 
                 -- This doesn't work yet, I'm not sure why.
                 -- Should be simple enough to kill a unit and then reclaim it. Turns out no.
                 if not EntityCategoryContains(categories.ENERGYPRODUCTION + categories.MASSFABRICATION + categories.ENERGYSTORAGE, reclaimUnit) then
-                    --RNGLOG('Getting Position')
+                    LOG('Reclaim Structure Engineer reclaim unit is not combustable')
                     reclaimUnitPos = reclaimUnit:GetPosition()
                     local engineers = self:GetPlatoonUnits()
                     local oldCreateWreckage = reclaimUnit.CreateWreckage
@@ -763,6 +824,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
 
                         -- can be nil, so we better check
                         if wreckage then
+                            LOG('Reclaim Structure Engineer initiated reclaim (shouldnt be a pgen)')
                             IssueClearCommands(engineers)
                             IssueReclaim(engineers, wreckage)
                         end
@@ -771,7 +833,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     end
                     reclaimUnit:Kill()
                     unitDestroyed = true
-                    IssueMove(self:GetPlatoonUnits(), reclaimUnitPos )
+                    
+                    IssueMove(engineers, reclaimUnitPos )
                     coroutine.yield(10)
                 end
                 if unitDestroyed then
@@ -785,11 +848,13 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         coroutine.yield(10)
                     end
                 else
-                    IssueReclaim(self:GetPlatoonUnits(), reclaimUnit)
+                    LOG('Reclaim Structure Engineer initiated reclaim (should be a pgen)')
+                    IssueReclaim(engineers, reclaimUnit)
                 end
+                LOG('Reclaim Structure Engineer entering loop to wait for unit reclaim')
                 repeat
                     coroutine.yield(30)
-                    if not aiBrain:PlatoonExists(self) then
+                    if IsDestroyed(self) then
                         return
                     end
                     if reclaimUnit and not reclaimUnit.ReclaimInProgress then
@@ -799,7 +864,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         break
                     end
                     allIdle = true
-                    for k,v in self:GetPlatoonUnits() do
+                    for k,v in engineers do
                         if not v.Dead and not v:IsIdleState() then
                             allIdle = false
                             break
@@ -807,6 +872,14 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     end
                 until allIdle
             end
+            if self.ReclaimCount < builderData.ReclaimMax then
+                LOG('Reclaim Structure Engineer has not hit max, rechecking for another')
+                coroutine.yield(5)
+                self.BuilderData = {}
+                self:ChangeState(self.DecideWhatToDo)
+                return
+            end
+            LOG('Reclaim Structure Engineer has completed, exiting state machine')
             coroutine.yield(5)
             self:ExitStateMachine()
             return
@@ -823,8 +896,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local eng = self.eng
             local builderData = self.BuilderData
-            local finishUnit = builderData.FinishUnit
-            local pos = eng:GetPosition()
             eng.AssistSet = true
             if builderData.AssistFactoryUnit then
                 --LOG('Try set Factory Unit as assist thing')
@@ -834,7 +905,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             else
                 eng.UnitBeingAssist = builderData.AssistUnit.UnitBeingBuilt or builderData.AssistUnit.UnitBeingAssist or builderData.AssistUnit
             end
-            --RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
             if builderData.SacrificeUnit then
                 IssueSacrifice({eng}, eng.UnitBeingAssist)
             else
@@ -847,7 +917,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 else 
                     guardedUnit = eng:GetGuardedUnit()
                 end
-                while eng and not eng.Dead and PlatoonExists(aiBrain, self) and not eng:IsIdleState() do
+                while eng and not IsDestroyed(eng) and not eng:IsIdleState() do
                     coroutine.yield(1)
                     if not guardedUnit or guardedUnit.Dead or guardedUnit:BeenDestroyed() then
                         break

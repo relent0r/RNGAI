@@ -56,6 +56,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             end
             self:LogDebug('Starting Land Assault')
             local aiBrain = self:GetBrain()
+            self.MergeType = 'LandMergeStateMachine'
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
             if aiBrain.EnemyIntel.Phase > 1 then
                 self.EnemyRadius = 70
@@ -351,7 +352,6 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                             if target and not IsDestroyed(target) or acuUnit then
                                 if acuUnit and self.CurrentPlatoonThreatAntiSurface > 30 then
                                     target = acuUnit
-                                    rangeModifier = 5
                                 elseif acuUnit and self.CurrentPlatoonThreatAntiSurface < totalThreat['AntiSurface'] then
                                     local acuRange = StateUtils.GetUnitMaxWeaponRange(acuUnit)
                                     if target then
@@ -455,6 +455,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 end
                 local avoidRange = math.max(targetRange or 60)
                 local targetPos = target:GetPosition()
+                avoidTargetPos = targetPos
                 IssueClearCommands(GetPlatoonUnits(self))
                 local rx = self.Pos[1] - targetPos[1]
                 local rz = self.Pos[3] - targetPos[3]
@@ -482,7 +483,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                     location = aiBrain.BuilderManagers[closestBase].Position
                 end
             end
-            StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandAssaultBehavior', 80, 35, false)
+            StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandMergeStateMachine', 80, 35, false)
             self.Retreat = true
             self.BuilderData = {
                 Position = location,
@@ -510,14 +511,10 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 return
             end
             local aiBrain = self:GetBrain()
-            local unitPos
-            local alpha
-            local x
-            local y
-            local smartPos
             local rangeModifier = 0
             local target = builderData.Target
-            local attackSquad =  self:GetSquadUnits('Attack')
+            local attackSquad =  self:GetSquadUnits('attack')
+            local guardSquad =  self:GetSquadUnits('attack')
             local targetPosition = target:GetPosition()
             local microCap = 50
             for _, unit in attackSquad do
@@ -528,13 +525,13 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                     coroutine.yield(1)
                     continue
                 end
-                unitPos = unit:GetPosition()
-                alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
-                x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange - rangeModifier or self.MaxPlatoonWeaponRange)
-                y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange - rangeModifier or self.MaxPlatoonWeaponRange)
-                smartPos = { x, GetTerrainHeight( x, y), y }
+                local unitPos = unit:GetPosition()
+                local alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
+                local x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange - rangeModifier or self.MaxPlatoonWeaponRange)
+                local y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange - rangeModifier or self.MaxPlatoonWeaponRange)
+                local smartPos = { x, GetTerrainHeight( x, y), y }
                 -- check if the move position is new or target has moved
-                if VDist2( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.7 or unit.TargetPos ~= targetPosition then
+                if VDist2Sq( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.49 or unit.TargetPos ~= targetPosition then
                     -- clear move commands if we have queued more than 4
                     if RNGGETN(unit:GetCommandQueue()) > 2 then
                         IssueClearCommands({unit})
@@ -553,6 +550,30 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                             IssueMove({unit}, targetPosition )
                         end
                     end
+                end
+            end
+            for _, unit in guardSquad do
+                microCap = microCap - 1
+                if microCap <= 0 then break end
+                if unit.Dead then continue end
+                local unitPos = unit:GetPosition()
+                local alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
+                local x = targetPosition[1] - math.cos(alpha) * self.MaxDirectFireRange + 4
+                local y = targetPosition[3] - math.sin(alpha) * self.MaxDirectFireRange + 4
+                local smartPos = { x, GetTerrainHeight( x, y), y }
+                -- check if the move position is new or target has moved
+                if VDist2Sq( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.49 or unit.TargetPos ~= targetPosition then
+                    -- clear move commands if we have queued more than 4
+                    if RNGGETN(unit:GetCommandQueue()) > 2 then
+                        IssueClearCommands({unit})
+                        coroutine.yield(3)
+                    end
+                    -- if our target is dead, jump out of the "for _, unit in self:GetPlatoonUnits() do" loop
+                    IssueMove({unit}, smartPos )
+                    if target.Dead then break end
+                    unit.smartPos = smartPos
+                    unit.TargetPos = targetPosition
+                -- in case we don't move, check if we can fire at the target
                 end
             end
             coroutine.yield(35)
@@ -645,6 +666,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIPlatoonLandAssaultBehavior)
+        platoon.PlatoonData = data.PlatoonData
         if data.ZoneType then
             platoon.ZoneType = data.ZoneType
         else

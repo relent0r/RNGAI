@@ -762,7 +762,7 @@ ZoneUpdate = function(aiBrain, platoon)
     end
 end
 
-MergeWithNearbyPlatoonsRNG = function(self, stateMachine, radius, maxMergeNumber, ignoreBase)
+MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNumber, ignoreBase)
     -- check to see we're not near an ally base
     -- ignoreBase is not worded well, if false then ignore if too close to base
     if IsDestroyed(self) then
@@ -810,7 +810,7 @@ MergeWithNearbyPlatoonsRNG = function(self, stateMachine, radius, maxMergeNumber
     local AlliedPlatoons = aiBrain:GetPlatoonsList()
     local bMergedPlatoons = false
     for _,aPlat in AlliedPlatoons do
-        if aPlat.PlatoonName ~= stateMachine then
+        if aPlat.MergeType ~= stateMachineType then
             continue
         end
         if aPlat == self then
@@ -1324,12 +1324,18 @@ function GetClosestTargetByIMAP(aiBrain, platoon, position, threatType, searchFi
                         end
                     end
                 end
+                if not table.empty(targetCandidates) then
                 --LOG('targetCandidates returned with '..table.getn(targetCandidates))
-                return targetCandidates
+                    return targetCandidates
+                else
+                    return false
+                end
             else
-                --LOG('targetUnits table is empty')
+                return false
             end
         end
+    else
+        return false
     end
 end
 
@@ -1382,10 +1388,14 @@ end
 
 function CanBuildOnMassMexPlatoon(aiBrain, engPos, distance)
     local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
-    --distance = distance * distance
     local MassMarker = {}
     local massPoints = aiBrain.GridDeposits:GetResourcesWithinDistance('Mass', engPos, distance, 'Amphibious')
+    distance = distance * distance
+    if table.getn(massPoints) > 0 then
+        LOG('Found mass point within distance of current engineer position')
+    end
     for _, v in massPoints do
+        LOG('MassPoint table entry at position '..repr(v.position))
         if v.type == 'Mass' then
             if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
                 local mexBorderWarn = false
@@ -1405,5 +1415,15 @@ function CanBuildOnMassMexPlatoon(aiBrain, engPos, distance)
         return true, MassMarker
     else
         return false
+    end
+end
+
+function ScryTargetPosition(unit, position)
+    if unit.Blueprint.CategoriesHash.OPTICS then
+        LOG('Set OnTargetLocation')
+        IssueScript( {unit}, {TaskName = "TargetLocation", Location = position} )
+        --unit:OnTargetLocation(position)
+    else
+        WARN("Invalid unit passed to ScryTargetPosition")
     end
 end

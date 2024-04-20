@@ -943,7 +943,7 @@ function SetMarkerInformation(aiBrain)
     end
     --RNGLOG('Dump MarkerChain '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers))
     --RNGLOG('Dump Resource MarkerChain '..repr(AdaptiveResourceMarkerTableRNG))
-    ScenarioInfo.MarkersInfectedRNG = true
+    aiBrain.MarkersInfectedRNG = true
 end
 
 function InfectMarkersRNG(aiBrain,marker,nodekey)

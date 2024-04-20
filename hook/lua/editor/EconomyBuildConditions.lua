@@ -303,9 +303,6 @@ end
 
 function MassIncomeToFactoryRNG(aiBrain, compareType, factoryDrain, requireBuilt)
 
-    local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
-
-
     local factoryList = aiBrain:GetListOfUnits(categories.STRUCTURE * categories.FACTORY)
     local t1LandFactories = 0
     local t2LandFactories = 0
@@ -504,6 +501,18 @@ function NavalAssistControlRNG(aiBrain, MassEfficiency, EnergyEfficiency, locati
         end
     end
     return false
-
 end
+
+function MinimumPowerRequired(aiBrain, trend)
+    local energyIncome = aiBrain.EconomyOverTimeCurrent.EnergyIncome * 10
+    if energyIncome < aiBrain.EcoManager.MinimumPowerRequired then
+        return true
+    end
+    local energyTrend = aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime
+    if energyTrend < trend then
+        return true
+    end
+    return false
+end
+
     

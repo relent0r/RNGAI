@@ -701,7 +701,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             local closestAPlatPos
             local AlliedPlatoons = aiBrain:GetPlatoonsList()
             for _,aPlat in AlliedPlatoons do
-                if not aPlat.Dead and not table.equal(aPlat, self) then
+                if not aPlat.Dead and not table.equal(aPlat, self) and aPlat.CalculatePlatoonThreat then
                     local aPlatAirThreat = aPlat:CalculatePlatoonThreat('Air', categories.ALLUNITS)
                     if aPlatAirThreat > self.EnemyThreatTable.AirThreat.TotalThreat / 2 then
                         local aPlatPos = aPlat:GetPlatoonPosition()
@@ -832,6 +832,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIExperimentalAirBehavior)
+        platoon.PlatoonData = data.PlatoonData
         local platoonUnits = platoon:GetPlatoonUnits()
         if platoonUnits then
             for _, unit in platoonUnits do

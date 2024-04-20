@@ -236,6 +236,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         -- create the platoon
         if not platoon.MachineStarted then
             setmetatable(platoon, AIArtilleryBehavior)
+            platoon.PlatoonData = data.PlatoonData
         end
         platoon:OnUnitsAddedToPlatoon()
         -- start the behavior

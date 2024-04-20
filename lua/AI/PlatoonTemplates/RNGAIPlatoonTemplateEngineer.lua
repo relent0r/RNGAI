@@ -23,7 +23,15 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'T123EngineerFinishRNG',
+    Name = 'T1EngineerStateRNG',
+    Plan = 'StateMachineAIRNG',
+    GlobalSquads = {
+        { categories.ENGINEER * categories.TECH1 , 1, 1, 'support', 'None' }
+    },
+}
+
+PlatoonTemplate {
+    Name = 'T123EngineerStateRNG',
     Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.ENGINEER * (categories.TECH1 + categories.TECH2 + categories.TECH3), 1, 1, 'support', 'None' }
@@ -31,15 +39,7 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'T123EngineerAssistRNG',
-    Plan = 'StateMachineAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * (categories.TECH1 + categories.TECH2 + categories.TECH3), 1, 1, 'support', 'None' }
-    },
-}
-
-PlatoonTemplate {
-    Name = 'T23EngineerAssistRNG',
+    Name = 'T23EngineerStateRNG',
     Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.ENGINEER * (categories.TECH2 + categories.TECH3), 1, 1, 'support', 'None' }
@@ -47,7 +47,7 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'T12EngineerAssistRNG',
+    Name = 'T12EngineerStateRNG',
     Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.ENGINEER * (categories.TECH1 + categories.TECH2), 1, 1, 'support', 'None' }
@@ -55,7 +55,7 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'T3SACUEngineerAssistRNG',
+    Name = 'T3SACUEngineerStateRNG',
     Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.ENGINEER * (categories.TECH3 + categories.SUBCOMMANDER) - categories.ENGINEERSTATION - categories.COMMAND, 1, 1, 'support', 'None' }

@@ -16,7 +16,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 45',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 1005,
         InstanceCount = 2,
         BuilderConditions = { 
@@ -25,6 +25,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -40,34 +41,9 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1Engineer Mass 80',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
-        Priority = 950,
-        InstanceCount = 3,
-        BuilderConditions = { 
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 80, nil, nil, 0, 'AntiSurface', 1}},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'Mass',
-            NeedGuard = false,
-            DesiresAssist = false,
-            Construction = {
-                MaxDistance = 80,
-                MinDistance = 0,
-                ThreatMin = -500,
-                ThreatMax = 0,
-                ThreatType = 'AntiSurface',
-                BuildStructures = {
-                    'T1Resource',
-                },
-            }
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T1Engineer Mass 120',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
-        Priority = 992,
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
+        Priority = 997,
         InstanceCount = 3,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 120, nil, nil, 0, 'AntiSurface', 1}},
@@ -76,6 +52,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -94,35 +71,8 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1Engineer Mass 400 MexBuild',
-        PlatoonTemplate = 'EngineerBuilderRNGMex',
-        Priority = 997,
-        InstanceCount = 3,
-        BuilderConditions = { 
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 400, -500, 2, 0, 'AntiSurface', 1}},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'Mass',
-            StateMachine = 'MexBuild',
-            NeedGuard = false,
-            DesiresAssist = false,
-            Construction = {
-                RepeatBuild = true,
-                Type = 'Mass',
-                MaxDistance = 400,
-                ThreatMin = -500,
-                ThreatMax = 0,
-                ThreatType = 'AntiSurface',
-                BuildStructures = {
-                    'T1Resource',
-                },
-            }
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T2Engineer Mass 120',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 850,
         InstanceCount = 1,
         BuilderConditions = { 
@@ -132,6 +82,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -148,7 +99,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 240',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 800,
         InstanceCount = 4,
         BuilderConditions = { 
@@ -158,6 +109,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -177,7 +129,7 @@ BuilderGroup {
 
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 480',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 700,
         InstanceCount = 4,
         BuilderConditions = { 
@@ -189,6 +141,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -209,7 +162,7 @@ BuilderGroup {
 
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 2000',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 300,
         InstanceCount = 4,
         BuilderConditions = { 
@@ -221,6 +174,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -287,7 +241,7 @@ BuilderGroup {
     
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 2000 Floating',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 910,
         InstanceCount = 5,
         BuilderConditions = {
@@ -296,6 +250,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -312,7 +267,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 2000 Floating Excess',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 890,
         InstanceCount = 10,
         BuilderConditions = {
@@ -321,6 +276,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -342,7 +298,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 30 Expansion',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 850,
         InstanceCount = 2,
         BuilderConditions = {
@@ -351,6 +307,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -367,7 +324,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 150 Expansion',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 700,
         InstanceCount = 2,
         BuilderConditions = {
@@ -376,6 +333,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -391,7 +349,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 2000 Expansion',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 550,
         InstanceCount = 2,
         BuilderConditions = {
@@ -400,6 +358,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {

@@ -451,6 +451,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIPlatoonAdaptiveReclaimBehavior)
+        platoon.PlatoonData = data.PlatoonData
         local count = TableGetn(platoon:GetPlatoonUnits())
         local engineers = platoon:GetPlatoonUnits()
         if engineers then

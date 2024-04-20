@@ -1024,6 +1024,7 @@ AIBrain = Class(RNGAIBrainClass) {
             T2ExtractorSpend = false,
             EcoMassUpgradeTimeout = 120,
             EcoPowerPreemptive = false,
+            MinimumPowerRequired = 0,
         }
         self.EcoManager.PowerPriorityTable = {
             ENGINEER = 12,
@@ -1280,7 +1281,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(IntelManagerRNG.LastKnownThread)
         self:ForkThread(RUtils.CanPathToCurrentEnemyRNG)
         self:ForkThread(Mapping.SetMarkerInformation)
-        self:CalculateMassMarkersRNG()
         self:ForkThread(self.SetupIntelTriggersRNG)
         self:ForkThread(IntelManagerRNG.InitialNavalAttackCheck)
         self.ZonesInitialized = false
@@ -1291,6 +1291,8 @@ AIBrain = Class(RNGAIBrainClass) {
         self.StructureManager:Run()
         self:ForkThread(IntelManagerRNG.CreateIntelGrid, self.IntelManager)
         self:ForkThread(self.CreateFloatingEngineerBase, self.BrainIntel.StartPos)
+        self:ForkThread(self.SetMinimumBasePower)
+        self:ForkThread(self.CalculateMassMarkersRNG)
         if self.RNGDEBUG then
             self:ForkThread(self.LogDataThreadRNG)
         end
@@ -1499,6 +1501,26 @@ AIBrain = Class(RNGAIBrainClass) {
            --RNGLOG('Zones table is empty, waiting')
             coroutine.yield(20)
         end
+    end,
+
+    SetMinimumBasePower = function(self)
+        self:WaitForZoneInitialization()
+        local totalPowerRequired = 0
+        local multiplier
+        if self.CheatEnabled then
+            multiplier = self.EcoManager.EcoMultiplier
+        else
+            multiplier = 1
+        end
+        if self.BuilderManagers['MAIN'].Zone then
+            local homeZone = self.BuilderManagers['MAIN'].Zone
+            if self.Zones.Land.zones[homeZone].resourcevalue > 0 then
+                local homeExtractors = self.Zones.Land.zones[homeZone].resourcevalue
+                local extractorPowerRequired = homeExtractors * (20 * multiplier) + (60 * multiplier)
+                totalPowerRequired = math.min(extractorPowerRequired, (260 * multiplier))
+            end
+        end
+        self.EcoManager.MinimumPowerRequired = math.max(totalPowerRequired,180)
     end,
 
     SetPathableZonesForBase = function(self, position, baseName)
@@ -1794,6 +1816,12 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     CalculateMassMarkersRNG = function(self)
+        coroutine.yield(math.random(10,20))
+        while not self.MarkersInfectedRNG do
+            RNGLOG('Waiting for markers to be infected in order to CalculateMassMarkers')
+            coroutine.yield(20)
+        end
+        LOG('Calculating Mass Markers')
         local MassMarker = {}
         local massMarkerBuildable = 0
         local markerCount = 0
@@ -1802,6 +1830,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local coreMassMarkers = 0
         local massMarkers = GetMarkersRNG()
         local baseRestrictedArea = self.OperatingAreas['BaseRestrictedArea']
+        local maximumGraphValue = 0
         
         for _, v in massMarkers do
             if v.type == 'Mass' then
@@ -1814,12 +1843,12 @@ AIBrain = Class(RNGAIBrainClass) {
                         self.GraphZones[v.GraphArea].FriendlySurfaceDirectFireThreat = 0
                         self.GraphZones[v.GraphArea].FriendlySurfaceInDirectFireThreat = 0
                         self.GraphZones[v.GraphArea].FriendlyAntiNavalThreat = 0
-                        if self.GraphZones[v.GraphArea].MassMarkersInZone == nil then
-                            self.GraphZones[v.GraphArea].MassMarkersInZone = 0
+                        if self.GraphZones[v.GraphArea].MassMarkersInGraph == nil then
+                            self.GraphZones[v.GraphArea].MassMarkersInGraph = 0
                         end
                     end
                     RNGINSERT(self.GraphZones[v.GraphArea].MassMarkers, v)
-                    self.GraphZones[v.GraphArea].MassMarkersInZone = self.GraphZones[v.GraphArea].MassMarkersInZone + 1
+                    self.GraphZones[v.GraphArea].MassMarkersInGraph = self.GraphZones[v.GraphArea].MassMarkersInGraph + 1
                     local massPointDistance = VDist3Sq(v.position, self.BrainIntel.StartPos)
                     if massPointDistance < 2500 then
                         coreMassMarkers = coreMassMarkers + 1
@@ -1843,6 +1872,16 @@ AIBrain = Class(RNGAIBrainClass) {
                     v.zoneid = MAP:GetZoneID(v.position,self.Zones.Land.index)
                 end
             end
+        end
+        LOG('Mass marker loop completed')
+        for _, v in self.GraphZones do
+            if v.MassMarkersInGraph and v.MassMarkersInGraph > maximumGraphValue then
+                maximumGraphValue = v.MassMarkersInGraph
+            end
+        end
+        if maximumGraphValue then
+            LOG('Setting MaximumGraphValue to '..tostring(maximumGraphValue))
+            self.IntelManager.MapMaximumValues.MaximumGraphValue = maximumGraphValue
         end
         if graphCheck then
             self.GraphZones.HasRun = true
@@ -2126,7 +2165,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if self.RNGDEBUG then
             RNGLOG('Building Scout Locations for '..self.Nickname)
         end
-        while not ScenarioInfo.MarkersInfectedRNG do
+        while not self.MarkersInfectedRNG do
             RNGLOG('Waiting for markers to be infected in order to build scout locations')
             coroutine.yield(20)
         end
@@ -3307,7 +3346,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('Run TacticalThreatAnalysisRNG')
                 self:ForkThread(IntelManagerRNG.TacticalThreatAnalysisRNG, self)
             end
-            self:CalculateMassMarkersRNG()
+            --self:CalculateMassMarkersRNG()
             local enemyCount = 0
             if self.EnemyIntel.EnemyCount > 0 then
                 enemyCount = self.EnemyIntel.EnemyCount
@@ -6872,6 +6911,7 @@ AIBrain = Class(RNGAIBrainClass) {
             T2ExtractorSpend = false,
             EcoMassUpgradeTimeout = 120,
             EcoPowerPreemptive = false,
+            MinimumPowerRequired = 0,
         }
         self.EcoManager.PowerPriorityTable = {
             ENGINEER = 12,
@@ -7119,7 +7159,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(IntelManagerRNG.LastKnownThread)
         self:ForkThread(RUtils.CanPathToCurrentEnemyRNG)
         self:ForkThread(Mapping.SetMarkerInformation)
-        self:CalculateMassMarkersRNG()
         self:ForkThread(self.SetupIntelTriggersRNG)
         self:ForkThread(IntelManagerRNG.InitialNavalAttackCheck)
         self.ZonesInitialized = false
@@ -7130,6 +7169,8 @@ AIBrain = Class(RNGAIBrainClass) {
         self.StructureManager:Run()
         self:ForkThread(IntelManagerRNG.CreateIntelGrid, self.IntelManager)
         self:ForkThread(self.CreateFloatingEngineerBase, self.BrainIntel.StartPos)
+        self:ForkThread(self.SetMinimumBasePower)
+        self:ForkThread(self.CalculateMassMarkersRNG)
         if self.RNGDEBUG then
             self:ForkThread(self.LogDataThreadRNG)
         end

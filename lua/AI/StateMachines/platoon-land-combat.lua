@@ -55,8 +55,8 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 return
             end
             local aiBrain = self:GetBrain()
+            self.MergeType = 'LandMergeStateMachine'
             StartLandCombatThreads(aiBrain, self)
-
             if self.PlatoonData.LocationType then
                 self.LocationType = self.PlatoonData.LocationType
             else
@@ -707,6 +707,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 end
                 local avoidRange = math.max(minTargetRange or 60)
                 local targetPos = target:GetPosition()
+                avoidTargetPos = targetPos
                 IssueClearCommands(GetPlatoonUnits(self))
                 local rx = self.Pos[1] - targetPos[1]
                 local rz = self.Pos[3] - targetPos[3]
@@ -761,7 +762,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     location = aiBrain.BuilderManagers[closestBase].Position
                 end
             end
-            StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandCombatBehavior', 80, 35, false)
+            StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandMergeStateMachine', 80, 35, false)
             self.Retreat = true
             self.BuilderData = {
                 Position = location,
@@ -786,6 +787,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIPlatoonLandCombatBehavior)
+        platoon.PlatoonData = data.PlatoonData
         local platoonthreat=0
         local platoonhealth=0
         local platoonhealthtotal=0

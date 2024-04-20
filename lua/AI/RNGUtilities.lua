@@ -143,11 +143,13 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         if self.PlatoonData.Construction.CheckCivUnits then
             local captureUnit = CheckForCivilianUnitCapture(aiBrain, self, platoon.MovementLayer)
             if captureUnit then
-                platoon.PlatoonData.StateMachine = 'CaptureUnit'
+                platoon.PlatoonData.StateMachine = 'PreAllocatedTask'
                 platoon.PlatoonData.CaptureUnit = captureUnit
                 platoon.PlatoonData.Task = 'CaptureUnit'
                 platoon.PlatoonData.PreAllocatedTask = true
                 platoon:StateMachineAIRNG(self)
+                LOG('CaptureUnit Return after StateMachine initialized')
+                return
             end
         end
         coroutine.yield(1)
@@ -4836,7 +4838,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             end
         end
     end
-    if (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
+    if platoon.FindPlatoonCounter and (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
         --RNGLOG('Look for platoon that needs a scout')
         coroutine.yield(10)
         platoonNeedScout, supportPlatoon = ScoutFindNearbyPlatoonsRNG(platoon, 250)
@@ -5034,7 +5036,7 @@ ScoutFindNearbyPlatoonsRNG = function(platoon, radius)
     return false
 end
 
-GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
+GetAirScoutLocationRNG = function(platoon, aiBrain, scout, optics)
     local scoutingData = false
     local scoutType = false
     local currentGameTime = GetGameTimeSeconds()
@@ -5099,7 +5101,9 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
         if highestGrid.Priority > 0 then
             --RNGLOG('AirScout MustScoutArea is greater than 0 and being set')
             scoutingData = im.MapIntelGrid[highestGrid.x][highestGrid.z]
-            scoutingData.ScoutAssigned = scout
+            if not optics then
+                scoutingData.ScoutAssigned = scout
+            end
             scoutingData.LastScouted = currentGameTime
             scoutingData.TimeScouted = 1
             scoutType = 'Location'
@@ -5144,7 +5148,9 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
             --RNGLOG('AirScouting Current Game Time '..currentGameTime)
             --RNGLOG('AirScouting HighPri Scouting Data '..repr(scoutingData))
         end
-        aiBrain.IntelData.AirHiPriScouts = aiBrain.IntelData.AirHiPriScouts + 1
+        if not optics then
+            aiBrain.IntelData.AirHiPriScouts = aiBrain.IntelData.AirHiPriScouts + 1
+        end
     elseif aiBrain.IntelData.AirLowPriScouts < 1 then
         --RNGLOG('AirScout LowPri is set')
         local highestGrid = {x = 0, z = 0, Priority = 0}
@@ -5184,13 +5190,17 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout)
             scoutingData.TimeScouted = 1
             scoutType = 'Location'
         end
-        aiBrain.IntelData.AirHiPriScouts = 0
-        aiBrain.IntelData.AirLowPriScouts = aiBrain.IntelData.AirLowPriScouts + 1
+        if not optics then
+            aiBrain.IntelData.AirHiPriScouts = 0
+            aiBrain.IntelData.AirLowPriScouts = aiBrain.IntelData.AirLowPriScouts + 1
+        end
     else
         --Reset number of scoutings and start over
         --RNGLOG('AirScout Resetting AirLowPriScouts and AirHiPriScouts')
-        aiBrain.IntelData.AirLowPriScouts = 0
-        aiBrain.IntelData.AirHiPriScouts = 0
+        if not optics then
+            aiBrain.IntelData.AirLowPriScouts = 0
+            aiBrain.IntelData.AirHiPriScouts = 0
+        end
     end
     if aiBrain.RNGDEBUG then
         if scoutingData.Position then
@@ -6914,9 +6924,9 @@ GetBaseType = function(baseName)
         baseType = MarkerUtils.GetMarker(baseName).Type
     end
     if not baseType then
-        LOG('baseName provided was '..repr(baseName))
+        LOG('baseName provided was '..tostring(baseName))
     end
-    LOG('Returning baseType '..repr(baseType))
+    LOG('Returning baseType '..tostring(baseType))
     return baseType
 end
 

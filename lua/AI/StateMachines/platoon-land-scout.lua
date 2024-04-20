@@ -660,6 +660,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIPlatoonLandScoutBehavior)
+        platoon.PlatoonData = data.PlatoonData
 
         if not platoon.LocationType then
             platoon.LocationType = platoon.PlatoonData.LocationType or 'MAIN'

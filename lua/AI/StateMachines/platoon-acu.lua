@@ -127,21 +127,23 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     cdr.BuilderManagerData.EngineerManager:RemoveUnitRNG(cdr)
                     brain.BuilderManagers['MAIN'].EngineerManager:AddUnitRNG(cdr, true)
                 end
-                local alreadyHaveExpansion = false
+                local expansionCount = 0
                 for k, manager in brain.BuilderManagers do
                     if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and not table.empty(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
                         self:LogDebug(string.format('We already have an expansion with a factory '..tostring(k)))
-                        alreadyHaveExpansion = true
-                        break
+                        expansionCount = expansionCount + 1
+                        if expansionCount > 1 then
+                            break
+                        end
                     end
                 end
-                if not alreadyHaveExpansion and self.BuilderData.Expansion and self.BuilderData.Position and VDist3Sq(cdr.Position, self.BuilderData.Position) > 900 
+                if expansionCount < 2 and self.BuilderData.Expansion and self.BuilderData.Position and VDist3Sq(cdr.Position, self.BuilderData.Position) > 900 
                 and not cdr.Caution and NavUtils.CanPathTo('Amphibious', cdr.Position, self.BuilderData.Position) then
                     self:LogDebug(string.format('We are navigating to an expansion build position'))
                     self:ChangeState(self.Navigating)
                     return
                 end
-                if not alreadyHaveExpansion and VDist3Sq(cdr.Position, self.BuilderData.Position) <= 900 and not cdr.Caution then
+                if expansionCount < 2 and VDist3Sq(cdr.Position, self.BuilderData.Position) <= 900 and not cdr.Caution then
                     self:LogDebug(string.format('We are at an expansion location, building base'))
                     self:ChangeState(self.Expand)
                     return
@@ -209,8 +211,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 multiplier = 1
             end
             if ScenarioInfo.Options.AICDRCombat ~= 'cdrcombatOff' and brain.EnemyIntel.Phase < 3 and gameTime < 1500 then
-                if (brain.EconomyOverTimeCurrent.MassIncome > (0.8 * multiplier) and brain.EconomyOverTimeCurrent.EnergyIncome > (12 * multiplier))
-                    or (brain.EconomyOverTimeCurrent.EnergyTrendOverTime > 2.0 and brain.EconomyOverTimeCurrent.EnergyIncome > 18) then
+                LOG('Checking if we can expand')
+                LOG('Mass income must be more than 0.8 '..brain.EconomyOverTimeCurrent.MassIncome)
+                LOG('Energy income must be greater than minimum required '..(brain.EconomyOverTimeCurrent.EnergyIncome * 10))
+                LOG('Minimum required '..brain.EcoManager.MinimumPowerRequired)
+                LOG('OR')
+                LOG('Energy Trend must be greater than 6.0 '..brain.EconomyOverTimeCurrent.EnergyTrendOverTime)
+                LOG('Energy Income must be greater than 18 '..brain.EconomyOverTimeCurrent.EnergyIncome)
+                if (brain.EconomyOverTimeCurrent.MassIncome > (0.8 * multiplier) and brain.EconomyOverTimeCurrent.EnergyIncome * 10 > brain.EcoManager.MinimumPowerRequired)
+                    or (brain.EconomyOverTimeCurrent.EnergyTrendOverTime > 6.0 and brain.EconomyOverTimeCurrent.EnergyIncome > 18) then
                     local enemyAcuClose = false
                     for _, v in brain.EnemyIntel.ACU do
                         if (not v.Unit.Dead) and (not v.Ally) and v.OnField then
@@ -222,16 +231,17 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if not enemyAcuClose and brain.BrainIntel.LandPhase < 2 then
-                        local alreadyHaveExpansion = false
+                        local expansionCount = 0
                         for k, manager in brain.BuilderManagers do
                         --RNGLOG('Checking through expansion '..k)
                             if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and not RNGTableEmpty(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
-                            --RNGLOG('We already have an expansion with a factory')
-                                alreadyHaveExpansion = true
-                                break
+                                expansionCount = expansionCount + 1
+                                if expansionCount > 1 then
+                                    break
+                                end
                             end
                         end
-                        if not alreadyHaveExpansion then
+                        if expansionCount < 2 then
                             local stageExpansion
                             local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
                             local maxRange
@@ -1480,18 +1490,19 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 cdr.EngineerBuildQueue={}
                 if expansionMarkerCount > 1 then
                     --LOG('ACU Object has more than 1 mass points and is called '..object.Expansion.Name)
-                    local alreadyHaveExpansion = false
+                    local expansionCount = 0
                     for k, manager in brain.BuilderManagers do
                     --RNGLOG('Checking through expansion '..k)
                         if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and not RNGTableEmpty(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
                         --RNGLOG('We already have an expansion with a factory')
-                            alreadyHaveExpansion = true
-                            break
+                            expansionCount = expansionCount + 1
+                            if expansionCount > 1 then
+                                break
+                            end
                         end
                     end
-                    if not alreadyHaveExpansion then
+                    if expansionCount < 2 then
                         if not brain.BuilderManagers['ZONE_'..object.id] then
-                        --RNGLOG('There is no manager at this expansion, creating builder manager')
                             brain:AddBuilderManagers(object.pos, 60, 'ZONE_'..object.id, true)
                             local baseValues = {}
                             local highPri = false
@@ -1663,6 +1674,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             self.BuilderData.ExpansionBuilt = true
                             object.engineerallocated = false
                         --RNGLOG('There is a manager here but no factories')
+                        elseif brain.BuilderManagers['ZONE_'..object.id].FactoryManager:GetNumFactories() > 0 then
+                            self.BuilderData.ExpansionBuilt = true
                         end
                     end
                 end

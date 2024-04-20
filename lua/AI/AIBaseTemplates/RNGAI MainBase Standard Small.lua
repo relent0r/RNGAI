@@ -18,6 +18,7 @@ BaseBuilderTemplate {
         -- Intel Builders --
         'RNGAI RadarBuilders',
         'RNGAI RadarUpgrade',
+        'RNGAI Intel Formers',
 
         -- Economy Builders --
         'RNGAI Energy Builder',

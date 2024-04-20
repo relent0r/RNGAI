@@ -46,6 +46,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                 self.MovementLayer = self:GetNavigationalLayer()
             end
             local aiBrain = self:GetBrain()
+            self.MergeType = 'NavalMergeStateMachine'
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
             if aiBrain.EnemyIntel.Phase > 2 then
                 self.EnemyRadius = 70
@@ -84,6 +85,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             if IsDestroyed(self) then
                 return
             end
+            self:LogDebug(string.format('DecideWhatToDo for Naval Zone Control'))
             local aiBrain = self:GetBrain()
             local threat
             local currentStatus = aiBrain.GridPresence:GetInferredStatus(self.Pos)
@@ -130,6 +132,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             end
             local attackPosition = AIAttackUtils.GetBestNavalTargetRNG(aiBrain, self)
             if attackPosition then
+                self:LogDebug(string.format('Attack Position is '..tostring(attackPosition[1])..':'..tostring(attackPosition[3])))
                 self:LogDebug(string.format('attackPosition found'))
                 if NavUtils.CanPathTo(self.MovementLayer, self.Pos, attackPosition) then
                     local rx = self.Pos[1] - attackPosition[1]
@@ -159,7 +162,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                     end
                 else
                     self:LogDebug(string.format('Have attack position but cant path to it, movement layer is '..tostring(self.MovementLayer)))
-                    self:LogDebug(string.format('Attack Position is '..tostring(attackPosition)))
+                    self:LogDebug(string.format('Attack Position is '..tostring(attackPosition[1])..':'..tostring(attackPosition[3])))
                     self:LogDebug(string.format('Current platoon position is '..tostring(self.Pos)))
                 end
             end
@@ -218,7 +221,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                     else
-                        self:LogDebug(string.format('Have attack position but cant path to it, position is '..tostring(closestTargetPos)))
+                        self:LogDebug(string.format('Have attack position but cant path to it, position is '..tostring(closestTargetPos[1])..':'..tostring(closestTargetPos[3])))
                     end
                 else
                     self:LogDebug(string.format('No targetCandidate table'))
@@ -359,7 +362,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                                     if dist < 225 then
                                         self:Stop()
                                         if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
-                                            local merged = StateUtils.MergeWithNearbyPlatoonsRNG(self, 'NavalZoneControlBehavior', 60, 25, false)
+                                            local merged = StateUtils.MergeWithNearbyPlatoonsRNG(self, 'NavalMergeStateMachine', 60, 25, false)
                                             if not merged then
                                                 self:LogDebug(string.format('We didnt merge for some reason'))
                                             end
@@ -690,6 +693,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIPlatoonNavalZoneControlBehavior)
+        platoon.PlatoonData = data.PlatoonData
         local platoonUnits = platoon:GetPlatoonUnits()
         if platoonUnits then
             for _, unit in platoonUnits do

@@ -316,10 +316,9 @@ BuilderGroup {
         Priority = 850,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
-            { EBC, 'LessThanEnergyTrendRNG', { 6.0 } },
+            { EBC, 'MinimumPowerRequired', { 6.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION - categories.HYDROCARBON } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
-            --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Trend'}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -604,7 +603,7 @@ BuilderGroup {
         Priority = 850,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
-            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 0.0 } }, -- If our energy is trending into negatives
+            { EBC, 'MinimumPowerRequired', { 6.0 } }, -- If our energy is trending into negatives
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 3, categories.STRUCTURE * categories.ENERGYPRODUCTION - categories.HYDROCARBON } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2 }},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Trend'}},

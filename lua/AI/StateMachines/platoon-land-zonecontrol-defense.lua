@@ -571,6 +571,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIPlatoonBehavior)
+        platoon.PlatoonData = data.PlatoonData
         local platoonthreat=0
         local platoonhealth=0
         local platoonhealthtotal=0

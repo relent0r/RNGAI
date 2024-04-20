@@ -323,7 +323,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 if path and pathLength and pathLength > 1 then
                     self:LogDebug(string.format('Performing aggressive path move'))
                     for i=1, pathLength do
-                        IssueAggressiveMove(platoonUnits, path[i].pos)
+                        IssueMove(platoonUnits, path[i].pos)
                         --self:MoveToLocation(path[i], false)
                         while not IsDestroyed(self) do
                             coroutine.yield(1)
@@ -331,9 +331,8 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                             if not platoonPosition then
                                 return
                             end
-                            if self.UnitTarget == 'ENGINEER' then
-                                if aiBrain:GetNumUnitsAroundPoint(categories.ENGINEER - categories.COMMAND, platoonPosition, 45, 'Enemy') > 0 then
-                                    local target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPosition, 'Attack', 45, categories.ENGINEER - categories.COMMAND, {categories.ENGINEER - categories.COMMAND}, false, true)
+                                if aiBrain:GetNumUnitsAroundPoint((categories.MOBILE * categories.LAND + categories.MASSEXTRACTION) - categories.COMMAND, platoonPosition, 45, 'Enemy') > 0 then
+                                    local target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPosition, 'Attack', 45, (categories.MOBILE * categories.LAND + categories.MASSEXTRACTION) - categories.COMMAND, {categories.ENGINEER - categories.COMMAND, categories.MASSEXTRACTION, categories.MOBILE * categories.LAND}, false, true)
                                     if target and not target.Dead then
                                         self.BuilderData = {
                                             AttackTarget = target,
@@ -344,7 +343,6 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                         return
                                     end
                                 end
-                            end
                             local px = path[i].pos[1] - platoonPosition[1]
                             local pz = path[i].pos[3] - platoonPosition[3]
                             local pathDistance = px * px + pz * pz
@@ -361,16 +359,15 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                     if shortListLength > 1 then
                         local shortListPath = builderData.RaidShortList
                         for i=1, shortListLength do
-                            IssueAggressiveMove(platoonUnits, shortListPath[i].pos)
+                            IssueMove(platoonUnits, shortListPath[i].pos)
                             while not IsDestroyed(self) do
                                 coroutine.yield(1)
                                 local platoonPosition = self:GetPlatoonPosition()
                                 if not platoonPosition then
                                     return
                                 end
-                                if self.UnitTarget == 'ENGINEER' then
-                                    if aiBrain:GetNumUnitsAroundPoint(categories.ENGINEER - categories.COMMAND, platoonPosition, 45, 'Enemy') > 0 then
-                                        local target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPosition, 'Attack', 45, categories.ENGINEER - categories.COMMAND, {categories.ENGINEER - categories.COMMAND}, false, true)
+                                    if aiBrain:GetNumUnitsAroundPoint((categories.MOBILE * categories.LAND + categories.MASSEXTRACTION) - categories.COMMAND, platoonPosition, 45, 'Enemy') > 0 then
+                                        local target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPosition, 'Attack', 45, (categories.MOBILE * categories.LAND + categories.MASSEXTRACTION) - categories.COMMAND, {categories.ENGINEER - categories.COMMAND, categories.MASSEXTRACTION, categories.MOBILE * categories.LAND}, false, true)
                                         if target and not target.Dead then
                                             self.BuilderData = {
                                                 AttackTarget = target,
@@ -381,7 +378,6 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                             return
                                         end
                                     end
-                                end
                                 local px = shortListPath[i].pos[1] - platoonPosition[1]
                                 local pz = shortListPath[i].pos[3] - platoonPosition[3]
                                 local pathDistance = px * px + pz * pz
@@ -653,6 +649,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIPlatoonBomberBehavior)
+        platoon.PlatoonData = data.PlatoonData
         local platoonUnits = platoon:GetPlatoonUnits()
         if platoonUnits then
             for _, v in platoonUnits do

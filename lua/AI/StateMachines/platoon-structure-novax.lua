@@ -43,6 +43,7 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
             if not self.MovementLayer then
                 AIAttackUtils.GetMostRestrictiveLayerRNG(self)
             end
+            LOG('Data that came into the novax '..repr(self.PlatoonData))
             self.MachineStarted = true
             self.LocationType = self.PlatoonData.LocationType or 'MAIN'
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
@@ -94,6 +95,7 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
             if not targetsAssigned then
                 local novaxCount = 0
                 local targetCount = 0
+                LOG('Looking for director target, max dps is '..tostring(self.MaxPlatoonDPS)..' self.Home is '..repr(self.Home))
                 local target = aiBrain:CheckDirectorTargetAvailable(false, false, 'SATELLITE', false, self.MaxPlatoonDPS, self.Home)
                 if target and not target.Dead then
                     self:LogDebug(string.format('Novax Director Target Found'))
@@ -118,7 +120,8 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
             if not targetsAssigned then
                 local novaxCount = 0
                 local targetCount = 0
-                self:LogDebug(string.format('Novax No director target, searching for prioritized'))
+                LOG('Performing braintargetinrange, range is '..tostring(self.MaxSearchRadius))
+                self:LogDebug(string.format('Novax No director target, searching for prioritized at range '..self.MaxSearchRadius))
                 local target = AIUtils.AIFindUndefendedBrainTargetInRangeRNG(aiBrain, self, 'Attack', self.MaxSearchRadius, self.atkPri)
                 if target and not target.Dead then
                     self:LogDebug(string.format('Novax Prioritized Target Found'))
@@ -205,6 +208,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         -- create the platoon
         if not platoon.MachineStarted then
             setmetatable(platoon, AINovaxBehavior)
+            platoon.PlatoonData = data.PlatoonData
         end
         platoon:OnUnitsAddedToPlatoon()
         -- start the behavior

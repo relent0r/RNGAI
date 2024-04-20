@@ -46,12 +46,11 @@ AITMLBehavior = Class(AIPlatoonRNG) {
             self.MachineStarted = true
             self.LocationType = self.PlatoonData.LocationType or 'MAIN'
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
-            local platoonUnits = self:GetPlatoonUnits()
             self.MaxPlatoonWeaponRange = 0
             self.AdjacentShields = {}
             self.AdjacentPower = {}
             self.TMLUnits = {}
-            self.atkPri = {
+            self.SearchPriorities = {
                 categories.MASSEXTRACTION * categories.STRUCTURE * ( categories.TECH2 + categories.TECH3 ),
                 categories.COMMAND,
                 categories.STRUCTURE * categories.ENERGYPRODUCTION * ( categories.TECH2 + categories.TECH3 ),
@@ -62,7 +61,6 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                 categories.STRUCTURE * categories.FACTORY * ( categories.TECH2 + categories.TECH3 ),
                 categories.STRUCTURE * categories.RADAR * (categories.TECH2 + categories.TECH3)
             }
-            LOG('Check platoon TMLUnits table '..repr(self.TMLUnits))
             self:LogDebug(string.format('Strategic TML Max Weapon Range is '..tostring(self.MaxPlatoonWeaponRange)))
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -75,6 +73,7 @@ AITMLBehavior = Class(AIPlatoonRNG) {
 
         ---@param self AITMLBehavior
         Main = function(self)
+            LOG('TML DecideWhatToDo ')
             self:LogDebug(string.format('TML DecideWhatToDo'))
             local aiBrain = self:GetBrain()
             coroutine.yield(50)
@@ -85,9 +84,8 @@ AITMLBehavior = Class(AIPlatoonRNG) {
             local target = false
             local missileCount = 0
             local totalMissileCount = 0
-            local enemyTmdCount = 0
-            local enemyShieldHealth = 0
             local ecoCaution = false 
+            local ALLBPS = __blueprints
             coroutine.yield(50)
             platoonUnits = GetPlatoonUnits(self)
             --RNGLOG('Target Find cycle start')
@@ -117,15 +115,17 @@ AITMLBehavior = Class(AIPlatoonRNG) {
             readyTmlLauncherCount = RNGGETN(readyTmlLaunchers)
             --RNGLOG('Ready TML Launchers is '..readyTmlLauncherCount)
             if readyTmlLauncherCount < 1 then
+                LOG('TML no ready launchers')
                 coroutine.yield(50)
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
-            local targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS, self.CenterPosition, 235, 'Enemy')
-            for _, v in atkPri do
+            local targetUnits = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS, self.Home, 265, 'Enemy')
+            for _, v in self.SearchPriorities do
                 for num, unit in targetUnits do
                     if not unit.Dead and EntityCategoryContains(v, unit) and self:CanAttackTarget('attack', unit) then
-                        targetPosition = unit:GetPosition()
+                        local targetPosition = unit:GetPosition()
+                        local targetHealth
                         if not RUtils.PositionInWater(targetPosition) then
                             -- 6000 damage for TML
                             if EntityCategoryContains(categories.COMMAND, unit) then
@@ -150,8 +150,8 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                                 target = unit
                                 
                                 --enemyTMD = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2, targetPosition, 25, 'Enemy')
-                                enemyTmdCount = AIAttackUtils.AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, self.CenterPosition, targetPosition, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2, 30, 'Enemy')
-                                enemyShield = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.SHIELD, targetPosition, 25, 'Enemy')
+                                local enemyTmdCount = AIAttackUtils.AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, self.Home, targetPosition, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2, 30, 'Enemy')
+                                local enemyShield = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.SHIELD, targetPosition, 25, 'Enemy')
                                 if not table.empty(enemyShield) then
                                     local enemyShieldHealth = 0
                                     --RNGLOG('There are '..RNGGETN(enemyShield)..'shields')
@@ -176,7 +176,7 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                                     for k, tml in readyTmlLaunchers do
                                         local missileCount = tml:GetTacticalSiloAmmoCount()
                                         --RNGLOG('Missile Count in Launcher is '..missileCount)
-                                        local tmlMaxRange = __blueprints[tml.UnitId].Weapon[1].MaxRadius
+                                        local tmlMaxRange = ALLBPS[tml.UnitId].Weapon[1].MaxRadius
                                         --RNGLOG('TML Max Range is '..tmlMaxRange)
                                         local tmlPosition = tml:GetPosition()
                                         if missileCount > 0 and VDist2Sq(tmlPosition[1], tmlPosition[3], targetPosition[1], targetPosition[3]) < tmlMaxRange * tmlMaxRange then
@@ -222,6 +222,7 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                     --RNGLOG('We have target and can fire, breaking loop')
                     break
                 end
+                LOG('TML No target, loop ')
             end
             if not table.empty(inRangeTmlLaunchers) then
                 --RNGLOG('Launching Tactical Missile')
@@ -229,7 +230,7 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                     AttackTarget = target,
                     Launchers = inRangeTmlLaunchers
                 }
-                self:LogDebug(string.format('Nuke Attacking targets'))
+                self:LogDebug(string.format('TML Attacking targets'))
                 self:ChangeState(self.AttackTarget)
                 return
             end
@@ -251,7 +252,7 @@ AITMLBehavior = Class(AIPlatoonRNG) {
             local target = builderData.AttackTarget
             if EntityCategoryContains(categories.MOBILE, target) then
                 if firePos then
-                    for k, v in builderData.inRangeTmlLaunchers do
+                    for k, v in builderData.Launchers do
                         local firePos = RUtils.LeadTargetRNG(v:GetPosition(), target, 15, 256)
                         if firePos then
                             if not v.TargetBlackList[target.EntityId].Terrain then
@@ -263,7 +264,7 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                     --RNGLOG('LeadTarget Returned False')
                 end
             else
-                IssueTactical(builderData.inRangeTmlLaunchers, target)
+                IssueTactical(builderData.Launchers, target)
             end
             self.BuilderData = {}
             self:ChangeState(self.DecideWhatToDo)
@@ -276,15 +277,21 @@ AITMLBehavior = Class(AIPlatoonRNG) {
 ---@param data { Behavior: 'AIBehavior' }
 ---@param units Unit[]
 AssignToUnitsMachine = function(data, platoon, units)
+    LOG('AssignUnits to machine')
     if units and not table.empty(units) then
         -- create the platoon
         if not platoon.MachineStarted then
+            LOG('Machine is not started, set metatable')
             setmetatable(platoon, AITMLBehavior)
+            platoon.PlatoonData = data.PlatoonData
         end
         platoon:OnUnitsAddedToPlatoon()
         -- start the behavior
         if not platoon.MachineStarted then
+            LOG('Machine is not started, start')
             ChangeState(platoon, platoon.Start)
+        else
+            LOG('TML Machine is already started')
         end
     end
 end

@@ -377,6 +377,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIPlatoonGunshipBehavior)
+        platoon.PlatoonData = data.PlatoonData
         local platoonUnits = platoon:GetPlatoonUnits()
         local maxPlatoonDPS = 0
         if platoonUnits then

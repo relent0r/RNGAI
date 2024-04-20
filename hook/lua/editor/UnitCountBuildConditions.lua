@@ -195,7 +195,7 @@ function RequirePresenceOnLabelRNG(aiBrain, expansionCount)
     if aiBrain.GraphZones then
         for id, v in aiBrain.GraphZones do
             local baseDetected = false
-            if v.MassMarkersInZone > 5 then
+            if v.MassMarkersInGraph > 5 then
                 for _, b in aiBrain.BuilderManagers do
                     if not v.BaseType then
                         continue
@@ -1164,11 +1164,7 @@ function ValidateLateGameBuild(aiBrain, locationType)
         end
     end
     if queuedCount > 0 then
-        --LOG('Number of high value units queued '..queuedCount)
-        --LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
-        --LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * queuedCount)))
-        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + ((250 * multiplier) * queuedCount) then
-            --LOG('Income is not high enough, return false')
+        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + ((275 * multiplier) * queuedCount) then
             return false
         end
     end
@@ -1184,11 +1180,7 @@ function ValidateLateGameBuild(aiBrain, locationType)
         end
     end
     if unitsBeingBuilt > 0 then
-        --LOG('Number of high value units being built '..unitsBeingBuilt)
-        --LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
-        --LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (100 * unitsBeingBuilt)))
-        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + ((250 * multiplier) * unitsBeingBuilt) then
-            --LOG('Income is not high enough, return false')
+        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + ((275 * multiplier) * unitsBeingBuilt) then
             return false
         end
     end
@@ -1595,8 +1587,9 @@ function ZoneAvailableRNG(aiBrain)
             if v.ZoneID then
                 local zone = aiBrain.Zones.Land.zones[v.ZoneID]
                 if (not zone.BuilderManager.FactoryManager.LocationActive or zone.BuilderManagerDisabled) and (not zone.engineerallocated or zone.engineerallocated.Dead) and (zone.lastexpansionattempt == 0 or zone.lastexpansionattempt + 30 < gameTime) then
-                    LOG('Zone available for expansion')
-                    return true
+                    if aiBrain:GetThreatAtPosition(zone.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 5 then
+                        return true
+                    end
                 end
             end
         end

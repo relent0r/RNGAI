@@ -961,6 +961,9 @@ function SendPlatoonWithTransports(aiBrain, platoon, destination, attempts, bSki
         import("/lua/ai/aiattackutilities.lua").GetMostRestrictiveLayer(platoon)
     end
 	LOG('Requesting platoon transport')
+	if platoon.BuilderName then
+		LOG('Requester is '..platoon.BuilderName)
+	end
 
     local MovementLayer = platoon.MovementLayer    
 

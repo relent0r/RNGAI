@@ -4,6 +4,7 @@ local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
+local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
 local ALLBPS = __blueprints
 
 local RNGINSERT = table.insert
@@ -26,7 +27,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonEngineerBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
-            self.LocationType = self.BuilderData.LocationType
+            self.LocationType = self.PlatoonData.LocationType
             self.StartCycle = 0
             self.MovementLayer = self:GetNavigationalLayer()
             local platoonUnits = self:GetPlatoonUnits()
@@ -54,17 +55,31 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 self:ExitStateMachine()
                 return
             end
+
             --RNGLOG("*AI DEBUG: Setting up Callbacks for " .. eng.EntityId)
             StateUtils.SetupMexBuildAICallbacksRNG(self.eng)
+            local engPos = self.eng:GetPosition()
+            local maxMarkerDistance = self.PlatoonData.Construction.MaxDistance or 256
+            LOG('Resource engineer max marker distance is '..tostring(maxMarkerDistance))
+            maxMarkerDistance = maxMarkerDistance * maxMarkerDistance
             local zoneMarkers = {}
             for _, v in aiBrain.Zones.Land.zones do
                 if v.resourcevalue > 0 then
-                    table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+                    local zx = engPos[1] - v.pos[1]
+                    local zz = engPos[3] - v.pos[3]
+                    if zx * zx + zz * zz < maxMarkerDistance then
+                        table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+                    end
                 end
             end
             for _, v in aiBrain.Zones.Naval.zones do
                 --LOG('Inserting zone data position '..repr(v.pos)..' resource markers '..repr(v.resourcemarkers)..' resourcevalue '..repr(v.resourcevalue)..' zone id '..repr(v.id))
                 if v.resourcevalue > 0 then
+                    local zx = engPos[1] - v.pos[1]
+                    local zz = engPos[3] - v.pos[3]
+                    if zx * zx + zz * zz < maxMarkerDistance then
+                        table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+                    end
                     table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
                 end
             end
@@ -95,6 +110,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             unit.MinNumAssistees = nil
             local blueprints = StateUtils.GetBuildableUnitId(aiBrain, eng, categories.MASSEXTRACTION * categories.STRUCTURE)
             local whatToBuild = blueprints[1]
+            self.ExtractorBuildID = whatToBuild
             local platoonPos = self:GetPlatoonPosition()
             local enemyPos
             if aiBrain:GetCurrentEnemy() then
@@ -106,7 +122,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
 
             eng.EngineerBuildQueue = {}
             table.sort(self.ZoneMarkers,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],platoonPos[1],platoonPos[3])/VDist2Sq(enemyPos[1],enemyPos[3],a.Position[1],a.Position[3])/a.ResourceValue/a.ResourceValue<VDist2Sq(b.Position[1],b.Position[3],platoonPos[1],platoonPos[3])/VDist2Sq(enemyPos[1],enemyPos[3],b.Position[1],b.Position[3])/b.ResourceValue/b.ResourceValue end)
-            local currentmexpos=nil
+            local currentmarker=nil
             self.CurentZoneIndex=nil
             self.CurrentMarkerIndex=nil
             local zoneFound = false
@@ -115,7 +131,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 for j, m in v.ResourceMarkers do
                     if aiBrain:CanBuildStructureAt('ueb1103', m.position) then
                         --LOG('First position in zoneMarkers selected is '..repr(m.position)..' zone index '..i)
-                        currentmexpos=m.position
+                        currentmarker=m
                         self.CurentZoneIndex=i
                         self.CurrentMarkerIndex=j
                         --RNGLOG('We can build at mex, breaking loop '..repr(currentmexpos))
@@ -150,59 +166,85 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
-            if aiBrain:GetThreatAtPosition(currentmexpos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 2 then
-                table.remove(self.ZoneMarkers[self.CurentZoneIndex],self.CurrentMarkerIndex)
-                self:LogDebug(string.format('Threat too high at destination mass marker'))
-                coroutine.yield(1)
-                self:ChangeState(self.DecideWhatToDo)
-                return
-            else
-               eng.EngineerBuildQueue = {}
-                for _=0,3,1 do
-                    if not currentmexpos then break end
-                    if self.ZoneMarkers[self.CurentZoneIndex].ResourceValue > 1 then
-                        local markers = table.copy(self.ZoneMarkers[self.CurentZoneIndex].ResourceMarkers)
-                        table.sort(markers,function(a,b) return(VDist2Sq(a.position[1],a.position[3],currentmexpos[1],currentmexpos[3])<VDist2Sq(b.position[1],b.position[3],currentmexpos[1],currentmexpos[3]))end)
-                        for k, massMarker in markers do
-                            if VDist2Sq(massMarker.position[1],massMarker.position[3],currentmexpos[1],currentmexpos[3]) < 625 then
-                                if aiBrain:CanBuildStructureAt('ueb1103', massMarker.position) then
-                                    RUtils.EngineerTryReclaimCaptureArea(aiBrain,eng, massMarker.position, 5)
-                                    local repairPerformed = RUtils.EngineerTryRepair(aiBrain,eng, whatToBuild, massMarker.position)
-                                    --eng:SetCustomName('MexBuild Platoon attempting to build in for loop')
-                                    if not repairPerformed then
-                                        if massMarker.BorderWarning then
-                                            --RNGLOG('Border Warning on mass point marker')
-                                            IssueBuildMobile({eng}, massMarker.position, whatToBuild, {})
-                                        else
-                                            aiBrain:BuildStructure(eng, whatToBuild, {massMarker.position[1], massMarker.position[3], 0}, false)
-                                        end
-                                        local newEntry = {whatToBuild, {massMarker.position[1], massMarker.position[3], 0}, false,Position=massMarker.position}
-                                        RNGINSERT(eng.EngineerBuildQueue, newEntry)
-                                        currentmexpos=massMarker.position
+            if aiBrain:GetThreatAtPosition(currentmarker.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 2 then
+                local threat = RUtils.GrabPosDangerRNG(aiBrain, currentmarker.position, 30, true, false, false)
+                if threat.enemySurface > threat.allySurface then
+                    table.remove(self.ZoneMarkers[self.CurentZoneIndex],self.CurrentMarkerIndex)
+                    self:LogDebug(string.format('Threat too high at destination mass marker '..tostring(currentmarker.position[1])..' '..tostring(currentmarker.position[3])))
+                    coroutine.yield(1)
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
+            end
+            eng.EngineerBuildQueue = {}
+            for _=0,3,1 do
+                if not currentmarker then break end
+                if self.ZoneMarkers[self.CurentZoneIndex].ResourceValue > 1 then
+                    local markers = table.copy(self.ZoneMarkers[self.CurentZoneIndex].ResourceMarkers)
+                    table.sort(markers,function(a,b) return(VDist2Sq(a.position[1],a.position[3],currentmarker.position[1],currentmarker.position[3])<VDist2Sq(b.position[1],b.position[3],currentmarker.position[1],currentmarker.position[3]))end)
+                    for k, massMarker in markers do
+                        local borderWarning
+                        if massMarker.position[1] - playableArea[1] <= 8 or massMarker.position[1] >= playableArea[3] - 8 or massMarker.position[3] - playableArea[2] <= 8 or massMarker.position[3] >= playableArea[4] - 8 then
+                            borderWarning = true
+                        end
+                        if VDist2Sq(massMarker.position[1],massMarker.position[3],currentmarker.position[1],currentmarker.position[3]) < 625 then
+                            if aiBrain:CanBuildStructureAt('ueb1103', massMarker.position) then
+                                RUtils.EngineerTryReclaimCaptureArea(aiBrain,eng, massMarker.position, 5)
+                                local repairPerformed = RUtils.EngineerTryRepair(aiBrain,eng, whatToBuild, massMarker.position)
+                                --eng:SetCustomName('MexBuild Platoon attempting to build in for loop')
+                                if not repairPerformed then
+                                    if borderWarning then
+                                        --RNGLOG('Border Warning on mass point marker')
+                                        IssueBuildMobile({eng}, massMarker.position, whatToBuild, {})
+                                    else
+                                        aiBrain:BuildStructure(eng, whatToBuild, {massMarker.position[1], massMarker.position[3], 0}, false)
                                     end
+                                    local newEntry = {whatToBuild, {massMarker.position[1], massMarker.position[3], 0}, false,Position=massMarker.position}
+                                    RNGINSERT(eng.EngineerBuildQueue, newEntry)
+                                    currentmarker=massMarker
                                 end
                             end
                         end
-                    else
-                        break
                     end
+                else
+                    if aiBrain:CanBuildStructureAt('ueb1103', currentmarker.position) then
+                        RUtils.EngineerTryReclaimCaptureArea(aiBrain,eng, currentmarker.position, 5)
+                        local repairPerformed = RUtils.EngineerTryRepair(aiBrain,eng, whatToBuild, currentmarker.position)
+                        --eng:SetCustomName('MexBuild Platoon attempting to build in for loop')
+                        if not repairPerformed then
+                            local borderWarning
+                            if currentmarker.position[1] - playableArea[1] <= 8 or currentmarker.position[1] >= playableArea[3] - 8 or currentmarker.position[3] - playableArea[2] <= 8 or currentmarker.position[3] >= playableArea[4] - 8 then
+                                borderWarning = true
+                            end
+                            if borderWarning then
+                                --RNGLOG('Border Warning on mass point marker')
+                                IssueBuildMobile({eng}, currentmarker.position, whatToBuild, {})
+                            else
+                                aiBrain:BuildStructure(eng, whatToBuild, {currentmarker.position[1], currentmarker.position[3], 0}, false)
+                            end
+                            local newEntry = {whatToBuild, {currentmarker.position[1], currentmarker.position[3], 0}, false,Position=currentmarker.position}
+                            RNGINSERT(eng.EngineerBuildQueue, newEntry)
+                        end
+                    end
+                    break
                 end
-                if currentmexpos then
-                    local ax = platoonPos[1] - currentmexpos[1]
-                    local az = platoonPos[3] - currentmexpos[3]
-                    if ax * ax + az * az < 900 then
-                        self:LogDebug(string.format('DecideWhatToDo high priority target close combatloop'))
-                        self:ChangeState(self.Constructing)
-                        return
-                    else
-                        self.BuilderData = {
-                            WhatToBuild = whatToBuild,
-                            Position = currentmexpos,
-                            CutOff = 400
-                        }
-                        self:ChangeState(self.NavigateToTaskLocation)
-                        return
-                    end
+            end
+            if currentmarker then
+                local ax = platoonPos[1] - currentmarker.position[1]
+                local az = platoonPos[3] - currentmarker.position[3]
+                if ax * ax + az * az < 3600 then
+                    self:LogDebug(string.format('DecideWhatToDo high priority target close combatloop'))
+                    self:ChangeState(self.Constructing)
+                    return
+                else
+                    self.BuilderData = {
+                        WhatToBuild = whatToBuild,
+                        Position = currentmarker.position,
+                        Marker = currentmarker,
+                        CutOff = 400
+                    }
+                    self:ChangeState(self.NavigateToTaskLocation)
+                    return
                 end
             end
             if eng.Dead then return end
@@ -225,14 +267,15 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local builderData = self.BuilderData
             local pos = eng:GetPosition()
             local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, pos, builderData.Position, 10 , 10000)
+            self:LogDebug(string.format('Navigating to position, path reason is '..tostring(reason)))
             local result, navReason
             local whatToBuildM = self.ExtractorBuildID
             local bUsedTransports
             if reason ~= 'PathOK' then
+                self:LogDebug(string.format('Path is not ok '))
                 -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
-                if reason == 'NoGraph' then
-                    result = true
-                elseif VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) < 300*300 then
+                if VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) < 300*300 then
+                    self:LogDebug(string.format('Distance is less than 300'))
                     --SPEW('* AI-RNG: engineerMoveWithSafePath(): executing CanPathTo(). LUA GenerateSafePathTo returned: ('..repr(reason)..') '..VDist2Sq(pos[1], pos[3], destination[1], destination[3]))
                     -- be really sure we don't try a pathing with a destoryed c-object
                     if IsDestroyed(eng) then
@@ -240,6 +283,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                     result, navReason = NavUtils.CanPathTo('Amphibious', pos, builderData.Position)
+                    self:LogDebug(string.format('Can we path to it '..tostring(result)))
                 end 
             end
             if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 300 * 300
@@ -249,6 +293,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 if VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 350 * 350 then
                     needTransports = true
                 end
+                if needTransports then
+                    self:LogDebug(string.format('We need a transport'))
+                end
 
                 -- Skip the last move... we want to return and do a build
                eng.WaitingForTransport = true
@@ -256,11 +303,14 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                eng.WaitingForTransport = false
 
                 if bUsedTransports then
+                    self:LogDebug(string.format('Used a transport'))
                     coroutine.yield(10)
                     self:ChangeState(self.Constructing)
                     return
-                elseif VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 512 * 512 then
+                elseif reason == 'Unpathable' or VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 512 * 512 then
                     -- If over 512 and no transports dont try and walk!
+                    table.remove(self.ZoneMarkers[self.CurentZoneIndex],self.CurrentMarkerIndex)
+                    self:LogDebug(string.format('No path to position or greater than 500 and unable to use transport'))
                     coroutine.yield(10)
                     self:ChangeState(self.DecideWhatToDo)
                     return
@@ -272,23 +322,13 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, builderData.Position)
                 end
                 if path then
-                    --RNGLOG('We have a path')
-                    if not whatToBuildM then
-                        local cons = eng.PlatoonHandle.PlatoonData.Construction
-                        local buildingTmpl, buildingTmplFile, baseTmpl, baseTmplFile, baseTmplDefault
-                        local factionIndex = aiBrain:GetFactionIndex()
-                        buildingTmplFile = import(cons.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
-                        baseTmplFile = import(cons.BaseTemplateFile or '/lua/BaseTemplates.lua')
-                        baseTmplDefault = import('/lua/BaseTemplates.lua')
-                        buildingTmpl = buildingTmplFile[(cons.BuildingTemplate or 'BuildingTemplates')][factionIndex]
-                        baseTmpl = baseTmplFile[(cons.BaseTemplate or 'BaseTemplates')][factionIndex]
-                        whatToBuildM = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
-                    end
+                    self:LogDebug(string.format('We are going to walk to the destination (a transport might have brought us)'))
                     --RNGLOG('* AI-RNG: engineerMoveWithSafePath(): path 0 true')
                     -- Move to way points (but not to destination... leave that for the final command)
                     --RNGLOG('We are issuing move commands for the path')
                     local dist
                     local pathLength = RNGGETN(path)
+                    self:LogDebug(string.format('Path length is '..tostring(pathLength)))
                     local brokenPathMovement = false
                     local currentPathNode = 1
                     IssueClearCommands({eng})
@@ -296,13 +336,12 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         if i>=3 then
                             local bool,markers=StateUtils.CanBuildOnMassMexPlatoon(aiBrain, path[i], 25)
                             if bool then
-                                LOG('We can build on a mass marker within 30')
                                 --local massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, waypointPath)
                                 --RNGLOG('Mass Marker'..repr(massMarker))
                                 --RNGLOG('Attempting second mass marker')
-                                
-                                local buildQueueReset = eng.EnginerBuildQueue or {}
-                                eng.EnginerBuildQueue = {}
+                                LOG('Trying to builder on mass marker along path, current build queue length is '..table.getn(eng.EngineerBuildQueue))
+                                local buildQueueReset = eng.EngineerBuildQueue or {}
+                                eng.EngineerBuildQueue = {}
                                 for _,massMarker in markers do
                                     RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
                                     RUtils.EngineerTryRepair(aiBrain, eng, whatToBuildM, massMarker.Position)
@@ -313,7 +352,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                         RNGINSERT(eng.EngineerBuildQueue, newEntry)
                                     else
                                         aiBrain:BuildStructure(eng, whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false)
-                                        local newEntry = {whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false,Position=massMarker.Position, true, PathPoint=i}
+                                        local newEntry = {whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false,Position=massMarker.Position, false, PathPoint=i}
                                         RNGINSERT(eng.EngineerBuildQueue, newEntry)
                                     end
                                 end
@@ -321,13 +360,16 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                     for k, v in buildQueueReset do
                                         RNGINSERT(eng.EngineerBuildQueue, v)
                                     end
+                                    LOG('Rebuild original build queue, current length is '..table.getn(eng.EngineerBuildQueue))
                                 end
                             end
                         end
                         if (i - math.floor(i/2)*2)==0 or VDist3Sq(builderData.Position,path[i])<40*40 then continue end
+                        self:LogDebug(string.format('We are issuing the move command to path node '..tostring(i)))
                         IssueMove({eng}, path[i])
                     end
                     if eng.EngineerBuildQueue then
+                        LOG('Looping through Build Queue and replaying build commands'..table.getn(eng.EngineerBuildQueue))
                         for k, v in eng.EngineerBuildQueue do
                             if eng.EngineerBuildQueue[k].PathPoint then
                                 continue
@@ -391,11 +433,13 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                 currentPathNode = currentPathNode + 1
                             end
                         end
-                        if VDist3Sq(builderData.Position, pos) < 100 then
+                        if VDist3Sq(builderData.Position, pos) < 3600 then
+                            self:LogDebug(string.format('We are within 60 units of destination, break from while loop'))
                             break
                         end
                         coroutine.yield(15)
                         if eng:IsIdleState() then
+                            self:LogDebug(string.format('We are idle for some reason, go back to decide what to do'))
                           self:ChangeState(self.DecideWhatToDo)
                           return
                         end
@@ -458,10 +502,22 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 else
+                    LOG('Engineer still trying to move directly to path, navreason during CanPathTo was '..tostring(navReason))
+                    LOG('reason during GenerateSafePath was '..tostring(reason))
+                    if reason == 'TooMuchThreat' then
+                        LOG('Engineer Utility StateMachine threat too high along path, exit and look for another task')
+                        coroutine.yield(30)
+                        self:ExitStateMachine()
+                        return
+                    end
                     IssueMove({eng}, builderData.Position)
                 end
+                if IsDestroyed(self) then
+                    return
+                end
                 coroutine.yield(10)
-                self:ChangeState(self.CheckForOtherTask)
+                self:LogDebug(string.format('Set to constructing state'))
+                self:ChangeState(self.Constructing)
                 return
             end
         end,
@@ -477,7 +533,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local eng = self.eng
             local aiBrain = self:GetBrain()
 
-            while not IsDestroyed(eng) and 0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving") do
+            while not IsDestroyed(eng) and (0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving")) do
                 coroutine.yield(1)
                 --RNGLOG('MexBuildAI waiting for mex build completion')
                 --RNGLOG('Engineer build queue length is '..table.getn(eng.EngineerBuildQueue))
@@ -542,6 +598,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         -- create the platoon
         setmetatable(platoon, AIPlatoonEngineerBehavior)
         platoon.BuilderData = data.BuilderData
+        platoon.PlatoonData = data.PlatoonData
         local platoonUnits = platoon:GetPlatoonUnits()
         if platoonUnits then
             for _, unit in platoonUnits do

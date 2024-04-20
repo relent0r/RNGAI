@@ -71,10 +71,40 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Zone Expansion Builders',
     BuildersType = 'EngineerBuilder',
     Builder {
+        BuilderName = 'RNGAI Zone Expansion Primary',
+        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        Priority = 997,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
+            { UCBC, 'ZoneAvailableRNG', { 'LocationType' } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            JobType = 'Expansion',
+            TransportWait = 5,
+            Construction = {
+                BuildClose = false,
+                BaseTemplate = ExBaseTmpl,
+                ExpansionBase = true,
+                ZoneExpansion = true,
+                NearMarkerType = 'Zone Expansion',
+                ExpansionRadius = 120, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
+                LocationRadius = 1000,
+                LocationType = 'LocationType',
+                BuildStructures = {                    
+                    'T1LandFactory',
+                }
+            },
+            NeedGuard = true,
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI Zone Expansion',
         PlatoonTemplate = 'EngineerBuilderT123RNG',
         Priority = 995,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'ZoneAvailableRNG', { 'LocationType' } },

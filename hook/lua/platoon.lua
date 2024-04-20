@@ -927,12 +927,12 @@ Platoon = Class(RNGAIPlatoonClass) {
         if cons.CheckCivUnits then
             local captureUnit = RUtils.CheckForCivilianUnitCapture(aiBrain, eng, self.MovementLayer)
             if captureUnit then
-                self.PlatoonData.StateMachine = 'CaptureUnit'
+                self.PlatoonData.StateMachine = 'PreAllocatedTask'
                 self.PlatoonData.CaptureUnit = captureUnit
                 self.PlatoonData.Task = 'CaptureUnit'
                 self.PlatoonData.PreAllocatedTask = true
                 self:StateMachineAIRNG(self)
-                LOG('Return after StateMachine initialized')
+                LOG('CaptureUnit Return after StateMachine initialized')
                 return
             end
         end
@@ -1473,28 +1473,16 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 end
                             end
                         end
-                        --LOG('Number of high value units being built '..unitsBeingBuilt)
-                        --LOG('Total current mass income '..repr(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
-                        --LOG('Current Approx Mass Consumption '..repr(aiBrain.EcoManager.ApproxFactoryMassConsumption + (250 * multiplier)))
-                        if unitsBeingBuilt > 0 and aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (250 * multiplier) then
-                            --LOG('Too many high value units being built, abort this one')
+                        if unitsBeingBuilt > 0 and aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (275 * multiplier) then
                             if queuedStructures[unitBp.TechCategory][eng.EntityId] then
-                                --LOG('Deleting engineer entry in queue')
                                 queuedStructures[unitBp.TechCategory][eng.EntityId] = nil
-                            else
-                                --LOG('There is no entry for this high value unit in the engineer manager queue table')
                             end
                             eng.ProcessBuild = eng:ForkThread(eng.PlatoonHandle.WaitForIdleDisband, unit)
                         else
-                            --LOG('Tech category exist but unit entity does not, adding to table')
                             if queuedStructures[unitBp.TechCategory][eng.EntityId] then
-                                --LOG('Deleting engineer entry in queue')
                                 queuedStructures[unitBp.TechCategory][eng.EntityId] = nil
-                            else
-                                --LOG('There is no entry for this high value unit in the engineer manager queue table')
                             end
                             structuresBeingBuilt[unitBp.TechCategory][unit.EntityId] = unit
-                            --LOG('Have added the following unit to the structuresBeingBuilt table '..repr(structuresBeingBuilt[unitBp.TechCategory]))
                         end
                     end
                 end
@@ -4037,20 +4025,13 @@ Platoon = Class(RNGAIPlatoonClass) {
             for _, engineers in ipairs({tech1Engineers, tech2Engineers, tech3Engineers}) do
                 for _, eng in ipairs(engineers) do
                     if aiBrain.EngineerAssistManagerBuildPower > aiBrain.EngineerAssistManagerBuildPowerRequired then
-                        LOG('Removing Engineer for assist platoon')
                         bp = eng.Blueprint
-                        if bp.CategoriesHash.TECH1 then
-                            LOG('Tech1')
-                        elseif bp.CategoriesHash.TECH2 then
-                            LOG('Tech2')
-                        elseif bp.CategoriesHash.TECH3 then
-                            LOG('Tech3')
-                        end
                         self:EngineerAssistRemoveRNG(aiBrain, eng)
                     else
                         -- If the power requirement is met, break out of the loop
                         break
                     end
+                    coroutine.yield(1)
                 end
             end
 
@@ -4236,6 +4217,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                     break
                 end
             end
+            if jobType =='Upgrade' and IsDestroyed(unitToAssist) then
+                LOG('Upgrading unit is destroyed, break from assist thread')
+                eng.UnitBeingAssist = nil
+                break
+            end
             if aiBrain.EngineerAssistManagerFocusCategory and not EntityCategoryContains(aiBrain.EngineerAssistManagerFocusCategory, eng.UnitBeingAssist) and aiBrain:IsAnyEngineerBuilding(aiBrain.EngineerAssistManagerFocusCategory) then
                 --RNGLOG('Assist Platoon Focus Category has changed, aborting current assist')
                 eng.UnitBeingAssist = nil
@@ -4289,69 +4275,94 @@ Platoon = Class(RNGAIPlatoonClass) {
 
         if machineType == 'ACU' then
             --LOG('Starting ACU State')
-            import("/mods/rngai/lua/ai/statemachines/platoon-acu.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-acu.lua").AssignToUnitsMachine({PlatoonData = self.PlatoonData  }, self, self:GetPlatoonUnits())
         elseif machineType == 'AirFeeder' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-air-feeder.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-air-feeder.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'LandFeeder' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-land-feeder.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-land-feeder.lua").AssignToUnitsMachine({PlatoonData = self.PlatoonData  }, self, self:GetPlatoonUnits())
         elseif machineType == 'LandCombat' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'LandAssault' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'LandScout' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-land-scout.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-land-scout.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'Gunship' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-air-gunship.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-air-gunship.lua").AssignToUnitsMachine({PlatoonData = self.PlatoonData  }, self, self:GetPlatoonUnits())
         elseif machineType == 'Bomber' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-air-bomber.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-air-bomber.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'ZoneControl' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-land-zonecontrol.lua").AssignToUnitsMachine({ZoneType = self.PlatoonData.ZoneType}, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-land-zonecontrol.lua").AssignToUnitsMachine({ZoneType = self.PlatoonData.ZoneType, PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'ZoneControlDefense' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-land-zonecontrol-defense.lua").AssignToUnitsMachine({ZoneType = self.PlatoonData.ZoneType}, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-land-zonecontrol-defense.lua").AssignToUnitsMachine({ZoneType = self.PlatoonData.ZoneType, PlatoonData = self.PlatoonData}, self, self:GetPlatoonUnits())
         elseif machineType == 'Fighter' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({PlatoonData = self.PlatoonData  }, self, self:GetPlatoonUnits())
         elseif machineType == 'FatBoy' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-experimental-fatboy.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-experimental-fatboy.lua").AssignToUnitsMachine({PlatoonData = self.PlatoonData  }, self, self:GetPlatoonUnits())
         elseif machineType == 'NavalZoneControl' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-naval-zonecontrol.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-naval-zonecontrol.lua").AssignToUnitsMachine({PlatoonData = self.PlatoonData  }, self, self:GetPlatoonUnits())
         elseif machineType == 'NavalCombat' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-naval-combat.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-naval-combat.lua").AssignToUnitsMachine({PlatoonData = self.PlatoonData  }, self, self:GetPlatoonUnits())
         elseif machineType == 'LandExperimental' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-experimental-land-combat.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-experimental-land-combat.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'AirExperimental' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-experimental-air-combat.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-experimental-air-combat.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'TorpedoBomber' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-air-torpedo.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-air-torpedo.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'StaticArtillery' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-structure-artillery.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-structure-artillery.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'MexBuild' then
-            import("/mods/rngai/lua/ai/statemachines/platoon-engineer-resource.lua").AssignToUnitsMachine({ }, self, self:GetPlatoonUnits())
+            import("/mods/rngai/lua/ai/statemachines/platoon-engineer-resource.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'StrategicArtillery' then
             local aiBrain = self:GetBrain()
-            local artilleryPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed('ArtilleryStateMachine')
+            local platoonName = 'ArtilleryStateMachine_'..self.PlatoonData.LocationType
+            local artilleryPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed(platoonName)
             if not artilleryPlatoonAvailable then
-                artilleryPlatoonAvailable = aiBrain:MakePlatoon('ArtilleryStateMachine', '')
-                artilleryPlatoonAvailable:UniquelyNamePlatoon('ArtilleryStateMachine')
+                artilleryPlatoonAvailable = aiBrain:MakePlatoon(platoonName, '')
+                artilleryPlatoonAvailable:UniquelyNamePlatoon(platoonName)
             end
-            import("/mods/rngai/lua/ai/statemachines/platoon-structure-artillery.lua").AssignToUnitsMachine({ }, artilleryPlatoonAvailable, self:GetPlatoonUnits())
+            local platoonUnits = self:GetPlatoonUnits()
+            aiBrain:AssignUnitsToPlatoon(artilleryPlatoonAvailable, platoonUnits, 'attack', 'None')
+            import("/mods/rngai/lua/ai/statemachines/platoon-structure-artillery.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, artilleryPlatoonAvailable, platoonUnits)
         elseif machineType == 'Novax' then
             local aiBrain = self:GetBrain()
-            local novaxPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed('NovaxStateMachine')
+            local platoonName = 'NovaxStateMachine'
+            local platoonData = self.PlatoonData
+            local novaxPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed(platoonName)
             if not novaxPlatoonAvailable then
-                novaxPlatoonAvailable = aiBrain:MakePlatoon('NovaxStateMachine', '')
-                novaxPlatoonAvailable:UniquelyNamePlatoon('NovaxStateMachine')
+                novaxPlatoonAvailable = aiBrain:MakePlatoon(platoonName, '')
+                novaxPlatoonAvailable:UniquelyNamePlatoon(platoonName)
             end
-            import("/mods/rngai/lua/ai/statemachines/platoon-structure-novax.lua").AssignToUnitsMachine({ }, novaxPlatoonAvailable, self:GetPlatoonUnits())
+            local platoonUnits = self:GetPlatoonUnits()
+            aiBrain:AssignUnitsToPlatoon(novaxPlatoonAvailable, platoonUnits, 'attack', 'None')
+            import("/mods/rngai/lua/ai/statemachines/platoon-structure-novax.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, novaxPlatoonAvailable, platoonUnits)
         elseif machineType == 'Nuke' then
             local aiBrain = self:GetBrain()
-            local nukePlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed('NukeStateMachine')
+            local platoonName = 'NukeStateMachine'
+            local nukePlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed(platoonName)
             if not nukePlatoonAvailable then
-                nukePlatoonAvailable = aiBrain:MakePlatoon('NukeStateMachine', '')
-                nukePlatoonAvailable:UniquelyNamePlatoon('NukeStateMachine')
+                nukePlatoonAvailable = aiBrain:MakePlatoon(platoonName, '')
+                nukePlatoonAvailable:UniquelyNamePlatoon(platoonName)
             end
-            import("/mods/rngai/lua/ai/statemachines/platoon-structure-nuke.lua").AssignToUnitsMachine({ }, nukePlatoonAvailable, self:GetPlatoonUnits())
+            local platoonUnits = self:GetPlatoonUnits()
+            aiBrain:AssignUnitsToPlatoon(nukePlatoonAvailable, platoonUnits, 'attack', 'None')
+            import("/mods/rngai/lua/ai/statemachines/platoon-structure-nuke.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, nukePlatoonAvailable, platoonUnits)
         elseif machineType == 'PreAllocatedTask' then
+            LOG('StateMachine initializing with PreAllocatedTask')
             import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
+        elseif machineType == 'TML' then
+            local aiBrain = self:GetBrain()
+            local platoonName = 'TMLStateMachine_'..self.PlatoonData.LocationType
+            local tmlPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed(platoonName)
+            if not tmlPlatoonAvailable then
+                tmlPlatoonAvailable = aiBrain:MakePlatoon(platoonName, '')
+                tmlPlatoonAvailable:UniquelyNamePlatoon(platoonName)
+            end
+            local platoonUnits = self:GetPlatoonUnits()
+            aiBrain:AssignUnitsToPlatoon(tmlPlatoonAvailable, platoonUnits, 'attack', 'None')
+            import("/mods/rngai/lua/ai/statemachines/platoon-structure-tml.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, tmlPlatoonAvailable, platoonUnits)
+        elseif machineType == 'Optics' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-structure-optics.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
+
         end
         WaitTicks(50)
     end,

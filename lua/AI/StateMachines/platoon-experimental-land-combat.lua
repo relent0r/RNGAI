@@ -468,10 +468,12 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                 self:LogWarning(string.format('no destination to navigate to'))
                 coroutine.yield(10)
                 --LOG('No destiantion break out of Navigating')
+                self:LogDebug(string.format('No destination recorded, decidewhattodo'))
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
             local waypoint, length
+            local prevWaypoint
             local endPoint = false
             IssueClearCommands({self.ExperimentalUnit})
 
@@ -492,13 +494,15 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     endPoint = true
                     if dx * dx + dz * dz < navigateDistanceCutOff then
                     IssueMove({self.ExperimentalUnit}, destination)
+                        self:LogDebug(string.format('Close to destination, DecideWhatToDo '))
+                        WaitTicks(30)
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
-                    
                 end
                 -- navigate towards waypoint 
                 if not waypoint then
+                    self:LogDebug(string.format('No waypoint returned'))
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
@@ -513,6 +517,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     end
                     local position = self.ExperimentalUnit:GetPosition()
                     if self.EnemyThreatTable.TotalSuroundingThreat > 25 and not StateUtils.PositionInWater(position) then
+                        self:LogDebug(string.format('Threat while navigating, decide what to do'))
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
@@ -921,6 +926,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIExperimentalLandBehavior)
+        platoon.PlatoonData = data.PlatoonData
         local platoonUnits = platoon:GetPlatoonUnits()
         if platoonUnits then
             for _, unit in platoonUnits do

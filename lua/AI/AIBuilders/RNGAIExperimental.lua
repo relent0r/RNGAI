@@ -362,7 +362,7 @@ BuilderGroup {
         InstanceCount = 50,
         BuilderType = 'Any',
         BuilderData = {
-            SearchRadius = 6000,
+            SearchRadius = 'BaseEnemyArea',
             StateMachine = 'Novax',
             LocationType = 'LocationType',
             PrioritizedCategories = { 

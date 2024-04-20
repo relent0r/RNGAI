@@ -46,6 +46,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                 self.MovementLayer = self:GetNavigationalLayer()
             end
             local aiBrain = self:GetBrain()
+            self.MergeType = 'NavalMergeStateMachine'
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
             if aiBrain.EnemyIntel.Phase > 2 then
                 self.EnemyRadius = 70
@@ -81,7 +82,11 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonNavalCombatBehavior
         Main = function(self)
+            if IsDestroyed(self) then
+                return
+            end
             local aiBrain = self:GetBrain()
+            self:LogDebug(string.format('DecideWhatToDo for Naval Zone Combat'))
             local threat
             local currentStatus = aiBrain.GridPresence:GetInferredStatus(self.Pos)
             if self.CurrentPlatoonThreatAntiSurface > 0 then
@@ -711,6 +716,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIPlatoonNavalCombatBehavior)
+        platoon.PlatoonData = data.PlatoonData
         local platoonUnits = platoon:GetPlatoonUnits()
         if platoonUnits then
             for _, unit in platoonUnits do

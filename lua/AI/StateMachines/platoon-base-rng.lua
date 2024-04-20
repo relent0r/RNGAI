@@ -242,11 +242,12 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                         if unit.BuilderManagerData.EngineerManager then
                             unit.BuilderManagerData.EngineerManager:TaskFinishedRNG(unit)
                         end
+                    else
+                        LOG('Engineer is missing BuilderManagerData')
                     end
                     unit:SetCustomName('EngineerDisbanded')
                 end
                 if not unit.Dead then
-                    IssueStop({ unit })
                     IssueClearCommands({ unit })
                 end
             end

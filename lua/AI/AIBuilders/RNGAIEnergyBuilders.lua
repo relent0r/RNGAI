@@ -71,6 +71,7 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = true,
             Construction = {
+                StateMachine = 'EngineerBuilder',
                 BuildClose = true,
                 AdjacencyPriority = {
                     categories.FACTORY * categories.AIR,
@@ -85,6 +86,7 @@ BuilderGroup {
                 AdjacencyDistance = 10,
                 maxUnits = 1,
                 maxRadius = 2.5,
+                BuildCategory = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE,
                 BuildStructures = {
                     'T1EnergyProduction',
                 },
