@@ -9,7 +9,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI SML Hi Pri',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         Priority = 700,
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
@@ -24,6 +24,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 25,
             Construction = {
@@ -36,14 +37,14 @@ BuilderGroup {
                 maxRadius = 20,
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T3StrategicMissile',
+                    { Unit = 'T3StrategicMissile', Categories = categories.STRUCTURE * categories.NUKE * categories.TECH3 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI SML Low Pri',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         Priority = 500,
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
@@ -59,6 +60,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
@@ -71,7 +73,7 @@ BuilderGroup {
                 maxRadius = 20,
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T3StrategicMissile',
+                    { Unit = 'T3StrategicMissile', Categories = categories.STRUCTURE * categories.NUKE * categories.TECH3 },
                 },
             }
         }
@@ -82,7 +84,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T3 Artillery Hi Pri',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         Priority = 600,
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
@@ -96,6 +98,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 30,
             Construction = {
@@ -107,7 +110,7 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 20,
                 BuildStructures = {
-                    'T3Artillery',
+                    { Unit = 'T3Artillery', Categories = categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 },
                 },
                 LocationType = 'LocationType',
             }
@@ -115,7 +118,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T3 Artillery Lo Pri',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         Priority = 600,
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
@@ -129,6 +132,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 15,
             Construction = {
@@ -140,7 +144,7 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 20,
                 BuildStructures = {
-                    'T3Artillery',
+                    { Unit = 'T3Artillery', Categories = categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 },
                 },
                 LocationType = 'LocationType',
             }
@@ -148,7 +152,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T4 Mavor Exp Nuke',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         DelayEqualBuildPlattons = {'HighValue', 20},
         Priority = 750,
         InstanceCount = 1,
@@ -165,6 +169,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 35,
             Construction = {
@@ -172,7 +177,7 @@ BuilderGroup {
                 AdjacencyPriority = {categories.SHIELD * categories.STRUCTURE},
                 HighValue = true,
                 BuildStructures = {
-                    'T4Artillery',
+                    { Unit = 'T4Artillery', Categories = categories.STRUCTURE * categories.ARTILLERY * categories.EXPERIMENTAL * categories.UEF },
                 },
                 LocationType = 'LocationType',
             }
@@ -180,7 +185,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T4 RapidFire',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         DelayEqualBuildPlattons = {'HighValue', 20},
         Priority = 750,
         InstanceCount = 1,
@@ -197,6 +202,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 35,
             Construction = {
@@ -204,7 +210,7 @@ BuilderGroup {
                 AdjacencyPriority = {categories.SHIELD * categories.STRUCTURE},
                 HighValue = true,
                 BuildStructures = {
-                    'T3RapidArtillery',
+                    { Unit = 'T3RapidArtillery', Categories = categories.STRUCTURE * categories.ARTILLERY * categories.EXPERIMENTAL * categories.AEON },
                 },
                 LocationType = 'LocationType',
             }
@@ -212,7 +218,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T4 Scathis',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         DelayEqualBuildPlattons = {'HighValue', 20},
         Priority = 750,
         InstanceCount = 1,
@@ -229,6 +235,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 35,
             Construction = {
@@ -236,7 +243,7 @@ BuilderGroup {
                 AdjacencyCategory = categories.SHIELD * categories.STRUCTURE,
                 HighValue = true,
                 BuildStructures = {
-                    'T4LandExperimental2',
+                    { Unit = 'T4LandExperimental2', Categories = categories.MOBILE * categories.ARTILLERY * categories.EXPERIMENTAL * categories.CYBRAN },
                 },
                 LocationType = 'LocationType',
             }

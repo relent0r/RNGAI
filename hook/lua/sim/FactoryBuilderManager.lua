@@ -145,9 +145,8 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                 local zone = self.Brain.BuilderManagers[self.LocationType].Zone
                 LOG('Factory manager is in zone '..tostring(zone))
                 if zone then
-                    if self.Brain.Zones.Land.zones[zone].engineerallocated then
-                        LOG('Factory is built, setting engineerallocated in zone to nil '..tostring(self.Brain.Zones.Land.zones[zone].engineerallocated.UnitId))
-                        self.Brain.Zones.Land.zones[zone].engineerallocated = nil
+                    if self.Brain.Zones.Land.zones[zone].engineerplatoonallocated then
+                        self.Brain.Zones.Land.zones[zone].engineerplatoonallocated = nil
                     end
                 end
             end

@@ -72,7 +72,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Zone Expansion Primary',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 997,
         InstanceCount = 1,
         BuilderConditions = {
@@ -82,8 +82,9 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'Expansion',
-            TransportWait = 5,
+            TransportWait = 8,
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -94,7 +95,7 @@ BuilderGroup {
                 LocationRadius = 1000,
                 LocationType = 'LocationType',
                 BuildStructures = {                    
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 }
             },
             NeedGuard = true,
@@ -102,7 +103,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Zone Expansion',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 995,
         InstanceCount = 1,
         BuilderConditions = {
@@ -112,6 +113,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'Expansion',
             TransportWait = 5,
             Construction = {
@@ -124,7 +126,7 @@ BuilderGroup {
                 LocationRadius = 1000,
                 LocationType = 'LocationType',
                 BuildStructures = {                    
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 }
             },
             NeedGuard = true,
@@ -137,7 +139,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Naval Expansion Area FrigateRaid',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 0,
         PriorityFunction = FrigateRaid,
         InstanceCount = 1,
@@ -149,6 +151,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
@@ -163,7 +166,7 @@ BuilderGroup {
                 ThreatRings = 1,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {                    
-                    'T1SeaFactory',
+                    { Unit = 'T1SeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH1 },
                 }
             },
             NeedGuard = false,
@@ -171,7 +174,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Naval Expansion Area 250 Small',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 740,
         PriorityFunction = NavalExpansionAdjust,
         InstanceCount = 1,
@@ -184,6 +187,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
@@ -199,7 +203,7 @@ BuilderGroup {
                 ThreatRings = 1,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {                    
-                    'T1SeaFactory',
+                    { Unit = 'T1SeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH1 },
                 }
             },
             NeedGuard = false,
@@ -212,7 +216,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Naval Expansion Area FrigateRaid Large',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 0,
         PriorityFunction = FrigateRaid,
         InstanceCount = 1,
@@ -224,6 +228,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'Expansion',
             Construction = {
                 BuildClose = false,
@@ -238,7 +243,7 @@ BuilderGroup {
                 ThreatRings = 1,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {                    
-                    'T1SeaFactory',
+                    { Unit = 'T1SeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH1 },
                 }
             },
             NeedGuard = false,
@@ -246,7 +251,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Naval Expansion Area 650 Large',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         PriorityFunction = NavalExpansionAdjust,
         Priority = 750,
         InstanceCount = 1,
@@ -260,6 +265,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'Expansion',
             TransportWait = 5,
             Construction = {
@@ -276,8 +282,8 @@ BuilderGroup {
                 ThreatRings = 1,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {                    
-                    'T1SeaFactory',
-                    'T1NavalDefense',
+                    { Unit = 'T1SeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH1 },
+                    { Unit = 'T1NavalDefense', Categories = categories.DEFENSE * categories.ANTINAVY * categories.TECH1 * categories.STRUCTURE },
                 }
             },
             NeedGuard = false,

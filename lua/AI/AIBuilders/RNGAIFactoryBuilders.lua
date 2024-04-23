@@ -84,7 +84,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG Factory Builder Land T1 Primary',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1050,
         DelayEqualBuildPlattons = {'Factories', 3},
         InstanceCount = 1,
@@ -97,20 +97,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Land T1 MainBase',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1010,
         DelayEqualBuildPlattons = {'Factories', 3},
         InstanceCount = 2,
@@ -125,20 +126,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Land T1 MainBase Storage',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1010,
         DelayEqualBuildPlattons = {'Factories', 3},
         InstanceCount = 1,
@@ -155,20 +157,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Land T2 MainBase',
-        PlatoonTemplate = 'EngineerBuilderT23RNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 1015,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -182,20 +185,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
-                    'T2SupportLandFactory',
+                    { Unit = 'T2SupportLandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH2 * categories.SUPPORTFACTORY },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Land T3 MainBase',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 1020,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -210,18 +214,19 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
+                StateMachine = 'EngineerBuilder',
                 LocationType = 'LocationType',
                 BuildClose = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
-                    'T3SupportLandFactory',
+                    { Unit = 'T3SupportLandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH3 * categories.SUPPORTFACTORY },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Land T1',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 900,
         DelayEqualBuildPlattons = {'Factories', 3},
         InstanceCount = 2,
@@ -235,12 +240,13 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
@@ -252,7 +258,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG Factory Builder Land T1 Unmarked Spam',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -264,13 +270,14 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
@@ -282,7 +289,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG Factory Builder Land T1 Primary Large',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1050,
         DelayEqualBuildPlattons = {'Factories', 3},
         InstanceCount = 1,
@@ -295,20 +302,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Land T1 MainBase Large',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -322,20 +330,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Land T1 Large',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 800,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -349,19 +358,20 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Land T1 Path Large',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1010,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -375,19 +385,20 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Land T2 MainBase Large',
-        PlatoonTemplate = 'EngineerBuilderT23RNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -401,20 +412,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
-                    'T2SupportLandFactory',
+                    { Unit = 'T2SupportLandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH2 * categories.SUPPORTFACTORY },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Land T3 MainBase Large',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -427,13 +439,14 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
-                    'T3SupportLandFactory',
+                    { Unit = 'T3SupportLandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH3 * categories.SUPPORTFACTORY },
                 },
             }
         }
@@ -445,7 +458,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 Primary',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1050,
         DelayEqualBuildPlattons = {'Factories', 3},
         InstanceCount = 1,
@@ -459,20 +472,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1AirFactory',
+                    { Unit = 'T1AirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 Main',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1010,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -488,18 +502,19 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             Construction = {
+                StateMachine = 'EngineerBuilder',
                 LocationType = 'LocationType',
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildClose = false,
                 BuildStructures = {
-                    'T1AirFactory',
+                    { Unit = 'T1AirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 Main Response',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 0,
         PriorityFunction = AirDefenseScramble,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -514,20 +529,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildClose = false,
                 BuildStructures = {
-                    'T1AirFactory',
+                    { Unit = 'T1AirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Air T2 MainBase',
-        PlatoonTemplate = 'EngineerBuilderT23RNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -539,20 +555,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
-                    'T2SupportAirFactory',
+                    { Unit = 'T2SupportAirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH2 * categories.SUPPORTFACTORY },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Air T3 MainBase',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -563,13 +580,14 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
-                    'T3SupportAirFactory',
+                    { Unit = 'T3SupportAirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH3 * categories.SUPPORTFACTORY },
                 },
             }
         }
@@ -581,7 +599,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 Expansion',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 700,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -591,13 +609,14 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
-                    'T1AirFactory',
+                    { Unit = 'T1AirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH1 },
                 },
             }
         }
@@ -609,7 +628,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 Primary Large',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1050,
         DelayEqualBuildPlattons = {'Factories', 3},
         InstanceCount = 1,
@@ -623,20 +642,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1AirFactory',
+                    { Unit = 'T1AirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 High Pri Large',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -649,20 +669,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
-                    'T1AirFactory',
+                    { Unit = 'T1AirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 Main Large',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 800,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -676,19 +697,20 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
-                    'T1AirFactory',
+                    { Unit = 'T1AirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Air T2 MainBase Large',
-        PlatoonTemplate = 'EngineerBuilderT23RNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -700,20 +722,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
-                    'T2SupportAirFactory',
+                    { Unit = 'T2SupportAirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH2 * categories.SUPPORTFACTORY },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Air T3 MainBase Large',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -724,20 +747,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = false,
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
-                    'T3SupportAirFactory',
+                    { Unit = 'T3SupportAirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH3 * categories.SUPPORTFACTORY },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 Main Response Large',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 0,
         PriorityFunction = AirDefenseScramble,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -751,13 +775,14 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildClose = false,
                 BuildStructures = {
-                    'T1AirFactory',
+                    { Unit = 'T1AirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH1 },
                 },
             }
         }
@@ -769,7 +794,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG Factory Builder Air T1 High Pri Large Expansion',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 0,
         PriorityFunction = ActiveExpansion,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -782,13 +807,14 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
-                    'T1AirFactory',
+                    { Unit = 'T1AirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH1 },
                 },
             }
         }
@@ -800,7 +826,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG Factory Builder Sea T1 Primary',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1050,
         DelayEqualBuildPlattons = {'Factories', 3},
         InstanceCount = 1,
@@ -814,20 +840,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1SeaFactory',
+                    { Unit = 'T1SeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Sea T1 High Pri',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -840,18 +867,19 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T1SeaFactory',
+                    { Unit = 'T1SeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Sea T1 High Pri Naval',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 0,
         PriorityFunction = NavalAdjust,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -865,18 +893,19 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T1SeaFactory',
+                    { Unit = 'T1SeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Sea T2 High Pri Naval',
-        PlatoonTemplate = 'EngineerBuilderT23RNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 0,
         PriorityFunction = NavalAdjust,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -891,18 +920,19 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T2SupportSeaFactory',
+                    { Unit = 'T2SupportSeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH2 * categories.SUPPORTFACTORY },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Sea T3 High Pri Naval',
-        PlatoonTemplate = 'EngineerBuilderT23RNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 0,
         PriorityFunction = NavalAdjust,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -916,11 +946,12 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T3SupportSeaFactory',
+                    { Unit = 'T3SupportSeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH3 * categories.SUPPORTFACTORY },
                 },
             }
         }
@@ -928,7 +959,7 @@ BuilderGroup {
 
     Builder {
         BuilderName = 'RNG Factory Builder Sea T2 High Pri Naval',
-        PlatoonTemplate = 'EngineerBuilderT23RNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 0,
         PriorityFunction = NavalAdjust,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -942,11 +973,12 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T2SupportSeaFactory',
+                    { Unit = 'T2SupportSeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH2 * categories.SUPPORTFACTORY },
                 },
             }
         }
@@ -954,7 +986,7 @@ BuilderGroup {
     
     Builder {
         BuilderName = 'RNG Factory Builder Sea T1 Marker',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 700,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -967,13 +999,14 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 NearMarkerType = 'Naval Area',
                 LocationRadius = 90,
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T1SeaFactory',
+                    { Unit = 'T1SeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH1 },
                 },
             }
         }
@@ -985,7 +1018,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG Factory Builder Sea T1 Primary Large',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1050,
         DelayEqualBuildPlattons = {'Factories', 3},
         InstanceCount = 1,
@@ -999,20 +1032,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1SeaFactory',
+                    { Unit = 'T1SeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Sea T1 High Pri Large',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -1024,18 +1058,19 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T1SeaFactory',
+                    { Unit = 'T1SeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Sea T1 Marker Large',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 0,
         PriorityFunction = NavalAdjust,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -1050,20 +1085,21 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 NearMarkerType = 'Naval Area',
                 LocationRadius = 90,
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T1SeaFactory',
+                    { Unit = 'T1SeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Sea T1 Marker Large Excess',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 650,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -1077,20 +1113,21 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 NearMarkerType = 'Naval Area',
                 LocationRadius = 90,
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T1SeaFactory',
+                    { Unit = 'T1SeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Sea T2 High Pri Naval Large',
-        PlatoonTemplate = 'EngineerBuilderT23RNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 0,
         PriorityFunction = NavalAdjust,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -1105,18 +1142,19 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T2SupportSeaFactory',
+                    { Unit = 'T2SupportSeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH2 * categories.SUPPORTFACTORY },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Sea T3 High Pri Naval Large',
-        PlatoonTemplate = 'EngineerBuilderT23RNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 0,
         PriorityFunction = NavalAdjust,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -1130,11 +1168,12 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T3SupportSeaFactory',
+                    { Unit = 'T3SupportSeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH3 * categories.SUPPORTFACTORY },
                 },
             }
         }
@@ -1160,12 +1199,13 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 1,
             Construction = {
                 BuildClose = true,
                 BuildStructures = {
-                    'T2AirStagingPlatform',
+                    { Unit = 'T2AirStagingPlatform', Categories = categories.STRUCTURE * categories.AIRSTAGINGPLATFORM },
                 },
                 LocationType = 'LocationType',
             }
@@ -1178,7 +1218,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG Factory Builder Land T1 Expansion Primary',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -1189,20 +1229,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Land T1 Expansion Active',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         PriorityFunction = ActiveExpansion,
         Priority = 0,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -1215,20 +1256,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Land T1 Expansion Aggressive',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         PriorityFunction = AggressiveExpansion,
         Priority = 0,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -1241,20 +1283,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Land T2 Expansion Active',
-        PlatoonTemplate = 'EngineerBuilderT23RNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         PriorityFunction = ActiveExpansion,
         Priority = 0,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -1267,20 +1310,22 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T2SupportLandFactory',
+                    { Unit = 'T2SupportLandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH2 * categories.SUPPORTFACTORY },
+                    
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Land T3 Expansion Active',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         PriorityFunction = ActiveExpansion,
         Priority = 0,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -1292,20 +1337,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T3SupportLandFactory',
+                    { Unit = 'T3SupportLandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH3 * categories.SUPPORTFACTORY },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG Factory Builder Land T1 Island Expansion',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -1318,12 +1364,13 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
@@ -1336,7 +1383,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Gate Builder',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 800,
         BuilderConditions = {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Gate' } },
@@ -1347,13 +1394,14 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BuildClose = false,
                 LocationType = 'LocationType',
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildStructures = {
-                    'T3QuantumGate',
+                    { Unit = 'T3QuantumGate', Categories = categories.FACTORY * categories.GATE * categories.TECH3 },
                 },
             }
         }
@@ -1365,7 +1413,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGEXP Factory Builder Land T1 High Pri',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -1377,13 +1425,14 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
@@ -1395,7 +1444,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGEXP Factory Builder Air T1 High Pri',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -1409,20 +1458,21 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
-                    'T1AirFactory',
+                    { Unit = 'T1AirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH1 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNGEXP Factory Builder Air T1 Main',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 900,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -1436,12 +1486,13 @@ BuilderGroup {
          },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 BuildClose = false,
                 BuildStructures = {
-                    'T1AirFactory',
+                    { Unit = 'T1AirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH1 },
                 },
             }
         }

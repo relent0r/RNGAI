@@ -2,6 +2,7 @@ local AIUtils = import('/lua/ai/AIUtilities.lua')
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local MarkerUtils = import("/lua/sim/MarkerUtilities.lua")
+local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 --local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
@@ -102,7 +103,7 @@ local PropBlacklist = {}
 -- This uses a mix of Uveso's reclaim logic and my own
 function ReclaimRNGAIThread(platoon, self, aiBrain)
     local function MexBuild(platoon, eng, aiBrain)
-        local bool,markers=MABC.CanBuildOnMassMexPlatoon(aiBrain, platoon:GetPlatoonPosition(), 25)
+        local bool,markers=StateUtils.CanBuildOnMassMexPlatoon(aiBrain, platoon:GetPlatoonPosition(), 25)
         if bool then
             IssueClearCommands({eng})
             local factionIndex = aiBrain:GetFactionIndex()
@@ -140,6 +141,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
     self.BadReclaimables = self.BadReclaimables or {}
 
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
+        local needEnergy = aiBrain:GetEconomyStoredRatio('ENERGY') < 0.5
         if self.PlatoonData.Construction.CheckCivUnits then
             local captureUnit = CheckForCivilianUnitCapture(aiBrain, self, platoon.MovementLayer)
             if captureUnit then
@@ -173,10 +175,16 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                     if not firstReclaim then
                         for k, r in aiBrain.StartReclaimTable do
                             if r.Reclaim and not IsDestroyed(r.Reclaim) then
-                                if r.Reclaim.MaxMassReclaim > highestValue and NavUtils.CanPathTo('Amphibious', engPos, r.Reclaim.CachePosition) then
+                                local reclaimValue
+                                if needEnergy then
+                                    reclaimValue = r.Reclaim.MaxEnergyReclaim
+                                else
+                                    reclaimValue = r.Reclaim.MaxMassReclaim
+                                end
+                                if reclaimValue > highestValue and NavUtils.CanPathTo('Amphibious', engPos, r.Reclaim.CachePosition) then
                                     closestReclaim = r.Reclaim
                                     closestReclaimKey = k
-                                    highestValue  = r.Reclaim.MaxMassReclaim
+                                    highestValue  = reclaimValue
                                 end
                             end
                         end
@@ -207,13 +215,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             coroutine.yield(1)
                             reclaimTimeout = reclaimTimeout + 1
                             --RNGLOG('Waiting for reclaim to no longer exist')
-                            if aiBrain:GetEconomyStoredRatio('MASS') > 0.95 then
-                                -- we are overflowing mass, assume we either need actual power or build power and we'll be close enough to the base to provide it.
-                                -- watch out for thrashing as I don't have a minimum storage check on this builder
-                                --RNGLOG('We are overflowing mass return from early reclaim thread')
-                                IssueClearCommands({self})
-                                return
-                            end
                             if self:IsUnitState('Reclaiming') and reclaimTimeout > 0 then
                                 reclaimTimeout = reclaimTimeout - 1
                             end
@@ -451,7 +452,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         end
 
         local reclaim = {}
-        local needEnergy = aiBrain:GetEconomyStoredRatio('ENERGY') < 0.5
+        
         --RNGLOG('* AI-RNG: Going through reclaim table')
         --self:SetCustomName('Loop through reclaim table')
         if reclaimRect and not table.empty( reclaimRect ) then
@@ -3531,7 +3532,7 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius)
     if not table.empty(im.ZoneExpansions.Pathable) then
         for _, v in im.ZoneExpansions.Pathable do
             local skipPos = false
-            if v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive and (not zoneSet[v.ZoneID].engineerallocated or zoneSet[v.ZoneID].engineerallocated.Dead) then
+            if v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive and (not zoneSet[v.ZoneID].engineerplatoonallocated or zoneSet[v.ZoneID].engineerplatoonallocated.Dead) then
                 if zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive then
                     LOG('Selecting base that already has an active factory manager')
                 end
@@ -3612,9 +3613,6 @@ end
 
 function AIBuildBaseTemplateFromLocationRNG(baseTemplate, location, zoneExpansionCheck)
     local baseT = {}
-    if zoneExpansionCheck then
-        LOG('Build Function for zone expansion, location '..repr(location))
-    end
     if location and baseTemplate then
         for templateNum, template in baseTemplate do
             baseT[templateNum] = {}

@@ -1753,9 +1753,9 @@ StructureManager = Class {
         coroutine.yield(math.random(50, 100))
         while self.Brain.Status ~= "Defeat" do
             coroutine.yield(60)
-            local extractors = self.Brain:GetListOfUnits((categories.MASSEXTRACTION + categories.FACTORY) - categories.TECH1, true)
+            local structures = self.Brain:GetListOfUnits((categories.MASSEXTRACTION + categories.FACTORY) - categories.TECH1  + categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3), true)
             local tmdRequired = {}
-            for _, v in extractors do
+            for _, v in structures do
                 local isDefended = self:StructureTMLCheck(v)
                 if not isDefended then
                     RNGINSERT(tmdRequired, v)

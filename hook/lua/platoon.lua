@@ -1082,7 +1082,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     LOG('Zone reference for expansion is '..repr(reference))
                     LOG('Zone reference is '..refZone)
                     aiBrain.Zones.Land.zones[refZone].lastexpansionattempt = GetGameTimeSeconds()
-                    aiBrain.Zones.Land.zones[refZone].engineerallocated = eng
+                    aiBrain.Zones.Land.zones[refZone].engineerplatoonallocated = self
                     --[[if aiBrain.Zones.Land.zones[refZone].resourcevalue > 3 then
                         local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
                         local smInstance = StructureManagerRNG.GetStructureManager(aiBrain)
@@ -1143,7 +1143,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 AIBuildStructures.AINewExpansionBaseRNG(aiBrain, refName, reference, eng, cons)
             end
             relative = false
-            RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference, cons.ZoneExpansion))
+            RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
             -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
             --buildFunction = AIBuildStructures.AIBuildBaseTemplateOrdered
             buildFunction = AIBuildStructures.AIBuildBaseTemplateRNG
@@ -1977,7 +1977,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 coroutine.yield( 15 )
                 assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
                 assistListCount = assistListCount + 1
-                --RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
+                --LOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
                 if assistListCount > 10 then
                     --RNGLOG('assistListCount is still empty after 7.5 seconds')
                     break
@@ -4346,8 +4346,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             local platoonUnits = self:GetPlatoonUnits()
             aiBrain:AssignUnitsToPlatoon(nukePlatoonAvailable, platoonUnits, 'attack', 'None')
             import("/mods/rngai/lua/ai/statemachines/platoon-structure-nuke.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, nukePlatoonAvailable, platoonUnits)
-        elseif machineType == 'PreAllocatedTask' then
-            LOG('StateMachine initializing with PreAllocatedTask')
+        elseif machineType == 'PreAllocatedTask' or machineType == 'EngineerBuilder' then
+            LOG('StateMachine initializing with PreAllocatedTask or EngineerBuilder')
+            LOG('BuilderName '..tostring(self.BuilderName))
             import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'TML' then
             local aiBrain = self:GetBrain()

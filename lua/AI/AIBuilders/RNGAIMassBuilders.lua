@@ -379,7 +379,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Single',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerStateT1RNG',
         Priority = 930,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 1,
@@ -393,6 +393,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
@@ -404,10 +405,10 @@ BuilderGroup {
                 NoPause = true,
                 Radius = 150,
                 BuildStructures = {
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
 
                 },
                 LocationType = 'LocationType',
@@ -416,7 +417,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerStateT1RNG',
         Priority = 925,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 1,
@@ -430,6 +431,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
@@ -441,10 +443,10 @@ BuilderGroup {
                 NoPause = true,
                 Radius = 150,
                 BuildStructures = {
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
 
                 },
                 LocationType = 'LocationType',
@@ -453,7 +455,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG T2 Mass Adjacency Engineer',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 945,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 1,
@@ -467,6 +469,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
@@ -477,10 +480,10 @@ BuilderGroup {
                 Radius = 80,
                 NearDefensivePoints = false,
                 BuildStructures = {
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
 
                 },
                 LocationType = 'LocationType',
@@ -489,7 +492,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Distant',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerStateT1RNG',
         Priority = 400,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
@@ -503,6 +506,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
@@ -513,10 +517,10 @@ BuilderGroup {
                 Radius = 80,
                 NearDefensivePoints = false,
                 BuildStructures = {
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
 
                 },
                 LocationType = 'LocationType',
@@ -525,7 +529,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Excess',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 800,
         InstanceCount = 2,
         BuilderConditions = {
@@ -537,6 +541,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
                 BaseTemplate = 'CappedExtractorTemplate',
@@ -546,10 +551,10 @@ BuilderGroup {
                 Radius = 80,
                 NearDefensivePoints = false,
                 BuildStructures = {
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
 
                 },
                 LocationType = 'LocationType',
@@ -563,7 +568,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Expansion',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerStateT1RNG',
         Priority = 925,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
@@ -577,6 +582,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
@@ -587,10 +593,10 @@ BuilderGroup {
                 Radius = 80,
                 NearDefensivePoints = false,
                 BuildStructures = {
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
 
                 },
                 LocationType = 'LocationType',
@@ -599,7 +605,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Distant Expansion',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerStateT1RNG',
         Priority = 400,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
@@ -613,6 +619,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
@@ -623,10 +630,10 @@ BuilderGroup {
                 Radius = 80,
                 NearDefensivePoints = false,
                 BuildStructures = {
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
 
                 },
                 LocationType = 'LocationType',
@@ -641,7 +648,7 @@ BuilderGroup {
     
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Floating',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerStateT1RNG',
         Priority = 905,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 1,
@@ -655,6 +662,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
@@ -666,10 +674,10 @@ BuilderGroup {
                 NoPause = true,
                 Radius = 'BaseDMZArea',
                 BuildStructures = {
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
 
                 },
                 LocationType = 'MAIN',

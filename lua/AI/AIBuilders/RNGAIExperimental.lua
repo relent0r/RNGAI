@@ -41,7 +41,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Experimental1 1st',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         PriorityFunction = ExperimentalDelayWaterMap,
         Priority = 910,
         DelayEqualBuildPlattons = {'HighValue', 20},
@@ -55,6 +55,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 30,
             Construction = {
@@ -63,7 +64,7 @@ BuilderGroup {
                 HighValue = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
-                    'T4LandExperimental1',
+                    { Unit = 'T4LandExperimental1', Categories = categories.EXPERIMENTAL * categories.MOBILE * categories.LAND - categories.CYBRAN * categories.ARTILLERY - categories.UNSELECTABLE - categories.UNTARGETABLE },
                 },
                 LocationType = 'LocationType',
             }
@@ -71,7 +72,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 MultiBuild',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         Priority = 500,
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
@@ -85,6 +86,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 30,
             Construction = {
@@ -93,7 +95,7 @@ BuilderGroup {
                 HighValue = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
-                    'T4LandExperimental1',
+                    { Unit = 'T4LandExperimental1', Categories = categories.EXPERIMENTAL * categories.MOBILE * categories.LAND - categories.CYBRAN * categories.ARTILLERY - categories.UNSELECTABLE - categories.UNTARGETABLE },
                 },
                 LocationType = 'LocationType',
             }
@@ -101,7 +103,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 Excess',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         Priority = 300,
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 3,
@@ -114,6 +116,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
@@ -122,7 +125,7 @@ BuilderGroup {
                 HighValue = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
-                    'T4LandExperimental1',
+                    { Unit = 'T4LandExperimental1', Categories = categories.EXPERIMENTAL * categories.MOBILE * categories.LAND - categories.CYBRAN * categories.ARTILLERY - categories.UNSELECTABLE - categories.UNTARGETABLE },
                 },
                 LocationType = 'LocationType',
             }
@@ -130,7 +133,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 Megabot',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         Priority = 550,
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
@@ -145,6 +148,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 30,
             Construction = {
@@ -153,7 +157,7 @@ BuilderGroup {
                 HighValue = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
-                    'T4LandExperimental3',
+                    { Unit = 'T4LandExperimental3', Categories = categories.EXPERIMENTAL * categories.MOBILE * categories.LAND * categories.BOT * categories.DIRECTFIRE * categories.SNIPER - categories.CYBRAN * categories.ARTILLERY - categories.UNSELECTABLE - categories.UNTARGETABLE },
                 },
                 LocationType = 'LocationType',
             }
@@ -161,7 +165,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 Air',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         Priority = 550,
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
@@ -176,6 +180,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 25,
             Construction = {
@@ -183,7 +188,7 @@ BuilderGroup {
                 BuildClose = true,
                 HighValue = true,
                 BuildStructures = {
-                    'T4AirExperimental1',
+                    { Unit = 'T4AirExperimental1', Categories = categories.EXPERIMENTAL * categories.MOBILE * categories.AIR },
                 },
                 LocationType = 'LocationType',
             }
@@ -191,7 +196,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 Sea',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         Priority = 500,
         PriorityFunction = NavalExpansionAdjust,
         DelayEqualBuildPlattons = {'HighValue', 20},
@@ -207,6 +212,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 15,
             Construction = {
@@ -214,7 +220,7 @@ BuilderGroup {
                 BuildClose = true,
                 HighValue = true,
                 BuildStructures = {
-                    'T4SeaExperimental1',
+                    { Unit = 'T4SeaExperimental1', Categories = categories.EXPERIMENTAL * categories.NAVAL  * categories.MOBILE },
                 },
                 LocationType = 'LocationType',
             }
@@ -222,7 +228,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 Novax',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         Priority = 650,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'HighValue', 20},
@@ -237,6 +243,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
@@ -244,7 +251,7 @@ BuilderGroup {
                 BuildClose = true,
                 HighValue = true,
                 BuildStructures = {
-                    'T4SatelliteExperimental',
+                    { Unit = 'T4SatelliteExperimental', Categories = categories.EXPERIMENTAL * categories.ORBITALSYSTEM  * categories.STRUCTURE * categories.UEF },
                 },
                 LocationType = 'LocationType',
             }

@@ -2,11 +2,13 @@ local NavUtils = import('/lua/sim/NavUtils.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
+local BaseTmplFile = lazyimport("/lua/basetemplates.lua")
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 
+local ALLBPS = __blueprints
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
 local RNGCOPY = table.copy
@@ -1202,24 +1204,6 @@ function PositionInWater(position)
     return inWater
 end
 
-function SetupEngineerStateCallbacksRNG(eng)
-    if eng and not eng.Dead and not eng.StateBuildDoneCallbackSet and eng.PlatoonHandle and PlatoonExists(eng:GetAIBrain(), eng.PlatoonHandle) then
-        import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(eng.PlatoonHandle.MexBuildAIDoneRNG, eng, categories.ALLUNITS)
-        eng.StateBuildDoneCallbackSet = true
-    end
-end
-
-function MexBuildAIDoneRNG(unit, params)
-    if not unit.PlatoonHandle then return end
-    if not unit.PlatoonHandle.PlanName == 'MexBuildAIRNG' then return end
-    --RNGLOG("*AI DEBUG: MexBuildAIRNG removing queue item")
-    --RNGLOG('Queue Size is '..RNGGETN(unit.EngineerBuildQueue))
-    if unit.EngineerBuildQueue and not table.empty(unit.EngineerBuildQueue) then
-        table.remove(unit.EngineerBuildQueue, 1)
-    end
-    --RNGLOG('Queue size after remove '..RNGGETN(unit.EngineerBuildQueue))
-end
-
 function GenerateGridPositions(referencePosition, distanceBetweenPositions, unitCount)
     local gridPositions = {}
     local gridSize = math.ceil(math.sqrt(unitCount))
@@ -1351,26 +1335,310 @@ function GetBuildableUnitId(aiBrain, unit, category)
             end
         end
     end
+    LOG('Returning number of blueprint options '..table.getn(blueprintOptions))
+    for k, v in blueprintOptions do
+        LOG('Item '..k..' : '..tostring(v))
+    end
     return blueprintOptions
 end
 
-SetupMexBuildAICallbacksRNG = function(eng)
-    if eng and not eng.Dead and not eng.MexBuildDoneCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
-        import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(MexBuildAIDoneRNG, eng, categories.ALLUNITS)
-        eng.MexBuildDoneCallbackSet = true
+SetupStateBuildAICallbacksRNG = function(eng)
+    if eng and not eng.Dead and not eng.StateBuildDoneCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
+        import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(BuildAIDoneRNG, eng, categories.ALLUNITS)
+        eng.StateBuildDoneCallbackSet = true
+    end
+    if eng and not eng.Dead and not eng.StateFailedToBuildCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
+        import('/lua/ScenarioTriggers.lua').CreateOnFailedToBuildTrigger(BuildAIFailedRNG, eng)
+        eng.StateFailedToBuildCallbackSet = true
     end
 end
 
-MexBuildAIDoneRNG = function(unit, params)
+BuildAIDoneRNG = function(unit, params)
     if unit.Active then return end
     if not unit.PlatoonHandle then return end
-    if not unit.PlatoonHandle.PlanName == 'MexBuildAIRNG' then return end
     --RNGLOG("*AI DEBUG: MexBuildAIRNG removing queue item")
     --RNGLOG('Queue Size is '..RNGGETN(unit.EngineerBuildQueue))
     if unit.EngineerBuildQueue and not table.empty(unit.EngineerBuildQueue) then
         table.remove(unit.EngineerBuildQueue, 1)
     end
+    if table.empty(unit.EngineerBuildQueue) then
+        unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
+    else
+        for k, v in unit.EngineerBuildQueue do
+            LOG('Item '..k)  
+            LOG(repr(v))
+        end
+        LOG('Engineer has this many items in the build queue '..table.getn(unit.EngineerBuildQueue))
+    end
     --RNGLOG('Queue size after remove '..RNGGETN(unit.EngineerBuildQueue))
+end
+
+BuildAIFailedRNG = function(unit, params)
+    if unit.Active then return end
+    if not unit.PlatoonHandle then return end
+    --RNGLOG("*AI DEBUG: MexBuildAIRNG removing queue item")
+    --RNGLOG('Queue Size is '..RNGGETN(unit.EngineerBuildQueue))
+    if not unit.BuildFailedCount then
+        unit.BuildFailedCount = 0
+    end
+    unit.BuildFailedCount = unit.BuildFailedCount + 1
+    --LOG('Current fail count is '..unit.FailedCount)
+    if unit.BuildFailedCount > 2 and not table.empty(unit.EngineerBuildQueue) then
+        LOG('Engineer has failed to build item multiple times, removing from queue, current queue size is '..table.getn(unit.EngineerBuildQueue))
+        table.remove(unit.EngineerBuildQueue, 1)
+        unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.PerformBuildTask)
+    else
+        LOG('Engineer has failed to build item, attempting restart')
+        unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
+    end
+end
+
+function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType, whatToBuild, closeToBuilder, relative, buildingTemplate, baseTemplate, reference, cons)
+    LOG('beginning adjacencypriority trying to build '..tostring(whatToBuild)..' building type '..tostring(buildingType))
+    LOG('Builder Name '..tostring(builder.PlatoonHandle.BuilderName))
+    local scaleCount = 1
+    local VDist3Sq = VDist3Sq
+    local Centered=cons.Centered
+    local AdjacencyBias=cons.AdjacencyBias
+    if AdjacencyBias then
+        if AdjacencyBias=='Forward' then
+            for _,v in reference do
+                table.sort(v,function(a,b) return VDist3Sq(a:GetPosition(),aiBrain.emanager.enemy.Position)<VDist3Sq(b:GetPosition(),aiBrain.emanager.enemy.Position) end)
+            end
+        elseif AdjacencyBias=='Back' then
+            for _,v in reference do
+                table.sort(v,function(a,b) return VDist3Sq(a:GetPosition(),aiBrain.emanager.enemy.Position)>VDist3Sq(b:GetPosition(),aiBrain.emanager.enemy.Position) end)
+            end
+        elseif AdjacencyBias=='BackClose' then
+            for _,v in reference do
+                table.sort(v,function(a,b) return VDist3Sq(a:GetPosition(),aiBrain.emanager.enemy.Position)/VDist3Sq(a:GetPosition(),builder:GetPosition())>VDist3Sq(b:GetPosition(),aiBrain.emanager.enemy.Position)/VDist3Sq(b:GetPosition(),builder:GetPosition()) end)
+            end
+        elseif AdjacencyBias=='ForwardClose' then
+            for _,v in reference do
+                table.sort(v,function(a,b) return VDist3Sq(a:GetPosition(),aiBrain.emanager.enemy.Position)*VDist3Sq(a:GetPosition(),builder:GetPosition())<VDist3Sq(b:GetPosition(),aiBrain.emanager.enemy.Position)*VDist3Sq(b:GetPosition(),builder:GetPosition()) end)
+            end
+        end
+    end
+    local function normalposition(vec)
+        return {vec[1],GetTerrainHeight(vec[1],vec[2]),vec[2]}
+    end
+    local function heightbuildpos(vec)
+        return {vec[1],vec[2],GetTerrainHeight(vec[1],vec[2])}
+    end
+    if whatToBuild then
+        local unitSize = ALLBPS[whatToBuild].Physics
+        local template = {}
+        table.insert(template, {})
+        table.insert(template[1], { buildingType })
+        --RNGLOG('reference contains '..repr(table.getn(reference))..' items')
+        if cons.Scale then
+            --RNGLOG('Scale construction option is true')
+            if buildingType == 'T1EnergyProduction' then
+                --RNGLOG('buildingType is T1EnergyProduction')
+                if aiBrain.EconomyMonitorThread then
+                    local currentEnergyTrend = aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime
+                    --RNGLOG('EnergyTrend when going to build T1 power '..currentEnergyTrend)
+                    --RNGLOG('Amount of power needed is '..(120 - currentEnergyTrend))
+                    local energyNumber = 120 - currentEnergyTrend
+                    scaleCount = math.ceil(energyNumber/20)
+                end
+            end
+        end
+        local scalenumber = 0
+        local itemQueued = false
+        for i=1, scaleCount do
+            scalenumber = scalenumber + 1
+            for _,x in reference do
+                for k,v in x do
+                    if not Centered then
+                        if not v.Dead then
+                            local targetSize = v.Blueprint.Physics
+                            local targetPos = v:GetPosition()
+                            local differenceX=math.abs(targetSize.SkirtSizeX-unitSize.SkirtSizeX)
+                            local offsetX=math.floor(differenceX/2)
+                            local differenceZ=math.abs(targetSize.SkirtSizeZ-unitSize.SkirtSizeZ)
+                            local offsetZ=math.floor(differenceZ/2)
+                            local offsetfactory=0
+                            if EntityCategoryContains(categories.FACTORY, v) and (buildingType=='T1LandFactory' or buildingType=='T2SupportLandFactory' or buildingType=='T3SupportLandFactory') then
+                                offsetfactory=2
+                            end
+                            -- Top/bottom of unit
+                            for i=-offsetX,offsetX do
+                                local testPos = { targetPos[1] + (i * 1), targetPos[3]-targetSize.SkirtSizeZ/2-(unitSize.SkirtSizeZ/2)-offsetfactory, 0 }
+                                local testPos2 = { targetPos[1] + (i * 1), targetPos[3]+targetSize.SkirtSizeZ/2+(unitSize.SkirtSizeZ/2)+offsetfactory, 0 }
+                                -- check if the buildplace is to close to the border or inside buildable area
+                                if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                                    --table.insert(template[1], testPos)
+                                    if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos)) then
+                                        if cons.AvoidCategory and aiBrain:GetNumUnitsAroundPoint(cons.AvoidCategory, normalposition(testPos), cons.maxRadius, 'Ally')<cons.maxUnits then
+                                            AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
+                                            if cons.Scale then
+                                                itemQueued = true
+                                                break
+                                            end
+                                            LOG('Added to build queue via AddToBuildQueueRNG')
+                                            return true
+                                        elseif not cons.AvoidCategory then
+                                            AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
+                                            if cons.Scale then
+                                                itemQueued = true
+                                                break
+                                            end
+                                            LOG('Added to build queue via AddToBuildQueueRNG')
+                                            return true
+                                        end
+                                    end
+                                end
+                                if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos2,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                                    --table.insert(template[1], testPos2)
+                                    if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos2)) then
+                                        if cons.AvoidCategory and aiBrain:GetNumUnitsAroundPoint(cons.AvoidCategory, normalposition(testPos2), cons.maxRadius, 'Ally')<cons.maxUnits then
+                                            AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
+                                            if cons.Scale then
+                                                itemQueued = true
+                                                break
+                                            end
+                                            LOG('Added to build queue via AddToBuildQueueRNG')
+                                            return true
+                                        elseif not cons.AvoidCategory then
+                                            AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
+                                            if cons.Scale then
+                                                itemQueued = true
+                                                break
+                                            end
+                                            LOG('Added to build queue via AddToBuildQueueRNG')
+                                            return true
+                                        end
+                                    end
+                                end
+                            end
+                            -- Sides of unit
+                            for i=-offsetZ,offsetZ do
+                                local testPos = { targetPos[1]-targetSize.SkirtSizeX/2-(unitSize.SkirtSizeX/2)-offsetfactory, targetPos[3] + (i * 1), 0 }
+                                local testPos2 = { targetPos[1]+targetSize.SkirtSizeX/2+(unitSize.SkirtSizeX/2)+offsetfactory, targetPos[3] + (i * 1), 0 }
+                                if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                                    --table.insert(template[1], testPos)
+                                    if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos)) then
+                                        if cons.AvoidCategory and aiBrain:GetNumUnitsAroundPoint(cons.AvoidCategory, normalposition(testPos), cons.maxRadius, 'Ally')<cons.maxUnits then
+                                            AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
+                                            if cons.Scale then
+                                                itemQueued = true
+                                                break
+                                            end
+                                            LOG('Added to build queue via AddToBuildQueueRNG')
+                                            return true
+                                        elseif not cons.AvoidCategory then
+                                            AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
+                                            if cons.Scale then
+                                                itemQueued = true
+                                                break
+                                            end
+                                            LOG('Added to build queue via AddToBuildQueueRNG')
+                                            return true
+                                        end
+                                    end
+                                end
+                                if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                                    --ForkThread(RNGtemporaryrenderbuildsquare,testPos2,unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                                    --table.insert(template[1], testPos2)
+                                    if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos2)) then
+                                        if cons.AvoidCategory and aiBrain:GetNumUnitsAroundPoint(cons.AvoidCategory, normalposition(testPos2), cons.maxRadius, 'Ally')<cons.maxUnits then
+                                            AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
+                                            if cons.Scale then
+                                                itemQueued = true
+                                                break
+                                            end
+                                            LOG('Added to build queue via AddToBuildQueueRNG')
+                                            return true
+                                        elseif not cons.AvoidCategory then
+                                            AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
+                                            if cons.Scale then
+                                                itemQueued = true
+                                                break
+                                            end
+                                            LOG('Added to build queue via AddToBuildQueueRNG')
+                                            return true
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    else
+                        if not v.Dead then
+                            local targetSize = v:GetBlueprint().Physics
+                            local targetPos = v:GetPosition()
+                            targetPos[1] = targetPos[1]-- - (targetSize.SkirtSizeX/2)
+                            targetPos[3] = targetPos[3]-- - (targetSize.SkirtSizeZ/2)
+                            -- Top/bottom of unit
+                            local testPos = { targetPos[1], targetPos[3]-targetSize.SkirtSizeZ/2-(unitSize.SkirtSizeZ/2), 0 }
+                            local testPos2 = { targetPos[1], targetPos[3]+targetSize.SkirtSizeZ/2+(unitSize.SkirtSizeZ/2), 0 }
+                            -- check if the buildplace is to close to the border or inside buildable area
+                            if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                                table.insert(template[1], testPos)
+                            end
+                            if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                                table.insert(template[1], testPos2)
+                            end
+                            -- Sides of unit
+                            local testPos = { targetPos[1]+targetSize.SkirtSizeX/2 + (unitSize.SkirtSizeX/2), targetPos[3], 0 }
+                            local testPos2 = { targetPos[1]-targetSize.SkirtSizeX/2-(unitSize.SkirtSizeX/2), targetPos[3], 0 }
+                            if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                                table.insert(template[1], testPos)
+                            end
+                            if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                                table.insert(template[1], testPos2)
+                            end
+                        end
+                    end
+                    if itemQueued then
+                        break
+                    end
+                end
+                if itemQueued then
+                    break
+                end
+                -- build near the base the engineer is part of, rather than the engineer location
+                local baseLocation = {nil, nil, nil}
+                if builder.BuildManagerData and builder.BuildManagerData.EngineerManager then
+                    baseLocation = builder.BuildManagerdata.EngineerManager.Location
+                end
+                --ForkThread(RNGrenderReference,template[1],unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
+                local location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, template, false, builder, baseLocation[1], baseLocation[3])
+                if location then
+                    if location[1] > 8 and location[1] < ScenarioInfo.size[1] - 8 and location[2] > 8 and location[2] < ScenarioInfo.size[2] - 8 then
+                        --RNGLOG('Build '..repr(buildingType)..' at adjacency: '..repr(location) )
+                        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, location, false)
+                        if cons.Scale then
+                            itemQueued = true
+                            break
+                        end
+                        LOG('Added to build queue via AddToBuildQueueRNG')
+                        return true
+                    end
+                end
+                if itemQueued then
+                    break
+                end
+            end
+        end
+        if itemQueued then
+            --RNGLOG('scaleNumber '..scalenumber)
+            LOG('Scale item added to build queue')
+            return true
+        end
+        
+        -- Build in a regular spot if adjacency not found
+        if cons.AdjRequired then
+            return false
+        else
+            LOG('Rerunning AIExecuteBuildStructureRNG')
+            return AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, whatToBuild, builder, true,  buildingTemplate, baseTemplate)
+        end
+    end
+    return false
 end
 
 GreaterThanEconEfficiencyRNG = function (aiBrain, MassEfficiency, EnergyEfficiency)
@@ -1426,4 +1694,152 @@ function ScryTargetPosition(unit, position)
     else
         WARN("Invalid unit passed to ScryTargetPosition")
     end
+end
+
+function AIBuildBaseTemplateRNG(aiBrain, builder, buildingType ,whatToBuild, closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
+    if whatToBuild then
+        for _,bType in baseTemplate do
+            for n,bString in bType[1] do
+                AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, whatToBuild, closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
+                return
+            end
+        end
+    end
+end
+
+function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, whatToBuild, closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+    local factionIndex = aiBrain:GetFactionIndex()
+    -- Small note here. FindPlaceToBuild caused a hard crash when I accidentally got buildingType and whatToBuild the wrong way around.
+    -- find a place to build it (ignore enemy locations if it's a resource)
+    -- build near the base the engineer is part of, rather than the engineer location
+    local relativeTo
+    if closeToBuilder then
+        relativeTo = builder:GetPosition()
+    elseif builder.BuilderManagerData and builder.BuilderManagerData.EngineerManager then
+        relativeTo = builder.BuilderManagerData.EngineerManager:GetLocationCoords()
+    else
+        local startPosX, startPosZ = aiBrain:GetArmyStartPos()
+        relativeTo = {startPosX, 0, startPosZ}
+    end
+    local location = false
+    location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, baseTemplate, relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
+    -- if it's a reference, look around with offsets
+    if not location and reference then
+        for num,offsetCheck in RandomIter({1,2,3,4,5,6,7,8}) do
+            location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, BaseTmplFile['MovedTemplates'..offsetCheck][factionIndex], relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
+            if location then
+                break
+            end
+        end
+    end
+    -- if we have no place to build, then maybe we have a modded/new buildingType. Lets try 'T1LandFactory' as dummy and search for a place to build near base
+    if not location and not IsResource(buildingType) and builder.BuilderManagerData and builder.BuilderManagerData.EngineerManager then
+        --RNGLOG('*AIExecuteBuildStructure: Find no place to Build! - buildingType '..repr(buildingType)..' - ('..builder.factionCategory..') Trying again with T1LandFactory and RandomIter. Searching near base...')
+        relativeTo = builder.BuilderManagerData.EngineerManager:GetLocationCoords()
+        for num,offsetCheck in RandomIter({1,2,3,4,5,6,7,8}) do
+            location = aiBrain:FindPlaceToBuild('T1LandFactory', whatToBuild, BaseTmplFile['MovedTemplates'..offsetCheck][factionIndex], relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
+            if location then
+                --RNGLOG('*AIExecuteBuildStructure: Yes! Found a place near base to Build! - buildingType '..repr(buildingType))
+                break
+            end
+        end
+    end
+    -- if we still have no place to build, then maybe we have really no place near the base to build. Lets search near engineer position
+    if not location and not IsResource(buildingType) then
+        --RNGLOG('*AIExecuteBuildStructure: Find still no place to Build! - buildingType '..repr(buildingType)..' - ('..builder.factionCategory..') Trying again with T1LandFactory and RandomIter. Searching near Engineer...')
+        relativeTo = builder:GetPosition()
+        for num,offsetCheck in RandomIter({1,2,3,4,5,6,7,8}) do
+            location = aiBrain:FindPlaceToBuild('T1LandFactory', whatToBuild, BaseTmplFile['MovedTemplates'..offsetCheck][factionIndex], relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
+            if location then
+                --RNGLOG('*AIExecuteBuildStructure: Yes! Found a place near engineer to Build! - buildingType '..repr(buildingType))
+                break
+            end
+        end
+    end
+    -- if we have a location, build!
+    if location then
+        local borderWarning = false
+        local relativeLoc = {location[1], 0, location[2]}
+        if relative then
+            relativeLoc = {relativeLoc[1] + relativeTo[1], relativeLoc[2] + relativeTo[2], relativeLoc[3] + relativeTo[3]}
+        end
+        if relativeLoc[1] - playableArea[1] <= 8 or relativeLoc[1] >= playableArea[3] - 8 or relativeLoc[3] - playableArea[2] <= 8 or relativeLoc[3] >= playableArea[4] - 8 then
+            --RNGLOG('Playable Area 1, 3 '..repr(playableArea))
+            --RNGLOG('Scenario Info 1, 3 '..repr(ScenarioInfo.size))
+            --RNGLOG('BorderWarning is true, location is '..repr(relativeLoc))
+            borderWarning = true
+        end
+        -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
+        AddToBuildQueueRNG(aiBrain, builder, whatToBuild, {relativeLoc[1], relativeLoc[3], 0}, false, borderWarning)
+        return true
+    end
+    -- At this point we're out of options, so move on to the next thing
+    return false
+end
+
+function AddToBuildQueueRNG(aiBrain, builder, whatToBuild, buildLocation, relative, borderWarning)
+    --if not aiBrain.RNG then
+    --    return RNGAddToBuildQueue(aiBrain, builder, whatToBuild, buildLocation, relative)
+    --end
+    if not builder.EngineerBuildQueue then
+        builder.EngineerBuildQueue = {}
+    end
+    -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
+    --RUtils.EngineerTryReclaimCaptureArea(aiBrain, builder, {buildLocation[1], buildLocation[3], buildLocation[2]}) 
+    LOG('Build Location is '..repr(buildLocation))
+    if borderWarning then
+        --LOG('BorderWarning build')
+        IssueBuildMobile({builder}, { buildLocation[1], buildLocation[3], buildLocation[2] }, whatToBuild, {})
+    else
+        aiBrain:BuildStructure(builder, whatToBuild, { buildLocation[1], buildLocation[2], 0 }, false)
+    end
+    local newEntry = { whatToBuild, buildLocation, relative, borderWarning }
+    table.insert(builder.EngineerBuildQueue, newEntry)
+    if builder.PlatoonHandle.PlatoonData.Construction.HighValue then
+        --LOG('Engineer is building high value item')
+        local ALLBPS = __blueprints
+        local unitBp = ALLBPS[whatToBuild]
+        --LOG('Unit being built '..repr(whatToBuild))
+        --LOG('Tech category of unit being built '..repr(unitBp.TechCategory))
+        if not builder.BuilderManagerData.EngineerManager.QueuedStructures[unitBp.TechCategory][builder.EntityId] then
+            --LOG('Added engineer entry to queued structures')
+            builder.BuilderManagerData.EngineerManager.QueuedStructures[unitBp.TechCategory][builder.EntityId] = {Engineer = builder, TimeStamp = GetGameTimeSeconds()}
+            --LOG('Queue '..repr(builder.BuilderManagerData.EngineerManager.QueuedStructures[unitBp.TechCategory]))
+        end
+    end
+end
+
+function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType, whatToBuild, closeToBuilder, relative, buildingTemplate, baseTemplate, reference)
+    if whatToBuild then
+        if IsResource(buildingType) then
+            return AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, whatToBuild, closeToBuilder, relative, buildingTemplate, baseTemplate, reference)
+        else
+            for l,bType in baseTemplate do
+                for m,bString in bType[1] do
+                    if bString == buildingType then
+                        for n,position in bType do
+                            if n > 1 and aiBrain:CanBuildStructureAt(whatToBuild, {position[1], GetSurfaceHeight(position[1], position[2]), position[2]}) then
+                                if buildingType == 'MassStorage' then
+                                    AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false, true)
+                                else
+                                    AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false)
+                                end
+                                table.remove(bType,n)
+                                return
+                            end
+                        end 
+                        break
+                    end 
+                end 
+            end 
+        end 
+    end 
+    --RNGLOG('AIBuildBaseTemplateOrderedRNG Unsuccessful build')
+    return
+end
+
+function IsResource(buildingType)
+    return buildingType == 'Resource' or buildingType == 'T1HydroCarbon' or
+            buildingType == 'T1Resource' or buildingType == 'T2Resource' or buildingType == 'T3Resource'
 end

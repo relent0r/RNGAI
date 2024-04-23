@@ -1,11 +1,13 @@
 AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
+local AIUtils = import('/lua/ai/aiutilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 
 local RNGINSERT = table.insert
 local RNGGETN = table.getn
+local RNGCOPY = table.copy
 
 local ALLBPS = __blueprints
 
@@ -67,15 +69,16 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             if IsDestroyed(self) then
                 return
             end
+            if self.BuilderData.ConstructionComplete then
+                self:ExitStateMachine()
+                return
+            end
             local aiBrain = self:GetBrain()
             local data = self.PlatoonData
             self.LastActive = GetGameTimeSeconds()
             -- how should we handle multipleself.engineers?
             local unit = self:GetPlatoonUnits()[1]
             local engPos = unit:GetPosition()
-            unit.DesiresAssist = false
-            unit.NumAssistees = nil
-            unit.MinNumAssistees = nil
             if data.PreAllocatedTask then
                 self:LogDebug(string.format('PreAllocatedTask detected, task is '..tostring(data.Task)))
                 if data.Task == 'Reclaim' then
@@ -331,25 +334,16 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         self:ExitStateMachine()
                     end
                 end
-            elseif data.BuildCategory then
-                local blueprints = StateUtils.GetBuildableUnitId(aiBrain, self.eng, data.BuildCategory)
-                local whatToBuild = blueprints[1]
             else
-                LOG('Utility Engineer looking for highest builder')
-                local engineerManager = unit.BuilderManagerData.EngineerManager
-                local builder = engineerManager:GetHighestBuilder('Any', {unit})
-                --BuilderValidation could go here?
-                -- if theself.engineer is too far away from the builder then return to base and dont take up a builder instance.
-                if not builder then
-                    self:ChangeState(self.CheckForOtherTask)
+                -- I've made this change state to keep the decision logic clean.
+                if self.PlatoonData.Construction then
+                    self.BuilderData = {
+                        Construction = self.PlatoonData.Construction
+                    }
+                    coroutine.yield(10)
+                    self:ChangeState(self.SetTaskData)
                     return
                 end
-                self.Priority = builder:GetPriority()
-                self.BuilderName = builder:GetBuilderName()
-                self:SetPlatoonData(builder:GetBuilderData(self.LocationType))
-                -- This isn't going to work because its recording the life and death of the platoon so it wont clear until the platoon is disbanded
-                -- StoreHandle should be doing more than it is. It can allowself.engineers to detect when something is queued to be built via categories?
-                builder:StoreHandle(self)
             end
             coroutine.yield(10)
             self:ChangeState(self.DecideWhatToDo)
@@ -626,6 +620,205 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
+    SetTaskData = State {
+
+        StateName = 'SetTaskData',
+
+        --- Check for reclaim or assist or expansion specific things based on distance from base.
+        ---@param self AIPlatoonEngineerBehavior
+        Main = function(self)
+            local AIBuildStructures = import("/lua/ai/aibuildstructures.lua")
+            local aiBrain = self:GetBrain()
+            local eng = self.eng
+            local builderData = self.BuilderData
+            local reference
+            local relative
+            local refName
+            local refZone
+            local buildFunction
+            local cons = builderData.Construction
+            local baseTmplList = {}
+            local closeToBuilder
+            local FactionToIndex  = { UEF = 1, AEON = 2, CYBRAN = 3, SERAPHIM = 4, NOMADS = 5}
+            local factionIndex = cons.FactionIndex or FactionToIndex[eng.factionCategory]
+            local buildingTmplFile = import(cons.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
+            local baseTmplFile = import(cons.BaseTemplateFile or '/lua/BaseTemplates.lua')
+            local buildingTmpl = buildingTmplFile[(cons.BuildingTemplate or 'BuildingTemplates')][factionIndex]
+            local baseTmpl = baseTmplFile[(cons.BaseTemplate or 'BaseTemplates')][factionIndex]
+            StateUtils.SetupStateBuildAICallbacksRNG(eng)
+            if cons.NearDefensivePoints then
+                if cons.Type == 'TMD' then
+                    local tmdPositions = RUtils.GetTMDPosition(aiBrain, eng, cons.LocationType)
+                    for _, v in tmdPositions do
+                        reference = v
+                        break
+                    end
+                else
+                    reference = RUtils.GetDefensivePointRNG(aiBrain, cons.LocationType or 'MAIN', cons.Tier or 2, cons.Type)
+                end
+                buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
+                RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
+            elseif cons.AdjacencyPriority then
+                relative = false
+                local pos = aiBrain.BuilderManagers[eng.BuilderManagerData.LocationType].EngineerManager.Location
+                local cats = {}
+                --RNGLOG('setting up adjacencypriority... cats are '..repr(cons.AdjacencyPriority))
+                for _,v in cons.AdjacencyPriority do
+                    RNGINSERT(cats,v)
+                end
+                reference={}
+                if not pos then
+                    coroutine.yield(1)
+                    self:ExitStateMachine()
+                    return
+                end
+                for i,cat in cats do
+                    -- convert text categories like 'MOBILE AIR' to 'categories.MOBILE * categories.AIR'
+                    if type(cat) == 'string' then
+                        cat = ParseEntityCategory(cat)
+                    end
+                    local radius = (cons.AdjacencyDistance or 50)
+                    local refunits=AIUtils.GetOwnUnitsAroundPoint(aiBrain, cat, pos, radius, cons.ThreatMin,cons.ThreatMax, cons.ThreatRings)
+                    RNGINSERT(reference,refunits)
+                    --RNGLOG('cat '..i..' had '..repr(RNGGETN(refunits))..' units')
+                end
+                if IsDestroyed(eng) then
+                    LOG('Eng is destroyed prior to performing adjaceny build')
+                end
+                buildFunction = StateUtils.AIBuildAdjacencyPriorityRNG
+                RNGINSERT(baseTmplList, baseTmpl)
+            elseif cons.ZoneExpansion then
+                reference, refName, refZone = RUtils.AIFindZoneExpansionPointRNG(aiBrain, cons.LocationType, (cons.LocationRadius or 100))
+                if not reference or not refName or aiBrain.Zones.Land.zones[refZone].lastexpansionattempt + 30 > GetGameTimeSeconds() then
+                    self:ExitStateMachined()
+                    return
+                end
+                if reference and refZone and refName then
+                    LOG('Zone reference for expansion is '..repr(reference))
+                    LOG('Zone reference is '..refZone)
+                    aiBrain.Zones.Land.zones[refZone].lastexpansionattempt = GetGameTimeSeconds()
+                    aiBrain.Zones.Land.zones[refZone].engineerplatoonallocated = self
+                    --[[if aiBrain.Zones.Land.zones[refZone].resourcevalue > 3 then
+                        local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
+                        local smInstance = StructureManagerRNG.GetStructureManager(aiBrain)
+                        if eng.Blueprint.CategoriesHash.TECH2 and smInstance.Factories.LAND[2].HQCount > 0 then
+                            table.insert(cons.BuildStructures, 'T2SupportLandFactory')
+                        elseif eng.Blueprint.CategoriesHash.TECH3 and smInstance.Factories.LAND[3].HQCount > 0 then
+                            table.insert(cons.BuildStructures, 'T3SupportLandFactory')
+                        else
+                            table.insert(cons.BuildStructures, 'T1LandFactory')
+                        end
+                    end]]
+                    AIBuildStructures.AINewExpansionBaseRNG(aiBrain, refName, reference, eng, cons)
+                    self.ZoneExpansionSet = true
+                    relative = false
+                    RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
+                    -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
+                    --buildFunction = AIBuildStructures.AIBuildBaseTemplateOrdered
+                    buildFunction = StateUtils.AIBuildBaseTemplateRNG
+                    local guards = eng:GetGuards()
+                    for _,v in guards do
+                        if not v.Dead and v.PlatoonHandle then
+                            v.PlatoonHandle:ExitStateMachine()
+                        end
+                    end
+                end
+            elseif cons.NearMarkerType == 'Naval Area' then
+                reference, refName = RUtils.AIFindNavalAreaNeedsEngineerRNG(aiBrain, cons.LocationType, cons.ValidateLabel,
+                        (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType, eng, true)
+                -- didn't find a location to build at
+                if not reference or not refName then
+                    --RNGLOG('No reference or refname for Naval Area Expansion')
+                    self:ExitStateMachine()
+                    return
+                end
+                AIBuildStructures.AINewExpansionBaseRNG(aiBrain, refName, reference, eng, cons)
+                relative = false
+                RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
+                -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
+                --buildFunction = AIBuildStructures.AIBuildBaseTemplateOrdered
+                buildFunction = StateUtils.AIBuildBaseTemplateRNG
+                local guards = eng:GetGuards()
+                for _,v in guards do
+                    if not v.Dead and v.PlatoonHandle then
+                        v.PlatoonHandle:ExitStateMachine()
+                    end
+                end
+            elseif cons.OrderedTemplate then
+                local relativeTo = RNGCOPY(eng:GetPosition())
+                --RNGLOG('relativeTo is'..repr(relativeTo))
+                relative = true
+                local baseTmplDefault = import('/lua/BaseTemplates.lua')
+                local tmpReference = aiBrain:FindPlaceToBuild('T3EnergyProduction', 'ueb1301', baseTmplDefault['BaseTemplates'][factionIndex], relative, eng, nil, relativeTo[1], relativeTo[3])
+                if tmpReference then
+                    reference = eng:CalculateWorldPositionFromRelative(tmpReference)
+                else
+                    return
+                end
+                buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
+                RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
+                --RNGLOG('baseTmpList is :'..repr(baseTmplList))
+            elseif cons.CappingTemplate then
+                local relativeTo = RNGCOPY(eng:GetPosition())
+                --RNGLOG('relativeTo is'..repr(relativeTo))
+                local cappingRadius
+                if type(cons.Radius) == 'string' then
+                    cappingRadius = aiBrain.OperatingAreas[cons.Radius]
+                else
+                    cappingRadius = cons.Radius
+                end
+                relative = true
+                local pos = aiBrain.BuilderManagers[cons.LocationType].Position
+                if not pos then
+                    pos = relativeTo
+                end
+                local refunits=AIUtils.GetOwnUnitsAroundPoint(aiBrain, cons.Categories, pos, cappingRadius, cons.ThreatMin,cons.ThreatMax, cons.ThreatRings)
+                local reference = RUtils.GetCappingPosition(aiBrain, eng, pos, refunits, baseTmpl, buildingTmpl)
+                LOG('Capping template')
+                LOG('reference is '..repr(reference))
+                buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
+                RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
+                --RNGLOG('baseTmpList is :'..repr(baseTmplList))
+            else
+                RNGINSERT(baseTmplList, baseTmpl)
+                relative = true
+                reference = true
+                buildFunction = StateUtils.AIExecuteBuildStructureRNG
+            end
+            if cons.BuildClose then
+                closeToBuilder = eng
+            end
+                    -------- BUILD BUILDINGS HERE --------
+            for baseNum, baseListData in baseTmplList do
+                for k, v in cons.BuildStructures do
+                    if aiBrain:PlatoonExists(self) then
+                        if not eng.Dead then
+                            LOG('Try to get unitids for '..tostring(v.Unit))
+                            local blueprints = StateUtils.GetBuildableUnitId(aiBrain, eng, v.Categories)
+                            local whatToBuild = blueprints[1]
+                            buildFunction(aiBrain, eng, v.Unit, whatToBuild, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons)
+                        else
+                            if aiBrain:PlatoonExists(self) then
+                                coroutine.yield(1)
+                                self:ExitStateMachine()
+                                return
+                            end
+                        end
+                    end
+                end
+            end
+            if eng.EngineerBuildQueue and table.getn(eng.EngineerBuildQueue) > 0 then
+                LOG('Performing BuildTask')
+                self:ChangeState(self.PerformBuildTask)
+                return
+            end
+            self.BuilderData = {}
+            coroutine.yield(5)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
     CheckForOtherTask = State {
 
         StateName = 'CheckForOtherTask',
@@ -697,6 +890,132 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             self.BuilderData = {}
             coroutine.yield(5)
             self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
+    PerformBuildTask = State {
+
+        StateName = 'PerformBuildTask',
+
+        --- Check for reclaim or assist or expansion specific things based on distance from base.
+        ---@param self AIPlatoonEngineerBehavior
+        Main = function(self)
+            local aiBrain = self:GetBrain()
+            local eng = self.eng
+            local builderData = self.BuilderData
+            local transportWait = builderData.PlatoonData.TransportWait or 2
+
+            while not eng.Dead and not table.empty(eng.EngineerBuildQueue) do
+
+                local whatToBuild = eng.EngineerBuildQueue[1][1]
+                local buildLocation = {eng.EngineerBuildQueue[1][2][1], 0, eng.EngineerBuildQueue[1][2][2]}
+                if GetTerrainHeight(buildLocation[1], buildLocation[3]) > GetSurfaceHeight(buildLocation[1], buildLocation[3]) then
+                    --land
+                    buildLocation[2] = GetTerrainHeight(buildLocation[1], buildLocation[3])
+                else
+                    --water
+                    buildLocation[2] = GetSurfaceHeight(buildLocation[1], buildLocation[3])
+                end
+                local buildRelative = eng.EngineerBuildQueue[1][3]
+                local borderWarning = eng.EngineerBuildQueue[1][4]
+                local engPos = eng:GetPosition()
+                local movementRequired = true
+                IssueClearCommands({eng})
+
+                if VDist3Sq(engPos, buildLocation) < 225 then
+                    LOG('Movement Required being set to false')
+                    movementRequired = false
+                end
+                
+                if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation, transportWait) then
+                    if not eng or eng.Dead or not eng.PlatoonHandle or not aiBrain:PlatoonExists(eng.PlatoonHandle) then
+                        if eng then eng.ProcessBuild = nil end
+                        return
+                    end
+                    if borderWarning then
+                        --RNGLOG('BorderWarning build')
+                        IssueBuildMobile({eng}, buildLocation, whatToBuild, {})
+                    else
+                        aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
+                    end
+                    local engStuckCount = 0
+                    local Lastdist
+                    local dist
+                    while not eng.Dead and not table.empty(eng.EngineerBuildQueue) do
+                        PlatoonPos = eng:GetPosition()
+                        dist = VDist2(PlatoonPos[1] or 0, PlatoonPos[3] or 0, buildLocation[1] or 0, buildLocation[3] or 0)
+                        if dist < 12 then
+                            break
+                        end
+                        if Lastdist ~= dist then
+                            engStuckCount = 0
+                            Lastdist = dist
+                        else
+                            engStuckCount = engStuckCount + 1
+                            --RNGLOG('* AI-RNG: * EngineerBuildAI: has no moved during move to build position look, adding one, current is '..engStuckCount)
+                            if engStuckCount > 40 and not eng:IsUnitState('Building') then
+                                --RNGLOG('* AI-RNG: * EngineerBuildAI: Stuck while moving to build position. Stuck='..engStuckCount)
+                                break
+                            end
+                        end
+                        if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
+                            if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.MOBILE, PlatoonPos, 45, 'Enemy') > 0 then
+                                local actionTaken = RUtils.EngineerEnemyAction(aiBrain, eng)
+                            end
+                        end
+                        if eng.Upgrading or eng.Combat or eng.Active then
+                            return
+                        end
+                        coroutine.yield(7)
+                    end
+                    if not eng or eng.Dead or not eng.PlatoonHandle or not aiBrain:PlatoonExists(eng.PlatoonHandle) then
+                        if eng then eng.ProcessBuild = nil end
+                        return
+                    end
+                    -- cancel all commands, also the buildcommand for blocking mex to check for reclaim or capture
+                    
+                    if builderData.PlatoonData.Construction.HighValue then
+                        --LOG('HighValue Unit being built')
+                        local highValueCount = RUtils.CheckHighValueUnitsBuilding(aiBrain, builderData.PlatoonData.Construction.LocationType)
+                        if highValueCount > 1 then
+                            --LOG('highValueCount is 2 or more')
+                            --LOG('We are going to abort '..repr(eng.EngineerBuildQueue[1]))
+                            eng.UnitBeingBuilt = nil
+                            table.remove(eng.EngineerBuildQueue, 1)
+                            break
+                        end
+                    end
+                    if movementRequired then
+                        IssueClearCommands({eng})
+                    -- check to see if we need to reclaim or capture...
+                        RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation, 10)
+                            -- check to see if we can repair
+                        RUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation)
+                                -- otherwise, go ahead and build the next structure there
+                        --RNGLOG('First marker location '..buildLocation[1]..':'..buildLocation[3])
+                        if borderWarning then
+                            --RNGLOG('BorderWarning build')
+                            IssueBuildMobile({eng}, buildLocation, whatToBuild, {})
+                        else
+                            aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
+                        end
+                    end
+                    coroutine.yield(5)
+                    self:ChangeState(self.Constructing)
+                    return
+                else
+                    -- we can't move there, so remove it from our build queue
+                    if self.ZoneExpansionSet then
+                        LOG('EngineerMoveWithSafePath is false, function will now exit')
+                    end
+                    table.remove(eng.EngineerBuildQueue, 1)
+                end
+                coroutine.yield(2)
+            end
+            self.BuilderData = {}
+            coroutine.yield(5)
+            self:ExitStateMachine()
             return
         end,
     },
@@ -949,6 +1268,81 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             self.BuilderData = {}
             coroutine.yield(5)
             self:ExitStateMachine()
+            return
+        end,
+    },
+
+    Constructing = State {
+
+        StateName = 'Constructing',
+
+        ---@param self AIPlatoonEngineerBehavior
+        Main = function(self)
+            local eng = self.eng
+            local aiBrain = self:GetBrain()
+
+            while not IsDestroyed(eng) and (0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving")) do
+                coroutine.yield(1)
+                local platPos = self:GetPlatoonPosition()
+                if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
+                    if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.MOBILE, platPos, 30, 'Enemy') > 0 then
+                        local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.MOBILE, platPos, 30, 'Enemy')
+                        if enemyUnits then
+                            local enemyUnitPos
+                            for _, unit in enemyUnits do
+                                enemyUnitPos = unit:GetPosition()
+                                if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, unit) then
+                                    if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
+                                        if VDist3Sq(platPos, enemyUnitPos) < 156 then
+                                            IssueClearCommands({eng})
+                                            IssueReclaim({eng}, unit)
+                                            coroutine.yield(60)
+                                            self:ChangeState(self.DecideWhatToDo)
+                                            return
+                                        end
+                                    end
+                                elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, unit) then
+                                    --RNGLOG('MexBuild found enemy unit, try avoid it')
+                                    if VDist3Sq(platPos, enemyUnitPos) < 156 and unit and not unit.Dead and unit:GetFractionComplete() == 1 then
+                                        --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
+                                        IssueClearCommands({eng})
+                                        IssueReclaim({eng}, unit)
+                                        coroutine.yield(60)
+                                        self:ChangeState(self.DecideWhatToDo)
+                                        return
+                                    else
+                                        IssueClearCommands({eng})
+                                        IssueMove({eng}, RUtils.AvoidLocation(enemyUnitPos, platPos, 50))
+                                        coroutine.yield(60)
+                                        self:ChangeState(self.DecideWhatToDo)
+                                        return
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                coroutine.yield(20)
+            end
+            coroutine.yield(5)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
+    CompleteBuild = State {
+
+        StateName = 'CompleteBuild',
+
+        --- Check for reclaim or assist or expansion specific things based on distance from base.
+        ---@param self AIPlatoonEngineerBehavior
+        Main = function(self)
+            local eng = self.eng
+            if table.empty(eng.EngineerBuildQueue) then
+                self:ExitStateMachine()
+            end
+            coroutine.yield(10)
+            self:ChangeState(self.PerformBuildTask)
             return
         end,
     },

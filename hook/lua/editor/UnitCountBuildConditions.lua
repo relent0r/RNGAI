@@ -1586,7 +1586,7 @@ function ZoneAvailableRNG(aiBrain)
         for _, v in im.ZoneExpansions.Pathable do
             if v.ZoneID then
                 local zone = aiBrain.Zones.Land.zones[v.ZoneID]
-                if (not zone.BuilderManager.FactoryManager.LocationActive or zone.BuilderManagerDisabled) and (not zone.engineerallocated or zone.engineerallocated.Dead) and (zone.lastexpansionattempt == 0 or zone.lastexpansionattempt + 30 < gameTime) then
+                if (not zone.BuilderManager.FactoryManager.LocationActive or zone.BuilderManagerDisabled) and (not zone.engineerplatoonallocated or zone.engineerplatoonallocated.Dead) and (zone.lastexpansionattempt == 0 or zone.lastexpansionattempt + 30 < gameTime) then
                     if aiBrain:GetThreatAtPosition(zone.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 5 then
                         return true
                     end

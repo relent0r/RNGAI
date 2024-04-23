@@ -27,7 +27,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Radar T1',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1000,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE}},
@@ -37,13 +37,14 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 AdjacencyPriority = {categories.STRUCTURE * categories.ENERGYPRODUCTION},
                 AdjacencyDistance = 70,
                 BuildClose = false,
                 BuildStructures = {
-                    'T1Radar',
+                    { Unit = 'T1Radar', Categories = categories.RADAR * categories.TECH1 * categories.STRUCTURE },
                 },
                 LocationType = 'LocationType',
             }
@@ -56,7 +57,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Radar T1 Expansion',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 850,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE}},
@@ -65,11 +66,12 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BuildClose = false,
                 BuildStructures = {
-                    'T1Radar',
+                    { Unit = 'T1Radar', Categories = categories.RADAR * categories.TECH1 * categories.STRUCTURE },
                 },
                 LocationType = 'LocationType',
             }
@@ -82,7 +84,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Sonar T1',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 800,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, (categories.STRUCTURE * categories.SONAR) + categories.MOBILESONAR } },
@@ -92,13 +94,14 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 AdjacencyPriority = {categories.STRUCTURE * categories.NAVAL},
                 AdjacencyDistance = 50,
                 BuildClose = false,
                 BuildStructures = {
-                    'T1Sonar',
+                    { Unit = 'T1Sonar', Categories = categories.SONAR * categories.TECH1 * categories.STRUCTURE },
                 },
                 LocationType = 'LocationType',
             }

@@ -229,12 +229,14 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
         if platUnits then
             for _, unit in platUnits do
                 if unit.Blueprint.CategoriesHash.ENGINEER then
+                    unit.EngineerBuildQueue = {}
                     unit.PlatoonHandle = nil
                     unit.AssistSet = nil
                     unit.AssistPlatoon = nil
                     unit.UnitBeingAssist = nil
                     unit.ReclaimInProgress = nil
                     unit.CaptureInProgress = nil
+                    unit.BuildFailedCount = nil
                     if unit:IsPaused() then
                         unit:SetPaused(false)
                     end

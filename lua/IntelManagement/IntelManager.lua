@@ -357,9 +357,10 @@ IntelManager = Class {
         self:WaitForNavmeshGeneration()
         self:WaitForMarkerInfection()
         coroutine.yield(Random(250,350))
+        local armyIndex = self.Brain:GetArmyIndex()
         local weightageValues = {
             teamValue = 0.4,
-            massValue = 0.4,
+            massValue = 0.6,
             distanceValue = 0.5,
             graphValue = 0.2,
             enemyLand = 0.1,
@@ -380,6 +381,7 @@ IntelManager = Class {
 
         local mainBasePos = self.Brain.BrainIntel.StartPos
         local aiBrain = self.Brain
+        local OwnIndex = aiBrain:GetArmyIndex()
 
         while true do
             local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
@@ -397,10 +399,10 @@ IntelManager = Class {
                     local markersInGraph = graphLabel.MassMarkersInGraph or 1
                     if markersInGraph > 2 then
                         labelResourceValue[v.label] = labelResourceValue[v.label] or {}
-                        table.insert(labelResourceValue[v.label], {ZoneID = v.id, ResourceValue = v.resourcevalue})
                         local bx = mainBasePos[1] - v.pos[1]
                         local bz = mainBasePos[3] - v.pos[3]
                         local mainBaseDistance = bx * bx + bz * bz
+                        table.insert(labelResourceValue[v.label], {ZoneID = v.id, ResourceValue = v.resourcevalue, StartPositionClose = v.startpositionclose, DistanceToBase = mainBaseDistance})
                         if v.BuilderManager.FactoryManager.LocationActive then
                             if not labelBaseValues[v.BuilderManager.GraphArea] then
                                 labelBaseValues[v.BuilderManager.GraphArea] = {}
@@ -427,17 +429,18 @@ IntelManager = Class {
                         
                         if not closeEnemyStart and not closeAllyStart then
                             if mainBaseDistance > 10000 then
-                                for _, e in v.edges do
+                                --[[for _, e in v.edges do
                                     local rx = v.pos[1] - e.zone.pos[1]
                                     local rz = v.pos[3] - e.zone.pos[3]
                                     local edgeDistance = rx * rx + rz * rz
-                                    if e.zone.resourcevalue > v.resourcevalue and v.resourcevalue < 2  or (e.zone.BuilderManager.FactoryManager.LocationActive or e.zone.engineerallocated and not e.zone.engineerallocated.Dead) and edgeDistance < 10000 then
+                                    if e.zone.resourcevalue > v.resourcevalue and v.resourcevalue < 2  or (e.zone.BuilderManager.FactoryManager.LocationActive or e.zone.engineerplatoonallocated and not e.zone.engineerplatoonallocated.Dead) and edgeDistance < 10000 then
+                                        LOG('Skipping due to edge resource values')
                                         edgeSkip = true
                                         break
                                     end
-                                end
+                                end]]
                                 if not edgeSkip then
-                                    if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) and (not v.engineerallocated or v.engineerallocated.Dead) and (v.lastexpansionattempt == 0 or v.lastexpansionattempt + 30 < gameTime) then
+                                    if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) and (not v.engineerplatoonallocated or v.engineerplatoonallocated.Dead) and (v.lastexpansionattempt == 0 or v.lastexpansionattempt + 30 < gameTime) then
                                         local normalizedDistanceValue = mainBaseDistance / maxDistance
                                         local normalizedTeamValue = v.teamvalue / maxTeamValue
                                         local normalizedResourceValue = v.resourcevalue / maxResourceValue
@@ -456,7 +459,7 @@ IntelManager = Class {
                                             normalizedFriendLandThreatValue * weightageValues['friendlyantisurfacethreat'] -
                                             normalizedFriendAirThreatValue * weightageValues['friendlylandantiairthreat']
                                         )
-                                        table.insert(zonePriorityList, {ZoneID = v.id, Position = v.pos, Priority = priorityScore, Label = v.label, ResourceValue = v.resourcevalue, TeamValue = v.teamvalue })
+                                        table.insert(zonePriorityList, {ZoneID = v.id, Position = v.pos, Priority = priorityScore, Label = v.label, ResourceValue = v.resourcevalue, TeamValue = v.teamvalue, BestArmy = v.bestarmy, DistanceToBase = mainBaseDistance })
                                     end
                                 end
                             end
@@ -468,25 +471,35 @@ IntelManager = Class {
             local filteredList = {}
             for _, zone in ipairs(zonePriorityList) do
                 if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zone.Position, 30, 'Enemy') < 1 then
+                    if zone.BestArmy and zone.BestArmy ~= armyIndex and ArmyBrains[zone.BestArmy].Status ~= 'Defeat' then
+                        LOG('Best Army is someone else, skip it')
+                        continue
+                    end
                     if zone.ResourceValue < 3 then
+                        local higherValueExists = false
                         if zone.TeamValue < 0.8 or zone.TeamValue > 1.2 then
-                            local higherValueExists = false
                             for _, resValue in ipairs(labelResourceValue[zone.Label] or {}) do
-                                if resValue.ResourceValue >= 3 then
+                                if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive then
+                                    LOG('Already have an active factory manager there')
+                                    LOG('Team value was '..tostring(zone.TeamValue))
+                                    higherValueExists = true
+                                    break
+                                end
+                                if not resValue.StartPositionClose then
                                     if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zoneSet[resValue.ZoneID].pos, 30, 'Ally') < 1 
                                     and aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zoneSet[resValue.ZoneID].pos, 30, 'Enemy') < 1 then
-                                        higherValueExists = true
-                                        break
-                                    end
-                                    if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive then
-                                        higherValueExists = true
-                                        break
+                                        if resValue.DistanceToBase < zone.DistanceToBase then
+                                            LOG('Low value, skip it pos '..tostring(zoneSet[resValue.ZoneID].pos[1]).. ':'..tostring(zoneSet[resValue.ZoneID].pos[3]))
+                                            LOG('Team value was '..tostring(zone.TeamValue))
+                                            higherValueExists = true
+                                            break
+                                        end
                                     end
                                 end
                             end
-                            if not higherValueExists then
-                                table.insert(filteredList, zone)
-                            end
+                        end
+                        if not higherValueExists then
+                            table.insert(filteredList, zone)
                         end
                     else
                         if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zone.Position, 30, 'Ally') < 1 then
@@ -495,6 +508,7 @@ IntelManager = Class {
                     end
                 end
             end
+            LOG('Number of filtered zones we can expand to '..table.getn(filteredList))
             if not table.empty(filteredList) then
                 table.sort(filteredList, function(a, b) return a.Priority > b.Priority end)
                 self.ZoneExpansions.Pathable = filteredList
@@ -1134,6 +1148,7 @@ IntelManager = Class {
             'Land',
             'Naval'
         }
+        local expansionSize = math.min((self.Brain.MapDimension / 2), 180)
         for k, v in Zones do
             for k1, v1 in self.Brain.Zones[v].zones do
                 self.ZoneIntel.Assignment[k1] = self:ZoneSetIntelAssignment(k1, v1)
@@ -1147,15 +1162,36 @@ IntelManager = Class {
                 for k, v in enemyStartData do
                     v1.enemystartdata[k] = { startangle = v.startangle, startdistance = v.startdistance}
                 end
-                
                 v1.allystartdata = {}
                 for k, v in allyStartData do
                     v1.allystartdata[k] = { startangle = v.startangle, startdistance = v.startdistance}
                 end
+                v1.bestarmy = self:ZoneSetBestArmy(expansionSize, v1)
             end
         end
         self.MapMaximumValues.MaximumResourceValue = maximumResourceValue
         --RNGLOG('Initial Zone Assignment Table '..repr(self.ZoneIntel.Assignment))
+    end,
+
+    ZoneSetBestArmy = function(self, maximumSearch, zone)
+        local closestArmy
+        local closestDistance
+        maximumSearch = maximumSearch * maximumSearch
+        for k, v in self.Brain.BrainIntel.AllyStartLocations do
+            LOG('Check ally start '..tostring(v.Position[1])..' : '..tostring(v.Position[3]))
+            local ax = v.Position[1] - zone.pos[1]
+            local az = v.Position[3] - zone.pos[3]
+            local armyDist = ax * ax + az * az
+            if armyDist < maximumSearch and (not closestDistance or armyDist < closestDistance) then
+                closestArmy = k
+                closestDistance = armyDist
+            end
+        end
+        if closestArmy then
+            LOG('Set closest Army as  '..tostring(closestArmy))
+            return closestArmy
+        end
+        return false
     end,
 
     ZoneSetIntelAssignment = function(self, key, zone)

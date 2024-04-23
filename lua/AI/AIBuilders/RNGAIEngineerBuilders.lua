@@ -503,7 +503,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Engineer Unfinished Structures',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1005,
         DelayEqualBuildPlattons = {'EngineerAssistUnfinished', 1},
         InstanceCount = 4,
@@ -525,7 +525,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Engineer Unfinished Defense',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1010,
         InstanceCount = 4,
         BuilderConditions = {
@@ -551,7 +551,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T123 Engineer Unfinished SMD',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 650,
         InstanceCount = 10,
         BuilderConditions = {
@@ -605,7 +605,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T123 Engineer Unfinished Experimental',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 600,
         DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
         InstanceCount = 16,
@@ -633,7 +633,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T123 Engineer Unfinished Strategic',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 500,
         DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
         InstanceCount = 12,
@@ -661,7 +661,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T123 Engineer Unfinished PGEN',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 810,
         DelayEqualBuildPlattons = {'EngineerAssistPgen', 1},
         InstanceCount = 8,
@@ -761,7 +761,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T12 Engineer Reclaim T1 Land',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1050,
         InstanceCount = 1,
         BuilderConditions = {
@@ -784,7 +784,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T12 Engineer Reclaim T2 Land',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1040,
         InstanceCount = 1,
         BuilderConditions = {
@@ -806,7 +806,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Engineer Reclaim T3 Land',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1030,
         InstanceCount = 1,
         BuilderConditions = {
@@ -832,7 +832,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T12 Engineer Reclaim T1 Air',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1050,
         InstanceCount = 1,
         BuilderConditions = {
@@ -855,7 +855,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T12 Engineer Reclaim T2 Air',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1040,
         InstanceCount = 1,
         BuilderConditions = {
@@ -883,7 +883,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T12 Engineer Reclaim T1 Naval',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1050,
         InstanceCount = 1,
         BuilderConditions = {
@@ -905,7 +905,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T12 Engineer Reclaim T2 Naval',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1040,
         InstanceCount = 1,
         BuilderConditions = {
@@ -932,7 +932,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Engineer Reclaim T1 Pgens',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 800,
         InstanceCount = 2,
         BuilderConditions = {
@@ -954,7 +954,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Engineer Reclaim T2 Pgens',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 600,
         InstanceCount = 2,
         BuilderConditions = {
@@ -1440,7 +1440,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGEXP Engineer Assist Quantum Gateway',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 510,
         DelayEqualBuildPlattons = {'EngineerAssistFactory', 1},
         InstanceCount = 12,
@@ -1467,7 +1467,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGEXP Engineer Assist HQ Upgrade',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 550,
         DelayEqualBuildPlattons = {'EngineerAssistFactory', 1},
         InstanceCount = 5,
@@ -1493,7 +1493,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGEXP Engineer Unfinished Structures',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 750,
         DelayEqualBuildPlattons = {'EngineerAssistUnfinished', 1},
         InstanceCount = 8,
@@ -1515,7 +1515,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGEXP T123 Engineer Upgrade Mex T2',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 850,
         InstanceCount = 8,
         BuilderConditions = {
@@ -1541,7 +1541,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGEXP T123 Engineer Upgrade Mex T3',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 840,
         InstanceCount = 8,
         BuilderConditions = {
@@ -1568,7 +1568,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGEXP T123 Engineer Unfinished Experimental',
-        PlatoonTemplate = 'T123EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 640,
         DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
         InstanceCount = 20,

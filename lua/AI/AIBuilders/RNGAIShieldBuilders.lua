@@ -31,7 +31,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T2 Shield Single',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 700,
         DelayEqualBuildPlattons = {'Shield', 5},
         InstanceCount = 1,
@@ -43,6 +43,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 DesiresAssist = true,
@@ -54,14 +55,14 @@ BuilderGroup {
                 maxRadius = 35,
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T2ShieldDefense',
+                    { Unit = 'T2ShieldDefense', Categories = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE * categories.TECH2 },
                 },
             },
         },
     },
     Builder {
         BuilderName = 'RNGAI T2 Shield DefensivePoint',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 700,
         DelayEqualBuildPlattons = {'Shield', 5},
         InstanceCount = 1,
@@ -73,6 +74,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
@@ -87,14 +89,14 @@ BuilderGroup {
                 Tier = 2,
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T2ShieldDefense',
+                    { Unit = 'T2ShieldDefense', Categories = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE * categories.TECH2 },
                 },
             },
         },
     },
     Builder {
         BuilderName = 'RNGAI T2 Shield Ratio',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 625,
         DelayEqualBuildPlattons = {'Shield', 5},
         InstanceCount = 1,
@@ -109,6 +111,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 8,
             Construction = {
@@ -129,14 +132,14 @@ BuilderGroup {
                 --maxRadius = 35,
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T2ShieldDefense',
+                    { Unit = 'T2ShieldDefense', Categories = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE * categories.TECH2 },
                 },
             },
         },
     },
     Builder {
         BuilderName = 'RNGAI T3 Shield Ratio',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 650,
         DelayEqualBuildPlattons = {'Shield', 5},
         InstanceCount = 2,
@@ -152,15 +155,12 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 8,
             Construction = {
                 DesiresAssist = true,
                 BuildClose = false,
-                --AdjacencyCategory = (categories.ENERGYPRODUCTION * categories.TECH3) + (categories.ENERGYPRODUCTION * categories.EXPERIMENTAL) + (categories.STRUCTURE * categories.FACTORY),
-                --AvoidCategory = categories.STRUCTURE * categories.SHIELD,
-                --maxUnits = 1,
-                --maxRadius = 35,
                 Centered = true,
                 AdjacencyPriority = {
                     categories.EXPERIMENTAL * categories.STRUCTURE,
@@ -173,7 +173,7 @@ BuilderGroup {
                 },
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T3ShieldDefense',
+                    { Unit = 'T3ShieldDefense', Categories = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE * categories.TECH3 },
                 }
             }
         }
@@ -185,7 +185,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T2 Shield Single Expansion Active',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 0,
         PriorityFunction = ActiveExpansion,
         DelayEqualBuildPlattons = {'Shield', 5},
@@ -197,6 +197,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 8,
             Construction = {
@@ -208,14 +209,14 @@ BuilderGroup {
                 maxRadius = 35,
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T2ShieldDefense',
+                    { Unit = 'T2ShieldDefense', Categories = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE * categories.TECH2 },
                 },
             },
         },
     },
     Builder {
         BuilderName = 'RNGAI T2 Shield Expansion Response',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 0,
         PriorityFunction = ShieldResponse,
         DelayEqualBuildPlattons = {'Shield', 5},
@@ -227,6 +228,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 8,
             Construction = {
@@ -238,7 +240,7 @@ BuilderGroup {
                 maxRadius = 35,
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T2ShieldDefense',
+                    { Unit = 'T2ShieldDefense', Categories = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE * categories.TECH2 },
                 },
             },
         },

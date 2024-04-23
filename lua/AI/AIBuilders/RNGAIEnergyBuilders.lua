@@ -15,7 +15,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Trend OverTime',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1000,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 3},
@@ -28,6 +28,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildPower',
             NeedGuard = false,
             DesiresAssist = true,
@@ -48,14 +49,14 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 2.5,
                 BuildStructures = {
-                    'T1EnergyProduction',
+                    { Unit = 'T1EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Trend Instant',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1050,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 3},
@@ -67,11 +68,11 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildPower',
             NeedGuard = false,
             DesiresAssist = true,
             Construction = {
-                StateMachine = 'EngineerBuilder',
                 BuildClose = true,
                 AdjacencyPriority = {
                     categories.FACTORY * categories.AIR,
@@ -88,14 +89,14 @@ BuilderGroup {
                 maxRadius = 2.5,
                 BuildCategory = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE,
                 BuildStructures = {
-                    'T1EnergyProduction',
+                    { Unit = 'T1EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T2 Power Engineer Negative Trend',
-        PlatoonTemplate = 'T2EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 1005,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'EnergyT2', 6},
@@ -107,6 +108,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildPower',
             DesiresAssist = true,
             NumAssistees = 15,
@@ -124,14 +126,14 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildStructures = {
-                    'T2EnergyProduction',
+                    { Unit = 'T2EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH2 * categories.STRUCTURE },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T2 Power Engineer Scale',
-        PlatoonTemplate = 'T2EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 800,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'EnergyT2', 6},
@@ -144,6 +146,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildPower',
             DesiresAssist = true,
             NumAssistees = 12,
@@ -157,14 +160,14 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 4,
                 BuildStructures = {
-                    'T2EnergyProduction',
+                    { Unit = 'T2EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH2 * categories.STRUCTURE },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T3 Power Engineer Negative Trend',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 1010,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'EnergyT3', 6},
@@ -175,6 +178,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildPower',
             DesiresAssist = true,
             NumAssistees = 20,
@@ -192,14 +196,14 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 15,
                 BuildStructures = {
-                    'T3EnergyProduction',
+                    { Unit = 'T3EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH3 * categories.STRUCTURE },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T3 Power Engineer Scale',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 700,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'EnergyT3', 6},
@@ -212,6 +216,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildPower',
             DesiresAssist = true,
             NumAssistees = 10,
@@ -226,7 +231,7 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 15,
                 BuildStructures = {
-                    'T3EnergyProduction',
+                    { Unit = 'T3EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH3 * categories.STRUCTURE },
                 },
             }
         }
@@ -238,7 +243,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Scale Expansion',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 900,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 3},
@@ -250,6 +255,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildPower',
             NeedGuard = false,
             DesiresAssist = true,
@@ -257,14 +263,14 @@ BuilderGroup {
                 AdjacencyPriority = {categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND)},
                 AdjacencyDistance = 50,
                 BuildStructures = {
-                    'T1EnergyProduction',
+                    { Unit = 'T1EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T2 Power Engineer Expansion',
-        PlatoonTemplate = 'T2EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 800,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 9},
@@ -277,6 +283,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildPower',
             Construction = {
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD, categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)},
@@ -284,7 +291,7 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 10,
                 BuildStructures = {
-                    'T2EnergyProduction',
+                    { Unit = 'T2EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH2 * categories.STRUCTURE },
                 },
             }
         }
@@ -296,7 +303,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1Engineer Hydro 60',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1010,
         DelayEqualBuildPlattons = {'Energy', 3},
         InstanceCount = 1,
@@ -305,12 +312,13 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildPower',
             NeedGuard = false,
             DesiresAssist = true,
             Construction = {
                 BuildStructures = {
-                    'T1HydroCarbon',
+                    { Unit = 'T1HydroCarbon', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE * categories.HYDROCARBON },
                 },
             }
         }
@@ -318,7 +326,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Hydro 120',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 950,
         DelayEqualBuildPlattons = {'Energy', 3},
         InstanceCount = 1,
@@ -327,19 +335,20 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildPower',
             NeedGuard = false,
             DesiresAssist = true,
             Construction = {
                 BuildStructures = {
-                    'T1HydroCarbon',
+                    { Unit = 'T1HydroCarbon', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE * categories.HYDROCARBON },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Hydro 250',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 780,
         DelayEqualBuildPlattons = {'Energy', 3},
         InstanceCount = 2,
@@ -349,12 +358,13 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildPower',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
                 BuildStructures = {
-                    'T1HydroCarbon',
+                    { Unit = 'T1HydroCarbon', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE * categories.HYDROCARBON },
                 },
             }
         }
@@ -367,7 +377,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG T1 Energy Storage Builder OverCharge',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1000,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 240 } },
@@ -377,19 +387,20 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BuildClose = false,
                 NoPause = true,
                 BuildStructures = {
-                    'EnergyStorage',
+                    { Unit = 'EnergyStorage', Categories = categories.ENERGYSTORAGE * categories.TECH1 * categories.STRUCTURE },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG T1 Energy Storage Builder OverCharge Power',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 850,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
@@ -399,21 +410,19 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BuildClose = true,
-                --ForceAvoidCategory = true,
-                --AvoidCategory = categories.ENERGYSTORAGE,
-                --Radius = 5,
                 BuildStructures = {
-                    'EnergyStorage',
+                    { Unit = 'EnergyStorage', Categories = categories.ENERGYSTORAGE * categories.TECH1 * categories.STRUCTURE },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNG T1 Energy Storage Builder',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 500,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 960 } },
@@ -424,14 +433,12 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BuildClose = true,
-                --ForceAvoidCategory = true,
-                --AvoidCategory = categories.ENERGYSTORAGE,
-                --Radius = 5,
                 BuildStructures = {
-                    'EnergyStorage',
+                    { Unit = 'EnergyStorage', Categories = categories.ENERGYSTORAGE * categories.TECH1 * categories.STRUCTURE },
                 },
             }
         }

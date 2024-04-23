@@ -266,7 +266,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     ExpansionData = stageExpansion.Key,
                                     CutOff = 225
                                 }
-                                brain.Zones.Land.zones[stageExpansion.Key].engineerallocated = cdr
+                                brain.Zones.Land.zones[stageExpansion.Key].engineerplatoonallocated = self
                                 brain.Zones.Land.zones[stageExpansion.Key].lastexpansionattempt = GetGameTimeSeconds()
                                 self:LogDebug(string.format('We have found a position to expand to, navigating'))
                                 self:ChangeState(self.Navigating)
@@ -1603,7 +1603,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                             cdr.EngineerBuildQueue={}
                             self.BuilderData.ExpansionBuilt = true
-                            object.engineerallocated = false
+                            object.engineerplatoonallocated = false
                         elseif brain.BuilderManagers['ZONE_'..object.id].FactoryManager:GetNumFactories() == 0 then
                             local abortBuild = false
                             brain.BuilderManagers['ZONE_'..object.id].EngineerManager:AddUnitRNG(cdr, true)
@@ -1672,7 +1672,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                             cdr.EngineerBuildQueue={}
                             self.BuilderData.ExpansionBuilt = true
-                            object.engineerallocated = false
+                            object.engineerplatoonallocated = false
                         --RNGLOG('There is a manager here but no factories')
                         elseif brain.BuilderManagers['ZONE_'..object.id].FactoryManager:GetNumFactories() > 0 then
                             self.BuilderData.ExpansionBuilt = true

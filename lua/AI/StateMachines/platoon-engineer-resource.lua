@@ -57,7 +57,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             end
 
             --RNGLOG("*AI DEBUG: Setting up Callbacks for " .. eng.EntityId)
-            StateUtils.SetupMexBuildAICallbacksRNG(self.eng)
+            StateUtils.SetupStateBuildAICallbacksRNG(self.eng)
             local engPos = self.eng:GetPosition()
             local maxMarkerDistance = self.PlatoonData.Construction.MaxDistance or 256
             LOG('Resource engineer max marker distance is '..tostring(maxMarkerDistance))
@@ -438,13 +438,13 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             break
                         end
                         coroutine.yield(15)
+                        if IsDestroyed(eng) then
+                            return
+                        end
                         if eng:IsIdleState() then
                             self:LogDebug(string.format('We are idle for some reason, go back to decide what to do'))
-                          self:ChangeState(self.DecideWhatToDo)
+                            self:ChangeState(self.DecideWhatToDo)
                           return
-                        end
-                        if eng.Dead or eng:IsIdleState() then
-                            return
                         end
                         if eng.EngineerBuildQueue then
                             if ALLBPS[eng.EngineerBuildQueue[1][1]].CategoriesHash.MASSEXTRACTION and ALLBPS[eng.EngineerBuildQueue[1][1]].CategoriesHash.TECH1 then
@@ -580,6 +580,19 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 end
                 coroutine.yield(20)
             end
+            coroutine.yield(10)
+            self:ChangeState(self.CompleteBuild)
+            return
+        end,
+    },
+
+    CompleteBuild = State {
+
+        StateName = 'CompleteBuild',
+
+        --- Check for reclaim or assist or expansion specific things based on distance from base.
+        ---@param self AIPlatoonEngineerBehavior
+        Main = function(self)
             table.remove(self.ZoneMarkers[self.CurentZoneIndex],self.CurrentMarkerIndex)
             coroutine.yield(10)
             self:ChangeState(self.DecideWhatToDo)
