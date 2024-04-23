@@ -201,7 +201,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Mass Fab',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 500,
         DelayEqualBuildPlattons = {'MassFab', 7},
         BuilderConditions = {
@@ -217,6 +217,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 4,
             Construction = {
@@ -228,7 +229,7 @@ BuilderGroup {
                 maxRadius = 15,
                 BuildClose = true,
                 BuildStructures = {
-                    'T3MassCreation',
+                    { Unit = 'T3MassCreation', Categories = categories.STRUCTURE * categories.MASSFABRICATION * categories.TECH3 }, 
                 },
             }
         }

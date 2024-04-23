@@ -1185,7 +1185,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Air Staging 1',
-        PlatoonTemplate = 'EngineerBuilderT123RNG', -- Air Staging has been moved to T1 so don't need T2 engineers now.
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 900,
         BuilderConditions = {
             { MIBC, 'AirStagingWantedRNG', { } },

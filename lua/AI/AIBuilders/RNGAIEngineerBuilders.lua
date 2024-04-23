@@ -474,7 +474,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Assist Factory Air AA T123',
-        PlatoonTemplate = 'T12EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT12RNG',
         Priority = 0,
         DelayEqualBuildPlattons = {'EngineerAssistFactory', 1},
         PriorityFunction = AirDefenseScramble,
@@ -579,7 +579,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T123 Unfinished Experimental Small',
-        PlatoonTemplate = 'T23EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 800,
         InstanceCount = 3,
         BuilderConditions = {
@@ -693,7 +693,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T2 Engineering Support UEF',
-        PlatoonTemplate = 'UEFT2EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateUEFT2RNG',
         Priority = 500,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
@@ -704,20 +704,21 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 AdjacencyCategory = categories.FACTORY,
                 BuildClose = true,
                 FactionIndex = 1,
                 BuildStructures = {
-                    'T2EngineerSupport',
+                    { Unit = 'T2EngineerSupport', Categories = categories.STRUCTURE * categories.ENGINEERSTATION * categories.TECH2 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T2 Engineering Support Cybran',
-        PlatoonTemplate = 'CybranT2EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderCybranT2RNG',
         Priority = 500,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
@@ -728,13 +729,14 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 AdjacencyCategory = categories.FACTORY,
                 BuildClose = true,
                 FactionIndex = 3,
                 BuildStructures = {
-                    'T2EngineerSupport',
+                    { Unit = 'T2EngineerSupport', Categories = categories.STRUCTURE * categories.ENGINEERSTATION * categories.TECH2 },
                 },
             }
         }
@@ -982,7 +984,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Engineer Assist Factory Naval',
-        PlatoonTemplate = 'T12EngineerStateRNG',
+        PlatoonTemplate = 'EngineerStateT12RNG',
         DelayEqualBuildPlattons = {'Assist', 3},
         Priority = 500,
         InstanceCount = 8,
