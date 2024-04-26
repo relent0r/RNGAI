@@ -47,7 +47,7 @@ end
 BuilderGroup {
     BuilderGroupName = 'RNGAI Base Defenses',
     BuildersType = 'EngineerBuilder',
-    --[[Builder {
+    Builder {
         BuilderName = 'RNGAI T1 Defence Engineer Restricted Breach Land',
         PlatoonTemplate = 'EngineerStateT1RNG',
         Priority = 950,
@@ -88,7 +88,7 @@ BuilderGroup {
                 LocationType = 'LocationType',
             }
         }
-    },]]
+    },
     Builder {
         BuilderName = 'RNGAI T1 Defence Engineer Restricted Breach Air',
         PlatoonTemplate = 'EngineerStateT1RNG',
@@ -424,7 +424,45 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI Base Defenses Expansion',
     BuildersType = 'EngineerBuilder',
-    --[[Builder {
+    Builder {
+        BuilderName = 'RNGAI T1 Defence High Value Land Expansion',
+        PlatoonTemplate = 'EngineerStateT1RNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.DEFENSE * categories.DIRECTFIRE}},
+            { UCBC, 'HighValueZone', {'LocationType' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIT1PDTemplate.lua',
+                BaseTemplate = 'T1PDTemplate',
+                BuildClose = false,
+                NearDefensivePoints = false,
+                OrderedTemplate = true,
+                BuildStructures = {
+                    { Unit = 'T1GroundDefense', Categories = categories.STRUCTURE * categories.DIRECTFIRE * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T1 Defence Restricted Breach Land Expansion',
         PlatoonTemplate = 'EngineerStateT1RNG',
         Priority = 950,
@@ -462,7 +500,7 @@ BuilderGroup {
                 LocationType = 'LocationType',
             }
         }
-    },]]
+    },
     Builder {
         BuilderName = 'RNGAI T1 Defence Restricted Breach Air Expansion',
         PlatoonTemplate = 'EngineerStateT1RNG',

@@ -330,13 +330,13 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             end
             if self.BuilderData.Retreat then
                 local platPos = self:GetPlatoonPosition()
-                while not self.Dead and platPos and VDist3Sq(platPos, self.Home) > 400 do
+                while not IsDestroyed(self) and platPos and VDist3Sq(platPos, self.Home) > 400 do
                     self:LogDebug(string.format('Gunship is in retreat mode, waiting until it arrives home, distance from home is '..VDist3Sq(platPos, self.Home)))
                     coroutine.yield(25)
                     platPos = self:GetPlatoonPosition()
                 end
             end
-            if self.Dead then
+            if IsDestroyed(self) then
                 return
             end
             self.CurrentEnemyAirThreat = 0

@@ -380,6 +380,13 @@ IntelManager = Class {
         local maxFriendlyAirThreat = 25
 
         local mainBasePos = self.Brain.BrainIntel.StartPos
+        local mainBaseLabelType
+        if RUtils.PositionInWater(mainBasePos) then
+            mainBaseLabelType = 'Water'
+        else
+            mainBaseLabelType = 'Land'
+        end
+        local mainBaseLabel = NavUtils.GetLabel(mainBaseLabelType, mainBasePos)
         local aiBrain = self.Brain
         local OwnIndex = aiBrain:GetArmyIndex()
 
@@ -429,18 +436,8 @@ IntelManager = Class {
                         
                         if not closeEnemyStart and not closeAllyStart then
                             if mainBaseDistance > 10000 then
-                                --[[for _, e in v.edges do
-                                    local rx = v.pos[1] - e.zone.pos[1]
-                                    local rz = v.pos[3] - e.zone.pos[3]
-                                    local edgeDistance = rx * rx + rz * rz
-                                    if e.zone.resourcevalue > v.resourcevalue and v.resourcevalue < 2  or (e.zone.BuilderManager.FactoryManager.LocationActive or e.zone.engineerplatoonallocated and not e.zone.engineerplatoonallocated.Dead) and edgeDistance < 10000 then
-                                        LOG('Skipping due to edge resource values')
-                                        edgeSkip = true
-                                        break
-                                    end
-                                end]]
                                 if not edgeSkip then
-                                    if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) and (not v.engineerplatoonallocated or v.engineerplatoonallocated.Dead) and (v.lastexpansionattempt == 0 or v.lastexpansionattempt + 30 < gameTime) then
+                                    if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) and (not v.engineerplatoonallocated or IsDestroyed(v.engineerplatoonallocated)) and (v.lastexpansionattempt == 0 or v.lastexpansionattempt + 30 < gameTime) then
                                         local normalizedDistanceValue = mainBaseDistance / maxDistance
                                         local normalizedTeamValue = v.teamvalue / maxTeamValue
                                         local normalizedResourceValue = v.resourcevalue / maxResourceValue
@@ -476,12 +473,15 @@ IntelManager = Class {
                         continue
                     end
                     if zone.ResourceValue < 3 then
+                        LOG('Zone worth less than 3')
+                        LOG('Team value was '..tostring(zone.TeamValue))
+                        LOG('Zone pos is '..tostring(zone.Position[1])..' : '..tostring(zone.Position[3]))
                         local higherValueExists = false
-                        if zone.TeamValue < 0.8 or zone.TeamValue > 1.2 then
+                        if zone.Label ~= mainBaseLabel then
                             for _, resValue in ipairs(labelResourceValue[zone.Label] or {}) do
                                 if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive then
-                                    LOG('Already have an active factory manager there')
-                                    LOG('Team value was '..tostring(zone.TeamValue))
+                                    LOG('Already have an active factory manager there on label '..tostring(zone.Label))
+                                    LOG('Location is '..tostring(zoneSet[resValue.ZoneID].pos[1])..' : '..tostring(zoneSet[resValue.ZoneID].pos[3]))
                                     higherValueExists = true
                                     break
                                 end
@@ -490,10 +490,40 @@ IntelManager = Class {
                                     and aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zoneSet[resValue.ZoneID].pos, 30, 'Enemy') < 1 then
                                         if resValue.DistanceToBase < zone.DistanceToBase then
                                             LOG('Low value, skip it pos '..tostring(zoneSet[resValue.ZoneID].pos[1]).. ':'..tostring(zoneSet[resValue.ZoneID].pos[3]))
-                                            LOG('Team value was '..tostring(zone.TeamValue))
                                             higherValueExists = true
                                             break
                                         end
+                                    end
+                                end
+                            end
+                        elseif zone.TeamValue < 0.8 or zone.TeamValue > 1.2 then
+                            for _, resValue in ipairs(labelResourceValue[zone.Label] or {}) do
+                                if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive then
+                                    LOG('Already have an active factory manager on lagbel '..tostring(zone.Label))
+                                    LOG('Location is '..tostring(zoneSet[resValue.ZoneID].pos[1])..' : '..tostring(zoneSet[resValue.ZoneID].pos[3]))
+                                    higherValueExists = true
+                                    break
+                                end
+                                if not resValue.StartPositionClose then
+                                    if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zoneSet[resValue.ZoneID].pos, 30, 'Ally') < 1 
+                                    and aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zoneSet[resValue.ZoneID].pos, 30, 'Enemy') < 1 then
+                                        if resValue.DistanceToBase < zone.DistanceToBase then
+                                            LOG('Low value, skip it pos '..tostring(zoneSet[resValue.ZoneID].pos[1]).. ':'..tostring(zoneSet[resValue.ZoneID].pos[3]))
+                                            higherValueExists = true
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+                        else            
+                            if aiBrain.BuilderManagers then
+                                for _, base in aiBrain.BuilderManagers do
+                                    local bx = zone.Position[1] - base.Position[1]
+                                    local bz = zone.Position[3] - base.Position[3]
+                                    local baseDistance = bx * bx + bz * bz
+                                    if baseDistance <= 25600 then
+                                        higherValueExists = true
+                                        break
                                     end
                                 end
                             end
@@ -1178,7 +1208,6 @@ IntelManager = Class {
         local closestDistance
         maximumSearch = maximumSearch * maximumSearch
         for k, v in self.Brain.BrainIntel.AllyStartLocations do
-            LOG('Check ally start '..tostring(v.Position[1])..' : '..tostring(v.Position[3]))
             local ax = v.Position[1] - zone.pos[1]
             local az = v.Position[3] - zone.pos[3]
             local armyDist = ax * ax + az * az

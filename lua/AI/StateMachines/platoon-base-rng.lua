@@ -108,7 +108,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                         end
                     end
                 end
-                if unit.MaxWeaponRange and (unitBp.Weapon and unitBp.Weapon[1].RangeCategory == 'UWRC_DirectFire' and not self.MaxDirectFireRange or self.MaxDirectFireRange < unit.MaxWeaponRange) then
+                if unit.MaxWeaponRange and (unitBp.Weapon and unitBp.Weapon[1].RangeCategory == 'UWRC_DirectFire' and not self.MaxDirectFireRange or self.MaxDirectFireRange < unit.MaxWeaponRange) and not unitCats.SCOUT then
                     self.MaxDirectFireRange = unit.MaxWeaponRange
                 end
                 if unit.MaxWeaponRange and (not self.MaxPlatoonWeaponRange or self.MaxPlatoonWeaponRange < unit.MaxWeaponRange) then

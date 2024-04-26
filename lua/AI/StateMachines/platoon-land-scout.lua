@@ -494,7 +494,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                 while PlatoonExists(aiBrain, self) do
                     coroutine.yield(25)
                     platPos = self:GetPlatoonPosition()
-                    if self.Dead or not platPos then
+                    if IsDestroyed(self) or not platPos then
                         return
                     end
                     local px = path[i][1] - platPos[1]
@@ -579,7 +579,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                 end
                 local enemyUnitRange = StateUtils.GetUnitMaxWeaponRange(builderData.RetreatFrom, 'Direct Fire') or 0
                 local avoidRange = math.max(enemyUnitRange + 2, self.IntelRange - 2)
-                while not self.Dead do
+                while not IsDestroyed(self) do
                     if builderData.RetreatFrom then
                         self.retreatTarget = builderData.RetreatFrom
                     end
@@ -601,7 +601,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         IssueClearCommands(platUnits)
                         self:MoveToLocation(RUtils.AvoidLocation(enemyPos, platPos, avoidRange), false)
                     elseif enemyDistance > (avoidRange * avoidRange) * 1.5 then
-                        if self.BuilderData.ScoutType == 'AssistPlatoon' and not self.BuilderData.SupportPlatoon.Dead then
+                        if self.BuilderData.ScoutType == 'AssistPlatoon' and not IsDestroyed(self.BuilderData.SupportPlatoon) then
                             self:LogDebug(string.format('Enemy is further away, supportPlatoon'))
                             self:ChangeState(self.SupportUnit)
                             return
@@ -617,7 +617,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     end
                     coroutine.yield(20)
                     if enemyUnit.Dead then
-                        if self.BuilderData.ScoutType == 'AssistPlatoon' and not self.BuilderData.SupportPlatoon.Dead then
+                        if self.BuilderData.ScoutType == 'AssistPlatoon' and not IsDestroyed(self.BuilderData.SupportPlatoon) then
                             self:LogDebug(string.format('Enemy is dead, supportPlatoon'))
                             self:ChangeState(self.SupportUnit)
                             return

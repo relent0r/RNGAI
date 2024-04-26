@@ -12,7 +12,7 @@ BaseBuilderTemplate {
         'RNGAI Initial ACU Builder Large',
 
         -- ACU MainBase Builder --
-        'RNGAI ACU Structure Builders Large',
+        'RNGAI ACU Structure Builders',
         'RNGAI ACU Build Assist',
 
         -- Expansion Builders --

@@ -440,6 +440,42 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
+    Builder {
+        BuilderName = 'RNGAI Factory Land T3 AA Island Expansion',
+        PlatoonTemplate = 'T3LandAA',
+        Priority = 707, -- After Second Engie Group
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
+            { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'Air'} },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Land T3 Tank Island Expansion',
+        PlatoonTemplate = 'T3LandBot',
+        Priority = 707, -- After Second Engie Group
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
+            { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'Land'} },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Land T3 Arty Island Expansion',
+        PlatoonTemplate = 'T3LandArtillery',
+        Priority = 712, -- After Second Engie Group
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
+            { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'Defensive'} },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
 }
 -- Land Formers
 

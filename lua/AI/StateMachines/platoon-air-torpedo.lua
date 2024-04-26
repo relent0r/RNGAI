@@ -527,11 +527,11 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if self.BuilderData.Retreat then
-                while not self.Dead and VDist3Sq(self:GetPlatoonPosition(), self.Home) > 100 do
+                while not IsDestroyed(self) and VDist3Sq(self:GetPlatoonPosition(), self.Home) > 100 do
                     coroutine.yield(25)
                 end
             end
-            if self.Dead then
+            if IsDestroyed(self) then
                 return
             end
             self.CurrentEnemyAirThreat = 0

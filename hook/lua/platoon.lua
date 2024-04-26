@@ -2183,8 +2183,21 @@ Platoon = Class(RNGAIPlatoonClass) {
                             WARN('No buildLocation or whatToBuild during ACU initialization')
                         end
                     end
+                    local failureCount = 0
                     while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
-                        coroutine.yield(5)
+                        if GetEconomyStored(aiBrain, 'MASS') == 0 then
+                            if not eng:IsPaused() then
+                                failureCount = failureCount + 1
+                                eng:SetPaused( true )
+                            end
+                        elseif eng:IsPaused() then
+                            eng:SetPaused( false )
+                        end
+                        if failureCount > 8 then
+                            IssueClearCommands({eng})
+                            break
+                        end
+                        coroutine.yield(7)
                     end
                 end
             end
@@ -2259,7 +2272,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             --RNGLOG('Unit is '..eng.UnitId)
             
 
-            if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation, transportWait) then
+            if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation, false, transportWait) then
                 if not eng or eng.Dead or not eng.PlatoonHandle or not PlatoonExists(aiBrain, eng.PlatoonHandle) then
                     if eng then eng.ProcessBuild = nil end
                     return
@@ -4149,7 +4162,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         local bestUnit = false
                         local numBuilding = 0
                         for _, unit in assistDesc do
-                            if not unit.Dead and not unit:BeenDestroyed() and unit:GetFractionComplete() < 1 and unit:GetAIBrain():GetArmyIndex() == armyIndex then
+                            if not unit.Dead and not unit.ReclaimInProgress and not unit:BeenDestroyed() and unit:GetFractionComplete() < 1 and unit:GetAIBrain():GetArmyIndex() == armyIndex then
                                 --RNGLOG('Completion Unit Assist '..unit.UnitId)
                                 numBuilding = numBuilding + 1
                                 local unitPos = unit:GetPosition()

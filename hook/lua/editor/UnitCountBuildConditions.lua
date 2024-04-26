@@ -1586,7 +1586,7 @@ function ZoneAvailableRNG(aiBrain)
         for _, v in im.ZoneExpansions.Pathable do
             if v.ZoneID then
                 local zone = aiBrain.Zones.Land.zones[v.ZoneID]
-                if (not zone.BuilderManager.FactoryManager.LocationActive or zone.BuilderManagerDisabled) and (not zone.engineerplatoonallocated or zone.engineerplatoonallocated.Dead) and (zone.lastexpansionattempt == 0 or zone.lastexpansionattempt + 30 < gameTime) then
+                if (not zone.BuilderManager.FactoryManager.LocationActive or zone.BuilderManagerDisabled) and (not zone.engineerplatoonallocated or IsDestroyed(zone.engineerplatoonallocated)) and (zone.lastexpansionattempt == 0 or zone.lastexpansionattempt + 30 < gameTime) then
                     if aiBrain:GetThreatAtPosition(zone.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 5 then
                         return true
                     end
@@ -1595,6 +1595,23 @@ function ZoneAvailableRNG(aiBrain)
         end
     end
     return false
+end
+
+function HighValueZone(aiBrain, locationType)
+    local zoneId = aiBrain.BuilderManagers[locationType].Zone
+    if aiBrain.Zones.Land.zones[zoneId] then
+        local resourceValue = aiBrain.Zones.Land.zones[zoneId].resourcevalue
+        if resourceValue > 2 then
+            local basePos = aiBrain.BuilderManagers[locationType].Position
+            local startPos = aiBrain.BrainIntel.StartPos
+            local dx = basePos[1] - startPos[1]
+            local dz = basePos[3] - startPos[3]
+            local distanceToMain = dx * dx + dz * dz
+            if distanceToMain > 22500 then
+                return true
+            end
+        end
+    end
 end
 
 --[[

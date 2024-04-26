@@ -158,7 +158,7 @@ function CDRBrainThread(cdr)
         end
         if cdr.Active then
             if cdr.DistanceToHome > 900 and cdr.CurrentEnemyThreat > 0 then
-                if cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat and not cdr.SupportPlatoon or cdr.SupportPlatoon.Dead and (gameTime - 15) > lastPlatoonCall then
+                if cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat and not cdr.SupportPlatoon or IsDestroyed(cdr.SupportPlatoon) and (gameTime - 15) > lastPlatoonCall then
                     --RNGLOG('CDR Support Platoon doesnt exist and I need it, calling platoon')
                     --RNGLOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
                     CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.2 - cdr.CurrentFriendlyThreat)

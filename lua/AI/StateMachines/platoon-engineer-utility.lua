@@ -338,6 +338,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 -- I've made this change state to keep the decision logic clean.
                 if self.PlatoonData.Construction then
                     self.BuilderData = {
+                        TransportWait = self.PlatoonData.TransportWait,
                         Construction = self.PlatoonData.Construction
                     }
                     coroutine.yield(10)
@@ -904,7 +905,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local eng = self.eng
             local builderData = self.BuilderData
-            local transportWait = builderData.PlatoonData.TransportWait or 2
+            local transportWait = builderData.TransportWait or 2
 
             while not eng.Dead and not table.empty(eng.EngineerBuildQueue) do
 
@@ -928,7 +929,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     movementRequired = false
                 end
                 
-                if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation, transportWait) then
+                if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation, false, transportWait) then
+                    LOG('Movewith safe path returned true')
                     if not eng or eng.Dead or not eng.PlatoonHandle or not aiBrain:PlatoonExists(eng.PlatoonHandle) then
                         if eng then eng.ProcessBuild = nil end
                         return
@@ -937,6 +939,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         --RNGLOG('BorderWarning build')
                         IssueBuildMobile({eng}, buildLocation, whatToBuild, {})
                     else
+                        LOG('IssueBuildStructure')
                         aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
                     end
                     local engStuckCount = 0
@@ -944,8 +947,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     local dist
                     while not eng.Dead and not table.empty(eng.EngineerBuildQueue) do
                         PlatoonPos = eng:GetPosition()
-                        dist = VDist2(PlatoonPos[1] or 0, PlatoonPos[3] or 0, buildLocation[1] or 0, buildLocation[3] or 0)
-                        if dist < 12 then
+                        dist = VDist2Sq(PlatoonPos[1] or 0, PlatoonPos[3] or 0, buildLocation[1] or 0, buildLocation[3] or 0)
+                        if dist < 144 then
                             break
                         end
                         if Lastdist ~= dist then
@@ -1297,7 +1300,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                             IssueClearCommands({eng})
                                             IssueReclaim({eng}, unit)
                                             coroutine.yield(60)
-                                            self:ChangeState(self.DecideWhatToDo)
+                                            self:ChangeState(self.PerformBuildTask)
                                             return
                                         end
                                     end
@@ -1308,13 +1311,13 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                         IssueClearCommands({eng})
                                         IssueReclaim({eng}, unit)
                                         coroutine.yield(60)
-                                        self:ChangeState(self.DecideWhatToDo)
+                                        self:ChangeState(self.PerformBuildTask)
                                         return
                                     else
                                         IssueClearCommands({eng})
                                         IssueMove({eng}, RUtils.AvoidLocation(enemyUnitPos, platPos, 50))
                                         coroutine.yield(60)
-                                        self:ChangeState(self.DecideWhatToDo)
+                                        self:ChangeState(self.PerformBuildTask)
                                         return
                                     end
                                 end
@@ -1325,7 +1328,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 coroutine.yield(20)
             end
             coroutine.yield(5)
-            self:ChangeState(self.DecideWhatToDo)
+            self:ChangeState(self.CompleteBuild)
             return
         end,
     },
@@ -1338,11 +1341,50 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonEngineerBehavior
         Main = function(self)
             local eng = self.eng
+            if self.HighValueDiscard then
+                return
+            end
             if table.empty(eng.EngineerBuildQueue) then
                 self:ExitStateMachine()
             end
-            coroutine.yield(10)
-            self:ChangeState(self.PerformBuildTask)
+            if eng:IsIdleState() then
+                coroutine.yield(2)
+                self:ChangeState(self.PerformBuildTask)
+                return
+            else
+                LOG('Engineer running CompleteBuild with items in the EngineerBuildQueue')
+                LOG('First item is '..tostring(eng.EngineerBuildQueue[1][1]))
+                coroutine.yield(2)
+                self:ChangeState(self.Constructing)
+                return
+            end
+        end,
+    },
+
+    DiscardCurrentBuild = State {
+
+        StateName = 'DiscardCurrentBuild',
+
+        --- Check for reclaim or assist or expansion specific things based on distance from base.
+        ---@param self AIPlatoonEngineerBehavior
+        Main = function(self)
+            local eng = self.eng
+            local unit = self.BuilderData.Unit
+
+            coroutine.yield(5)
+            LOG('Trigger WaitForIdleDisband')
+            LOG('Unit to attempt to reclaim is '..tostring(unit.UnitId))
+            if unit and not IsDestroyed(unit) then
+                IssueClearCommands({eng})
+                unit.ReclaimInProgress = true
+                IssueReclaim({eng}, unit)
+                unit.EngineerBuildQueue = {}
+            end
+            while RNGGETN(eng:GetCommandQueue()) > 0 do
+                coroutine.yield(20)
+            end
+            coroutine.yield(2)
+            self:ExitStateMachine()
             return
         end,
     },

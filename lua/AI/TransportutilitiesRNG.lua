@@ -962,7 +962,7 @@ function SendPlatoonWithTransports(aiBrain, platoon, destination, attempts, bSki
     end
 	LOG('Requesting platoon transport')
 	if platoon.BuilderName then
-		LOG('Requester is '..platoon.BuilderName)
+		LOG('Requester is '..platoon.BuilderName..' wait attempts is set to '..tostring(attempts))
 	end
 
     local MovementLayer = platoon.MovementLayer    
@@ -1013,6 +1013,7 @@ function SendPlatoonWithTransports(aiBrain, platoon, destination, attempts, bSki
 
 		-- make the requested number of attempts to get transports - 12 second delay between attempts
 		for counter = 1, attempts do
+			LOG('Wait Cycle '..counter)
 			if PlatoonExists( aiBrain, platoon ) then
 				-- check if we can get enough transport and how many transports we are using
 				-- this call will return the # of units transported (true) or false, if true, the platoon holding the transports or false

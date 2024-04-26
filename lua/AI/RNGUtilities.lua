@@ -3532,7 +3532,7 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius)
     if not table.empty(im.ZoneExpansions.Pathable) then
         for _, v in im.ZoneExpansions.Pathable do
             local skipPos = false
-            if v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive and (not zoneSet[v.ZoneID].engineerplatoonallocated or zoneSet[v.ZoneID].engineerplatoonallocated.Dead) then
+            if v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive and (not zoneSet[v.ZoneID].engineerplatoonallocated or IsDestroyed(zoneSet[v.ZoneID].engineerplatoonallocated)) then
                 if zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive then
                     LOG('Selecting base that already has an active factory manager')
                 end
@@ -3611,7 +3611,7 @@ function GetTemplateReplacementRNG(aiBrain, building, faction, buildingTmpl)
     return retTemplate
 end
 
-function AIBuildBaseTemplateFromLocationRNG(baseTemplate, location, zoneExpansionCheck)
+function AIBuildBaseTemplateFromLocationRNG(baseTemplate, location)
     local baseT = {}
     if location and baseTemplate then
         for templateNum, template in baseTemplate do
@@ -6303,7 +6303,7 @@ function SetCoreResources(aiBrain, position, baseName)
         WARN('No zone returned trying to get core resources for base')
         return
     end
-    local resourceTable = table.copy(aiBrain.Zones.Land[targetZone].resourcemarkers)
+    local resourceTable = table.copy(aiBrain.Zones.Land.zones[targetZone].resourcemarkers)
     if resourceTable then
         if aiBrain.BuilderManagers[baseName] then
             aiBrain.BuilderManagers[baseName].CoreResources = resourceTable
@@ -6313,7 +6313,7 @@ function SetCoreResources(aiBrain, position, baseName)
     else
         WARN('No resource table found in GetCoreResources')
         LOG('Zone attempted '..repr(targetZone))
-        LOG('ZoneTable '..repr(aiBrain.Zones.Land[targetZone]))
+        LOG('ZoneTable '..repr(aiBrain.Zones.Land.zones[targetZone]))
         return
     end
 end

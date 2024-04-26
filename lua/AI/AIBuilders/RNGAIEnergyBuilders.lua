@@ -43,7 +43,7 @@ BuilderGroup {
                     categories.INDIRECTFIRE * categories.DEFENSE,
                     categories.SHIELD * categories.STRUCTURE,
                 },
-                Scale = true,
+                --Scale = true,
                 AvoidCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION,
                 AdjacencyDistance = 15,
                 maxUnits = 1,

@@ -1520,7 +1520,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 totalPowerRequired = math.min(extractorPowerRequired, (260 * multiplier))
             end
         end
-        self.EcoManager.MinimumPowerRequired = math.max(totalPowerRequired,180)
+        self.EcoManager.MinimumPowerRequired = math.max(totalPowerRequired,200)
     end,
 
     SetPathableZonesForBase = function(self, position, baseName)

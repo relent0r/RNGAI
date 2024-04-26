@@ -195,7 +195,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.5, 5.0}},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Higher Pri'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Any',
@@ -237,8 +237,8 @@ BuilderGroup {
         Priority = 1005,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
-            { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.7, 12.0}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.9 }},
+            { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.7, 18.0}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.95 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) }},
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.AIR * categories.TECH1 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
@@ -265,9 +265,8 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Air Factory Lower Pri'}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 1.0 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) }},
             { UCBC, 'IsEngineerNotBuilding', {categories.FACTORY * categories.AIR * categories.TECH1}},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
@@ -313,10 +312,11 @@ BuilderGroup {
     Builder {    	
         BuilderName = 'RNGAI ACU T1 Power Trend',
         PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 850,
+        Priority = 1000,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { EBC, 'MinimumPowerRequired', { 6.0 } },
+            { EBC, 'GreaterThanMassStorageOrEfficiency', { 50, 0.7 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION - categories.HYDROCARBON } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
         },
@@ -368,7 +368,7 @@ BuilderGroup {
             { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -395,7 +395,7 @@ BuilderGroup {
             { UCBC, 'CmdrHasUpgrade', { 'T3Engineering', true }},
             { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -449,294 +449,6 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Defence ACU Restricted Breach Air',
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 950,
-        BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'ANTISURFACEAIR' }},
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.DEFENSE * categories.AIR}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.7 }},
-            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, 'DEFENSE' } },
-            { UCBC, 'UnitCapCheckLess', { .9 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                BuildClose = true,
-                BuildStructures = {
-                    'T1AADefense',
-                },
-                LocationType = 'LocationType',
-            }
-        }
-    },
-}
-
-BuilderGroup {
-    BuilderGroupName = 'RNGAI ACU Structure Builders Large',
-    BuildersType = 'EngineerBuilder',
-    Builder {
-        BuilderName = 'RNG ACU Factory Builder Land T1 Primary Large',
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 1050,
-        DelayEqualBuildPlattons = {'Factories', 3},
-        InstanceCount = 1,
-        BuilderConditions = {
-            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
-            { EBC, 'GreaterThanEconStorageCurrentRNG', { 240, 1050 } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH1 }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
-         },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            DesiresAssist = true,
-            Construction = {
-                LocationType = 'LocationType',
-                BuildClose = true,
-                BuildStructures = {
-                    'T1LandFactory',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI ACU T1 Land Factory Higher Pri Large',
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 1005,
-        DelayEqualBuildPlattons = {'Factories', 3},
-        BuilderConditions = {
-            { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.5, 5.0}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.20}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.TECH1 * categories.ENERGYPRODUCTION } },
-            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                BuildClose = true,
-                BuildStructures = {
-                    'T1LandFactory',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI ACU T1 Land Factory Lower Pri Large',
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 800,
-        DelayEqualBuildPlattons = {'Factories', 3},
-        BuilderConditions = {
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.80, 'FACTORY'}}, -- Ratio from 0 to 1. (1=100%)
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 1.0 }},
-            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
-            { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
-         },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                LocationType = 'LocationType',
-                BuildClose = false,
-                BuildStructures = {
-                    'T1LandFactory',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI ACU T1 Air Factory Higher Pri Large',
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 1005,
-        PriorityFunction = NavalAdjust,
-        BuilderConditions = {
-            { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.5, 5.0}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.20}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.TECH1 * categories.ENERGYPRODUCTION } },
-            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                BuildClose = true,
-                BuildStructures = {
-                    'T1AirFactory',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI ACU Mass 30 Large',
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 850,
-        BuilderConditions = { 
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 30, nil, nil, 0, 'AntiSurface', 1}},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            NeedGuard = false,
-            DesiresAssist = false,
-            Construction = {
-                RepeatBuild = false,
-                MexThreat = true,
-                Type = 'Mass',
-                MaxDistance = 30,
-                MinDistance = 0,
-                ThreatMin = -500,
-                ThreatMax = 20,
-                ThreatType = 'AntiSurface',
-                BuildStructures = {
-                    'T1Resource',
-                },
-            }
-        }
-    },
-    Builder {    	
-        BuilderName = 'RNGAI ACU T1 Power Trend Large',
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 850,
-        DelayEqualBuildPlattons = {'Energy', 3},
-        BuilderConditions = {
-            { EBC, 'MinimumPowerRequired', { 6.0 } }, -- If our energy is trending into negatives
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 3, categories.STRUCTURE * categories.ENERGYPRODUCTION - categories.HYDROCARBON } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2 }},
-            --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Power Trend'}},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            DesiresAssist = false,
-            Construction = {
-                AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
-                BuildStructures = {
-                    'T1EnergyProduction',
-                },
-            }
-        }
-    },
-    Builder {    	
-        BuilderName = 'RNGAI ACU T1 Power Scale Large',
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 800,
-        DelayEqualBuildPlattons = {'Energy', 3},
-        BuilderConditions = {
-            { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.1 }},
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION - categories.HYDROCARBON } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T3 Pgen Exist
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            DesiresAssist = false,
-            Construction = {
-                AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
-                AvoidCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH1,
-                maxUnits = 1,
-                maxRadius = 3,
-                BuildStructures = {
-                    'T1EnergyProduction',
-                    'T1EnergyProduction',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI ACU T2 Power Engineer Negative Trend Large',
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 850,
-        InstanceCount = 1,
-        DelayEqualBuildPlattons = {'Energy', 9},
-        BuilderConditions = {
-            { UCBC, 'CmdrHasUpgrade', { 'AdvancedEngineering', true }},
-            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.1 }},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            DesiresAssist = true,
-            NumAssistees = 10,
-            Construction = {
-                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
-                AvoidCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2,
-                maxUnits = 1,
-                maxRadius = 10,
-                BuildStructures = {
-                    'T2EnergyProduction',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI ACU T3 Power Engineer Negative Trend Large',
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 850,
-        InstanceCount = 1,
-        DelayEqualBuildPlattons = {'Energy', 9},
-        BuilderConditions = {
-            { UCBC, 'CmdrHasUpgrade', { 'T3Engineering', true }},
-            { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.1 }},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            DesiresAssist = true,
-            NumAssistees = 10,
-            Construction = {
-                AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
-                AvoidCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3,
-                maxUnits = 1,
-                maxRadius = 10,
-                BuildStructures = {
-                    'T3EnergyProduction',
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T1 Defence ACU Restricted Breach Land Large',
-        PlatoonTemplate = 'CommanderBuilderRNG',
-        Priority = 950,
-        BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE}},
-            { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, categories.DEFENSE } },
-            { UCBC, 'UnitCapCheckLess', { .9 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIT1PDTemplate.lua',
-                BaseTemplate = 'T1PDTemplate',
-                BuildClose = true,
-                OrderedTemplate = true,
-                NearBasePatrolPoints = false,
-                BuildStructures = {
-                    'T1GroundDefense',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                },
-                LocationType = 'LocationType',
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T1 Defence ACU Restricted Breach Air Large',
         PlatoonTemplate = 'CommanderBuilderRNG',
         Priority = 950,
         BuilderConditions = {
@@ -815,7 +527,7 @@ BuilderGroup {
         Priority = 700,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 0.9}},
-            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY + categories.STRUCTURE }},
+            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.STRUCTURE }},
         },
         BuilderType = 'Any',
         BuilderData = {

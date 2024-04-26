@@ -331,7 +331,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 local Stuck = 0
                 while PlatoonExists(aiBrain, self) do
                     coroutine.yield(1)
-                    if self.Dead then
+                    if IsDestroyed(self) then
                         return
                     end
                     if self.ScoutUnit and (not self.ScoutUnit.Dead) then
@@ -346,7 +346,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                         IssueClearCommands(attackSquad)
                         while PlatoonExists(aiBrain, self) do
                             coroutine.yield(1)
-                            if self.Dead then
+                            if IsDestroyed(self) then
                                 return
                             end
                             if target and not IsDestroyed(target) or acuUnit then

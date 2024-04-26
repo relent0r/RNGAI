@@ -561,9 +561,10 @@ StructureManager = Class {
         local t2LandPass = false
         if totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 then
             --LOG('Factory T1 Upgrade HQ Check passed '..self.Brain.Nickname)
-            if (not self.Brain.RNGEXP and actualMexIncome > (23 * multiplier) or self.Brain.RNGEXP and actualMexIncome > (18 * multiplier)) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 20.0 then
+            if (not self.Brain.RNGEXP and (actualMexIncome > (23 * multiplier) or self.Brain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier)) 
+            or self.Brain.RNGEXP and (actualMexIncome > (18 * multiplier) or self.Brain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier))) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 26.0 then
                 --LOG('Factory Upgrade actual mex income is '..actualMexIncome..' for '..self.Brain.Nickname)
-                if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.015 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
+                if (self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.015 or GetEconomyStored(self.Brain, 'MASS') >= 250) and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                     --LOG('Factory Upgrade efficiency over time check passed '..self.Brain.Nickname)
                     local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                     local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
@@ -639,7 +640,7 @@ StructureManager = Class {
             --RNGLOG('Factory T1 Upgrade Support Check passed')
             if self.Factories.LAND[1].UpgradingCount < 1 then
                 --RNGLOG('Factory T1 Upgrade Less than 1 Factory Upgrading')
-                if self.Brain.EconomyOverTimeCurrent.MassTrendOverTime >= 0.0 and self.Brain.EconomyOverTimeCurrent.EnergyTrendOverTime >= 0.0 then
+                if actualMexIncome > (23 * multiplier) and self.Brain.EconomyOverTimeCurrent.MassTrendOverTime >= 0.0 and self.Brain.EconomyOverTimeCurrent.EnergyTrendOverTime >= 0.0 then
                     if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 0.95 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
                         --RNGLOG('Factory Upgrade efficiency over time check passed')
                         local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
@@ -702,7 +703,7 @@ StructureManager = Class {
         local t3LandPass = false
         if totalLandT3HQCount < 1 and totalLandT2HQCount > 0 and self.Factories.LAND[2].UpgradingCount < 1 and self.Factories.LAND[2].Total > 0 then
             --RNGLOG('Factory T1 Upgrade HQ Check passed')
-            if actualMexIncome > (50 * multiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 100.0 then
+            if (actualMexIncome > (50 * multiplier) or self.Brain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (35 * multiplier)) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 100.0 then
                 --RNGLOG('Factory Upgrade actual mex income passed '..actualMexIncome)
                 if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.015 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
                     --RNGLOG('Factory Upgrade efficiency over time check passed')
@@ -801,7 +802,7 @@ StructureManager = Class {
             --RNGLOG('Factory T2 Upgrade Support Check passed')
             if self.Factories.LAND[2].UpgradingCount < 1 then
                 --RNGLOG('Factory T2 Upgrade Less than 1 Factory Upgrading')
-                if self.Brain.EconomyOverTimeCurrent.MassTrendOverTime >= 0.0 and self.Brain.EconomyOverTimeCurrent.EnergyTrendOverTime >= 0.0 then
+                if actualMexIncome > (50 * multiplier) and self.Brain.EconomyOverTimeCurrent.MassTrendOverTime >= 0.0 and self.Brain.EconomyOverTimeCurrent.EnergyTrendOverTime >= 0.0 then
                     if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.0 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
                         --RNGLOG('Factory Upgrade efficiency over time check passed')
                         local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
@@ -881,7 +882,7 @@ StructureManager = Class {
         local t2NavalPass = false
         if totalNavalT2HQCount < 1 and totalNavalT3HQCount < 1 and self.Factories.NAVAL[1].UpgradingCount < 1 and self.Factories.NAVAL[1].Total > 0 then
             --RNGLOG('Factory Naval T1 Upgrade HQ Check passed')
-            if actualMexIncome > (35 * multiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 50.0 then
+            if actualMexIncome > (30 * multiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 50.0 then
                 --RNGLOG('Factory Naval Upgrade actual mex income is '..actualMexIncome)
                 if self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.025 and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 then
                     --RNGLOG('Factory Naval Upgrade efficiency over time check passed')

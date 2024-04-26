@@ -1343,13 +1343,27 @@ function GetBuildableUnitId(aiBrain, unit, category)
 end
 
 SetupStateBuildAICallbacksRNG = function(eng)
-    if eng and not eng.Dead and not eng.StateBuildDoneCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
-        import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(BuildAIDoneRNG, eng, categories.ALLUNITS)
-        eng.StateBuildDoneCallbackSet = true
-    end
-    if eng and not eng.Dead and not eng.StateFailedToBuildCallbackSet and eng.PlatoonHandle and eng:GetAIBrain():PlatoonExists(eng.PlatoonHandle) then
-        import('/lua/ScenarioTriggers.lua').CreateOnFailedToBuildTrigger(BuildAIFailedRNG, eng)
-        eng.StateFailedToBuildCallbackSet = true
+    if eng and not eng.Dead then
+        local aiBrain = eng:GetAIBrain()
+        if not eng.StateBuildDoneCallbackSet and eng.PlatoonHandle and aiBrain:PlatoonExists(eng.PlatoonHandle) then
+            import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(BuildAIDoneRNG, eng, categories.ALLUNITS)
+            eng.StateBuildDoneCallbackSet = true
+        end
+        if not eng.StateFailedToBuildCallbackSet and eng.PlatoonHandle and aiBrain:PlatoonExists(eng.PlatoonHandle) then
+            import('/lua/ScenarioTriggers.lua').CreateOnFailedToBuildTrigger(BuildAIFailedRNG, eng)
+            eng.StateFailedToBuildCallbackSet = true
+        end
+        if not eng.StateStartBuildCallbackSet and eng.PlatoonHandle and aiBrain:PlatoonExists(eng.PlatoonHandle) then
+            -- note the CreateStartBuildTrigger says it takes a category but in reality it doesn't
+            import('/lua/ScenarioTriggers.lua').CreateStartBuildTrigger(StartBuildRNG, eng)
+            eng.StateStartBuildCallbackSet = true
+        end
+        --[[
+        if not eng.StateCaptureDoneCallbackSet and eng.PlatoonHandle and aiBrain:PlatoonExists(eng.PlatoonHandle) then
+            import('/lua/ScenarioTriggers.lua').CreateUnitStopCaptureTrigger(eng.PlatoonHandle.EngineerCaptureDoneRNG, eng)
+            eng.StateCaptureDoneCallbackSet = true
+        end
+        ]]
     end
 end
 
@@ -1363,12 +1377,6 @@ BuildAIDoneRNG = function(unit, params)
     end
     if table.empty(unit.EngineerBuildQueue) then
         unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
-    else
-        for k, v in unit.EngineerBuildQueue do
-            LOG('Item '..k)  
-            LOG(repr(v))
-        end
-        LOG('Engineer has this many items in the build queue '..table.getn(unit.EngineerBuildQueue))
     end
     --RNGLOG('Queue size after remove '..RNGGETN(unit.EngineerBuildQueue))
 end
@@ -1387,15 +1395,65 @@ BuildAIFailedRNG = function(unit, params)
         LOG('Engineer has failed to build item multiple times, removing from queue, current queue size is '..table.getn(unit.EngineerBuildQueue))
         table.remove(unit.EngineerBuildQueue, 1)
         unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.PerformBuildTask)
-    else
+    elseif not unit.PlatoonHandle.HighValueDiscard then
         LOG('Engineer has failed to build item, attempting restart')
         unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
     end
 end
 
+StartBuildRNG = function(eng, unit)
+    if eng.Active then return end
+    if not eng.PlatoonHandle then return end
+    --LOG("*AI DEBUG: Build done " .. unit.EntityId)
+    if eng and not eng.Dead and unit and not unit.Dead then
+        local locationType = eng.PlatoonHandle.PlatoonData.Construction.LocationType
+        local highValue = eng.PlatoonHandle.PlatoonData.Construction.HighValue
+        if locationType and highValue then
+            LOG('Value Unit being built')
+            local aiBrain = eng.Brain
+            local multiplier = aiBrain.EcoManager.EcoMultiplier
+            if aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt then
+                --LOG('StructuresBeingBuilt exist on engineer manager '..repr(aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt))
+                local structuresBeingBuilt = aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt
+                local queuedStructures = aiBrain.BuilderManagers[locationType].EngineerManager.QueuedStructures
+                local unitBp = unit.Blueprint
+                --LOG('Unit tech category is '..repr(unitBp.TechCategory))
+                local unitsBeingBuilt = 0
+                --if structuresBeingBuilt['QUEUED'][unitBp.TechCategory] then
+                if structuresBeingBuilt[unitBp.TechCategory] and not structuresBeingBuilt[unitBp.TechCategory][unit.EntityId] then
+                    local rebuildTable = false
+                    for _, v in structuresBeingBuilt do
+                        for _, c in v do
+                            if c and not c.Dead then
+                                if c:GetFractionComplete() < 0.98 then
+                                    unitsBeingBuilt = unitsBeingBuilt + 1
+                                end
+                            end
+                        end
+                    end
+                    if unitsBeingBuilt > 0 and aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (275 * multiplier) then
+                        if queuedStructures[unitBp.TechCategory][eng.EntityId] then
+                            queuedStructures[unitBp.TechCategory][eng.EntityId] = nil
+                        end
+                        LOG('Attempting to cancel and reclaim unit')
+                        eng.PlatoonHandle.BuilderData = {
+                            Unit = unit
+                        }
+                        eng.PlatoonHandle.HighValueDiscard = true
+                        eng.PlatoonHandle:ChangeStateExt(eng.PlatoonHandle.DiscardCurrentBuild)
+                    else
+                        if queuedStructures[unitBp.TechCategory][eng.EntityId] then
+                            queuedStructures[unitBp.TechCategory][eng.EntityId] = nil
+                        end
+                        structuresBeingBuilt[unitBp.TechCategory][unit.EntityId] = unit
+                    end
+                end
+            end
+        end
+    end
+end
+
 function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType, whatToBuild, closeToBuilder, relative, buildingTemplate, baseTemplate, reference, cons)
-    LOG('beginning adjacencypriority trying to build '..tostring(whatToBuild)..' building type '..tostring(buildingType))
-    LOG('Builder Name '..tostring(builder.PlatoonHandle.BuilderName))
     local scaleCount = 1
     local VDist3Sq = VDist3Sq
     local Centered=cons.Centered
@@ -1823,6 +1881,9 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType, whatToBui
                                 if buildingType == 'MassStorage' then
                                     AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false, true)
                                 else
+                                    if buildingType == 'T1GroundDefense' or buildingType == 'Wall' then
+                                        LOG('Adding T1PD Template item to engineer queue')
+                                    end
                                     AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false)
                                 end
                                 table.remove(bType,n)
