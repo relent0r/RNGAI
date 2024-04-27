@@ -462,11 +462,38 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 if rx * rx + rz * rz < targetRange * targetRange then
                     self:MoveToLocation(RUtils.AvoidLocation(targetPos, self.Pos, avoidRange), false)
                 else
-                    local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, true)
-                    if zoneRetreat then
-                        self:MoveToLocation(aiBrain.Zones.Land.zones[zoneRetreat].pos, false)
+                    local targetCats = target.Blueprint.CategoriesHash
+                    local attackStructure = false
+                    local platUnits = self:GetPlatoonUnits()
+                    if targetCats.STRUCTURE and targetCats.DEFENSE then
+                        if targetRange < self.MaxPlatoonWeaponRange then
+                            attackStructure = true
+                            for _, v in platUnits do
+                                --self:LogDebug('Role is '..repr(v.Role))
+                                if v.Role == 'Artillery' or v.Role == 'Silo' and not v:IsUnitState("Attacking") then
+                                    IssueClearCommands({v})
+                                    IssueAttack({v},target)
+                                end
+                            end
+                        end
+                    end
+                    local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, targetPos, true)
+                    if attackStructure then
+                        for _, v in platUnits do
+                            if v.Role ~= 'Artillery' and v.Role ~= 'Silo' then
+                                if zoneRetreat then
+                                    IssueMove({v}, aiBrain.Zones.Land.zones[zoneRetreat].pos)
+                                else
+                                    IssueMove({v}, self.Home)
+                                end
+                            end
+                        end
                     else
-                        self:MoveToLocation(self.Home, false)
+                        if zoneRetreat then
+                            self:MoveToLocation(aiBrain.Zones.Land.zones[zoneRetreat].pos, false)
+                        else
+                            self:MoveToLocation(self.Home, false)
+                        end
                     end
                 end
                 coroutine.yield(40)

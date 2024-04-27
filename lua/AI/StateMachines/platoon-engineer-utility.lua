@@ -922,6 +922,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 local borderWarning = eng.EngineerBuildQueue[1][4]
                 local engPos = eng:GetPosition()
                 local movementRequired = true
+                eng.PerformingBuildTask = true
                 IssueClearCommands({eng})
 
                 if VDist3Sq(engPos, buildLocation) < 225 then
@@ -1281,6 +1282,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
 
         ---@param self AIPlatoonEngineerBehavior
         Main = function(self)
+            LOG('Entering Contructing for '..self.BuilderName)
             local eng = self.eng
             local aiBrain = self:GetBrain()
 
@@ -1328,6 +1330,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 coroutine.yield(20)
             end
             coroutine.yield(5)
+            LOG('Contructing is exiting to complete build '..self.BuilderName)
             self:ChangeState(self.CompleteBuild)
             return
         end,
@@ -1349,6 +1352,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             end
             if eng:IsIdleState() then
                 coroutine.yield(2)
+                LOG('Engineer complete build is restarting PerformBuildTask '..self.BuilderName)
                 self:ChangeState(self.PerformBuildTask)
                 return
             else

@@ -729,7 +729,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, true)
+                    local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, targetPos, true)
                     if attackStructure then
                         for _, v in platUnits do
                             if v.Role ~= 'Artillery' and v.Role ~= 'Silo' then

@@ -469,19 +469,19 @@ IntelManager = Class {
             for _, zone in ipairs(zonePriorityList) do
                 if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zone.Position, 30, 'Enemy') < 1 then
                     if zone.BestArmy and zone.BestArmy ~= armyIndex and ArmyBrains[zone.BestArmy].Status ~= 'Defeat' then
-                        LOG('Best Army is someone else, skip it')
+                        --LOG('Best Army is someone else, skip it')
                         continue
                     end
                     if zone.ResourceValue < 3 then
-                        LOG('Zone worth less than 3')
-                        LOG('Team value was '..tostring(zone.TeamValue))
-                        LOG('Zone pos is '..tostring(zone.Position[1])..' : '..tostring(zone.Position[3]))
+                        --LOG('Zone worth less than 3')
+                        --LOG('Team value was '..tostring(zone.TeamValue))
+                        --LOG('Zone pos is '..tostring(zone.Position[1])..' : '..tostring(zone.Position[3]))
                         local higherValueExists = false
                         if zone.Label ~= mainBaseLabel then
                             for _, resValue in ipairs(labelResourceValue[zone.Label] or {}) do
                                 if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive then
-                                    LOG('Already have an active factory manager there on label '..tostring(zone.Label))
-                                    LOG('Location is '..tostring(zoneSet[resValue.ZoneID].pos[1])..' : '..tostring(zoneSet[resValue.ZoneID].pos[3]))
+                                    --LOG('Already have an active factory manager there on label '..tostring(zone.Label))
+                                    --LOG('Location is '..tostring(zoneSet[resValue.ZoneID].pos[1])..' : '..tostring(zoneSet[resValue.ZoneID].pos[3]))
                                     higherValueExists = true
                                     break
                                 end
@@ -489,7 +489,7 @@ IntelManager = Class {
                                     if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zoneSet[resValue.ZoneID].pos, 30, 'Ally') < 1 
                                     and aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zoneSet[resValue.ZoneID].pos, 30, 'Enemy') < 1 then
                                         if resValue.DistanceToBase < zone.DistanceToBase then
-                                            LOG('Low value, skip it pos '..tostring(zoneSet[resValue.ZoneID].pos[1]).. ':'..tostring(zoneSet[resValue.ZoneID].pos[3]))
+                                            --LOG('Low value, skip it pos '..tostring(zoneSet[resValue.ZoneID].pos[1]).. ':'..tostring(zoneSet[resValue.ZoneID].pos[3]))
                                             higherValueExists = true
                                             break
                                         end
@@ -499,8 +499,8 @@ IntelManager = Class {
                         elseif zone.TeamValue < 0.8 or zone.TeamValue > 1.2 then
                             for _, resValue in ipairs(labelResourceValue[zone.Label] or {}) do
                                 if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive then
-                                    LOG('Already have an active factory manager on lagbel '..tostring(zone.Label))
-                                    LOG('Location is '..tostring(zoneSet[resValue.ZoneID].pos[1])..' : '..tostring(zoneSet[resValue.ZoneID].pos[3]))
+                                    --LOG('Already have an active factory manager on lagbel '..tostring(zone.Label))
+                                    --LOG('Location is '..tostring(zoneSet[resValue.ZoneID].pos[1])..' : '..tostring(zoneSet[resValue.ZoneID].pos[3]))
                                     higherValueExists = true
                                     break
                                 end
@@ -508,7 +508,7 @@ IntelManager = Class {
                                     if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zoneSet[resValue.ZoneID].pos, 30, 'Ally') < 1 
                                     and aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zoneSet[resValue.ZoneID].pos, 30, 'Enemy') < 1 then
                                         if resValue.DistanceToBase < zone.DistanceToBase then
-                                            LOG('Low value, skip it pos '..tostring(zoneSet[resValue.ZoneID].pos[1]).. ':'..tostring(zoneSet[resValue.ZoneID].pos[3]))
+                                            --LOG('Low value, skip it pos '..tostring(zoneSet[resValue.ZoneID].pos[1]).. ':'..tostring(zoneSet[resValue.ZoneID].pos[3]))
                                             higherValueExists = true
                                             break
                                         end
@@ -538,7 +538,7 @@ IntelManager = Class {
                     end
                 end
             end
-            LOG('Number of filtered zones we can expand to '..table.getn(filteredList))
+            --LOG('Number of filtered zones we can expand to '..table.getn(filteredList))
             if not table.empty(filteredList) then
                 table.sort(filteredList, function(a, b) return a.Priority > b.Priority end)
                 self.ZoneExpansions.Pathable = filteredList
@@ -548,7 +548,7 @@ IntelManager = Class {
         end
     end,
 
-    GetClosestZone = function(self, aiBrain, platoon, position, controlRequired, minimumResourceValue)
+    GetClosestZone = function(self, aiBrain, platoon, position, enemyPosition, controlRequired, minimumResourceValue)
             
             local zoneSet = false
             if aiBrain.ZonesInitialized then
@@ -586,6 +586,9 @@ IntelManager = Class {
                     local dz = originPosition[3] - v.pos[3]
                     local zoneDist = dx * dx + dz * dz
                     if (not bestZoneDist or zoneDist < bestZoneDist) and NavUtils.CanPathTo(platoon.MovementLayer, originPosition, v.pos) then
+                        if enemyPosition and RUtils.GetAngleRNG(originPosition[1], originPosition[3], v.pos[1], v.pos[3], enemyPosition[1], enemyPosition[3]) < 0.4 then
+                            continue
+                        end
                         if controlRequired then
                             if control == 'Allied' then
                                 bestZoneDist = zoneDist

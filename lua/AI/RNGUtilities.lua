@@ -3735,7 +3735,7 @@ end
 
 
 function GetAngleRNG(myX, myZ, myDestX, myDestZ, theirX, theirZ)
-    --[[ Softles gave me this to help improve the mass point retreat mechanic
+    --[[ Softles gave me this to help improve retreat mechanics
        If (myX,myZ) is the platoon, (myDestX,myDestZ) the mass point, and (theirX, theirZ) the enemy threat
        Then 0 => mass point in same direction as enemy, 1 => mass point in complete opposite direction
        You, your dest, and them form a triangle.

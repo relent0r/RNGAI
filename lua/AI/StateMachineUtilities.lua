@@ -343,7 +343,7 @@ ExitConditions = function(self,aiBrain)
             local enemyThreat = 0
             for _,enemy in enemies do
                 enemyThreat = enemyThreat + enemy.Blueprint.Defense.SurfaceThreatLevel
-                if enemyThreat * 1.1 > self.Threat then
+                if enemyThreat * 1.1 > self.CurrentPlatoonThreatAntiSurface then
                     --RNGLOG('TruePlatoon enemy threat too high during navigating, exiting')
                     self.navgood = false
                     return true
@@ -1335,10 +1335,10 @@ function GetBuildableUnitId(aiBrain, unit, category)
             end
         end
     end
-    LOG('Returning number of blueprint options '..table.getn(blueprintOptions))
-    for k, v in blueprintOptions do
-        LOG('Item '..k..' : '..tostring(v))
-    end
+    --LOG('Returning number of blueprint options '..table.getn(blueprintOptions))
+    --for k, v in blueprintOptions do
+    --    LOG('Item '..k..' : '..tostring(v))
+    --end
     return blueprintOptions
 end
 
@@ -1376,6 +1376,7 @@ BuildAIDoneRNG = function(unit, params)
         table.remove(unit.EngineerBuildQueue, 1)
     end
     if table.empty(unit.EngineerBuildQueue) then
+        LOG('BuildDone callback fired '..unit.PlatoonHandle.BuilderName)
         unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
     end
     --RNGLOG('Queue size after remove '..RNGGETN(unit.EngineerBuildQueue))
@@ -1396,8 +1397,12 @@ BuildAIFailedRNG = function(unit, params)
         table.remove(unit.EngineerBuildQueue, 1)
         unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.PerformBuildTask)
     elseif not unit.PlatoonHandle.HighValueDiscard then
-        LOG('Engineer has failed to build item, attempting restart')
-        unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
+        LOG('Engineer has failed to build item, attempting restart '..unit.PlatoonHandle.BuilderName)
+        if not unit.PerformingBuildTask then
+            unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
+        else
+            unit.PerformingBuildTask = false
+        end
     end
 end
 

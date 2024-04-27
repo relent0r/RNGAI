@@ -169,7 +169,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             if aiBrain:GetThreatAtPosition(currentmarker.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 2 then
                 local threat = RUtils.GrabPosDangerRNG(aiBrain, currentmarker.position, 30, true, false, false)
                 if threat.enemySurface > threat.allySurface then
-                    table.remove(self.ZoneMarkers[self.CurentZoneIndex],self.CurrentMarkerIndex)
+                    table.remove(self.ZoneMarkers[self.CurentZoneIndex].ResourceMarkers,self.CurrentMarkerIndex)
                     self:LogDebug(string.format('Threat too high at destination mass marker '..tostring(currentmarker.position[1])..' '..tostring(currentmarker.position[3])))
                     coroutine.yield(1)
                     self:ChangeState(self.DecideWhatToDo)
@@ -177,8 +177,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 end
             end
             eng.EngineerBuildQueue = {}
-            for _=0,3,1 do
-                if not currentmarker then break end
+            if currentmarker then
                 if self.ZoneMarkers[self.CurentZoneIndex].ResourceValue > 1 then
                     local markers = table.copy(self.ZoneMarkers[self.CurentZoneIndex].ResourceMarkers)
                     table.sort(markers,function(a,b) return(VDist2Sq(a.position[1],a.position[3],currentmarker.position[1],currentmarker.position[3])<VDist2Sq(b.position[1],b.position[3],currentmarker.position[1],currentmarker.position[3]))end)
@@ -226,13 +225,10 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             RNGINSERT(eng.EngineerBuildQueue, newEntry)
                         end
                     end
-                    break
                 end
-            end
-            if currentmarker then
                 local ax = platoonPos[1] - currentmarker.position[1]
                 local az = platoonPos[3] - currentmarker.position[3]
-                if ax * ax + az * az < 3600 then
+                if ax * ax + az * az < 3600 and NavUtils.CanPathTo(self.MovementLayer, platoonPos, currentmarker.position) then
                     self:LogDebug(string.format('DecideWhatToDo high priority target close combatloop'))
                     self:ChangeState(self.Constructing)
                     return
@@ -293,7 +289,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 if VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 350 * 350 then
                     needTransports = true
                 end
-                if needTransports then
+                if needTransports and reason == 'Unpathable' then
                     self:LogDebug(string.format('We need a transport'))
                 end
 
@@ -309,8 +305,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     return
                 elseif reason == 'Unpathable' or VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 512 * 512 then
                     -- If over 512 and no transports dont try and walk!
-                    table.remove(self.ZoneMarkers[self.CurentZoneIndex],self.CurrentMarkerIndex)
+                    table.remove(self.ZoneMarkers[self.CurentZoneIndex].ResourceMarkers,self.CurrentMarkerIndex)
                     self:LogDebug(string.format('No path to position or greater than 500 and unable to use transport'))
+                    IssueClearCommands({eng})
                     coroutine.yield(10)
                     self:ChangeState(self.DecideWhatToDo)
                     return
@@ -593,7 +590,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         --- Check for reclaim or assist or expansion specific things based on distance from base.
         ---@param self AIPlatoonEngineerBehavior
         Main = function(self)
-            table.remove(self.ZoneMarkers[self.CurentZoneIndex],self.CurrentMarkerIndex)
+            table.remove(self.ZoneMarkers[self.CurentZoneIndex].ResourceMarkers,self.CurrentMarkerIndex)
             coroutine.yield(10)
             self:ChangeState(self.DecideWhatToDo)
             return

@@ -421,7 +421,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, true)
+                    local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, targetPos, true)
                     if attackStructure then
                         self:LogDebug(string.format('Non Artillery retreating'))
                         for _, v in platUnits do
@@ -435,6 +435,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         end
                     else
                         if zoneRetreat then
+                            self:LogDebug(string.format('Performing zone retreat to '..tostring(aiBrain.Zones.Land.zones[zoneRetreat].pos[1])..' : '..tostring(aiBrain.Zones.Land.zones[zoneRetreat].pos[3])))
                             self:MoveToLocation(aiBrain.Zones.Land.zones[zoneRetreat].pos, false)
                         else
                             self:MoveToLocation(self.Home, false)
