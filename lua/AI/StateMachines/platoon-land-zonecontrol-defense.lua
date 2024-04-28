@@ -330,7 +330,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             if IsDestroyed(self) then
                 return
             end
-            local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, true)
+            local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, false, true)
             self.Retreat = true
             self.BuilderData = {
                 TargetZone = zoneRetreat,

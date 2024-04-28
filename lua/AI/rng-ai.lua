@@ -1801,7 +1801,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.Zones.Naval.zones[zone].BuilderManager = self.BuilderManagers[baseName]
                 else
                     if not self.Zones.Land.zones[zone].BuilderManager then
-                        LOG('BuilderManager not present, what is this zone '..repr(self.Zones.Land.zones[zone]))
+                        LOG('BuilderManager not present, what is this zone '..tostring(zone))
                     end
                     self.Zones.Land.zones[zone].BuilderManager = self.BuilderManagers[baseName]
                 end

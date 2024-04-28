@@ -5497,16 +5497,18 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval)
                                 end
                             end
                         else
-                            local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
-                            local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
-                            if tempPoint > highestPriority then
-                                if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
-                                    --LOG('Set higher priority')
-                                    --LOG('Distance '..targetDistance)
-                                    --LOG('Priority '..(v.priority + (v.danger or 0)))
-                                    --LOG('Point Calculation is '..(v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30))
-                                    highestPriority = tempPoint
-                                    closestTarget = v.unit
+                            if not unitCats.SCOUT then
+                                local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
+                                local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
+                                if tempPoint > highestPriority then
+                                    if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
+                                        --LOG('Set higher priority')
+                                        --LOG('Distance '..targetDistance)
+                                        --LOG('Priority '..(v.priority + (v.danger or 0)))
+                                        --LOG('Point Calculation is '..(v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30))
+                                        highestPriority = tempPoint
+                                        closestTarget = v.unit
+                                    end
                                 end
                             end
                         end
