@@ -691,7 +691,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             elseif cons.ZoneExpansion then
                 reference, refName, refZone = RUtils.AIFindZoneExpansionPointRNG(aiBrain, cons.LocationType, (cons.LocationRadius or 100))
                 if not reference or not refName or aiBrain.Zones.Land.zones[refZone].lastexpansionattempt + 30 > GetGameTimeSeconds() then
-                    self:ExitStateMachined()
+                    self:ExitStateMachine()
                     return
                 end
                 if reference and refZone and refName then
@@ -1376,7 +1376,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local unit = self.BuilderData.Unit
 
             coroutine.yield(5)
-            LOG('Trigger WaitForIdleDisband')
+            LOG('Trigger DiscardCurrentBuild')
             LOG('Unit to attempt to reclaim is '..tostring(unit.UnitId))
             if unit and not IsDestroyed(unit) then
                 IssueClearCommands({eng})

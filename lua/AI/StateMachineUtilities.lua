@@ -1368,16 +1368,14 @@ SetupStateBuildAICallbacksRNG = function(eng)
 end
 
 CaptureDoneRNG = function(unit, params)
-    if unit.Active then return end
+    if unit.Active or unit.Dead then return end
     if not unit.PlatoonHandle then return end
     --RNGLOG("*AI DEBUG: Capture done" .. unit.EntityId)
-    if not unit.ProcessBuild then
-        unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, false)
-    end
-end,
+    unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
+end
 
 BuildAIDoneRNG = function(unit, params)
-    if unit.Active then return end
+    if unit.Active or unit.Dead then return end
     if not unit.PlatoonHandle then return end
     --RNGLOG("*AI DEBUG: MexBuildAIRNG removing queue item")
     --RNGLOG('Queue Size is '..RNGGETN(unit.EngineerBuildQueue))
@@ -1392,7 +1390,7 @@ BuildAIDoneRNG = function(unit, params)
 end
 
 BuildAIFailedRNG = function(unit, params)
-    if unit.Active then return end
+    if unit.Active or unit.Dead then return end
     if not unit.PlatoonHandle then return end
     --RNGLOG("*AI DEBUG: MexBuildAIRNG removing queue item")
     --RNGLOG('Queue Size is '..RNGGETN(unit.EngineerBuildQueue))
@@ -1416,7 +1414,7 @@ BuildAIFailedRNG = function(unit, params)
 end
 
 StartBuildRNG = function(eng, unit)
-    if eng.Active then return end
+    if eng.Active or eng.Dead then return end
     if not eng.PlatoonHandle then return end
     --LOG("*AI DEBUG: Build done " .. unit.EntityId)
     if eng and not eng.Dead and unit and not unit.Dead then
@@ -1435,7 +1433,6 @@ StartBuildRNG = function(eng, unit)
                 local unitsBeingBuilt = 0
                 --if structuresBeingBuilt['QUEUED'][unitBp.TechCategory] then
                 if structuresBeingBuilt[unitBp.TechCategory] and not structuresBeingBuilt[unitBp.TechCategory][unit.EntityId] then
-                    local rebuildTable = false
                     for _, v in structuresBeingBuilt do
                         for _, c in v do
                             if c and not c.Dead then

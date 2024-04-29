@@ -404,8 +404,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Engineer Reclaim Enemy Walls',
-        PlatoonTemplate = 'EngineerBuilderT1RNG',
-        PlatoonAIPlan = 'ReclaimUnitsAIRNG',
+        PlatoonTemplate = 'EngineerReclaimWallsT1RNG',
         Priority = 400,
         BuilderConditions = {
             { UCBC, 'HaveUnitsWithCategoryAndAllianceRNG', { true, 10, categories.WALL, 'Enemy'}},

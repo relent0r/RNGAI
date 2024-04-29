@@ -135,6 +135,14 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'EngineerReclaimWallsT1RNG',
+    Plan = 'ReclaimUnitsAIRNG',
+    GlobalSquads = {
+        { categories.ENGINEER * categories.TECH1, 1, 1, 'support', 'None' }
+    },
+}
+
+PlatoonTemplate {
     Name = 'T1EngineerTransferRNG',
     Plan = 'TransferAIRNG',
     GlobalSquads = {

@@ -239,6 +239,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     return
                 end
                 local platPos = self:GetPlatoonPosition()
+                if not platPos then return end
                 local dx = platPos[1] - movePosition[1]
                 local dz = platPos[3] - movePosition[3]
                 local posDist = dx * dx + dz * dz

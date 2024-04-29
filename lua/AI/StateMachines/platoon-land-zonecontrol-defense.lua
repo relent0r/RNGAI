@@ -433,9 +433,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 return
             end
             while PlatoonExists(aiBrain, self) do
-                self:LogDebug(string.format('platoon is navigating, path length is '..RNGGETN(self.path)))
-                coroutine.yield(1)
-                self:LogDebug(string.format('platoon distance to destination '..VDist3Sq(self.BuilderData.Position,self.Pos)))
                 if VDist3Sq(self.BuilderData.Position,self.Pos) < 400 then
                     self.path = false
                     self.navigating = false

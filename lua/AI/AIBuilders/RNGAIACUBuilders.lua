@@ -57,7 +57,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Small',
-        PlatoonTemplate = 'StateMachineAIRNG',
+        PlatoonTemplate = 'CommanderStateMachineRNG',
         Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
@@ -68,7 +68,7 @@ BuilderGroup {
         InstantCheck = true,
         BuilderType = 'Any',
         BuilderData = {
-            StateMachine = 'EngineerBuilder'
+            StateMachine = 'EngineerBuilder',
             Construction = {
                 MaxDistance = 30,
                 BuildStructures = {
@@ -118,7 +118,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Large',
-        PlatoonTemplate = 'StateMachineAIRNG',
+        PlatoonTemplate = 'CommanderStateMachineRNG',
         Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
@@ -129,7 +129,7 @@ BuilderGroup {
         InstantCheck = true,
         BuilderType = 'Any',
         BuilderData = {
-            StateMachine = 'EngineerBuilder'
+            StateMachine = 'EngineerBuilder',
             Construction = {
                 MaxDistance = 30,
                 BuildStructures = {

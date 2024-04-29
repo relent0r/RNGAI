@@ -191,7 +191,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
                         end
                     end
                 end
-                if unit:IsIdleState() then
+                if not IsDestroyed(unit) and unit:IsIdleState() then
                     movementTimeout = movementTimeout + 1
                     if movementTimeout > 10 then
                         break
@@ -400,7 +400,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                     break
                 end
                 coroutine.yield(15)
-                if eng.Dead or eng:IsIdleState() then
+                if IsDestroyed(eng) or eng:IsIdleState() then
                     return
                 end
                 if eng.EngineerBuildQueue then
