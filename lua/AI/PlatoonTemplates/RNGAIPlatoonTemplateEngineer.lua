@@ -87,8 +87,8 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'CommanderBuilderRNG',
-    Plan = 'EngineerBuildAIRNG',
+    Name = 'CommanderDummyRNG',
+    Plan = 'DummyPlatoonAIRNG',
     GlobalSquads = {
         { categories.COMMAND, 1, 1, 'support', 'None' }
     },
@@ -115,14 +115,6 @@ PlatoonTemplate {
     Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.COMMAND, 1, 1, 'support', 'None' },
-    },
-}
-
-PlatoonTemplate {
-    Name = 'EngineerBuilderT1RNG',
-    Plan = 'EngineerBuildAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * categories.TECH1 - categories.COMMAND , 1, 1, 'support', 'None' }
     },
 }
 

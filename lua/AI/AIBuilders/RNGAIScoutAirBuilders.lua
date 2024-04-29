@@ -76,7 +76,6 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.SCOUT } },
         },
         BuilderData = {
-            ScanWait = 20,
         },
         LocationType = 'LocationType',
         BuilderType = 'Any',
@@ -92,7 +91,6 @@ BuilderGroup {
         BuilderData = {
             PerimeterPoints = true,
             ExpansionPatrol = true,
-            ScanWait = 20,
         },
         LocationType = 'LocationType',
         BuilderType = 'Any',

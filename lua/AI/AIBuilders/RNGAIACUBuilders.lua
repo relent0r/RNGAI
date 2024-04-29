@@ -49,7 +49,6 @@ BuilderGroup {
         InstantCheck = true,
         BuilderType = 'Any',
         BuilderData = {
-            ScanWait = 40,
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
@@ -58,7 +57,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Small',
-        PlatoonTemplate = 'CommanderBuilderRNG',
+        PlatoonTemplate = 'StateMachineAIRNG',
         Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
@@ -69,7 +68,7 @@ BuilderGroup {
         InstantCheck = true,
         BuilderType = 'Any',
         BuilderData = {
-            ScanWait = 40,
+            StateMachine = 'EngineerBuilder'
             Construction = {
                 MaxDistance = 30,
                 BuildStructures = {
@@ -111,7 +110,6 @@ BuilderGroup {
         InstantCheck = true,
         BuilderType = 'Any',
         BuilderData = {
-            ScanWait = 40,
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
@@ -120,7 +118,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Large',
-        PlatoonTemplate = 'CommanderBuilderRNG',
+        PlatoonTemplate = 'StateMachineAIRNG',
         Priority = 2000,
         PriorityFunction = function(self, aiBrain)
 			return 0, false
@@ -131,7 +129,7 @@ BuilderGroup {
         InstantCheck = true,
         BuilderType = 'Any',
         BuilderData = {
-            ScanWait = 40,
+            StateMachine = 'EngineerBuilder'
             Construction = {
                 MaxDistance = 30,
                 BuildStructures = {
@@ -162,7 +160,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG ACU Factory Builder Land T1 Primary Small',
-        PlatoonTemplate = 'CommanderBuilderRNG',
+        PlatoonTemplate = 'CommanderDummyRNG',
         Priority = 1050,
         DelayEqualBuildPlattons = {'Factories', 3},
         InstanceCount = 1,
@@ -187,7 +185,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI ACU T1 Land Factory Higher Pri',
-        PlatoonTemplate = 'CommanderBuilderRNG',
+        PlatoonTemplate = 'CommanderDummyRNG',
         Priority = 1005,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -210,7 +208,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI ACU T1 Land Factory Lower Pri',
-        PlatoonTemplate = 'CommanderBuilderRNG',
+        PlatoonTemplate = 'CommanderDummyRNG',
         Priority = 750,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -233,7 +231,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI ACU T1 Air Factory Higher Pri',
-        PlatoonTemplate = 'CommanderBuilderRNG',
+        PlatoonTemplate = 'CommanderDummyRNG',
         Priority = 1005,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -260,7 +258,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI ACU T1 Air Factory Lower Pri',
-        PlatoonTemplate = 'CommanderBuilderRNG',
+        PlatoonTemplate = 'CommanderDummyRNG',
         Priority = 750,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
@@ -284,7 +282,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI ACU Mass 60',
-        PlatoonTemplate = 'CommanderBuilderRNG',
+        PlatoonTemplate = 'CommanderDummyRNG',
         Priority = 1005,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 60, nil, nil, 0, 'AntiSurface', 1}},
@@ -311,7 +309,7 @@ BuilderGroup {
     },
     Builder {    	
         BuilderName = 'RNGAI ACU T1 Power Trend',
-        PlatoonTemplate = 'CommanderBuilderRNG',
+        PlatoonTemplate = 'CommanderDummyRNG',
         Priority = 1000,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
@@ -333,7 +331,7 @@ BuilderGroup {
     },
     Builder {    	
         BuilderName = 'RNGAI ACU T1 Power Scale',
-        PlatoonTemplate = 'CommanderBuilderRNG',
+        PlatoonTemplate = 'CommanderDummyRNG',
         Priority = 800,
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
@@ -359,7 +357,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI ACU T2 Power Engineer Negative Trend',
-        PlatoonTemplate = 'CommanderBuilderRNG',
+        PlatoonTemplate = 'CommanderDummyRNG',
         Priority = 850,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 9},
@@ -387,7 +385,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI ACU T3 Power Engineer Negative Trend',
-        PlatoonTemplate = 'CommanderBuilderRNG',
+        PlatoonTemplate = 'CommanderDummyRNG',
         Priority = 850,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'Energy', 9},
@@ -414,7 +412,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Defence ACU Restricted Breach Land',
-        PlatoonTemplate = 'CommanderBuilderRNG',
+        PlatoonTemplate = 'CommanderDummyRNG',
         Priority = 950,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
@@ -449,7 +447,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Defence ACU Restricted Breach Air',
-        PlatoonTemplate = 'CommanderBuilderRNG',
+        PlatoonTemplate = 'CommanderDummyRNG',
         Priority = 950,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'ANTISURFACEAIR' }},

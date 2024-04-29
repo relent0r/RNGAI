@@ -156,7 +156,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     self:LogDebug(string.format('PreAllocatedTask is CaptureUnit'))
                     if not unit.CaptureDoneCallbackSet then
                         self:LogDebug(string.format('No Capture Callback set on engineer, setting '))
-                        import('/lua/ScenarioTriggers.lua').CreateUnitStopCaptureTrigger(unit.PlatoonHandle.EngineerCaptureDoneRNG, unit)
+                        import('/lua/ScenarioTriggers.lua').CreateUnitStopCaptureTrigger(StateUtils.CaptureDoneRNG, unit)
                         unit.CaptureDoneCallbackSet = true
                     end
                     local captureUnit = self.PlatoonData.CaptureUnit
@@ -957,9 +957,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             Lastdist = dist
                         else
                             engStuckCount = engStuckCount + 1
-                            --RNGLOG('* AI-RNG: * EngineerBuildAI: has no moved during move to build position look, adding one, current is '..engStuckCount)
+                            --RNGLOG('* AI-RNG: * No movement during move to build position look, adding one, current is '..engStuckCount)
                             if engStuckCount > 40 and not eng:IsUnitState('Building') then
-                                --RNGLOG('* AI-RNG: * EngineerBuildAI: Stuck while moving to build position. Stuck='..engStuckCount)
+                                --RNGLOG('* AI-RNG: * Stuck while moving to build position. Stuck='..engStuckCount)
                                 break
                             end
                         end

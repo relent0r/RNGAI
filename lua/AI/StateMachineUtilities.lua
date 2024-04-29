@@ -1360,12 +1360,21 @@ SetupStateBuildAICallbacksRNG = function(eng)
         end
         --[[
         if not eng.StateCaptureDoneCallbackSet and eng.PlatoonHandle and aiBrain:PlatoonExists(eng.PlatoonHandle) then
-            import('/lua/ScenarioTriggers.lua').CreateUnitStopCaptureTrigger(eng.PlatoonHandle.EngineerCaptureDoneRNG, eng)
+            import('/lua/ScenarioTriggers.lua').CreateUnitStopCaptureTrigger(CaptureDoneRNG, eng)
             eng.StateCaptureDoneCallbackSet = true
         end
         ]]
     end
 end
+
+CaptureDoneRNG = function(unit, params)
+    if unit.Active then return end
+    if not unit.PlatoonHandle then return end
+    --RNGLOG("*AI DEBUG: Capture done" .. unit.EntityId)
+    if not unit.ProcessBuild then
+        unit.ProcessBuild = unit:ForkThread(unit.PlatoonHandle.ProcessBuildCommandRNG, false)
+    end
+end,
 
 BuildAIDoneRNG = function(unit, params)
     if unit.Active then return end
