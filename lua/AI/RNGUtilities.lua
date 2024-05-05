@@ -1371,7 +1371,9 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             for _, target in targetUnits do
                 if not target.Dead then
                     local targetPos = target:GetPosition()
-                    local targetDistance = VDist3Sq(cdrPos, targetPos)
+                    local rx = cdrPos[1] - targetPos[1]
+                    local rz = cdrPos[3] - targetPos[3]
+                    local targetDistance = rx * rx + rz * rz
                     if target.Blueprint.CategoriesHash.COMMAND then
                         if target.EntityId and not enemyACUTargets[target.EntityId] then
                             enemyACUTargets[target.EntityId] = { unit = target, position = targetPos, distance = targetDistance }
@@ -3516,9 +3518,9 @@ function MexUpgradeManagerRNG(aiBrain)
     end
 end
 
-AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius)
+AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position)
     local im = IntelManagerRNG.GetIntelManager(aiBrain)
-    local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location
+    local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location or position
     local zoneSet = aiBrain.Zones.Land.zones
     local retPos, retName, refZone
     radius = radius * radius

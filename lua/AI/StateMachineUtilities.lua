@@ -1732,7 +1732,7 @@ function CanBuildOnMassMexPlatoon(aiBrain, engPos, distance)
         LOG('Found mass point within distance of current engineer position')
     end
     for _, v in massPoints do
-        LOG('MassPoint table entry at position '..repr(v.position))
+        LOG('MassPoint table entry at position '..tostring(v.position[1])..':'..tostring(v.position[3]))
         if v.type == 'Mass' then
             if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
                 local mexBorderWarn = false
@@ -1914,4 +1914,115 @@ end
 function IsResource(buildingType)
     return buildingType == 'Resource' or buildingType == 'T1HydroCarbon' or
             buildingType == 'T1Resource' or buildingType == 'T2Resource' or buildingType == 'T3Resource'
+end
+
+function MaintainSafeDistance(platoon,unit,target, artyUnit)
+    local function KiteDist(pos1,pos2,distance)
+        local vec={}
+        local dist=VDist3(pos1,pos2)
+        for i,k in pos2 do
+            if type(k)~='number' then continue end
+            vec[i]=k+distance/dist*(pos1[i]-k)
+        end
+        return vec
+    end
+
+    if target.Dead then return end
+    if unit.Dead then return end
+    local pos=unit:GetPosition()
+    local tpos=target:GetPosition()
+    local dest
+    local targetRange = RUtils.GetTargetRange(target) or 10
+    if artyUnit then
+        local unitRange = RUtils.GetTargetRange(unit) or 10
+        if unitRange > targetRange then
+            targetRange = unitRange
+        end
+    end
+    if targetRange and not artyUnit then
+        dest=KiteDist(pos,tpos,targetRange + 10)
+    else
+        dest=KiteDist(pos,tpos,targetRange + 3)
+    end
+    if VDist3Sq(pos,dest)>6 then
+        IssueClearCommands({unit})
+        IssueMove({unit},dest)
+        coroutine.yield(2)
+        return
+    else
+        coroutine.yield(2)
+        return
+    end
+end
+
+function GetSupportPosition(aiBrain, platoon)
+    local function DrawCirclePoints(points, radius, center)
+        local extractorPoints = {}
+        local slice = 2 * math.pi / points
+        for i=1, points do
+            local angle = slice * i
+            local newX = center[1] + radius * math.cos(angle)
+            local newY = center[3] + radius * math.sin(angle)
+            table.insert(extractorPoints, { newX, 0 , newY})
+        end
+        return extractorPoints
+    end
+    local movetoPoint = false
+    if aiBrain:GetCurrentEnemy() then
+        local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
+        local reference = aiBrain.EnemyIntel.EnemyStartLocations[EnemyIndex].Position
+        local platoonPos = GetPlatoonPosition(platoon)
+        if platoon.SupportRotate then
+            movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{-90,15})
+        else
+            movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{90,15})
+        end
+        if (not platoon.SupportRotate) and (not NavUtils.CanPathTo(platoon.MovementLayer, platoonPos, movetoPoint)) then
+            movetoPoint = RUtils.LerpyRotate(reference,aiBrain.CDRUnit.Position,{-90,15})
+            platoon.SupportRotate = true
+        end
+    else
+        local pointTable = false
+        if aiBrain.CDRUnit.Target and not aiBrain.CDRUnit.Target.Dead and aiBrain.CDRUnit.TargetPosition then
+            pointTable = DrawCirclePoints(8, 15, aiBrain.CDRUnit.Position)
+        end
+        
+        if pointTable then
+            local platoonPos = GetPlatoonPosition(platoon)
+            if not platoonPos then
+                return
+            end
+            for k, v in pointTable do
+                if VDist3Sq(aiBrain.CDRUnit.TargetPosition,v) < VDist3Sq(platoonPos,v) then
+                    movetoPoint = v
+                    platoon.MoveToPosition = v
+                    break
+                end
+            end
+        end
+    end
+    if movetoPoint then
+        return movetoPoint
+    end
+    return false
+end
+
+function GetThreatAroundTarget(self, aiBrain, targetPosition)
+    local enemyUnitThreat = 0
+    local enemyACUPresent
+    local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), targetPosition, 35, 'Enemy')
+    for k,v in enemyUnits do
+        if v and not v.Dead then
+            if EntityCategoryContains(categories.STRUCTURE * categories.DEFENSE, v) then
+                enemyUnitThreat = enemyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel + 10
+            end
+            if EntityCategoryContains(categories.COMMAND, v) then
+                enemyACUPresent = true
+                enemyUnitThreat = enemyUnitThreat + v:EnhancementThreatReturn()
+            else
+                enemyUnitThreat = enemyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel
+            end
+        end
+    end
+    return enemyUnitThreat, enemyACUPresent
 end

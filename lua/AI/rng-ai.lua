@@ -1236,7 +1236,6 @@ AIBrain = Class(RNGAIBrainClass) {
         -- ACU Support Data
         self.ACUSupport = {}
         self.ACUSupport.EnemyACUClose = 0
-        self.ACUSupport.ACUMaxSearchRadius = 0
         self.ACUSupport.Supported = false
         self.ACUSupport.PlatoonCount = 0
         self.ACUSupport.Platoons = {}
@@ -7113,7 +7112,6 @@ AIBrain = Class(RNGAIBrainClass) {
         -- ACU Support Data
         self.ACUSupport = {}
         self.ACUSupport.EnemyACUClose = 0
-        self.ACUSupport.ACUMaxSearchRadius = 0
         self.ACUSupport.Supported = false
         self.ACUSupport.PlatoonCount = 0
         self.ACUSupport.Platoons = {}

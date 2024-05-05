@@ -551,6 +551,12 @@ IntelManager = Class {
     GetClosestZone = function(self, aiBrain, platoon, position, enemyPosition, controlRequired, minimumResourceValue)
             
             local zoneSet = false
+            local movementLayer
+            if not platoon then
+                movementLayer = 'Land'
+            else
+                movementLayer = platoon.MovementLayer
+            end
             if aiBrain.ZonesInitialized then
                 if platoon then
                     if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
@@ -585,7 +591,7 @@ IntelManager = Class {
                     local dx = originPosition[1] - v.pos[1]
                     local dz = originPosition[3] - v.pos[3]
                     local zoneDist = dx * dx + dz * dz
-                    if (not bestZoneDist or zoneDist < bestZoneDist) and NavUtils.CanPathTo(platoon.MovementLayer, originPosition, v.pos) then
+                    if (not bestZoneDist or zoneDist < bestZoneDist) and NavUtils.CanPathTo(movementLayer, originPosition, v.pos) then
                         if enemyPosition and RUtils.GetAngleRNG(originPosition[1], originPosition[3], v.pos[1], v.pos[3], enemyPosition[1], enemyPosition[3]) < 0.4 then
                             continue
                         end

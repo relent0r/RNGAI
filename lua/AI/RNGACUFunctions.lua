@@ -20,7 +20,6 @@ local CategoryT2Defense = categories.STRUCTURE * categories.DEFENSE * (categorie
 function SetCDRDefaults(aiBrain, cdr)
 --RNGLOG('* AI-RNG: CDR Defaults running ')
     cdr.CDRHome = table.copy(cdr:GetPosition())
-    aiBrain.ACUSupport.ACUMaxSearchRadius = 80
     cdr.Initialized = false
     cdr.MovementLayer = 'Amphibious'
     cdr.GunUpgradeRequired = false
@@ -443,10 +442,9 @@ function CDRThreatAssessmentRNG(cdr)
                     end
                     cdr.MaxBaseRange = math.max(safetyCutOff, cdr.DefaultRange * cdr.Confidence)
                 else
-                    cdr.MaxBaseRange = math.min(180, cdr.DefaultRange * cdr.Confidence)
+                    cdr.MaxBaseRange = math.max(35, math.min(180, cdr.DefaultRange * cdr.Confidence))
                 end
             end
-            aiBrain.ACUSupport.ACUMaxSearchRadius = cdr.MaxBaseRange
            --RNGLOG('Current CDR Max Base Range '..cdr.MaxBaseRange)
         end
         coroutine.yield(20)

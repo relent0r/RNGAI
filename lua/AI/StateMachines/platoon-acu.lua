@@ -62,6 +62,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             else
                 self.LocationType = 'MAIN'
             end
+            StartDrawThreads(brain, self)
             if brain:GetCurrentUnits(categories.FACTORY) < 1 then
                 --LOG('ACU Has no factory so is requesting a new builder')
                 if brain.BuilderManagers[self.LocationType].FactoryManager and not brain.BuilderManagers[self.LocationType].FactoryManager.LocationActive then
@@ -86,6 +87,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local brain = self:GetBrain()
             local cdr = self.cdr
             local gameTime = GetGameTimeSeconds()
+            local maxBaseRange = cdr.MaxBaseRange * cdr.MaxBaseRange
             if cdr.Caution and cdr.EnemyNavalPresent and cdr:GetCurrentLayer() == 'Seabed' then
                 self:LogDebug(string.format('retreating due to seabed'))
                 self:ChangeState(self.Retreating)
@@ -276,7 +278,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > cdr.MaxBaseRange * cdr.MaxBaseRange and not self.BuilderData.DefendExpansion and brain.GridPresence:GetInferredStatus(cdr.Position) ~= 'Allied' then
+            if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > maxBaseRange and not self.BuilderData.DefendExpansion and brain.GridPresence:GetInferredStatus(cdr.Position) ~= 'Allied' then
                 self:LogDebug(string.format('ACU is beyond maxRadius of '..cdr.MaxBaseRange))
                 if not cdr.Caution then
                     self:LogDebug(string.format('We are not in caution mode, check if base closer than 6400'))
@@ -356,7 +358,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 local target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition
                 cdr.Combat = true
                 local acuDistanceToBase = VDist3Sq(cdr.Position, cdr.CDRHome)
-                if (not cdr.SuicideMode and acuDistanceToBase > cdr.MaxBaseRange * cdr.MaxBaseRange and (not cdr:IsUnitState('Building'))) and not self.BuilderData.DefendExpansion or (cdr.PositionStatus == 'Hostile' and cdr.Caution) then
+                if (not cdr.SuicideMode and acuDistanceToBase > maxBaseRange and (not cdr:IsUnitState('Building'))) and not self.BuilderData.DefendExpansion or (cdr.PositionStatus == 'Hostile' and cdr.Caution) then
                     self:LogDebug(string.format('OverCharge running but ACU is beyond its MaxBaseRange property or in caution and enemy territory'))
                     if not cdr.Caution then
                         self:LogDebug(string.format('Not in caution, check if base closer than 6400'))
@@ -400,7 +402,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     else
-                        --LOG('cdr retreating due to beyond max range and not building '..(cdr.MaxBaseRange * cdr.MaxBaseRange)..' current distance '..acuDistanceToBase)
+                        --LOG('cdr retreating due to beyond max range and not building '..(maxBaseRange)..' current distance '..acuDistanceToBase)
                         --LOG('Wipe BuilderData in numUnits > 1')
                         self.BuilderData = {}
                         self:LogDebug(string.format('We are in caution, retreat threat is  '..cdr.CurrentEnemyThreat))
@@ -526,11 +528,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
             end
             coroutine.yield(5)
-            if VDist3Sq(cdr.Position, cdr.CDRHome) > cdr.MaxBaseRange * cdr.MaxBaseRange then
-                self:LogDebug(string.format('ACU is too far from base'))
-                self:LogDebug(string.format('Current Distance '..VDist3Sq(cdr.Position, cdr.CDRHome)))
-                self:LogDebug(string.format('MaxBase Range '..(cdr.MaxBaseRange * cdr.MaxBaseRange)))
-            end
             self:LogDebug(string.format('End of loop and no state change, loop again'))
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -1196,9 +1193,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                  return false
             end
             local brain = self:GetBrain()
-            local closestPlatoon = false
-            local closestPlatoonDistance = false
-            local closestAPlatPos = false
+            local closestPlatoon
+            local closestPlatoonDistance
+            local closestAPlatPos
             local platoonValue = 0
             local baseRetreat
             local currentTargetPosition
@@ -1229,7 +1226,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Navigating)
                 return
             end
-            if distanceToHome > brain.ACUSupport.ACUMaxSearchRadius or cdr.Phase > 2 or brain.EnemyIntel.Phase > 2 then
+            if distanceToHome > (cdr.MaxBaseRange * cdr.MaxBaseRange) or cdr.Phase > 2 or brain.EnemyIntel.Phase > 2 then
                 baseRetreat = true
             end
             local supportPlatoon = brain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
@@ -1239,35 +1236,18 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             if cdr.Health > 5000 and distanceToHome > 6400 and not baseRetreat then
                 if cdr.GunUpgradeRequired and cdr.CurrentEnemyThreat < 15 and not cdr.EnemyCDRPresent then
                     if brain.GridPresence:GetInferredStatus(cdr.Position) ~= 'Hostile' then
-                        local extractors = brain:GetListOfUnits(categories.MASSEXTRACTION, true)
+                        local zoneRetreat = brain.IntelManager:GetClosestZone(brain, self, false, currentTargetPosition, true)
                         local closestDistance
-                        local closestExtractor
-                        for _, v in extractors do
-                            if not IsDestroyed(v) then
-                                local position = v:GetPosition()
-                                local distance = VDist3Sq(position, cdr.Position)
-                                if (not closestExtractor or distance < closestDistance ) then
-                                    if currentTargetPosition then
-                                        if RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], position[1], position[3], currentTargetPosition[1], currentTargetPosition[3]) > 0.4 then
-                                            closestExtractor = v
-                                            closestDistance = distance
-                                        end
-                                    else
-                                        closestExtractor = v
-                                        closestDistance = distance
-                                    end
-                                end
-                            end
-                        end
-                        if closestDistance then
-                            --LOG('Closest extractor is '..VDist3Sq(cdr.Position, cdr.Home))
+                        local zonePos
+                        if zoneRetreat then
+                            zonePos = brain.Zones.Land.zones[zoneRetreat].pos
+                            closestDistance = VDist3Sq(zonePos, cdr.Position)
                         end
                         if closestDistance < VDist3Sq(cdr.Position, cdr.Home) then
                             cdr.Retreat = false
                             self.BuilderData = {
-                                Position = closestAPlatPos,
-                                CutOff = 144,
-                                ExtractorRetreat = closestExtractor
+                                Position = zonePos,
+                                CutOff = 144
                             }
                             self:ChangeState(self.Navigating)
                             return
@@ -1276,7 +1256,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
                 if supportPlatoon then
                     closestPlatoon = supportPlatoon
-                    closestAPlatPos = GetPlatoonPosition(supportPlatoon)
+                    closestAPlatPos = supportPlatoon:GetPlatoonPosition()
                     if closestAPlatPos then
                         closestPlatoonDistance = VDist3Sq(closestAPlatPos, cdr.Position)
                     end
@@ -1295,7 +1275,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
 
                             -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
                             if aPlat.MovementLayer == 'Land' or aPlat.MovementLayer == 'Amphibious' then
-                                local aPlatPos = GetPlatoonPosition(aPlat)
+                                local aPlatPos = aPlat:GetPlatoonPosition()
                                 local aPlatDistance = VDist2Sq(cdr.Position[1],cdr.Position[3],aPlatPos[1],aPlatPos[3])
                                 local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],cdr.CDRHome[1],cdr.CDRHome[3])
                                 if aPlatDistance > 1600 and aPlatToHomeDistance < distanceToHome then
@@ -1916,5 +1896,35 @@ AssignToUnitsMachine = function(data, platoon, units)
         platoon:OnUnitsAddedToPlatoon()
         -- start the behavior
         ChangeState(platoon, platoon.Start)
+    end
+end
+
+StartDrawThreads = function(brain, platoon)
+    brain:ForkThread(DrawThread, platoon)
+end
+
+DrawThread = function(aiBrain, platoon)
+    while aiBrain:PlatoonExists(platoon) do
+        local cdr = platoon.cdr
+        local cdrPos = cdr:GetPosition()
+        if cdr.CurrentEnemyThreat > cdr.CurrentFriendlyThreat then
+            DrawCircle(cdrPos,80,'FF0000')
+        else
+            DrawCircle(cdrPos,80,'aaffaa')
+        end
+        if cdr.CurrentEnemyInnerCircle > cdr.CurrentFriendlyInnerCircle then
+            DrawCircle(cdrPos,35,'FF0000')
+        else
+            DrawCircle(cdrPos,35,'aaffaa')
+        end
+        if cdr.MaxBaseRange then
+            DrawCircle(cdr.CDRHome,cdr.MaxBaseRange,'0000FF')
+        end
+        if platoon.BuilderData.AttackTarget and not platoon.BuilderData.AttackTarget.Dead and platoon.cdr.Position then
+            local targetPos = platoon.BuilderData.AttackTarget:GetPosition()
+            DrawCircle(targetPos,15,'FF0000')
+            DrawLine(platoon.cdr.Position, targetPos, 'aaffffff')
+        end
+        coroutine.yield(2)
     end
 end
