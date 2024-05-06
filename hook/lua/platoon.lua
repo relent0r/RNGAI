@@ -167,120 +167,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         end
     end,
 
-    AirScoutingAIRNG = function(self)
-        --RNGLOG('* AI-RNG: Starting AirScoutAIRNG')
-        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
-        local patrol = self.PlatoonData.Patrol or false
-        local scout = GetPlatoonUnits(self)[1]
-        local unknownLoop = 0
-        if not scout then
-            return
-        end
-        --RNGLOG('* AI-RNG: Patrol function is :'..tostring(patrol))
-        local aiBrain = self:GetBrain()
-        local im = IntelManagerRNG.GetIntelManager(aiBrain)
-
-        -- build scoutlocations if not already done.
-        if not im.MapIntelStats.ScoutLocationsBuilt then
-            aiBrain:BuildScoutLocationsRNG()
-        end
-
-        --If we have Stealth (are cybran), then turn on our Stealth
-        if scout:TestToggleCaps('RULEUTC_CloakToggle') then
-            scout:SetScriptBit('RULEUTC_CloakToggle', false)
-        end
-        local startPos = aiBrain.BrainIntel.StartPos
-        local estartX = nil
-        local estartZ = nil
-        local targetData = {}
-        local currentGameTime = GetGameTimeSeconds()
-        local cdr = aiBrain.CDRUnit
-        if not cdr.Dead and cdr.Active and (not cdr.AirScout or cdr.AirScout.Dead) and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 then
-            cdr.AirScout = scout
-            while not scout.Dead and cdr.Active do
-                coroutine.yield(1)
-                local acuPos = cdr.Position
-                local patrolTime = self.PlatoonData.PatrolTime or 30
-                self:MoveToLocation(acuPos, false)
-                coroutine.yield(20)
-                local patrolunits = GetPlatoonUnits(self)
-                IssueClearCommands(patrolunits)
-                IssuePatrol(patrolunits, AIUtils.RandomLocation(acuPos[1], acuPos[3]))
-                IssuePatrol(patrolunits, AIUtils.RandomLocation(acuPos[1], acuPos[3]))
-                WaitSeconds(patrolTime)
-                self:Stop()
-                --RNGLOG('* AI-RNG: Scout looping ACU support movement')
-                coroutine.yield(2)
-            end
-            cdr.AirScout = false
-        end
-        while not scout.Dead do
-            coroutine.yield(1)
-            targetData = RUtils.GetAirScoutLocationRNG(self, aiBrain, scout)
-            if aiBrain.RNGDEBUG then
-                if targetData then
-                    RNGLOG('AirScout targetData received')
-                else
-                    RNGLOG('AirScout No targetData received')
-                end
-            end
-
-            local unknownThreats = aiBrain:GetThreatsAroundPosition(scout:GetPosition(), 16, true, 'Unknown')
-
-            --Air scout do scoutings.
-            if targetData then
-                self:Stop()
-
-                local vec = self:DoAirScoutVecs(scout, targetData.Position)
-
-                while not scout.Dead and not scout:IsIdleState() do
-                    coroutine.yield(1)
-                    --If we're close enough...
-                    if VDist3Sq(vec, scout:GetPosition()) < 15625 then
-                        if targetData.MustScout then
-                        --Untag and remove
-                            targetData.MustScout = false
-                        end
-                        targetData.LastScouted = GetGameTimeSeconds()
-                        targetData.ScoutAssigned = false
-                        --Break within 125 ogrids of destination so we don't decelerate trying to stop on the waypoint.
-                        break
-                    end
-
-                    if VDist3(scout:GetPosition(), targetData.Position) < 25 then
-                        break
-                    end
-
-                    coroutine.yield(30)
-                    --RNGLOG('* AI-RNG: Scout looping position < 25 to targetArea')
-                end
-            else
-                --RNGLOG('No targetArea found')
-                --RNGLOG('No target area, number of high pri scouts is '..aiBrain.IntelData.AirHiPriScouts)
-                --RNGLOG('Num opponents is '..aiBrain.NumOpponents)
-                --RNGLOG('Low pri scouts '..aiBrain.IntelData.AirLowPriScouts)
-                coroutine.yield(10)
-            end
-            coroutine.yield(10)
-            --RNGLOG('* AI-RNG: Scout looping end of scouting interest table')
-        end
-        --RNGLOG('* AI-RNG: Scout Returning to base : {'..startX..', 0, '..startZ..'}')
-        self:MoveToLocation(startPos, false)
-        while not scout.Dead and not scout:IsIdleState() do
-            coroutine.yield(1)
-            --If we're close enough...
-            if VDist3Sq(startPos, scout:GetPosition()) < 6400 then
-                --Break within 125 ogrids of destination so we don't decelerate trying to stop on the waypoint.
-                break
-            end
-            coroutine.yield(20)
-        end
-        coroutine.yield(50)
-        if PlatoonExists(aiBrain, self) and not scout.Dead then
-            return self:SetAIPlanRNG('AirScoutingAIRNG')
-        end
-    end,
-
     CommanderInitializeAIRNG = function(self)
         -- Why did I do this. I need the initial BO to be as perfect as possible.
         -- Because I had multiple builders based on the number of mass points around the acu spawn and this was all good and fine
@@ -1755,6 +1641,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'LandScout' then
             import("/mods/rngai/lua/ai/statemachines/platoon-land-scout.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
+        elseif machineType == 'AirScout' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-air-scout.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'Gunship' then
             import("/mods/rngai/lua/ai/statemachines/platoon-air-gunship.lua").AssignToUnitsMachine({PlatoonData = self.PlatoonData  }, self, self:GetPlatoonUnits())
         elseif machineType == 'Bomber' then

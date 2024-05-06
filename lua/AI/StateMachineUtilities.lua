@@ -2026,3 +2026,30 @@ function GetThreatAroundTarget(self, aiBrain, targetPosition)
     end
     return enemyUnitThreat, enemyACUPresent
 end
+
+GenerateScoutVec = function(scout, targetArea)
+    local vec = {0, 0, 0}
+    vec[1] = targetArea[1] - scout:GetPosition()[1]
+    vec[3] = targetArea[3] - scout:GetPosition()[3]
+
+    --Normalize
+    local length = VDist2(targetArea[1], targetArea[3], scout:GetPosition()[1], scout:GetPosition()[3])
+    local norm = {vec[1]/length, 0, vec[3]/length}
+
+    --Get negative reciprocal vector, make length of vision radius
+    local dir = math.pow(-1, Random(1,2))
+
+    local visRad = scout:GetBlueprint().Intel.VisionRadius
+    local orthogonal = {norm[3]*visRad*dir, 0, -norm[1]*visRad*dir}
+
+    --Offset the target location with an orthogonal vector and a flyby vector.
+    local dest = {targetArea[1] + orthogonal[1] + norm[1]*75, 0, targetArea[3] + orthogonal[3] + norm[3]*75}
+
+    --Clamp to map edges
+    if dest[1] < 5 then dest[1] = 5
+    elseif dest[1] > ScenarioInfo.size[1]-5 then dest[1] = ScenarioInfo.size[1]-5 end
+    if dest[3] < 5 then dest[3] = 5
+    elseif dest[3] > ScenarioInfo.size[2]-5 then dest[3] = ScenarioInfo.size[2]-5 end
+    
+    return dest
+end
