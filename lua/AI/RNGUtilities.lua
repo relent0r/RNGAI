@@ -5202,8 +5202,8 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout, optics)
             aiBrain.IntelData.AirHiPriScouts = 0
         end
     end
-    if aiBrain.RNGDEBUG then
-        if scoutingData.Position then
+    if true then
+        if scoutingData and scoutingData.Position then
             --RNGLOG('Trying to draw scoutingData position '..repr(scoutingData.Position))
             aiBrain:ForkThread(drawScoutMarker, scoutingData.Position)
         end

@@ -21,7 +21,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI AirScoutForm',
-    Plan = 'AirScoutingAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.AIR * categories.SCOUT * (categories.TECH1 + categories.TECH3), 1, 1, 'scout', 'None' },
     }
@@ -29,7 +29,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI AirScoutSingle',
-    Plan = 'AirScoutingAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.AIR * categories.SCOUT * (categories.TECH1 + categories.TECH3), 1, 1, 'scout', 'None' },
     }

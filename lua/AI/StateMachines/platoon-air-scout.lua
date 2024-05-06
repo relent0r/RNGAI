@@ -1,8 +1,8 @@
 local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local NavUtils = import("/lua/sim/navutils.lua")
-local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
@@ -30,7 +30,7 @@ local RNGSORT = table.sort
 AIPlatoonAirScoutBehavior = Class(AIPlatoonRNG) {
 
     PlatoonName = 'AirScoutBehavior',
-    Debug = false,
+    Debug = true,
 
     Start = State {
 
@@ -54,10 +54,14 @@ AIPlatoonAirScoutBehavior = Class(AIPlatoonRNG) {
             end
             self.CurrentEnemyThreatAntiAir = 0
             self.CurrentPlatoonThreatAntiAir = 0
-            self.AttackPriorities = self.PlatoonData.PrioritizedCategories or {categories.AIR - categories.UNTARGETABLE}
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
-            StartAirScoutThreads(aiBrain, self)
-            coroutine.yield(30)
+            local platUnits = self:GetPlatoonUnits()
+            for _, v in platUnits do
+                if v.Blueprint.CategoriesHash.SCOUT then
+                    self.Scout = v
+                    break
+                end
+            end
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -81,8 +85,14 @@ AIPlatoonAirScoutBehavior = Class(AIPlatoonRNG) {
             local estartZ = nil
             local targetData = {}
             local currentGameTime = GetGameTimeSeconds()
+            local scout = self.Scout
             local cdr = aiBrain.CDRUnit
+            if cdr.AirScout and not cdr.AirScout.Dead then
+                self:LogDebug(string.format('ACU already have a scout assigned'))
+            end
             if not cdr.Dead and cdr.Active and (not cdr.AirScout or cdr.AirScout.Dead) and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 then
+                self.BuilderData = {PatrolUnit = cdr}
+                self:LogDebug(string.format('Scout is assigning itself to acu'))
                 self:ChangeState(self.PatrolUnit)
                 return
             end
@@ -92,21 +102,28 @@ AIPlatoonAirScoutBehavior = Class(AIPlatoonRNG) {
                 local dx = platPos[1] - vec[1]
                 local dz = platPos[3] - vec[2]
                 local posDist = dx * dx + dz * dz
-                if posDist < self.MaxRadius * self.MaxRadius then
+                if posDist < 6400 then
                     self.BuilderData = {}
                     self.HoldPosTimer = nil
-                    self:ChangeState(self.TagScoutArea)
+                    if targetData.MustScout then
+                        --Untag and remove
+                        targetData.MustScout = false
+                    end
+                    targetData.LastScouted = GetGameTimeSeconds()
+                    targetData.ScoutAssigned = false
+                    coroutine.yield(10)
+                    self:ChangeState(self.DecideWhatToDo)
                     return  
                 else
                     self.BuilderData = {
-                        Position = vec
+                        Position = vec,
                         TargetData = targetData
                     }
                     self:ChangeState(self.Navigating)
                     return
                 end
 
-                while not scout.Dead and not scout:IsIdleState() do
+                while not IsDestroyed(self) and not scout:IsIdleState() do
                     coroutine.yield(1)
                     --If we're close enough...
                     if VDist3Sq(vec, scout:GetPosition()) < 15625 then
@@ -127,7 +144,13 @@ AIPlatoonAirScoutBehavior = Class(AIPlatoonRNG) {
                     coroutine.yield(30)
                     --RNGLOG('* AI-RNG: Scout looping position < 25 to targetArea')
                 end
-            else
+            end
+            for _, v in self:GetPlatoonUnits() do
+                if v.Blueprint.CategoriesHash.SCOUT then
+                    self.Scout = v
+                    break
+                end
+            end
             coroutine.yield(20)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -148,49 +171,55 @@ AIPlatoonAirScoutBehavior = Class(AIPlatoonRNG) {
                 return
             end
             local platUnits = GetPlatoonUnits(self)
+            local scout = self.Scout
             IssueClearCommands(platUnits)
-            if self.BuilderData.Retreat then
+            if not scout.Dead and scout.GetNavigator then
+                local navigator = scout:GetNavigator()
+                if self.BuilderData.Retreat then
                 --LOG(repr(self.BuilderData))
-                IssueMove(platUnits, self.BuilderData.Position)
-            end
-            local movePosition = self.BuilderData.Position
-            if not movePosition then
-                WARN('AI-RNG : Fighter no builderdata position passed')
-            end
-            local lastDist
-            local timeout = 0
-            while aiBrain:PlatoonExists(self) do
-                coroutine.yield(15)
-                if IsDestroyed(self) then
-                    return
+                    navigator:SetGoal(self.BuilderData.Position)
                 end
-                local platPos = self:GetPlatoonPosition()
-                if not platPos then return end
-                local dx = platPos[1] - movePosition[1]
-                local dz = platPos[3] - movePosition[3]
-                local posDist = dx * dx + dz * dz
+                local movePosition = self.BuilderData.Position
+                if not movePosition then
+                    WARN('AI-RNG : Fighter no builderdata position passed')
+                end
+                self:LogDebug(string.format('Setting goal to movePosition '..tostring(movePosition[1])..' : '..tostring(movePosition[3])))
+                navigator:SetGoal(movePosition)
+                local lastDist
+                local timeout = 0
+                while aiBrain:PlatoonExists(self) do
+                    coroutine.yield(15)
+                    if IsDestroyed(self) then
+                        return
+                    end
+                    local platPos = self:GetPlatoonPosition()
+                    if not platPos then return end
+                    local dx = platPos[1] - movePosition[1]
+                    local dz = platPos[3] - movePosition[3]
+                    local posDist = dx * dx + dz * dz
 
-                if posDist < 3600 then
-                    if self.BuilderData.TargetData then
-                        local targetData = self.BuilderData.TargetData
-                        if targetData.MustScout then
-                        --Untag and remove
-                            targetData.MustScout = false
+                    if posDist < 3600 then
+                        if self.BuilderData.TargetData then
+                            local targetData = self.BuilderData.TargetData
+                            if targetData.MustScout then
+                            --Untag and remove
+                                targetData.MustScout = false
+                            end
+                            targetData.LastScouted = GetGameTimeSeconds()
+                            targetData.ScoutAssigned = false
                         end
-                        targetData.LastScouted = GetGameTimeSeconds()
-                        targetData.ScoutAssigned = false
+                        coroutine.yield(5)
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
                     end
-                    coroutine.yield(5)
-                    self:ChangeState(self.DecideWhatToDo)
-                    return
-                end
-                if not lastDist or lastDist == posDist then
-                    timeout = timeout + 1
-                    if timeout > 15 then
-                        break
+                    if not lastDist or lastDist == posDist then
+                        timeout = timeout + 1
+                        if timeout > 15 then
+                            break
+                        end
                     end
+                    lastDist = posDist
                 end
-                lastDist = posDist
             end
             coroutine.yield(30)
             self:ChangeState(self.DecideWhatToDo)
@@ -207,27 +236,24 @@ AIPlatoonAirScoutBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonAirScoutBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
-            local timer = 120
-            if self.BuilderData.Loiter then
-                timer = 5
-            end
             local patrolTime = self.PlatoonData.PatrolTime or 30
             local currentTime = GetGameTimeSeconds()
             local unit = self.BuilderData.PatrolUnit
-            unit.AirScout = scout
+            unit.AirScout = self.Scout
+            local unitPos = unit:GetPosition()
+            self:MoveToLocation(unitPos, false)
             while aiBrain:PlatoonExists(self) do
-                local unitPos = unit:GetPosition()
-                self:MoveToLocation(unitPos, false)
-                coroutine.yield(20)
-                local patrolunits = GetPlatoonUnits(self)
-                IssueClearCommands(patrolunits)
-                IssuePatrol(patrolunits, AIUtils.RandomLocation(unitPos[1], unitPos[3]))
-                IssuePatrol(patrolunits, AIUtils.RandomLocation(unitPos[1], unitPos[3]))
+                unitPos = unit:GetPosition()
+                IssueClearCommands({self.Scout})
+                IssuePatrol({self.Scout}, StateUtils.RandomLocation(unitPos[1], unitPos[3]))
+                IssuePatrol({self.Scout}, StateUtils.RandomLocation(unitPos[1], unitPos[3]))
                 if currentTime + patrolTime < GetGameTimeSeconds() then
+                    self:LogDebug(string.format('Clearing Scout flag from acu'))
                     unit.AirScout = nil
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
+                coroutine.yield(45)
             end
         end,
     },

@@ -76,6 +76,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.SCOUT } },
         },
         BuilderData = {
+            StateMachine = 'AirScout'
         },
         LocationType = 'LocationType',
         BuilderType = 'Any',
@@ -89,10 +90,11 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.AIR * categories.SCOUT } },
         },
         BuilderData = {
+            StateMachine = 'AirScout',
             PerimeterPoints = true,
             ExpansionPatrol = true,
+            LocationType = 'LocationType',
         },
-        LocationType = 'LocationType',
         BuilderType = 'Any',
     },
     Builder {
@@ -106,10 +108,11 @@ BuilderGroup {
             
         },
         BuilderData = {
+            StateMachine = 'AirScout',
             ACUSupport = true,
             PatrolTime = 10,
+            LocationType = 'LocationType',
         },
-        LocationType = 'LocationType',
         BuilderType = 'Any',
     },
     Builder {
@@ -121,10 +124,11 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.SCOUT } },
         },
         BuilderData = {
+            StateMachine = 'AirScout',
             Patrol = true,
             PatrolTime = 120,
+            LocationType = 'LocationType',
         },
-        LocationType = 'LocationType',
         BuilderType = 'Any',
     },
 }
