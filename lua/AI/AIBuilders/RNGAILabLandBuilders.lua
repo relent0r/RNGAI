@@ -43,6 +43,8 @@ BuilderGroup {
             },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'ZoneControl',
+            ZoneType     = 'raid',
             MarkerType = 'Mass',            
             MoveFirst = 'Random',
             MoveNext = 'Threat',

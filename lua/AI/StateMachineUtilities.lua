@@ -261,9 +261,9 @@ VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride)--basic kit
     if VDist3Sq(pos,dest)>9 then
         IssueClearCommands({unit})
         IssueMove({unit},dest)
-        return
+        return mod
     else
-        return
+        return mod
     end
 end
 

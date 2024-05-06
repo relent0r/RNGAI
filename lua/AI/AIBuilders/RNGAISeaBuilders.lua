@@ -447,6 +447,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE * categories.TECH1 }},
             },
         BuilderData = {
+            StateMachine = 'NavalZoneControl',
             MarkerType = 'Mass',            
             WaterOnly = true,
             MoveFirst = 'Random',
@@ -484,6 +485,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MOBILE * categories.NAVAL * categories.FRIGATE * categories.TECH1 }},
             },
         BuilderData = {
+            StateMachine = 'NavalZoneControl',
             MarkerType = 'Mass',            
             FrigateRaid = true,
             WaterOnly = false,

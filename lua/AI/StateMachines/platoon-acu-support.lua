@@ -469,7 +469,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                     elseif holdBack and (aiBrain.CDRUnit.Health > 6500 or aiBrain.CDRUnit.CurrentEnemyInnerCircle < 3) then
                                         MaintainSafeDistance(self,unit,target)
                                     else
-                                        retreatTrigger = self.VariableKite(self,unit,target)
+                                        retreatTrigger = StateUtils.VariableKite(self,unit,target)
                                     end
                                 end
                             end
@@ -501,7 +501,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                     elseif holdBack and aiBrain.CDRUnit.Health > 6500 then
                                         MaintainSafeDistance(self,unit,target, true)
                                     else
-                                        retreatTrigger = self.VariableKite(self,unit,target)
+                                        retreatTrigger = StateUtils.VariableKite(self,unit,target)
                                     end
                                 end
                             end
