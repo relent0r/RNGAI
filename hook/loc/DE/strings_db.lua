@@ -1,8 +1,8 @@
 
 RNGAI_0001="AI : RNGAI Standard"
-RNGAI_0002="Good for 10km or smaller maps."
+RNGAI_0002="Designed for map sizes up to 40km."
 RNGAI_0003="AIx: RNGAI Standard"
-RNGAI_0004="Good for 10km or smaller maps."
+RNGAI_0004="Designed for map sizes up to 40km."
 
 -- Translation strings for your AI lobby options.
 aisettings_0200="Enable Threat Debug"
