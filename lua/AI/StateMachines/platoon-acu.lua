@@ -687,8 +687,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     elseif cdr.Health > 6000 and builderData.Retreat and cdr.Phase < 3 and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < cdr.MaxBaseRange * cdr.MaxBaseRange and (not cdr.Caution) and (not cdr.EnemyAirPresent) then
-                        --LOG('cdr is > 6000 and within max base range current range '..VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]))
-                        --LOG('maxbaserange '..(cdr.MaxBaseRange * cdr.MaxBaseRange))
                         local supportPlatoon = brain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
                         if supportPlatoon.GetPlatoonPosition then
                             local supportPlatoonPos = supportPlatoon:GetPlatoonPosition()

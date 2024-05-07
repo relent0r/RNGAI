@@ -23,7 +23,7 @@ local RNGMAX = math.max
 ---@field ThreatToEvade Vector | nil
 ---@field LocationToRaid Vector | nil
 ---@field OpportunityToRaid Vector | nil
-AIPlatoonBehavior = Class(AIPlatoonRNG) {
+AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
 
     PlatoonName = 'ACUSupportBehavior',
     Debug = false,
@@ -35,14 +35,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonBehavior
         Main = function(self)
-
-            -- requires expansion markers
-            --LOG('Starting zone control')
-            if not import("/lua/sim/markerutilities/expansions.lua").IsGenerated() then
-                self:LogWarning('requires generated expansion markers')
-                self:ChangeState(self.Error)
-                return
-            end
 
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
@@ -80,6 +72,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             self.CurrentPlatoonThreatAntiSurface = 0
             self.CurrentPlatoonThreatAntiNavy = 0
             self.CurrentPlatoonThreatAntiAir = 0
+            self.MachineStarted = true
+            self.threatTimeout = 0
             StartACUSupportThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -183,13 +177,13 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             end
             if acu.CurrentEnemyThreat < 5 and acu.CurrentFriendlyThreat > 15 then
                 --RNGLOG('CDR is not in danger, threatTimeout increased')
-                threatTimeout = threatTimeout + 1
-                if threatTimeout > 10 then
+                self.threatTimeout = self.threatTimeout + 1
+                if self.threatTimeout > 10 then
                     coroutine.yield(20)
                     --RNGLOG('CDR is not in danger, venting to LandCombatBehavior')
                     RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
                     if PlatoonExists(aiBrain, self) then
-                        aiBrain:DisbandPlatoon(self)
+                        self:ExitStateMachine()
                     end
                     return
                 end
@@ -200,11 +194,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 --return self:SetAIPlanRNG('LandAssaultBehavior')
                 RUtils.VentToPlatoon(self, aiBrain, 'LandAssaultBehavior')
                 if PlatoonExists(aiBrain, self) then
-                    aiBrain:DisbandPlatoon(self)
+                    self:ExitStateMachine()
                 end
                 return
             end
-            if NavUtils.CanPathTo(self.MovementLayer, platoonPos, acu.Position) then
+            if NavUtils.CanPathTo(self.MovementLayer, self.Pos, acu.Position) then
                 if ACUDistance > 14400 then
                     self.BuilderData = {
                         Position = acu.Position,
@@ -330,11 +324,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local ax = self.Pos[1] - aiBrain.CDRUnit.Position[1]
             local az = self.Pos[3] - aiBrain.CDRUnit.Position[3]
             local ACUDistance = ax * ax + az * az
-            if aiBrain.CDRUnit.Active and ACUDistance > 1600 do
+            if aiBrain.CDRUnit.Active and ACUDistance > 1600 then
                 self:LogDebug(string.format('ACU is active and further than 1600 units'))
                 self.MoveToPosition = GetSupportPosition(aiBrain)
                 if not self.MoveToPosition then
-                    self.MoveToPosition = RUtils.AvoidLocation(aiBrain.CDRUnit.Position, platoonPos, 15)
+                    self.MoveToPosition = RUtils.AvoidLocation(aiBrain.CDRUnit.Position, self.Pos, 15)
                 end
                 for _, unit in platUnits do
                     if unit and not IsDestroyed(unit) then
@@ -357,8 +351,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
+            local target
             if not target or target.Dead then
-                targetTable, acuUnit = RUtils.AIFindBrainTargetInACURangeRNG(aiBrain, aiBrain.CDRUnit.Position, self, 'Attack', 80, self.atkPri, self.CurrentPlatoonThreat, true)
+                local targetTable, acuUnit = RUtils.AIFindBrainTargetInACURangeRNG(aiBrain, aiBrain.CDRUnit.Position, self, 'Attack', 80, self.atkPri, self.CurrentPlatoonThreat, true)
                 if targetTable.Attack.Unit then
                     target = targetTable.Attack.Unit
                 elseif targetTable.Artillery.Unit then
@@ -372,20 +367,13 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             -- Big chunk of micro code for stuff.
             if target and not IsDestroyed(target) then
                 --RNGLOG('Have a target from the ACU')
-                local threatAroundplatoon = 0
                 local targetPosition = target:GetPosition()
-                local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, self, true)
-                if platBiasUnit and not IsDestroyed(platBiasUnit) then
-                    platoonPos=platBiasUnit:GetPosition()
-                else
-                    platoonPos=GetPlatoonPosition(self)
-                end
                 local targetRange = RUtils.GetTargetRange(target) or 30
                 targetRange = targetRange * targetRange + 5
                 local targetDistance = VDist2Sq(targetPosition[1], targetPosition[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3])
                 --RNGLOG('Target distance is '..VDist2Sq(targetPosition[1], targetPosition[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3]))
                 if targetDistance < math.max(targetRange, 1225) and targetRange <= 2500 then
-                    if not NavUtils.CanPathTo(self.MovementLayer, platoonPos, targetPosition) then 
+                    if not NavUtils.CanPathTo(self.MovementLayer, self.Pos, targetPosition) then 
                         coroutine.yield(5)
                         RUtils.VentToPlatoon(self, aiBrain, 'LandAssaultBehavior')
                         if PlatoonExists(aiBrain, self) then
@@ -393,7 +381,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         end
                         return
                     end
-                    if not platoonPos then
+                    if not self.Pos then
                         return
                     end 
                     IssueClearCommands(GetPlatoonUnits(self))
@@ -406,7 +394,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     while PlatoonExists(aiBrain, self) do
                         --RNGLOG('Start platoonexist loop')
                         coroutine.yield(1)
-                        self.CurrentPlatoonThreat = self:CalculatePlatoonThreatAroundPosition('Surface', categories.MOBILE * categories.LAND, platoonPos, 25)
+                        self.CurrentPlatoonThreat = self:CalculatePlatoonThreatAroundPosition('Surface', categories.MOBILE * categories.LAND, self.Pos, 25)
                         --RNGLOG('Current ACU Support platoon threat is '..self.CurrentPlatoonThreat)
                         self.MoveToPosition = targetPosition
                         local attackSquad = self:GetSquadUnits('Attack')
@@ -515,13 +503,13 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             self.MoveToPosition = GetSupportPosition(aiBrain)
                             
                             if self.MoveToPosition then
-                                if VDist3Sq(platoonPos,self.MoveToPosition) > 25 then
+                                if VDist3Sq(self.Pos,self.MoveToPosition) > 25 then
                                     IssueClearCommands(GetPlatoonUnits(self))
                                     self:MoveToLocation(self.MoveToPosition, false)
                                 end
                             else
-                                self.MoveToPosition = RUtils.AvoidLocation(aiBrain.CDRUnit.Position, platoonPos, 15)
-                                if VDist3Sq(platoonPos,self.MoveToPosition) > 25 then
+                                self.MoveToPosition = RUtils.AvoidLocation(aiBrain.CDRUnit.Position, self.Pos, 15)
+                                if VDist3Sq(self.Pos,self.MoveToPosition) > 25 then
                                     IssueClearCommands(GetPlatoonUnits(self))
                                     self:MoveToLocation(self.MoveToPosition, false)
                                 end
@@ -542,15 +530,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     --RNGLOG('Target is too far from acu')
                     local attackSquad = self:GetSquadUnits('Attack')
                     local artillerySquad = self:GetSquadUnits('Artillery')
-                    local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, self, true)
-                    if platBiasUnit and not IsDestroyed(platBiasUnit) then
-                        platoonPos=platBiasUnit:GetPosition()
-                    else
-                        platoonPos=GetPlatoonPosition(self)
-                    end
                     self.MoveToPosition = GetSupportPosition(aiBrain)
                     if not self.MoveToPosition then
-                        self.MoveToPosition = RUtils.AvoidLocation(aiBrain.CDRUnit.Position, platoonPos, 15)
+                        self.MoveToPosition = RUtils.AvoidLocation(aiBrain.CDRUnit.Position, self.Pos, 15)
                     end
                     if artillerySquad and targetTable.Artillery.Unit and targetTable.Artillery.Distance < (self.MaxPlatoonWeaponRange * self.MaxPlatoonWeaponRange) and not IsDestroyed(targetTable.Artillery.Unit) then
                         local targetStructure
@@ -585,7 +567,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                 IssueMove({unit},self.MoveToPosition)
                             end
                         end
-                    elseif VDist3Sq(self.MoveToPosition,platoonPos) > 25 then
+                    elseif VDist3Sq(self.MoveToPosition,self.Pos) > 25 then
                         for _, unit in GetPlatoonUnits(self) do
                             if unit and not IsDestroyed(unit) then
                                 IssueClearCommands({unit})
@@ -766,6 +748,55 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
     Transporting = State {
 
         StateName = 'Transporting',
+
+        --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
+        ---@param self AIPlatoonAdaptiveReclaimBehavior
+        Main = function(self)
+            --LOG('ACUSupport trying to use transport')
+            local brain = self:GetBrain()
+            local builderData = self.BuilderData
+            if not builderData.Position then
+                WARN('No position passed to ACUSupport')
+                return false
+            end
+            local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
+            if usedTransports then
+                self:LogDebug(string.format('platoon used transports'))
+                if not self.BuilderData.Position then
+                    --LOG('No self.BuilderData.Position in Transporting')
+                end
+                self:ChangeState(self.Navigating)
+                return
+            else
+                self:LogDebug(string.format('platoon tried but didnt use transports'))
+                coroutine.yield(20)
+                if self.Home and self.LocationType then
+                    local hx = self.Pos[1] - self.Home[1]
+                    local hz = self.Pos[3] - self.Home[3]
+                    local homeDistance = hx * hx + hz * hz
+                    if homeDistance < 6400 and brain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint then
+                        self:LogDebug(string.format('No transport used and close to base, move to rally point'))
+                        local rallyPoint = brain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint
+                        local rx = self.Pos[1] - self.Home[1]
+                        local rz = self.Pos[3] - self.Home[3]
+                        local rallyPointDist = rx * rx + rz * rz
+                        if rallyPointDist > 100 then
+                            local units = self:GetPlatoonUnits()
+                            IssueMove(units, rallyPoint )
+                        end
+                        coroutine.yield(50)
+                    end
+                end
+                self:ChangeState(self.DecideWhatToDo)
+                return
+            end
+            return
+        end,
+    },
+
+    Loiter = State {
+
+        StateName = 'Loiter',
 
         --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
         ---@param self AIPlatoonAdaptiveReclaimBehavior
@@ -996,21 +1027,13 @@ AssignToUnitsMachine = function(data, platoon, units)
         -- meet platoon requirements
         --LOG('Assigning units to zone control')
         import("/lua/sim/navutils.lua").Generate()
-        import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
-        setmetatable(platoon, AIPlatoonBehavior)
         platoon.PlatoonData = data.PlatoonData
         local platoonthreat=0
         local platoonhealth=0
         local platoonhealthtotal=0
-        if data.ZoneType then
-            platoon.ZoneType = data.ZoneType
-        else
-            platoon.ZoneType = 'control'
-        end
-        local platoonUnits = platoon:GetPlatoonUnits()
-        if platoonUnits then
-            for _, v in platoonUnits do
+        if units then
+            for _, v in units do
                 v.PlatoonHandle = platoon
                 if not platoon.machinedata then
                     platoon.machinedata = {name = 'ACUSupport',id=v.EntityId}
@@ -1030,9 +1053,15 @@ AssignToUnitsMachine = function(data, platoon, units)
                 end
             end
         end
+        if not platoon.MachineStarted then
+            setmetatable(platoon, AIPlatoonACUSupportBehavior)
+            platoon.PlatoonData = data.PlatoonData
+        end
         platoon:OnUnitsAddedToPlatoon()
         -- start the behavior
-        ChangeState(platoon, platoon.Start)
+        if not platoon.MachineStarted then
+            ChangeState(platoon, platoon.Start)
+        end
     end
 end
 

@@ -569,8 +569,7 @@ function CDRCallPlatoon(cdr, threatRequired)
         if aPlat == cdr.PlatoonHandle or aPlat == supportPlatoonAvailable then
             continue
         end
-        if aPlat.PlatoonName == 'LandAssaultBehavior' or aPlat.PlatoonName == 'LandCombatBehavior' 
-        or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlatoonName == 'ZoneControlBehavior' then
+        if aPlat.MergeType == 'LandMergeStateMachine' then
             if aPlat.UsingTransport then
                 continue
             end
@@ -647,12 +646,15 @@ function CDRCallPlatoon(cdr, threatRequired)
         aiBrain:ForkThread(StateUtils.ZoneUpdate)
         if not table.empty(validUnits.Attack) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Attack, 'Attack', 'None')
+            import("/mods/rngai/lua/ai/statemachines/platoon-acu-support.lua").AssignToUnitsMachine({ }, supportPlatoonAvailable, validUnits.Attack)
         end
         if not table.empty(validUnits.Artillery) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Artillery, 'Artillery', 'None')
+            import("/mods/rngai/lua/ai/statemachines/platoon-acu-support.lua").AssignToUnitsMachine({ }, supportPlatoonAvailable, validUnits.Artillery)
         end
         if not table.empty(validUnits.Guard) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Guard, 'Guard', 'None')
+            import("/mods/rngai/lua/ai/statemachines/platoon-acu-support.lua").AssignToUnitsMachine({ }, supportPlatoonAvailable, validUnits.Guard)
         end
         bMergedPlatoons = true
     elseif bValidUnits and PlatoonExists(aiBrain, supportPlatoonAvailable)then
@@ -670,7 +672,6 @@ function CDRCallPlatoon(cdr, threatRequired)
         dontStopPlatoon = true
     end
     if bMergedPlatoons and dontStopPlatoon then
-        supportPlatoonAvailable:SetAIPlan('ACUSupportRNG')
         return true
     elseif bMergedPlatoons then
         cdr.SupportPlatoon = supportPlatoonAvailable
