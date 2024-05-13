@@ -16,7 +16,7 @@ BuilderGroup {
             
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 600.0 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.NUKE * categories.STRUCTURE}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) }},
@@ -51,9 +51,9 @@ BuilderGroup {
             
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.1 }},
-            { EBC, 'GreaterThanEconIncomeCombinedRNG', { 9.0, 800.0 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.40, 0.90 } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2 }},
+            { EBC, 'GreaterThanEconIncomeCombinedRNG', { 12.0, 800.0 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.40, 0.95 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.NUKE * categories.STRUCTURE}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, categories.ENERGYPRODUCTION * categories.TECH3 } },
@@ -90,7 +90,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 8.0, 700.0 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ARTILLERY * categories.TECH3 } },
             { TBC, 'EnemyThreatInT3ArtilleryRangeRNG', {'LocationType', 0.30} },

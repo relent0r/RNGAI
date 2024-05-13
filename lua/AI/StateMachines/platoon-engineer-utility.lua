@@ -536,13 +536,13 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             break
                         end
                         coroutine.yield(15)
+                        if IsDestroyed(eng) then
+                            return
+                        end
                         if eng:IsIdleState() then
-                            self:LogDebug(string.format('We are idle for some reason, go back to decide what to do'))
+                          self:LogDebug(string.format('We are idle for some reason, go back to decide what to do'))
                           self:ChangeState(self.DecideWhatToDo)
                           return
-                        end
-                        if eng.Dead or eng:IsIdleState() then
-                            return
                         end
                         if eng.EngineerBuildQueue then
                             if ALLBPS[eng.EngineerBuildQueue[1][1]].CategoriesHash.MASSEXTRACTION and ALLBPS[eng.EngineerBuildQueue[1][1]].CategoriesHash.TECH1 then
@@ -794,7 +794,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 for k, v in cons.BuildStructures do
                     if aiBrain:PlatoonExists(self) then
                         if not eng.Dead then
-                            LOG('Try to get unitids for '..tostring(v.Unit))
+                            --LOG('Try to get unitids for '..tostring(v.Unit))
                             local blueprints = StateUtils.GetBuildableUnitId(aiBrain, eng, v.Categories)
                             local whatToBuild = blueprints[1]
                             buildFunction(aiBrain, eng, v.Unit, whatToBuild, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons)

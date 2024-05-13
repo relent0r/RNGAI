@@ -65,7 +65,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             unit.DesiresAssist = false
             unit.NumAssistees = nil
             unit.MinNumAssistees = nil
-            localself.engineerManager = unit.BuilderManagerData.EngineerManager
+            self.engineerManager = unit.BuilderManagerData.EngineerManager
             local builder =self.engineerManager:GetHighestBuilder('Any', {unit})
             --BuilderValidation could go here?
             -- if theself.engineer is too far away from the builder then return to base and dont take up a builder instance.

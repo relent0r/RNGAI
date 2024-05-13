@@ -114,6 +114,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 end
             end
             local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, true)
+            local enemyACU, enemyACUDistance = StateUtils.GetClosestEnemyACU(aiBrain, self.Pos)
             self:LogDebug(string.format('DecideWhatToDo Danger Check, EnemySurface is '..threat.enemySurface..' ally surface is '..threat.allySurface))
             if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
                 self:LogDebug(string.format('DecideWhatToDo we have no antiair threat and there are air units around'))
@@ -132,6 +133,19 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 end
             else
                 self.retreat=false
+            end
+            if enemyACU and enemyACU.GetPosition and enemyACUDistance < 1225 then
+                local enemyPos = enemyACU:GetPosition()
+                local rx = self.Pos[1] - enemyPos[1]
+                local rz = self.Pos[3] - enemyPos[3]
+                local currentAcuDistance = rx * rx + rz * rz
+                if currentAcuDistance < 1225 and threat.allySurface < 50 then
+                    self:LogDebug(string.format('DecideWhatToDo enemy ACU forcing retreat '..threat.enemySurface))
+                    self.retreat=true
+                    self:ChangeState(self.Retreating)
+                    return
+                end
+                LOG('Enemy ACU is closest than 35 units at start of DecideWhat to do for land assault, our surface threat '..tostring(threat.allySurface)..' enemy surface threat '..tostring(threat.enemySurface))
             end
             if StateUtils.SimpleTarget(self,aiBrain) then
                 if rangedAttack then
@@ -357,11 +371,18 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                         if not approxThreat then
                             approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, false, false)
                         end
-                        if not (v.Role == 'Sniper' or v.Role == 'Silo') and closestTarget>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
+                        if (v.Role ~= 'Sniper' or v.Role ~= 'Silo' or v.Role ~= 'Scout') and closestTarget>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface then
                                 IssueClearCommands({v}) 
                                 if v.Role == 'Shield' or v.Role == 'Stealth' then
-                                    IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
+                                    if v.GetNavigator then
+                                        local navigator = v:GetNavigator()
+                                        if navigator then
+                                            navigator:SetGoal(RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
+                                        end
+                                    else
+                                        IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
+                                    end
                                 else
                                     IssueAggressiveMove({v},targetPos)
                                 end
@@ -383,7 +404,24 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             if approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface*1.5 and not targetCats.INDIRECTFIRE and targetCats.MOBILE and v.MaxWeaponRange <= unitRange then
                                 IssueClearCommands({v})
                                 if v.Role == 'Shield' or v.Role == 'Stealth' then
-                                    IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
+                                    if v.GetNavigator then
+                                        local navigator = v:GetNavigator()
+                                        if navigator then
+                                            navigator:SetGoal(RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
+                                        end
+                                    else
+                                        IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
+                                    end
+                                elseif v.Role == 'Scout' then
+                                    LOG("land combat scout trying to get into intelrange")
+                                    if v.GetNavigator then
+                                        local navigator = v:GetNavigator()
+                                        if navigator then
+                                            navigator:SetGoal(RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self.IntelRange or self.MaxPlatoonWeaponRange) }))
+                                        end
+                                    else
+                                        IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self.IntelRange or self.MaxPlatoonWeaponRange) }))
+                                    end
                                 else
                                     IssueAggressiveMove({v},targetPos)
                                 end
@@ -395,7 +433,18 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if target and not target.Dead and targetPos and aiBrain:CheckBlockingTerrain(self.Pos, targetPos, 'none') then
-                IssueMove(units, targetPos)
+                for _, v in units do
+                    if not v.Dead then
+                        if v.GetNavigator then
+                            local navigator = v:GetNavigator()
+                            if navigator then
+                                navigator:SetGoal(targetPos)
+                            end
+                        else
+                            IssueMove({v},targetPos)
+                        end
+                    end
+                end
             end
             coroutine.yield(30)
             self:ChangeState(self.DecideWhatToDo)
@@ -608,20 +657,47 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                 --snum=snum+1
                                 ---[[
                                 if self.dest then
-                                    IssueClearCommands({v})
                                     if v.Role=='Sniper' then
                                         IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
+                                        if v.GetNavigator then
+                                            local navigator = v:GetNavigator()
+                                            if navigator then
+                                                navigator:SetGoal(RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
+                                            end
+                                        else
+                                            IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
+                                        end
                                     else
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
+                                        if v.GetNavigator then
+                                            local navigator = v:GetNavigator()
+                                            if navigator then
+                                                navigator:SetGoal(RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
+                                            end
+                                        else
+                                            IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
+                                        end
                                     end
                                     spread=spread+VDist3Sq(unitPos,self.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
                                     snum=snum+1
                                 else
-                                    IssueClearCommands({v})
                                     if v.Role=='Sniper' or v.Role=='Support' then
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
+                                        if v.GetNavigator then
+                                            local navigator = v:GetNavigator()
+                                            if navigator then
+                                                navigator:SetGoal(RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
+                                            end
+                                        else
+                                            IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
+                                        end
                                     else
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
+                                        if v.GetNavigator then
+                                            local navigator = v:GetNavigator()
+                                            if navigator then
+                                                navigator:SetGoal(RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
+                                            end
+                                        else
+                                            IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
+                                        end
                                     end
                                     spread=spread+VDist3Sq(unitPos,self.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
                                     snum=snum+1
@@ -654,13 +730,23 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 if IsDestroyed(self) then
                     return
                 end
-                IssueClearCommands(platoonUnits)
                 if self.path then
                     nodenum=RNGGETN(self.path)
                     if nodenum>=3 then
                         self:LogDebug(string.format('nodenum while pathing >= 3 will spreadmove '..nodenum))
                         self.dest={self.path[3][1]+math.random(-4,4),self.path[3][2],self.path[3][3]+math.random(-4,4)}
-                        IssueMove(attack, self.dest)
+                        for _, v in attack do
+                            if not v.Dead then
+                                if v.GetNavigator then
+                                    local navigator = v:GetNavigator()
+                                    if navigator then
+                                        navigator:SetGoal(self.dest)
+                                    end
+                                else
+                                    IssueMove({v},self.dest)
+                                end
+                            end
+                        end
                         StateUtils.SpreadMove(supportsquad,StateUtils.Midpoint(self.path[1],self.path[2],0.2))
                         StateUtils.SpreadMove(scouts,StateUtils.Midpoint(self.path[1],self.path[2],0.15))
                         StateUtils.SpreadMove(aa,StateUtils.Midpoint(self.path[1],self.path[2],0.1))
@@ -670,7 +756,18 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             self:LogDebug(string.format('No BuilderData.Position '))
                         end
                         self.dest=self.BuilderData.Position
-                        self:MoveToLocation(self.dest,false)
+                        for _, v in platoonUnits do
+                            if not v.Dead then
+                                if v.GetNavigator then
+                                    local navigator = v:GetNavigator()
+                                    if navigator then
+                                        navigator:SetGoal(self.dest)
+                                    end
+                                else
+                                    IssueMove({v},self.dest)
+                                end
+                            end
+                        end
                     end
                     for i,v in self.path do
                         if not self.Pos then break end
@@ -708,15 +805,27 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 local avoidRange = math.max(minTargetRange or 60)
                 local targetPos = target:GetPosition()
                 avoidTargetPos = targetPos
-                IssueClearCommands(GetPlatoonUnits(self))
+                local platUnits = self:GetPlatoonUnits()
+                IssueClearCommands(platUnits)
                 local rx = self.Pos[1] - targetPos[1]
                 local rz = self.Pos[3] - targetPos[3]
-                if rx * rx + rz * rz < targetRange * targetRange then
-                    self:MoveToLocation(RUtils.AvoidLocation(targetPos, self.Pos, avoidRange), false)
+                local targetDistance = rx * rx + rz * rz
+                if targetDistance < targetRange * targetRange then
+                    for _, v in platUnits do
+                        if not v.Dead then
+                            if v.GetNavigator then
+                                local navigator = v:GetNavigator()
+                                if navigator then
+                                    navigator:SetGoal(RUtils.AvoidLocation(targetPos, self.Pos, avoidRange))
+                                end
+                            else
+                                IssueMove({v},RUtils.AvoidLocation(targetPos, self.Pos, avoidRange))
+                            end
+                        end
+                    end
                 else
                     local targetCats = target.Blueprint.CategoriesHash
                     local attackStructure = false
-                    local platUnits = self:GetPlatoonUnits()
                     if targetCats.STRUCTURE and targetCats.DEFENSE then
                         if targetRange < self.MaxPlatoonWeaponRange then
                             attackStructure = true
@@ -734,27 +843,66 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                         for _, v in platUnits do
                             if v.Role ~= 'Artillery' and v.Role ~= 'Silo' then
                                 if zoneRetreat then
-                                    IssueMove({v}, aiBrain.Zones.Land.zones[zoneRetreat].pos)
+                                    if v.GetNavigator then
+                                        local navigator = v:GetNavigator()
+                                        if navigator then
+                                            navigator:SetGoal(aiBrain.Zones.Land.zones[zoneRetreat].pos)
+                                        end
+                                    else
+                                        IssueMove({v},aiBrain.Zones.Land.zones[zoneRetreat].pos)
+                                    end
                                 else
-                                    IssueMove({v}, self.Home)
+                                    local unitPos = v:GetPosition()
+                                    if v.GetNavigator then
+                                        local navigator = v:GetNavigator()
+                                        if navigator then
+                                            navigator:SetGoal(RUtils.lerpy(unitPos, targetPos, {targetDistance, targetDistance - self.MaxPlatoonWeaponRange }))
+                                        end
+                                    else
+                                        IssueMove({v},RUtils.lerpy(unitPos, targetPos, {targetDistance, targetDistance - self.MaxPlatoonWeaponRange }))
+                                    end
                                 end
                             end
                         end
                     else
                         if zoneRetreat then
-                            self:MoveToLocation(aiBrain.Zones.Land.zones[zoneRetreat].pos, false)
+                            for _, v in platUnits do
+                                if not v.Dead then
+                                    if v.GetNavigator then
+                                        local navigator = v:GetNavigator()
+                                        if navigator then
+                                            navigator:SetGoal(aiBrain.Zones.Land.zones[zoneRetreat].pos)
+                                        end
+                                    else
+                                        IssueMove({v},aiBrain.Zones.Land.zones[zoneRetreat].pos)
+                                    end
+                                end
+                            end
                         else
-                            self:MoveToLocation(self.Home, false)
+                            for _, v in platUnits do
+                                if not v.Dead then
+                                    if v.GetNavigator then
+                                        local navigator = v:GetNavigator()
+                                        if navigator then
+                                            navigator:SetGoal(self.Home)
+                                        end
+                                    else
+                                        IssueMove({v},self.Home)
+                                    end
+                                end
+                            end
                         end
                     end
                 end
                 coroutine.yield(40)
             end
+            local zoneRetreat
             if aiBrain.GridPresence:GetInferredStatus(self.Pos) == 'Hostile' then
-                location = StateUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), true, 'Enemy')
+                zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, avoidTargetPos, true)
             else
-                location = StateUtils.GetNearExtractorRNG(aiBrain, self, self.Pos, avoidTargetPos, (categories.MASSEXTRACTION + categories.ENGINEER), false, 'Ally')
+                zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, false, true)
             end
+            local location = aiBrain.Zones.Land.zones[zoneRetreat].pos
             if (not location) then
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
                 if closestBase then

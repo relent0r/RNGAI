@@ -298,11 +298,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             else
                 if self.MapWaterRatio < 0.10 then
-                    self.DefaultLandRatio = 0.65
-                    self.DefaultAirRatio = 0.35
+                    self.DefaultLandRatio = 0.70
+                    self.DefaultAirRatio = 0.30
                     self.DefaultNavalRatio = 0.0
                 else
-                    self.DefaultLandRatio = 0.6
+                    self.DefaultLandRatio = 0.65
                     self.DefaultAirRatio = 0.15
                     self.DefaultNavalRatio = 0.15
                 end
@@ -6890,6 +6890,17 @@ AIBrain = Class(RNGAIBrainClass) {
         self.emanager = {
             mex = {
 
+            },
+            Artillery = {
+                T3 = 0,
+                T4 = 0
+            },
+            Nuke = {
+                T3 = 0,
+                T4 = 0
+            },
+            Satellite = {
+                T4 = 0
             }
         }
 
@@ -6971,6 +6982,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.Phase = 1
         self.EnemyIntel.TML = {}
         self.EnemyIntel.SMD = {}
+        self.EnemyIntel.SML = {}
         self.EnemyIntel.Experimental = {}
         self.EnemyIntel.Artillery = {}
         self.EnemyIntel.DirectorData = {

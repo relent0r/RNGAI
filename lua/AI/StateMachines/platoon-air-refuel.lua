@@ -56,7 +56,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                         if not table.empty(plats) then
                             local closest, distance
                             for _, v in plats do
-                                if not v.Dead then
+                                if not v.Dead and v:GetFractionComplete() == 1 then
                                     local roomAvailable = false
                                     if not EntityCategoryContains(categories.CARRIER, v) then
                                         roomAvailable = v:TransportHasSpaceFor(unit)
@@ -72,6 +72,20 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                             if closest and not IsDestroyed(unit) and not unit.Dead then
+                                local platCats = closest.Blueprint.CategoriesHash
+                                if platCats.AIRSTAGINGPLATFORM and not platCats.MOBILE and not closest.AIPlatoonReference then
+                                    local platoonName = 'AirStagingPlatoon'
+                                    local AirStagingPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed(platoonName)
+                                    if not AirStagingPlatoonAvailable then
+                                        AirStagingPlatoonAvailable = aiBrain:MakePlatoon(platoonName, '')
+                                        AirStagingPlatoonAvailable:UniquelyNamePlatoon(platoonName)
+                                    end
+                                    aiBrain:AssignUnitsToPlatoon(AirStagingPlatoonAvailable, {closest}, 'attack', 'None')
+                                    import("/mods/rngai/lua/ai/statemachines/platoon-structure-staging.lua").AssignToUnitsMachine({ }, AirStagingPlatoonAvailable, {closest})
+                                elseif platCats.CARRIER and not closest.CarrierStaging then
+                                    closest.CarrierStaging = closest:ForkThread(behaviors.CarrierStagingThread)
+                                    closest.Refueling = {}
+                                end
                                 local platPos = self:GetPlatoonPosition()
                                 local closestAirStaging = closest:GetPosition()
                                 local dx = platPos[1] - closestAirStaging[1]
@@ -87,17 +101,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                 end
                                 IssueClearCommands({unit})
                                 safecall("Unable to IssueTransportLoad units are "..tostring(unit.EntityId), IssueTransportLoad, {unit}, closest )
-                                --RNGLOG('Transport load issued')
-                                if EntityCategoryContains(categories.AIRSTAGINGPLATFORM - categories.MOBILE, closest) and not closest.AirStaging then
-                                    --LOG('Air Refuel Forking AirStaging Thread for fighter')
-                                    closest.AirStaging = closest:ForkThread(behaviors.AirStagingThreadRNG)
-                                    closest.Refueling = {}
-                                elseif EntityCategoryContains(categories.CARRIER, closest) and not closest.CarrierStaging then
-                                    closest.CarrierStaging = closest:ForkThread(behaviors.CarrierStagingThread)
-                                    closest.Refueling = {}
-                                end
                                 refuel = true
-                                RNGINSERT(closest.Refueling, unit)
                                 unit.Loading = true
                             end
                             self:LogDebug(string.format('Air Refuel we have an air staging platform but we didnt use it'))
@@ -230,6 +234,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                     if (not unit.Loading or (fuel >= 1.0 and health >= 1.0)) and (not unit:IsUnitState('Attached')) then
                         self:LogDebug(string.format('Air Refuel complete is true '))
                         refuelComplete = true
+                        unit.Loading = false
                     end
                     self:LogDebug(string.format('Air Refuel fuel is '..fuel))
                     self:LogDebug(string.format('Air Refuel health is '..health))
@@ -244,6 +249,11 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                 end
             end
             local platUnits = self:GetPlatoonUnits()
+            if refuelTimeout >= 30 then
+                for _, unit in platUnits do
+                    unit.Loading = false
+                end
+            end
             IssueClearCommands(platUnits)
             self:ChangeState(self.DecideWhatToDo)
             return

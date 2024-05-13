@@ -49,9 +49,6 @@ IntelManager = Class {
         self.Initialized = false
         self.Debug = false
         -- Used for scout assignments to zones
-        self.ZoneIntel = {
-            Assignment = { }
-        }
         self.ZoneExpansions = { 
             Pathable = {},
             NonPathable = {},
@@ -1117,12 +1114,13 @@ IntelManager = Class {
             --RNGLOG('Zone set for radar that has been built '..unit.UnitId)
             unit.zoneid = MAP:GetZoneID(radarPosition,self.Brain.Zones.Land.index)
             if unit.zoneid then
-                for k, v in self.ZoneIntel.Assignment do
-                    if VDist3Sq(radarPosition, v.Position) < intelRadius then
-                        --RNGLOG('Radar coverage has been set true for zone '..unit.zoneid)
-                        RNGINSERT(v.RadarUnits, unit)
-                        v.RadarCoverage = true
+                local zone = self.Brain.Zones.Land.zones[unit.zoneid]
+                if VDist3Sq(radarPosition, zone.pos) < intelRadius then
+                    if not zone.intelassignment.RadarUnits then
+                        zone.intelassignment.RadarUnits = {}
                     end
+                    RNGINSERT(zone.intelassignment.RadarUnits, unit)
+                    zone.intelassignment.RadarCoverage = true
                 end
             else
                 WARN('No ZoneID for Radar, unable to set coverage area')
@@ -1137,16 +1135,19 @@ IntelManager = Class {
         local radarPosition = unit:GetPosition()
         if unit.Blueprint.CategoriesHash.RADAR then
             --RNGLOG('Unassigning Radar Unit')
-            for k, v in self.ZoneIntel.Assignment do
-                for c, b in v.RadarUnits do
-                    if b == unit then
-                        --RNGLOG('Found Radar that was covering zone '..k..' removing')
-                        RNGREMOVE(v.RadarUnits, c)
+            if unit.zoneid then
+                local zone = self.Brain.Zones.Land.zones[unit.zoneid]
+                if zone.intelassignment.RadarUnits then
+                    for c, b in zone.intelassignment.RadarUnits do
+                        if b == unit then
+                            --RNGLOG('Found Radar that was covering zone '..k..' removing')
+                            RNGREMOVE(zone.intelassignment.RadarUnits, c)
+                        end
                     end
-                end
-                if v.RadarCoverage and RNGGETN(v.RadarUnits) == 0 then
-                    --RNGLOG('No Radars in range for zone '..k..' setting radar coverage to false')
-                    v.RadarCoverage = false
+                    if zone.intelassignment.RadarCoverage and table.empty(zone.intelassignment.RadarUnits) then
+                        --RNGLOG('No Radars in range for zone '..k..' setting radar coverage to false')
+                        zone.intelassignment.RadarCoverage = false
+                    end
                 end
             end
             local gridSearch = math.floor(unit.Blueprint.Intel.RadarRadius / MapIntelGridSize)
@@ -1190,7 +1191,6 @@ IntelManager = Class {
         local expansionSize = math.min((self.Brain.MapDimension / 2), 180)
         for k, v in Zones do
             for k1, v1 in self.Brain.Zones[v].zones do
-                self.ZoneIntel.Assignment[k1] = self:ZoneSetIntelAssignment(k1, v1)
                 v1.label = self:ZoneSetLabelAssignment(v, v1.pos)
                 if v1.resourcevalue > maximumResourceValue then
                     maximumResourceValue = v1.resourcevalue
@@ -1209,7 +1209,6 @@ IntelManager = Class {
             end
         end
         self.MapMaximumValues.MaximumResourceValue = maximumResourceValue
-        --RNGLOG('Initial Zone Assignment Table '..repr(self.ZoneIntel.Assignment))
     end,
 
     ZoneSetBestArmy = function(self, maximumSearch, zone)

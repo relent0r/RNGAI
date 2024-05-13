@@ -71,7 +71,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Retreating)
                 return
             end
-            if self.CurrentEnemyAirThreat > 0 and homeDist > 900 and not aiBrain.BrainIntel.SuicideModeActive then
+            if self.CurrentEnemyAirThreat > 0 and self.CurrentEnemyAirThreat > self.CurrentPlatoonThreatAntiAir and homeDist > 900 and not aiBrain.BrainIntel.SuicideModeActive then
                 self:LogDebug(string.format('Gunship retreating due to air threat and distance from base'))
                 self:ChangeState(self.Retreating)
                 return
@@ -225,7 +225,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             while not IsDestroyed(self) do
                 local origin = self:GetPlatoonPosition()
                 local platoonUnits = self:GetPlatoonUnits()
-                waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 80)
+                waypoint, length = NavUtils.DirectionTo('Air', origin, destination, 80)
                 if waypoint == destination then
                     local dx = origin[1] - destination[1]
                     local dz = origin[3] - destination[3]
@@ -356,7 +356,15 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             local platoonUnits = self:GetPlatoonUnits()
             if self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Dead and not self.BuilderData.AttackTarget.Tractored then
                 local target = self.BuilderData.AttackTarget
-                IssueAttack(platoonUnits, target)
+                local targetPos = target:GetPosition()
+                local movementPositions = StateUtils.GenerateGridPositions(targetPos, 6, self.PlatoonCount)
+                for k, unit in platoonUnits do
+                    if not unit.Dead and movementPositions[k] then
+                        IssueMove({platoonUnits[k]}, movementPositions[k])
+                    else
+                        IssueMove({platoonUnits[k]}, targetPos)
+                    end
+                end
                 coroutine.yield(35)
             else
                 --LOG('No target to attack')
@@ -444,6 +452,8 @@ GunshipThreatThreads = function(aiBrain, platoon)
             end
             platoon.PlatoonCount = unitCount
             platoon.MaxPlatoonDPS = maxPlatoonDPS
+            platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
+            platoon.CurrentPlatoonThreatAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
         end
         coroutine.yield(20)
     end

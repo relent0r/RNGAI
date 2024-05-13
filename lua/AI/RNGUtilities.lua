@@ -3338,6 +3338,42 @@ GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, inclu
     end
 end
 
+GrabPosDetailedDangerRNG = function(aiBrain,pos,radius, detailType)
+    if detailType == 'AntiAir' then
+        if pos and radius then
+            local brainThreats = {allyTotal=0,enemyTotal=0,allySurface=0,enemySurface=0,allyStructure=0,enemyStructure=0,allyAir=0,allySurfaceAir=0,enemyAir=0,enemySurfaceAir=0,allySub=0,enemySub=0,enemyrange=0,allyrange=0}
+            local enemyMaxRadius = 0
+            local allyMaxRadius = 0
+            local enemyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Enemy')
+            local enemyUnitCount = 0
+            for _,v in enemyunits do
+                if not v.Dead then
+                    enemyUnitCount = enemyUnitCount + 1
+                    local bp = v.Blueprint
+                    local unitCats = bp.CategoriesHash
+                    local mult = v:GetHealthPercent() or 1
+                    if bp.Defense.AirThreatLevel ~= nil then
+                        if unitCats.AIR then
+                            brainThreats.enemyAir = brainThreats.enemyAir + bp.Defense.AirThreatLevel*mult
+                            brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.AirThreatLevel*mult
+                            if bp.Weapon[1].MaxRadius > enemyMaxRadius then
+                                enemyMaxRadius = bp.Weapon[1].MaxRadius
+                            end
+                        elseif unitCats.LAND or unitCats.HOVER or unitCats.AMPHIBIOUS then
+                            brainThreats.enemySurfaceAir = brainThreats.enemySurfaceAir + bp.Defense.AirThreatLevel*mult
+                            brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.AirThreatLevel*mult
+                            if bp.Weapon[1].MaxRadius > enemyMaxRadius then
+                                enemyMaxRadius = bp.Weapon[1].MaxRadius
+                            end
+                        end
+                    end
+                end
+            end
+            return brainThreats
+        end
+    end
+end
+
 GrabPosDangerRNGOriginal = function(aiBrain,pos,radius)
     local function GetWeightedHealthRatio(unit)
         if unit.MyShield then
@@ -4840,7 +4876,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     end
     if platoon.FindPlatoonCounter and (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
         --RNGLOG('Look for platoon that needs a scout')
-        coroutine.yield(10)
+        coroutine.yield(3)
         platoonNeedScout, supportPlatoon = ScoutFindNearbyPlatoonsRNG(platoon, 250)
         platoon.FindPlatoonCounter = platoon.FindPlatoonCounter + 1
     end
@@ -4853,25 +4889,20 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     if (not platoonNeedScout) and (not platoon.ZonesValidated) then
         scoutPos = scout:GetPosition()
         local scoutMarker
-        if not RNGTableEmpty(im.ZoneIntel.Assignment) then
-            for k, v in im.ZoneIntel.Assignment do
-                if (not v.RadarCoverage) and (not v.ScoutUnit or v.ScoutUnit.Dead) and (not v.StartPosition) then
-                    --RNGLOG('Scout ZoneIntel Assignment has found a zone with no radar and no scout')
-                    if NavUtils.CanPathTo(platoon.MovementLayer, scoutPos, v.Position) then
-                        --RNGLOG('Scout ZoneIntel Assignment scout is assigning itself to the zone')
-                        scoutMarker = v
-                        im.ZoneIntel.Assignment[k].ScoutUnit = scout
+        for k, zone in aiBrain.Zones.Land.zones do
+            if zone.intelassignment then
+                local ia = zone.intelassignment
+                if (not ia.RadarCoverage) and (not ia.ScoutUnit or ia.ScoutUnit.Dead) and (not ia.StartPosition) then
+                    if NavUtils.CanPathTo(platoon.MovementLayer, scoutPos, zone.pos) then
+                        scoutMarker = { Position = zone.pos }
+                        ia.ScoutUnit = scout
                         break
                     else
                         coroutine.yield(5)
                     end
                 end
-
             end
-        else
-            WARN('ZoneIntel Assignment table is empty, it shouldnt be')
         end
-
         if scoutMarker then
             --RNGLOG('Scout Marker Found, moving to position')
             scoutType = 'ZoneLocation'

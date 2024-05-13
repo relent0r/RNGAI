@@ -32,7 +32,8 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         elseif self.UseCenterPoint then
             -- use BuilderManager location
             rally = AIUtils.AIGetClosestMarkerLocationRNG(self, rallyType, position[1], position[3])
-            local expPoint = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(self.Brain):GetClosestZone(self.Brain, false, {position[1], 0, position[3]}, false, false, 2)
+            local zone = self.Brain.IntelManager:GetClosestZone(self.Brain, false, {position[1], 0, position[3]}, false, false, 2)
+            local expPoint = self.Brain.Zones.Land.zones[zone].pos
 
             if expPoint and rally then
                 local rallyPointDistance = VDist2(position[1], position[3], rally[1], rally[3])

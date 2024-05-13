@@ -125,6 +125,8 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             self:LogDebug('DecideWhatToDo')
             local aiBrain = self:GetBrain()
             local rangedAttack = self.PlatoonData.RangedAttack and aiBrain.EnemyIntel.EnemyFireBaseDetected
+            local enemyACU, enemyACUDistance = StateUtils.GetClosestEnemyACU(aiBrain, self.Pos)
+
             local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, true)
             if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
                 self:LogDebug(string.format('DecideWhatToDo we have no antiair threat and there are air units around'))
@@ -141,6 +143,19 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.Retreating)
                     return
                 end
+            end
+            if enemyACU and enemyACU.GetPosition and enemyACUDistance < 1225 then
+                local enemyPos = enemyACU:GetPosition()
+                local rx = self.Pos[1] - enemyPos[1]
+                local rz = self.Pos[3] - enemyPos[3]
+                local currentAcuDistance = rx * rx + rz * rz
+                if currentAcuDistance < 1225 and threat.allySurface < 50 then
+                    self:LogDebug(string.format('DecideWhatToDo enemy ACU forcing retreat '..threat.enemySurface))
+                    self.retreat=true
+                    self:ChangeState(self.Retreating)
+                    return
+                end
+                LOG('Enemy ACU is closest than 35 units at start of DecideWhat to do for land assault, our surface threat '..tostring(threat.allySurface)..' enemy surface threat '..tostring(threat.enemySurface))
             end
             if not self.MovementLayer then
                 self.MovementLayer = self:GetNavigationalLayer()

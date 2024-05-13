@@ -27,6 +27,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
         local maxPlatoonDPS = 0
         local maxPlatoonStrikeRadius = 20
         local maxPlatoonStrikeRadiusDistance = 0
+        local intelrange = 0
         for k, unit in units do
             unit.AIPlatoonReference = self
             local unitBp = unit.Blueprint
@@ -168,6 +169,9 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                     if not self.ScoutUnit or self.ScoutUnit.Dead then
                         self.ScoutUnit = unit
                     end
+                    if not intelrange or unitBp.Intel.RadarRadius > intelrange then
+                        intelrange = unitBp.Intel.RadarRadius
+                    end
                 elseif unitCats.ANTIAIR then
                     unit.Role='AA'
                 elseif unitCats.DIRECTFIRE then
@@ -192,6 +196,9 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
         end
         if maxPlatoonDPS > 0 then
             self.MaxPlatoonDPS = maxPlatoonDPS
+        end
+        if intelrange > 0 then
+            self.IntelRange = intelrange
         end
         if not self.MaxPlatoonWeaponRange then
             self.MaxPlatoonWeaponRange=20

@@ -175,7 +175,7 @@ AIPlatoonAirScoutBehavior = Class(AIPlatoonRNG) {
             IssueClearCommands(platUnits)
             if not scout.Dead and scout.GetNavigator then
                 local navigator = scout:GetNavigator()
-                if self.BuilderData.Retreat then
+                if self.BuilderData.Retreat and navigator then
                 --LOG(repr(self.BuilderData))
                     navigator:SetGoal(self.BuilderData.Position)
                 end
@@ -184,7 +184,9 @@ AIPlatoonAirScoutBehavior = Class(AIPlatoonRNG) {
                     WARN('AI-RNG : Fighter no builderdata position passed')
                 end
                 self:LogDebug(string.format('Setting goal to movePosition '..tostring(movePosition[1])..' : '..tostring(movePosition[3])))
-                navigator:SetGoal(movePosition)
+                if navigator then
+                    navigator:SetGoal(movePosition)
+                end
                 local lastDist
                 local timeout = 0
                 while aiBrain:PlatoonExists(self) do

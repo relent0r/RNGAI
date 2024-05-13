@@ -248,6 +248,9 @@ VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride)--basic kit
     elseif (unit.Role=='Shield' or unit.Role == 'Stealth') and platoon.MaxDirectFireRange > 0 then
         dest=KiteDist(pos,tpos,platoon.MaxDirectFireRange-math.random(1,3)-mod,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
+    elseif unit.Role=='Scout' then
+        dest=KiteDist(pos,tpos,(platoon.IntelRange or platoon.MaxPlatoonWeaponRange),healthmod)
+        dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif maxPlatoonRangeOverride then
         dest=KiteDist(pos,tpos,platoon.MaxPlatoonWeaponRange,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
@@ -282,7 +285,14 @@ SpreadMove = function(unitgroup,location)
     local loc1=CrossP(sum,location,-num/VDist3(sum,location))
     local loc2=CrossP(sum,location,num/VDist3(sum,location))
     for i,v in unitgroup do
-        IssueMove({v},Midpoint(loc1,loc2,i/num))
+        if v.GetNavigator then
+            local navigator = v:GetNavigator()
+            if navigator then
+                navigator:SetGoal(Midpoint(loc1,loc2,i/num))
+            end
+        else
+            IssueMove({v},Midpoint(loc1,loc2,i/num))
+        end
     end
 end
 
@@ -2076,4 +2086,23 @@ function RandomLocation(x, z)
     movePos[2] = height
 
     return movePos
+end
+
+function GetClosestEnemyACU(aiBrain, position)
+    if not table.empty(aiBrain.EnemyIntel.ACU) then
+        local closestACU 
+        local closestDistance
+        for k,v in aiBrain.EnemyIntel.ACU do
+            if not v.Unit.Dead and v.Position[1] then
+                local rx = v.Position[1] -  position[1]
+                local rz = v.Position[3] -  position[3]
+                local acuDistance = rx * rx + rz * rz
+                if not closestDistance or acuDistance < closestDistance then
+                    closestDistance = acuDistance
+                    closestACU = v.Unit
+                end
+            end
+        end
+        return closestACU
+    end
 end

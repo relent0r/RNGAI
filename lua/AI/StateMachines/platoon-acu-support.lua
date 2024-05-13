@@ -97,9 +97,9 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 local enemyAcuPosition = aiBrain.BrainIntel.SuicideModeTarget:GetPosition()
                 local rx = self.Pos[1] - enemyAcuPosition[1]
                 local rz = self.Pos[3] - enemyAcuPosition[3]
-                local acuDistance = rx * rx + rz * rz
+                local enemyAcuDistance = rx * rx + rz * rz
                 if NavUtils.CanPathTo(self.MovementLayer, self.Pos, enemyAcuPosition) then
-                    if acuDistance > 6400 then
+                    if enemyAcuDistance > 6400 then
                         self.BuilderData = {
                             AttackTarget = aiBrain.BrainIntel.SuicideModeTarget,
                             Position = aiBrain.BrainIntel.SuicideModeTarget:GetPosition(),
@@ -198,12 +198,16 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 end
                 return
             end
-            if NavUtils.CanPathTo(self.MovementLayer, self.Pos, acu.Position) then
-                if ACUDistance > 14400 then
+            if acu.Position and NavUtils.CanPathTo(self.MovementLayer, self.Pos, acu.Position) then
+                local rx = self.Pos[1] - acu.Position[1]
+                local rz = self.Pos[3] - acu.Position[3]
+                local acuDistance = rx * rx + rz * rz
+                if acuDistance > 14400 then
                     self.BuilderData = {
                         Position = acu.Position,
                         CutOff = 25,
                     }
+                    self.dest = self.BuilderData.Position
                     self:ChangeState(self.Navigating)
                     return
                 end
@@ -264,7 +268,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                         if not approxThreat then
                             approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, false, false)
                         end
-                        if not (v.Role == 'Sniper' or v.Role == 'Silo') and closestTarget>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
+                        if not (v.Role == 'Sniper' or v.Role == 'Silo' or v.Role == 'Scout') and closestTarget>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface then
                                 IssueClearCommands({v}) 
                                 --IssueMove({v},target:GetPosition())
@@ -293,6 +297,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                 IssueClearCommands({v})
                                 if v.Role == 'Shield' or v.Role == 'Stealth' then
                                     IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
+                                elseif v.Role == 'Scout' then
+                                    IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self.IntelRange or self.MaxPlatoonWeaponRange) }))
                                 else
                                     IssueAggressiveMove({v},targetPos)
                                 end
@@ -323,8 +329,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local platUnits=GetPlatoonUnits(self)
             local ax = self.Pos[1] - aiBrain.CDRUnit.Position[1]
             local az = self.Pos[3] - aiBrain.CDRUnit.Position[3]
-            local ACUDistance = ax * ax + az * az
-            if aiBrain.CDRUnit.Active and ACUDistance > 1600 then
+            local acuDistance = ax * ax + az * az
+            if aiBrain.CDRUnit.Active and acuDistance > 1600 then
                 self:LogDebug(string.format('ACU is active and further than 1600 units'))
                 self.MoveToPosition = GetSupportPosition(aiBrain)
                 if not self.MoveToPosition then
@@ -343,7 +349,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 --RNGLOG('Support waiting after move command')
                 ax = self.Pos[1] - aiBrain.CDRUnit.Position[1]
                 az = self.Pos[3] - aiBrain.CDRUnit.Position[3]
-                ACUDistance = ax * ax + az * az
+                acuDistance = ax * ax + az * az
                 if aiBrain.BrainIntel.SuicideModeActive then
                     if aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
                         self:ChangeState(self.DecideWhatToDo)
@@ -762,9 +768,6 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
             if usedTransports then
                 self:LogDebug(string.format('platoon used transports'))
-                if not self.BuilderData.Position then
-                    --LOG('No self.BuilderData.Position in Transporting')
-                end
                 self:ChangeState(self.Navigating)
                 return
             else
@@ -814,6 +817,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 if not self.BuilderData.Position then
                     --LOG('No self.BuilderData.Position in Transporting')
                 end
+                self.dest = builderData.Position
                 self:ChangeState(self.Navigating)
                 return
             else
@@ -874,6 +878,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 if StateUtils.ExitConditions(self,aiBrain) then
                     self.navigating=false
                     self.path=false
+                    self.dest=false
                     coroutine.yield(10)
                     self:LogDebug(string.format('Navigating exit condition met, decidewhattodo'))
                     self:ChangeState(self.DecideWhatToDo)
