@@ -783,7 +783,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                         local rx = self.Pos[1] - self.Home[1]
                         local rz = self.Pos[3] - self.Home[3]
                         local rallyPointDist = rx * rx + rz * rz
-                        if rallyPointDist > 100 then
+                        if rallyPointDist > 225 then
                             local units = self:GetPlatoonUnits()
                             IssueMove(units, rallyPoint )
                         end
@@ -833,7 +833,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                         local rx = self.Pos[1] - self.Home[1]
                         local rz = self.Pos[3] - self.Home[3]
                         local rallyPointDist = rx * rx + rz * rz
-                        if rallyPointDist > 100 then
+                        if rallyPointDist > 225 then
                             local units = self:GetPlatoonUnits()
                             IssueMove(units, rallyPoint )
                         end

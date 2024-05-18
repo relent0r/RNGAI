@@ -1357,7 +1357,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     if aiBrain.RNGDEBUG then
                         eng:SetCustomName('I am at the start of the assist manager loop')
                     end
-                    bp = eng.Blueprint
+                    local bp = eng.Blueprint
                     if bp.CategoriesHash.TECH1 then
                         totalTech1BuilderRate = totalTech1BuilderRate + bp.Economy.BuildRate
                         table.insert(tech1Engineers, eng)
@@ -1380,7 +1380,6 @@ Platoon = Class(RNGAIPlatoonClass) {
             for _, engineers in ipairs({tech1Engineers, tech2Engineers, tech3Engineers}) do
                 for _, eng in ipairs(engineers) do
                     if aiBrain.EngineerAssistManagerBuildPower > aiBrain.EngineerAssistManagerBuildPowerRequired then
-                        bp = eng.Blueprint
                         self:EngineerAssistRemoveRNG(aiBrain, eng)
                     else
                         -- If the power requirement is met, break out of the loop

@@ -281,7 +281,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             if not target and VDist3Sq(platPos, self.Home) < 900 then
                 self:LogDebug(string.format('trying to merge with another platoon'))
                 if self.PlatoonCount < 10 then
-                    local plat = StateUtils.GetClosestPlatoonRNG(self, 'BomberBehavior', 60)
+                    local plat = StateUtils.GetClosestPlatoonRNG(self, 'BomberBehavior', false, 60)
                     if plat and plat.PlatoonCount and plat.PlatoonCount < 10 then
                         self:LogDebug(string.format('Bomber platoon is merging with another'))
                         local platUnits = plat:GetPlatoonUnits()

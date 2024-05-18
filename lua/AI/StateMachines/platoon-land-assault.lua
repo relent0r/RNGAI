@@ -262,7 +262,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                         local rx = self.Pos[1] - self.Home[1]
                         local rz = self.Pos[3] - self.Home[3]
                         local rallyPointDist = rx * rx + rz * rz
-                        if rallyPointDist > 100 then
+                        if rallyPointDist > 225 then
                             local units = self:GetPlatoonUnits()
                             IssueMove(units, rallyPoint )
                         end
@@ -364,7 +364,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                             if IsDestroyed(self) then
                                 return
                             end
-                            if target and not IsDestroyed(target) or acuUnit then
+                            if not self.Retreat and target and not IsDestroyed(target) or acuUnit then
                                 if acuUnit and self.CurrentPlatoonThreatAntiSurface > 30 then
                                     target = acuUnit
                                 elseif acuUnit and self.CurrentPlatoonThreatAntiSurface < totalThreat['AntiSurface'] then
@@ -398,7 +398,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                                     self:ChangeState(self.DecideWhatToDo)
                                     return
                                 end
-                                if not IsDestroyed(target) then
+                                if target and not IsDestroyed(target) then
                                     self.BuilderData = {
                                         Target = target
                                     }
@@ -445,6 +445,9 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 end
             end
             self:LogDebug('end of Navigating, DecideWhatToDo')
+            if self.retreat then
+                StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandMergeStateMachine', 80, 35, false)
+            end
             --LOG('end of Navigating, DecideWhatToDo')
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -525,7 +528,6 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                     location = aiBrain.BuilderManagers[closestBase].Position
                 end
             end
-            StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandMergeStateMachine', 80, 35, false)
             self.Retreat = true
             self.BuilderData = {
                 Position = location,
@@ -670,7 +672,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 end
                 smartPos = { x, GetTerrainHeight( x, y), y }
                 -- check if the move position is new or target has moved
-                if VDist2( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.7 or unit.TargetPos ~= targetPosition then
+                if VDist2Sq( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.8 or unit.TargetPos ~= targetPosition then
                     -- clear move commands if we have queued more than 4
                     if RNGGETN(unit:GetCommandQueue()) > 2 then
                         IssueClearCommands({unit})

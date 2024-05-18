@@ -336,7 +336,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.90, 0.1 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION - categories.HYDROCARBON } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T3 Pgen Exist
         },

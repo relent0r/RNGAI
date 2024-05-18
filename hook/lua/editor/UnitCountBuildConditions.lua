@@ -1515,7 +1515,6 @@ function MinimumFactoryCheckRNG(aiBrain, locationType, structureType)
                         return false
                     end
                 end
-                
             end
         end
     end
@@ -1612,6 +1611,20 @@ function HighValueZone(aiBrain, locationType)
             end
         end
     end
+end
+
+function UnfinishedUnitsAtLocationRNG(aiBrain, locationType, category)
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+    if not engineerManager then
+        return false
+    end
+    local unfinishedUnits = aiBrain:GetUnitsAroundPoint(category, engineerManager.Location, engineerManager.Radius, 'Ally')
+    for num, unit in unfinishedUnits do
+        if unit:GetFractionComplete() < 1 and table.getn(unit:GetGuards()) < 1 then
+            return true
+        end
+    end
+    return false
 end
 
 --[[

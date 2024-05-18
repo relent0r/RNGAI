@@ -142,7 +142,8 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
 
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
         local needEnergy = aiBrain:GetEconomyStoredRatio('ENERGY') < 0.5
-        if self.PlatoonData.Construction.CheckCivUnits then
+        if platoon.PlatoonData.Construction.CheckCivUnits then
+            LOG('Reclaim is looking for units to capture')
             local captureUnit = CheckForCivilianUnitCapture(aiBrain, self, platoon.MovementLayer)
             if captureUnit then
                 platoon.PlatoonData.StateMachine = 'PreAllocatedTask'
@@ -6964,9 +6965,10 @@ GetBaseType = function(baseName)
 end
 
 CheckForCivilianUnitCapture = function(aiBrain, eng, movementLayer)
+    LOG('Check for civilian units to capture')
 
     if aiBrain.EnemyIntel.CivilianCaptureUnits and not table.empty(aiBrain.EnemyIntel.CivilianCaptureUnits) then
-        --LOG('We have capturable units')
+        LOG('We have capturable units')
         local closestUnit
         local closestDistance
         local engPos = eng:GetPosition()

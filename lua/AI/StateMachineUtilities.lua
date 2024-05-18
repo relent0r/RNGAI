@@ -661,7 +661,7 @@ GetClosestBaseRNG = function(aiBrain, platoon, platoonPosition, naval)
 end
 
 
-GetClosestPlatoonRNG = function(platoon, platoonName, distanceLimit, angleTargetPos)
+GetClosestPlatoonRNG = function(platoon, platoonName, mergeType, distanceLimit, angleTargetPos)
     local aiBrain = platoon:GetBrain()
     if not aiBrain then
         return
@@ -685,7 +685,10 @@ GetClosestPlatoonRNG = function(platoon, platoonName, distanceLimit, angleTarget
     --RNGLOG('Getting list of allied platoons close by')
     AlliedPlatoons = aiBrain:GetPlatoonsList()
     for _,aPlat in AlliedPlatoons do
-        if aPlat.PlatoonName ~= platoonName then
+        if mergeType and aPlat.MergeType ~= mergeType then
+            continue
+        end
+        if  platoonName and aPlat.PlatoonName ~= platoonName then
             continue
         end
         if aPlat == platoon then

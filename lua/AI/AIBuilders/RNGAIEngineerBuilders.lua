@@ -479,7 +479,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistUnfinished', 1},
         InstanceCount = 4,
         BuilderConditions = {
-                { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * (categories.DEFENSE + categories.FACTORY + categories.ENERGYPRODUCTION + categories.MASSEXTRACTION) }},
+                { UCBC, 'UnfinishedUnitsAtLocationRNG', { 'LocationType', categories.STRUCTURE * (categories.DEFENSE + categories.FACTORY + categories.ENERGYPRODUCTION + categories.MASSEXTRACTION) }},
                 { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             },
         BuilderData = {
@@ -1389,7 +1389,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistUnfinished', 1},
         InstanceCount = 8,
         BuilderConditions = {
-                { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * (categories.FACTORY + categories.MASSEXTRACTION + categories.MASSFABRICATION + categories.ENERGYPRODUCTION)}},
+                { UCBC, 'UnfinishedUnitsAtLocationRNG', { 'LocationType', categories.STRUCTURE * (categories.FACTORY + categories.MASSEXTRACTION + categories.MASSFABRICATION + categories.ENERGYPRODUCTION)}},
                 { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             },
         BuilderData = {

@@ -374,7 +374,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                         if IsDestroyed(self) then
                             return
                         end
-                        local mergePlatoon, alternatePos = StateUtils.GetClosestPlatoonRNG(self,'NavalCombatBehavior', 122500)
+                        local mergePlatoon, alternatePos = StateUtils.GetClosestPlatoonRNG(self,'NavalCombatBehavior', false, 122500)
                         if alternatePos then
                             self:LogDebug(string.format('Centering Platoon Units'))
                             local waitTime = RUtils.CenterPlatoonUnitsRNG(self, self.Pos)
@@ -512,7 +512,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             if IsDestroyed(self) then
                 return
             end
-            local mergePlatoon, alternatePos = StateUtils.GetClosestPlatoonRNG(self,'NavalCombatBehavior', mergeDistance)
+            local mergePlatoon, alternatePos = StateUtils.GetClosestPlatoonRNG(self,'NavalCombatBehavior', false, mergeDistance)
             local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos, true)
             if alternatePos and closestBase then
                 self:LogDebug(string.format('Found mergePlatoon, checking if base is closer'))
@@ -556,7 +556,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                         if IsDestroyed(self) then
                             return
                         end
-                        local tempPlatoon, tempPos = StateUtils.GetClosestPlatoonRNG(self,'NavalCombatBehavior', mergeDistance)
+                        local tempPlatoon, tempPos = StateUtils.GetClosestPlatoonRNG(self,'NavalCombatBehavior', false, mergeDistance)
                         if tempPlatoon and tempPos then
                             local px = tempPos[1] - self.Pos[1]
                             local pz = tempPos[3] - self.Pos[3]

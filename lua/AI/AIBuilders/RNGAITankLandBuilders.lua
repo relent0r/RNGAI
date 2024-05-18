@@ -534,7 +534,7 @@ BuilderGroup {
         InstanceCount = 30,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND - categories.ENGINEER - categories.EXPERIMENTAL } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
             StateMachine = 'LandAssault',
@@ -733,7 +733,7 @@ BuilderGroup {
         BuilderConditions = {
             --{ UCBC, 'LessThanGameTimeSecondsRNG', { 300 } }, -- don't build after 5 minutes
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.EXPERIMENTAL } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
         },
         BuilderData = {
             StateMachine = 'ZoneControl',

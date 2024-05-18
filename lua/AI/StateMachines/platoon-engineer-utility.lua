@@ -198,7 +198,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     for k,v in unfinishedUnits do
                         if v:GetFractionComplete() < 1 and RNGGETN(v:GetGuards()) < 1 then
                             --LOG('No Guards for strucutre '..repr(v:GetGuards()))
-                            if not v.Dead and not v:BeenDestroyed() then
+                            if not v:BeenDestroyed() then
                                 unitBeingFinished = v
                                 break
                             end
@@ -228,8 +228,10 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         self.BuilderData = {}
                         coroutine.yield(10)
                         if self.StateMachineTimeout > 5 then
+                            LOG('FinishUnit timeout reached')
                             self:ExitStateMachine()
                         else
+                            LOG('FinishUnit cant find thing to finish')
                             self:ChangeState(self.DecideWhatToDo)
                             return
                         end

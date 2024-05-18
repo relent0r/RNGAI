@@ -18,9 +18,6 @@ local RNGINSERT = table.insert
 local RNGSORT = table.sort
 local RNGMAX = math.max
 
--- Previous marker sorting method for early raiding
--- table.sort(self.MassMarkerTable,function(a,b) return VDist2Sq(a.Position[1], a.Position[3],startX, startZ) / (VDist2Sq(a.Position[1], a.Position[3], platLoc[1], platLoc[3]) + RUtils.EdgeDistance(a.Position[1],a.Position[3],playableArea[1])) > VDist2Sq(b.Position[1], b.Position[3], startX, startZ) / (VDist2Sq(b.Position[1], b.Position[3], platLoc[1], platLoc[3]) + RUtils.EdgeDistance(b.Position[1],b.Position[3],playableArea[1])) end)
-
 ---@class AIPlatoonBehavior : AIPlatoon
 ---@field RetreatCount number 
 ---@field ThreatToEvade Vector | nil
@@ -211,7 +208,23 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             end
             local targetZone
             if not targetZone then
-                targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType)
+                if self.PlatoonData.EarlyRaid and not self.ZoneMarkerTable then
+                    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+                    local myLabel = NavUtils.GetLabel('Land', self.Pos)
+                    local startPos = aiBrain.BrainIntel.StartPos
+                    local zoneMarkers = {}
+                    for _, v in aiBrain.Zones.Land.zones do
+                        if v.resourcevalue > 0 and v.label == myLabel then
+                            table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+                        end
+                    end
+                    self.ZoneMarkerTable = zoneMarkers
+                    table.sort(self.ZoneMarkerTable,function(a,b) return VDist2Sq(a.Position[1], a.Position[3],startPos[1], startPos[3]) / (VDist2Sq(a.Position[1], a.Position[3], self.Pos[1], self.Pos[3]) + RUtils.EdgeDistance(a.Position[1],a.Position[3],playableArea[1])) > VDist2Sq(b.Position[1], b.Position[3], startPos[1], startPos[3]) / (VDist2Sq(b.Position[1], b.Position[3], self.Pos[1], self.Pos[3]) + RUtils.EdgeDistance(b.Position[1],b.Position[3],playableArea[1])) end)
+                    targetZone = self.ZoneMarkerTable[1].ZoneID
+                    table.remove(self.ZoneMarkerTable, 1)
+                else
+                    targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType)
+                end
                 if targetZone then
                     self.BuilderData = {
                         TargetZone = targetZone,
@@ -561,7 +574,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     location = aiBrain.BuilderManagers[closestBase].Position
                 end
             end
-            StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandMergeStateMachine', 80, 35, false)
             self.Retreat = true
             self.BuilderData = {
                 Position = location,
@@ -612,7 +624,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         local rx = self.Pos[1] - self.Home[1]
                         local rz = self.Pos[3] - self.Home[3]
                         local rallyPointDist = rx * rx + rz * rz
-                        if rallyPointDist > 100 then
+                        if rallyPointDist > 225 then
                             local units = self:GetPlatoonUnits()
                             IssueMove(units, rallyPoint )
                         end
@@ -657,6 +669,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 if StateUtils.ExitConditions(self,aiBrain) then
                     self.navigating=false
                     self.path=false
+                    if self.retreat then
+                        StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandMergeStateMachine', 80, 35, false)
+                    end
                     coroutine.yield(10)
                     self:LogDebug(string.format('Navigating exit condition met, decidewhattodo'))
                     self:ChangeState(self.DecideWhatToDo)

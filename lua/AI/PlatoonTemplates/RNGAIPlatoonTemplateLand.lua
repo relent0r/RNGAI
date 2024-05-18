@@ -72,7 +72,7 @@ PlatoonTemplate {
     Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - (categories.SNIPER + categories.drl0204 + categories.del0204) - categories.xrl0302, -- Type of units.
-          2, -- Min number of units.
+          0, -- Min number of units.
           25, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',

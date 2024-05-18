@@ -50,7 +50,7 @@ BuilderGroup {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.LAND } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.5, 250.0 }},
         },
         BuilderType = 'Any',
@@ -141,7 +141,7 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
@@ -174,7 +174,7 @@ BuilderGroup {
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             -- Have we the eco to build it ?
             --{ UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 600.0 }},                    -- Base income
         },
@@ -206,7 +206,7 @@ BuilderGroup {
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             -- Have we the eco to build it ?
             --{ UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 600.0 }},                    -- Base income
         },
@@ -236,7 +236,7 @@ BuilderGroup {
             { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             -- Have we the eco to build it ?
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 600.0 }},                    -- Base income
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.EXPERIMENTAL}},

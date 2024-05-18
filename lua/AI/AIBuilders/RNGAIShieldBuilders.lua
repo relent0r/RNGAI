@@ -104,7 +104,7 @@ BuilderGroup {
             { UCBC, 'HaveUnitRatioAtLocationRNG', { 'LocationType', 1.0, categories.STRUCTURE * categories.SHIELD, '<=',categories.STRUCTURE * categories.TECH3 * (categories.ENERGYPRODUCTION + categories.FACTORY) } },
             { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.95 } },
-            { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 0.0 } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.95, 1.1 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.SHIELD}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'HaveUnitRatioVersusCapRNG', { 0.12 / 2, '<', categories.STRUCTURE * categories.DEFENSE * categories.SHIELD } },
@@ -146,7 +146,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2, 5 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.95 } },
-            { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 0.0 } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.95, 1.1 }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.SHIELD}},
             { UCBC, 'HaveUnitRatioAtLocationRNG', { 'LocationType', 1.0, categories.STRUCTURE * categories.SHIELD, '<=',categories.STRUCTURE * categories.TECH3 * (categories.ENERGYPRODUCTION + categories.FACTORY) } },

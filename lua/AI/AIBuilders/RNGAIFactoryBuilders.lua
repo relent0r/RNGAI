@@ -147,7 +147,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'GreaterThanEconStorageCurrentRNG', { 240, 1050 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.70, 0.85 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.70, 0.90 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { MIBC, 'AirPlayerCheck', {'LocationType', 3, categories.FACTORY * categories.LAND } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
@@ -176,7 +176,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.85 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.90 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { MIBC, 'AirPlayerCheck', {'LocationType', 3, categories.FACTORY * categories.LAND }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
@@ -232,7 +232,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.95 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { MIBC, 'AirPlayerCheck', {'LocationType', 3, categories.FACTORY * categories.LAND }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
@@ -377,7 +377,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.30, 'FACTORY'}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.80 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.85 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { MIBC, 'AirPlayerCheck', {'LocationType', 3, categories.FACTORY * categories.LAND }},
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },

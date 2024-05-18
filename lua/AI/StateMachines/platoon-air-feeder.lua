@@ -52,7 +52,7 @@ AIPlatoonAirFeederBehavior = Class(AIPlatoonRNG) {
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             local refuel = false
             local platUnits = self:GetPlatoonUnits()
-            local targetPlatoon = StateUtils.GetClosestPlatoonRNG(self, 'FighterBehavior', 62500)
+            local targetPlatoon = StateUtils.GetClosestPlatoonRNG(self, 'FighterBehavior', false, 62500)
             if not targetPlatoon then
                 --LOG('Feeder No FighterBehavior platoon found, make new platoon')
                 self.FeederTimeout = self.FeederTimeout + 1

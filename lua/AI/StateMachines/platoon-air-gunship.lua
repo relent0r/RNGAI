@@ -178,7 +178,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             end
             if not target and VDist3Sq(platPos, self.Home) < 900 then
                 if self.PlatoonCount < 10 then
-                    local plat = StateUtils.GetClosestPlatoonRNG(self, 'GunshipBehavior', 60)
+                    local plat = StateUtils.GetClosestPlatoonRNG(self, 'GunshipBehavior', false, 60)
                     if plat and plat.PlatoonCount and plat.PlatoonCount < 10 then
                         self:LogDebug(string.format('Gunship platoon is merging with another'))
                         local platUnits = plat:GetPlatoonUnits()
