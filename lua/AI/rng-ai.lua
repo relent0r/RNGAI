@@ -5999,6 +5999,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
+        LOG('Civilian unit count is '..table.getn(civUnits))
         if not table.empty(civUnits) then
             self.EnemyIntel.CivilianCaptureUnits = civUnits
         end

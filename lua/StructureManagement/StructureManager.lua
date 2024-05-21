@@ -1670,8 +1670,8 @@ StructureManager = Class {
             multiplier = 1
         end
         --LOG('Initial Delay loop starting')
-        while initial_delay < (50 / multiplier) do
-            if not unit.Dead and GetEconomyStored( aiBrain, 'ENERGY') >= 150 and unit:GetFractionComplete() == 1 then
+        while initial_delay < (60 / multiplier) do
+            if not unit.Dead and GetEconomyStored( aiBrain, 'ENERGY') >= 250 and unit:GetFractionComplete() == 1 then
                 initial_delay = initial_delay + 10
                 if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
                     initial_delay = 50
