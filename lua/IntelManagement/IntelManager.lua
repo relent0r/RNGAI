@@ -1182,7 +1182,7 @@ IntelManager = Class {
         end
         coroutine.yield(Random(5,20))
         local teamAveragePositions = self:GetTeamAveragePositions()
-        self:CalculateAirSlot()
+        self:CalculatePlayerSlot()
         local maximumResourceValue = 0
         local Zones = {
             'Land',
@@ -1296,39 +1296,44 @@ IntelManager = Class {
         return teamValue
     end,
 
-    CalculateAirSlot = function(self)
-        local furtherestPlayer = false
+    CalculatePlayerSlot = function(self)
+        local furthestPlayer = false
+        local closestPlayer = false
         local selfIndex = self.Brain:GetArmyIndex()
         if self.Brain.BrainIntel.AllyCount > 2 and self.Brain.EnemyIntel.EnemyCount > 0 then
             local closestIndex
             local closestDistance
-            local furtherestPlayerDistance
-            --LOG('EnemyStartLocations'..repr(self.Brain.EnemyIntel.EnemyStartLocations))
-
+            local furthestPlayerDistance
+            local closestPlayerDistance = math.huge -- Initialize with a large value
             for _, b in self.Brain.EnemyIntel.EnemyStartLocations do
                 if not closestIndex or b.Distance < closestDistance then
-                    --LOG('No index or distance is closer '..repr(b))
                     closestDistance = b.Distance
                     closestIndex = b.Index
                 end
             end
-            --RNGLOG('Closest enemy is index '..repr(closestIndex)..' at '..repr(closestDistance))
             for _, v in self.Brain.BrainIntel.AllyStartLocations do
-                if v.Index ~= selfIndex and (not furtherestPlayerDistance or closestDistance > furtherestPlayerDistance) then
-                    furtherestPlayerDistance = VDist3Sq(v.Position, self.Brain.EnemyIntel.EnemyStartLocations[closestIndex].Position)
+                if v.Index ~= selfIndex then
+                    local distanceToEnemy = VDist3Sq(v.Position, self.Brain.EnemyIntel.EnemyStartLocations[closestIndex].Position)
+                    if not furthestPlayerDistance or distanceToEnemy > furthestPlayerDistance then
+                        furthestPlayerDistance = distanceToEnemy
+                    end
+                    if (not closestPlayerDistance or distanceToEnemy < closestPlayerDistance) and (not furthestPlayerDistance or furthestPlayerDistance - distanceToEnemy > 50) then
+                        closestPlayerDistance = distanceToEnemy
+                        closestPlayer = true
+                    end
                 end
             end
-            if closestDistance and furtherestPlayerDistance and closestDistance > furtherestPlayerDistance then
-                if math.sqrt(closestDistance) - math.sqrt(furtherestPlayerDistance) > 50 then
-                    --RNGLOG('We are the futherest') 
-                    --RNGLOG('The difference between positions is '..(math.sqrt(closestDistance) - math.sqrt(furtherestPlayerDistance)))
-                    furtherestPlayer = true
+            if closestDistance and furthestPlayerDistance and closestDistance > furthestPlayerDistance then
+                if math.sqrt(closestDistance) - math.sqrt(furthestPlayerDistance) > 50 then
+                    furthestPlayer = true
                     self.Brain.BrainIntel.AirPlayer = true
                 end
             end
-            if not furtherestPlayer then
-                --RNGLOG('We are not the furtherest, start position is '..repr(self.Brain.BrainIntel.StartPos))
-                --RNGLOG('The difference between positions is '..(closestDistance - furtherestPlayerDistance))
+            if not furthestPlayer then
+                if closestPlayer and closestPlayerDistance and closestPlayerDistance > 50 then
+                    -- Logic for closest player being far enough
+                    self.Brain.BrainIntel.SpamPlayer = true
+                end
             end
         end
     end,
