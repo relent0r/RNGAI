@@ -353,7 +353,7 @@ ExitConditions = function(self,aiBrain)
             local enemyThreat = 0
             for _,enemy in enemies do
                 enemyThreat = enemyThreat + enemy.Blueprint.Defense.SurfaceThreatLevel
-                if enemyThreat * 1.1 > self.CurrentPlatoonThreatAntiSurface then
+                if enemyThreat * 1.1 > self.CurrentPlatoonThreatAntiSurface and not self.retreat then
                     --RNGLOG('TruePlatoon enemy threat too high during navigating, exiting')
                     self.navgood = false
                     return true

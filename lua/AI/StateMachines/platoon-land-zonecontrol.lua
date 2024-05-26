@@ -99,7 +99,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             if not PlatoonExists(aiBrain, self) then
                 return
             end
-            local threatMultiplier = 1.1
+            local threatMultiplier = 1.0
             if self.ZoneType == 'raid' then
                 threatMultiplier = 0.9
             end
@@ -208,17 +208,30 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             end
             local targetZone
             if not targetZone then
-                if self.PlatoonData.EarlyRaid and not self.ZoneMarkerTable then
+                if self.PlatoonData.EarlyRaid then
                     local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
-                    local myLabel = NavUtils.GetLabel('Land', self.Pos)
+                    local ignoreRadius = aiBrain.OperatingAreas['BaseMilitaryArea']
+                    ignoreRadius = ignoreRadius * ignoreRadius
                     local startPos = aiBrain.BrainIntel.StartPos
-                    local zoneMarkers = {}
-                    for _, v in aiBrain.Zones.Land.zones do
-                        if v.resourcevalue > 0 and v.label == myLabel then
-                            table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+                    if not self.ZoneMarkerTable then
+                        local myLabel = NavUtils.GetLabel('Land', self.Pos)
+                        local zoneMarkers = {}
+                        for _, v in aiBrain.Zones.Land.zones do
+                            if v.resourcevalue > 0 and v.label == myLabel then
+                                local withinRange
+                                for _, pos in aiBrain.EnemyIntel.EnemyStartLocations do
+                                    if VDist2Sq(v.pos[1],  v.pos[3], pos.Position[1], pos.Position[3]) < ignoreRadius then
+                                        withinRange = true
+                                        break
+                                    end
+                                end
+                                if withinRange then
+                                    table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+                                end
+                            end
                         end
+                        self.ZoneMarkerTable = zoneMarkers
                     end
-                    self.ZoneMarkerTable = zoneMarkers
                     table.sort(self.ZoneMarkerTable,function(a,b) return VDist2Sq(a.Position[1], a.Position[3],startPos[1], startPos[3]) / (VDist2Sq(a.Position[1], a.Position[3], self.Pos[1], self.Pos[3]) + RUtils.EdgeDistance(a.Position[1],a.Position[3],playableArea[1])) > VDist2Sq(b.Position[1], b.Position[3], startPos[1], startPos[3]) / (VDist2Sq(b.Position[1], b.Position[3], self.Pos[1], self.Pos[3]) + RUtils.EdgeDistance(b.Position[1],b.Position[3],playableArea[1])) end)
                     targetZone = self.ZoneMarkerTable[1].ZoneID
                     table.remove(self.ZoneMarkerTable, 1)

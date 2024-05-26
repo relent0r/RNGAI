@@ -36,7 +36,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Former Scout',
         PlatoonTemplate = 'RNGAILandScoutStateMachine',
-        Priority = 1000,
+        Priority = 1001,
         InstanceCount = 30,
         BuilderType = 'Any',
         BuilderConditions = {

@@ -74,6 +74,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             self.CurrentPlatoonThreatAntiAir = 0
             self.MachineStarted = true
             self.threatTimeout = 0
+            LOG('ACU Support is starting')
             StartACUSupportThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -129,6 +130,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     rangedAttack = true
                 else
                     self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
+                    LOG('ACU Support is itself retreating')
                     self.retreat=true
                     self:ChangeState(self.Retreating)
                     return
@@ -149,6 +151,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             end
             local target
             if StateUtils.SimpleTarget(self,aiBrain) then
+                LOG('ACU Support is moving to combat loop')
                 if rangedAttack then
                     self:ChangeState(self.RangedCombatLoop)
                     return
@@ -162,7 +165,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 coroutine.yield(20)
                 RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
                 if PlatoonExists(aiBrain, self) then
-                    aiBrain:DisbandPlatoon(self)
+                    LOG('ACU Support is exiting due to acu retreating or close to base')
+                    self:ExitStateMachine()
                 end
                 return
             end
@@ -171,7 +175,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 coroutine.yield(20)
                 RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
                 if PlatoonExists(aiBrain, self) then
-                    aiBrain:DisbandPlatoon(self)
+                    LOG('ACU Support is exiting due to acu retreating and low threat')
+                    self:ExitStateMachine()
                 end
                 return
             end
@@ -183,6 +188,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     --RNGLOG('CDR is not in danger, venting to LandCombatBehavior')
                     RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
                     if PlatoonExists(aiBrain, self) then
+                        LOG('ACU Support is exiting due to low acu threat')
                         self:ExitStateMachine()
                     end
                     return
@@ -194,11 +200,13 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 --return self:SetAIPlanRNG('LandAssaultBehavior')
                 RUtils.VentToPlatoon(self, aiBrain, 'LandAssaultBehavior')
                 if PlatoonExists(aiBrain, self) then
+                    LOG('ACU Support is exiting due to acu in water')
                     self:ExitStateMachine()
                 end
                 return
             end
             if acu.Position and NavUtils.CanPathTo(self.MovementLayer, self.Pos, acu.Position) then
+                LOG('ACU Support is navigating to acu')
                 local rx = self.Pos[1] - acu.Position[1]
                 local rz = self.Pos[3] - acu.Position[3]
                 local acuDistance = rx * rx + rz * rz

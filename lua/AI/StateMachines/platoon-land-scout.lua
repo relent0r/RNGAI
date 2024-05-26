@@ -86,6 +86,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonLandScoutBehavior
         Main = function(self)
+            LOG('Scout StateMachine DecideWhatToDo')
             local aiBrain = self:GetBrain()
             local scout = self.ScoutUnit
             local scoutPos = scout:GetPosition()
@@ -129,6 +130,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             end
             local targetData, scoutType = RUtils.GetLandScoutLocationRNG(self, aiBrain, scout)
             if targetData then
+                LOG('Scout StateMachine scoutType is '..tostring(scoutType))
                 --Can we get there safely?
                 if scoutType == 'AssistUnit' and not targetData.Dead then
                     local supportUnitPos = targetData:GetPosition()

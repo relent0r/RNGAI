@@ -918,7 +918,7 @@ function PerformACUReclaim(aiBrain, cdr, minimumReclaim, nextWaypoint)
         if reclaiming then
             coroutine.yield(3)
             local counter = 0
-            while (not cdr.Caution) and (RNGGETN(cdr:GetCommandQueue()) > 1 or reclaiming) do
+            while (not cdr.Caution) and (RNGGETN(cdr:GetCommandQueue()) > 1 and reclaiming) do
                 coroutine.yield(10)
                 if cdr:IsIdleState() then
                     reclaiming = false

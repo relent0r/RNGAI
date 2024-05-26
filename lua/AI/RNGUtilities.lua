@@ -3250,8 +3250,12 @@ GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, inclu
                 if bp.CategoriesHash.INDIRECTFIRE then
                     mult=0.3
                 end
-                if bp.CategoriesHash.STRUCTURE and not bp.CategoriesHash.TACTICALMISSILEPLATFORM then
-                    mult=1.5
+                if bp.CategoriesHash.STRUCTURE then
+                    if bp.CategoriesHash.TACTICALMISSILEPLATFORM then
+                        mult=0.2
+                    else
+                        mult=1.5
+                    end
                 end
                 if bp.CategoriesHash.COMMAND then
                     local commanderThreat = v:EnhancementThreatReturn()
@@ -4876,9 +4880,12 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         end
     end
     if platoon.FindPlatoonCounter and (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
-        --RNGLOG('Look for platoon that needs a scout')
+        LOG('Look for platoon that needs a scout')
         coroutine.yield(3)
         platoonNeedScout, supportPlatoon = ScoutFindNearbyPlatoonsRNG(platoon, 250)
+        if platoonNeedScout then
+            LOG('Found platoon')
+        end
         platoon.FindPlatoonCounter = platoon.FindPlatoonCounter + 1
     end
     if platoonNeedScout then

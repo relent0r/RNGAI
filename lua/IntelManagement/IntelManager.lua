@@ -1304,34 +1304,67 @@ IntelManager = Class {
             local closestIndex
             local closestDistance
             local furthestPlayerDistance
-            local closestPlayerDistance = math.huge -- Initialize with a large value
+            local closestPlayerDistance
+            local selfDistanceToEnemy
+            local selfDistanceToTeammates
+            
             for _, b in self.Brain.EnemyIntel.EnemyStartLocations do
                 if not closestIndex or b.Distance < closestDistance then
                     closestDistance = b.Distance
                     closestIndex = b.Index
                 end
             end
+            
+            selfDistanceToEnemy = VDist3Sq(self.Brain.BrainIntel.StartPos, self.Brain.EnemyIntel.EnemyStartLocations[closestIndex].Position)
+            
             for _, v in self.Brain.BrainIntel.AllyStartLocations do
                 if v.Index ~= selfIndex then
                     local distanceToEnemy = VDist3Sq(v.Position, self.Brain.EnemyIntel.EnemyStartLocations[closestIndex].Position)
+                    local distanceToTeammate = VDist3Sq(v.Position, self.Brain.BrainIntel.StartPos)
+                    
                     if not furthestPlayerDistance or distanceToEnemy > furthestPlayerDistance then
                         furthestPlayerDistance = distanceToEnemy
                     end
-                    if (not closestPlayerDistance or distanceToEnemy < closestPlayerDistance) and (not furthestPlayerDistance or furthestPlayerDistance - distanceToEnemy > 50) then
+                    if not closestPlayerDistance or distanceToEnemy < closestPlayerDistance then
                         closestPlayerDistance = distanceToEnemy
-                        closestPlayer = true
+                    end
+                    if not selfDistanceToTeammates or distanceToTeammate < selfDistanceToTeammates then
+                        selfDistanceToTeammates = distanceToTeammate
                     end
                 end
             end
+            
             if closestDistance and furthestPlayerDistance and closestDistance > furthestPlayerDistance then
                 if math.sqrt(closestDistance) - math.sqrt(furthestPlayerDistance) > 50 then
                     furthestPlayer = true
+                    LOG('Air player slot for '..self.Brain.Nickname)
                     self.Brain.BrainIntel.AirPlayer = true
                 end
             end
+            LOG('For AI '..self.Brain.Nickname)
+            LOG('Closest Enemy Distance is '..tostring(closestDistance))
+            LOG('Self Enemy Distance is '..tostring(selfDistanceToEnemy))
+            LOG('Closest ally Distance is '..tostring(closestPlayerDistance))
             if not furthestPlayer then
-                if closestPlayer and closestPlayerDistance and closestPlayerDistance > 50 then
-                    -- Logic for closest player being far enough
+                if closestDistance and selfDistanceToEnemy and selfDistanceToEnemy <= closestPlayerDistance then
+                    if math.sqrt(selfDistanceToEnemy) - math.sqrt(selfDistanceToTeammates) > 50 then
+                        LOG('Spam player slot for '..self.Brain.Nickname)
+                        self.Brain.BrainIntel.SpamPlayer = true
+                    end
+                end
+            end
+        elseif self.Brain.BrainIntel.AllyCount == 1 and self.Brain.EnemyIntel.EnemyCount == 1 then
+            local enemyX, enemyZ
+            if self.Brain:GetCurrentEnemy() then
+                enemyX, enemyZ = self.Brain:GetCurrentEnemy():GetArmyStartPos()
+            end
+        
+            -- Get the armyindex from the enemy
+            if enemyX then
+                local EnemyIndex = self.Brain:GetCurrentEnemy():GetArmyIndex()
+                local OwnIndex = self.Brain:GetArmyIndex()
+                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' and self.Brain.EnemyIntel.EnemyStartLocations[EnemyIndex].Distance < 250000 then
+                    LOG('Spam player slot for 1v1 '..self.Brain.Nickname)
                     self.Brain.BrainIntel.SpamPlayer = true
                 end
             end

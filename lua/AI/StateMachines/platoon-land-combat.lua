@@ -119,7 +119,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
                 self:LogDebug(string.format('DecideWhatToDo we have no antiair threat and there are air units around'))
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
-                local label = NavUtils.GetLabel('Water', self.Pos)
+                local label = NavUtils.GetLabel('Land', self.Pos)
                 aiBrain:PlatoonReinforcementRequestRNG(self, 'AntiAir', closestBase, label)
             end
             if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then

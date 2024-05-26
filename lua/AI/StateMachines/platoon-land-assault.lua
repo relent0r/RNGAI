@@ -575,13 +575,12 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 local y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange - rangeModifier or self.MaxPlatoonWeaponRange)
                 local smartPos = { x, GetTerrainHeight( x, y), y }
                 -- check if the move position is new or target has moved
-                if VDist2Sq( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.49 or unit.TargetPos ~= targetPosition then
+                if VDist2Sq( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 1 or unit.TargetPos ~= targetPosition then
                     -- clear move commands if we have queued more than 4
                     if RNGGETN(unit:GetCommandQueue()) > 2 then
                         IssueClearCommands({unit})
                         coroutine.yield(3)
                     end
-                    -- if our target is dead, jump out of the "for _, unit in self:GetPlatoonUnits() do" loop
                     IssueMove({unit}, smartPos )
                     if target.Dead then break end
                     IssueAttack({unit}, target)
@@ -606,13 +605,12 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 local y = targetPosition[3] - math.sin(alpha) * self.MaxDirectFireRange + 4
                 local smartPos = { x, GetTerrainHeight( x, y), y }
                 -- check if the move position is new or target has moved
-                if VDist2Sq( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.49 or unit.TargetPos ~= targetPosition then
+                if VDist2Sq( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 1 or unit.TargetPos ~= targetPosition then
                     -- clear move commands if we have queued more than 4
                     if RNGGETN(unit:GetCommandQueue()) > 2 then
                         IssueClearCommands({unit})
                         coroutine.yield(3)
                     end
-                    -- if our target is dead, jump out of the "for _, unit in self:GetPlatoonUnits() do" loop
                     IssueMove({unit}, smartPos )
                     if target.Dead then break end
                     unit.smartPos = smartPos
@@ -672,7 +670,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 end
                 smartPos = { x, GetTerrainHeight( x, y), y }
                 -- check if the move position is new or target has moved
-                if VDist2Sq( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 0.8 or unit.TargetPos ~= targetPosition then
+                if VDist2Sq( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 2.25 or unit.TargetPos ~= targetPosition then
                     -- clear move commands if we have queued more than 4
                     if RNGGETN(unit:GetCommandQueue()) > 2 then
                         IssueClearCommands({unit})
