@@ -477,7 +477,7 @@ function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)
                 return true
             end
         elseif uType == 'Land' then
-            if GetEconomyStored(aiBrain, 'MASS') >= 5 and GetEconomyStored(aiBrain, 'ENERGY') >= 100 then
+            if GetEconomyStored(aiBrain, 'MASS') >= 5 and GetEconomyStored(aiBrain, 'ENERGY') >= 100 or aiBrain.BrainIntel.SpamPlayer then
                 return true
             end
         else

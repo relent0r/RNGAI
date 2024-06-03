@@ -1342,7 +1342,7 @@ Platoon = Class(RNGAIPlatoonClass) {
 
         while aiBrain:PlatoonExists(self) do
             coroutine.yield(1)
-            --RNGLOG('aiBrain.EngineerAssistManagerEngineerCount '..aiBrain.EngineerAssistManagerEngineerCount)
+            RNGLOG('aiBrain.EngineerAssistManagerEngineerCount '..aiBrain.EngineerAssistManagerEngineerCount)
             local totalBuildRate = 0
             local tech1Engineers = {}
             local tech2Engineers = {}
@@ -1352,6 +1352,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local totalTech3BuilderRate = 0
             local platoonCount = 0
             local platUnits = GetPlatoonUnits(self)
+            LOG('Actual count '..tostring(table.getn(platUnits)))
             for _, eng in platUnits do
                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
                     if aiBrain.RNGDEBUG then
@@ -1580,6 +1581,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --RNGLOG('Assist Platoon Focus Category has changed, aborting current assist')
                 eng.UnitBeingAssist = nil
                 break
+            end
+            if eng:IsIdleState() then
+                LOG('Engineer in assist manager is idle when he shouldnt be')
             end
             coroutine.yield(30)
         end

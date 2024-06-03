@@ -107,6 +107,9 @@ function EnemyThreatInT3ArtilleryRangeRNG(aiBrain, locationtype, ratio)
             return true
         end
     end
+    LOG('Enemy Thread not in arty range')
+    LOG('Total '..tostring(totalThreat))
+    LOG('Inrange '..tostring(inRangeThreat))
     return false
 end
 

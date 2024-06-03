@@ -1347,6 +1347,10 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local eng = self.eng
             if self.HighValueDiscard then
+                while RNGGETN(eng:GetCommandQueue()) > 0 and not eng:IsIdleState() do
+                    coroutine.yield(20)
+                end
+                self:ExitStateMachine()
                 return
             end
             if table.empty(eng.EngineerBuildQueue) then
@@ -1384,9 +1388,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 IssueClearCommands({eng})
                 unit.ReclaimInProgress = true
                 IssueReclaim({eng}, unit)
-                unit.EngineerBuildQueue = {}
+                eng.EngineerBuildQueue = {}
             end
-            while RNGGETN(eng:GetCommandQueue()) > 0 do
+            while RNGGETN(eng:GetCommandQueue()) > 0 and not eng:IsIdleState() do
                 coroutine.yield(20)
             end
             coroutine.yield(2)

@@ -436,7 +436,7 @@ GunshipThreatThreads = function(aiBrain, platoon)
                         --LOG('Gunship needs refuel')
                         if not aiBrain.BrainIntel.AirStagingRequired and aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) < 1 then
                             aiBrain.BrainIntel.AirStagingRequired = true
-                        elseif not platoon.BuilderData.AttackTarget or platoon.BuilderData.AttackTarget.Dead then
+                        elseif not aiBrain.BrainIntel.AirStagingRequired and not platoon.BuilderData.AttackTarget or platoon.BuilderData.AttackTarget.Dead then
                             --LOG('Assigning unit to refuel platoon from refuel')
                             platoon:LogDebug(string.format('Gunship is low on fuel or health and is going to refuel'))
                             local plat = aiBrain:MakePlatoon('', '')

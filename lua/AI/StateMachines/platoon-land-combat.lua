@@ -597,7 +597,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 else
-                    coroutine.yield(15)
+                    coroutine.yield(10)
                 end
                 local nodenum=RNGGETN(self.path)
                 if not (self.path[nodenum]==lastfinalpoint) and nodenum > 1 then
@@ -656,18 +656,25 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                             if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>v.MaxWeaponRange/3*v.MaxWeaponRange/3+platoonNum*platoonNum then
-                                --spread=spread+VDist3Sq(v:GetPosition(),self.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
-                                --snum=snum+1
-                                ---[[
                                 if self.dest then
-                                    if v.Role=='Sniper' then
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
+                                    if v.Role=='Scout' then
+                                        if v.GetNavigator then
+                                            local navigator = v:GetNavigator()
+                                            if navigator then
+                                                navigator:SetGoal(self.Pos)
+                                            end
+                                        else
+                                            IssueClearCommands({v})
+                                            IssueMove({v},self.Pos)
+                                        end
+                                    elseif v.Role=='Sniper' then
                                         if v.GetNavigator then
                                             local navigator = v:GetNavigator()
                                             if navigator then
                                                 navigator:SetGoal(RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
                                             end
                                         else
+                                            IssueClearCommands({v})
                                             IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
                                         end
                                     else
@@ -677,19 +684,31 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                                 navigator:SetGoal(RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
                                             end
                                         else
+                                            IssueClearCommands({v})
                                             IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
                                         end
                                     end
                                     spread=spread+VDist3Sq(unitPos,self.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
                                     snum=snum+1
                                 else
-                                    if v.Role=='Sniper' or v.Role=='Support' then
+                                    if v.Role=='Scout' then
+                                        if v.GetNavigator then
+                                            local navigator = v:GetNavigator()
+                                            if navigator then
+                                                navigator:SetGoal(self.Pos)
+                                            end
+                                        else
+                                            IssueClearCommands({v})
+                                            IssueMove({v},self.Pos)
+                                        end
+                                    elseif v.Role=='Sniper' or v.Role=='Support' then
                                         if v.GetNavigator then
                                             local navigator = v:GetNavigator()
                                             if navigator then
                                                 navigator:SetGoal(RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
                                             end
                                         else
+                                            IssueClearCommands({v})
                                             IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
                                         end
                                     else
@@ -699,12 +718,13 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                                 navigator:SetGoal(RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
                                             end
                                         else
+                                            IssueClearCommands({v})
                                             IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
                                         end
                                     end
                                     spread=spread+VDist3Sq(unitPos,self.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
                                     snum=snum+1
-                                end--]]
+                                end
                             end
                         end
                     end
@@ -767,6 +787,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                         navigator:SetGoal(self.dest)
                                     end
                                 else
+                                    IssueClearCommands({v})
                                     IssueMove({v},self.dest)
                                 end
                             end
@@ -783,7 +804,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 end
-                coroutine.yield(25)
+                coroutine.yield(20)
             end
         end,
     },

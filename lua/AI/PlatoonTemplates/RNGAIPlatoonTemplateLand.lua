@@ -71,14 +71,9 @@ PlatoonTemplate {
     Name = 'LandCombatStateMachineRNG',
     Plan = 'StateMachineAIRNG',
     GlobalSquads = {
-        { categories.MOBILE * categories.LAND * ( categories.DIRECTFIRE + categories.INDIRECTFIRE ) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - (categories.SNIPER + categories.drl0204 + categories.del0204) - categories.xrl0302, -- Type of units.
+        { categories.MOBILE * categories.LAND * ( categories.DIRECTFIRE + categories.INDIRECTFIRE ) - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - categories.xrl0302, -- Type of units.
           1, -- Min number of units.
           25, -- Max number of units.
-          'attack', -- platoon types: 'support', 'attack', 'scout',
-          'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
-          { categories.MOBILE * categories.LAND * categories.INDIRECTFIRE - categories.ANTIAIR - categories.SCOUT - categories.EXPERIMENTAL - categories.ENGINEER - categories.uel0304 - categories.url0304 - categories.xsl0304, -- Type of units.
-          0, -- Min number of units.
-          12, -- Max number of units.
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.MOBILE * (categories.SHIELD + categories.STEALTHFIELD) - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },

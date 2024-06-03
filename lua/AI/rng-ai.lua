@@ -4697,7 +4697,7 @@ AIBrain = Class(RNGAIBrainClass) {
     FactoryEcoManagerRNG = function(self)
         coroutine.yield(Random(1,7))
         while true do
-            if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
+            if self.EcoManager.EcoManagerStatus == 'ACTIVE' and not self.BrainIntel.SpamPlayer then
                 if GetGameTimeSeconds() < 240 then
                     coroutine.yield(50)
                     continue

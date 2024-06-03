@@ -121,7 +121,18 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             end
 
             eng.EngineerBuildQueue = {}
-            table.sort(self.ZoneMarkers,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],platoonPos[1],platoonPos[3])/VDist2Sq(enemyPos[1],enemyPos[3],a.Position[1],a.Position[3])/a.ResourceValue/a.ResourceValue<VDist2Sq(b.Position[1],b.Position[3],platoonPos[1],platoonPos[3])/VDist2Sq(enemyPos[1],enemyPos[3],b.Position[1],b.Position[3])/b.ResourceValue/b.ResourceValue end)
+            local enemyWeight = 1.5
+            table.sort(self.ZoneMarkers, function(a, b)
+                local aDistanceToPlatoon = VDist2Sq(a.Position[1], a.Position[3], platoonPos[1], platoonPos[3])
+                local aDistanceToEnemy = VDist2Sq(enemyPos[1], enemyPos[3], a.Position[1], a.Position[3]) * enemyWeight
+                local aValue = aDistanceToPlatoon / aDistanceToEnemy / a.ResourceValue / a.ResourceValue
+            
+                local bDistanceToPlatoon = VDist2Sq(b.Position[1], b.Position[3], platoonPos[1], platoonPos[3])
+                local bDistanceToEnemy = VDist2Sq(enemyPos[1], enemyPos[3], b.Position[1], b.Position[3]) * enemyWeight
+                local bValue = bDistanceToPlatoon / bDistanceToEnemy / b.ResourceValue / b.ResourceValue
+            
+                return aValue < bValue
+            end)
             local currentmarker=nil
             self.CurentZoneIndex=nil
             self.CurrentMarkerIndex=nil

@@ -262,8 +262,15 @@ VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride)--basic kit
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     end
     if VDist3Sq(pos,dest)>9 then
-        IssueClearCommands({unit})
-        IssueMove({unit},dest)
+        if unit.GetNavigator then
+            local navigator = unit:GetNavigator()
+            if navigator then
+                navigator:SetGoal(dest)
+            end
+        else
+            IssueClearCommands({unit})
+            IssueMove({unit},dest)
+        end
         return mod
     else
         return mod
@@ -1382,21 +1389,20 @@ end
 
 CaptureDoneRNG = function(unit, params)
     if unit.Active or unit.Dead then return end
-    if not unit.PlatoonHandle then return end
+    if not unit.AIPlatoonReference then return end
     --RNGLOG("*AI DEBUG: Capture done" .. unit.EntityId)
     unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
 end
 
 BuildAIDoneRNG = function(unit, params)
     if unit.Active or unit.Dead then return end
-    if not unit.PlatoonHandle then return end
+    if not unit.AIPlatoonReference then return end
     --RNGLOG("*AI DEBUG: MexBuildAIRNG removing queue item")
     --RNGLOG('Queue Size is '..RNGGETN(unit.EngineerBuildQueue))
     if unit.EngineerBuildQueue and not table.empty(unit.EngineerBuildQueue) then
         table.remove(unit.EngineerBuildQueue, 1)
     end
     if table.empty(unit.EngineerBuildQueue) then
-        LOG('BuildDone callback fired '..unit.PlatoonHandle.BuilderName)
         unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
     end
     --RNGLOG('Queue size after remove '..RNGGETN(unit.EngineerBuildQueue))
@@ -1404,7 +1410,7 @@ end
 
 BuildAIFailedRNG = function(unit, params)
     if unit.Active or unit.Dead then return end
-    if not unit.PlatoonHandle then return end
+    if not unit.AIPlatoonReference then return end
     --RNGLOG("*AI DEBUG: MexBuildAIRNG removing queue item")
     --RNGLOG('Queue Size is '..RNGGETN(unit.EngineerBuildQueue))
     if not unit.BuildFailedCount then
@@ -1428,7 +1434,7 @@ end
 
 StartBuildRNG = function(eng, unit)
     if eng.Active or eng.Dead then return end
-    if not eng.PlatoonHandle then return end
+    if not eng.AIPlatoonReference then return end
     --LOG("*AI DEBUG: Build done " .. unit.EntityId)
     if eng and not eng.Dead and unit and not unit.Dead then
         local locationType = eng.PlatoonHandle.PlatoonData.Construction.LocationType

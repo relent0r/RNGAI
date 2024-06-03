@@ -1627,6 +1627,37 @@ function UnfinishedUnitsAtLocationRNG(aiBrain, locationType, category)
     return false
 end
 
+function PlayerRoleCheck(aiBrain, locationType, unitCount, unitCategory, checkType)
+    if aiBrain.BrainIntel.AirPlayer and checkType == 'AIR' and aiBrain.BrainIntel.AllyCount > 1 then
+        local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+        if not factoryManager then
+            WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
+            return true
+        end
+        if factoryManager.LocationActive then
+            local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
+            if  numUnits >= unitCount then
+                --RNGLOG('We are air player and have hit land factory limit')
+                return false
+            end
+        end
+    elseif aiBrain.BrainIntel.SpamPlayer and checkType == 'SPAM' and aiBrain.BrainIntel.AllyCount > 1 then
+        local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+        if not factoryManager then
+            WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
+            return true
+        end
+        if factoryManager.LocationActive then
+            local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
+            if  numUnits >= unitCount then
+                RNGLOG('We are spam player and have hit air factory limit')
+                return false
+            end
+        end
+    end
+    return true
+end
+
 --[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.

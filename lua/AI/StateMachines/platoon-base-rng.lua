@@ -244,6 +244,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                     unit.ReclaimInProgress = nil
                     unit.CaptureInProgress = nil
                     unit.BuildFailedCount = nil
+                    unit.AIPlatoonReference = nil
                     if unit:IsPaused() then
                         unit:SetPaused(false)
                     end

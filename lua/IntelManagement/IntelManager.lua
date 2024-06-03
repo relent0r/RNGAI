@@ -1300,6 +1300,8 @@ IntelManager = Class {
         local furthestPlayer = false
         local closestPlayer = false
         local selfIndex = self.Brain:GetArmyIndex()
+        LOG('Ally Count '..tostring(self.Brain.BrainIntel.AllyCount))
+        LOG('Enemy Count'..tostring(self.Brain.EnemyIntel.EnemyCount))
         if self.Brain.BrainIntel.AllyCount > 2 and self.Brain.EnemyIntel.EnemyCount > 0 then
             local closestIndex
             local closestDistance
@@ -1350,6 +1352,7 @@ IntelManager = Class {
                     if math.sqrt(selfDistanceToEnemy) - math.sqrt(selfDistanceToTeammates) > 50 then
                         LOG('Spam player slot for '..self.Brain.Nickname)
                         self.Brain.BrainIntel.SpamPlayer = true
+                        self:ForkThread(self.SpamTriggerDurationThread)
                     end
                 end
             end
@@ -1363,12 +1366,32 @@ IntelManager = Class {
             if enemyX then
                 local EnemyIndex = self.Brain:GetCurrentEnemy():GetArmyIndex()
                 local OwnIndex = self.Brain:GetArmyIndex()
-                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' and self.Brain.EnemyIntel.EnemyStartLocations[EnemyIndex].Distance < 250000 then
+                LOG('Enemy Index is '..EnemyIndex)
+                LOG('Checkt pathing data '..repr(self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]))
+                LOG('Enemy Distance is '..tostring(self.Brain.EnemyIntel.EnemyStartLocations[EnemyIndex].Distance))
+                if self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' and self.Brain.EnemyIntel.EnemyStartLocations[EnemyIndex].Distance < 348100 then
                     LOG('Spam player slot for 1v1 '..self.Brain.Nickname)
                     self.Brain.BrainIntel.SpamPlayer = true
+                    self:ForkThread(self.SpamTriggerDurationThread)
                 end
+            else
+                LOG('No current enemy')
             end
         end
+    end,
+
+    SpamTriggerDurationThread = function(self)
+        -- This function just runs a timed thread for a more spammy approach with some bail outs along the way.
+        local cancelSpam = false
+        local startTime = GetGameTimeSeconds()
+        while not cancelSpam do
+            coroutine.yield(50)
+            if GetGameTimeSeconds() - startTime > 300 then
+                cancelSpam = true
+            end
+        end
+        LOG('Switch off SpamPlayer '..self.Brain.Nickname)
+        self.Brain.BrainIntel.SpamPlayer = false
     end,
 
     GetTeamAveragePositions = function(self)

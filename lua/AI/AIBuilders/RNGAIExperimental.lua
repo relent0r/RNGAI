@@ -269,7 +269,7 @@ BuilderGroup {
         FormRadius = 10000,
         InstanceCount = 50,
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL - categories.uel0401 } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL - categories.uel0401 - categories.ARTILLERY } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -313,6 +313,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'StrategicArtillery',
             ThreatWeights = {
                 TargetThreatType = 'Commander',
             },
