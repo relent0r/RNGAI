@@ -26,44 +26,7 @@ local PlatoonExists = moho.aibrain_methods.PlatoonExists
         end
         self:ConfigurePlatoon()
         while PlatoonExists(aiBrain, self) do
-            local weaponDamage = 0
-            local platoonUnits = GetPlatoonUnits(self)
-            for k, v in platoonUnits do
-                if not v.Dead then
-                    if v.UnitId == 'daa0206' then
-                        local damage = v.Blueprint.Weapon[1].DoTPulses * v.Blueprint.Weapon[1].Damage * v.Blueprint.Weapon[1].MuzzleSalvoSize
-                        weaponDamage = weaponDamage + damage
-                    elseif v.UnitId == 'xrl0302' then
-                        local damage = v.Blueprint.Weapon[2].Damage
-                        weaponDamage = weaponDamage + damage
-                    end
-                end
-            end
-            weaponDamage = weaponDamage * 0.85
-            --LOG('MercyStrike Damage output is '..weaponDamage)
-            coroutine.yield(1)
-            local platoonUnits = GetPlatoonUnits(self)
-            local requiredCount = 0
-            local acuIndex
-            if not target then
-                --LOG('no target, searching ')
-                target, requiredCount, acuIndex = RUtils.CheckACUSnipe(aiBrain, self.MovementLayer)
-                if target then
-                    local hp = aiBrain.EnemyIntel.ACU[acuIndex].HP
-                    requiredCount = math.ceil(hp / weaponDamage)
-                end
-                if not target then
-                    --RNGLOG('Mercy strike : No ACU target')
-                    if RNGGETN(platoonUnits) >= 2 then
-                        --RNGLOG('Mercy strike : No ACU found in TacticalMission loop, look for closest')
-                        target = self:FindClosestUnit('Attack', 'Enemy', true, categories.COMMAND )
-                        if target then
-                            local hp = target:GetHealth()
-                            requiredCount = math.ceil(hp / weaponDamage)
-                        end
-                    end
-                end
-            end
+
             if target and RNGGETN(platoonUnits) >= requiredCount then
                 --RNGLOG('Mercy strike : required count available')
                 self:Stop()
@@ -178,411 +141,82 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.Navigating)
                         return
                     else
-                        self:ChangeState(self.CombatLoop)
+                        self:ChangeState(self.SuicideLoop)
                         return
                     end
                 end
             end
-            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, true)
-            self:LogDebug(string.format('DecideWhatToDo Danger Check, EnemySurface is '..threat.enemySurface..' ally surface is '..threat.allySurface))
-            if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
-                self:LogDebug(string.format('DecideWhatToDo we have no antiair threat and there are air units around'))
-                local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
-                local label = NavUtils.GetLabel('Water', self.Pos)
-                aiBrain:PlatoonReinforcementRequestRNG(self, 'AntiAir', closestBase, label)
-            end
-            if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then
-                if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*2 > threat.enemySurface then
-                    rangedAttack = true
-                else
-                    self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
-                    self.retreat=true
-                    self:ChangeState(self.Retreating)
-                    return
+            local requiredCount = 0
+            local acuIndex
+            if not target then
+                --LOG('no target, searching ')
+                target, requiredCount, acuIndex = RUtils.CheckACUSnipe(aiBrain, self.MovementLayer)
+                if target then
+                    local hp = aiBrain.EnemyIntel.ACU[acuIndex].HP
+                    requiredCount = math.ceil(hp / weaponDamage)
                 end
-            else
-                self.retreat=false
-            end
-            if StateUtils.SimpleTarget(self,aiBrain) then
-                if rangedAttack then
-                    self:ChangeState(self.RangedCombatLoop)
-                    return
-                else
-                    self:ChangeState(self.CombatLoop)
-                    return
-                end
-            end
-            if VDist3Sq(self.Pos, aiBrain.BuilderManagers[self.LocationType].Position) < 14400 then
-                --LOG('DecideWhatToDo HighPriority Targets')
-                local hiPriTargetPos
-                local hiPriTarget = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
-                if hiPriTarget and not IsDestroyed(hiPriTarget) then
-                    hiPriTargetPos = hiPriTarget:GetPosition()
-                    if VDist2Sq(hiPriTargetPos[1],hiPriTargetPos[3],self.Pos[1],self.Pos[3])>(self.MaxPlatoonWeaponRange+20)*(self.MaxPlatoonWeaponRange+20) then  
-                        if not self.combat and not self.retreat then
-                            if self.path and VDist3Sq(self.path[RNGGETN(self.path)],hiPriTargetPos)>400 then
-                                self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
-                                --RNGLOG('self.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(self.path[RNGGETN(self.path)],point.Position))
-                                self.BuilderData = {
-                                    Position = hiPriTargetPos,
-                                    CutOff = 400,
-                                }
-                                --LOG('Retreating to platoon')
-                                self.dest = self.BuilderData.Position
-                                self:ChangeState(self.Navigating)
-                                return
-                            end
-                            self.rdest=hiPriTargetPos
-                            self.raidunit=hiPriTarget
-                            self.dest=hiPriTargetPos
-                            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
-                            self.navigating=true
-                            self.raid=true
-                            --SwitchState(self,'raid')
-                            --RNGLOG('Simple Priority is moving to '..repr(self.dest))
-                            self.BuilderData = {
-                                Position = hiPriTargetPos,
-                                CutOff = 400,
-                            }
-                            --LOG('Retreating to platoon')
-                            self:ChangeState(self.Navigating)
-                            return
+                if not target then
+                    --RNGLOG('Mercy strike : No ACU target')
+                    if RNGGETN(platoonUnits) >= 2 then
+                        --RNGLOG('Mercy strike : No ACU found in TacticalMission loop, look for closest')
+                        target = self:FindClosestUnit('Attack', 'Enemy', true, categories.COMMAND )
+                        if target then
+                            local hp = target:GetHealth()
+                            requiredCount = math.ceil(hp / weaponDamage)
                         end
                     end
                 end
             end
-            if VDist3Sq(self.Pos, self.Home) > 10000 then
-                --LOG('DecideWhatToDo Look for priority points ')
-                local acuSnipeUnit = RUtils.CheckACUSnipe(aiBrain, 'Land')
-                if acuSnipeUnit then
-                    if not acuSnipeUnit.Dead then
-                        local acuTargetPosition = acuSnipeUnit:GetPosition()
-                        self.rdest=acuTargetPosition
-                        self.raidunit=acuSnipeUnit
-                        self.dest=acuTargetPosition
-                        self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
-                        self.navigating=true
-                        self.raid=true
+            if target and not target.Dead and RNGGETN(platoonUnits) >= requiredCount then
+                local targetPos = target:GetPosition()
+                local rx = self.Pos[1] - targetPos[1]
+                local rz = self.Pos[3] - targetPos[3]
+                local acuDistance = rx * rx + rz * rz
+                if NavUtils.CanPathTo(self.MovementLayer, self.Pos, targetPos) then
+                    if acuDistance > 6400 then
                         self.BuilderData = {
-                            TargetUnit = acuSnipeUnit,
-                            Position = acuTargetPosition,
-                            CutOff = 400,
+                            AttackTarget = target,
+                            Position = targetPos,
+                            CutOff = 400
                         }
-                        --LOG('Retreating to platoon')
+                        self.dest = self.BuilderData.Position
                         self:ChangeState(self.Navigating)
                         return
-                    end
-                end
-                if not table.empty(aiBrain.prioritypoints) then
-                    local pointHighest = 0
-                    local point = false
-                    for _, v in aiBrain.prioritypoints do
-                        local tempPoint = v.priority/(RNGMAX(VDist2Sq(self.Pos[1],self.Pos[3],v.Position[1],v.Position[3]),30*30)+(v.danger or 0))
-                        if tempPoint > pointHighest then
-                            pointHighest = tempPoint
-                            point = v
-                        end
-                    end
-                    if point then
-                    --RNGLOG('point pos '..repr(point.Position)..' with a priority of '..point.priority)
-                        if VDist2Sq(point.Position[1],point.Position[3],self.Pos[1],self.Pos[3])>(self.MaxPlatoonWeaponRange+20)*(self.MaxPlatoonWeaponRange+20) then
-                            if not self.combat and not self.retreat then
-                                if point.type then
-                                    --RNGLOG('switching to state '..point.type)
-                                end
-                                if point.type=='push' then
-                                    --SwitchState(platoon,'push')
-                                    self.dest=point.Position
-                                elseif point.type=='raid' then
-                                    if self.raid then
-                                        if self.path and VDist3Sq(self.path[RNGGETN(self.path)],point.Position)>400 then
-                                            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
-                                            --RNGLOG('self.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(self.path[RNGGETN(self.path)],point.Position))
-                                            self.BuilderData = {
-                                                Position = point.Position,
-                                                CutOff = 400,
-                                            }
-                                            self.dest = self.BuilderData.Position
-                                            --LOG('Retreating to platoon')
-                                            self:ChangeState(self.Navigating)
-                                            return
-                                        end
-                                    end
-                                    self.rdest=point.Position
-                                    self.raidunit=point.unit
-                                    self.dest=point.Position
-                                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
-                                    self.navigating=true
-                                    self.raid=true
-                                    self.BuilderData = {
-                                        Position = point.Position,
-                                        CutOff = 400,
-                                    }
-                                    --LOG('Retreating to platoon')
-                                    self:ChangeState(self.Navigating)
-                                    return
-                                elseif point.type=='garrison' then
-                                    --SwitchState(platoon,'garrison')
-                                    self.dest=point.Position
-                                elseif point.type=='guard' then
-                                    --SwitchState(platoon,'guard')
-                                    self.guard=point.unit
-                                elseif point.type=='acuhelp' then
-                                    --SwitchState(platoon,'acuhelp')
-                                    self.guard=point.unit
-                                end
-                            end
-                        end
+                    else
+                        self:ChangeState(self.SuicideLoop)
+                        return
                     end
                 end
             end
-            if 1 == 1 then
-                --LOG('DecideWhatToDo GetMassMarkers ')
-                local mex=RUtils.AIGetMassMarkerLocations(aiBrain, false)
-                local raidlocs={}
-                for _,v in mex do
-                    if v.Position and GetSurfaceHeight(v.Position[1],v.Position[3])<=GetTerrainHeight(v.Position[1],v.Position[3]) 
-                    and VDist2Sq(v.Position[1],v.Position[3],self.Pos[1],self.Pos[3])>150*150 and NavUtils.CanPathTo(self.MovementLayer, self.Pos,v.Position) 
-                    and RUtils.GrabPosEconRNG(aiBrain,v.Position,50).ally < 1 then
-                        RNGINSERT(raidlocs,v)
-                    end
-                end
-                table.sort(raidlocs,function(k1,k2) return VDist2Sq(k1.Position[1],k1.Position[3],self.Pos[1],self.Pos[3])*VDist2Sq(k1.Position[1],k1.Position[3],self.Home[1],self.Home[3])/VDist2Sq(k1.Position[1],k1.Position[3],self.Home[1],self.Home[3])<VDist2Sq(k2.Position[1],k2.Position[3],self.Pos[1],self.Pos[3])*VDist2Sq(k2.Position[1],k2.Position[3],self.Home[1],self.Home[3])/VDist2Sq(k2.Position[1],k2.Position[3],self.Home[1],self.Home[3]) end)
-                self.dest=raidlocs[1].Position
-                --RNGLOG('self.Pos '..repr(self.Pos))
-                --RNGLOG('self.dest '..repr(self.dest))
-                if self.dest and self.Pos then
-                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.dest, 0, 150,80)
-                end
-                if self.path then
-                    self.navigating=true
-                    self.BuilderData = {
-                        Position = self.dest,
-                        CutOff = 400,
-                    }
-                    self:ChangeState(self.Navigating)
-                    return
-                end
-            end
-            --LOG('DecideWhatToDo end of loop')
             coroutine.yield(25)
-            --LOG('post yield')
-            if self.Vented then
-                --LOG('Vented LandCombatPlatoon completed decide what to do loop')
-            end
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
 
     },
 
-    CombatLoop = State {
+    SuicideLoop = State {
 
-        StateName = 'CombatLoop',
+        StateName = 'SuicideLoop',
 
         --- The platoon searches for a target
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
             local units=GetPlatoonUnits(self)
-            if not aiBrain.BrainIntel.SuicideModeActive then
-                for k,unit in self.targetcandidates do
-                    if not unit or unit.Dead or not unit.machineworth then 
-                        --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
-                        table.remove(self.targetcandidates,k) 
-                    end
-                end
-            end
             local target
             local closestTarget
             local approxThreat
             local targetPos
             for _,v in units do
                 if v and not v.Dead then
-                    local unitPos = v:GetPosition()
-                    if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
-                        target = aiBrain.BrainIntel.SuicideModeTarget
-                    else
-                        for l, m in self.targetcandidates do
-                            if m and not m.Dead then
-                                local enemyPos = m:GetPosition()
-                                local rx = unitPos[1] - enemyPos[1]
-                                local rz = unitPos[3] - enemyPos[3]
-                                local tmpDistance = rx * rx + rz * rz
-                                if v.Role ~= 'Artillery' and v.Role ~= 'Silo' and v.Role ~= 'Sniper' then
-                                    tmpDistance = tmpDistance*m.machineworth
-                                end
-                                if not closestTarget or tmpDistance < closestTarget then
-                                    target = m
-                                    closestTarget = tmpDistance
-                                end
-                            end
-                        end
-                    end
-                    if target then
-                        local skipKite = false
-                        local unitRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
-                        targetPos = target:GetPosition()
-                        local targetCats = target.Blueprint.CategoriesHash
-                        if not approxThreat then
-                            approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, false, false)
-                        end
-                        if not (v.Role == 'Sniper' or v.Role == 'Silo') and closestTarget>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
-                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface then
-                                IssueClearCommands({v}) 
-                                if v.Role == 'Shield' or v.Role == 'Stealth' then
-                                    IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
-                                else
-                                    IssueAggressiveMove({v},targetPos)
-                                end
-                                continue
-                            end
-                        end
-                        if v.Role == 'Artillery' or v.Role == 'Silo' or v.Role == 'Sniper' then
-                            if targetCats.DIRECTFIRE and targetCats.STRUCTURE and targetCats.DEFENSE then
-                                if v.MaxWeaponRange > unitRange then
-                                    skipKite = true
-                                    if not v:IsUnitState("Attacking") then
-                                        IssueClearCommands({v})
-                                        IssueAttack({v}, target)
-                                    end
-                                end
-                            end
-                        end
-                        if not skipKite then
-                            if approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface*1.5 and not targetCats.INDIRECTFIRE and targetCats.MOBILE and v.MaxWeaponRange <= unitRange then
-                                IssueClearCommands({v})
-                                if v.Role == 'Shield' or v.Role == 'Stealth' then
-                                    IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
-                                else
-                                    IssueAggressiveMove({v},targetPos)
-                                end
-                            else
-                                StateUtils.VariableKite(self,v,target)
-                            end
-                        end
-                    end
+                    IssueClearCommands({v})
+                    IssueAttack({v}, target)
                 end
             end
-            if target and not target.Dead and targetPos and aiBrain:CheckBlockingTerrain(self.Pos, targetPos, 'none') then
-                IssueMove(units, targetPos)
-            end
+
             coroutine.yield(30)
             self:ChangeState(self.DecideWhatToDo)
-            return
-        end,
-    },
-
-    RangedCombatLoop = State {
-
-        StateName = 'RangedCombatLoop',
-
-        --- The platoon searches for a target
-        ---@param self AIPlatoonLandCombatBehavior
-        Main = function(self)
-            local aiBrain = self:GetBrain()
-            local units=GetPlatoonUnits(self)
-            if not aiBrain.BrainIntel.SuicideModeActive then
-                for k,unit in self.targetcandidates do
-                    if not unit or unit.Dead or not unit.machineworth then 
-                        --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
-                        table.remove(self.targetcandidates,k) 
-                    end
-                end
-            end
-            local target
-            local closestTarget
-            local targetPos
-            for _,v in units do
-                if v and not v.Dead then
-                    local unitPos = v:GetPosition()
-                    if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
-                        target = aiBrain.BrainIntel.SuicideModeTarget
-                    else
-                        for l, m in self.targetcandidates do
-                            if m and not m.Dead then
-                                local enemyPos = m:GetPosition()
-                                local rx = unitPos[1] - enemyPos[1]
-                                local rz = unitPos[3] - enemyPos[3]
-                                local tmpDistance = rx * rx + rz * rz
-                                if not closestTarget or tmpDistance < closestTarget then
-                                    target = m
-                                    closestTarget = tmpDistance
-                                end
-                            end
-                        end
-                    end
-                    if target then
-                        local skipKite = false
-                        local unitRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
-                        targetPos = target:GetPosition()
-                        local targetCats = target.Blueprint.CategoriesHash
-                        if v.Role == 'Artillery' or v.Role == 'Silo' or v.Role == 'Sniper' then
-                            if targetCats.DIRECTFIRE and targetCats.STRUCTURE and targetCats.DEFENSE then
-                                if v.MaxWeaponRange > unitRange then
-                                    skipKite = true
-                                    if not v:IsUnitState("Attacking") then
-                                        IssueClearCommands({v})
-                                        IssueAttack({v}, target)
-                                    end
-                                end
-                            end
-                        end
-                        if not skipKite then
-                            StateUtils.VariableKite(self,v,target, true)
-                        end
-                    end
-                end
-            end
-            if target and not target.Dead and targetPos and aiBrain:CheckBlockingTerrain(self.Pos, targetPos, 'none') then
-                IssueMove(units, targetPos)
-            end
-            coroutine.yield(30)
-            self:ChangeState(self.DecideWhatToDo)
-            return
-        end,
-    },
-
-    Transporting = State {
-
-        StateName = 'Transporting',
-
-        --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
-        ---@param self AIPlatoonAdaptiveReclaimBehavior
-        Main = function(self)
-            --LOG('LandCombat trying to use transport')
-            local brain = self:GetBrain()
-            if not self.dest then
-                WARN('No position passed to LandAssault')
-                return false
-            end
-            local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, self.dest, 3, false)
-            if usedTransports then
-                self:ChangeState(self.Navigating)
-                return
-            else
-                self:LogDebug(string.format('Platoon tried but didnt use transports'))
-                coroutine.yield(20)
-                if self.Home and self.LocationType then
-                    local hx = self.Pos[1] - self.Home[1]
-                    local hz = self.Pos[3] - self.Home[3]
-                    local homeDistance = hx * hx + hz * hz
-                    if homeDistance < 6400 and brain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint then
-                        self:LogDebug(string.format('No transport used and close to base, move to rally point'))
-                        local rallyPoint = brain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint
-                        local rx = self.Pos[1] - self.Home[1]
-                        local rz = self.Pos[3] - self.Home[3]
-                        local rallyPointDist = rx * rx + rz * rz
-                        if rallyPointDist > 225 then
-                            local units = self:GetPlatoonUnits()
-                            IssueMove(units, rallyPoint )
-                        end
-                        coroutine.yield(50)
-                    end
-                end
-                self:ChangeState(self.DecideWhatToDo)
-                return
-            end
             return
         end,
     },
@@ -594,167 +228,78 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         --- The platoon retreats from a threat
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
-            if self.Vented then
-                --LOG('Vented LandCombatPlatoon trying to navigating')
-            end
             local aiBrain = self:GetBrain()
-            local platoonUnits = GetPlatoonUnits(self)
-            local currentPathNum=0
-            local pathmaxdist=0
-            local lastfinalpoint=nil
-            local lastfinaldist=0
-            while PlatoonExists(aiBrain, self) do
-                if self.Vented then
-                    --LOG('Vented LandCombatPlatoon Navigating')
-                end
-                coroutine.yield(1)
-                if StateUtils.ExitConditions(self,aiBrain) then
-                    self.navigating=false
-                    self.path=false
-                    coroutine.yield(10)
-                    self:ChangeState(self.DecideWhatToDo)
-                    return
-                else
-                    coroutine.yield(15)
-                end
-                local nodenum=RNGGETN(self.path)
-                if not (self.path[nodenum]==lastfinalpoint) and nodenum > 1 then
-                    pathmaxdist=0
-                    for i,v in self.path do
-                        if not v then continue end
-                        if not type(i)=='number' then continue end
-                        if i==nodenum then continue end
-                        --totaldist=totaldist+self.path[i+1].nodedist
-                        pathmaxdist=math.max(VDist3Sq(v,self.path[i+1]),pathmaxdist)
-                    end
-                    lastfinalpoint=self.path[nodenum]
-                    lastfinaldist=VDist3Sq(self.path[nodenum],self.path[nodenum-1])
-                end
-                if self.path[nodenum-1] and VDist3Sq(self.path[nodenum],self.path[nodenum-1])>lastfinaldist*3 then
-                    if NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.path[nodenum]) then
-                        self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.path[nodenum], 1, 150,80)
-                        coroutine.yield(10)
-                        continue
-                    end
-                end
-                if self.dest and not NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.dest) then
-                    self.navigating=false
-                    self.path=nil
-                    coroutine.yield(10)
-                    self:LogDebug(string.format('platoon is going to use transport'))
-                    self:ChangeState(self.Transporting)
-                    return
-                end
-                if self.path and GetTerrainHeight(self.path[nodenum][1],self.path[nodenum][3])<GetSurfaceHeight(self.path[nodenum][1],self.path[nodenum][3]) then
-                    self.navigating=false
-                    self.path=nil
-                    coroutine.yield(20)
-                    self:ChangeState(self.DecideWhatToDo)
-                    return
-                end
-                platoonUnits = GetPlatoonUnits(self)
-                local platoonNum=RNGGETN(platoonUnits)
-                if platoonNum < 20 then
-                    --StateUtils.CHPMergePlatoon(self, 30)
-                end
-                local spread=0
-                local snum=0
-                if GetTerrainHeight(self.Pos[1],self.Pos[3])<self.Pos[2]+3 then
-                    for _,v in platoonUnits do
-                        if v and not v.Dead then
-                            local unitPos = v:GetPosition()
-                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>self.MaxPlatoonWeaponRange*self.MaxPlatoonWeaponRange+900 then
-                                local vec={}
-                                vec[1],vec[2],vec[3]=v:GetVelocity()
-                                if VDist3Sq({0,0,0},vec)<1 then
-                                    IssueClearCommands({v})
-                                    IssueMove({v},self.Home)
-                                    aiBrain:AssignUnitsToPlatoon('ArmyPool', {v}, 'Unassigned', 'NoFormation')
-                                    continue
-                                end
-                            end
-                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>v.MaxWeaponRange/3*v.MaxWeaponRange/3+platoonNum*platoonNum then
-                                --spread=spread+VDist3Sq(v:GetPosition(),self.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
-                                --snum=snum+1
-                                ---[[
-                                if self.dest then
-                                    IssueClearCommands({v})
-                                    if v.Role=='Sniper' then
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
-                                    else
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
-                                    end
-                                    spread=spread+VDist3Sq(unitPos,self.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
-                                    snum=snum+1
-                                else
-                                    IssueClearCommands({v})
-                                    if v.Role=='Sniper' or v.Role=='Support' then
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
-                                    else
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
-                                    end
-                                    spread=spread+VDist3Sq(unitPos,self.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
-                                    snum=snum+1
-                                end--]]
-                            end
-                        end
-                    end
-                end
-                if spread>5 then
-                    coroutine.yield(math.ceil(math.sqrt(spread+10)*5))
-                end
-                platoonUnits = GetPlatoonUnits(self)
-                local supportsquad={}
-                local scouts={}
-                local aa={}
-                local attack={}
-                for _,v in platoonUnits do
-                    if v and not v.Dead then
-                        if v.Role=='Artillery' or v.Role=='Silo' or v.Role=='Sniper' or v.Role=='Shield' then
-                            RNGINSERT(supportsquad,v)
-                        elseif v.Role=='Scout' then
-                            RNGINSERT(scouts,v)
-                        elseif v.Role=='AA' then
-                            RNGINSERT(aa,v)
-                        else
-                            RNGINSERT(attack,v)
-                        end
-                    end
-                end
-                if IsDestroyed(self) then
-                    return
-                end
-                IssueClearCommands(platoonUnits)
-                if self.path then
-                    nodenum=RNGGETN(self.path)
-                    if nodenum>=3 then
-                        self:LogDebug(string.format('nodenum while pathing >= 3 will spreadmove '..nodenum))
-                        self.dest={self.path[3][1]+math.random(-4,4),self.path[3][2],self.path[3][3]+math.random(-4,4)}
-                        IssueMove(attack, self.dest)
-                        StateUtils.SpreadMove(supportsquad,StateUtils.Midpoint(self.path[1],self.path[2],0.2))
-                        StateUtils.SpreadMove(scouts,StateUtils.Midpoint(self.path[1],self.path[2],0.15))
-                        StateUtils.SpreadMove(aa,StateUtils.Midpoint(self.path[1],self.path[2],0.1))
-                    else
-                        self:LogDebug(string.format('Platoon move towards end of path '))
-                        if not self.BuilderData.Position then
-                            self:LogDebug(string.format('No BuilderData.Position '))
-                        end
-                        self.dest=self.BuilderData.Position
-                        self:MoveToLocation(self.dest,false)
-                    end
-                    for i,v in self.path do
-                        if not self.Pos then break end
-                        if (not v) then continue end
-                        if not type(i)=='number' or type(v)=='number' then continue end
-                        if i==nodenum then continue end
-                        if VDist2Sq(v[1],v[3],self.Pos[1],self.Pos[3])<1089 then
-                            currentPathNum = currentPathNum + 1
-                            table.remove(self.path,i)
-                        end
-                    end
-                end
-                coroutine.yield(25)
+            local im = IntelManagerRNG.GetIntelManager(aiBrain)
+            local builderData = self.BuilderData
+            local destination
+            local scout = self.ScoutUnit
+            local platPos = self:GetPlatoonPosition()
+            if not builderData then
+                coroutine.yield(10)
+                self:LogDebug(string.format('Scout had no builderData in navigation'))
+                self:ChangeState(self.DecideWhatToDo)
+                return
             end
+            if not destination then
+                coroutine.yield(10)
+                self:LogDebug(string.format('Scout had no destination in navigation'))
+                self:ChangeState(self.DecideWhatToDo)
+                return
+            end
+            local path, reason = NavUtils.PathToWithThreatThreshold(self.MovementLayer, platPos, destination, aiBrain, NavUtils.ThreatFunctions.AntiSurface, 1000, aiBrain.BrainIntel.IMAPConfig.Rings)
+            if not path then
+                self.BuilderData = {}
+                --LOG('No Path in scout navigation, reason is '..repr(reason))
+                coroutine.yield(10)
+                self:LogDebug(string.format('Scout had no path in navigation'))
+                self:ChangeState(self.DecideWhatToDo)
+                return
+            end
+            local pathNodesCount = RNGGETN(path)
+            for i=1, pathNodesCount do
+                local distEnd = false
+                local Lastdist
+                local dist
+                local Stuck = 0
+                if scout.GetNavigator then
+                    local navigator = scout:GetNavigator()
+                    if navigator then
+                        navigator:SetGoal(path[i])
+                    end
+                else
+                    IssueMove({scout},path[i])
+                end
+                while PlatoonExists(aiBrain, self) do
+                    coroutine.yield(25)
+                    platPos = self:GetPlatoonPosition()
+                    if IsDestroyed(self) or not platPos then
+                        return
+                    end
+                    local px = path[i][1] - platPos[1]
+                    local pz = path[i][3] - platPos[3]
+                    dist = px * px + pz * pz
+                    if dist < 400 then
+                        break
+                    end
+                    if Lastdist ~= dist then
+                        Stuck = 0
+                        Lastdist = dist
+                    else
+                        Stuck = Stuck + 1
+                        if Stuck > 15 then
+                            IssueClearCommands(GetPlatoonUnits(self))
+                            break
+                        end
+                    end
+                end
+                local dx = destination[1] - platPos[1]
+                local dz = destination[3] - platPos[3]d
+                end
+            end
+            --LOG('Scout exiting navigating')
+            self:LogDebug(string.format('Scout exiting navigating'))
+            self:ChangeState(self.DecideWhatToDo)
+            return
         end,
     },
 
@@ -940,21 +485,20 @@ ThreatThread = function(aiBrain, platoon)
         if IsDestroyed(platoon) then
             return
         end
-        local currentPlatoonCount = 0
-        local platoonUnits = platoon:GetPlatoonUnits()
-        for _, unit in platoonUnits do
-            currentPlatoonCount = currentPlatoonCount + 1
+        local weaponDamage = 0
+        local platoonUnits = self:GetPlatoonUnits()
+        for k, v in platoonUnits do
+            if not v.Dead then
+                if v.UnitId == 'daa0206' then
+                    local damage = v.Blueprint.Weapon[1].DoTPulses * v.Blueprint.Weapon[1].Damage * v.Blueprint.Weapon[1].MuzzleSalvoSize
+                    weaponDamage = weaponDamage + damage
+                elseif v.UnitId == 'xrl0302' then
+                    local damage = v.Blueprint.Weapon[2].Damage
+                    weaponDamage = weaponDamage + damage
+                end
+            end
         end
-        if currentPlatoonCount > platoon.PlatoonLimit then
-            platoon.PlatoonFull = true
-        else
-            platoon.PlatoonFull = false
-        end
-        platoon.CurrentPlatoonThreatDirectFireAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.DIRECTFIRE)
-        platoon.CurrentPlatoonThreatIndirectFireAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.INDIRECTFIRE)
-        platoon.CurrentPlatoonThreatAntiSurface = platoon.CurrentPlatoonThreatDirectFireAntiSurface + platoon.CurrentPlatoonThreatIndirectFireAntiSurface
-        platoon.CurrentPlatoonThreatAntiNavy = platoon:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
-        platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
+        self.WeaponDamage = weaponDamage * 0.85
         coroutine.yield(35)
     end
 end
