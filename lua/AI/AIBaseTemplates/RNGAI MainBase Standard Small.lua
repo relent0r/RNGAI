@@ -52,7 +52,6 @@ BaseBuilderTemplate {
         'RNGAI ScoutLandFormer',
         'RNGAI Land Mass Raid',
         'RNGAI Land FormBuilders',
-        'RNGAI Mass Hunter Labs FormBuilders',
         'RNGAI Land Response Formers',
 
         -- Land Factory Builders --

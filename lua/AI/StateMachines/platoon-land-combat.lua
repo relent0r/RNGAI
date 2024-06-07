@@ -578,10 +578,12 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             end
             local aiBrain = self:GetBrain()
             local platoonUnits = GetPlatoonUnits(self)
+            IssueClearCommands(platoonUnits)
             local currentPathNum=0
             local pathmaxdist=0
             local lastfinalpoint=nil
             local lastfinaldist=0
+            self:Stop()
             while PlatoonExists(aiBrain, self) do
                 if self.Vented then
                     --LOG('Vented LandCombatPlatoon Navigating')

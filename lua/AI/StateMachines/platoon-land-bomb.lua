@@ -102,12 +102,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             else
                 self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 55)
             end
-            self.CurrentPlatoonThreatAntiSurface = 0
-            self.CurrentPlatoonThreatAntiNavy = 0
-            self.CurrentPlatoonThreatAntiAir = 0
-            if self.Vented then
-                --LOG('Vented LandCombatPlatoon Starting')
-            end
+            self.WeaponDamage = 1
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -124,13 +119,15 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 --LOG('Vented LandCombatPlatoon Deciding what to do')
             end
             local aiBrain = self:GetBrain()
-            local rangedAttack = false
+            local target
             if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
+                self:LogDebug('Checking for SuicideModeActive')
                 local enemyAcuPosition = aiBrain.BrainIntel.SuicideModeTarget:GetPosition()
                 local rx = self.Pos[1] - enemyAcuPosition[1]
                 local rz = self.Pos[3] - enemyAcuPosition[3]
                 local acuDistance = rx * rx + rz * rz
                 if NavUtils.CanPathTo(self.MovementLayer, self.Pos, enemyAcuPosition) then
+                    self:LogDebug('Found SuicideMode enemy acu')
                     if acuDistance > 6400 then
                         self.BuilderData = {
                             AttackTarget = aiBrain.BrainIntel.SuicideModeTarget,
@@ -148,21 +145,23 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             end
             local requiredCount = 0
             local acuIndex
+            local platoonUnits = self:GetPlatoonUnits()
             if not target then
-                --LOG('no target, searching ')
+                self:LogDebug('Checking for ACUSnipe Opporunity')
                 target, requiredCount, acuIndex = RUtils.CheckACUSnipe(aiBrain, self.MovementLayer)
                 if target then
+                    self:LogDebug('Found ACUSnipe enemy acu')
                     local hp = aiBrain.EnemyIntel.ACU[acuIndex].HP
-                    requiredCount = math.ceil(hp / weaponDamage)
+                    requiredCount = math.ceil(hp / self.WeaponDamage)
                 end
                 if not target then
-                    --RNGLOG('Mercy strike : No ACU target')
                     if RNGGETN(platoonUnits) >= 2 then
-                        --RNGLOG('Mercy strike : No ACU found in TacticalMission loop, look for closest')
+                        self:LogDebug('Checking for Closest enemy acu')
                         target = self:FindClosestUnit('Attack', 'Enemy', true, categories.COMMAND )
                         if target then
+                            self:LogDebug('Found closest enemy acu')
                             local hp = target:GetHealth()
-                            requiredCount = math.ceil(hp / weaponDamage)
+                            requiredCount = math.ceil(hp / self.WeaponDamage)
                         end
                     end
                 end
@@ -293,7 +292,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 local dx = destination[1] - platPos[1]
-                local dz = destination[3] - platPos[3]d
+                local dz = destination[3] - platPos[3]
+                if dx * dx + dz * dz < 400 then
+                    break
                 end
             end
             --LOG('Scout exiting navigating')
@@ -486,7 +487,7 @@ ThreatThread = function(aiBrain, platoon)
             return
         end
         local weaponDamage = 0
-        local platoonUnits = self:GetPlatoonUnits()
+        local platoonUnits = platoon:GetPlatoonUnits()
         for k, v in platoonUnits do
             if not v.Dead then
                 if v.UnitId == 'daa0206' then
@@ -498,7 +499,7 @@ ThreatThread = function(aiBrain, platoon)
                 end
             end
         end
-        self.WeaponDamage = weaponDamage * 0.85
+        platoon.WeaponDamage = weaponDamage * 0.85
         coroutine.yield(35)
     end
 end

@@ -211,6 +211,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local targetZone
             if not targetZone then
                 if self.PlatoonData.EarlyRaid then
+                    self:LogDebug(string.format('Early Raid Platoon'))
                     local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
                     local ignoreRadius = aiBrain.OperatingAreas['BaseMilitaryArea']
                     ignoreRadius = ignoreRadius * ignoreRadius
@@ -222,6 +223,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             if v.resourcevalue > 0 and v.label == myLabel then
                                 local withinRange
                                 for _, pos in aiBrain.EnemyIntel.EnemyStartLocations do
+                                    LOG('Checking enemy start pos of '..tostring(pos.Index))
+                                    LOG('Distance is '..tostring(VDist2Sq(v.pos[1],  v.pos[3], pos.Position[1], pos.Position[3])))
+                                    LOG('ignoreRadius is '..tostring(ignoreRadius))
                                     if VDist2Sq(v.pos[1],  v.pos[3], pos.Position[1], pos.Position[3]) < ignoreRadius then
                                         withinRange = true
                                         break
@@ -235,10 +239,32 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         self.ZoneMarkerTable = zoneMarkers
                     end
                     table.sort(self.ZoneMarkerTable,function(a,b) return VDist2Sq(a.Position[1], a.Position[3],startPos[1], startPos[3]) / (VDist2Sq(a.Position[1], a.Position[3], self.Pos[1], self.Pos[3]) + RUtils.EdgeDistance(a.Position[1],a.Position[3],playableArea[1])) > VDist2Sq(b.Position[1], b.Position[3], startPos[1], startPos[3]) / (VDist2Sq(b.Position[1], b.Position[3], self.Pos[1], self.Pos[3]) + RUtils.EdgeDistance(b.Position[1],b.Position[3],playableArea[1])) end)
+                    local pathable = false
+                    while not pathable do
+                        if NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.ZoneMarkerTable[1].Position) then
+                            pathable = true
+                        else
+                            table.remove(self.ZoneMarkerTable, 1)
+                        end
+                        if table.empty(self.ZoneMarkerTable) then
+                            self.PlatoonData.EarlyRaid = false
+                            break
+                        end
+                        coroutine.yield(1)
+                    end
                     targetZone = self.ZoneMarkerTable[1].ZoneID
                     table.remove(self.ZoneMarkerTable, 1)
                 else
-                    targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType)
+                    local currentLabel = false
+                    if aiBrain:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then
+                        currentLabel = true
+                    end
+                    if currentLabel then
+                        LOG('No transport available, use current label')
+                    else
+                        LOG('transport available, use any label')
+                    end
+                    targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType, currentLabel)
                 end
                 if targetZone then
                     self.BuilderData = {
@@ -674,6 +700,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local aiBrain = self:GetBrain()
             local platoonUnits = GetPlatoonUnits(self)
+            IssueClearCommands(platoonUnits)
             local pathmaxdist=0
             local lastfinalpoint=nil
             local lastfinaldist=0
@@ -683,6 +710,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 self.path = path
                 if not path then
                     LOG('No path due to '..tostring(reason))
+                    LOG('Target location data is '..tostring(self.BuilderData))
+                    LOG('Position is '..tostring(self.BuilderData.Position[1])..':'..tostring(self.BuilderData.Position[3]))
+                    if self.BuilderData.TargetZone then
+                        LOG('Zone is '..tostring(self.BuilderData.TargetZone))
+                    end
                 end
             end
             if not self.path then

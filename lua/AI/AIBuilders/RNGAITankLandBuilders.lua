@@ -711,7 +711,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.xrl0302 } },
         },
         BuilderData = {
-            PlatoonPlan = 'MercyAIRNG',
+            StateMachine = 'MobileBomb',
             LocationType = 'LocationType',
             SearchRadius = 'BaseEnemyArea',
             PrioritizedCategories = {
@@ -725,13 +725,48 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Land FormBuilders',                           -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
     BuildersType = 'PlatoonFormBuilder',                                        -- BuilderTypes are: EngineerBuilder, FactoryBuilder, PlatoonFormBuilder.
     Builder {
+        BuilderName = 'RNGAI Lab Early Game',
+        PlatoonTemplate = 'RNGAI T1 Mass Raiders Mini',
+        Priority = 1000,
+        InstanceCount = 3,
+        BuilderConditions = {  
+                { MIBC, 'LessThanGameTime', { 300 } },
+                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE } },
+            },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'ZoneControl',
+            ZoneType     = 'raid',
+            UseFormation = 'None',
+            LocationType = 'LocationType',
+            EarlyRaid = true,
+            TargetSearchPriorities = { 
+                categories.MOBILE * categories.LAND,
+                categories.ENGINEER,
+                categories.MASSEXTRACTION,
+                categories.ENERGYPRODUCTION,
+                categories.ENERGYSTORAGE,
+                categories.STRUCTURE * categories.DEFENSE,
+                categories.STRUCTURE,
+            },
+            PrioritizedCategories = {   
+                categories.ENGINEER,
+                categories.MASSEXTRACTION,
+                categories.ENERGYPRODUCTION,
+                categories.ENERGYSTORAGE,
+                categories.MOBILE * categories.LAND,
+                categories.STRUCTURE * categories.DEFENSE,
+                categories.STRUCTURE,
+            },
+        },    
+    },
+    Builder {
         BuilderName = 'RNGAI Zone Control',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 800,                                                          -- Priority. 1000 is normal.
         InstanceCount = 5,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
-            --{ UCBC, 'LessThanGameTimeSecondsRNG', { 300 } }, -- don't build after 5 minutes
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL - categories.SCOUT } },
         },

@@ -117,7 +117,7 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'RNGAI MobileBombAttack',
-    Plan = 'PlatoonMergeRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.xrl0302 , 2, 10, 'Attack', 'none' },
     }
