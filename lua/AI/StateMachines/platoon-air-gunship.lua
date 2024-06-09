@@ -242,7 +242,6 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
-                    
                 end
                 -- navigate towards waypoint 
                 if not waypoint then

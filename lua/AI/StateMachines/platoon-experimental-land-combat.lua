@@ -102,7 +102,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         if finishedUnit.Blueprint.CategoriesHash.ENGINEER and finishedUnit.Blueprint.CategoriesHash.TECH3 then
                             local plat = aiBrain:MakePlatoon('', '')
                             aiBrain:AssignUnitsToPlatoon(plat, {finishedUnit}, 'attack', 'None')
-                            import("/mods/rngai/lua/ai/statemachines/platoon-engineer-task.lua").AssignToUnitsMachine({ 
+                            import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ 
                                 StateMachine = 'Engineer',
                                 LocationType = 'FLOATING',
                                 BuilderData = {

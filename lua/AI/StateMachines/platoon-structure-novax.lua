@@ -60,6 +60,7 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
                                 categories.STRUCTURE * categories.NUKE * categories.TECH3, 
                                 categories.EXPERIMENTAL * categories.ORBITALSYSTEM, 
                                 categories.EXPERIMENTAL * categories.ENERGYPRODUCTION * categories.STRUCTURE, 
+                                categories.EXPERIMENTAL * categories.MOBILE * categories.LAND,
                                 categories.TECH3 * categories.MASSFABRICATION, 
                                 categories.TECH3 * categories.ENERGYPRODUCTION, 
                                 categories.STRUCTURE * categories.STRATEGIC, 

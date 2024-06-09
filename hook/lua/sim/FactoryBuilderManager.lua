@@ -173,11 +173,15 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         elseif self.Brain.TransportPool and EntityCategoryContains(categories.TRANSPORTFOCUS - categories.uea0203, finishedUnit ) then
             self.Brain.TransportRequested = nil
             finishedUnit:ForkThread( import('/lua/ai/transportutilities.lua').AssignTransportToPool, finishedUnit:GetAIBrain() )
-		elseif finishedUnit.Blueprint.CategoriesHash.AIR and finishedUnit.Blueprint.CategoriesHash.GROUNDATTACK and not finishedUnit.Blueprint.CategoriesHash.EXPERIMENTAL then
+		elseif finishedUnit.Blueprint.CategoriesHash.AIR then
             local unitStats = self.Brain.IntelManager.UnitStats
+            local unitValue = finishedUnit.Blueprint.Economy.BuildCostMass or 0
             if unitStats then
-                local unitValue = finishedUnit.Blueprint.Economy.BuildCostMass or 0
-                unitStats['Gunship'].Built.Mass = unitStats['Gunship'].Built.Mass + unitValue
+                if finishedUnit.Blueprint.CategoriesHash.GROUNDATTACK and not finishedUnit.Blueprint.CategoriesHash.EXPERIMENTAL then
+                    unitStats['Gunship'].Built.Mass = unitStats['Gunship'].Built.Mass + unitValue
+                elseif finishedUnit.Blueprint.CategoriesHash.BOMBER and not finishedUnit.Blueprint.CategoriesHash.EXPERIMENTAL and not finishedUnit.Blueprint.CategoriesHash.BOMB then
+                    unitStats['Bomber'].Built.Mass = unitStats['Bomber'].Built.Mass + unitValue
+                end
             end
         end
         self:AssignBuildOrder(factory, factory.BuilderManagerData.BuilderType)

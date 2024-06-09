@@ -621,6 +621,7 @@ IntelManager = Class {
             local zoneSet
             local zoneSelection
             local selection
+            local platoonLabel = platoon.Label
             local enemyMexmodifier = 0.1
             local enemyDanger = 1.0
             local enemyX, enemyZ
@@ -655,6 +656,9 @@ IntelManager = Class {
                     local platoonPosition = platoon:GetPlatoonPosition()
                     for k, v in zoneSet do
                         if v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
+                            if requireSameLabel and platoonLabel and v.label > 0 and platoonLabel ~= v.label then
+                                continue
+                            end
                             if not v.startpositionclose then
                                 if platoonPosition then
                                     local compare
@@ -724,6 +728,9 @@ IntelManager = Class {
                    --RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
                     for k, v in zoneSet do
                         if v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
+                            if requireSameLabel and platoonLabel and v.label > 0 and platoonLabel ~= v.label then
+                                continue
+                            end
                             local distanceModifier = VDist3(v.pos,aiBrain.BrainIntel.StartPos)
                             local enemyModifier = 1
                             local startPos = 1
@@ -784,6 +791,9 @@ IntelManager = Class {
                     if not selection then
                         for k, v in zoneSet do
                             if v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
+                                if requireSameLabel and platoonLabel and v.label > 0 and platoonLabel ~= v.label then
+                                    continue
+                                end
                                 if not v.startpositionclose then
                                     local distanceModifier = VDist2(v.pos[1],v.pos[3],enemyX, enemyZ)
                                     local enemyModifier = 1
@@ -857,7 +867,7 @@ IntelManager = Class {
                     local maxFriendlyLandThreat = 25
                     local maxFriendlyAirThreat = 25
 
-                    local platoonLabel = platoon.Label
+                    
                    --RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
                     for k, v in zoneSet do
                         if v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
@@ -1977,6 +1987,11 @@ IntelManager = Class {
                     if t3BombersBuilt < 1 then
                         aiBrain.amanager.Demand.Air.T3.bomber = 1
                         disableBomber = false
+                    end
+                    LOG('bomberMassKilled mass killed '..tostring(bomberMassKilled))
+                    LOG('bomberMassKilled mass built '..tostring(bomberMassBuilt))
+                    if bomberMassKilled > 0 and bomberMassBuilt > 0 then
+                        LOG('bomberMassKilled ratio is '..tostring(math.min(bomberMassKilled / bomberMassBuilt, 2)))
                     end
                     if bomberMassKilled > 0 and bomberMassBuilt > 0 and math.min(bomberMassKilled / bomberMassBuilt, 2) > 1.2 then
                         aiBrain.amanager.Demand.Air.T3.bomber = aiBrain.amanager.Current['Air']['T3']['bomber'] + 1
