@@ -866,12 +866,24 @@ IntelManager = Class {
                     local maxEnemyAirThreat = 25
                     local maxFriendlyLandThreat = 25
                     local maxFriendlyAirThreat = 25
+                    local zoneCount = aiBrain.BuilderManagers[platoon.LocationType].PathableZones.PathableZoneCount or 0
+                    local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
+                    local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
+                    local enemyThreatRatio
+                    if zoneCount > 0 and enemyAirThreat > 0 and myAirThreat > 0 then
+                        enemyThreatRatio = (enemyAirThreat / myAirThreat * zoneCount) or 0
+                    end
+                    LOG('enemyThreatRatio '..tostring(enemyThreatRatio))
 
                     
                    --RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
                     for k, v in zoneSet do
                         if v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
                             if requireSameLabel and platoonLabel and v.label > 0 and platoonLabel ~= v.label then
+                                continue
+                            end
+                            if v.friendlyantiairallocatedthreat > math.max(v.enemyairthreat * 2, enemyThreatRatio) then
+                                LOG('Allocated threat is higher than enemy air threat, ignore this zone')
                                 continue
                             end
                             local distanceModifier = VDist3Sq(originPos, v.pos)
@@ -888,7 +900,7 @@ IntelManager = Class {
                             local normalizedTeamValue = v.teamvalue / maxTeamValue
                             local normalizedResourceValue = v.resourcevalue / maxResourceValue
                             local normalizedEnemyLandThreatValue = v.enemylandthreat / maxEnemyLandThreat
-                            local normalizedEnemyAirThreatValue = v.enemyantiairthreat / maxEnemyAirThreat
+                            local normalizedEnemyAirThreatValue = v.enemyairthreat / maxEnemyAirThreat
                             local normalizedFriendLandThreatValue = v.friendlyantisurfacethreat / maxFriendlyLandThreat
                             local normalizedFriendAirThreatValue = v.friendlylandantiairthreat / maxFriendlyAirThreat
                             local normalizedStartPosValue = startPos
@@ -903,7 +915,6 @@ IntelManager = Class {
                                 normalizedFriendLandThreatValue * weightageValues['friendlyantisurfacethreat'] -
                                 normalizedFriendAirThreatValue * weightageValues['friendlylandantiairthreat']
                             )
-
                             if priorityScore > selection then
                                 selection = priorityScore
                                 zoneSelection = v.id
@@ -997,7 +1008,8 @@ IntelManager = Class {
                 local friendlyThreatAntiSurface = {}
                 local friendlyThreatDirecFireAntiSurface = {}
                 local friendlyThreatIndirecFireAntiSurface = {}
-                local friendlyantiairthreat = {}
+                local friendlyThreatAntiAir = {}
+                local friendlyThreatAntiAirAllocated = {}
                 local labelThreat = {}
                 for k1, v1 in AlliedPlatoons do
                     if not v1.MovementLayer then
@@ -1023,10 +1035,16 @@ IntelManager = Class {
                             friendlyThreatIndirecFireAntiSurface[v1.Zone] = friendlyThreatIndirecFireAntiSurface[v1.Zone] + v1.CurrentPlatoonThreatIndirectFireAntiSurface
                         end
                         if v1.Zone and v1.CurrentPlatoonThreatAntiAir then
-                            if not friendlyantiairthreat[v1.Zone] then
-                                friendlyantiairthreat[v1.Zone] = 0
+                            if not friendlyThreatAntiAir[v1.Zone] then
+                                friendlyThreatAntiAir[v1.Zone] = 0
                             end
-                            friendlyantiairthreat[v1.Zone] = friendlyantiairthreat[v1.Zone] + v1.CurrentPlatoonThreatAntiAir
+                            friendlyThreatAntiAir[v1.Zone] = friendlyThreatAntiAir[v1.Zone] + v1.CurrentPlatoonThreatAntiAir
+                        end
+                        if v1.ZoneAllocated and v1.CurrentPlatoonThreatAntiAir then
+                            if not friendlyThreatAntiAirAllocated[v1.ZoneAllocated] then
+                                friendlyThreatAntiAirAllocated[v1.ZoneAllocated] = 0
+                            end
+                            friendlyThreatAntiAirAllocated[v1.ZoneAllocated] = friendlyThreatAntiAirAllocated[v1.ZoneAllocated] + v1.CurrentPlatoonThreatAntiAir
                         end
                     end
                 end
@@ -1036,6 +1054,11 @@ IntelManager = Class {
                             aiBrain.Zones[v].zones[k2].friendlyantisurfacethreat = v3
                         end
                     end
+                    for k3, v3 in friendlyThreatAntiAirAllocated do
+                        if k2 == k3 then
+                            aiBrain.Zones[v].zones[k2].friendlyantiairallocatedthreat = v3
+                        end
+                    end
                     for k3, v3 in friendlyThreatDirecFireAntiSurface do
                         if k2 == k3 then
                             aiBrain.Zones[v].zones[k2].friendlydirectfireantisurfacethreat = v3
@@ -1043,7 +1066,7 @@ IntelManager = Class {
                                 labelThreat[v2.label] = {
                                     friendlydirectfireantisurfacethreat = 0,
                                     friendlyindirectantisurfacethreat = 0,
-                                    friendlyantiairthreat = 0
+                                    friendlyThreatAntiAir = 0
                                 }
                             end
                             if v2.label > 0 then
@@ -1058,7 +1081,7 @@ IntelManager = Class {
                                 labelThreat[v2.label] = {
                                     friendlydirectfireantisurfacethreat = 0,
                                     friendlyindirectantisurfacethreat = 0,
-                                    friendlyantiairthreat = 0
+                                    friendlyThreatAntiAir = 0
                                 }
                             end
                             if v2.label > 0 then
@@ -1066,18 +1089,18 @@ IntelManager = Class {
                             end
                         end
                     end
-                    for k3, v3 in friendlyantiairthreat do
+                    for k3, v3 in friendlyThreatAntiAir do
                         if k2 == k3 then
-                            aiBrain.Zones[v].zones[k2].friendlyantiairthreat = v3
+                            aiBrain.Zones[v].zones[k2].friendlyThreatAntiAir = v3
                             if v2.label > 0 and not labelThreat[v2.label] then
                                 labelThreat[v2.label] = {
                                     friendlydirectfireantisurfacethreat = 0,
                                     friendlyindirectantisurfacethreat = 0,
-                                    friendlyantiairthreat = 0
+                                    friendlyThreatAntiAir = 0
                                 }
                             end
                             if v2.label > 0 then
-                                labelThreat[v2.label].friendlyantiairthreat = labelThreat[v2.label].friendlyantiairthreat + v3
+                                labelThreat[v2.label].friendlyThreatAntiAir = labelThreat[v2.label].friendlyThreatAntiAir + v3
                             end
                         end
                     end
@@ -1092,8 +1115,8 @@ IntelManager = Class {
                             aiBrain.GraphZones[k2].FriendlySurfaceInDirectFireThreat = v3.friendlyindirectantisurfacethreat
                             --LOG('Assigned FriendlySurfaceInDirectFireThreat to graphzone '..k2..' of '..aiBrain.GraphZones[k2].FriendlySurfaceInDirectFireThreat)
                         end
-                        if k2 == k3 and v3.friendlyantiairthreat then
-                            aiBrain.GraphZones[k2].FriendlyLandAntiAirThreat = v3.friendlyantiairthreat
+                        if k2 == k3 and v3.friendlyThreatAntiAir then
+                            aiBrain.GraphZones[k2].FriendlyLandAntiAirThreat = v3.friendlyThreatAntiAir
                             --LOG('Assigned FriendlyLandAntiAirThreat to graphzone '..k2..' of '..aiBrain.GraphZones[k2].FriendlyLandAntiAirThreat)
                         end
                     end
@@ -2160,10 +2183,11 @@ IntelManager = Class {
                 local zoneCount = aiBrain.BuilderManagers['MAIN'].PathableZones.PathableZoneCount
                 -- We are going to look at the threat in the pathable zones and see which ones are in our territory and make sure we have a theoretical number of air units there
                 -- I want to do this on a per base method, but I realised I'm not keeping information.
-                local totalMobileAARequired = math.ceil(zoneCount * (enemyThreat.Air / selfThreat.AirNow)) or 0
-                --LOG('Enemy Air Threat '..enemyThreat.Air)
-                --LOG('Self Air Threat '..selfThreat.AirNow)
-                --LOG('totalMobileAARequired '..totalMobileAARequired)
+                local totalMobileAARequired = math.min(math.ceil(zoneCount * (enemyThreat.Air / selfThreat.AirNow)), zoneCount * 2) or 0
+                LOG('Enemy Air Threat '..enemyThreat.Air)
+                LOG('Self Air Threat '..selfThreat.AirNow)
+                LOG('totalMobileAARequired '..totalMobileAARequired)
+                LOG('Current T3 Mobile AA count '..aiBrain.amanager.Current['Land']['T3']['aa'])
                 if aiBrain.BrainIntel.LandPhase == 1 then
                     aiBrain.amanager.Demand.Land.T1.aa = totalMobileAARequired
                 elseif aiBrain.BrainIntel.LandPhase == 2 then
@@ -2186,7 +2210,7 @@ IntelManager = Class {
             else
                 aiBrain.amanager.Demand.Land.T1.aa = 0
                 aiBrain.amanager.Demand.Land.T2.aa = 0
-                aiBrain.amanager.Demand.Land.T2.aa = 0
+                aiBrain.amanager.Demand.Land.T3.aa = 0
             end
         elseif type == 'ExperimentalArtillery' then
             local t3ArtilleryCount = 0

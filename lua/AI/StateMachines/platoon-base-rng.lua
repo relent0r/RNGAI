@@ -245,6 +245,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                     unit.CaptureInProgress = nil
                     unit.BuildFailedCount = nil
                     unit.AIPlatoonReference = nil
+                    unit.Active = nil
                     if unit:IsPaused() then
                         unit:SetPaused(false)
                     end
@@ -252,8 +253,6 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                         if unit.BuilderManagerData.EngineerManager then
                             unit.BuilderManagerData.EngineerManager:TaskFinishedRNG(unit)
                         end
-                    else
-                        LOG('Engineer is missing BuilderManagerData')
                     end
                     unit:SetCustomName('EngineerDisbanded')
                 end

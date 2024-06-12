@@ -138,6 +138,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             self.CurrentMarkerIndex=nil
             local zoneFound = false
             self:LogDebug(string.format('Looping through remaining zone markers'))
+            self:LogDebug(string.format('eng id is '..tostring(eng.EntityId)))
             for i,v in self.ZoneMarkers do
                 for j, m in v.ResourceMarkers do
                     if aiBrain:CanBuildStructureAt('ueb1103', m.position) then
@@ -157,6 +158,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             if not zoneFound then
                 if self.StartCycle > 3 then
                     LOG('Start Cycle is greater than 3, disband platoon')
+                    self:LogDebug(string.format('Start Cycle is greater than 3, disband platoon, eng id is '..tostring(eng.EntityId)))
+                    LOG('Eng id is '..tostring(eng.EntityId))
                     self:ExitStateMachine()
                 end
                 local zoneMarkers = {}

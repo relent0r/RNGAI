@@ -14,9 +14,6 @@ function AddToBuildQueueRNG(aiBrain, builder, whatToBuild, buildLocation, relati
     end
     -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
     --RUtils.EngineerTryReclaimCaptureArea(aiBrain, builder, {buildLocation[1], buildLocation[3], buildLocation[2]}) 
-    if builder.PlatoonHandle.BuilderName == 'RNGAI Zone Expansion' then
-        LOG('Engineer Performing initial build at '..repr(buildLocation)..' for engineer '..tostring(builder.EntityId))
-    end
     if borderWarning then
         --LOG('BorderWarning build')
         IssueBuildMobile({builder}, {buildLocation[1], buildLocation[3], buildLocation[2]}, whatToBuild, {})
@@ -234,9 +231,6 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
             end
         end
     end
-    if builder.PlatoonHandle.BuilderName == 'RNGAI Zone Expansion' then
-        LOG('Engineer inside AIExecuteBuildStructureRNG, current location is '..repr(location)..' for engineer '..tostring(builder.EntityId))
-    end
     -- if we have no place to build, then maybe we have a modded/new buildingType. Lets try 'T1LandFactory' as dummy and search for a place to build near base
     if not location and not IsResource(buildingType) and builder.BuilderManagerData and builder.BuilderManagerData.EngineerManager then
         --RNGLOG('*AIExecuteBuildStructure: Find no place to Build! - buildingType '..repr(buildingType)..' - ('..builder.factionCategory..') Trying again with T1LandFactory and RandomIter. Searching near base...')
@@ -273,9 +267,6 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuild
             --RNGLOG('Scenario Info 1, 3 '..repr(ScenarioInfo.size))
             --RNGLOG('BorderWarning is true, location is '..repr(relativeLoc))
             borderWarning = true
-        end
-        if builder.PlatoonHandle.BuilderName == 'RNGAI Zone Expansion' then
-            LOG('Engineer inside AIExecuteBuildStructureRNG, current build location is '..repr(NormalToBuildLocation(relativeLoc))..' for engineer '..tostring(builder.EntityId))
         end
         -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
         AddToBuildQueueRNG(aiBrain, builder, whatToBuild, NormalToBuildLocation(relativeLoc), false, borderWarning)
@@ -615,7 +606,6 @@ function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructio
     -- Iterate through bases finding the value of each expansion
     local baseValues = {}
     local highPri = false
-    LOG('Expansion being created, position is '..repr(position))
     for templateName, baseData in BaseBuilderTemplates do
         local baseValue = baseData.ExpansionFunction(aiBrain, position, constructionData.NearMarkerType)
         table.insert(baseValues, { Base = templateName, Value = baseValue })

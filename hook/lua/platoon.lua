@@ -1573,7 +1573,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
             if jobType =='Upgrade' and IsDestroyed(unitToAssist) then
-                LOG('Upgrading unit is destroyed, break from assist thread')
+                --LOG('Upgrading unit is destroyed, break from assist thread')
                 eng.UnitBeingAssist = nil
                 break
             end
@@ -1581,9 +1581,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                 --RNGLOG('Assist Platoon Focus Category has changed, aborting current assist')
                 eng.UnitBeingAssist = nil
                 break
-            end
-            if eng:IsIdleState() then
-                LOG('Engineer in assist manager is idle when he shouldnt be')
             end
             coroutine.yield(30)
         end

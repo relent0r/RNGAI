@@ -172,7 +172,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     basePosition = aiBrain.BuilderManagers[self.LocationType].Position
                     targetThreat = GetThreatAtPosition(aiBrain, aiBrain.BuilderManagers[self.LocationType].Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Air')
                 end
-                if targetThreat > 10 and basePosition and NavUtils.CanPathTo(self.MovementLayer, self.Pos, basePosition) then
+                if targetThreat > 10 and basePosition and NavUtils.CanPathTo(self.MovementLayer, self.Pos, basePosition) and VDist3Sq(self.Pos, basePosition) < 90000 then
                     local targetZone = MAP:GetZoneID(basePosition,self.Zones.Land.index)
                     self.BuilderData = {
                         TargetZone = targetZone,
@@ -198,6 +198,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         Position = aiBrain.Zones.Land.zones[targetZone].pos,
                         CutOff = 400
                     }
+                    self.ZoneAllocated = targetZone
                     local zx = platPos[1] - self.BuilderData.Position[1]
                     local zz = platPos[3] - self.BuilderData.Position[3]
                     if zx * zx + zz * zz < 3600 then

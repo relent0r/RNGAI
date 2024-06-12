@@ -145,9 +145,6 @@ function CheckTransportPool( aiBrain )
 	local unitlist = GetListOfUnits( aiBrain, AIRTRANSPORTS - categories.uea0203, true, true)
 	
 	for k,v in unitlist do
-		if TransportDialog and v.EntityId == 85 then
-			LOG("*AI DEBUG TRANSPORT "..unit.PlatoonHandle.BuilderName.." Transport "..unit.EntityId.." CheckTransportPool" )
-		end
 		if v and v.PlatoonHandle != TransportPool and v.PlatoonHandle != RefuelPool and GetFractionComplete(v) == 1 then
 			platoon = v.PlatoonHandle or false
 			oldplatoonname = false

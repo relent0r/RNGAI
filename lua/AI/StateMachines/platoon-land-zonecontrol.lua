@@ -190,7 +190,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         AttackTarget = target,
                         Position = targetPos,
                         CutOff = 400
-
                     }
                     self.dest = self.BuilderData.Position
                     local ax = self.Pos[1] - targetPos[1]

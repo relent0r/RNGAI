@@ -684,10 +684,11 @@ BuilderGroup {
         BuilderName = 'RNGAI Response BaseMilitary ANTIAIR Area',
         PlatoonTemplate = 'LandAntiAirStateMachineRNG',
         Priority = 1000,
-        InstanceCount = 6,
+        InstanceCount = 12,
         BuilderType = 'Any',
         BuilderConditions = {
               { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ANTIAIR - categories.INDIRECTFIRE} },
+              --{ UCBC, 'PlatoonDemandMet', { 'Land', 'aa' } },
         },
         BuilderData = {
             StateMachine = 'ZoneControlDefense',

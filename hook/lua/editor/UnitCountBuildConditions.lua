@@ -1134,7 +1134,21 @@ function ArmyManagerBuild(aiBrain, uType, tier, unit)
         return true
     end
     return false
+end
 
+function PlatoonDemandMet(aiBrain, uType, unit)
+    local current = 0
+    local totalDemand = 0
+    for i = 1, 4 do
+        current = current + (aiBrain.amanager.Current[uType][i][unit] or 0)
+        totalDemand = totalDemand + (aiBrain.amanager.Demand[uType][i][unit] or 0)
+    end
+    LOG('Current Air Platoon count '..current)
+    LOG('Current Air Platoon demand '..totalDemand)
+    if current < totalDemand then
+        return true
+    end
+    return false
 end
 
 function IsEngineerNotBuilding(aiBrain, category)
@@ -1453,9 +1467,6 @@ end
 function UnitBuildDemand(aiBrain, type, tier, unit)
 
     if aiBrain.amanager.Demand[type][tier][unit] > aiBrain.amanager.Current[type][tier][unit] then
-        --RNGLOG('UnitBuild Demand has gone true ')
-        --RNGLOG('Unit Demand  of type '..type..' tier '..tier..' unit '..unit..' count '..repr(aiBrain.amanager.Demand[type][tier][unit]))
-        --RNGLOG('Current units '..repr(aiBrain.amanager.Current[type][tier][unit]))
         return true
     end
     return false

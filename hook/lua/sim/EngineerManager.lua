@@ -205,8 +205,14 @@ EngineerManager = Class(RNGEngineerManager) {
     TaskFinishedRNG = function(manager, unit)
         if manager.LocationType ~= 'FLOATING' and VDist3(manager.Location, unit:GetPosition()) > manager.Radius and not EntityCategoryContains(categories.COMMAND, unit) then
             --LOG('Engineer is more than distance from manager, radius is '..manager.Radius..' distance is '..VDist3(manager.Location, unit:GetPosition()))
+            if unit.EntityId == '70' then
+                LOG('Engineer ID 70 is being reassigned')
+            end
             manager:ReassignUnitRNG(unit)
         else
+            if unit.EntityId == '70' then
+                LOG('Engineer ID 70 is running performing ForkEngineerTask')
+            end
             manager:ForkEngineerTask(unit)
         end
     end,
