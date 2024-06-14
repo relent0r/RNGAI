@@ -6372,21 +6372,22 @@ function VentToPlatoon(platoon, aiBrain, plan)
         end
     end
     if plan == 'LandCombatBehavior' then
-        --LOG('Venting to LandCombatBehavior')
+        LOG('ACU Support Venting to LandCombatBehavior')
         ventPlatoon = aiBrain:MakePlatoon('', '')
         aiBrain:AssignUnitsToPlatoon(ventPlatoon, validUnits, 'Attack', 'None')
         import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ Vented = true}, ventPlatoon, validUnits)
     elseif plan =='LandAssaultBehavior' then
-        --LOG('Venting to LandAssaultBehavior')
+        LOG('ACU Support Venting to LandAssaultBehavior')
         ventPlatoon = aiBrain:MakePlatoon('', '')
         aiBrain:AssignUnitsToPlatoon(ventPlatoon, validUnits, 'Attack', 'None')
         import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ Vented = true }, ventPlatoon, validUnits)
     else
+        LOG('ACU Support Venting to default')
         ventPlatoon = aiBrain:MakePlatoon('', plan)
         ventPlatoon.PlanName = 'Vented Platoon'
         aiBrain:AssignUnitsToPlatoon(ventPlatoon, validUnits, 'Attack', 'None')
     end
-    --RNGLOG('Platoon has been vented')
+    LOG('ACU Support Platoon has been vented')
 end
 
 function GetTMDPosition(aiBrain, eng, locationType)

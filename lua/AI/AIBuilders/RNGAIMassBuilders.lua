@@ -569,7 +569,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Expansion',
-        PlatoonTemplate = 'EngineerStateT1RNG',
+        PlatoonTemplate = 'EngineerStateT12RNG',
         Priority = 925,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
@@ -606,7 +606,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Distant Expansion',
-        PlatoonTemplate = 'EngineerStateT1RNG',
+        PlatoonTemplate = 'EngineerStateT12RNG',
         Priority = 400,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
@@ -649,7 +649,7 @@ BuilderGroup {
     
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Floating',
-        PlatoonTemplate = 'EngineerStateT1RNG',
+        PlatoonTemplate = 'EngineerStateT12RNG',
         Priority = 905,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 1,

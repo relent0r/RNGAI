@@ -232,7 +232,11 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             if not closestBase then
                 basePos = aiBrain.BuilderManagers['MAIN'].Position
             else
-                basePos = aiBrain.BuilderManagers[closestBase].Position
+                if aiBrain.BuilderManagers[closestBase].FactoryManager.RallyPoint then
+                    basePos = aiBrain.BuilderManagers[closestBase].FactoryManager.RallyPoint
+                else
+                    basePos = aiBrain.BuilderManagers[closestBase].Position
+                end
             end
             if basePos then
                 self:LogDebug(string.format('No positions or targets found, retreating back to base'))

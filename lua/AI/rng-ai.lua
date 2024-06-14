@@ -4088,6 +4088,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if not potentialTarget then
             local closestMex = false
             local airThreat = false
+            local targetSelected = false
             for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
                 for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
                     if not RNGTableEmpty(im.MapIntelGrid[i][k].EnemyUnits) then
@@ -4100,6 +4101,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                             airThreat = positionThreat
                                             closestMex = v.object
                                             if airThreat == 0 then
+                                                targetSelected = true
                                                 break
                                             end
                                         end
@@ -4109,14 +4111,27 @@ AIBrain = Class(RNGAIBrainClass) {
                                             airThreat = positionThreat
                                             closestMex = v.object
                                             if airThreat == 0 then
+                                                targetSelected = true
                                                 break
                                             end
+                                        end
+                                    elseif platoonType == 'SATELLITE' and platoonDPS then
+                                        if RUtils.HaveUnitVisual(self, v.Unit, true) and not RUtils.ShieldProtectingTargetRNG(self, v.Unit, nil) then
+                                            closestMex = v.object
+                                            targetSelected = true
+                                            break
                                         end
                                     end
                                 end
                             end
                         end
                     end
+                    if targetSelected then
+                        break
+                    end
+                end
+                if targetSelected then
+                    break
                 end
             end
             if closestMex then

@@ -197,7 +197,6 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             if self.MovementLayer == 'Land' and RUtils.PositionOnWater(acu.Position[1], acu.Position[3]) then
                 --RNGLOG('ACU is underwater and we are on land, if he was under water when he called then he should have called an amphib platoon')
                 coroutine.yield(20)
-                --return self:SetAIPlanRNG('LandAssaultBehavior')
                 RUtils.VentToPlatoon(self, aiBrain, 'LandAssaultBehavior')
                 if PlatoonExists(aiBrain, self) then
                     LOG('ACU Support is exiting due to acu in water')
@@ -210,6 +209,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 local rx = self.Pos[1] - acu.Position[1]
                 local rz = self.Pos[3] - acu.Position[3]
                 local acuDistance = rx * rx + rz * rz
+                LOG('ACU Support acu distance is '..tostring(acuDistance))
                 if acuDistance > 14400 then
                     self.BuilderData = {
                         Position = acu.Position,
@@ -217,6 +217,9 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     }
                     self.dest = self.BuilderData.Position
                     self:ChangeState(self.Navigating)
+                    return
+                else
+                    self:ChangeState(self.SupportACU)
                     return
                 end
             end
@@ -333,14 +336,15 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
+            LOG('ACU Support is supporting ACU')
             local aiBrain = self:GetBrain()
             local platUnits=GetPlatoonUnits(self)
             local ax = self.Pos[1] - aiBrain.CDRUnit.Position[1]
             local az = self.Pos[3] - aiBrain.CDRUnit.Position[3]
             local acuDistance = ax * ax + az * az
             if aiBrain.CDRUnit.Active and acuDistance > 1600 then
-                self:LogDebug(string.format('ACU is active and further than 1600 units'))
-                self.MoveToPosition = GetSupportPosition(aiBrain)
+                self:LogDebug(string.format('ACU Support ACU is active and further than 1600 units'))
+                self.MoveToPosition = StateUtils.GetSupportPosition(aiBrain, self)
                 if not self.MoveToPosition then
                     self.MoveToPosition = RUtils.AvoidLocation(aiBrain.CDRUnit.Position, self.Pos, 15)
                 end
@@ -592,6 +596,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 end
                 --RNGLOG('Target kite has completed')
             end
+            LOG('ACU Support is exiting supporting ACU')
             coroutine.yield(30)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -605,6 +610,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
+            LOG('ACU Support ranged combat loop')
             local aiBrain = self:GetBrain()
             local units=GetPlatoonUnits(self)
             if not aiBrain.BrainIntel.SuicideModeActive then
@@ -675,6 +681,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         --- The platoon retreats from a threat
         ---@param self AIPlatoonACUSupportBehavior
         Main = function(self)
+            LOG('ACU Support is retreating')
             local aiBrain = self:GetBrain()
             local location = false
             local avoidTargetPos
@@ -753,7 +760,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 --LOG('No self.BuilderData.Position in retreat')
             end
             self.dest = self.BuilderData.Position
-            --LOG('Retreating to platoon')
+            LOG('ACU Support is exiting retreating back to navigating')
             self:ChangeState(self.Navigating)
             return
         end,
@@ -801,6 +808,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
+            self:ChangeState(self.DecideWhatToDo)
             return
         end,
     },
@@ -851,6 +859,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
+            self:ChangeState(self.DecideWhatToDo)
             return
         end,
     },
@@ -863,6 +872,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         --- The platoon retreats from a threat
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
+            LOG('ACU Support is navigating')
             local aiBrain = self:GetBrain()
             local platoonUnits = GetPlatoonUnits(self)
             local pathmaxdist=0

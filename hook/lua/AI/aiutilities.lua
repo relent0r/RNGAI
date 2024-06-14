@@ -732,7 +732,7 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
                 local unitPos = unit:GetPosition()
                 local numShields = aiBrain:GetNumUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
                 --RNGLOG('Satellite Distance of unit to platoon '..VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]))
-                if numShields > 0 and (not retUnit) and (not distance or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
+                if numShields > 0 and (not retUnit) or numShields > 0 and (not distance or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                     local shieldUnits = aiBrain:GetUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
                     local totalShieldHealth = 0
                     for _, sUnit in shieldUnits do
@@ -752,11 +752,13 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
                             targetShields = numShields
                         end
                     end
-                elseif (not retUnit) or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
+                elseif (not retUnit) or (not distance or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                     LOG('Satellite, no shield found blocking target so we should be assigning it, numshields was '..tostring(numShields))
                     retUnit = unit
                     distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                     targetShields = 0
+                else
+                    LOG('Satellite, no target for some reason, number shields was '..tostring(numShields))
                 end
             end
         end
@@ -778,7 +780,7 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
             --RNGLOG('Satellite has target')
             return retUnit
         else
-            --RNGLOG('Satellite did not get target')
+            LOG('Satellite did not get target')
         end
     end
 

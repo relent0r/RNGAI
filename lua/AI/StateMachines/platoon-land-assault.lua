@@ -293,14 +293,34 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 return false
             end
             local aiBrain = self:GetBrain()
-            local maxPathDistance = 250
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), builderData.Position, 10 , maxPathDistance)
+            local maxPathDistance = 350
+            local path, reason, distance, threats = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, builderData.Position, 10 , maxPathDistance)
             if not path then
-                --LOG('LandAssault trying to take transport')
-                self:LogDebug(string.format('platoon is going to use transport'))
-                LOG('No path due to '..repr(reason))
-                self:ChangeState(self.Transporting)
-                return
+                if not path then
+                    if reason ~= "TooMuchThreat" then
+                        self:LogDebug(string.format('platoon is going to use transport'))
+                        self:ChangeState(self.Transporting)
+                        return
+                    elseif reason == "TooMuchThreat" and NavUtils.CanPathTo(self.MovementLayer, self.Pos, builderData.Position) then
+                        LOG('TooMuchThreat along path, we need to analyse it')
+                        for _, v in threats do
+                            LOG('Threat Table item '..tostring(v))
+                        end
+                        LOG('Looking for alternative stage pos ')
+                        local alternativeStageZone = aiBrain.IntelManager:GetClosestZone(aiBrain, false, builderData.Position, false, true, 2)
+                        if alternativeStageZone then
+                            local alternativeStagePos = aiBrain.Zones.Land.zones[alternativeStageZone].pos
+                            LOG('Found alternative stage pos ')
+                            local rx = self.Pos[1] - alternativeStagePos[1]
+                            local rz = self.Pos[3] -alternativeStagePos[3]
+                            local stageDistance = rx * rx + rz * rz
+                            LOG('alternative stage distance is  '..tostring(stageDistance))
+                            if stageDistance > 2500 then
+                                path, reason, distance  = AIAttackUtils.PlatoonGeneratePathToRNG(self.MovementLayer, self.Pos, alternativeStagePos, 300, 20)
+                            end
+                        end
+                    end
+                end
             end
             local bAggroMove = self.PlatoonData.AggressiveMove
             local pathNodesCount = RNGGETN(path)
@@ -359,60 +379,57 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                         local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, self.Pos, 'Attack', self.EnemyRadius, LandRadiusScanCategory, self.atkPri, false)
                         local attackSquad = self:GetSquadUnits('Attack')
                         IssueClearCommands(attackSquad)
-                        while PlatoonExists(aiBrain, self) do
-                            coroutine.yield(1)
-                            if IsDestroyed(self) then
-                                return
-                            end
-                            if not self.Retreat and target and not IsDestroyed(target) or acuUnit then
-                                if acuUnit and self.CurrentPlatoonThreatAntiSurface > 30 then
-                                    target = acuUnit
-                                elseif acuUnit and self.CurrentPlatoonThreatAntiSurface < totalThreat['AntiSurface'] then
-                                    local acuRange = StateUtils.GetUnitMaxWeaponRange(acuUnit)
-                                    if target then
-                                        local targetPos = target:GetPosition()
-                                        local rx = self.Pos[1] - targetPos[1]
-                                        local rz = self.Pos[3] - targetPos[3]
-                                        local targetDistance = rx * rx + rz * rz
-                                        if targetDistance < self.MaxPlatoonWeaponRange * self.MaxPlatoonWeaponRange then
-                                            local acuPos = acuUnit:GetPosition()
-                                            local ax = self.Pos[1] - acuPos[1]
-                                            local az = self.Pos[3] - acuPos[3]
-                                            local acuDistance = ax * ax + az * az
-                                            if targetDistance < acuDistance and acuDistance > acuRange then
-                                                self.BuilderData = {
-                                                    Target = target
-                                                }
-                                                self:LogDebug('target found in Navigating and its closer than the acu is, CombatLoop')
-                                                --LOG('target found in Navigating, CombatLoop')
-                                                self:ChangeState(self.CombatLoop)
-                                                return
-                                            end
+                        if IsDestroyed(self) then
+                            return
+                        end
+                        if not self.Retreat and target and not IsDestroyed(target) or acuUnit then
+                            if acuUnit and self.CurrentPlatoonThreatAntiSurface > 30 then
+                                target = acuUnit
+                            elseif acuUnit and self.CurrentPlatoonThreatAntiSurface < totalThreat['AntiSurface'] then
+                                local acuRange = StateUtils.GetUnitMaxWeaponRange(acuUnit)
+                                if target then
+                                    local targetPos = target:GetPosition()
+                                    local rx = self.Pos[1] - targetPos[1]
+                                    local rz = self.Pos[3] - targetPos[3]
+                                    local targetDistance = rx * rx + rz * rz
+                                    if targetDistance < self.MaxPlatoonWeaponRange * self.MaxPlatoonWeaponRange then
+                                        local acuPos = acuUnit:GetPosition()
+                                        local ax = self.Pos[1] - acuPos[1]
+                                        local az = self.Pos[3] - acuPos[3]
+                                        local acuDistance = ax * ax + az * az
+                                        if targetDistance < acuDistance and acuDistance > acuRange then
+                                            self.BuilderData = {
+                                                Target = target
+                                            }
+                                            self:LogDebug('target found in Navigating and its closer than the acu is, CombatLoop')
+                                            --LOG('target found in Navigating, CombatLoop')
+                                            self:ChangeState(self.CombatLoop)
+                                            return
                                         end
                                     end
-                                    self:LogDebug('ACU present in Navigating, DecideWhatToDo')
-                                    self:LogDebug('ACU target distance is '..VDist3(acuUnit:GetPosition(), self.Pos))
-                                    if target then
-                                        self:LogDebug('Comparitive target distance is '..VDist3(target:GetPosition(), self.Pos))
-                                    end
-                                    self:ChangeState(self.DecideWhatToDo)
-                                    return
                                 end
-                                if target and not IsDestroyed(target) then
-                                    self.BuilderData = {
-                                        Target = target
-                                    }
-                                    self:LogDebug('target found in Navigating, CombatLoop')
-                                    --LOG('target found in Navigating, CombatLoop')
-                                    self:ChangeState(self.CombatLoop)
-                                    return
+                                self:LogDebug('ACU present in Navigating, DecideWhatToDo')
+                                self:LogDebug('ACU target distance is '..VDist3(acuUnit:GetPosition(), self.Pos))
+                                if target then
+                                    self:LogDebug('Comparitive target distance is '..VDist3(target:GetPosition(), self.Pos))
                                 end
-                            else
-                                self:MoveToLocation(path[i], false)
-                                break
+                                self:ChangeState(self.DecideWhatToDo)
+                                return
                             end
-                            coroutine.yield(15)
+                            if target and not IsDestroyed(target) then
+                                self.BuilderData = {
+                                    Target = target
+                                }
+                                self:LogDebug('target found in Navigating, CombatLoop')
+                                --LOG('target found in Navigating, CombatLoop')
+                                self:ChangeState(self.CombatLoop)
+                                return
+                            end
+                        else
+                            self:MoveToLocation(path[i], false)
+                            break
                         end
+                        coroutine.yield(15)
                     end
                     distEnd = VDist2Sq(path[pathNodesCount][1], path[pathNodesCount][3], self.Pos[1], self.Pos[3] )
                     if not attackFormation and distEnd < 6400 and enemyUnitCount == 0 then

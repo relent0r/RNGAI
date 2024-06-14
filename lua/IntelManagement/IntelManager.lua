@@ -869,9 +869,9 @@ IntelManager = Class {
                     local zoneCount = aiBrain.BuilderManagers[platoon.LocationType].PathableZones.PathableZoneCount or 0
                     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
                     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
-                    local enemyThreatRatio
+                    local enemyThreatRatio = 0
                     if zoneCount > 0 and enemyAirThreat > 0 and myAirThreat > 0 then
-                        enemyThreatRatio = (enemyAirThreat / myAirThreat * zoneCount) or 0
+                        enemyThreatRatio = (enemyAirThreat / myAirThreat * zoneCount)
                     end
                     LOG('enemyThreatRatio '..tostring(enemyThreatRatio))
 
