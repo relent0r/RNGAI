@@ -811,7 +811,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if eng.EngineerBuildQueue and table.getn(eng.EngineerBuildQueue) > 0 then
-                LOG('Performing BuildTask')
                 self:ChangeState(self.PerformBuildTask)
                 return
             end
@@ -928,12 +927,10 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 IssueClearCommands({eng})
 
                 if VDist3Sq(engPos, buildLocation) < 225 then
-                    LOG('Movement Required being set to false')
                     movementRequired = false
                 end
                 
                 if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation, false, transportWait) then
-                    LOG('Movewith safe path returned true')
                     if not eng or eng.Dead or not eng.PlatoonHandle or not aiBrain:PlatoonExists(eng.PlatoonHandle) then
                         if eng then eng.ProcessBuild = nil end
                         return
@@ -942,7 +939,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         --RNGLOG('BorderWarning build')
                         IssueBuildMobile({eng}, buildLocation, whatToBuild, {})
                     else
-                        LOG('IssueBuildStructure')
                         aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
                     end
                     local engStuckCount = 0

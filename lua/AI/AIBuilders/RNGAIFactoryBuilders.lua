@@ -502,8 +502,8 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'BuildStructure',
+            StateMachine = 'EngineerBuilder',
             Construction = {
-                StateMachine = 'EngineerBuilder',
                 LocationType = 'LocationType',
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},
                 BuildClose = false,

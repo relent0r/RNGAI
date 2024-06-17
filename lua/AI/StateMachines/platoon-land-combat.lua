@@ -590,6 +590,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 end
                 coroutine.yield(1)
                 if StateUtils.ExitConditions(self,aiBrain) then
+                    self:LogDebug(string.format('Exit condition true during navigation'))
                     self.navigating=false
                     self.path=false
                     if self.Retreat then
@@ -632,6 +633,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 if self.path and GetTerrainHeight(self.path[nodenum][1],self.path[nodenum][3])<GetSurfaceHeight(self.path[nodenum][1],self.path[nodenum][3]) then
                     self.navigating=false
                     self.path=nil
+                    self:LogDebug(string.format('Platoon thinks its in water during navigation'))
                     coroutine.yield(20)
                     self:ChangeState(self.DecideWhatToDo)
                     return

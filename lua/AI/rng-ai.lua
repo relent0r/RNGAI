@@ -1795,16 +1795,11 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             if zone then
                 self.BuilderManagers[baseName].Zone = zone
-                RNGLOG('Zone set for builder manager '..zone)
                 if baseLayer == 'Water' then
                     self.Zones.Naval.zones[zone].BuilderManager = self.BuilderManagers[baseName]
                 else
-                    if not self.Zones.Land.zones[zone].BuilderManager then
-                        LOG('BuilderManager not present, what is this zone '..tostring(zone))
-                    end
                     self.Zones.Land.zones[zone].BuilderManager = self.BuilderManagers[baseName]
                 end
-                LOG('Allocation BuilderManager to zone, basename is '..baseName)
                 --RNGLOG('Zone is '..self.BuilderManagers[baseName].Zone)
                 zoneSet = true
             else
@@ -5198,6 +5193,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     if not v:IsPaused() then continue end
                     --RNGLOG('Unpausing TML')
                     v:SetPaused(false)
+                    continue
+                end
+                if v.LimitPause then
                     continue
                 end
                 if v.Dead then continue end

@@ -5492,7 +5492,7 @@ CheckACUSnipe = function(aiBrain, layerType)
     return potentialTarget, requiredCount, acuIndex
 end
 
-CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval)
+CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu)
     local platPos
     local closestTarget
     local highestPriority = 0
@@ -5521,7 +5521,34 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval)
             if not closestTarget then
                 for k, v in aiBrain.prioritypointshighvalue do
                     if not v.unit.Dead and not v.unit.Tractored then
-                        local unitCats = v.object.Blueprint.CategoriesHash
+                        local unitCats = v.unit.Blueprint.CategoriesHash
+                        if ignoreAcu then
+                            if unitCats.COMMAND then
+                                LOG('Got ACU via prioritypointshighvalue')
+                                local skipAcu
+                                if platoon.MovementLayer == 'Air' then
+                                    LOG('Our movement layer is air')
+                                    local acuTarget = CheckACUSnipe(aiBrain, 'Air')
+                                    if acuTarget and not acuTarget.Dead then
+                                        local brainIndex = v.unit:GetAIBrain():GetArmyIndex()
+                                        local acuIndex = acuTarget:GetAIBrain():GetArmyIndex()
+                                        LOG('Got ACU target brain index '..tostring(brainIndex))
+                                        LOG('Got ACU snipe brain index '..tostring(brainIndex))
+                                        if brainIndex ~= acuIndex then
+                                            skipAcu = true
+                                        else
+                                            LOG('Got ACU snipe query')
+                                        end
+                                    else
+                                        skipAcu = true
+                                    end
+                                end
+                                if skipAcu then
+                                    continue
+                                end
+                                LOG('Got ACU via prioritypointshighvalue')
+                            end
+                        end
                         if naval then
                             if not unitCats.HOVER and PositionInWater(v.Position) then
                                 local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)

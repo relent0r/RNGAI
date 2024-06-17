@@ -349,9 +349,11 @@ ExitConditions = function(self,aiBrain)
         self:LogDebug(string.format('No self.dest in ExitConditions'))
     end
     if VDist3Sq(self.dest,self.Pos) < 400 then
+        self:LogDebug(string.format('Close to destination exit condition true'))
         return true
     end
     if VDist3Sq(self.path[RNGGETN(self.path)],self.Pos) < 400 then
+        self:LogDebug(string.format('Close to end of path exition condition true'))
         return true
     end
     if self.navigating then
@@ -370,6 +372,7 @@ ExitConditions = function(self,aiBrain)
                     if self.raid or self.guard then
                         if dist<2025 then
                             --RNGLOG('Exit Path Navigation for raid')
+                            self:LogDebug(string.format('Enemy detected during navigation and less than 45'))
                             return true
                         end
                     else
@@ -520,14 +523,18 @@ GetUnitMaxWeaponRange = function(unit, filterType)
             -- unit can have MaxWeaponRange entry from the last platoon
             if filterType then
                 if weapon.WeaponCategory == filterType then
-                    if not maxRange or weapon.MaxRadius > maxRange then
-                        maxRange = weapon.MaxRadius
+                    if not weapon.EnabledByEnhancement or (weapon.EnabledByEnhancement and unit.HasEnhancement and unit:HasEnhancement(weapon.EnabledByEnhancement)) then
+                        if not maxRange or weapon.MaxRadius > maxRange then
+                            maxRange = weapon.MaxRadius
+                        end
                     end
                 end
             elseif not maxRange or weapon.MaxRadius > maxRange then
                 -- save the weaponrange 
-                if not maxRange or weapon.MaxRadius > maxRange then
-                    maxRange = weapon.MaxRadius
+                if not weapon.EnabledByEnhancement or (weapon.EnabledByEnhancement and unit.HasEnhancement and unit:HasEnhancement(weapon.EnabledByEnhancement)) then
+                    if not maxRange or weapon.MaxRadius > maxRange then
+                        maxRange = weapon.MaxRadius
+                    end
                 end
             end
         end
@@ -1747,11 +1754,7 @@ function CanBuildOnMassMexPlatoon(aiBrain, engPos, distance)
     local MassMarker = {}
     local massPoints = aiBrain.GridDeposits:GetResourcesWithinDistance('Mass', engPos, distance, 'Amphibious')
     distance = distance * distance
-    if table.getn(massPoints) > 0 then
-        LOG('Found mass point within distance of current engineer position')
-    end
     for _, v in massPoints do
-        LOG('MassPoint table entry at position '..tostring(v.position[1])..':'..tostring(v.position[3]))
         if v.type == 'Mass' then
             if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
                 local mexBorderWarn = false
@@ -1875,7 +1878,6 @@ function AddToBuildQueueRNG(aiBrain, builder, whatToBuild, buildLocation, relati
     end
     -- put in build queue.. but will be removed afterwards... just so that it can iteratively find new spots to build
     --RUtils.EngineerTryReclaimCaptureArea(aiBrain, builder, {buildLocation[1], buildLocation[3], buildLocation[2]}) 
-    LOG('Build Location is '..repr(buildLocation))
     if borderWarning then
         --LOG('BorderWarning build')
         IssueBuildMobile({builder}, { buildLocation[1], buildLocation[3], buildLocation[2] }, whatToBuild, {})
@@ -1911,9 +1913,6 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType, whatToBui
                                 if buildingType == 'MassStorage' then
                                     AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false, true)
                                 else
-                                    if buildingType == 'T1GroundDefense' or buildingType == 'Wall' then
-                                        LOG('Adding T1PD Template item to engineer queue')
-                                    end
                                     AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false)
                                 end
                                 table.remove(bType,n)

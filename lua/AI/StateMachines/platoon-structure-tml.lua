@@ -96,23 +96,32 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                 ecoCaution = false
             end
             for k, tml in platoonUnits do
-                if not tml or tml.Dead or tml:BeenDestroyed() then
-                    self:PlatoonDisbandNoAssign()
-                    return
-                else
+                if tml and not tml:BeenDestroyed() then
                     missileCount = tml:GetTacticalSiloAmmoCount()
                     if missileCount > 0 then
                         totalMissileCount = totalMissileCount + missileCount
                         RNGINSERT(readyTmlLaunchers, tml)
                     end
-                end
-                if missileCount > 1 and ecoCaution then
-                    tml:SetAutoMode(false)
-                else
-                    tml:SetAutoMode(true)
+                    if missileCount > 1 and ecoCaution then
+                        tml:SetAutoMode(false)
+                    else
+                        tml:SetAutoMode(true)
+                    end
                 end
             end
             readyTmlLauncherCount = RNGGETN(readyTmlLaunchers)
+            if readyTmlLauncherCount < 1 then
+                local potentialUnits = aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE - categories.TACTICALMISSILEPLATFORM, self.Home, 265, 'Enemy')
+                if potentialUnits > 0 then
+                    for _, tml in platoonUnits do
+                        tml.LimitPause = true
+                    end
+                else
+                    for _, tml in platoonUnits do
+                        tml.LimitPause = false
+                    end
+                end
+            end
             --RNGLOG('Ready TML Launchers is '..readyTmlLauncherCount)
             if readyTmlLauncherCount < 1 then
                 LOG('TML no ready launchers')

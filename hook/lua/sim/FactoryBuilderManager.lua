@@ -477,8 +477,6 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                 table.insert(queue, 'T1LandScout')
                 table.insert(queue, 'T1LandScout')
             elseif mapSizeX >= 500 and mapSizeZ >= 500 then
-                LOG('10 KM Map Check true')
-                LOG('Restricted Mass Markers '..tostring(self.Brain.BrainIntel.RestrictedMassMarker))
                 if EnemyIndex and self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
                     for i=1, 1 do
                         table.insert(queue, 'T1BuildEngineer')
@@ -509,7 +507,6 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                             table.insert(queue, 'T1BuildEngineer')
                         end
                     end
-                    LOG('Start Reclaim Current '..tostring(self.Brain.StartReclaimCurrent))
                     if self.Brain.StartReclaimCurrent > 500 then
                         for i=1, 2 do
                             table.insert(queue, 'T1BuildEngineer')

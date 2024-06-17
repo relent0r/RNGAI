@@ -527,7 +527,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local location = false
             local avoidTargetPos
             local target = StateUtils.GetClosestUnitRNG(aiBrain, self, self.Pos, (categories.MOBILE + categories.STRUCTURE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, 128, 'Enemy')
-            LOG('Zone control retreat triggered')
             if target and not target.Dead then
                 local targetRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
                 local minTargetRange
@@ -545,16 +544,13 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 local zonePos = aiBrain.Zones.Land.zones[zoneRetreat].pos
                 if targetDistance < targetRange * targetRange then
                     if zonePos then
-                        LOG('Zone control close enemy retreat to zone pos game time '..GetGameTimeSeconds())
                         self:MoveToLocation(zonePos, false)
                         coroutine.yield(20)
                     else
-                        LOG('Zone control close enemy retreat to lerp pos game time '..GetGameTimeSeconds())
                         self:MoveToLocation(RUtils.AvoidLocation(targetPos, self.Pos, avoidRange), false)
                         coroutine.yield(20)
                     end
                 else
-                    LOG('Zone control retreat to zone game time '..GetGameTimeSeconds())
                     local targetCats = target.Blueprint.CategoriesHash
                     local attackStructure = false
                     local platUnits = self:GetPlatoonUnits()
@@ -570,7 +566,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if attackStructure then
-                        self:LogDebug(string.format('Non Artillery retreating'))
                         for _, v in platUnits do
                             if v.Role ~= 'Artillery' and v.Role ~= 'Silo' then
                                 if zoneRetreat then
@@ -626,7 +621,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 coroutine.yield(40)
-                LOG('Zone control retreat finished waiting game time'..GetGameTimeSeconds())
             end
             local zoneRetreat
             if aiBrain.GridPresence:GetInferredStatus(self.Pos) == 'Hostile' then
@@ -651,7 +645,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 --LOG('No self.BuilderData.Position in retreat')
             end
             self.dest = self.BuilderData.Position
-            LOG('Retreating to platoon')
             self:ChangeState(self.Navigating)
             return
         end,

@@ -114,6 +114,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 self:LogDebug(string.format('Checking for ACU Snipe'))
                 local target, _, acuIndex = RUtils.CheckACUSnipe(aiBrain, 'Air')
                 if target then
+                    LOG('Bomber has acu via ACUSnipe')
                     local enemyAcuHealth = aiBrain.EnemyIntel.ACU[acuIndex].HP
                     if self.PlatoonStrikeDamage > enemyAcuHealth * 0.80 or acuHP < 2500 then
                         self.BuilderData = {
@@ -139,9 +140,12 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             end
             if not target then
                 self:LogDebug(string.format('Checking for High Priority Target'))
-                local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, false)
+                local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, false, false, true)
                 if target then
                     --LOG('Bomber high Priority Target Found '..target.UnitId)
+                    if target.Blueprint.CategoriesHash.COMMAND then
+                        LOG('Bomber has acu via High Priority Target')
+                    end
                     self.BuilderData = {
                         AttackTarget = target,
                         Position = target:GetPosition()
@@ -184,6 +188,9 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         AttackTarget = target,
                         Position = target:GetPosition()
                     }
+                    if target.Blueprint.CategoriesHash.COMMAND then
+                        LOG('Bomber has acu via Director')
+                    end
                     --LOG('Bomber navigating to target')
                     local targetPosition = self.BuilderData.Position
                     local tx = platPos[1] - targetPosition[1]
@@ -230,6 +237,9 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                 AttackTarget = point.unit,
                                 Position = point.Position
                             }
+                            if point.unit.Blueprint.CategoriesHash.COMMAND then
+                                LOG('Bomber has acu via Priority Points')
+                            end
                             --LOG('Bomber navigating to target')
                             --LOG('Retreating to platoon')
                             local targetPosition = self.BuilderData.Position
@@ -335,7 +345,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                 return
                             end
                                 if aiBrain:GetNumUnitsAroundPoint((categories.MOBILE * categories.LAND + categories.MASSEXTRACTION) - categories.COMMAND - categories.SCOUT, platoonPosition, 45, 'Enemy') > 0 then
-                                    local target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPosition, 'Attack', 45, (categories.MOBILE * categories.LAND + categories.MASSEXTRACTION) - categories.COMMAND - categories.SCOUT, {categories.ENGINEER - categories.COMMAND, categories.MASSEXTRACTION, categories.MOBILE * categories.LAND - categories.SCOUT}, false, true)
+                                    local target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPosition, 'Attack', 45, (categories.MOBILE * categories.LAND + categories.MASSEXTRACTION) - categories.COMMAND - categories.SCOUT, {categories.ENGINEER - categories.COMMAND, categories.MASSEXTRACTION, categories.MOBILE * categories.LAND - categories.COMMAND - categories.SCOUT}, false, true)
                                     if target and not target.Dead then
                                         self.BuilderData = {
                                             AttackTarget = target,
@@ -370,7 +380,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                     return
                                 end
                                     if aiBrain:GetNumUnitsAroundPoint((categories.MOBILE * categories.LAND + categories.MASSEXTRACTION) - categories.COMMAND - categories.SCOUT, platoonPosition, 45, 'Enemy') > 0 then
-                                        local target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPosition, 'Attack', 45, (categories.MOBILE * categories.LAND + categories.MASSEXTRACTION) - categories.COMMAND - categories.SCOUT, {categories.ENGINEER - categories.COMMAND, categories.MASSEXTRACTION, categories.MOBILE * categories.LAND - categories.SCOUT}, false, true)
+                                        local target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPosition, 'Attack', 45, (categories.MOBILE * categories.LAND + categories.MASSEXTRACTION) - categories.COMMAND - categories.SCOUT, {categories.ENGINEER - categories.COMMAND, categories.MASSEXTRACTION, categories.MOBILE * categories.LAND - categories.COMMAND - categories.SCOUT}, false, true)
                                         if target and not target.Dead then
                                             self.BuilderData = {
                                                 AttackTarget = target,
