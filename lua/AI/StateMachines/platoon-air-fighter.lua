@@ -296,7 +296,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             IssueClearCommands(GetPlatoonUnits(self))
             if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
                 local target = self.BuilderData.AttackTarget
-                if target.Blueprint.CategoriesHash.BOMBER or target.Blueprint.CategoriesHash.GROUNDATTACK or target.Blueprint.CategoriesHash.TRANSPORTFOCUS then
+                if target.Blueprint.CategoriesHash.BOMBER or target.Blueprint.CategoriesHash.GROUNDATTACK or target.Blueprint.CategoriesHash.TRANSPORTFOCUS or target.Blueprint.CategoriesHash.EXPERIMENTAL then
                     IssueAttack(GetPlatoonUnits(self), target)
                 else
                     IssueAggressiveMove(GetPlatoonUnits(self), target:GetPosition())
@@ -572,7 +572,7 @@ FighterThreatThreads = function(aiBrain, platoon)
             --LOG('CurrentEnemyThreatAntiAir '..platoon.CurrentEnemyThreatAntiAir)
             platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
             --LOG('CurrentPlatoonThreat '..platoon.CurrentPlatoonThreatAntiAir)
-            if not platoon.BuilderData.Retreat and platoon.CurrentEnemyThreatAntiAir > platoon.CurrentPlatoonThreatAntiAir * 1.3 and not platoon.BuilderData.ProtectACU then
+            if not platoon.BuilderData.Retreat and platoon.CurrentEnemyThreatAntiAir > platoon.CurrentPlatoonThreatAntiAir * 1.3 and not platoon.BuilderData.ProtectACU and not platoon.BuilderData.AttackTarget.Blueprint.CategoriesHash.EXPERIMENTAL then
                 if VDist3Sq(platPos, platoon.Home) > 6400 then
                     platoon.BuilderData = {}
                     platoon:ChangeState(platoon.DecideWhatToDo)

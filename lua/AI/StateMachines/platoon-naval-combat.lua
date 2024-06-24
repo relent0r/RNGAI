@@ -35,7 +35,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Error)
                 return
             end
-            self:LogDebug(string.format('Starting Naval Zone Control'))
+            self:LogDebug(string.format('Starting Naval Zone Combat'))
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
                 self:LogWarning('requires generated navigational mesh')
@@ -111,6 +111,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                 local baseDistance = bx * bx + bz * bz
                 if baseDistance > 900 then
                     self:LogDebug(string.format('DecideWhatToDo Ordered to retreat due to local threat'))
+                    LOG('Naval Zone Combat DecideWhatToDo Ordered to retreat due to local threat ')
                     self:ChangeState(self.Retreating)
                     return
                 else
@@ -149,7 +150,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             end
             if not target then
                 local targetCandidates
-                local searchFilter = (categories.NAVAL + categories.AMPHIBIOUS + categories.STRUCTURE) - categories.INSIGNIFICANTUNIT
+                local searchFilter = (categories.NAVAL + categories.AMPHIBIOUS + categories.HOVER + categories.HOVER + categories.STRUCTURE) - categories.INSIGNIFICANTUNIT
                 if self.CurrentPlatoonThreatAntiSurface == 0 then
                     self:LogDebug(string.format('Looking for sub target via IMAP'))
                     targetCandidates = StateUtils.GetClosestTargetByIMAP(aiBrain, self, self.Home, 'Naval', searchFilter, 'AntiSub', 'Sub')
@@ -284,6 +285,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             if currentStatus == 'Hostile' then
                 self:LogDebug(string.format('No attack position found and in hostile territory, should we look for a platoon to merge with'))
                 coroutine.yield(25)
+                LOG('Naval Combat DecideWhatToDo No attack position found and in hostile territory ')
                 self:ChangeState(self.Retreating)
                 return
             end

@@ -73,8 +73,6 @@ AITMLBehavior = Class(AIPlatoonRNG) {
 
         ---@param self AITMLBehavior
         Main = function(self)
-            LOG('TML DecideWhatToDo ')
-            self:LogDebug(string.format('TML DecideWhatToDo'))
             local aiBrain = self:GetBrain()
             coroutine.yield(50)
             local platoonUnits = self:GetPlatoonUnits()
@@ -124,7 +122,6 @@ AITMLBehavior = Class(AIPlatoonRNG) {
             end
             --RNGLOG('Ready TML Launchers is '..readyTmlLauncherCount)
             if readyTmlLauncherCount < 1 then
-                LOG('TML no ready launchers')
                 coroutine.yield(50)
                 self:ChangeState(self.DecideWhatToDo)
                 return
@@ -231,7 +228,6 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                     --RNGLOG('We have target and can fire, breaking loop')
                     break
                 end
-                LOG('TML No target, loop ')
             end
             if not table.empty(inRangeTmlLaunchers) then
                 --RNGLOG('Launching Tactical Missile')
@@ -239,11 +235,9 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                     AttackTarget = target,
                     Launchers = inRangeTmlLaunchers
                 }
-                self:LogDebug(string.format('TML Attacking targets'))
                 self:ChangeState(self.AttackTarget)
                 return
             end
-            self:LogDebug(string.format('TML no target, rerunning DecideWhatToDo'))
             coroutine.yield(30)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -286,21 +280,16 @@ AITMLBehavior = Class(AIPlatoonRNG) {
 ---@param data { Behavior: 'AIBehavior' }
 ---@param units Unit[]
 AssignToUnitsMachine = function(data, platoon, units)
-    LOG('AssignUnits to machine')
     if units and not table.empty(units) then
         -- create the platoon
         if not platoon.MachineStarted then
-            LOG('Machine is not started, set metatable')
             setmetatable(platoon, AITMLBehavior)
             platoon.PlatoonData = data.PlatoonData
         end
         platoon:OnUnitsAddedToPlatoon()
         -- start the behavior
         if not platoon.MachineStarted then
-            LOG('Machine is not started, start')
             ChangeState(platoon, platoon.Start)
-        else
-            LOG('TML Machine is already started')
         end
     end
 end

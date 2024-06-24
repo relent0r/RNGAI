@@ -488,12 +488,9 @@ function CDRHpUpgradeCheck(aiBrain, cdr)
             return true
         end
     elseif factionIndex == 4 then
-        LOG('Checking if ACU has nano repair')
         if not cdr:HasEnhancement('DamageStabilization') then
-            LOG('ACU does not have nano repair')
             return true
         end
-        LOG('ACU has nano repair')
     end
     return false
 end

@@ -70,7 +70,8 @@ IntelManager = Class {
         }
         self.StrategyFlags = {
             T3BomberRushActivated = false,
-            EnemyAirSnipeThreat = false
+            EnemyAirSnipeThreat = false,
+            EarlyT2AmphibBuilt = false,
         }
         self.UnitStats = {
             Land = {
@@ -121,6 +122,18 @@ IntelManager = Class {
                 },
                 Efficiency = 0
 
+            },
+            RangedBot = {
+                Deaths = {
+                    Mass = 0
+                },
+                Kills = {
+                    Mass = 0
+                },
+                Built = {
+                    Mass = 0
+                },
+                Efficiency = 0
             },
             Air = {
                 Deaths = {
@@ -622,6 +635,10 @@ IntelManager = Class {
             local zoneSelection
             local selection
             local platoonLabel = platoon.Label
+            if requireSameLabel and platoon.MovementLayer == 'Amphibious' then
+                local myLabel = NavUtils.GetLabel('Land', platoon.Pos)
+                platoonLabel = myLabel
+            end
             local enemyMexmodifier = 0.1
             local enemyDanger = 1.0
             local enemyX, enemyZ
@@ -873,7 +890,6 @@ IntelManager = Class {
                     if zoneCount > 0 and enemyAirThreat > 0 and myAirThreat > 0 then
                         enemyThreatRatio = (enemyAirThreat / myAirThreat * zoneCount)
                     end
-                    LOG('enemyThreatRatio '..tostring(enemyThreatRatio))
 
                     
                    --RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
@@ -883,7 +899,6 @@ IntelManager = Class {
                                 continue
                             end
                             if v.friendlyantiairallocatedthreat > math.max(v.enemyairthreat * 2, enemyThreatRatio) then
-                                LOG('Allocated threat is higher than enemy air threat, ignore this zone')
                                 continue
                             end
                             local distanceModifier = VDist3Sq(originPos, v.pos)
@@ -1798,16 +1813,8 @@ IntelManager = Class {
                     end
                 end
             end
-            if aiBrain.RNGDEBUG then
-                if defensiveUnitsFound then
-                    RNGLOG('directordata defensiveUnitsFound is true')
-                end
-                if defensiveUnitThreat then
-                    RNGLOG('defensiveUnitThreat is '..defensiveUnitThreat)
-                end
-            end
             if defensiveUnitsFound and defensiveUnitThreat > 0 then
-                local numberRequired = math.max(math.ceil(defensiveUnitThreat / 8), 8)
+                local numberRequired = math.min(math.ceil(defensiveUnitThreat / 8), 16)
                 if aiBrain.amanager.Demand.Land.T2.mml < numberRequired then
                     aiBrain.amanager.Demand.Land.T2.mml = numberRequired
                     --RNGLOG('Directordata Increasing mml production count by '..numberRequired)
@@ -2017,8 +2024,16 @@ IntelManager = Class {
                         LOG('bomberMassKilled ratio is '..tostring(math.min(bomberMassKilled / bomberMassBuilt, 2)))
                     end
                     if bomberMassKilled > 0 and bomberMassBuilt > 0 and math.min(bomberMassKilled / bomberMassBuilt, 2) > 1.2 then
-                        aiBrain.amanager.Demand.Air.T3.bomber = aiBrain.amanager.Current['Air']['T3']['bomber'] + 1
-                        disableBomber = false
+                        local myAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
+                        local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
+                        local enemyCount = 1
+                        if aiBrain.EnemyIntel.EnemyCount > 0 then
+                            enemyCount = aiBrain.EnemyIntel.EnemyCount
+                        end
+                        if myAirThreat * 1.3 > (enemyAirThreat / enemyCount) then
+                            aiBrain.amanager.Demand.Air.T3.bomber = aiBrain.amanager.Current['Air']['T3']['bomber'] + 1
+                            disableBomber = false
+                        end
                     end
                 end
             end
@@ -2124,6 +2139,47 @@ IntelManager = Class {
                     aiBrain.EngineerAssistManagerFocusSnipe = false
                 end
             end
+            local disableRangedBot = true
+            if aiBrain.BrainIntel.LandPhase < 2 then
+                
+            elseif aiBrain.BrainIntel.LandPhase < 3 then
+                local rangedBotMassKilled = aiBrain.IntelManager.UnitStats['RangedBot'].Kills.Mass
+                local rangedBotMassBuilt = aiBrain.IntelManager.UnitStats['RangedBot'].Built.Mass
+                if rangedBotMassKilled > 0 and rangedBotMassBuilt > 0 and math.min(rangedBotMassKilled / rangedBotMassBuilt, 2) > 1.2 then
+                    aiBrain.amanager.Demand.Land.T2.bot = aiBrain.amanager.Current['Land']['T2']['bot'] + 1
+                    disableRangedBot = false
+                end
+                if rangedBotMassKilled > 0 and rangedBotMassBuilt > 0 then
+                    LOG('Ranged Bot Efficiency is '..tostring(math.min(rangedBotMassKilled / rangedBotMassBuilt, 2)))
+                end
+                if not self.StrategyFlags.EarlyT2AmphibBuilt then
+                    LOG('Checking Amphib Built')
+                    local t2AmphibBuilt = aiBrain:GetBlueprintStat("Units_History", categories.DIRECTFIRE * categories.LAND * categories.TECH2 * (categories.AMPHIBIOUS + categories.HOVER))
+                    LOG('Count is '..tostring(t2AmphibBuilt))
+                    if t2AmphibBuilt < 5 then
+                        aiBrain.amanager.Demand.Land.T2.amphib = 5
+                    else
+                        self.StrategyFlags.EarlyT2AmphibBuilt = true
+                        aiBrain.amanager.Demand.Land.T2.amphib = 0
+                    end
+                end
+            elseif aiBrain.BrainIntel.LandPhase > 2 then
+                local rangedBotMassKilled = aiBrain.IntelManager.UnitStats['RangedBot'].Kills.Mass
+                local rangedBotMassBuilt = aiBrain.IntelManager.UnitStats['RangedBot'].Built.Mass
+                if rangedBotMassKilled > 0 and rangedBotMassBuilt > 0 then
+                    LOG('Ranged Bot Efficiency is '..tostring(math.min(rangedBotMassKilled / rangedBotMassBuilt, 2)))
+                end
+                if rangedBotMassKilled > 0 and rangedBotMassBuilt > 0 and math.min(rangedBotMassKilled / rangedBotMassBuilt, 2) > 1.2 then
+                    aiBrain.amanager.Demand.Land.T3.sniper = aiBrain.amanager.Current['Land']['T3']['sniper'] + 1
+                    disableRangedBot = false
+                end
+            end
+            if disableRangedBot and aiBrain.amanager.Current['Land']['T2']['bot'] > 1 then
+                aiBrain.amanager.Demand.Land.T2.bot = 0
+            end
+            if disableRangedBot and aiBrain.amanager.Current['Land']['T3']['sniper'] > 1 then
+                aiBrain.amanager.Demand.Land.T3.sniper = 0
+            end
         elseif type == 'AirAntiNaval' then
             if not table.empty(potentialStrikes) then
                 --RNGLOG('potentialStrikes for navy '..repr(potentialStrikes))
@@ -2183,7 +2239,7 @@ IntelManager = Class {
                 local zoneCount = aiBrain.BuilderManagers['MAIN'].PathableZones.PathableZoneCount
                 -- We are going to look at the threat in the pathable zones and see which ones are in our territory and make sure we have a theoretical number of air units there
                 -- I want to do this on a per base method, but I realised I'm not keeping information.
-                local totalMobileAARequired = math.min(math.ceil(zoneCount * (enemyThreat.Air / selfThreat.AirNow)), zoneCount * 2) or 0
+                local totalMobileAARequired = math.min(math.ceil((zoneCount * 0.70) * (enemyThreat.Air / selfThreat.AirNow)), zoneCount * 1.5) or 0
                 LOG('Enemy Air Threat '..enemyThreat.Air)
                 LOG('Self Air Threat '..selfThreat.AirNow)
                 LOG('totalMobileAARequired '..totalMobileAARequired)
@@ -2300,7 +2356,12 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit)
                     data.sourcecat = 'Air'
                 end
             elseif sourceCat.LAND then
-                data.sourcecat = 'Land'
+                if ( sourceCat.UEF or sourceCat.CYBRAN ) and sourceCat.BOT and sourceCat.TECH2 and sourceCat.DIRECTFIRE or sourceCat.SNIPER and sourceCat.TECH3 then
+                    data.sourcecat = 'RangedBot'
+                    if targetUnit.Blueprint.Economy.BuildCostMass then
+                        valueGained = targetUnit.Blueprint.Economy.BuildCostMass or 0
+                    end
+                end
             elseif sourceCat.STRUCTURE then
                 data.sourcecat = 'Structure'
             end
@@ -2634,7 +2695,6 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                             --RNGLOG('Expansion has '..expansion.MassPoints..' mass points')
                             --RNGLOG('Expansion is '..expansion.Name..' at '..repr(expansion.Position))
                             local extractorCount = zone.resourcevalue
-                            LOG('Extractor Count from zone is '..extractorCount)
                             if extractorCount > 1 then
                                 -- Lets ponder this a bit more, the acu is strong, but I don't want him to waste half his hp on civilian PD's
                                 if type == 'acu' and GetThreatAtPosition( aiBrain, expansion.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 5 then
@@ -2874,12 +2934,23 @@ TacticalThreatAnalysisRNG = function(aiBrain)
     local v = Vector(0, 0, 0)
 
     if not RNGTableEmpty(aiBrain.EnemyIntel.EnemyThreatLocations) then
-        for _, x in aiBrain.EnemyIntel.EnemyThreatLocations do
+        local eThreatLocations = aiBrain.EnemyIntel.EnemyThreatLocations
+        for _, x in eThreatLocations do
             for _, z in x do
-                if z['StructuresNotMex'] and (gameTime - z.UpdateTime) < 25 then
+                if z['StructuresNotMex'] then
+                    LOG('Current Game Time'..tostring(gameTime))
+                    LOG('Cell Update time '..tostring(z.UpdateTime))
+                end 
+                if z['StructuresNotMex'] and (gameTime - z.UpdateTime) < 35 then
                     --RNGLOG('Enemy Threat Locations has a StructuresNotMex table')
                     -- position format as used by the engine
                     v = z.Position
+                    z.LandDefStructureCount = 0
+                    z.LandDefStructureThreat = 0
+                    z.LandDefStructureMaxRange = 0
+                    z.AirDefStructureCount = 0
+                    z.AirDefStructureThreat = 0
+                    z.AirDefStructureMaxRange = 0
                     -- retrieve units and shields that are in or overlap with the iMAP cell
                     local unitsAtLocation = GetUnitsAroundPoint(aiBrain, CategoriesStructuresNotMex, v, scanRadius, 'Enemy')
                     local shieldsAtLocation = GetUnitsAroundPoint(aiBrain, CategoriesShield, v, 50 + scanRadius, 'Enemy')
@@ -2964,28 +3035,18 @@ TacticalThreatAnalysisRNG = function(aiBrain)
     
     if not RNGTableEmpty(defensiveUnits) then
         for k, unit in defensiveUnits do
-            if not aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount then
-                aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount = 0
-                aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureThreat = 0
-                aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureMaxRange = 0
-            end
-            if not aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount then
-                aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount = 0
-                aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureThreat = 0
-                aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureMaxRange = 0
-            end
-            if aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]]['StructuresNotMex'] then
+            if eThreatLocations[unit.IMAP[1]][unit.IMAP[3]]['StructuresNotMex'] then
                     if unit.Object.Blueprint.Defense.SurfaceThreatLevel > 0 then
-                        aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount = aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount + 1
-                        aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureThreat = aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureThreat + unit.Object.Blueprint.Defense.SurfaceThreatLevel
-                        if unit.Object.Blueprint.Weapon[1].MaxRadius and unit.Object.Blueprint.Weapon[1].MaxRadius > aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureMaxRange then
-                            aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureMaxRange = unit.Object.Blueprint.Weapon[1].MaxRadius
+                        eThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount = eThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount + 1
+                        eThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureThreat = eThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureThreat + unit.Object.Blueprint.Defense.SurfaceThreatLevel
+                        if unit.Object.Blueprint.Weapon[1].MaxRadius and unit.Object.Blueprint.Weapon[1].MaxRadius > eThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureMaxRange then
+                            eThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureMaxRange = unit.Object.Blueprint.Weapon[1].MaxRadius
                         end
                     elseif unit.Object.Blueprint.Defense.AirThreatLevel > 0 then
-                        aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount = aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount + 1
-                        aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureThreat = aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureThreat + unit.Object.Blueprint.Defense.AirThreatLevel
+                        eThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount = eThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount + 1
+                        eThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureThreat = eThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureThreat + unit.Object.Blueprint.Defense.AirThreatLevel
                     end
-                    if aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount + aiBrain.EnemyIntel.EnemyThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount > 5 then
+                    if eThreatLocations[unit.IMAP[1]][unit.IMAP[3]].LandDefStructureCount + eThreatLocations[unit.IMAP[1]][unit.IMAP[3]].AirDefStructureCount > 5 then
                         aiBrain.EnemyIntel.EnemyFireBaseDetected = true
                     end
                 end
@@ -2993,7 +3054,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
         end
 
         local firebaseTable = {}
-        for _, x in aiBrain.EnemyIntel.EnemyThreatLocations do
+        for _, x in eThreatLocations do
             for _, z in x do
                 if z.LandDefStructureCount > 0 or z.AirDefStructureCount > 0 then
                     local tableEntry = { Position = z.Position, Land = { Count = 0 }, Air = { Count = 0 }, aggX = 0, aggZ = 0, weight = 0, maxRangeLand = 0, validated = false}

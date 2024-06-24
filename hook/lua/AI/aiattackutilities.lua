@@ -416,7 +416,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
         -- We are multipling the structure threat because the default threat allocation is shit. A T1 naval factory is only worth 3 threat which is not enough to make
         -- frigates / subs want to attack them over something else.
         secondaryThreat = aiBrain:GetThreatAtPosition({threat[1], 0, threat[2]}, aiBrain.BrainIntel.IMAPConfig.Rings, true, SecondaryTargetThreatType)
-        --RNGLOG('GetBestNavalTarget Primary Threat is '..primaryThreat..' secondaryThreat is '..secondaryThreat)
+        --LOG('GetBestNavalTarget Primary Threat is '..primaryThreat..' secondaryThreat is '..secondaryThreat..' at pos '..tostring(threat[1])..':'..tostring(threat[2]))
 
         baseThreat = primaryThreat + secondaryThreat
 
@@ -434,17 +434,20 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
         if myThreat <= IgnoreStrongerTargetsIfWeakerThan
                 and (myThreat == 0 or enemyThreat / (myThreat + friendlyThreat) > IgnoreStrongerTargetsRatio)
                 and unitCapRatio < IgnoreStrongerUnitCap then
-            --RNGLOG('*AI DEBUG: Skipping threat')
+            --LOG('*AI DEBUG: Skipping threat due to something way strong')
             continue
         end
-
+        local weakPlatoon = false
         if threatDiff <= 0 then
             -- if we're weaker than the enemy... make the target less attractive anyway
             --LOG('NavalAttackAI is weaker than the enemy')
+            --LOG('My threat was '..tostring(myThreat)..'enemy threat was '..tostring(enemyThreat))
+            weakPlatoon = true
             threat[3] = threat[3] + threatDiff * WeakAttackThreatWeight
         else
             -- ignore overall threats that are really low, otherwise we want to defeat the enemy wherever they are
             if (baseThreat <= IgnoreThreatLessThan) or (myThreat >= IgnoreWeakerTargetsIfStrongerThan and (enemyThreat == 0 or myThreat / enemyThreat > IgnoreWeakerTargetsRatio)) then
+                --LOG('NavalAttackAI is ignoring threat due to it being low')
                 continue
             end
             threat[3] = threat[3] + threatDiff * StrongAttackThreatWeight
@@ -491,12 +494,11 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     if not foundPathableThreat or curMaxThreat == 0 then
         return false
     end
-    local x = threatTable[curMaxIndex][1]
-    local y = GetTerrainHeight(threatTable[curMaxIndex][1], threatTable[curMaxIndex][2])
-    local z = threatTable[curMaxIndex][2]
+    table.sort(threatTable, function(a,b) return a[3] > b[3] end)
+    LOG('Returning threat table with '..tostring(table.getn(threatTable))..' entries')
     --local pathablePos = CheckNavalPathingRNG(aiBrain, platoon, {x, y, z}, maxRange, selectedWeaponArc)
     
-    return {x, y, z}
+    return threatTable
 end
 
 function CheckNavalPathingRNG(aiBrain, platoon, location, maxRange, selectedWeaponArc)

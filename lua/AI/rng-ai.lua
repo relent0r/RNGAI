@@ -438,6 +438,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         shield=0,
                         stealth=0,
                         mobilebomb=0,
+                        amphib=0,
                         bot=0
                     },
                     T3 = {
@@ -888,6 +889,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     T2 = {
                         tank=0,
                         mml=0,
+                        amphib=0,
                         aa=0,
                         shield=0,
                         stealth=0,
@@ -2082,7 +2084,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 local maxEngineersRequired = math.max(math.ceil(totalMassRequired / 500), math.ceil(totalEnergyRequired / 500))
                 if totalMassRequired > 500 or totalEnergyRequired > 1500 then
                     v.ReclaimData.ReclaimAvailable = true
-                    v.ReclaimData.EngineersRequired = math.max(3, maxEngineersRequired)
+                    v.ReclaimData.EngineersRequired = math.max(4, maxEngineersRequired)
                 else 
                     v.ReclaimData.ReclaimAvailable = false
                     v.ReclaimData.EngineersRequired = maxEngineersRequired
@@ -3722,7 +3724,6 @@ AIBrain = Class(RNGAIBrainClass) {
             self.amanager.Ratios[factionIndex].Land.T2.aa = 10
             self.amanager.Ratios[factionIndex].Land.T2.aa = 10
         end
-        self.EnemyIntel.EnemyThreatLocations = {}
 
         local selfIndex = self:GetArmyIndex()
         local potentialThreats = {}
@@ -3746,16 +3747,23 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         -- Get threats for each threat type listed on the threatTypes table. Full map scan.
         local currentGameTime = GetGameTimeSeconds()
+        local eThreatLocations = self.EnemyIntel.EnemyThreatLocations
 
         for _, t in threatTypes do
             local rawThreats = GetThreatsAroundPosition(self, self.BuilderManagers.MAIN.Position, 16, true, t)
             for _, raw in rawThreats do
                 local position = {raw[1], GetSurfaceHeight(raw[1], raw[2]),raw[2]}
-                potentialThreats[raw[1]] = potentialThreats[raw[1]] or { }
-                potentialThreats[raw[1]][raw[2]] = potentialThreats[raw[1]][raw[2]] or { }
-                potentialThreats[raw[1]][raw[2]][t] = raw[3]
-                potentialThreats[raw[1]][raw[2]].Position = potentialThreats[raw[1]][raw[2]].Position or position
-                potentialThreats[raw[1]][raw[2]].UpdateTime = potentialThreats[raw[1]][raw[2]].UpdateTime or currentGameTime
+                if not eThreatLocations[raw[1]] then
+                    eThreatLocations[raw[1]] = {}
+                end
+                if not eThreatLocations[raw[1]][raw[2]] then
+                    eThreatLocations[raw[1]][raw[2]] = {}
+                end
+                eThreatLocations[raw[1]] = eThreatLocations[raw[1]] or { }
+                eThreatLocations[raw[1]][raw[2]] = eThreatLocations[raw[1]][raw[2]] or { }
+                eThreatLocations[raw[1]][raw[2]][t] = raw[3]
+                eThreatLocations[raw[1]][raw[2]].Position = eThreatLocations[raw[1]][raw[2]].Position or position
+                eThreatLocations[raw[1]][raw[2]].UpdateTime = currentGameTime
                 --local threatRow = {posX=raw[1], posZ=raw[2], rThreat=raw[3], rThreatType=t}
                 threatTotals[t] = threatTotals[t] + raw[3]
                 --RNGINSERT(potentialThreats, threatRow)
@@ -3773,9 +3781,8 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Remove threats that are too close to the enemy base so we are focused on whats happening in the battlefield.
         -- Also set if the threat is on water or not
         -- Set the time the threat was identified so we can flush out old entries
-        if not RNGTableEmpty(potentialThreats) then
-            local threatLocation = {}
-            for _, x in potentialThreats do
+        if not RNGTableEmpty(eThreatLocations) then
+            for _, x in eThreatLocations do
                 for _, z in x do
                     --RNGLOG('* AI-RNG: Threat is'..repr(threat))
                     if not z.PositionOnWater then
@@ -3792,7 +3799,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
             end
-            self.EnemyIntel.EnemyThreatLocations = potentialThreats
             --RNGLOG('* AI-RNG: second table pass :'..repr(potentialThreats))
             --RNGLOG('* AI-RNG: Final Valid Threat Locations :'..repr(self.EnemyIntel.EnemyThreatLocations))
         end
@@ -5535,7 +5541,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local coms = {acu=0,sacu=0}
         local pgens = {T1=0,T2=0,T3=0,hydro=0}
         local silo = {T2=0,T3=0}
-        local armyLand={T1={scout=0,tank=0,arty=0,aa=0},T2={tank=0,mml=0,aa=0,shield=0,bot=0,stealth=0,mobilebomb=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0,armoured=0}}
+        local armyLand={T1={scout=0,tank=0,arty=0,aa=0},T2={tank=0,mml=0,amphib=0,aa=0,shield=0,bot=0,stealth=0,mobilebomb=0},T3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0,armoured=0}}
         local armyLandType={scout=0,tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0,bot=0,armoured=0}
         local armyLandTiers={T1=0,T2=0,T3=0}
         local armyAir={T1={scout=0,interceptor=0,bomber=0,gunship=0,transport=0},T2={fighter=0,bomber=0,gunship=0,mercy=0,transport=0,torpedo=0},T3={scout=0,asf=0,bomber=0,gunship=0,torpedo=0,transport=0}}
@@ -5730,7 +5736,11 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif unitCat.TECH2 then
                             armyLandTiers.T2=armyLandTiers.T2+1
                             if unitCat.DIRECTFIRE and not unitCat.BOT and not unitCat.ANTIAIR then
-                                armyLand.T2.tank=armyLand.T2.tank+1
+                                if unitCat.AMPHIBIOUS or unitCat.HOVER then
+                                    armyLand.T2.amphib=armyLand.T2.amphib+1
+                                else
+                                    armyLand.T2.tank=armyLand.T2.tank+1
+                                end
                                 armyLandType.tank=armyLandType.tank+1
                             elseif unitCat.DIRECTFIRE and unitCat.BOT and unitCat.BOMB then
                                 armyLand.T2.mobilebomb=armyLand.T2.mobilebomb+1
@@ -6060,6 +6070,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.CategoriesHash.ANTINAVY 
             and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy == 0 and unit.PlatoonHandle.StateName ~= 'Retreating' then
                 unit.PlatoonHandle:LogDebug(string.format('Naval retreat callback fired'))
+                LOG('Naval Platoon being told to retreat due to antinavy, current antinavy is '..tostring(unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy))
                 unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.Retreating)
             end
         end
@@ -6073,9 +6084,10 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         local function AntiAirRetreatState(unit, instigator)
             --RNGLOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiAir))
-            if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.CategoriesHash.ANTINAVY and instigator.Blueprint.CategoriesHash.AIR
+            if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and (instigator.Blueprint.CategoriesHash.ANTINAVY or instigator.Blueprint.CategoriesHash.BOMBER or instigator.Blueprint.CategoriesHash.GROUNDATTACK) and instigator.Blueprint.CategoriesHash.AIR and not instigator.Blueprint.CategoriesHash.TRANSPORTFOCUS
             and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiAir == 0 and unit.PlatoonHandle.StateName ~= 'Retreating' then
                 unit.PlatoonHandle:LogDebug(string.format('Naval retreat callback fired'))
+                LOG('Naval Platoon being told to retreat due to air antinavy, current antiair is '..tostring(unit.PlatoonHandle.CurrentPlatoonThreatAntiAir))
                 unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.Retreating)
             end
         end
@@ -6100,6 +6112,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 unit:AddOnDamagedCallback( AntiNavalRetreatState, nil, 100)
             else
                 unit:AddOnDamagedCallback( AntiNavalRetreat, nil, 100)
+            end
+            if not unit.Blueprint.CategoriesHash.ANTIAIR then
+                if unit.AIPlatoonReference then
+                    unit:AddOnDamagedCallback( AntiAirRetreatState, nil, 100)
+                else
+                    unit:AddOnDamagedCallback( AntiAirRetreat, nil, 100)
+                end
             end
         end
         if unit.Blueprint.CategoriesHash.TECH2 and unit.Blueprint.CategoriesHash.CRUISER then
@@ -6346,6 +6365,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         tank=0,
                         mml=0,
                         aa=0,
+                        amphib=0,
                         shield=0,
                         stealth=0,
                         mobilebomb=0,
@@ -6799,6 +6819,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     T2 = {
                         tank=0,
                         mml=0,
+                        amphib=0,
                         aa=0,
                         shield=0,
                         stealth=0,

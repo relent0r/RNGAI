@@ -113,7 +113,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, true)
+            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, true, true)
             local enemyACU, enemyACUDistance = StateUtils.GetClosestEnemyACU(aiBrain, self.Pos)
             self:LogDebug(string.format('DecideWhatToDo Danger Check, EnemySurface is '..threat.enemySurface..' ally surface is '..threat.allySurface))
             if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
@@ -123,7 +123,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 aiBrain:PlatoonReinforcementRequestRNG(self, 'AntiAir', closestBase, label)
             end
             if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then
-                if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*2 > threat.enemySurface then
+                if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*1.5 > (threat.enemySurface - threat.enemyStructure) then
                     rangedAttack = true
                 else
                     self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
@@ -428,6 +428,26 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             else
                                 StateUtils.VariableKite(self,v,target)
                             end
+                        else
+                            if v.Role == 'Shield' or v.Role == 'Stealth' then
+                                if v.GetNavigator then
+                                    local navigator = v:GetNavigator()
+                                    if navigator then
+                                        navigator:SetGoal(RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
+                                    end
+                                else
+                                    IssueMove({v},RUtils.lerpy(RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4})))
+                                end
+                            elseif v.Role == 'Scout' then
+                                if v.GetNavigator then
+                                    local navigator = v:GetNavigator()
+                                    if navigator then
+                                        navigator:SetGoal(RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self.IntelRange or self.MaxPlatoonWeaponRange) }))
+                                    end
+                                else
+                                    IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self.IntelRange or self.MaxPlatoonWeaponRange) }))
+                                end
+                            end
                         end
                     end
                 end
@@ -593,8 +613,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     self:LogDebug(string.format('Exit condition true during navigation'))
                     self.navigating=false
                     self.path=false
-                    if self.Retreat then
+                    if self.retreat then
                         StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandMergeStateMachine', 80, 35, false)
+                        self.retreat = false
                     end
                     coroutine.yield(10)
                     self:ChangeState(self.DecideWhatToDo)
@@ -938,7 +959,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     location = aiBrain.BuilderManagers[closestBase].Position
                 end
             end
-            self.Retreat = true
+            self.retreat = true
             self.BuilderData = {
                 Position = location,
                 CutOff = 400,

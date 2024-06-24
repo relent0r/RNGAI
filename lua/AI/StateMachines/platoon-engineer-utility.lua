@@ -659,8 +659,10 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 else
                     reference = RUtils.GetDefensivePointRNG(aiBrain, cons.LocationType or 'MAIN', cons.Tier or 2, cons.Type)
                 end
-                buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
-                RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
+                if reference then
+                    buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
+                    RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
+                end
             elseif cons.AdjacencyPriority then
                 relative = false
                 local pos = aiBrain.BuilderManagers[eng.BuilderManagerData.LocationType].EngineerManager.Location
@@ -1289,17 +1291,23 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 local platPos = self:GetPlatoonPosition()
                 if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                     if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.MOBILE, platPos, 30, 'Enemy') > 0 then
+                        self:LogDebug(string.format('Constructing enemy unit found '))
                         local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.MOBILE, platPos, 30, 'Enemy')
                         if enemyUnits then
                             local enemyUnitPos
                             for _, unit in enemyUnits do
+                                self:LogDebug(string.format('Found '..tostring(unit.UnitId)))
                                 enemyUnitPos = unit:GetPosition()
                                 if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, unit) then
+                                    self:LogDebug(string.format('Constructing found scout or engineer, distance is '..tostring(VDist3Sq(platPos, enemyUnitPos))))
                                     if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
                                         if VDist3Sq(platPos, enemyUnitPos) < 156 then
                                             IssueClearCommands({eng})
                                             IssueReclaim({eng}, unit)
-                                            coroutine.yield(60)
+                                            coroutine.yield(40)
+                                            while not unit.Dead and VDist3Sq(platPos, enemyUnitPos) < 156 do
+                                                coroutine.yield(20)
+                                            end
                                             self:ChangeState(self.PerformBuildTask)
                                             return
                                         end

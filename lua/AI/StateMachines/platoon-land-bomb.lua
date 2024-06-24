@@ -381,7 +381,7 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
                 end
             end
             StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandBombMergeStateMachine', 80, 35, true)
-            self.Retreat = true
+            self.retreat = true
             self.BuilderData = {
                 Position = location,
                 CutOff = 400,

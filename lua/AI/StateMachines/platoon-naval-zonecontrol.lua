@@ -114,6 +114,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                 local baseDistance = bx * bx + bz * bz
                 if baseDistance > 900 then
                     self:LogDebug(string.format('DecideWhatToDo Ordered to retreat due to local threat'))
+                    LOG('Naval Zone Control DecideWhatToDo Ordered to retreat due to local threat ')
                     self:ChangeState(self.Retreating)
                     return
                 else
@@ -130,45 +131,57 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                 end
                 self:LogDebug(string.format('No Simple target found'))
             end
-            local attackPosition = AIAttackUtils.GetBestNavalTargetRNG(aiBrain, self)
-            if attackPosition then
-                self:LogDebug(string.format('Attack Position is '..tostring(attackPosition[1])..':'..tostring(attackPosition[3])))
-                self:LogDebug(string.format('attackPosition found'))
-                if NavUtils.CanPathTo(self.MovementLayer, self.Pos, attackPosition) then
-                    local rx = self.Pos[1] - attackPosition[1]
-                    local rz = self.Pos[3] - attackPosition[3]
-                    local posDistance = rx * rx + rz * rz
-                    self:LogDebug(string.format('distance is '..posDistance))
-                    if posDistance > 6400 then
-                        self.BuilderData = {
-                            Position = attackPosition,
-                            CutOff = 400
-                        }
-                        self.dest = self.BuilderData.Position
-                        local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', self.Pos, attackPosition, 10 , 1000)
-                        if path and RNGGETN(path) > 0 then
-                            self.path = path
-                            self:ChangeState(self.Navigating)
-                            return
+            local attackTable = AIAttackUtils.GetBestNavalTargetRNG(aiBrain, self)
+            if not table.empty(attackTable) then
+                LOG('attackTable has items')
+                self:LogDebug(string.format('attackTable has items'))
+                for k, v in attackTable do
+                    LOG('attackTable itme '..tostring(k..' has a threat value of '..tostring(v[3])))
+                    local attackPosition = {v[1], GetSurfaceHeight(v[1], v[2]), v[2]}
+                    self:LogDebug(string.format('Attack Position is '..tostring(attackPosition[1])..':'..tostring(attackPosition[3])))
+                    if NavUtils.CanPathTo(self.MovementLayer, self.Pos, attackPosition) then
+                        local rx = self.Pos[1] - attackPosition[1]
+                        local rz = self.Pos[3] - attackPosition[3]
+                        local posDistance = rx * rx + rz * rz
+                        self:LogDebug(string.format('distance is '..posDistance))
+                        if posDistance > 6400 then
+                            self.BuilderData = {
+                                Position = attackPosition,
+                                CutOff = 400
+                            }
+                            self.dest = self.BuilderData.Position
+                            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', self.Pos, attackPosition, 10 , 1000)
+                            if path and RNGGETN(path) > 0 then
+                                self.path = path
+                                self:LogDebug(string.format('Navigating to attack position'..tostring(attackPosition)))
+                                LOG('Navigating to Attack position is found')
+                                self:ChangeState(self.Navigating)
+                                return
+                            else
+                                LOG('No path to attack pos')
+                                self:LogDebug(string.format('No path or no entries in path returned'..tostring(self.Pos)))
+                            end
                         else
-                            self:LogDebug(string.format('No path or no entries in path returned'..tostring(self.Pos)))
+                            LOG('close to Attack position')
+                            if StateUtils.SimpleNavalTarget(self,aiBrain) then
+                                self:LogDebug(string.format('DecideWhatToDo found simple target'))
+                                self:ChangeState(self.CombatLoop)
+                                return
+                            else
+                                LOG('no local enemies found')
+                                self:LogDebug(string.format('no local enemies found'))
+                            end
                         end
                     else
-                        if StateUtils.SimpleNavalTarget(self,aiBrain) then
-                            self:LogDebug(string.format('DecideWhatToDo found simple target'))
-                            self:ChangeState(self.CombatLoop)
-                            return
-                        end
+                        self:LogDebug(string.format('Have attack position but cant path to it, movement layer is '..tostring(self.MovementLayer)))
+                        self:LogDebug(string.format('Attack Position is '..tostring(attackPosition[1])..':'..tostring(attackPosition[3])))
+                        self:LogDebug(string.format('Current platoon position is '..tostring(self.Pos)))
                     end
-                else
-                    self:LogDebug(string.format('Have attack position but cant path to it, movement layer is '..tostring(self.MovementLayer)))
-                    self:LogDebug(string.format('Attack Position is '..tostring(attackPosition[1])..':'..tostring(attackPosition[3])))
-                    self:LogDebug(string.format('Current platoon position is '..tostring(self.Pos)))
                 end
             end
             if not target then
                 local targetCandidates
-                local searchFilter = (categories.NAVAL + categories.AMPHIBIOUS + categories.STRUCTURE) - categories.INSIGNIFICANTUNIT
+                local searchFilter = (categories.NAVAL + categories.AMPHIBIOUS + categories.HOVER + categories.STRUCTURE) - categories.INSIGNIFICANTUNIT
                 self:LogDebug(string.format('Looking for target via IMAP'))
                 targetCandidates = StateUtils.GetClosestTargetByIMAP(aiBrain, self, self.Home, 'Naval', searchFilter, 'AntiSub', 'Water')
                 if targetCandidates then
@@ -241,6 +254,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             if basePos then
                 self:LogDebug(string.format('No positions or targets found, retreating back to base'))
                 coroutine.yield(25)
+                LOG('Naval Zone Control DecideWhatToDo Ordered to retreat due to no target')
                 self:ChangeState(self.Retreating)
                 return
             end
@@ -288,6 +302,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             if pathNodesCount == 0 then
                 self:LogDebug(string.format('Number of nodes in path is zero, we are going to retreat for now'))
                 coroutine.yield(25)
+                LOG('Naval Zone Control DecideWhatToDo Ordered to retreat due to node paths being 0 ')
                 self:ChangeState(self.Retreating)
             end
             

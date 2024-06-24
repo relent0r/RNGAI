@@ -127,7 +127,6 @@ function ThreatPresentOnLabelRNG(aiBrain, locationtype, tType, ratioRequired)
             for _, z in x do
                 if tType == 'Defensive' then
                     if z.LandLabel == graphArea and z.LandDefStructureCount and z.LandDefStructureCount > 0 and (gameTime - z.UpdateTime) < 45 then
-                        LOG('ThreatPresentOnLabelRNG Defensive threat present')
                         threatTotal = threatTotal + z.LandDefStructureThreat
                     end
                 elseif z[tType] and z[tType] > 0 and z.LandLabel == graphArea and (gameTime - z.UpdateTime) < 45 then
@@ -146,19 +145,17 @@ function ThreatPresentOnLabelRNG(aiBrain, locationtype, tType, ratioRequired)
             return true
         end
         if tType == 'Defensive' and aiBrain.GraphZones and aiBrain.GraphZones[graphArea].FriendlySurfaceInDirectFireThreat < threatTotal then
-            LOG('ThreatPresentOnLabelRNG returning true as we need more threat')
+            --LOG('ThreatPresentOnLabelRNG Defensive threat found in graph for threat type '..tostring(tType))
             return true
         end
     end
     if tType == 'Air' and aiBrain.GraphZones then
         if aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface and aiBrain.GraphZones[graphArea].FriendlyLandAntiAirThreat then
             if aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface > 10 and aiBrain.GraphZones[graphArea].FriendlyLandAntiAirThreat < 10 then
-                LOG('Requesting Minimum antiair support')
                 return true
             end
         end
     end
-    --RNGLOG('ThreatPresentOnLabelRNG No threat in graph area')
     return false
 end
 

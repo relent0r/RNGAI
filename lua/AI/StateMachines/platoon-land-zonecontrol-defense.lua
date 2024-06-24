@@ -349,7 +349,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 return
             end
             local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, false, true)
-            self.Retreat = true
+            self.retreat = true
             self.BuilderData = {
                 TargetZone = zoneRetreat,
                 Position = aiBrain.Zones.Land.zones[zoneRetreat].pos,
@@ -474,6 +474,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 if VDist3Sq(self.BuilderData.Position,self.Pos) < 400 then
                     self.path = false
                     self.navigating = false
+                    if self.retreat then
+                        self.retreat = false
+                    end
                     self:LogDebug(string.format('platoon is at destination, exiting'))
                     self:ChangeState(self.DecideWhatToDo)
                     return

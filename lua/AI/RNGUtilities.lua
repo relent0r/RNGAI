@@ -3252,7 +3252,7 @@ GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, inclu
                 end
                 if bp.CategoriesHash.STRUCTURE then
                     if bp.CategoriesHash.TACTICALMISSILEPLATFORM then
-                        mult=0.2
+                        mult=0.1
                     else
                         mult=1.5
                     end
@@ -4880,12 +4880,8 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         end
     end
     if platoon.FindPlatoonCounter and (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
-        LOG('Look for platoon that needs a scout')
         coroutine.yield(3)
         platoonNeedScout, supportPlatoon = ScoutFindNearbyPlatoonsRNG(platoon, 250)
-        if platoonNeedScout then
-            LOG('Found platoon')
-        end
         platoon.FindPlatoonCounter = platoon.FindPlatoonCounter + 1
     end
     if platoonNeedScout then
@@ -5498,96 +5494,101 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
     local highestPriority = 0
     if aiBrain.EnemyIntel.HighPriorityTargetAvailable then
         if platoon then
-            platPos = platoon:GetPlatoonPosition()
+            platPos = platoon.Pos or platoon:GetPlatoonPosition()
         end
         -- again because we are dealing with vdist3sq in ClosestEnemyBase the rangeCheck is also squared
         local rangeCheck = 4
         if avoid then
             rangeCheck = 9
         end
-        if platPos and VDist3Sq(platPos, aiBrain.BrainIntel.StartPos) < (aiBrain.EnemyIntel.ClosestEnemyBase / rangeCheck) then
-            for k, v in aiBrain.EnemyIntel.Experimental do
-                if not v.object.Dead and v.object:GetFractionComplete() > 0.9 then
-                    local unitCats = v.object.Blueprint.CategoriesHash
-                    if naval then
-                        if not unitCats.HOVER and not unitCats.AIR and PositionInWater(v.position) then
-                            closestTarget = v.object
-                        end
-                    else
-                        closestTarget = v.object
-                    end
-                end
-            end
-            if not closestTarget then
-                for k, v in aiBrain.prioritypointshighvalue do
-                    if not v.unit.Dead and not v.unit.Tractored then
-                        local unitCats = v.unit.Blueprint.CategoriesHash
-                        if ignoreAcu then
-                            if unitCats.COMMAND then
-                                LOG('Got ACU via prioritypointshighvalue')
-                                local skipAcu
-                                if platoon.MovementLayer == 'Air' then
-                                    LOG('Our movement layer is air')
-                                    local acuTarget = CheckACUSnipe(aiBrain, 'Air')
-                                    if acuTarget and not acuTarget.Dead then
-                                        local brainIndex = v.unit:GetAIBrain():GetArmyIndex()
-                                        local acuIndex = acuTarget:GetAIBrain():GetArmyIndex()
-                                        LOG('Got ACU target brain index '..tostring(brainIndex))
-                                        LOG('Got ACU snipe brain index '..tostring(brainIndex))
-                                        if brainIndex ~= acuIndex then
-                                            skipAcu = true
-                                        else
-                                            LOG('Got ACU snipe query')
-                                        end
-                                    else
-                                        skipAcu = true
-                                    end
-                                end
-                                if skipAcu then
-                                    continue
-                                end
-                                LOG('Got ACU via prioritypointshighvalue')
-                            end
-                        end
+        if platPos then
+            local platDistance = VDist3Sq(platPos, aiBrain.BrainIntel.StartPos)
+            if platDistance < (aiBrain.EnemyIntel.ClosestEnemyBase / rangeCheck) then
+                for k, v in aiBrain.EnemyIntel.Experimental do
+                    if not v.object.Dead and v.object:GetFractionComplete() > 0.9 then
+                        local unitCats = v.object.Blueprint.CategoriesHash
+                        local unitPos = v.position
                         if naval then
-                            if not unitCats.HOVER and PositionInWater(v.Position) then
-                                local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
-                                local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
-                                if tempPoint > highestPriority then
-                                    if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
-                                        --LOG('Set higher priority')
-                                        --LOG('Distance '..targetDistance)
-                                        --LOG('Priority '..(v.priority + (v.danger or 0)))
-                                        --LOG('Point Calculation is '..(v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30))
-                                        highestPriority = tempPoint
-                                        closestTarget = v.unit
+                            if not unitCats.HOVER and not unitCats.AIR and PositionInWater(v.position) then
+                                closestTarget = v.object
+                            end
+                        elseif platoon.MovementLayer == 'Air' then
+                            local unitDist = VDist3Sq(unitPos,platPos)
+                            if unitDist > aiBrain.OperatingAreas['BaseDMZArea'] then
+                                local currentThreat = aiBrain:GetThreatAtPosition( unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir' )
+                                if currentThreat < 30 then
+                                    closestTarget = v.object
+                                end
+                            else
+                                closestTarget = v.object
+                            end
+                        end
+                    end
+                end
+                if not closestTarget then
+                    for k, v in aiBrain.prioritypointshighvalue do
+                        if not v.unit.Dead and not v.unit.Tractored then
+                            local unitCats = v.unit.Blueprint.CategoriesHash
+                            if ignoreAcu then
+                                if unitCats.COMMAND then
+                                    local skipAcu
+                                    if platoon.MovementLayer == 'Air' then
+                                        local acuTarget = CheckACUSnipe(aiBrain, 'Air')
+                                        if acuTarget and not acuTarget.Dead then
+                                            local brainIndex = v.unit:GetAIBrain():GetArmyIndex()
+                                            local acuIndex = acuTarget:GetAIBrain():GetArmyIndex()
+                                            if brainIndex ~= acuIndex then
+                                                skipAcu = true
+                                            end
+                                        else
+                                            skipAcu = true
+                                        end
+                                    end
+                                    if skipAcu then
+                                        continue
                                     end
                                 end
                             end
-                        else
-                            if not unitCats.SCOUT then
-                                local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
-                                local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
-                                if tempPoint > highestPriority then
-                                    if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
-                                        --LOG('Set higher priority')
-                                        --LOG('Distance '..targetDistance)
-                                        --LOG('Priority '..(v.priority + (v.danger or 0)))
-                                        --LOG('Point Calculation is '..(v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30))
-                                        highestPriority = tempPoint
-                                        closestTarget = v.unit
+                            if naval then
+                                if not unitCats.HOVER and PositionInWater(v.Position) then
+                                    local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
+                                    local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
+                                    if tempPoint > highestPriority then
+                                        if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
+                                            --LOG('Set higher priority')
+                                            --LOG('Distance '..targetDistance)
+                                            --LOG('Priority '..(v.priority + (v.danger or 0)))
+                                            --LOG('Point Calculation is '..(v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30))
+                                            highestPriority = tempPoint
+                                            closestTarget = v.unit
+                                        end
+                                    end
+                                end
+                            else
+                                if not unitCats.SCOUT then
+                                    local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
+                                    local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
+                                    if tempPoint > highestPriority then
+                                        if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
+                                            --LOG('Set higher priority')
+                                            --LOG('Distance '..targetDistance)
+                                            --LOG('Priority '..(v.priority + (v.danger or 0)))
+                                            --LOG('Point Calculation is '..(v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30))
+                                            highestPriority = tempPoint
+                                            closestTarget = v.unit
+                                        end
                                     end
                                 end
                             end
                         end
                     end
                 end
-            end
-            if closestTarget then
-                if platoon then
-                    --LOG('High Priority target found distance is '..VDist3Sq(closestTarget:GetPosition(), platPos))
+                if closestTarget then
+                    if platoon then
+                        --LOG('High Priority target found distance is '..VDist3Sq(closestTarget:GetPosition(), platPos))
+                    end
+                    return closestTarget
                 end
-                return closestTarget
             end
         end
     end
@@ -6399,22 +6400,18 @@ function VentToPlatoon(platoon, aiBrain, plan)
         end
     end
     if plan == 'LandCombatBehavior' then
-        LOG('ACU Support Venting to LandCombatBehavior')
         ventPlatoon = aiBrain:MakePlatoon('', '')
         aiBrain:AssignUnitsToPlatoon(ventPlatoon, validUnits, 'Attack', 'None')
         import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ Vented = true}, ventPlatoon, validUnits)
     elseif plan =='LandAssaultBehavior' then
-        LOG('ACU Support Venting to LandAssaultBehavior')
         ventPlatoon = aiBrain:MakePlatoon('', '')
         aiBrain:AssignUnitsToPlatoon(ventPlatoon, validUnits, 'Attack', 'None')
         import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ Vented = true }, ventPlatoon, validUnits)
     else
-        LOG('ACU Support Venting to default')
         ventPlatoon = aiBrain:MakePlatoon('', plan)
         ventPlatoon.PlanName = 'Vented Platoon'
         aiBrain:AssignUnitsToPlatoon(ventPlatoon, validUnits, 'Attack', 'None')
     end
-    LOG('ACU Support Platoon has been vented')
 end
 
 function GetTMDPosition(aiBrain, eng, locationType)

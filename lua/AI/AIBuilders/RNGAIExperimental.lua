@@ -47,6 +47,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.LAND } },
@@ -77,6 +78,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2 }},
@@ -108,6 +110,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 3,
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 4, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
@@ -138,6 +141,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
@@ -170,6 +174,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { MIBC, 'FactionIndex', { 2, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             -- Have we the eco to build it ?
@@ -202,6 +207,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             -- Have we the eco to build it ?
@@ -233,6 +239,7 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             -- Have we the eco to build it ?

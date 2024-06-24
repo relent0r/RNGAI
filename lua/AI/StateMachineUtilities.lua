@@ -99,7 +99,7 @@ SimpleNavalTarget = function(platoon, aiBrain)
     local position=platoon.Pos
     local searchRadius = math.max(platoon.EnemyRadius, platoon.MaxPlatoonWeaponRange)
     if not position then return false end
-    platoon.targetcandidates=aiBrain:GetUnitsAroundPoint((categories.AMPHIBIOUS + categories.LAND + categories.NAVAL + categories.STRUCTURE) - categories.WALL - categories.INSIGNIFICANTUNIT, position, searchRadius, 'Enemy')
+    platoon.targetcandidates=aiBrain:GetUnitsAroundPoint((categories.HOVER + categories.AMPHIBIOUS + categories.LAND + categories.NAVAL + categories.STRUCTURE) - categories.WALL - categories.INSIGNIFICANTUNIT, position, searchRadius, 'Enemy')
     local candidates = platoon.targetcandidates
     platoon.targetcandidates={}
     local gameTime = GetGameTimeSeconds()
@@ -1001,8 +1001,8 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                     RNGINSERT(unitTable.ArtilleryThreat.Units, {Object = unit, Distance = distance})
                 elseif unit.Blueprint.CategoriesHash.TACTICALMISSILEPLATFORM then
-                    unitTable.DefenseThreat.TotalThreat = unitTable.DefenseThreat.TotalThreat + unitThreat * 0.3
-                    unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat + unitThreat * 0.3
+                    unitTable.DefenseThreat.TotalThreat = unitTable.DefenseThreat.TotalThreat + unitThreat * 0.1
+                    unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat + unitThreat * 0.1
                     RNGINSERT(unitTable.DefenseThreat.Units, {Object = unit, Distance = distance})
                 else
                     unitTable.DefenseThreat.TotalThreat = unitTable.DefenseThreat.TotalThreat + unitThreat
@@ -1296,6 +1296,9 @@ function GetClosestTargetByIMAP(aiBrain, platoon, position, threatType, searchFi
         local gameTime = GetGameTimeSeconds()
         local targetCandidates = {}
         for _, grid in threatcandidates do
+            LOG('Looking for targets at imap threat location '..tostring(grid.Position[1])..':'..tostring(grid.Position[3]))
+            LOG('Type is  '..tostring(grid.Type))
+            LOG('Threat is  '..tostring(grid.Threat))
             local targetUnits = aiBrain:GetUnitsAroundPoint(searchFilter, grid.Position, aiBrain.BrainIntel.IMAPConfig.OgridRadius, 'Enemy')
             if not table.empty(targetUnits) then
                 local antiThreat = aiBrain:GetThreatAtPosition(grid.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, avoidThreat)
@@ -1336,16 +1339,19 @@ function GetClosestTargetByIMAP(aiBrain, platoon, position, threatType, searchFi
                     end
                 end
                 if not table.empty(targetCandidates) then
-                --LOG('targetCandidates returned with '..table.getn(targetCandidates))
+                    LOG('targetCandidates returned with '..table.getn(targetCandidates))
                     return targetCandidates
                 else
+                    LOG('targetCandidates table is empty ')
                     return false
                 end
             else
+                LOG('targetUnits table is empty ')
                 return false
             end
         end
     else
+        LOG('targetCandidates table is empty ')
         return false
     end
 end
@@ -1572,7 +1578,6 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType, whatToBuild
                                                 itemQueued = true
                                                 break
                                             end
-                                            LOG('Added to build queue via AddToBuildQueueRNG')
                                             return true
                                         elseif not cons.AvoidCategory then
                                             AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
@@ -1580,7 +1585,6 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType, whatToBuild
                                                 itemQueued = true
                                                 break
                                             end
-                                            LOG('Added to build queue via AddToBuildQueueRNG')
                                             return true
                                         end
                                     end
@@ -1595,7 +1599,6 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType, whatToBuild
                                                 itemQueued = true
                                                 break
                                             end
-                                            LOG('Added to build queue via AddToBuildQueueRNG')
                                             return true
                                         elseif not cons.AvoidCategory then
                                             AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
@@ -1603,7 +1606,6 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType, whatToBuild
                                                 itemQueued = true
                                                 break
                                             end
-                                            LOG('Added to build queue via AddToBuildQueueRNG')
                                             return true
                                         end
                                     end
@@ -1623,7 +1625,6 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType, whatToBuild
                                                 itemQueued = true
                                                 break
                                             end
-                                            LOG('Added to build queue via AddToBuildQueueRNG')
                                             return true
                                         elseif not cons.AvoidCategory then
                                             AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos), false)
@@ -1631,7 +1632,6 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType, whatToBuild
                                                 itemQueued = true
                                                 break
                                             end
-                                            LOG('Added to build queue via AddToBuildQueueRNG')
                                             return true
                                         end
                                     end
@@ -1646,7 +1646,6 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType, whatToBuild
                                                 itemQueued = true
                                                 break
                                             end
-                                            LOG('Added to build queue via AddToBuildQueueRNG')
                                             return true
                                         elseif not cons.AvoidCategory then
                                             AddToBuildQueueRNG(aiBrain, builder, whatToBuild, heightbuildpos(testPos2), false)
@@ -1654,7 +1653,6 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType, whatToBuild
                                                 itemQueued = true
                                                 break
                                             end
-                                            LOG('Added to build queue via AddToBuildQueueRNG')
                                             return true
                                         end
                                     end
@@ -1710,7 +1708,6 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType, whatToBuild
                             itemQueued = true
                             break
                         end
-                        LOG('Added to build queue via AddToBuildQueueRNG')
                         return true
                     end
                 end
@@ -1720,8 +1717,6 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType, whatToBuild
             end
         end
         if itemQueued then
-            --RNGLOG('scaleNumber '..scalenumber)
-            LOG('Scale item added to build queue')
             return true
         end
         
@@ -1729,7 +1724,6 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType, whatToBuild
         if cons.AdjRequired then
             return false
         else
-            LOG('Rerunning AIExecuteBuildStructureRNG')
             return AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, whatToBuild, builder, true,  buildingTemplate, baseTemplate)
         end
     end

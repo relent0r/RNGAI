@@ -298,7 +298,17 @@ function GreaterThanEconIncomeCombinedRNG(aiBrain, mIncome, eIncome)
     return false
 end
 
+function HighValueGateRNG(aiBrain)
 
+    local multiplier = aiBrain.EcoManager.EcoMultiplier
+    if GetEconomyStoredRatio(aiBrain, 'MASS') >= 0.70 then
+        return true
+    end
+    if aiBrain.EcoManager.CoreExtractorT3Percentage < 1.0 and aiBrain.cmanager.income.r.m < (160 * multiplier) and not aiBrain.RNGEXP then
+        return false
+    end
+    return true
+end
 
 
 function MassIncomeToFactoryRNG(aiBrain, compareType, factoryDrain, requireBuilt)
@@ -465,7 +475,7 @@ end
 function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)
     --RNGLOG('Current Spend Ratio '..(aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m))
     local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3) or 0
-    if aiBrain.cmanager.categoryspend.fact[uType] / (aiBrain.cmanager.income.r.m - mexSpend) < aiBrain.ProductionRatios[uType] then
+    if aiBrain.cmanager.categoryspend.fact[uType] / ( aiBrain.cmanager.income.r.m - mexSpend ) < aiBrain.ProductionRatios[uType] then
         if aiBrain.EnemyIntel.ChokeFlag and uType == 'Land' then 
             if (GetEconomyStoredRatio(aiBrain, 'MASS') >= 0.10 and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= 0.95) then
                 return true

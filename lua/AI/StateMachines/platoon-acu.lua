@@ -213,13 +213,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 multiplier = 1
             end
             if ScenarioInfo.Options.AICDRCombat ~= 'cdrcombatOff' and brain.EnemyIntel.Phase < 3 and gameTime < 1500 then
-                LOG('Checking if we can expand')
-                LOG('Mass income must be more than 0.8 '..brain.EconomyOverTimeCurrent.MassIncome)
-                LOG('Energy income must be greater than minimum required '..(brain.EconomyOverTimeCurrent.EnergyIncome * 10))
-                LOG('Minimum required '..brain.EcoManager.MinimumPowerRequired)
-                LOG('OR')
-                LOG('Energy Trend must be greater than 6.0 '..brain.EconomyOverTimeCurrent.EnergyTrendOverTime)
-                LOG('Energy Income must be greater than 18 '..brain.EconomyOverTimeCurrent.EnergyIncome)
                 if (brain.EconomyOverTimeCurrent.MassIncome > (0.8 * multiplier) and brain.EconomyOverTimeCurrent.EnergyIncome * 10 > brain.EcoManager.MinimumPowerRequired)
                     or (brain.EconomyOverTimeCurrent.EnergyTrendOverTime > 6.0 and brain.EconomyOverTimeCurrent.EnergyIncome > 18) then
                     local enemyAcuClose = false

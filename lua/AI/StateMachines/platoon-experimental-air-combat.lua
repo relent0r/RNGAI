@@ -70,15 +70,12 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             self.LocationType = self.PlatoonData.LocationType or 'MAIN'
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             self.ExperimentalUnit = self:GetSquadUnits('Attack')[1]
-            LOG('Experimental unit '..self.ExperimentalUnit.UnitId)
             if self.ExperimentalUnit and not self.ExperimentalUnit.Dead then
                 -- Set the platoon max weapon range for the platoon and modify the categories on the Gauss Cannon
-                LOG('Setting platoon weapon range for experimental')
                 self.MaxPlatoonWeaponRange = self.ExperimentalUnit.Blueprint.Weapon[1].MaxRadius
                 if not self.MaxPlatoonWeaponRange then
                     self.MaxPlatoonWeaponRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Direct Fire')
                 end
-                LOG('Max weapon range is '..self.MaxPlatoonWeaponRange)
                 for i = 1, self.ExperimentalUnit:GetWeaponCount() do
                     local wep = self.ExperimentalUnit:GetWeapon(i)
                     local weaponBlueprint = wep:GetBlueprint()

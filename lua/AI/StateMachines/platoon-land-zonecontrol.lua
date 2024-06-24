@@ -138,7 +138,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             self:LogDebug(string.format('DecideWhatToDo threat data enemy surface '..tostring(threat.enemySurface)))
             self:LogDebug(string.format('DecideWhatToDo threat data ally surface '..tostring(threat.allySurface)))
             if threat.allySurface and threat.enemySurface and threat.allySurface*threatMultiplier < threat.enemySurface then
-                if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*2 > threat.enemySurface then
+                if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*1.5 > (threat.enemySurface - threat.enemyStructure) then
                     rangedAttack = true
                 else
                     self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
@@ -160,7 +160,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.Retreating)
                     return
                 end
-                LOG('Enemy ACU is closest than 35 units at start of DecideWhat to do for land assault, our surface threat '..tostring(threat.allySurface)..' enemy surface threat '..tostring(threat.enemySurface))
             end
             if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
                 local targetPos = self.BuilderData.AttackTarget:GetPosition()
@@ -222,9 +221,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             if v.resourcevalue > 0 and v.label == myLabel then
                                 local withinRange
                                 for _, pos in aiBrain.EnemyIntel.EnemyStartLocations do
-                                    LOG('Checking enemy start pos of '..tostring(pos.Index))
-                                    LOG('Distance is '..tostring(VDist2Sq(v.pos[1],  v.pos[3], pos.Position[1], pos.Position[3])))
-                                    LOG('ignoreRadius is '..tostring(ignoreRadius))
                                     if VDist2Sq(v.pos[1],  v.pos[3], pos.Position[1], pos.Position[3]) < ignoreRadius then
                                         withinRange = true
                                         break
@@ -264,6 +260,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         LOG('transport available, use any label')
                     end
                     targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType, currentLabel)
+                    if not targetZone then
+                        LOG('No targetZone returned')
+                    end
                 end
                 if targetZone then
                     self.BuilderData = {
@@ -411,7 +410,28 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             else
                                 StateUtils.VariableKite(self,v,target)
                             end
+                        else
+                            if v.Role == 'Shield' or v.Role == 'Stealth' then
+                                if v.GetNavigator then
+                                    local navigator = v:GetNavigator()
+                                    if navigator then
+                                        navigator:SetGoal(RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
+                                    end
+                                else
+                                    IssueMove({v},RUtils.lerpy(RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4})))
+                                end
+                            elseif v.Role == 'Scout' then
+                                if v.GetNavigator then
+                                    local navigator = v:GetNavigator()
+                                    if navigator then
+                                        navigator:SetGoal(RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self.IntelRange or self.MaxPlatoonWeaponRange) }))
+                                    end
+                                else
+                                    IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self.IntelRange or self.MaxPlatoonWeaponRange) }))
+                                end
+                            end
                         end
+
                     end
                 end
             end
@@ -636,7 +656,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     location = aiBrain.BuilderManagers[closestBase].Position
                 end
             end
-            self.Retreat = true
+            self.retreat = true
             self.BuilderData = {
                 Position = location,
                 CutOff = 400,
@@ -722,21 +742,16 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.Transporting)
                         return
                     elseif reason == "TooMuchThreat" and NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.BuilderData.Position) then
-                        LOG('TooMuchThreat along path, we need to analyse it')
-                        for _, v in threats do
-                            LOG('Threat Table item '..tostring(v))
-                        end
-                        LOG('Looking for alternative stage pos ')
                         local alternativeStageZone = aiBrain.IntelManager:GetClosestZone(aiBrain, false, self.BuilderData.Position, false, true, 2)
-                        if alternativeStageZone then
+                        if alternativeStageZone and aiBrain.Zones.Land.zones[alternativeStageZone].pos then
                             local alternativeStagePos = aiBrain.Zones.Land.zones[alternativeStageZone].pos
-                            LOG('Found alternative stage pos ')
-                            local rx = self.Pos[1] - alternativeStagePos[1]
-                            local rz = self.Pos[3] -alternativeStagePos[3]
-                            local stageDistance = rx * rx + rz * rz
-                            LOG('alternative stage distance is  '..tostring(stageDistance))
-                            if stageDistance > 2500 then
-                                path, reason, distance  = AIAttackUtils.PlatoonGeneratePathToRNG(self.MovementLayer, self.Pos, alternativeStagePos, 300, 20)
+                            if NavUtils.CanPathTo(self.MovementLayer, self.Pos,alternativeStagePos) then
+                                local rx = self.Pos[1] - alternativeStagePos[1]
+                                local rz = self.Pos[3] -alternativeStagePos[3]
+                                local stageDistance = rx * rx + rz * rz
+                                if stageDistance > 2500 then
+                                    path, reason, distance  = AIAttackUtils.PlatoonGeneratePathToRNG(self.MovementLayer, self.Pos, alternativeStagePos, 300, 20)
+                                end
                             end
                         end
                     end
@@ -751,6 +766,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     self.path=false
                     if self.retreat then
                         StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandMergeStateMachine', 80, 35, false)
+                        self.retreat = false
                     end
                     coroutine.yield(10)
                     self:LogDebug(string.format('Navigating exit condition met, decidewhattodo'))

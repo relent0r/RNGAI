@@ -1143,8 +1143,6 @@ function PlatoonDemandMet(aiBrain, uType, unit)
         current = current + (aiBrain.amanager.Current[uType][i][unit] or 0)
         totalDemand = totalDemand + (aiBrain.amanager.Demand[uType][i][unit] or 0)
     end
-    LOG('Current Air Platoon count '..current)
-    LOG('Current Air Platoon demand '..totalDemand)
     if current < totalDemand then
         return true
     end

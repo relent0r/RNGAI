@@ -26,7 +26,6 @@ AIPlatoonAirStagingBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonAirStagingBehavior
         Main = function(self)
             self.MachineStarted = true
-            LOG('Air Staging platform platoon is starting')
             self:ChangeState(self.DecideWhatToDo)
             return
         end,

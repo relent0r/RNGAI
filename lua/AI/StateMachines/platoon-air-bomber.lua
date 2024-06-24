@@ -143,9 +143,6 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, false, false, true)
                 if target then
                     --LOG('Bomber high Priority Target Found '..target.UnitId)
-                    if target.Blueprint.CategoriesHash.COMMAND then
-                        LOG('Bomber has acu via High Priority Target')
-                    end
                     self.BuilderData = {
                         AttackTarget = target,
                         Position = target:GetPosition()
@@ -237,9 +234,6 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                 AttackTarget = point.unit,
                                 Position = point.Position
                             }
-                            if point.unit.Blueprint.CategoriesHash.COMMAND then
-                                LOG('Bomber has acu via Priority Points')
-                            end
                             --LOG('Bomber navigating to target')
                             --LOG('Retreating to platoon')
                             local targetPosition = self.BuilderData.Position

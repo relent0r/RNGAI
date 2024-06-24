@@ -572,7 +572,6 @@ StructureManager = Class {
                         --LOG('Factory Upgrade efficiency check passed, get closest factory '..self.Brain.Nickname)
                         local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH1')
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
-                            LOG('Structure Manager Triggering T2 Land HQ Upgrade '..self.Brain.Nickname)
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'LAND')
                             t2LandPass = true
                             coroutine.yield(30)

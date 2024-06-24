@@ -144,7 +144,6 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
             self.LocationActive = true
             if self.LocationType then
                 local zone = self.Brain.BuilderManagers[self.LocationType].Zone
-                LOG('Factory manager is in zone '..tostring(zone))
                 if zone then
                     if self.Brain.Zones.Land.zones[zone].engineerplatoonallocated then
                         self.Brain.Zones.Land.zones[zone].engineerplatoonallocated = nil
@@ -182,6 +181,13 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                 elseif finishedUnit.Blueprint.CategoriesHash.BOMBER and not finishedUnit.Blueprint.CategoriesHash.EXPERIMENTAL and not finishedUnit.Blueprint.CategoriesHash.BOMB then
                     unitStats['Bomber'].Built.Mass = unitStats['Bomber'].Built.Mass + unitValue
                 end
+            end
+        elseif finishedUnit.Blueprint.CategoriesHash.LAND then
+            local unitStats = self.Brain.IntelManager.UnitStats
+            local unitCat = finishedUnit.Blueprint.CategoriesHash
+            local unitValue = finishedUnit.Blueprint.Economy.BuildCostMass or 0
+            if ( unitCat.UEF or unitCat.CYBRAN ) and unitCat.BOT and unitCat.TECH2 and unitCat.DIRECTFIRE or unitCat.SNIPER and unitCat.TECH3 then
+                unitStats['RangedBot'].Built.Mass = unitStats['RangedBot'].Built.Mass + unitValue
             end
         end
         self:AssignBuildOrder(factory, factory.BuilderManagerData.BuilderType)

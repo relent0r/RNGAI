@@ -13,7 +13,7 @@ BuilderGroup {
         Priority = 700,
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
-            
+            { EBC, 'HighValueGateRNG', {}},
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
@@ -48,7 +48,7 @@ BuilderGroup {
         Priority = 500,
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
-            
+            { EBC, 'HighValueGateRNG', {}},
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.3 }},
@@ -88,6 +88,7 @@ BuilderGroup {
         Priority = 600,
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
@@ -122,6 +123,7 @@ BuilderGroup {
         Priority = 600,
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2 }},
@@ -157,6 +159,7 @@ BuilderGroup {
         Priority = 750,
         InstanceCount = 1,
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { MIBC, 'FactionIndex', {1,4} }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
@@ -190,6 +193,7 @@ BuilderGroup {
         Priority = 750,
         InstanceCount = 1,
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { MIBC, 'FactionIndex', { 2 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
@@ -223,6 +227,7 @@ BuilderGroup {
         Priority = 750,
         InstanceCount = 1,
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { MIBC, 'FactionIndex', { 3 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
