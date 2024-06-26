@@ -1308,8 +1308,8 @@ StructureManager = Class {
             --RNGLOG('Core Extractor T3 Count needs to be less than 3 '..aiBrain.EcoManager.CoreExtractorT3Count)
             --RNGLOG('Total Core Extractors needs to be greater than 2 '..aiBrain.EcoManager.TotalCoreExtractors)
             --RNGLOG('Mex Income '..aiBrain.cmanager.income.r.m..' needs to be greater than '..(140 * multiplier))
-            --RNGLOG('T3 Land Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Land.T3)
-            --RNGLOG('or T3 Air Factory Count needs to be greater than 1 '..aiBrain.smanager.fact.Air.T3)
+            --RNGLOG('T3 Land Factory Count needs to be greater than 1 '..aiBrain.smanager.Current.Structure.fact.Land.T3)
+            --RNGLOG('or T3 Air Factory Count needs to be greater than 1 '..aiBrain.smanager.Current.Structure.fact.Air.T3)
             --RNGLOG('Efficiency over time needs to be greater than 1.0 '..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
             --RNGLOG('upgradespend - totalSpend '..(upgradeSpend - totalSpend))
             --if aiBrain.EcoManager.T3ExtractorSpend then
@@ -1317,7 +1317,7 @@ StructureManager = Class {
             --    RNGLOG('Is upgradeSpend minus total spend greater than T3ExtractorSpend?')
             --end
 
-            if aiBrain.EcoManager.CoreExtractorT3Count < 3 and aiBrain.EcoManager.TotalCoreExtractors > 2 and aiBrain.cmanager.income.r.m > (140 * multiplier) and (aiBrain.smanager.fact.Land.T3 > 0 or aiBrain.smanager.fact.Air.T3 > 0) and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 then
+            if aiBrain.EcoManager.CoreExtractorT3Count < 3 and aiBrain.EcoManager.TotalCoreExtractors > 2 and aiBrain.cmanager.income.r.m > (140 * multiplier) and (aiBrain.smanager.Current.Structure.fact.Land.T3 > 0 or aiBrain.smanager.Current.Structure.fact.Air.T3 > 0) and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 then
                 aiBrain.EcoManager.CoreMassPush = true
                 --RNGLOG('Assist Focus is Mass extraction')
                 aiBrain.EngineerAssistManagerFocusCategory = categories.MASSEXTRACTION

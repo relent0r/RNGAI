@@ -50,6 +50,78 @@ BuilderGroup {
             }
         }
     },
+    Builder {
+        BuilderName = 'RNGAI Radar T2',
+        PlatoonTemplate = 'EngineerStateT123RNG',
+        Priority = 645,
+        BuilderConditions = {
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE}},
+            { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.2 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            Construction = {
+                AdjacencyPriority = {categories.STRUCTURE * categories.ENERGYPRODUCTION},
+                AdjacencyDistance = 70,
+                BuildClose = false,
+                BuildStructures = {
+                    { Unit = 'T2Radar', Categories = categories.RADAR * categories.TECH2 * categories.STRUCTURE },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI Radar T3',
+        PlatoonTemplate = 'EngineerStateT123RNG',
+        Priority = 650,
+        BuilderConditions = {
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE }},
+            { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.4 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            Construction = {
+                AdjacencyPriority = {categories.STRUCTURE * categories.ENERGYPRODUCTION},
+                AdjacencyDistance = 70,
+                BuildClose = false,
+                BuildStructures = {
+                    { Unit = 'T3Radar', Categories = categories.RADAR * categories.TECH3 * categories.STRUCTURE },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI Radar T3 Optics',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
+        Priority = 650,
+        BuilderConditions = {
+            { UCBC, 'StructureBuildDemand', { 'Structure', 'Intel', 'optics'} },
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.AEON * categories.OPTICS * categories.STRUCTURE}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.3 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            Construction = {
+                AdjacencyPriority = {categories.STRUCTURE * categories.ENERGYPRODUCTION},
+                AdjacencyDistance = 70,
+                BuildClose = false,
+                BuildStructures = {
+                    { Unit = 'T3Optics', Categories = categories.AEON * categories.OPTICS * categories.STRUCTURE },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
 }
 
 BuilderGroup {

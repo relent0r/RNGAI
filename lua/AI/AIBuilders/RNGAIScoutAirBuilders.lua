@@ -29,8 +29,9 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirScout',
         Priority = 895,
         BuilderConditions = {
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { UCBC, 'UnitBuildDemand', { 'Air', 'T1', 'scout'} },
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'ANTIAIR' }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 1.0 }},
             { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
             { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 20}},

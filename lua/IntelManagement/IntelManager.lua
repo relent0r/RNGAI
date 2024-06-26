@@ -1213,13 +1213,20 @@ IntelManager = Class {
         coroutine.yield(300)
         local aiBrain = self.Brain
         while aiBrain.Status ~= "Defeat" do
-            coroutine.yield(50)
-            self:ForkThread(self.AdaptiveProductionThread, 'AirAntiSurface',false, 20)
+            coroutine.yield(45)
+            self:ForkThread(self.AdaptiveProductionThread, 'AirAntiSurface',{ MaxThreat = 20})
+            coroutine.yield(1)
             self:ForkThread(self.AdaptiveProductionThread, 'DefensiveAntiSurface')
+            coroutine.yield(1)
             self:ForkThread(self.AdaptiveProductionThread, 'LandAntiSurface')
-            self:ForkThread(self.AdaptiveProductionThread, 'AirAntiNaval',false,  20)
-            self:ForkThread(self.AdaptiveProductionThread, 'MobileAntiAir',false,  20)
-            self:ForkThread(self.AdaptiveProductionThread, 'ExperimentalArtillery',false,  20)
+            coroutine.yield(1)
+            self:ForkThread(self.AdaptiveProductionThread, 'AirAntiNaval',{ MaxThreat = 20})
+            coroutine.yield(1)
+            self:ForkThread(self.AdaptiveProductionThread, 'MobileAntiAir',{ MaxThreat = 20})
+            coroutine.yield(1)
+            self:ForkThread(self.AdaptiveProductionThread, 'ExperimentalArtillery',{ MaxThreat = 20})
+            coroutine.yield(1)
+            self:ForkThread(self.AdaptiveProductionThread, 'IntelStructure', { Tier = 'T3', Structure = 'optics'})
         end
     end,
 
@@ -1663,7 +1670,7 @@ IntelManager = Class {
         return false, false
     end,
 
-    AdaptiveProductionThread = function(self, type, desiredStrikeDamage, threatMax)
+    AdaptiveProductionThread = function(self, type, data)
         local aiBrain = self.Brain
         local baseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
         local baseMilitaryArea = aiBrain.OperatingAreas['BaseMilitaryArea']
@@ -1759,9 +1766,9 @@ IntelManager = Class {
                                         end
                                     end
                                     if not abortZone then
-                                        if v1.enemyantiairthreat < threatMax then
+                                        if v1.enemyantiairthreat < data.MaxThreat then
                                             --RNGLOG('Zone air threat level below max')
-                                            if GetThreatBetweenPositions(aiBrain, aiBrain.BrainIntel.StartPos, v1.pos, nil, threatType) < threatMax * 2 then
+                                            if GetThreatBetweenPositions(aiBrain, aiBrain.BrainIntel.StartPos, v1.pos, nil, threatType) < data.MaxThreat * 2 then
                                                 RNGLOG('Zone air threat between points below max '..tostring(GetThreatBetweenPositions(aiBrain, aiBrain.BrainIntel.StartPos, v1.pos, nil, threatType)))
                                                 RNGLOG('Adding zone as potential strike target')
                                                 table.insert( potentialStrikes, { ZoneID = v1.id, Position = v1.pos, Type = 'Zone'} )
@@ -1877,7 +1884,7 @@ IntelManager = Class {
                     if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.Position[1] then
                         if minThreatRisk >= 50 and VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos) < (aiBrain.EnemyIntel.ClosestEnemyBase / 4) then
                             if RUtils.PositionInWater(v.Position) then
-                                if GetThreatBetweenPositions(aiBrain, aiBrain.BrainIntel.StartPos, v.Position, nil, threatType) < threatMax * 2 then
+                                if GetThreatBetweenPositions(aiBrain, aiBrain.BrainIntel.StartPos, v.Position, nil, threatType) < data.MaxThreat * 2 then
                                     --RNGLOG('ACU ClosestEnemy base distance is '..(aiBrain.EnemyIntel.ClosestEnemyBase /2))
                                     --RNGLOG('ACU Distance from start position '..VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos))
                                     local gridX, gridZ = self:GetIntelGrid(v.Position)
@@ -2306,6 +2313,14 @@ IntelManager = Class {
             --LOG('experimentalNovaxCount '..experimentalNovaxCount)
             --LOG('experimentalArtilleryCount '..experimentalArtilleryCount)
             --LOG('experimentalNukeCount '..experimentalNukeCount)
+        elseif type == 'IntelStructure' then
+            if data.Tier == 'T3' and data.Structure == 'optics' then
+                if aiBrain.EconomyOverTimeCurrent.EnergyIncome > 80 and aiBrain.smanager.Current.Structure['Intel']['T3']['optics'] < 1 then
+                    aiBrain.smanager.Demand.Structure.Intel.optics = 1
+                else
+                    aiBrain.smanager.Demand.Structure.Intel.optics = 0
+                end
+            end
         end
     end,
 }
@@ -2937,10 +2952,6 @@ TacticalThreatAnalysisRNG = function(aiBrain)
         local eThreatLocations = aiBrain.EnemyIntel.EnemyThreatLocations
         for _, x in eThreatLocations do
             for _, z in x do
-                if z['StructuresNotMex'] then
-                    LOG('Current Game Time'..tostring(gameTime))
-                    LOG('Cell Update time '..tostring(z.UpdateTime))
-                end 
                 if z['StructuresNotMex'] and (gameTime - z.UpdateTime) < 35 then
                     --RNGLOG('Enemy Threat Locations has a StructuresNotMex table')
                     -- position format as used by the engine
@@ -3014,7 +3025,6 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                 })
                             elseif EntityCategoryContains( CategoriesFactory, unit) then
                                 --RNGLOG('Inserting Enemy Factory Structure '..unit.UnitId)
-                                
                                 RNGINSERT(factoryUnits, {
                                     EnemyIndex = unitIndex, 
                                     Value = unit.Blueprint.Defense.EconomyThreatLevel, 

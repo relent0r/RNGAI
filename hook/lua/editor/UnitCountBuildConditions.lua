@@ -524,7 +524,12 @@ function EnemyUnitsGreaterAtRestrictedRNG(aiBrain, locationType, number, type)
                 return true
             end
         elseif type == 'AIR' then
-            if aiBrain.BasePerimeterMonitor[locationType].AirUnits > number or aiBrain.BasePerimeterMonitor[locationType].AntiSurfaceAirUnits > number then
+            if aiBrain.BasePerimeterMonitor[locationType].AirUnits > number then
+                --RNGLOG('Air units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'ANTIAIR' then
+            if aiBrain.BasePerimeterMonitor[locationType].AntiAirUnits > number then
                 --RNGLOG('Air units greater than '..number..' at base location '..locationType)
                 return true
             end
@@ -671,7 +676,12 @@ function EnemyUnitsLessAtRestrictedRNG(aiBrain, locationType, number, type)
                 return true
             end
         elseif type == 'AIR' then
-            if aiBrain.BasePerimeterMonitor[locationType].AirUnits < number or aiBrain.BasePerimeterMonitor[locationType].AntiSurfaceAirUnits > number then
+            if aiBrain.BasePerimeterMonitor[locationType].AirUnits < number then
+                --RNGLOG('Air units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'ANTIAIR' then
+            if aiBrain.BasePerimeterMonitor[locationType].AntiAirUnits < number then
                 --RNGLOG('Air units greater than '..number..' at base location '..locationType)
                 return true
             end
@@ -1465,6 +1475,15 @@ end
 function UnitBuildDemand(aiBrain, type, tier, unit)
 
     if aiBrain.amanager.Demand[type][tier][unit] > aiBrain.amanager.Current[type][tier][unit] then
+        return true
+    end
+    return false
+
+end
+
+function StructureBuildDemand(aiBrain, type, tier, unit)
+
+    if aiBrain.smanager.Demand[type][tier][unit] > aiBrain.smanager.Current[type][tier][unit] then
         return true
     end
     return false

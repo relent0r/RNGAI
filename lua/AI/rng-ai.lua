@@ -953,44 +953,65 @@ AIBrain = Class(RNGAIBrainClass) {
             },
         }
         self.smanager = {
-            fact = {
-                Land =
-                {
-                    T1 = 0,
-                    T2 = 0,
-                    T3 = 0
-                },
-                Air = {
-                    T1=0,
-                    T2=0,
-                    T3=0
-                },
-                Naval= {
-                    T1=0,
-                    T2=0,
-                    T3=0
+            Current = {
+                Structure = {
+                    fact = {
+                        Land =
+                        {
+                            T1 = 0,
+                            T2 = 0,
+                            T3 = 0
+                        },
+                        Air = {
+                            T1=0,
+                            T2=0,
+                            T3=0
+                        },
+                        Naval= {
+                            T1=0,
+                            T2=0,
+                            T3=0
+                        }
+                    },
+                    --The mex list is indexed by zone so the AI can easily calculate how many mexes it has per zone.
+                    mex = {
+                        
+                    },
+                    pgen = {
+                        T1=0,
+                        T2=0,
+                        T3=0
+                    },
+                    hydro = {
+
+                    },
+                    silo = {
+                        T2=0,
+                        T3=0
+                    },
+                    fabs= {
+                        T2=0,
+                        T3=0
+                    },
+                    intel= {
+                        T1=0,
+                        T2=0,
+                        T3=0,
+                        Optics=0
+                    },
                 }
             },
-            --The mex list is indexed by zone so the AI can easily calculate how many mexes it has per zone.
-            mex = {
-                
-            },
-            pgen = {
-                T1=0,
-                T2=0,
-                T3=0
-            },
-            hydro = {
-
-            },
-            silo = {
-                T2=0,
-                T3=0
-            },
-            fabs= {
-                T2=0,
-                T3=0
+            Demand = {
+                Structure = {
+                    Intel = {
+                        T1=0,
+                        T2=0,
+                        T3=0,
+                        Optics=0
+                    }
+                }
             }
+
         }
         self.emanager = {
             mex = {
@@ -1221,6 +1242,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         if self.CheatEnabled then
             self.EcoManager.EcoMultiplier = tonumber(ScenarioInfo.Options.BuildMult)
+            self.BrainIntel.OmniCheatEnabled = ScenarioInfo.Options.OmniCheat == 'on'
         end
         --This coin flip is done for aggressive expansion chances
         self.coinFlip = math.random(1,3)
@@ -2882,6 +2904,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 local navalUnits = 0
                 local landThreat = 0
                 local airThreat = 0
+                local antiAirUnits = 0
+                local antiAirThreat = 0
                 local navalThreat = 0
                 local enemyLandAngle = false
                 local enemyLandDistance = 0
@@ -2935,6 +2959,10 @@ AIBrain = Class(RNGAIBrainClass) {
                                         local unitPos = unit:GetPosition()
                                         enemyAirAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
                                     end
+                                    if unitCat.ANTIAIR then
+                                        antiAirUnits = antiAirUnits + 1
+                                        antiAirThreat = antiAirThreat + unit.Blueprint.Defense.AirThreatLevel
+                                    end
                                     continue
                                 end
                                 if unitCat.NAVAL then
@@ -2967,6 +2995,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     if enemyNavalAngle then
                         self.BasePerimeterMonitor[k].RecentNavalAngle = enemyNavalAngle
                     end
+                    self.BasePerimeterMonitor[k].AntiAirUnits = antiAirUnits
+                    self.BasePerimeterMonitor[k].AntiAirThreat = antiAirThreat
                     self.BasePerimeterMonitor[k].NavalThreat = navalThreat
                     self.BasePerimeterMonitor[k].AirThreat = airThreat
                     self.BasePerimeterMonitor[k].LandThreat = landThreat
@@ -3399,29 +3429,29 @@ AIBrain = Class(RNGAIBrainClass) {
                 self.EconomyUpgradeSpend = self.EconomyUpgradeSpendDefault
             end
             if self.BrainIntel.AirPhase < 2 then
-                if self.smanager.fact.Air.T2 > 0 then
+                if self.smanager.Current.Structure.fact.Air.T2 > 0 then
                     self.BrainIntel.AirPhase = 2
                 end
             elseif self.BrainIntel.AirPhase < 3 then
-                if self.smanager.fact.Air.T3 > 0 then
+                if self.smanager.Current.Structure.fact.Air.T3 > 0 then
                     self.BrainIntel.AirPhase = 3
                 end
             end
             if self.BrainIntel.LandPhase < 2 then
-                if self.smanager.fact.Land.T2 > 0 then
+                if self.smanager.Current.Structure.fact.Land.T2 > 0 then
                     self.BrainIntel.LandPhase = 2
                 end
             elseif self.BrainIntel.LandPhase < 3 then
-                if self.smanager.fact.Land.T3 > 0 then
+                if self.smanager.Current.Structure.fact.Land.T3 > 0 then
                     self.BrainIntel.LandPhase = 3
                 end
             end
             if self.BrainIntel.NavalPhase < 2 then
-                if self.smanager.fact.Naval.T2 > 0 then
+                if self.smanager.Current.Structure.fact.Naval.T2 > 0 then
                     self.BrainIntel.NavalPhase = 2
                 end
             elseif self.BrainIntel.NavalPhase < 3 then
-                if self.smanager.fact.Naval.T3 > 0 then
+                if self.smanager.Current.Structure.fact.Naval.T3 > 0 then
                     self.BrainIntel.NavalPhase = 3
                 end
             end
@@ -5512,15 +5542,6 @@ AIBrain = Class(RNGAIBrainClass) {
 
         coroutine.yield(Random(80,100))
         --RNGLOG('Heavy Economy thread starting '..self.Nickname)
-        -- This section is for debug
-        --[[
-        self.cmanager = {income={r={m=0,e=0},t={m=0,e=0}},spend={m=0},storage={max={m=0,e=0},current={m=0,e=0}},categoryspend={fac={l=0,a=0,n=0},mex={t1=0,t2=0,t3=0},eng={t1=0,t2=0,t3=0,com=0},silo={t2=0,t3=0}}}
-        self.amanager = {t1={scout=0,tank=0,arty=0,aa=0},t2={tank=0,mml=0,aa=0,shield=0},t3={tank=0,sniper=0,arty=0,mml=0,aa=0,shield=0},total={t1=0,t2=0,t3=0}}
-        self.smanager={fac={l={t1=0,t2=0,t3=0},a={t1=0,t2=0,t3=0},n={t1=0,t2=0,t3=0}},mex={t1=0,t2=0,t3=0},pgen={t1=0,t2=0,t3=0},silo={t2=0,t3=0},fabs={t2=0,t3=0}}
-        ]]
-
-
-
         while self.Status ~= "Defeat" do
             --RNGLOG('heavy economy loop started')
             self:HeavyEconomyForkRNG()
@@ -5950,7 +5971,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SelfThreat.ExtractorCount = totalExtractorCount
         self.BrainIntel.SelfThreat.Extractor = totalEconomyThreat
         self.EngineerDistributionTable = engineerDistribution
-        self.smanager={fact=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,hydrocarbon=hydros}
+        self.smanager.Current.Structure={fact=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,hydrocarbon=hydros}
         local totalCoreExtractors = mainBaseExtractors.T1 + mainBaseExtractors.T2 + mainBaseExtractors.T3
         if totalCoreExtractors > 0 then
             --RNGLOG('Mainbase T1 Extractors '..mainBaseExtractors.T1)
@@ -6883,43 +6904,45 @@ AIBrain = Class(RNGAIBrainClass) {
             },
         }
         self.smanager = {
-            fact = {
-                Land =
-                {
-                    T1 = 0,
-                    T2 = 0,
-                    T3 = 0
+            Current = {
+                fact = {
+                    Land =
+                    {
+                        T1 = 0,
+                        T2 = 0,
+                        T3 = 0
+                    },
+                    Air = {
+                        T1=0,
+                        T2=0,
+                        T3=0
+                    },
+                    Naval= {
+                        T1=0,
+                        T2=0,
+                        T3=0
+                    }
                 },
-                Air = {
+                --The mex list is indexed by zone so the AI can easily calculate how many mexes it has per zone.
+                mex = {
+                    
+                },
+                pgen = {
                     T1=0,
                     T2=0,
                     T3=0
                 },
-                Naval= {
-                    T1=0,
+                hydro = {
+
+                },
+                silo = {
+                    T2=0,
+                    T3=0
+                },
+                fabs= {
                     T2=0,
                     T3=0
                 }
-            },
-            --The mex list is indexed by zone so the AI can easily calculate how many mexes it has per zone.
-            mex = {
-                
-            },
-            pgen = {
-                T1=0,
-                T2=0,
-                T3=0
-            },
-            hydro = {
-
-            },
-            silo = {
-                T2=0,
-                T3=0
-            },
-            fabs= {
-                T2=0,
-                T3=0
             }
         }
         self.emanager = {
