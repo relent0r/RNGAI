@@ -116,7 +116,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 if target then
                     LOG('Bomber has acu via ACUSnipe')
                     local enemyAcuHealth = aiBrain.EnemyIntel.ACU[acuIndex].HP
-                    if self.PlatoonStrikeDamage > enemyAcuHealth * 0.80 or acuHP < 2500 then
+                    if self.PlatoonStrikeDamage > enemyAcuHealth * 0.80 or enemyAcuHealth < 2500 then
                         self.BuilderData = {
                             AttackTarget = target,
                             Position = target:GetPosition()
@@ -153,7 +153,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                     local tz = platPos[3] - targetPosition[3]
                     local targetDistance = tx * tx + tz * tz
                     if targetDistance < 22500 then
-                        self:LogDebug(string.format('Bomber AttackTarget on ACU Snipe'))
+                        self:LogDebug(string.format('Bomber AttackTarget on high priority target'))
                         self:ChangeState(self.AttackTarget)
                         return
                     else
@@ -185,20 +185,17 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         AttackTarget = target,
                         Position = target:GetPosition()
                     }
-                    if target.Blueprint.CategoriesHash.COMMAND then
-                        LOG('Bomber has acu via Director')
-                    end
                     --LOG('Bomber navigating to target')
                     local targetPosition = self.BuilderData.Position
                     local tx = platPos[1] - targetPosition[1]
                     local tz = platPos[3] - targetPosition[3]
                     local targetDistance = tx * tx + tz * tz
                     if targetDistance < 22500 then
-                        self:LogDebug(string.format('Bomber AttackTarget on ACU Snipe'))
+                        self:LogDebug(string.format('Bomber AttackTarget on director target of '..tostring(target.UnitId)))
                         self:ChangeState(self.AttackTarget)
                         return
                     else
-                        self:LogDebug(string.format('Bomber navigating to snipe ACU'))
+                        self:LogDebug(string.format('Bomber navigating to director target '..tostring(target.UnitId)))
                         self:ChangeState(self.Navigating)
                         return
                     end
@@ -241,11 +238,11 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                             local tz = platPos[3] - targetPosition[3]
                             local targetDistance = tx * tx + tz * tz
                             if targetDistance < 22500 then
-                                self:LogDebug(string.format('Bomber AttackTarget on ACU Snipe'))
+                                self:LogDebug(string.format('Bomber AttackTarget on high priority points'))
                                 self:ChangeState(self.AttackTarget)
                                 return
                             else
-                                self:LogDebug(string.format('Bomber navigating to snipe ACU'))
+                                self:LogDebug(string.format('Bomber navigating on high priority points'))
                                 self:ChangeState(self.Navigating)
                                 return
                             end
@@ -612,6 +609,9 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             if self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Dead and not self.BuilderData.AttackTarget.Tractored then
                 IssueClearCommands(platoonUnits)
                 local target = self.BuilderData.AttackTarget
+                if target.Blueprint.CategoriesHash.COMMAND then
+                    self:LogDebug(string.format('Attack target has ACU as target'))
+                end
                 local platPos = self:GetPlatoonPosition()
                 local targetPosition = target:GetPosition()
                 local tx = platPos[1] - targetPosition[1]
@@ -626,6 +626,9 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         IssueAttack(platoonUnits, target)
                     end
                 else
+                    if target.Blueprint.CategoriesHash.COMMAND then
+                        self:LogDebug(string.format('Attack target has give attack command on ACU '))
+                    end
                     IssueAttack(platoonUnits, target)
                 end
                 while not target.Dead do
@@ -634,10 +637,14 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
+                    if target.Blueprint.CategoriesHash.COMMAND then
+                        self:LogDebug(string.format('Attack target is waiting for acu to be dead'))
+                    end
                     coroutine.yield(25)
                 end
                 coroutine.yield(5)
             else
+                self:LogDebug(string.format('Bomber has no attack target after activating AttackTarget'))
                 self.BuilderData = {}
             end
             self:ChangeState(self.DecideWhatToDo)

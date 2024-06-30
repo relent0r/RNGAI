@@ -62,7 +62,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             else
                 self.LocationType = 'MAIN'
             end
-            StartDrawThreads(brain, self)
+            --StartDrawThreads(brain, self)
             if brain:GetCurrentUnits(categories.FACTORY) < 1 then
                 --LOG('ACU Has no factory so is requesting a new builder')
                 if brain.BuilderManagers[self.LocationType].FactoryManager and not brain.BuilderManagers[self.LocationType].FactoryManager.LocationActive then
@@ -693,7 +693,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if not endPoint and (not cdr.GunUpgradeRequired) and (not cdr.HighThreatUpgradeRequired) and cdr.Health > 6000 and (not builderData.Retreat or (cdr.CurrentEnemyInnerCircle < 10 and cdr.CurrentEnemyThreat < 50)) and GetEconomyStoredRatio(brain, 'MASS') < 0.70 then
-                        self:LogDebug(string.format('ACU attempting to perform reclaim check while navigating'))
                         ACUFunc.PerformACUReclaim(brain, cdr, 25, waypoint)
                         --LOG('acu performed reclaim')
                     end
@@ -1763,7 +1762,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                             if preReqRequired then
                                 NextEnhancement = tempEnhanceBp.Prerequisite
-                            end
+                            end 
+                            self:LogDebug(string.format('Enhancement upgrade triggered for '..tostring(NextEnhancement)))
                             local order = { TaskName = "EnhanceTask", Enhancement = NextEnhancement }
                             IssueScript({cdr}, order)
                         end
@@ -1816,6 +1816,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             --RNGLOG('eta on enhancement is '..eta)
                             coroutine.yield(10)
                         end
+                        self:LogDebug(string.format('Enhancement should be completed '))
                         --LOG('* RNGAI: * BuildEnhancementRNG: '..brain:GetBrain().Nickname..' Upgrade finished '..enhancement)
                         for _, v in priorityUpgrades do
                             if NextEnhancement == v then

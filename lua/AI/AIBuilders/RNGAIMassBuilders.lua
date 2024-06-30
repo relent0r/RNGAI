@@ -254,6 +254,7 @@ BuilderGroup {
             StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
+            CheckCivUnits = true,
             Construction = {
                 MaxDistance = 2000,
                 ThreatMin = -500,
@@ -262,7 +263,6 @@ BuilderGroup {
                 BuildStructures = {
                     'T1Resource',
                 },
-                CheckCivUnits = true
             }
         }
     },
@@ -280,6 +280,7 @@ BuilderGroup {
             StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
+            CheckCivUnits = true,
             Construction = {
                 MaxDistance = 2000,
                 ThreatMin = -500,
@@ -288,7 +289,6 @@ BuilderGroup {
                 BuildStructures = {
                     'T1Resource',
                 },
-                CheckCivUnits = true
             }
         }
     },
@@ -362,6 +362,7 @@ BuilderGroup {
             StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
+            CheckCivUnits = true,
             Construction = {
                 MaxDistance = 2000,
                 ThreatMin = -500,

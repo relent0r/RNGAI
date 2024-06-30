@@ -1410,6 +1410,9 @@ end
 BuildAIDoneRNG = function(unit, params)
     if unit.Active or unit.Dead then return end
     if not unit.AIPlatoonReference then return end
+    if unit.PlatoonHandle.EngineerAssistPlatoon then
+        LOG('This is an engineer assist manager engineer getting a build done callback')
+    end
     --RNGLOG("*AI DEBUG: MexBuildAIRNG removing queue item")
     --RNGLOG('Queue Size is '..RNGGETN(unit.EngineerBuildQueue))
     if unit.EngineerBuildQueue and not table.empty(unit.EngineerBuildQueue) then
@@ -1428,6 +1431,9 @@ BuildAIFailedRNG = function(unit, params)
     --RNGLOG('Queue Size is '..RNGGETN(unit.EngineerBuildQueue))
     if not unit.BuildFailedCount then
         unit.BuildFailedCount = 0
+    end
+    if unit.PlatoonHandle.EngineerAssistPlatoon then
+        LOG('This is an engineer assist manager engineer getting a build failed callback')
     end
     unit.BuildFailedCount = unit.BuildFailedCount + 1
     --LOG('Current fail count is '..unit.FailedCount)

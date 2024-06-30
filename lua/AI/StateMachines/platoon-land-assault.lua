@@ -326,144 +326,146 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            local bAggroMove = self.PlatoonData.AggressiveMove
-            local pathNodesCount = RNGGETN(path)
-            local platoonUnits = GetPlatoonUnits(self)
-            local attackUnits =  self:GetSquadUnits('Attack')
-            local attackFormation = false
-            for i=1, pathNodesCount do
-                local distEnd = false
-                local currentLayerSeaBed = false
-                for _, v in attackUnits do
-                    if v and not v.Dead then
-                        if v:GetCurrentLayer() ~= 'Seabed' then
-                            currentLayerSeaBed = false
-                            break
-                        else
-                            currentLayerSeaBed = true
-                            break
+            if path then
+                local bAggroMove = self.PlatoonData.AggressiveMove
+                local pathNodesCount = RNGGETN(path)
+                local platoonUnits = GetPlatoonUnits(self)
+                local attackUnits =  self:GetSquadUnits('Attack')
+                local attackFormation = false
+                for i=1, pathNodesCount do
+                    local distEnd = false
+                    local currentLayerSeaBed = false
+                    for _, v in attackUnits do
+                        if v and not v.Dead then
+                            if v:GetCurrentLayer() ~= 'Seabed' then
+                                currentLayerSeaBed = false
+                                break
+                            else
+                                currentLayerSeaBed = true
+                                break
+                            end
                         end
                     end
-                end
-                if bAggroMove and attackUnits and (not currentLayerSeaBed) then
-                    --RNGLOG('HUNTAIPATH Attack and Guard moving Aggro')
-                    if IsDestroyed(self) then
-                        return
-                    end
-                    if distEnd and distEnd > 6400 then
-                        self:SetPlatoonFormationOverride('NoFormation')
-                        attackFormation = false
-                    end
-                    self:AggressiveMoveToLocation(path[i], 'Attack')
-                    self:AggressiveMoveToLocation(path[i], 'Guard')
-                elseif attackUnits then
-                    --RNGLOG('HUNTAIPATH Attack and Guard moving non aggro')
-                    if distEnd and distEnd > 6400 then
-                        self:SetPlatoonFormationOverride('NoFormation')
-                        attackFormation = false
-                    end
-                    self:MoveToLocation(path[i], false, 'Attack')
-                    self:MoveToLocation(path[i], false, 'Guard')
-                end
-                local Lastdist
-                local dist
-                local Stuck = 0
-                while PlatoonExists(aiBrain, self) do
-                    coroutine.yield(1)
-                    if IsDestroyed(self) then
-                        return
-                    end
-                    if self.ScoutUnit and (not self.ScoutUnit.Dead) then
-                        IssueClearCommands({self.ScoutUnit})
-                        IssueMove({self.ScoutUnit}, self.Pos)
-                    end
-                    local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, LandRadiusDetectionCategory, self.Pos, self.EnemyRadius, 'Enemy')
-                    if enemyUnitCount > 0 and (not currentLayerSeaBed) then
-                        self:LogDebug('Enemy Found during navigation')
-                        local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, self.Pos, 'Attack', self.EnemyRadius, LandRadiusScanCategory, self.atkPri, false)
-                        local attackSquad = self:GetSquadUnits('Attack')
-                        IssueClearCommands(attackSquad)
+                    if bAggroMove and attackUnits and (not currentLayerSeaBed) then
+                        --RNGLOG('HUNTAIPATH Attack and Guard moving Aggro')
                         if IsDestroyed(self) then
                             return
                         end
-                        if not self.retreat and target and not IsDestroyed(target) or acuUnit then
-                            if acuUnit and self.CurrentPlatoonThreatAntiSurface > 30 then
-                                target = acuUnit
-                            elseif acuUnit and self.CurrentPlatoonThreatAntiSurface < totalThreat['AntiSurface'] then
-                                local acuRange = StateUtils.GetUnitMaxWeaponRange(acuUnit)
-                                if target then
-                                    local targetPos = target:GetPosition()
-                                    local rx = self.Pos[1] - targetPos[1]
-                                    local rz = self.Pos[3] - targetPos[3]
-                                    local targetDistance = rx * rx + rz * rz
-                                    if targetDistance < self.MaxPlatoonWeaponRange * self.MaxPlatoonWeaponRange then
-                                        local acuPos = acuUnit:GetPosition()
-                                        local ax = self.Pos[1] - acuPos[1]
-                                        local az = self.Pos[3] - acuPos[3]
-                                        local acuDistance = ax * ax + az * az
-                                        if targetDistance < acuDistance and acuDistance > acuRange then
-                                            self.BuilderData = {
-                                                Target = target
-                                            }
-                                            self:LogDebug('target found in Navigating and its closer than the acu is, CombatLoop')
-                                            --LOG('target found in Navigating, CombatLoop')
-                                            self:ChangeState(self.CombatLoop)
-                                            return
+                        if distEnd and distEnd > 6400 then
+                            self:SetPlatoonFormationOverride('NoFormation')
+                            attackFormation = false
+                        end
+                        self:AggressiveMoveToLocation(path[i], 'Attack')
+                        self:AggressiveMoveToLocation(path[i], 'Guard')
+                    elseif attackUnits then
+                        --RNGLOG('HUNTAIPATH Attack and Guard moving non aggro')
+                        if distEnd and distEnd > 6400 then
+                            self:SetPlatoonFormationOverride('NoFormation')
+                            attackFormation = false
+                        end
+                        self:MoveToLocation(path[i], false, 'Attack')
+                        self:MoveToLocation(path[i], false, 'Guard')
+                    end
+                    local Lastdist
+                    local dist
+                    local Stuck = 0
+                    while PlatoonExists(aiBrain, self) do
+                        coroutine.yield(1)
+                        if IsDestroyed(self) then
+                            return
+                        end
+                        if self.ScoutUnit and (not self.ScoutUnit.Dead) then
+                            IssueClearCommands({self.ScoutUnit})
+                            IssueMove({self.ScoutUnit}, self.Pos)
+                        end
+                        local enemyUnitCount = GetNumUnitsAroundPoint(aiBrain, LandRadiusDetectionCategory, self.Pos, self.EnemyRadius, 'Enemy')
+                        if enemyUnitCount > 0 and (not currentLayerSeaBed) then
+                            self:LogDebug('Enemy Found during navigation')
+                            local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, self.Pos, 'Attack', self.EnemyRadius, LandRadiusScanCategory, self.atkPri, false)
+                            local attackSquad = self:GetSquadUnits('Attack')
+                            IssueClearCommands(attackSquad)
+                            if IsDestroyed(self) then
+                                return
+                            end
+                            if not self.retreat and target and not IsDestroyed(target) or acuUnit then
+                                if acuUnit and self.CurrentPlatoonThreatAntiSurface > 30 then
+                                    target = acuUnit
+                                elseif acuUnit and self.CurrentPlatoonThreatAntiSurface < totalThreat['AntiSurface'] then
+                                    local acuRange = StateUtils.GetUnitMaxWeaponRange(acuUnit)
+                                    if target then
+                                        local targetPos = target:GetPosition()
+                                        local rx = self.Pos[1] - targetPos[1]
+                                        local rz = self.Pos[3] - targetPos[3]
+                                        local targetDistance = rx * rx + rz * rz
+                                        if targetDistance < self.MaxPlatoonWeaponRange * self.MaxPlatoonWeaponRange then
+                                            local acuPos = acuUnit:GetPosition()
+                                            local ax = self.Pos[1] - acuPos[1]
+                                            local az = self.Pos[3] - acuPos[3]
+                                            local acuDistance = ax * ax + az * az
+                                            if targetDistance < acuDistance and acuDistance > acuRange then
+                                                self.BuilderData = {
+                                                    Target = target
+                                                }
+                                                self:LogDebug('target found in Navigating and its closer than the acu is, CombatLoop')
+                                                --LOG('target found in Navigating, CombatLoop')
+                                                self:ChangeState(self.CombatLoop)
+                                                return
+                                            end
                                         end
                                     end
+                                    self:LogDebug('ACU present in Navigating, DecideWhatToDo')
+                                    self:LogDebug('ACU target distance is '..VDist3(acuUnit:GetPosition(), self.Pos))
+                                    if target then
+                                        self:LogDebug('Comparitive target distance is '..VDist3(target:GetPosition(), self.Pos))
+                                    end
+                                    self:ChangeState(self.DecideWhatToDo)
+                                    return
                                 end
-                                self:LogDebug('ACU present in Navigating, DecideWhatToDo')
-                                self:LogDebug('ACU target distance is '..VDist3(acuUnit:GetPosition(), self.Pos))
-                                if target then
-                                    self:LogDebug('Comparitive target distance is '..VDist3(target:GetPosition(), self.Pos))
+                                if target and not IsDestroyed(target) then
+                                    self.BuilderData = {
+                                        Target = target
+                                    }
+                                    self:LogDebug('target found in Navigating, CombatLoop')
+                                    --LOG('target found in Navigating, CombatLoop')
+                                    self:ChangeState(self.CombatLoop)
+                                    return
                                 end
-                                self:ChangeState(self.DecideWhatToDo)
-                                return
+                            else
+                                self:LogDebug('Moving to path point i')
+                                self:MoveToLocation(path[i], false)
+                                break
                             end
-                            if target and not IsDestroyed(target) then
-                                self.BuilderData = {
-                                    Target = target
-                                }
-                                self:LogDebug('target found in Navigating, CombatLoop')
-                                --LOG('target found in Navigating, CombatLoop')
-                                self:ChangeState(self.CombatLoop)
-                                return
-                            end
-                        else
-                            self:LogDebug('Moving to path point i')
-                            self:MoveToLocation(path[i], false)
+                            coroutine.yield(15)
+                        end
+                        distEnd = VDist2Sq(path[pathNodesCount][1], path[pathNodesCount][3], self.Pos[1], self.Pos[3] )
+                        if not attackFormation and distEnd < 6400 and enemyUnitCount == 0 then
+                            attackFormation = true
+                            self:SetPlatoonFormationOverride('AttackFormation')
+                        end
+                        dist = VDist2Sq(path[i][1], path[i][3], self.Pos[1], self.Pos[3])
+                        -- are we closer then 15 units from the next marker ? Then break and move to the next marker
+                        if dist < 400 then
+                            -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
+                            --RNGLOG('HUNTAIPATH issuing clear commands due to close dist')
+                            IssueClearCommands(GetPlatoonUnits(self))
                             break
                         end
+                        
+                        if Lastdist ~= dist then
+                            Stuck = 0
+                            Lastdist = dist
+                        -- No, we are not moving, wait 100 ticks then break and use the next weaypoint
+                        else
+                            Stuck = Stuck + 1
+                            if Stuck > 15 then
+                                --RNGLOG('HUNTAIPATH issue stop and break')
+                                self:Stop()
+                                break
+                            end
+                        end
+                        --RNGLOG('Lastdist '..Lastdist..' dist '..dist)
                         coroutine.yield(15)
                     end
-                    distEnd = VDist2Sq(path[pathNodesCount][1], path[pathNodesCount][3], self.Pos[1], self.Pos[3] )
-                    if not attackFormation and distEnd < 6400 and enemyUnitCount == 0 then
-                        attackFormation = true
-                        self:SetPlatoonFormationOverride('AttackFormation')
-                    end
-                    dist = VDist2Sq(path[i][1], path[i][3], self.Pos[1], self.Pos[3])
-                    -- are we closer then 15 units from the next marker ? Then break and move to the next marker
-                    if dist < 400 then
-                        -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
-                        --RNGLOG('HUNTAIPATH issuing clear commands due to close dist')
-                        IssueClearCommands(GetPlatoonUnits(self))
-                        break
-                    end
-                    
-                    if Lastdist ~= dist then
-                        Stuck = 0
-                        Lastdist = dist
-                    -- No, we are not moving, wait 100 ticks then break and use the next weaypoint
-                    else
-                        Stuck = Stuck + 1
-                        if Stuck > 15 then
-                            --RNGLOG('HUNTAIPATH issue stop and break')
-                            self:Stop()
-                            break
-                        end
-                    end
-                    --RNGLOG('Lastdist '..Lastdist..' dist '..dist)
-                    coroutine.yield(15)
                 end
             end
             self:LogDebug('end of Navigating, DecideWhatToDo')

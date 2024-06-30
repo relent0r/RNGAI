@@ -1059,7 +1059,8 @@ BuilderGroup {
             ReclaimTable = true,
             LocationType = 'LocationType',
             ReclaimTime = 80,
-            MinimumReclaim = 4
+            MinimumReclaim = 4,
+            CheckCivUnits = true
         },
         BuilderType = 'Any',
     },

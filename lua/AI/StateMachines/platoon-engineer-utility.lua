@@ -154,12 +154,14 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 elseif data.Task == 'CaptureUnit' then
                     LOG('CaptureUnit triggered')
                     self:LogDebug(string.format('PreAllocatedTask is CaptureUnit'))
+                    LOG('PreAllocatedTask is CaptureUnit')
                     if not unit.CaptureDoneCallbackSet then
                         self:LogDebug(string.format('No Capture Callback set on engineer, setting '))
                         import('/lua/ScenarioTriggers.lua').CreateUnitStopCaptureTrigger(StateUtils.CaptureDoneRNG, unit)
                         unit.CaptureDoneCallbackSet = true
                     end
                     local captureUnit = self.PlatoonData.CaptureUnit
+                    LOG('CaptureUnit is '..tostring(captureUnit.UnitId))
                     if not IsDestroyed(captureUnit) and RUtils.GrabPosDangerRNG(aiBrain,captureUnit:GetPosition(), 40).enemySurface < 5 then
                         local captureUnitPos = captureUnit:GetPosition()
                         self.BuilderData = {
@@ -171,13 +173,16 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         local rz = engPos[3] - captureUnitPos[3]
                         local captureUnitDistance = rx * rx + rz * rz
                         if captureUnitDistance < 3600 then
+                            LOG('CaptureUnit is close, attempt to capture')
                             self:ChangeState(self.CaptureUnit)
                             return
                         else
+                            LOG('CaptureUnit is distant, Navigate')
                             self:ChangeState(self.NavigateToTaskLocation)
                             return
                         end
                     else
+                        LOG('No capture unit, reset')
                         self.BuilderData = {}
                         coroutine.yield(10)
                         self:ChangeState(self.DecideWhatToDo)
@@ -662,6 +667,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 if reference then
                     buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
                     RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
+                else
+                    self:LogDebug(string.format('Engineer unable to find reference for defensive point build'))
                 end
             elseif cons.AdjacencyPriority then
                 relative = false
@@ -816,6 +823,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.PerformBuildTask)
                 return
             end
+            self:LogDebug(string.format('Engineer unable to set task data'))
             self.BuilderData = {}
             coroutine.yield(5)
             self:ChangeState(self.DecideWhatToDo)
@@ -1048,10 +1056,12 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             unit.MyShield:TurnOn()
                         end
                     end
+                    LOG('Capture Unit callback triggered')
                     if unit and not IsDestroyed(unit) then
                         local capturedPlatoon = aiBrain:MakePlatoon('', '')
                         capturedPlatoon.PlanName = 'Captured Platoon'
                         aiBrain:AssignUnitsToPlatoon(capturedPlatoon, {unit}, 'Attack', 'None')
+                        LOG('Unit assigned to land combat')
                         import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ }, capturedPlatoon, unit)
                     end
                 end
@@ -1061,6 +1071,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 import('/lua/scenariotriggers.lua').CreateUnitCapturedTrigger(nil, captureUnitCallback, captureUnit)
                 IssueClearCommands({eng})
                 LOG('Engineer Capture Unit StateMachine issuing capture')
+                LOG('Engineer position is '..tostring(pos[1])..':'..tostring(pos[3]))
+                LOG('Capture Unit is '..tostring(captureUnit.UnitId))
                 IssueCapture({eng}, captureUnit)
                 while aiBrain:PlatoonExists(self) and not eng.CaptureComplete do
                     coroutine.yield(30)
@@ -1068,6 +1080,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 eng.CaptureComplete = nil
             end
             self.BuilderData = {}
+            self.BuilderData.ConstructionComplete = true
             coroutine.yield(5)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -1358,6 +1371,18 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 return
             end
             if table.empty(eng.EngineerBuildQueue) then
+                if self.PlatoonData.CheckCivUnits then
+                    local aiBrain = self:GetBrain()
+                    local captureUnit = RUtils.CheckForCivilianUnitCapture(aiBrain, eng, self.MovementLayer)
+                    if captureUnit then
+                        self.PlatoonData.StateMachine = 'PreAllocatedTask'
+                        self.PlatoonData.CaptureUnit = captureUnit
+                        self.PlatoonData.Task = 'CaptureUnit'
+                        self.PlatoonData.PreAllocatedTask = true
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
+                end
                 self:ExitStateMachine()
             end
             if eng:IsIdleState() then

@@ -213,7 +213,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                         self:LogDebug(string.format('We have Artillery or Ranged unit threat around us'))
                         self:LogDebug(string.format('Artillery Threat '..threatTable.ArtilleryThreat.TotalThreat))
                         self:LogDebug(string.format('Ranged Threat '..threatTable.RangedUnitThreat.TotalThreat))
-                        
+                        local shieldPercent = (self.ExperimentalUnit.MyShield:GetHealth() / self.ExperimentalUnit.MyShield:GetMaxHealth()) or 0.45
                         for _, enemyUnit in threatTable.ArtilleryThreat.Units do
                             if not IsDestroyed(enemyUnit.Object) and enemyUnit.Object:GetFractionComplete() >= 1 then
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object)
@@ -221,7 +221,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                                 if unitRange > self.MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
                                 end
-                                if overRangedCount > 1 then
+                                if overRangedCount > 1 and shieldPercent and shieldPercent < 0.50 then
                                     self.BuilderData = {
                                         Retreat = true,
                                         RetreatReason = 'ArtilleryThreat',
@@ -242,7 +242,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                                 if unitRange > self.MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
                                 end
-                                if overRangedCount > 3 then
+                                if overRangedCount > 3 and shieldPercent and shieldPercent < 0.50 then
                                     self.BuilderData = {
                                         Retreat = true,
                                         RetreatReason = 'ArtilleryThreat',
@@ -463,10 +463,11 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     end
                     if threatTable.ArtilleryThreat.TotalThreat > 0 then
                         local artilleryCount = 0
+                        local shieldPercent = (experimental.MyShield:GetHealth() / experimental.MyShield:GetMaxHealth()) or 0.45
                         for _, unit in threatTable.ArtilleryThreat.Units do
                             if unit.Distance < 16384 then
                                 artilleryCount = artilleryCount + 1
-                                if artilleryCount > 1 then
+                                if artilleryCount > 1 and (experimental.ShieldCaution or shieldPercent < 0.50) then
                                     --LOG('Fatboy is within range of Artillery and count is greater than one')
                                     self:ChangeState(self.DecideWhatToDo)
                                     return 
@@ -988,6 +989,7 @@ ThreatThread = function(aiBrain, platoon)
         elseif experimental.MyShield and experimental.ShieldCaution then
             experimental.ShieldCaution = false
         end
+
         coroutine.yield(35)
     end
 end

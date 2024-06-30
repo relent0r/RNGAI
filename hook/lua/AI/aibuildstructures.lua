@@ -62,7 +62,7 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToB
             end 
         end 
     end 
-    --RNGLOG('AIBuildBaseTemplateOrderedRNG Unsuccessful build')
+    LOG('AIBuildBaseTemplateOrderedRNG Unsuccessful build, trying to build '..tostring(whatToBuild))
     return
 end
 

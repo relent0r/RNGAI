@@ -142,7 +142,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
 
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
         local needEnergy = aiBrain:GetEconomyStoredRatio('ENERGY') < 0.5
-        if platoon.PlatoonData.Construction.CheckCivUnits then
+        if platoon.PlatoonData.CheckCivUnits then
             LOG('Reclaim is looking for units to capture')
             local captureUnit = CheckForCivilianUnitCapture(aiBrain, self, platoon.MovementLayer)
             if captureUnit then
@@ -987,25 +987,54 @@ function HaveUnitVisual(aiBrain, unit, checkBlipOnly)
     if unitBrain and unitBrain:GetArmyIndex() == iArmyIndex then 
         return true
     else
+        if unit.Blueprint.CategoriesHash.COMMAND then
+            LOG('We are looking for an ACU')
+        end
         local bCanSeeUnit = false
         if not(unit.Dead) then
+            if unit.Blueprint.CategoriesHash.COMMAND then
+                LOG('ACU is not dead')
+            end
             if not(unit.GetBlip) then
+                if unit.Blueprint.CategoriesHash.COMMAND then
+                    LOG('ACU has not GetBlip function')
+                end
                 if unit.GetPosition then
                     return true
+                else
+                    if unit.Blueprint.CategoriesHash.COMMAND then
+                        LOG('ACU has no getposition function tho')
+                    end
                 end
             else
                 local blip = unit:GetBlip(iArmyIndex)
                 if blip then
+                    if unit.Blueprint.CategoriesHash.COMMAND then
+                        LOG('Found blip for acu')
+                    end
                     if checkBlipOnly then 
                         return true
                     elseif blip:IsSeenEver(iArmyIndex) then 
                         return true 
                     end
+                    if unit.Blueprint.CategoriesHash.COMMAND then
+                        LOG('We did not find the unit')
+                    end
+                else
+                    if unit.Blueprint.CategoriesHash.COMMAND then
+                        LOG('No blip for acu detection so this will return false')
+                        if unit.GetPosition then
+                            local unitPos = unit:GetPosition()
+                            LOG('We have no visual but can get the position of '..tostring(unitPos[1])..':'..tostring(unitPos[3]))
+                        end
+                    end
                 end
             end
         end
     end
-    --RNGLOG('HaveUnitVisual : No Visual on unit')
+    if unit.Blueprint.CategoriesHash.COMMAND then
+        LOG('We did not find the ACU unit')
+    end
     return false
 end
 
@@ -5237,7 +5266,7 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout, optics)
             aiBrain.IntelData.AirHiPriScouts = 0
         end
     end
-    if true then
+    if aiBrain.RNGDEBUG then
         if scoutingData and scoutingData.Position then
             --RNGLOG('Trying to draw scoutingData position '..repr(scoutingData.Position))
             aiBrain:ForkThread(drawScoutMarker, scoutingData.Position)
@@ -5463,12 +5492,25 @@ CheckACUSnipe = function(aiBrain, layerType)
             end
         elseif layerType == 'Air' then
             if v.AIR and v.AIR.GameTime then
-                if v.AIR.GameTime + 500 > GetGameTimeSeconds()then
+                LOG('ACU Snipe found in tactical missions')
+                LOG('Game time is'..tostring(v.AIR.GameTime)..' current game time is '..tostring(GetGameTimeSeconds())..' game time plus 500 is '..tostring(v.AIR.GameTime + 500))
+                if v.AIR.GameTime + 500 > GetGameTimeSeconds() then
+                    LOG('Game time is within range')
+                    local unit = aiBrain.EnemyIntel.ACU[k].Unit
+                    if unit then
+                        LOG('Unit is present')
+                        if unit.UnitId then
+                            LOG('Unit ID is '..unit.UnitId)
+                        end
+                    end
                     if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
+                        LOG('Have unit visual on acu, returning data')
                         potentialTarget = aiBrain.EnemyIntel.ACU[k].Unit
                         requiredCount = v.AIR.CountRequired
                         acuIndex = k
                         break
+                    else
+                        LOG('We have no unit visual on acu')
                     end
                 end
             end
@@ -7021,6 +7063,7 @@ CheckForCivilianUnitCapture = function(aiBrain, eng, movementLayer)
         end
         
         if closestUnit and not IsDestroyed(closestUnit) then
+            LOG('We have the closest unit')
             return closestUnit
         end
     end

@@ -253,6 +253,7 @@ AITMLBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local builderData = self.BuilderData
             local target = builderData.AttackTarget
+            local firePos = target:GetPosition()
             if EntityCategoryContains(categories.MOBILE, target) then
                 if firePos then
                     for k, v in builderData.Launchers do

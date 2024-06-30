@@ -553,7 +553,7 @@ IntelManager = Class {
             if not table.empty(filteredList) then
                 table.sort(filteredList, function(a, b) return a.Priority > b.Priority end)
                 self.ZoneExpansions.Pathable = filteredList
-                aiBrain:ForkThread(self.DrawInfection, filteredList[1].Position)
+                --aiBrain:ForkThread(self.DrawInfection, filteredList[1].Position)
             end
             coroutine.yield(50)
         end
@@ -1348,12 +1348,13 @@ IntelManager = Class {
             local ez = teamAveragePositions['Enemy'].z - zone.pos[3]
             local enemyPosDist = ex * ex + ez * ez
             teamValue = RUtils.CalculateRelativeDistanceValue(math.sqrt(enemyPosDist), math.sqrt(allyPosDist))
+            --[[
             if enemyPosDist > allyPosDist then
                 aiBrain:ForkThread(DrawTargetRadius, zone.pos, 'aa44ff44')
             end
             if enemyPosDist < allyPosDist then
                 aiBrain:ForkThread(DrawTargetRadius, zone.pos, 'cc0000')
-            end
+            end]]
         else
             teamValue = 1
         end
@@ -1730,6 +1731,9 @@ IntelManager = Class {
                                 table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'ACU', Index = k} )
                             end
                         elseif v.HP < 7000 and aiBrain.BrainIntel.AirPhase == 3 then
+                            LOG('ACU found with less than 7000 hp at phase 3')
+                            LOG('HP is '..tostring(v.HP))
+                            LOG('Last Spotted is '..tostring(v.LastSpotted))
                             local gridX, gridZ = self:GetIntelGrid(v.Position)
                             local scoutRequired = true
                             if self.MapIntelGrid[gridX][gridZ].MustScout and self.MapIntelGrid[gridX][gridZ].ACUIndexes[k] then
@@ -2599,7 +2603,7 @@ function InitialNavalAttackCheck(aiBrain)
                             local dx = v.position[1] - m[1]
                             local dz = v.position[3] - m[3]
                             local posDist = dx * dx + dz * dz
-                            aiBrain:ForkThread(DrawTargetRadius, m, 'cc0000')
+                            --aiBrain:ForkThread(DrawTargetRadius, m, 'cc0000')
                             if not valueValidated then
                                 if posDist <= frigateRange * frigateRange then
                                     valueValidated = true
@@ -2629,7 +2633,7 @@ function InitialNavalAttackCheck(aiBrain)
                             local dx = v.position[1] - m[1]
                             local dz = v.position[3] - m[3]
                             local posDist = dx * dx + dz * dz
-                            aiBrain:ForkThread(DrawTargetRadius, m, 'FFFF00')
+                            --aiBrain:ForkThread(DrawTargetRadius, m, 'FFFF00')
                             if not valueValidated then
                                 for _, b in unitTable do
                                     if b.Range > 0 and posDist <= b.Range * b.Range then

@@ -3239,6 +3239,14 @@ AIBrain = Class(RNGAIBrainClass) {
             Value = true,
             OnceOnly = false, 
         })
+        self:SetupArmyIntelTrigger({
+            CallbackFunction = self.ACUDetectionRNG, 
+            Type = 'Radar', 
+            Category = categories.COMMAND,
+            Blip = false, 
+            Value = true,
+            OnceOnly = false, 
+        })
     end,
 
     OnIntelChange = function(self, blip, reconType, val)
@@ -3301,13 +3309,11 @@ AIBrain = Class(RNGAIBrainClass) {
         local acuTable = self.EnemyIntel.ACU
         if not unit.Dead then
             local timeOut = 0
-            if not acuTable[index].Unit then
-                acuTable[index].Unit = unit
-            end
             while timeOut < 3 do
                 local currentGameTime = GetGameTimeSeconds()
                 if not IsDestroyed(unit) and RUtils.HaveUnitVisual(self, unit, true) then
                     local acuPos = unit:GetPosition()
+                    acuTable[index].Unit = unit
                     acuTable[index].Position = acuPos
                     acuTable[index].DistanceToBase = VDist3Sq(acuPos, self.BrainIntel.StartPos)
                     acuTable[index].HP = unit:GetHealth()
