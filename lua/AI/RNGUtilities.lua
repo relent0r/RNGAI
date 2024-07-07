@@ -1382,6 +1382,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
     local structureTargets = { }
     local structureThreat = 0
     local enemyACUTargets = {}
+    local defenseTargets = {}
     local returnAcu = false
     local returnTarget = false
     local highThreat = 0
@@ -1424,6 +1425,64 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                         closestTargetPosition = targetPos
                     end
                 end
+            end
+        end
+    end
+    if not returnTarget then
+        if not RNGTableEmpty(structureTargets) then
+            table.sort(structureTargets, function(a,b) return a.distance < b.distance end)
+            --RNGLOG('ACUTARGETTING : Mobile Targets are within range')
+            for k, v in structureTargets do
+                if v.distance < 14400 then
+                    local unitCat = v.unit.Blueprint.CategoriesHash
+                    if unitCat.DEFENSE and (unitCat.DIRECTFIRE or unitCat.INDIRECTFIRE) then
+                        table.insert(defenseTargets, v)
+                    end
+                end
+                if not v.unit:BeenDestroyed() then
+                    local surfaceThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+                    if v.distance < (closestDistance * 2) and surfaceThreat < math.max(55, cdrThreat) or acuDistanceToBase < 6400 then
+                        local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
+                        local targetLayer = v.unit:GetCurrentLayer()
+                        if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
+                        not (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
+                            if NavUtils.CanPathTo('Amphibious', v.position, cdrPos) then
+                                --RNGLOG('ACUTARGETTING : returnTarget set in for loop for mobileTargets')
+                                returnTarget = v.unit
+                                break
+                            end
+                        end
+                    elseif v.distance < (closestDistance * 2) and GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander') > 0 then
+                        local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE - categories.WALL) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), v.position, 50, 'Enemy')
+                        local enemyUnitThreat = 0
+                        for _,c in enemyUnits do
+                            if c and not c.Dead then
+                                if c.Blueprint.CategoriesHash.COMMAND then
+                                    enemyACUPresent = true
+                                    enemyUnitThreat = enemyUnitThreat + c:EnhancementThreatReturn()
+                                else
+                                    enemyUnitThreat = enemyUnitThreat + c.Blueprint.Defense.SurfaceThreatLevel
+                                end
+                            end
+                        end
+                        if enemyUnitThreat < math.max(55, cdrThreat) then
+                            local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
+                            local targetLayer = v.unit:GetCurrentLayer()
+                            if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
+                            not (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
+                                if NavUtils.CanPathTo('Amphibious', v.position, cdrPos) then
+                                    --RNGLOG('ACUTARGETTING : returnTarget set in for loop for enemyACUTargets')
+                                    returnTarget = v.unit
+                                    break
+                                end
+                            end
+                        end
+                    else
+                        highThreat = highThreat + surfaceThreat
+                        --RNGLOG('ACUTARGETTING : Mobile Threat too high at target location structure')
+                    end
+                end
+                
             end
         end
     end
@@ -1560,57 +1619,6 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             end
         end
     end
-    if not returnTarget then
-        if not RNGTableEmpty(structureTargets) then
-            table.sort(structureTargets, function(a,b) return a.distance < b.distance end)
-            --RNGLOG('ACUTARGETTING : Mobile Targets are within range')
-            for k, v in structureTargets do
-                if not v.unit:BeenDestroyed() then
-                    local surfaceThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
-                    if v.distance < (closestDistance * 2) and surfaceThreat < math.max(55, cdrThreat) or acuDistanceToBase < 6400 then
-                        local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
-                        local targetLayer = v.unit:GetCurrentLayer()
-                        if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
-                        not (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
-                            if NavUtils.CanPathTo('Amphibious', v.position, cdrPos) then
-                                --RNGLOG('ACUTARGETTING : returnTarget set in for loop for mobileTargets')
-                                returnTarget = v.unit
-                                break
-                            end
-                        end
-                    elseif v.distance < (closestDistance * 2) and GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander') > 0 then
-                        local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE - categories.WALL) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), v.position, 50, 'Enemy')
-                        local enemyUnitThreat = 0
-                        for _,c in enemyUnits do
-                            if c and not c.Dead then
-                                if c.Blueprint.CategoriesHash.COMMAND then
-                                    enemyACUPresent = true
-                                    enemyUnitThreat = enemyUnitThreat + c:EnhancementThreatReturn()
-                                else
-                                    enemyUnitThreat = enemyUnitThreat + c.Blueprint.Defense.SurfaceThreatLevel
-                                end
-                            end
-                        end
-                        if enemyUnitThreat < math.max(55, cdrThreat) then
-                            local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
-                            local targetLayer = v.unit:GetCurrentLayer()
-                            if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
-                            not (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
-                                if NavUtils.CanPathTo('Amphibious', v.position, cdrPos) then
-                                    --RNGLOG('ACUTARGETTING : returnTarget set in for loop for enemyACUTargets')
-                                    returnTarget = v.unit
-                                    break
-                                end
-                            end
-                        end
-                    else
-                        highThreat = highThreat + surfaceThreat
-                        --RNGLOG('ACUTARGETTING : Mobile Threat too high at target location structure')
-                    end
-                end
-            end
-        end
-    end
     if returnTarget then
         if not aiBrain.ACUSupport.Supported then
             aiBrain.ACUSupport.Supported = true
@@ -1618,10 +1626,10 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             aiBrain.ACUSupport.TargetPosition = returnTarget:GetPosition()
         end
         --RNGLOG('ACUTARGETTING : Returning Target')
-        return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition
+        return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition, defenseTargets
     end
     --RNGLOG('No target being returned for ACU targeting')
-    return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition
+    return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition, defenseTargets
 end
 
 function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted)
@@ -6442,6 +6450,7 @@ function VentToPlatoon(platoon, aiBrain, plan)
         end
     end
     if plan == 'LandCombatBehavior' then
+        LOG('We are venting to a new state machine')
         ventPlatoon = aiBrain:MakePlatoon('', '')
         aiBrain:AssignUnitsToPlatoon(ventPlatoon, validUnits, 'Attack', 'None')
         import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ Vented = true}, ventPlatoon, validUnits)
@@ -6700,7 +6709,6 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
     -- minimumValue : I want to make sure that whatever we shoot at it either an ACU or is worth more than the missile we just built.
     local minimumValue = 0
     local missilesConsumed = 0
-    local targetPositions = {}
     local firingPositions = {}
     local missileCost
     local missileRadius
@@ -6751,11 +6759,11 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
         smdRadius = ALLBPS['ueb4302'].Weapon[1].MaxRadius or 90
     end
     --LOG('GetNukeStrikePosition smd radius'..smdRadius)
-
+    local acuTargetPositions = {}
     for k, v in aiBrain.EnemyIntel.ACU do
         if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.LastSpotted ~= 0 then
             if HaveUnitVisual(aiBrain, v.Unit, true) and (not FindSMDAtPosition(v.Position, knownSMDUnits, smdRadius) or experimentalLauncherAvailable)  then
-                RNGINSERT(targetPositions, {v.Position, type = 'COMMAND'})
+                RNGINSERT(acuTargetPositions, v.Position)
             end
         end
     end
@@ -6763,15 +6771,15 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
 
     --RNGLOG(' ACUs detected are '..table.getn(targetPositions))
 
-    if not table.empty(targetPositions) then
+    if not table.empty(acuTargetPositions) then
         local targetFound = false
-        for _, pos in targetPositions do
+        for _, pos in acuTargetPositions do
             for _, v in smlLaunchers do
                 local antiNukes = FindSMDBetweenPositions(v.Launcher:GetPosition(), pos, knownSMDUnits, smdRadius, 45)
-                if antinukes < 1 or experimentalLauncherAvailable then
+                if antiNukes < 1 or experimentalLauncherAvailable then
                     targetFound = true
                     --LOG('Adding firing position for acu')
-                    table.insert(firingPositions, { Launcher = v.Launcher, Position = pos[1],  TimeStamp = gameTime })
+                    table.insert(firingPositions, { Launcher = v.Launcher, Position = pos,  TimeStamp = gameTime })
                     missilesConsumed = missilesConsumed + 1
                     break
                 end

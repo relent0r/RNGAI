@@ -108,7 +108,8 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                             if target then
                                 self.BuilderData = {
                                     AttackTarget = target,
-                                    Position = target:GetPosition()
+                                    Position = target:GetPosition(),
+                                    ProtectUnit = true
                                 }
                                 --LOG('FighterBehavior DecideWhatToDo found acu target AttackTarget')
                                 self:ChangeState(self.AttackTarget)

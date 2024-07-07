@@ -59,9 +59,11 @@ AIOpticsBehavior = Class(AIPlatoonRNG) {
                 self.BuilderData = {
                     ScoutPosition = intelTarget,
                 }
-                self:LogDebug(string.format('Strategic Optics Found scout target'))
-                self:ChangeState(self.ScryTarget)
-                return
+                if aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime > 400 then
+                    self:LogDebug(string.format('Strategic Optics Found scout target'))
+                    self:ChangeState(self.ScryTarget)
+                    return
+                end
             end
             self:LogDebug(string.format('Strategic Optics no target, rerunning DecideWhatToDo'))
             coroutine.yield(30)

@@ -72,9 +72,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             self.CurrentPlatoonThreatAntiSurface = 0
             self.CurrentPlatoonThreatAntiNavy = 0
             self.CurrentPlatoonThreatAntiAir = 0
-            if self.Vented then
-                --LOG('Vented LandCombatPlatoon Starting')
-            end
+            self:LogDebug('Starting Land Combat behavior')
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -87,9 +85,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
-            if self.Vented then
-                --LOG('Vented LandCombatPlatoon Deciding what to do')
-            end
+            self:LogDebug('Land Combat DecideWhatToDo')
             local aiBrain = self:GetBrain()
             local rangedAttack = false
             if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
@@ -140,6 +136,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 local rz = self.Pos[3] - enemyPos[3]
                 local currentAcuDistance = rx * rx + rz * rz
                 if currentAcuDistance < 1225 and threat.allySurface < 50 then
+                    if self.Vented then
+                        LOG('Vented LandCombatPlatoon Found close acu and close surface threat, retreat')
+                    end
                     self:LogDebug(string.format('DecideWhatToDo enemy ACU forcing retreat '..threat.enemySurface))
                     self.retreat=true
                     self:ChangeState(self.Retreating)
@@ -280,6 +279,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
+            self:LogDebug('Land Combat DecideWhatToDo ending')
             if 1 == 1 then
                 --LOG('DecideWhatToDo GetMassMarkers ')
                 local mex=RUtils.AIGetMassMarkerLocations(aiBrain, false)
@@ -311,9 +311,6 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             --LOG('DecideWhatToDo end of loop')
             coroutine.yield(25)
             --LOG('post yield')
-            if self.Vented then
-                --LOG('Vented LandCombatPlatoon completed decide what to do loop')
-            end
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -594,7 +591,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
             if self.Vented then
-                --LOG('Vented LandCombatPlatoon trying to navigating')
+                LOG('Vented LandCombatPlatoon trying to navigating')
             end
             local aiBrain = self:GetBrain()
             local platoonUnits = GetPlatoonUnits(self)
@@ -606,7 +603,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             self:Stop()
             while PlatoonExists(aiBrain, self) do
                 if self.Vented then
-                    --LOG('Vented LandCombatPlatoon Navigating')
+                    LOG('Vented LandCombatPlatoon Navigating')
                 end
                 coroutine.yield(1)
                 if StateUtils.ExitConditions(self,aiBrain) then
@@ -661,9 +658,6 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 end
                 platoonUnits = GetPlatoonUnits(self)
                 local platoonNum=RNGGETN(platoonUnits)
-                if platoonNum < 20 then
-                    --StateUtils.CHPMergePlatoon(self, 30)
-                end
                 local spread=0
                 local snum=0
                 if GetTerrainHeight(self.Pos[1],self.Pos[3])<self.Pos[2]+3 then
@@ -1049,7 +1043,6 @@ end
 ---@param aiBrain AIBrain
 ---@param platoon AIPlatoon
 LandCombatPositionThread = function(aiBrain, platoon)
-    local UnitCategories = categories.ANTIAIR
     while aiBrain:PlatoonExists(platoon) do
         local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, platoon)
         if platBiasUnit and not platBiasUnit.Dead then

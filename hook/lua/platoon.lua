@@ -1194,6 +1194,10 @@ Platoon = Class(RNGAIPlatoonClass) {
         if not aiBrain.RNG then
             return RNGAIPlatoonClass.PlatoonDisband(self)
         end
+        if self.Vented then
+            LOG('PlatoonDisband is is killing a vented platoon')
+            LOG(reprsl(debug.traceback()))
+        end
         if self.ArmyPool then
             WARN('AI WARNING: Platoon trying to disband ArmyPool')
             --LOG(reprsl(debug.traceback()))

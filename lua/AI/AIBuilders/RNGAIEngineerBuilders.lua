@@ -9,6 +9,7 @@ local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MABC = '/lua/editor/MarkerBuildConditions.lua'
+local TBC = '/lua/editor/ThreatBuildConditions.lua'
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 local AirDefenseScramble = function(self, aiBrain, builderManager)
@@ -430,6 +431,18 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
+        BuilderName = 'RNGAI Factory Engineer T2 Expansion Minimum',
+        PlatoonTemplate = 'T2BuildEngineer',
+        Priority = 890, -- low factory priority
+        BuilderConditions = {
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.ENGINEER * (categories.TECH2 + categories.TECH3) - categories.COMMAND } }, -- Build engies until we have 2 of them.
+            { TBC, 'GreaterThanAlliedThreatInZone', { 'LocationType', 15 }},
+            { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T2 Expansion',
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 450, -- low factory priority
@@ -456,12 +469,24 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
+        BuilderName = 'RNGAI Factory Engineer T3 Expansion Minimum',
+        PlatoonTemplate = 'T3BuildEngineer',
+        Priority = 891, -- low factory priority
+        BuilderConditions = {
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 2 of them.
+            { TBC, 'GreaterThanAlliedThreatInZone', { 'LocationType', 15 }},
+            { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech3' } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T3 Small Expansion',
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 500, -- Top factory priority
         BuilderConditions = {
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.ENGINEER * categories.TECH3 } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.ENGINEER * categories.TECH3 } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech3' } },
         },
         BuilderType = 'All',

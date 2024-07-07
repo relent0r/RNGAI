@@ -166,3 +166,20 @@ function LandThreatAtBaseOwnZones(aiBrain)
     end
     return false
 end
+
+function GreaterThanAlliedThreatInZone(aiBrain, locationType, threat)
+    if aiBrain.BuilderManagers[locationType].FactoryManager.LocationActive and aiBrain.BasePerimeterMonitor[locationType] then
+        if aiBrain.BasePerimeterMonitor[locationType].LandUnits > 1 then
+            local zoneId = aiBrain.BuilderManagers[locationType].Zone
+            if aiBrain.Zones.Land.zones[zoneId] then
+                local zoneData = aiBrain.Zones.Land.zones[zoneId]
+                if zoneData.friendlydirectfireantisurfacethreat and zoneData.friendlydirectfireantisurfacethreat > threat then
+                    return true
+                end
+            end
+        else
+            return true
+        end
+    end
+    return false
+end

@@ -1299,7 +1299,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local eng = self.eng
             local aiBrain = self:GetBrain()
 
-            while not IsDestroyed(eng) and (0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving")) do
+            while not IsDestroyed(eng) and ((0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving"))) do
                 coroutine.yield(1)
                 local platPos = self:GetPlatoonPosition()
                 if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then

@@ -25,7 +25,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.GunUpgradeRequired = false
     cdr.GunUpgradePresent = false
     cdr.WeaponRange = false
-    cdr.DefaultRange = 384
+    cdr.DefaultRange = 320
     cdr.MaxBaseRange = 80
     cdr.OverCharge = false
     cdr.ThreatLimit = 35
@@ -400,40 +400,76 @@ function CDRThreatAssessmentRNG(cdr)
                     cdr.InFirebaseRange = false
                 end
             end
-            if aiBrain.BrainIntel.SelfThreat.LandNow > 0 then
-                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + aiBrain.BrainIntel.SelfThreat.LandNow
-            else
-                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + 0.1
+            -- Helper function to get the threat value with a default to avoid division by zero
+            local function getThreatValue(threat, default)
+                return threat > 0 and threat or default
             end
-            if aiBrain.BrainIntel.SelfThreat.AllyLandThreat > 0 then
-                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + aiBrain.BrainIntel.SelfThreat.AllyLandThreat
-            else 
-                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + 0.1
+
+            -- Calculate Friendly Threat Confidence Modifier
+            local function calculateFriendlyThreatModifier(aiBrain, friendlyUnitThreat, cdr, weights)
+                local friendlyThreatConfidenceModifier = 0
+                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + (weights.selfThreat * getThreatValue(aiBrain.BrainIntel.SelfThreat.LandNow, 0.1))
+                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + (weights.allyThreat * getThreatValue(aiBrain.BrainIntel.SelfThreat.AllyLandThreat, 0.1))
+                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + (weights.friendlyUnitThreat * friendlyUnitThreat)
+
+                if cdr.Health > 7000 and aiBrain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
+                    friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier * weights.healthBoost
+                end
+
+                return friendlyThreatConfidenceModifier
             end
-            if aiBrain.EnemyIntel.EnemyThreatCurrent.Land > 0 then
-                enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + aiBrain.EnemyIntel.EnemyThreatCurrent.Land
-            else
-                enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + 0.1
+
+            -- Calculate Enemy Threat Confidence Modifier
+            local function calculateEnemyThreatModifier(aiBrain, enemyUnitThreat, weights)
+                local enemyThreatConfidenceModifier = 0
+                enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + (weights.enemyThreat * getThreatValue(aiBrain.EnemyIntel.EnemyThreatCurrent.Land, 0.1))
+                enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + (weights.enemyUnitThreat * enemyUnitThreat)
+
+                return enemyThreatConfidenceModifier
             end
-            friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + friendlyUnitThreat
-            --RNGLOG('Total Friendly Threat '..friendlyThreatConfidenceModifier)
-            --RNGLOG('Total Enemy Threat '..enemyThreatConfidenceModifier)
-            if cdr.Health > 7000 and aiBrain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
-                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier * 1.2
-                --RNGLOG('ACU Health is above 6000, modified friendly threat '..friendlyThreatConfidenceModifier)
+
+            -- Main function to calculate cdr.Confidence
+            local function calculateConfidence(aiBrain, cdr, friendlyUnitThreat, enemyUnitThreat, cdrDistanceToBase, localEnemyThreatRatio, weights)
+                local friendlyThreatConfidenceModifier = calculateFriendlyThreatModifier(aiBrain, friendlyUnitThreat, cdr, weights)
+                local enemyThreatConfidenceModifier = calculateEnemyThreatModifier(aiBrain, enemyUnitThreat, weights)
+
+                -- Add influence of new metrics with weights
+                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + weights.distanceToBase * (1 / (cdrDistanceToBase + 1))
+                enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + weights.localEnemyThreatRatio * localEnemyThreatRatio
+
+                -- Calculate confidence
+                cdr.Confidence = friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier
+
+                if aiBrain.EnemyIntel.Phase > 2 then
+                    cdr.Confidence = cdr.Confidence * weights.phasePenalty
+                end
             end
-            enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + enemyUnitThreat
-            cdr.Confidence = friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier
-            if aiBrain.EnemyIntel.Phase > 2 then
-                cdr.Confidence = cdr.Confidence * 0.7
-            end
+
+            -- Example weights
+            local weights = {
+                selfThreat = 1.0,
+                allyThreat = 1.0,
+                friendlyUnitThreat = 1.1,
+                healthBoost = 1.3,
+                enemyThreat = 1.0,
+                enemyUnitThreat = 1.0,
+                distanceToBase = 0.7,
+                localEnemyThreatRatio = 1.0,
+                phasePenalty = 0.7
+            }
+            local enemyThreatRatio = friendlyUnitThreat > 0 and (enemyUnitThreat / friendlyUnitThreat) or 0.5
+            -- Example call
+            calculateConfidence(aiBrain, cdr, friendlyUnitThreat, enemyUnitThreat, cdr.DistanceToHome, enemyThreatRatio, weights)
+
+            LOG('Current cdr confidence is '..tostring(cdr.Confidence))
+
             if aiBrain.RNGEXP then
                 cdr.MaxBaseRange = 80
             else
                 if ScenarioInfo.Options.AICDRCombat == 'cdrcombatOff' then
                     --RNGLOG('cdrcombat is off setting max radius to 60')
                     cdr.MaxBaseRange = 80
-                elseif cdr.Phase < 2 and aiBrain.EnemyIntel.Phase < 2 then
+                elseif cdr.Phase < 3 and aiBrain.EnemyIntel.Phase < 3 then
                     local safetyCutOff
                     if aiBrain.EnemyIntel.ClosestEnemyBase > 0 then
                         safetyCutOff = math.sqrt(aiBrain.EnemyIntel.ClosestEnemyBase) / 2
@@ -445,7 +481,7 @@ function CDRThreatAssessmentRNG(cdr)
                     cdr.MaxBaseRange = math.max(35, math.min(180, cdr.DefaultRange * cdr.Confidence))
                 end
             end
-           --RNGLOG('Current CDR Max Base Range '..cdr.MaxBaseRange)
+            LOG('Current CDR Max Base Range '..cdr.MaxBaseRange)
         end
         coroutine.yield(20)
     end
@@ -563,6 +599,9 @@ function CDRCallPlatoon(cdr, threatRequired)
     local bMergedPlatoons = false
     local platoonTable = {}
     for _,aPlat in AlliedPlatoons do
+        if aPlat.Vented then
+            LOG('ACU trying to merge a Vented platoon')
+        end
         if aPlat == cdr.PlatoonHandle or aPlat == supportPlatoonAvailable then
             continue
         end
@@ -741,10 +780,10 @@ function CDRGetUnitClump(aiBrain, cdrPos, radius)
     return false
 end
 
-function SetAcuSnipeMode(unit, bool)
+function SetAcuSnipeMode(unit, type)
     local targetPriorities = {}
     --RNGLOG('Set ACU weapon priorities.')
-    if bool then
+    if type == 'ACU' then
        targetPriorities = {
                 categories.COMMAND,
                 categories.MOBILE * categories.EXPERIMENTAL,
@@ -756,6 +795,19 @@ function SetAcuSnipeMode(unit, bool)
                 (categories.ALLUNITS - categories.SPECIALLOWPRI),
             }
         --RNGLOG('Setting to snipe mode')
+    elseif type == 'STRUCTURE' then
+        targetPriorities = {
+            categories.MOBILE * categories.EXPERIMENTAL,
+            categories.STRUCTURE * (categories.DIRECTFIRE + categories.INDIRECTFIRE),
+            categories.MOBILE * categories.TECH3,
+            categories.MOBILE * categories.TECH2,
+            categories.COMMAND,
+            categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE,
+            (categories.STRUCTURE * categories.DEFENSE - categories.ANTIMISSILE),
+            categories.MOBILE * categories.TECH1,
+            (categories.ALLUNITS - categories.SPECIALLOWPRI),
+        }
+    --RNGLOG('Setting to snipe mode')
     else
        targetPriorities = {
                 categories.MOBILE * categories.EXPERIMENTAL,

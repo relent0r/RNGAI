@@ -804,9 +804,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 end
                 platoonUnits = GetPlatoonUnits(self)
                 local platoonNum=RNGGETN(platoonUnits)
-                if platoonNum < 20 then
-                    --StateUtils.CHPMergePlatoon(self, 30)
-                end
                 local spread=0
                 local snum=0
                 if GetTerrainHeight(self.Pos[1],self.Pos[3])<self.Pos[2]+3 then

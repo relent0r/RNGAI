@@ -436,86 +436,6 @@ GetWeightedHealthRatio = function(unit)--health % including shields
     end
 end
 
-CHPMergePlatoon = function(self,radius)
-    local aiBrain = self:GetBrain()
-    local VDist3Sq = VDist3Sq
-    if not self.machinedata then self.machinedata={} end
-    self.machinedata.merging=true
-    coroutine.yield(3)
-    --local other
-    local best = radius*radius
-    local ps1 = RNGCOPY(aiBrain:GetPlatoonsList())
-    local ps = {}
-    local platoonPos = GetPlatoonPosition(self)
-    local platoonUnits = self:GetPlatoonUnits()
-    local platoonCount = RNGGETN(platoonUnits)
-    if platoonCount<1 or platoonCount>30 then return end
-    for i, p in ps1 do
-        if not p or p==self or not aiBrain:PlatoonExists(p) or not p.machinedata.name or not p.machinedata.name==self.machinedata.name or VDist3Sq(platoonPos,GetPlatoonPosition(p))>best or RNGGETN(p:GetPlatoonUnits())>30 then
-        else
-            RNGINSERT(ps,p)
-        end
-    end
-    if RNGGETN(ps)<1 then 
-        coroutine.yield(30)
-        self.machinedata.merging=false
-        return 
-    elseif RNGGETN(ps)==1 then
-        if ps[1].machinedata and self then
-            -- actually merge
-            if platoonCount<RNGGETN(ps[1]:GetPlatoonUnits()) then
-                self.machinedata.merging=false
-                return
-            else
-                local units = ps[1]:GetPlatoonUnits()
-                local validUnits = {}
-                local bValidUnits = false
-                for _,u in units do
-                    if not u.Dead and not u:IsUnitState('Attached') then
-                        RNGINSERT(validUnits, u)
-                        bValidUnits = true
-                    end
-                end
-                if not bValidUnits or RNGGETN(validUnits)<1 then
-                    return
-                end
-                aiBrain:AssignUnitsToPlatoon(self,validUnits,'Attack','NoFormation')
-                self.machinedata.merging=false
-                ps[1]:PlatoonDisbandNoAssign()
-                return true
-            end
-        end
-    else
-        table.sort(ps,function(a,b) return VDist3Sq(GetPlatoonPosition(a),platoonPos)<VDist3Sq(GetPlatoonPosition(b),platoonPos) end)
-        for _,other in ps do
-            if other and self then
-                -- actually merge
-                if platoonCount<RNGGETN(other:GetPlatoonUnits()) then
-                    continue
-                else
-                    local units = other:GetPlatoonUnits()
-                    local validUnits = {}
-                    local bValidUnits = false
-                    for _,u in units do
-                        if not u.Dead and not u:IsUnitState('Attached') then
-                            RNGINSERT(validUnits, u)
-                            bValidUnits = true
-                        end
-                    end
-                    if not bValidUnits or RNGGETN(validUnits)<1 then
-                        continue
-                    end
-                    aiBrain:AssignUnitsToPlatoon(self,validUnits,'Attack','NoFormation')
-                    self.machinedata.merging=false
-                    other:PlatoonDisbandNoAssign()
-                    return true
-                end
-            end
-        end
-        self.machinedata.merging=false
-    end
-end
-
 GetUnitMaxWeaponRange = function(unit, filterType)
     local maxRange
     if unit and not unit.Dead then
@@ -652,7 +572,7 @@ end
 GetClosestBaseRNG = function(aiBrain, platoon, platoonPosition, naval)
     local closestBase
     local closestBaseDistance
-    if aiBrain.BuilderManagers then
+    if aiBrain.BuilderManagers and platoonPosition[1] then
         local distanceToHome = VDist3Sq(platoonPosition, platoon.Home)
         for baseName, base in aiBrain.BuilderManagers do
             if (naval and base.Layer == 'Water' or not naval) and not table.empty(base.FactoryManager.FactoryList) then
@@ -839,6 +759,9 @@ MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNu
     local AlliedPlatoons = aiBrain:GetPlatoonsList()
     local bMergedPlatoons = false
     for _,aPlat in AlliedPlatoons do
+        if aPlat.Vented then
+            LOG('Trying to merged with a vented platoon')
+        end
         if aPlat.MergeType ~= stateMachineType then
             continue
         end
@@ -884,6 +807,9 @@ MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNu
                     RNGINSERT(validUnits, u)
                     bValidUnits = true
                 end
+            end
+            if aPlat.Vented then
+                LOG('Trying to merged with a vented platoon, our mergetype is '..tostring(stateMachineType))
             end
             if bValidUnits then
                 --LOG("*AI DEBUG: Merging platoons " .. self.PlatoonName .. ": (" .. platPos[1] .. ", " .. platPos[3] .. ") and " .. aPlat.PlatoonName .. ": (" .. allyPlatPos[1] .. ", " .. allyPlatPos[3] .. ")")
@@ -2097,7 +2023,7 @@ function RandomLocation(x, z)
 end
 
 function GetClosestEnemyACU(aiBrain, position)
-    if not table.empty(aiBrain.EnemyIntel.ACU) then
+    if not table.empty(aiBrain.EnemyIntel.ACU) and position[1] then
         local closestACU 
         local closestDistance
         for k,v in aiBrain.EnemyIntel.ACU do

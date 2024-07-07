@@ -166,7 +166,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
                 if PlatoonExists(aiBrain, self) then
                     LOG('ACU Support is exiting due to acu retreating or close to base')
-                    self:ExitStateMachine()
+                    --self:ExitStateMachine()
                 end
                 return
             end
@@ -176,7 +176,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
                 if PlatoonExists(aiBrain, self) then
                     LOG('ACU Support is exiting due to acu retreating and low threat')
-                    self:ExitStateMachine()
+                    --self:ExitStateMachine()
                 end
                 return
             end
@@ -189,7 +189,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
                     if PlatoonExists(aiBrain, self) then
                         LOG('ACU Support is exiting due to low acu threat')
-                        self:ExitStateMachine()
+                        --self:ExitStateMachine()
                     end
                     return
                 end
@@ -200,7 +200,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 RUtils.VentToPlatoon(self, aiBrain, 'LandAssaultBehavior')
                 if PlatoonExists(aiBrain, self) then
                     LOG('ACU Support is exiting due to acu in water')
-                    self:ExitStateMachine()
+                    --self:ExitStateMachine()
                 end
                 return
             end
@@ -935,9 +935,6 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 end
                 platoonUnits = GetPlatoonUnits(self)
                 local platoonNum=RNGGETN(platoonUnits)
-                if platoonNum < 20 then
-                    --StateUtils.CHPMergePlatoon(self, 30)
-                end
                 local spread=0
                 local snum=0
                 if GetTerrainHeight(self.Pos[1],self.Pos[3])<self.Pos[2]+3 then

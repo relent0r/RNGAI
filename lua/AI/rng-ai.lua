@@ -2920,6 +2920,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 if v.FactoryManager.LocationActive and self.BuilderManagers[k].FactoryManager and not RNGTableEmpty(self.BuilderManagers[k].FactoryManager.FactoryList) then
                     if not self.BasePerimeterMonitor[k] then
+                        LOG('Creating BasePerimeter monitor table for '..tostring(k))
                         self.BasePerimeterMonitor[k] = {}
                     end
                     local enemyUnits = self:GetUnitsAroundPoint(categories.ALLUNITS - categories.SCOUT - categories.INSIGNIFICANTUNIT, self.BuilderManagers[k].FactoryManager.Location, perimeterMonitorRadius , 'Enemy')
