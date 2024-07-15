@@ -325,7 +325,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             else
-                -- I've made this change state to keep the decision logic clean.
+                -- I've made this change state to keep the decision--LOGic clean.
                 if self.PlatoonData.Construction then
                     self.BuilderData = {
                         TransportWait = self.PlatoonData.TransportWait,
@@ -646,7 +646,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
                 else
                     self:LogDebug(string.format('Engineer unable to find reference for defensive point build'))
-                    LOG('Engineer unable to find reference for defensive point build '..tostring(builderData.Construction.BaseTemplate))
+                   --LOG('Engineer unable to find reference for defensive point build '..tostring(builderData.Construction.BaseTemplate))
                 end
             elseif cons.AdjacencyPriority then
                 relative = false
@@ -738,7 +738,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 if tmpReference then
                     reference = eng:CalculateWorldPositionFromRelative(tmpReference)
                 else
-                    LOG('No tmpReference available trying to build an ordered template with '..tostring(builderData.Construction.BaseTemplate))
+                   --LOG('No tmpReference available trying to build an ordered template with '..tostring(builderData.Construction.BaseTemplate))
                     return
                 end
                 buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
@@ -760,8 +760,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 end
                 local refunits=AIUtils.GetOwnUnitsAroundPoint(aiBrain, cons.Categories, pos, cappingRadius, cons.ThreatMin,cons.ThreatMax, cons.ThreatRings)
                 local reference = RUtils.GetCappingPosition(aiBrain, eng, pos, refunits, baseTmpl, buildingTmpl)
-                LOG('Capping template')
-                LOG('reference is '..repr(reference))
+               --LOG('Capping template')
+               --LOG('reference is '..repr(reference))
                 buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
                 RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
                 --RNGLOG('baseTmpList is :'..repr(baseTmplList))
@@ -783,7 +783,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             local blueprints = StateUtils.GetBuildableUnitId(aiBrain, eng, v.Categories)
                             local whatToBuild = blueprints[1]
                             if not whatToBuild then
-                                LOG('What to build is nil')
+                               --LOG('What to build is nil')
                             end
                             buildFunction(aiBrain, eng, v.Unit, whatToBuild, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons)
                         else

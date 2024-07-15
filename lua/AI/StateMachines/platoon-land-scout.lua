@@ -244,12 +244,12 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     local rz = scoutPos[3] - targetData.Position[3]
                     if rx * rx + rz * rz > 4225 then
                         self:LogDebug(string.format('We have targetData from unknown scoutType Position why? navigate'))
-                        LOG('Unknown targetData '..repr(targetData))
+                       --LOG('Unknown targetData '..repr(targetData))
                         self:ChangeState(self.Navigating)
                         return
                     else
                         self:LogDebug(string.format('We have targetData from unknown scoutType Position why? HoldPosition'))
-                        LOG('Unknown targetData '..repr(targetData))
+                       --LOG('Unknown targetData '..repr(targetData))
                         self:ChangeState(self.HoldPosition)
                         return
                     end

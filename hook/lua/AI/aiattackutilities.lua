@@ -71,7 +71,7 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
             --LOG('Threats returned '..repr(threats))
         end
         if msg ~= 'Unpathable' and platoonLayer ~= 'Land' then
-            LOG('No path from '..repr(start)..' to '..repr(destination)..' reason is '..repr(msg)..' platoon layer was '..platoonLayer)
+           --LOG('No path from '..repr(start)..' to '..repr(destination)..' reason is '..repr(msg)..' platoon layer was '..platoonLayer)
         end
         return false, msg, distance, threats
     end
@@ -375,7 +375,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     local mapSizeX = ScenarioInfo.size[1]
     local mapSizeZ = ScenarioInfo.size[2]
     local maxMapLengthSq = math.sqrt((mapSizeX * mapSizeX) + (mapSizeZ * mapSizeZ))
-    local logCount = 0
+    local--LOGCount = 0
 
     local unitCapRatio = GetArmyUnitCostTotal(aiBrain:GetArmyIndex()) / GetArmyUnitCap(aiBrain:GetArmyIndex())
 

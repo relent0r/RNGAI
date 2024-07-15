@@ -68,7 +68,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             self.CurrentPlatoonThreatAntiNavy = 0
             self.CurrentPlatoonThreatAntiAir = 0
             if self.Vented then
-                LOG('Vented LandCombatPlatoon is starting')
+               --LOG('Vented LandCombatPlatoon is starting')
             end
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -84,13 +84,13 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             self:LogDebug('Land Combat DecideWhatToDo')
             if self.Vented then
-                LOG('Vented LandCombatPlatoon DecideWhatToDo')
+               --LOG('Vented LandCombatPlatoon DecideWhatToDo')
             end
             local aiBrain = self:GetBrain()
             local rangedAttack = false
             if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
                 if self.Vented then
-                    LOG('Vented LandCombatPlatoon suicide mode')
+                   --LOG('Vented LandCombatPlatoon suicide mode')
                 end
                 local enemyAcuPosition = aiBrain.BrainIntel.SuicideModeTarget:GetPosition()
                 local rx = self.Pos[1] - enemyAcuPosition[1]
@@ -126,7 +126,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     rangedAttack = true
                 else
                     if self.Vented then
-                        LOG('Vented LandCombatPlatoon retreating due to threat')
+                       --LOG('Vented LandCombatPlatoon retreating due to threat')
                     end
                     self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
                     self.retreat=true
@@ -138,7 +138,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             end
             if enemyACU and enemyACU.GetPosition and enemyACUDistance < 1225 then
                 if self.Vented then
-                    LOG('Vented LandCombatPlatoon acu retreat')
+                   --LOG('Vented LandCombatPlatoon acu retreat')
                 end
                 local enemyPos = enemyACU:GetPosition()
                 local rx = self.Pos[1] - enemyPos[1]
@@ -146,7 +146,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 local currentAcuDistance = rx * rx + rz * rz
                 if currentAcuDistance < 1225 and threat.allySurface < 50 then
                     if self.Vented then
-                        LOG('Vented LandCombatPlatoon Found close acu and close surface threat, retreat')
+                       --LOG('Vented LandCombatPlatoon Found close acu and close surface threat, retreat')
                     end
                     self:LogDebug(string.format('DecideWhatToDo enemy ACU forcing retreat '..threat.enemySurface))
                     self.retreat=true
@@ -157,17 +157,17 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             end
             if StateUtils.SimpleTarget(self,aiBrain) then
                 if self.Vented then
-                    LOG('Vented LandCombatPlatoon simple target found')
+                   --LOG('Vented LandCombatPlatoon simple target found')
                 end
                 if rangedAttack then
                     if self.Vented then
-                        LOG('Vented LandCombatPlatoon going for ranged attack')
+                       --LOG('Vented LandCombatPlatoon going for ranged attack')
                     end
                     self:ChangeState(self.RangedCombatLoop)
                     return
                 else
                     if self.Vented then
-                        LOG('Vented LandCombatPlatoon going for normal combat loop')
+                       --LOG('Vented LandCombatPlatoon going for normal combat loop')
                     end
                     self:ChangeState(self.CombatLoop)
                     return
@@ -175,7 +175,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             end
             if VDist3Sq(self.Pos, aiBrain.BuilderManagers[self.LocationType].Position) < 14400 then
                 if self.Vented then
-                    LOG('Vented LandCombatPlatoon Looking for high priority target')
+                   --LOG('Vented LandCombatPlatoon Looking for high priority target')
                 end
                 local hiPriTargetPos
                 local hiPriTarget = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
@@ -216,7 +216,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             end
             if VDist3Sq(self.Pos, self.Home) > 10000 then
                 if self.Vented then
-                    LOG('Vented LandCombatPlatoon Looking for priority points')
+                   --LOG('Vented LandCombatPlatoon Looking for priority points')
                 end
                 local acuSnipeUnit = RUtils.CheckACUSnipe(aiBrain, 'Land')
                 if acuSnipeUnit then
@@ -303,7 +303,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             end
             if 1 == 1 then
                 if self.Vented then
-                    LOG('Vented LandCombatPlatoon Looking for mass markers')
+                   --LOG('Vented LandCombatPlatoon Looking for mass markers')
                 end
                 local mex=RUtils.AIGetMassMarkerLocations(aiBrain, false)
                 local raidlocs={}
@@ -332,7 +332,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if self.Vented then
-                LOG('Vented LandCombatPlatoon DecideWhatToDo complete and nothing was done')
+               --LOG('Vented LandCombatPlatoon DecideWhatToDo complete and nothing was done')
             end
             coroutine.yield(25)
             --LOG('post yield')
@@ -350,7 +350,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
             if self.Vented then
-                LOG('Vented LandCombatPlatoon DecideWhatToDo inside combat loop')
+               --LOG('Vented LandCombatPlatoon DecideWhatToDo inside combat loop')
             end
             local aiBrain = self:GetBrain()
             local units=GetPlatoonUnits(self)
@@ -363,7 +363,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 end
             else
                 if self.Vented then
-                    LOG('Vented LandCombatPlatoon suicide mode is active')
+                   --LOG('Vented LandCombatPlatoon suicide mode is active')
                 end
             end
             local target
@@ -442,7 +442,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                         IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
                                     end
                                 elseif v.Role == 'Scout' then
-                                    LOG("land combat scout trying to get into intelrange")
+                                   --LOG("land combat scout trying to get into intelrange")
                                     if v.GetNavigator then
                                         local navigator = v:GetNavigator()
                                         if navigator then
@@ -496,11 +496,11 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 end
             else
                 if self.Vented then
-                    LOG('Vented LandCombatPlatoon no target in combat loop')
+                   --LOG('Vented LandCombatPlatoon no target in combat loop')
                 end
             end
             if self.Vented then
-                LOG('Vented LandCombatPlatoon finished combat loop')
+               --LOG('Vented LandCombatPlatoon finished combat loop')
             end
             coroutine.yield(30)
             self:ChangeState(self.DecideWhatToDo)
@@ -630,7 +630,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
             if self.Vented then
-                LOG('Vented LandCombatPlatoon trying to navigating')
+               --LOG('Vented LandCombatPlatoon trying to navigating')
             end
             local aiBrain = self:GetBrain()
             local platoonUnits = GetPlatoonUnits(self)
@@ -666,7 +666,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             end
             while PlatoonExists(aiBrain, self) do
                 if self.Vented then
-                    LOG('Vented LandCombatPlatoon Navigating')
+                   --LOG('Vented LandCombatPlatoon Navigating')
                 end
                 coroutine.yield(1)
                 if StateUtils.ExitConditions(self,aiBrain) then
@@ -675,7 +675,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     self.path=false
                     if self.retreat then
                         if self.Vented then
-                            LOG('Vented LandCombatPlatoon unit is trying to merge with another')
+                           --LOG('Vented LandCombatPlatoon unit is trying to merge with another')
                         end
                         StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandMergeStateMachine', 80, 35, false)
                         self.retreat = false
@@ -712,7 +712,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     coroutine.yield(10)
                     self:LogDebug(string.format('platoon is going to use transport'))
                     if self.Vented then
-                        LOG('Vented LandCombatPlatoon unit is trying to use a transport')
+                       --LOG('Vented LandCombatPlatoon unit is trying to use a transport')
                     end
                     self:ChangeState(self.Transporting)
                     return
@@ -722,7 +722,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     self.path=nil
                     self:LogDebug(string.format('Platoon thinks its in water during navigation'))
                     if self.Vented then
-                        LOG('Vented LandCombatPlatoon thinks its in water during navigation')
+                       --LOG('Vented LandCombatPlatoon thinks its in water during navigation')
                     end
                     coroutine.yield(20)
                     self:ChangeState(self.DecideWhatToDo)
@@ -741,7 +741,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                 vec[1],vec[2],vec[3]=v:GetVelocity()
                                 if VDist3Sq({0,0,0},vec)<1 then
                                     if self.Vented then
-                                        LOG('Vented LandCombatPlatoon unit is being ejected during navigation')
+                                       --LOG('Vented LandCombatPlatoon unit is being ejected during navigation')
                                     end
                                     IssueClearCommands({v})
                                     IssueMove({v},self.Home)
@@ -899,7 +899,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     end
                 else
                     if self.Vented then
-                        LOG('Vented LandCombatPlatoon has no path when trying to navigate')
+                       --LOG('Vented LandCombatPlatoon has no path when trying to navigate')
                     end
                 end
                 coroutine.yield(20)
@@ -915,7 +915,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
             if self.Vented then
-                LOG('Vented LandCombatPlatoon is retreating')
+               --LOG('Vented LandCombatPlatoon is retreating')
             end
             local aiBrain = self:GetBrain()
             local location = false
@@ -1041,8 +1041,8 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 CutOff = 400,
             }
             if self.Vented then
-                LOG('Vented LandCombatPlatoon is going to navigate to retreat position')
-                LOG('Retreat location is '..tostring(location[1])..':'..tostring(location[3]))
+               --LOG('Vented LandCombatPlatoon is going to navigate to retreat position')
+               --LOG('Retreat location is '..tostring(location[1])..':'..tostring(location[3]))
             end
             --LOG('Retreating to platoon')
             self:ChangeState(self.Navigating)
@@ -1079,7 +1079,7 @@ AssignToUnitsMachine = function(data, platoon, units)
             categories.ALLUNITS,
         }
         if data.Vented then
-            LOG('This is a state machine that was vented from ACU support')
+           --LOG('This is a state machine that was vented from ACU support')
             platoon.Vented = true
         end
         if not platoon.LocationType then
@@ -1087,7 +1087,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         end
         local platoonUnits = GetPlatoonUnits(platoon)
         if data.Vented then
-            LOG('Platoon Count at time of startup is '..table.getn(platoonUnits))
+           --LOG('Platoon Count at time of startup is '..table.getn(platoonUnits))
         end
         if platoonUnits then
             for _, v in platoonUnits do

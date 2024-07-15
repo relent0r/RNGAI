@@ -17,7 +17,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
             self.BuilderHandle:RemoveHandle(self)
         end
         if self.Vented then
-            LOG('Vented LandCombatPlatoon has been destroyed')
+           --LOG('Vented LandCombatPlatoon has been destroyed')
         end
         self.Trash:Destroy()
     end,
@@ -25,7 +25,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
     ---@param self AIPlatoon
     OnUnitsAddedToPlatoon = function(self)
         if self.Vented then
-            LOG('Vented LandCombatPlatoon has has units added to it')
+           --LOG('Vented LandCombatPlatoon has has units added to it')
         end
         local units = self:GetPlatoonUnits()
         self.Units = units
@@ -222,7 +222,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
 
     PlatoonDisbandNoAssign = function(self)
         if self.Vented then
-            LOG('Vented LandCombatPlatoon is being disbanded via PlatoonDisbandNoAssign')
+           --LOG('Vented LandCombatPlatoon is being disbanded via PlatoonDisbandNoAssign')
         end
         if self.BuilderHandle then
             self.BuilderHandle:RemoveHandle(self)
@@ -240,7 +240,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
             return
         end
         if self.Vented then
-            LOG('Vented LandCombatPlatoon is being disbanded via ExitStateMachine')
+           --LOG('Vented LandCombatPlatoon is being disbanded via ExitStateMachine')
         end
 
         local brain = self:GetBrain()
