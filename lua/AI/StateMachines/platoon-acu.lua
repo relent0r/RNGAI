@@ -531,7 +531,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             elseif self.BuilderData.Loiter then
-                LOG('ACU : We are defending our expansion current stored energy is '..tostring(brain:GetEconomyStoredRatio('ENERGY')))
+                --LOG('ACU : We are defending our expansion current stored energy is '..tostring(brain:GetEconomyStoredRatio('ENERGY')))
                 if brain:GetEconomyStored('ENERGY') < 500 and not brain:IsAnyEngineerBuilding(categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)) 
                     and brain:GetCurrentUnits(categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)) < 1 then
                     self.BuilderData.Construction = {
@@ -539,7 +539,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 'T1EnergyProduction',
                             },
                         }
-                    LOG('ACU : We are going to try and build a pgen')
+                    --LOG('ACU : We are going to try and build a pgen')
                     self:LogDebug(string.format('Trying to build energy'))
                     self:ChangeState(self.StructureBuild)
                     return

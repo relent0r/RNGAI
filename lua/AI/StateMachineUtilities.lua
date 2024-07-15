@@ -1673,7 +1673,6 @@ function CanBuildOnMassMexPlatoon(aiBrain, engPos, distance)
                     if aiBrain:CanBuildStructureAt('ueb1103', v.position) then
                         table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v, BorderWarning = mexBorderWarn})
                     elseif aiBrain:GetNumUnitsAroundPoint(categories.MASSEXTRACTION, v.position, 1 , 'Enemy') > 1 then
-                        LOG('Unable to build at location but I found an enemy extractor')
                         table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v, BorderWarning = mexBorderWarn})
                     end
                 end
@@ -1690,7 +1689,6 @@ end
 
 function ScryTargetPosition(unit, position)
     if unit.Blueprint.CategoriesHash.OPTICS then
-        LOG('Set OnTargetLocation')
         IssueScript( {unit}, {TaskName = "TargetLocation", Location = position} )
         --unit:OnTargetLocation(position)
     else
@@ -1836,7 +1834,6 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType, whatToBui
             end 
         end 
     end 
-    LOG('AIBuildBaseTemplateOrderedRNG Unsuccessful build of unit '..tostring(whatToBuild))
     return
 end
 

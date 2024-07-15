@@ -6392,7 +6392,6 @@ function SetCoreResources(aiBrain, position, baseName)
 end
 
 function VentToPlatoon(platoon, aiBrain, plan)
-    LOG('Venting to new trueplatoon platoon')
     local ventPlatoon
     local platoonUnits = platoon:GetPlatoonUnits()
     local count = 0
@@ -6402,8 +6401,6 @@ function VentToPlatoon(platoon, aiBrain, plan)
         end
 
     end
-    LOG('We should be venting '..table.getn(platoonUnits)..' units')
-    LOG('After we have filtered dead units we get '..count..' units')
     if plan == 'LandCombatBehavior' then
         --LOG('We are venting to a new state machine')
         ventPlatoon = aiBrain:MakePlatoon('', '')

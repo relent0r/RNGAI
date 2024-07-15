@@ -1405,19 +1405,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                         totalTech3BuilderRate = totalTech3BuilderRate + bp.Economy.BuildRate
                         table.insert(tech3Engineers, eng)
                     end
-                    --[[
-                    if eng:IsIdleState() then
-                        LOG('Engineer in assist manager is idle id '..tostring(eng.UnitId))
-                        if eng.UnitBeingAssist then
-                            LOG('Eng has unit being assist, id is '..tostring(eng.UnitBeingAssist.UnitId))
-                            if not IsDestroyed(eng.UnitBeingAssist) then
-                                LOG('Eng has unit being assist, completion is '..tostring(eng.UnitBeingAssist:GetFractionComplete()))
-                            end
-                            if eng.AIPlatoonReference then
-                                LOG('This is a state machine engineer')
-                            end
-                        end
-                    end]]
                     totalBuildRate = totalBuildRate + bp.Economy.BuildRate
                     eng.Active = true
                     platoonCount = platoonCount + 1
