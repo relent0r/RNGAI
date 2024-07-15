@@ -347,6 +347,8 @@ ExitConditions = function(self,aiBrain)
     end
     if not self.dest then
         self:LogDebug(string.format('No self.dest in ExitConditions'))
+        self:ChangeState(self.DecideWhatToDo)
+        return
     end
     if VDist3Sq(self.dest,self.Pos) < 400 then
         self:LogDebug(string.format('Close to destination exit condition true'))
@@ -759,9 +761,6 @@ MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNu
     local AlliedPlatoons = aiBrain:GetPlatoonsList()
     local bMergedPlatoons = false
     for _,aPlat in AlliedPlatoons do
-        if aPlat.Vented then
-            LOG('Trying to merged with a vented platoon')
-        end
         if aPlat.MergeType ~= stateMachineType then
             continue
         end
@@ -807,9 +806,6 @@ MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNu
                     RNGINSERT(validUnits, u)
                     bValidUnits = true
                 end
-            end
-            if aPlat.Vented then
-                LOG('Trying to merged with a vented platoon, our mergetype is '..tostring(stateMachineType))
             end
             if bValidUnits then
                 --LOG("*AI DEBUG: Merging platoons " .. self.PlatoonName .. ": (" .. platPos[1] .. ", " .. platPos[3] .. ") and " .. aPlat.PlatoonName .. ": (" .. allyPlatPos[1] .. ", " .. allyPlatPos[3] .. ")")
@@ -1051,20 +1047,24 @@ function ExperimentalAirTargetLocalCheckRNG(aiBrain, position, platoon, maxRange
     return unitTable
 end
 
-FindExperimentalTargetRNG = function(aiBrain, platoon, experimentalPosition)
+FindExperimentalTargetRNG = function(aiBrain, platoon, layer, experimentalPosition)
     local im = IntelManagerRNG.GetIntelManager(aiBrain)
     if not im.MapIntelStats.ScoutLocationsBuilt then
         -- No target
         return
     end
 
-    local bestUnit = false
-    local bestBase = false
+    local bestUnit
+    local bestBase
     -- If we haven't found a target check the main bases radius for any units, 
     -- Check if there are any high priority units from the main base position. But only if we came online around that position.
     if experimentalPosition and VDist3Sq(experimentalPosition, aiBrain.BuilderManagers['MAIN'].Position) < 22500 then
         if not bestUnit then
-            bestUnit = RUtils.CheckHighPriorityTarget(aiBrain, nil, platoon)
+            if layer == 'Air' or layer == 'Water' then
+                bestUnit = RUtils.CheckHighPriorityTarget(aiBrain, nil, platoon, false, true)
+            else
+                bestUnit = RUtils.CheckHighPriorityTarget(aiBrain, nil, platoon, false, false)
+            end
             if bestUnit and not bestUnit.Dead then
                 bestBase = {}
                 bestBase.Position = bestUnit:GetPosition()
@@ -1222,9 +1222,6 @@ function GetClosestTargetByIMAP(aiBrain, platoon, position, threatType, searchFi
         local gameTime = GetGameTimeSeconds()
         local targetCandidates = {}
         for _, grid in threatcandidates do
-            LOG('Looking for targets at imap threat location '..tostring(grid.Position[1])..':'..tostring(grid.Position[3]))
-            LOG('Type is  '..tostring(grid.Type))
-            LOG('Threat is  '..tostring(grid.Threat))
             local targetUnits = aiBrain:GetUnitsAroundPoint(searchFilter, grid.Position, aiBrain.BrainIntel.IMAPConfig.OgridRadius, 'Enemy')
             if not table.empty(targetUnits) then
                 local antiThreat = aiBrain:GetThreatAtPosition(grid.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, avoidThreat)
@@ -1265,19 +1262,15 @@ function GetClosestTargetByIMAP(aiBrain, platoon, position, threatType, searchFi
                     end
                 end
                 if not table.empty(targetCandidates) then
-                    LOG('targetCandidates returned with '..table.getn(targetCandidates))
                     return targetCandidates
                 else
-                    LOG('targetCandidates table is empty ')
                     return false
                 end
             else
-                LOG('targetUnits table is empty ')
                 return false
             end
         end
     else
-        LOG('targetCandidates table is empty ')
         return false
     end
 end
@@ -1336,11 +1329,6 @@ end
 BuildAIDoneRNG = function(unit, params)
     if unit.Active or unit.Dead then return end
     if not unit.AIPlatoonReference then return end
-    if unit.PlatoonHandle.EngineerAssistPlatoon then
-        LOG('This is an engineer assist manager engineer getting a build done callback')
-    end
-    --RNGLOG("*AI DEBUG: MexBuildAIRNG removing queue item")
-    --RNGLOG('Queue Size is '..RNGGETN(unit.EngineerBuildQueue))
     if unit.EngineerBuildQueue and not table.empty(unit.EngineerBuildQueue) then
         table.remove(unit.EngineerBuildQueue, 1)
     end
@@ -1358,17 +1346,12 @@ BuildAIFailedRNG = function(unit, params)
     if not unit.BuildFailedCount then
         unit.BuildFailedCount = 0
     end
-    if unit.PlatoonHandle.EngineerAssistPlatoon then
-        LOG('This is an engineer assist manager engineer getting a build failed callback')
-    end
     unit.BuildFailedCount = unit.BuildFailedCount + 1
     --LOG('Current fail count is '..unit.FailedCount)
     if unit.BuildFailedCount > 2 and not table.empty(unit.EngineerBuildQueue) then
-        LOG('Engineer has failed to build item multiple times, removing from queue, current queue size is '..table.getn(unit.EngineerBuildQueue))
         table.remove(unit.EngineerBuildQueue, 1)
         unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.PerformBuildTask)
     elseif not unit.PlatoonHandle.HighValueDiscard then
-        LOG('Engineer has failed to build item, attempting restart '..unit.PlatoonHandle.BuilderName)
         if not unit.PerformingBuildTask then
             unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
         else
@@ -1385,7 +1368,6 @@ StartBuildRNG = function(eng, unit)
         local locationType = eng.PlatoonHandle.PlatoonData.Construction.LocationType
         local highValue = eng.PlatoonHandle.PlatoonData.Construction.HighValue
         if locationType and highValue then
-            LOG('Value Unit being built')
             local aiBrain = eng.Brain
             local multiplier = aiBrain.EcoManager.EcoMultiplier
             if aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt then
@@ -1410,7 +1392,6 @@ StartBuildRNG = function(eng, unit)
                         if queuedStructures[unitBp.TechCategory][eng.EntityId] then
                             queuedStructures[unitBp.TechCategory][eng.EntityId] = nil
                         end
-                        LOG('Attempting to cancel and reclaim unit')
                         eng.PlatoonHandle.BuilderData = {
                             Unit = unit
                         }
@@ -1688,9 +1669,13 @@ function CanBuildOnMassMexPlatoon(aiBrain, engPos, distance)
                     mexBorderWarn = true
                 end 
                 local mexDistance = VDist2Sq( v.position[1],v.position[3], engPos[1], engPos[3] )
-                if mexDistance < distance and aiBrain:CanBuildStructureAt('ueb1103', v.position) and NavUtils.CanPathTo('Amphibious', engPos, v.position) then
-                    --RNGLOG('mexDistance '..mexDistance)
-                    table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v, BorderWarning = mexBorderWarn})
+                if mexDistance < distance and NavUtils.CanPathTo('Amphibious', engPos, v.position) then
+                    if aiBrain:CanBuildStructureAt('ueb1103', v.position) then
+                        table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v, BorderWarning = mexBorderWarn})
+                    elseif aiBrain:GetNumUnitsAroundPoint(categories.MASSEXTRACTION, v.position, 1 , 'Enemy') > 1 then
+                        LOG('Unable to build at location but I found an enemy extractor')
+                        table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v, BorderWarning = mexBorderWarn})
+                    end
                 end
             end
         end
@@ -1851,7 +1836,7 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType, whatToBui
             end 
         end 
     end 
-    --RNGLOG('AIBuildBaseTemplateOrderedRNG Unsuccessful build')
+    LOG('AIBuildBaseTemplateOrderedRNG Unsuccessful build of unit '..tostring(whatToBuild))
     return
 end
 

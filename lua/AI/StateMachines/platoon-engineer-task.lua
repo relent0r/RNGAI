@@ -16,10 +16,10 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonEngineerBehavior
         Main = function(self)
+            self:LogDebug(string.format('Welcome to the EngineerTaskBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             self.LocationType = self.BuilderData.LocationType
             self.MovementLayer = self:GetNavigationalLayer()
-            self:LogDebug(string.format('Welcome to the engineer state machine'))
             local platoonUnits = self:GetPlatoonUnits()
             for _, eng in platoonUnits do
                 if not eng.BuilderManagerData then
@@ -29,7 +29,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                    eng.BuilderManagerData.EngineerManager = aiBrain.BuilderManagers['FLOATING'].EngineerManager
                 end
                 if eng:IsUnitState('Attached') then
-                    LOG('Engineer Attached to something, try to detach')
                     if aiBrain:GetNumUnitsAroundPoint(categories.TRANSPORTFOCUS, eng:GetPosition(), 10, 'Ally') > 0 then
                         eng:DetachFrom()
                         coroutine.yield(20)

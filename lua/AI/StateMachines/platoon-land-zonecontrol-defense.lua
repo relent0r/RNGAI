@@ -38,14 +38,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonBehavior
         Main = function(self)
-
-            -- requires expansion markers
-            --LOG('Starting zone control')
-            if not import("/lua/sim/markerutilities/expansions.lua").IsGenerated() then
-                self:LogWarning('requires generated expansion markers')
-                self:ChangeState(self.Error)
-                return
-            end
+            self:LogDebug(string.format('Welcome to the ZoneControlDefenseBehavior StateMachine'))
 
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
@@ -449,19 +442,12 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.Transporting)
                         return
                     elseif reason == "TooMuchThreat" and NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.BuilderData.Position) then
-                        LOG('TooMuchThreat along path, we need to analyse it')
-                        for _, v in threats do
-                            LOG('Threat Table item '..tostring(v))
-                        end
-                        LOG('Looking for alternative stage pos ')
                         local alternativeStageZone = aiBrain.IntelManager:GetClosestZone(aiBrain, false, self.BuilderData.Position, false, true, 2)
                         if alternativeStageZone then
                             local alternativeStagePos = aiBrain.Zones.Land.zones[alternativeStageZone].pos
-                            LOG('Found alternative stage pos ')
                             local rx = self.Pos[1] - alternativeStagePos[1]
                             local rz = self.Pos[3] -alternativeStagePos[3]
                             local stageDistance = rx * rx + rz * rz
-                            LOG('alternative stage distance is  '..tostring(stageDistance))
                             if stageDistance > 2500 then
                                 path, reason, distance  = AIAttackUtils.PlatoonGeneratePathToRNG(self.MovementLayer, self.Pos, alternativeStagePos, 300, 20)
                             end

@@ -61,7 +61,6 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                 categories.STRUCTURE * categories.FACTORY * ( categories.TECH2 + categories.TECH3 ),
                 categories.STRUCTURE * categories.RADAR * (categories.TECH2 + categories.TECH3)
             }
-            self:LogDebug(string.format('Strategic TML Max Weapon Range is '..tostring(self.MaxPlatoonWeaponRange)))
             self:ChangeState(self.DecideWhatToDo)
             return
         end,

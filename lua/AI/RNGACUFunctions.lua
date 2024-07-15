@@ -157,17 +157,20 @@ function CDRBrainThread(cdr)
         end
         if cdr.Active then
             if cdr.DistanceToHome > 900 and cdr.CurrentEnemyThreat > 0 then
-                if cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat and not cdr.SupportPlatoon or IsDestroyed(cdr.SupportPlatoon) and (gameTime - 15) > lastPlatoonCall then
+                if cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat and (not cdr.SupportPlatoon or IsDestroyed(cdr.SupportPlatoon) and (gameTime - 15) > lastPlatoonCall) then
+                    --LOG('Calling platoon, last call was '..tostring(lastPlatoonCall)..' game time is '..tostring(gameTime))
                     --RNGLOG('CDR Support Platoon doesnt exist and I need it, calling platoon')
                     --RNGLOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
                     CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.2 - cdr.CurrentFriendlyThreat)
                     lastPlatoonCall = gameTime
                 elseif cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat and (gameTime - 25) > lastPlatoonCall then
+                    --LOG('Calling platoon, last call was '..tostring(lastPlatoonCall)..' game time is '..tostring(gameTime))
                     --RNGLOG('CDR Support Platoon exist but we have too much threat, calling platoon')
                     --RNGLOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
                     CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.2 - cdr.CurrentFriendlyThreat)
                     lastPlatoonCall = gameTime
                 elseif cdr.Health < 6000 and (gameTime - 15) > lastPlatoonCall then
+                    --LOG('Calling platoon, last call was '..tostring(lastPlatoonCall)..' game time is '..tostring(gameTime))
                     CDRCallPlatoon(cdr, 20)
                 end
             end
@@ -461,7 +464,7 @@ function CDRThreatAssessmentRNG(cdr)
             -- Example call
             calculateConfidence(aiBrain, cdr, friendlyUnitThreat, enemyUnitThreat, cdr.DistanceToHome, enemyThreatRatio, weights)
 
-            LOG('Current cdr confidence is '..tostring(cdr.Confidence))
+            --LOG('Current cdr confidence is '..tostring(cdr.Confidence))
 
             if aiBrain.RNGEXP then
                 cdr.MaxBaseRange = 80
@@ -476,12 +479,12 @@ function CDRThreatAssessmentRNG(cdr)
                     else
                         safetyCutOff = 120
                     end
-                    cdr.MaxBaseRange = math.max(safetyCutOff, cdr.DefaultRange * cdr.Confidence)
+                    cdr.MaxBaseRange = math.min(math.max(safetyCutOff, cdr.DefaultRange * cdr.Confidence), 385)
                 else
                     cdr.MaxBaseRange = math.max(35, math.min(180, cdr.DefaultRange * cdr.Confidence))
                 end
             end
-            LOG('Current CDR Max Base Range '..cdr.MaxBaseRange)
+            --LOG('Current CDR Max Base Range '..cdr.MaxBaseRange)
         end
         coroutine.yield(20)
     end
@@ -587,11 +590,8 @@ function CDRCallPlatoon(cdr, threatRequired)
     if not aiBrain then
         return
     end
-    if aiBrain.RNGDEBUG then
-        RNGLOG('ACU call platoon , threat required '..threatRequired)
-    end
+    --LOG('ACU call platoon , threat required '..threatRequired)
     threatRequired = threatRequired + 10
-
     local supportPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
     --local platoonPos = GetPlatoonPosition(supportPlatoonAvailable)
     --LOG('Support Platoon exist, where is it?'..repr(platoonPos))
@@ -599,9 +599,6 @@ function CDRCallPlatoon(cdr, threatRequired)
     local bMergedPlatoons = false
     local platoonTable = {}
     for _,aPlat in AlliedPlatoons do
-        if aPlat.Vented then
-            LOG('ACU trying to merge a Vented platoon')
-        end
         if aPlat == cdr.PlatoonHandle or aPlat == supportPlatoonAvailable then
             continue
         end
@@ -647,11 +644,12 @@ function CDRCallPlatoon(cdr, threatRequired)
                     for _,u in units do
                         if not u.Dead and not u:IsUnitState('Attached') then
                             threatValue = threatValue + u.Blueprint.Defense.SurfaceThreatLevel
-                            if EntityCategoryContains(categories.DIRECTFIRE, u) then
+                            local cats = u.Blueprint.CategoriesHash
+                            if cats.DIRECTFIRE then
                                 RNGINSERT(validUnits.Attack, u)
-                            elseif EntityCategoryContains(categories.INDIRECTFIRE, u) then
+                            elseif cats.INDIRECTFIRE then
                                 RNGINSERT(validUnits.Artillery, u)
-                            elseif EntityCategoryContains(categories.ANTIAIR + categories.SHIELD, u) then
+                            elseif cats.ANTIAIR or cats.SHIELD then
                                 RNGINSERT(validUnits.Guard, u)
                             else
                                 RNGINSERT(validUnits.Attack, u)
@@ -676,8 +674,8 @@ function CDRCallPlatoon(cdr, threatRequired)
     end
     local dontStopPlatoon = false
     if bValidUnits and not supportPlatoonAvailable then
-        --RNGLOG('No Support Platoon, creating new one')
-        supportPlatoonAvailable = aiBrain:MakePlatoon('ACUSupportPlatoon', 'ACUSupportRNG')
+        --LOG('No Support Platoon, creating new one')
+        supportPlatoonAvailable = aiBrain:MakePlatoon('', '')
         supportPlatoonAvailable:UniquelyNamePlatoon('ACUSupportPlatoon')
         aiBrain:ForkThread(StateUtils.ZoneUpdate)
         if not table.empty(validUnits.Attack) then
@@ -694,7 +692,7 @@ function CDRCallPlatoon(cdr, threatRequired)
         end
         bMergedPlatoons = true
     elseif bValidUnits and PlatoonExists(aiBrain, supportPlatoonAvailable)then
-        --RNGLOG('Support Platoon already exist, assigning to existing one')
+        --LOG('Support Platoon already exist, assigning to existing one')
         if not table.empty(validUnits.Attack) then
             aiBrain:AssignUnitsToPlatoon(supportPlatoonAvailable, validUnits.Attack, 'Attack', 'None')
         end

@@ -495,7 +495,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
         return false
     end
     table.sort(threatTable, function(a,b) return a[3] > b[3] end)
-    LOG('Returning threat table with '..tostring(table.getn(threatTable))..' entries')
+    --LOG('Returning threat table with '..tostring(table.getn(threatTable))..' entries')
     --local pathablePos = CheckNavalPathingRNG(aiBrain, platoon, {x, y, z}, maxRange, selectedWeaponArc)
     
     return threatTable

@@ -67,6 +67,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
 
         ---@param self AIExperimentalFatBoyBehavior
         Main = function(self)
+            self:LogDebug(string.format('Welcome to the ExperimentalFatBoyBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             if not self.MovementLayer then
                 AIAttackUtils.GetMostRestrictiveLayerRNG(self)
@@ -315,7 +316,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                 return
             end
             if not target then
-                target, _ = StateUtils.FindExperimentalTargetRNG(aiBrain, self, experimentalPosition)
+                target, _ = StateUtils.FindExperimentalTargetRNG(aiBrain, self, self.MovementLayer, experimentalPosition)
             end
             if target and not IsDestroyed(target) then
                 --LOG('We have a target from FindExperimentalTargetRNG')
@@ -412,6 +413,8 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                 -- check for opportunities
                 local wx = waypoint[1]
                 local wz = waypoint[3]
+                local lastDist
+                local timeout = 0
                 while not IsDestroyed(self.ExperimentalUnit) do
                     WaitTicks(20)
                     if IsDestroyed(self.ExperimentalUnit) then
@@ -425,6 +428,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     -- check if we're near our current waypoint
                     local dx = position[1] - wx
                     local dz = position[3] - wz
+                    local wayPointDist = dx * dx + dz * dz
                     if dx * dx + dz * dz < navigateDistanceCutOff then
                         --LOG('close to waypoint position in second loop')
                         --LOG('distance is '..(dx * dx + dz * dz))
@@ -434,6 +438,13 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                         end
                         break
                     end
+                    if not lastDist or lastDist == wayPointDist then
+                        timeout = timeout + 1
+                        if timeout > 6 then
+                            break
+                        end
+                    end
+                    lastDist = wayPointDist
                     --LOG('Current TotalSuroundingThreat '..repr(self.EnemyThreatTable.TotalSuroundingThreat))
                     -- check for threats
                     WaitTicks(20)

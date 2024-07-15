@@ -26,6 +26,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonEngineerBehavior
         Main = function(self)
+            self:LogDebug(string.format('Welcome to the EngineerResourceBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             self.LocationType = self.PlatoonData.LocationType
             self.StartCycle = 0
@@ -60,7 +61,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             StateUtils.SetupStateBuildAICallbacksRNG(self.eng)
             local engPos = self.eng:GetPosition()
             local maxMarkerDistance = self.PlatoonData.Construction.MaxDistance or 256
-            LOG('Resource engineer max marker distance is '..tostring(maxMarkerDistance))
             maxMarkerDistance = maxMarkerDistance * maxMarkerDistance
             local zoneMarkers = {}
             for _, v in aiBrain.Zones.Land.zones do
@@ -157,9 +157,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             end
             if not zoneFound then
                 if self.StartCycle > 3 then
-                    LOG('Start Cycle is greater than 3, disband platoon')
                     self:LogDebug(string.format('Start Cycle is greater than 3, disband platoon, eng id is '..tostring(eng.EntityId)))
-                    LOG('Eng id is '..tostring(eng.EntityId))
                     self:ExitStateMachine()
                 end
                 local zoneMarkers = {}
@@ -176,7 +174,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 end
                 self.ZoneMarkers = zoneMarkers
                 self.StartCycle = self.StartCycle + 1
-                LOG('Start Cycle incremented due to no markers found '..self.StartCycle)
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
@@ -347,10 +344,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         if i>=3 then
                             local bool,markers=StateUtils.CanBuildOnMassMexPlatoon(aiBrain, path[i], 25)
                             if bool then
-                                --local massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, waypointPath)
-                                --RNGLOG('Mass Marker'..repr(massMarker))
-                                --RNGLOG('Attempting second mass marker')
-                                LOG('Trying to builder on mass marker along path, current build queue length is '..table.getn(eng.EngineerBuildQueue))
                                 local buildQueueReset = eng.EngineerBuildQueue or {}
                                 eng.EngineerBuildQueue = {}
                                 for _,massMarker in markers do
@@ -371,7 +364,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                     for k, v in buildQueueReset do
                                         RNGINSERT(eng.EngineerBuildQueue, v)
                                     end
-                                    LOG('Rebuild original build queue, current length is '..table.getn(eng.EngineerBuildQueue))
                                 end
                             end
                         end
@@ -380,7 +372,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         IssueMove({eng}, path[i])
                     end
                     if eng.EngineerBuildQueue then
-                        LOG('Looping through Build Queue and replaying build commands'..table.getn(eng.EngineerBuildQueue))
                         for k, v in eng.EngineerBuildQueue do
                             if eng.EngineerBuildQueue[k].PathPoint then
                                 continue
@@ -513,10 +504,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 else
-                    LOG('Engineer still trying to move directly to path, navreason during CanPathTo was '..tostring(navReason))
-                    LOG('reason during GenerateSafePath was '..tostring(reason))
                     if reason == 'TooMuchThreat' then
-                        LOG('Engineer Utility StateMachine threat too high along path, exit and look for another task')
                         coroutine.yield(30)
                         self:ExitStateMachine()
                         return

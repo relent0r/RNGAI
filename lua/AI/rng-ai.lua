@@ -231,9 +231,6 @@ AIBrain = Class(RNGAIBrainClass) {
             Radius = 0
             }
         self.MapWaterRatio = self:GetMapWaterRatio()
-        if true then
-            LOG('Water Ratio is '..self.MapWaterRatio)
-        end
 
         self.MapSize = 10
         local mapSizeX, mapSizeZ = GetMapSize()
@@ -2920,7 +2917,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 if v.FactoryManager.LocationActive and self.BuilderManagers[k].FactoryManager and not RNGTableEmpty(self.BuilderManagers[k].FactoryManager.FactoryList) then
                     if not self.BasePerimeterMonitor[k] then
-                        LOG('Creating BasePerimeter monitor table for '..tostring(k))
                         self.BasePerimeterMonitor[k] = {}
                     end
                     local enemyUnits = self:GetUnitsAroundPoint(categories.ALLUNITS - categories.SCOUT - categories.INSIGNIFICANTUNIT, self.BuilderManagers[k].FactoryManager.Location, perimeterMonitorRadius , 'Enemy')
@@ -4893,7 +4889,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     if self.cmanager.categoryspend.fact['Naval'] > (self.cmanager.income.r.m * self.ProductionRatios['Naval']) then
                         local deficit = self.cmanager.categoryspend.fact['Naval'] - (self.cmanager.income.r.m * self.ProductionRatios['Naval'])
-                        --RNGLOG('Naval Factory Deficit is '..deficit)
+                        --LOG('Naval Factory Deficit is '..deficit)
                         if self.BuilderManagers then
                             for k, v in self.BuilderManagers do
                                 if self.BuilderManagers[k].FactoryManager then
@@ -4903,7 +4899,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 if EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
                                                     if not f.Offline then
                                                         f.Offline = true
-                                                        --RNGLOG('Naval T1 Factory Taken offline')
+                                                        --LOG('Naval T1 Factory Taken offline')
                                                         deficit = deficit - 4
                                                     end
                                                 end
@@ -4912,7 +4908,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                                 end
                                             end
                                         end
-                                        --RNGLOG('Finished T1 Loop Naval Factory Deficit is '..deficit)
+                                        --LOG('Finished T1 Loop Naval Factory Deficit is '..deficit)
                                         if deficit <= 0 then
                                             break
                                         end
@@ -5042,7 +5038,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 if self.cmanager.categoryspend.fact['Naval'] < (self.cmanager.income.r.m * self.ProductionRatios['Naval']) then
                     local surplus = (self.cmanager.income.r.m * self.ProductionRatios['Naval']) - self.cmanager.categoryspend.fact['Naval']
-                    --RNGLOG('Naval Factory Surplus is '..surplus)
+                    --LOG('Naval Factory Surplus is '..surplus)
                     if self.BuilderManagers then
                         for k, v in self.BuilderManagers do
                             if v.Layer == 'Water' and self.BuilderManagers[k].FactoryManager then
@@ -5056,7 +5052,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                             if EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
                                                 if f.Offline then
                                                     f.Offline = false
-                                                    --RNGLOG('Naval T1 Factory put online')
+                                                    --LOG('Naval T1 Factory put online')
                                                     surplus = surplus - 4
                                                 end
                                             elseif EntityCategoryContains(categories.TECH2 * categories.NAVAL, f) then
@@ -5466,13 +5462,17 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.EXPERIMENTAL, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC, type = 'Completion'},
+                    {cat = categories.STRUCTURE * categories.EXPERIMENTAL, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
                     {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade' }, 
                     {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'}, 
+                    {cat = categories.STRUCTURE * categories.SHIELD, type = 'Completion'}, 
+                    {cat = categories.STRUCTURE * categories.SHIELD, type = 'Upgrade'},
                 }
             end
-            --RNGLOG('EngineerAssistManager State is '..state)
-            --RNGLOG('Current EngineerAssistManager build power '..self.EngineerAssistManagerBuildPower..' build power required '..self.EngineerAssistManagerBuildPowerRequired)
+            --LOG('EngineerAssistManager State is '..state)
+            --LOG('Current EngineerAssistManager build power '..self.EngineerAssistManagerBuildPower..' build power required '..self.EngineerAssistManagerBuildPowerRequired)
+            --LOG('Min Assist Power is '..tostring(minAssistPower))
             --RNGLOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
             --RNGLOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
             if self.RNGEXP and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.9 and self.EngineerAssistManagerBuildPower <= 30 then
@@ -5497,7 +5497,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('EngineerAssistManagerBuildPower being set to 5')
                 self.EngineerAssistManagerActive = true
                 self.EngineerAssistManagerBuildPowerRequired = 5
-            elseif self.EngineerAssistManagerBuildPower == self.EngineerAssistManagerBuildPowerRequired and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.7 then
+            elseif self.EngineerAssistManagerBuildPower == self.EngineerAssistManagerBuildPowerRequired and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.8 then
                 --RNGLOG('EngineerAssistManagerBuildPower matches EngineerAssistManagerBuildPowerRequired, not add or removal')
                 coroutine.yield(30)
             else
@@ -6050,7 +6050,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
-        LOG('Civilian unit count is '..table.getn(civUnits))
         if not table.empty(civUnits) then
             self.EnemyIntel.CivilianCaptureUnits = civUnits
         end
@@ -6098,7 +6097,6 @@ AIBrain = Class(RNGAIBrainClass) {
             if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.CategoriesHash.ANTINAVY 
             and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy == 0 and unit.PlatoonHandle.StateName ~= 'Retreating' then
                 unit.PlatoonHandle:LogDebug(string.format('Naval retreat callback fired'))
-                LOG('Naval Platoon being told to retreat due to antinavy, current antinavy is '..tostring(unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy))
                 unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.Retreating)
             end
         end
@@ -6115,7 +6113,6 @@ AIBrain = Class(RNGAIBrainClass) {
             if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and (instigator.Blueprint.CategoriesHash.ANTINAVY or instigator.Blueprint.CategoriesHash.BOMBER or instigator.Blueprint.CategoriesHash.GROUNDATTACK) and instigator.Blueprint.CategoriesHash.AIR and not instigator.Blueprint.CategoriesHash.TRANSPORTFOCUS
             and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiAir == 0 and unit.PlatoonHandle.StateName ~= 'Retreating' then
                 unit.PlatoonHandle:LogDebug(string.format('Naval retreat callback fired'))
-                LOG('Naval Platoon being told to retreat due to air antinavy, current antiair is '..tostring(unit.PlatoonHandle.CurrentPlatoonThreatAntiAir))
                 unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.Retreating)
             end
         end

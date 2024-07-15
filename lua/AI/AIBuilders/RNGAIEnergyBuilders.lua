@@ -304,7 +304,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1Engineer Hydro 60',
         PlatoonTemplate = 'EngineerStateT123RNG',
-        Priority = 1010,
+        Priority = 1051,
         DelayEqualBuildPlattons = {'Energy', 3},
         InstanceCount = 1,
         BuilderConditions = { 

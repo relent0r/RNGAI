@@ -19,7 +19,6 @@ end
 local ShieldResponse = function(self, aiBrain, builderManager)
     --RNGLOG('LocationType is '..builderManager.LocationType)
     if aiBrain.emanager.Artillery.T3 > 0 or aiBrain.emanager.Artillery.T4 > 0 or aiBrain.emanager.Satellite.T4 > 0 then
-        LOG('Shield Response is priority function is enabled')
         return 950
     else
         return 0

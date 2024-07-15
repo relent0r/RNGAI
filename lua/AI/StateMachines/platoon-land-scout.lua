@@ -41,12 +41,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonLandScoutBehavior
         Main = function(self)
-            -- requires expansion markers
-            if not import("/lua/sim/markerutilities/expansions.lua").IsGenerated() then
-                self:LogWarning('requires generated expansion markers')
-                self:ChangeState(self.Error)
-                return
-            end
+            self:LogDebug(string.format('Welcome to the LandScoutBehavior StateMachine'))
 
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
@@ -86,7 +81,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonLandScoutBehavior
         Main = function(self)
-            LOG('Scout StateMachine DecideWhatToDo')
+            --LOG('Scout StateMachine DecideWhatToDo')
             local aiBrain = self:GetBrain()
             local scout = self.ScoutUnit
             local scoutPos = scout:GetPosition()
@@ -129,22 +124,28 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            if self.BuilderData.SupportUnit and not self.BuilderData.SupportUnit.Dead then
+            if (self.BuilderData.SupportUnit and not self.BuilderData.SupportUnit.Dead) or (self.BuilderData.SupportPlatoon and not IsDestroyed(self.BuilderData.SupportPlatoon)) then
                 self:LogDebug(string.format('We are going to support a unit'))
                 local checkRadius = self.IntelRange + 5
-                local supportUnitPos = self.BuilderData.SupportUnit:GetPosition()
-                local px = supportUnitPos[1] - scoutPos[1]
-                local pz = supportUnitPos[3] - scoutPos[3]
+                local supportPos
+                if self.BuilderData.SupportUnit then
+                    supportPos = self.BuilderData.SupportUnit:GetPosition()
+                elseif self.BuilderData.SupportPlatoon then
+                    supportPos = self.BuilderData.SupportPlatoon:GetPlatoonPosition()
+                else
+                    WARN('Scout has been asked to support something but the data is nil')
+                end
+                local px = supportPos[1] - scoutPos[1]
+                local pz = supportPos[3] - scoutPos[3]
                 local dist = px * px + pz * pz
                 if dist < checkRadius * checkRadius then
                     self:ChangeState(self.SupportUnit)
                     return
                 end
-
             end
             local targetData, scoutType = RUtils.GetLandScoutLocationRNG(self, aiBrain, scout)
             if targetData then
-                LOG('Scout StateMachine scoutType is '..tostring(scoutType))
+                --LOG('Scout StateMachine scoutType is '..tostring(scoutType))
                 --Can we get there safely?
                 if scoutType == 'AssistUnit' and not targetData.Dead then
                     local supportUnitPos = targetData:GetPosition()
@@ -794,6 +795,8 @@ LandScoutThreatThread = function(aiBrain, platoon)
         local enemyThreat = 0
         local unitToAttack
         local unitToRetreat
+        local supportUnit
+        local supportPlatoon
         if GetNumUnitsAroundPoint(aiBrain, unitCatCheck, platPos, checkRadius, 'Enemy') > 0 then
             local enemyUnits = GetUnitsAroundPoint(aiBrain, unitCatCheck, platPos, checkRadius, 'Enemy')
             for _, v in enemyUnits do
@@ -802,9 +805,17 @@ LandScoutThreatThread = function(aiBrain, platoon)
                     unitToAttack = v
                 elseif platoon.StateName ~= 'Retreating' and not v.Dead and ( platoon.StateName ~= 'Navigating' and not platoon.BuilderData.Retreat )then
                     unitToRetreat = v
+                    if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
+                        supportUnit = platoon.BuilderData.SupportUnit
+                    end
+                    if platoon.BuilderData.SupportPlatoon and not IsDestroyed(platoon.BuilderData.SupportPlatoon) then
+                        supportPlatoon = platoon.BuilderData.SupportPlatoon
+                    end
                     platoon.BuilderData = {
                         Position = unitToRetreat:GetPosition(),
-                        RetreatFrom = unitToRetreat
+                        RetreatFrom = unitToRetreat,
+                        SupportUnit = supportUnit or nil,
+                        SupportPlatoon = supportPlatoon or nil
                     }
                     platoon:ChangeState(platoon.Retreating)
                     coroutine.yield(10)
@@ -821,9 +832,17 @@ LandScoutThreatThread = function(aiBrain, platoon)
                         local cz = platPos[3] - oldEnemyPos[3]
                         local oldEnemyDistance = cx * cx + cz * cz
                         if enemyDistance < oldEnemyDistance then
+                            if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
+                                supportUnit = platoon.BuilderData.SupportUnit
+                            end
+                            if platoon.BuilderData.SupportPlatoon and not IsDestroyed(platoon.BuilderData.SupportPlatoon) then
+                                supportPlatoon = platoon.BuilderData.SupportPlatoon
+                            end
                             platoon.BuilderData = {
                                 Position = unitPos,
-                                RetreatFrom = v
+                                RetreatFrom = v,
+                                SupportUnit = supportUnit or nil,
+                                SupportPlatoon = supportPlatoon or nil
                             }
                             coroutine.yield(2)
                             break
@@ -842,9 +861,17 @@ LandScoutThreatThread = function(aiBrain, platoon)
                         local cz = platPos[3] - oldEnemyPos[3]
                         local oldEnemyDistance = cx * cx + cz * cz
                         if enemyDistance < oldEnemyDistance then
+                            if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
+                                supportUnit = platoon.BuilderData.SupportUnit
+                            end
+                            if platoon.BuilderData.SupportPlatoon and not IsDestroyed(platoon.BuilderData.SupportPlatoon) then
+                                supportPlatoon = platoon.BuilderData.SupportPlatoon
+                            end
                             platoon.BuilderData = {
                                 Position = unitPos,
-                                RetreatFrom = v
+                                RetreatFrom = v,
+                                SupportUnit = supportUnit or nil,
+                                SupportPlatoon = supportPlatoon or nil
                             }
                             coroutine.yield(2)
                             platoon:ChangeState(platoon.Retreating)
@@ -852,9 +879,17 @@ LandScoutThreatThread = function(aiBrain, platoon)
                             break
                         end
                     elseif enemyDistance < checkRadius * checkRadius then
+                        if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
+                            supportUnit = platoon.BuilderData.SupportUnit
+                        end
+                        if platoon.BuilderData.SupportPlatoon and not IsDestroyed(platoon.BuilderData.SupportPlatoon) then
+                            supportPlatoon = platoon.BuilderData.SupportPlatoon
+                        end
                         platoon.BuilderData = {
                             Position = unitPos,
-                            RetreatFrom = v
+                            RetreatFrom = v,
+                            SupportUnit = supportUnit or nil,
+                            SupportPlatoon = supportPlatoon or nil
                         }
                         coroutine.yield(2)
                         platoon:ChangeState(platoon.Retreating)

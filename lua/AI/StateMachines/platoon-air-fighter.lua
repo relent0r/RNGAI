@@ -39,14 +39,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonFighterBehavior
         Main = function(self)
-            -- requires expansion markers
-            --LOG('start Fighter platoon')
-            if not import("/lua/sim/markerutilities/expansions.lua").IsGenerated() then
-                self:LogWarning('requires generated expansion markers')
-                self:ChangeState(self.Error)
-                return
-            end
-
+            self:LogDebug(string.format('Welcome to the FighterBehavior StateMachine'))
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
                 self:LogWarning('requires generated navigational mesh')
@@ -130,9 +123,6 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 end
-                if target then
-                    LOG('Experimental found for fighter target, id is '..target.UnitId)
-                end
                 if not target or target.Dead then
                     --RNGLOG('FighterBehavior DecideWhatToDo Check targets at max radius')
                 -- Params aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted
@@ -144,9 +134,6 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                         Position = target:GetPosition()
                     }
                     --LOG('FighterBehavior found normal target AttackTarget')
-                    if target.Blueprint.CategoriesHash.EXPERIMENTAL then
-                        LOG('Attacking experimental')
-                    end
                     self:ChangeState(self.AttackTarget)
                     return
                 end
@@ -597,7 +584,7 @@ FighterThreatThreads = function(aiBrain, platoon)
                         if not aiBrain.BrainIntel.AirStagingRequired and aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) < 1 then
                             aiBrain.BrainIntel.AirStagingRequired = true
                         elseif not platoon.BuilderData.AttackTarget or platoon.BuilderData.AttackTarget.Dead then
-                            --LOG('Assigning unit to refuel platoon from refuel')
+                            LOG('Assigning unit to refuel platoon from refuel')
                             local plat = aiBrain:MakePlatoon('', '')
                             aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'attack', 'None')
                             import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Fighter', LocationType = platoon.LocationType}, plat, {unit})

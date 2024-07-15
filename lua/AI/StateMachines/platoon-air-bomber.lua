@@ -27,6 +27,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
 
             local aiBrain = self:GetBrain()
+            self:LogDebug(string.format('Welcome to the BomberBehavior StateMachine'))
             if self.PlatoonData.LocationType then
                 self.LocationType = self.PlatoonData.LocationType
             else
@@ -112,9 +113,10 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             end
             if not target then
                 self:LogDebug(string.format('Checking for ACU Snipe'))
-                local target, _, acuIndex = RUtils.CheckACUSnipe(aiBrain, 'Air')
+                local target, countRequired , acuIndex, strikeDamage = RUtils.CheckACUSnipe(aiBrain, 'Air')
                 if target then
-                    LOG('Bomber has acu via ACUSnipe')
+                    LOG('ACU Snipe found for bombers, strike damage required is '..tostring(strikeDamage))
+                    --LOG('Bomber has acu via ACUSnipe')
                     local enemyAcuHealth = aiBrain.EnemyIntel.ACU[acuIndex].HP
                     if self.PlatoonStrikeDamage > enemyAcuHealth * 0.80 or enemyAcuHealth < 2500 then
                         self.BuilderData = {

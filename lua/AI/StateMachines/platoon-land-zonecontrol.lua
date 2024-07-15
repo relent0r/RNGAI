@@ -35,14 +35,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonBehavior
         Main = function(self)
-
-            -- requires expansion markers
-            --LOG('Starting zone control')
-            if not import("/lua/sim/markerutilities/expansions.lua").IsGenerated() then
-                self:LogWarning('requires generated expansion markers')
-                self:ChangeState(self.Error)
-                return
-            end
+            self:LogDebug(string.format('Welcome to the ZoneControlBehavior StateMachine'))
 
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
@@ -254,15 +247,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     if aiBrain:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then
                         currentLabel = true
                     end
-                    if currentLabel then
-                        LOG('No transport available, use current label')
-                    else
-                        LOG('transport available, use any label')
-                    end
                     targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType, currentLabel)
-                    if not targetZone then
-                        LOG('No targetZone returned')
-                    end
                 end
                 if targetZone then
                     self.BuilderData = {

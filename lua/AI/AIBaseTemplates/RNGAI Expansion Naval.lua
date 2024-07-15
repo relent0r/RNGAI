@@ -3,7 +3,6 @@ BaseBuilderTemplate {
     BaseTemplateName = 'RNGAI Standard Expansion Naval',
     Builders = {
         'RNGAI Engineer Builder Naval Expansion',
-        --'RNGAI Mass Builder Expansion',
         'RNGAI Naval Assist',
         'RNGAI Naval Factory Reclaim',
 

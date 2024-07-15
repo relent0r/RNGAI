@@ -27,20 +27,22 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         end
 
         if not self.UseCenterPoint then
-            -- Find closest marker to averaged location
             rally = AIUtils.AIGetClosestMarkerLocationRNG(self, rallyType, position[1], position[3])
         elseif self.UseCenterPoint then
             -- use BuilderManager location
             rally = AIUtils.AIGetClosestMarkerLocationRNG(self, rallyType, position[1], position[3])
-            local zone = self.Brain.IntelManager:GetClosestZone(self.Brain, false, {position[1], 0, position[3]}, false, false, 2)
-            local expPoint = self.Brain.Zones.Land.zones[zone].pos
-
-            if expPoint and rally then
+            local altRally
+            if rallyType == 'Naval Rally Point' then
+                altRally = RUtils.GetRallyPoint(self.Brain, 'Water', position, 20, 60)
+            else
+                altRally = RUtils.GetRallyPoint(self.Brain, 'Land', position, 20, 60)
+            end
+            if altRally and rally then
                 local rallyPointDistance = VDist2(position[1], position[3], rally[1], rally[3])
-                local expansionDistance = VDist2(position[1], position[3], expPoint[1], expPoint[3])
+                local zoneDistance = VDist2(position[1], position[3], altRally[1], altRally[3])
 
-                if expansionDistance < rallyPointDistance then
-                    rally = expPoint
+                if zoneDistance < rallyPointDistance then
+                    rally = altRally
                 end
             end
         end
@@ -102,6 +104,53 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         return true
     end,
 
+    ---@param self FactoryBuilderManager
+    RallyPointMonitor = function(self)
+        if not self.Brain.RNG then
+            return RNGFactoryBuilderManager.RallyPointMonitor(self)
+        end
+        local navalLocation = self.Brain.BuilderManagers[self.LocationType].Layer == 'Water'
+        while true do
+            if self.LocationActive and self.RallyPoint then
+                -- LOG('*AI DEBUG: Checking Active Rally Point')
+                local newRally = false
+                local bestDist = 99999
+                local rallyheight = GetTerrainHeight(self.RallyPoint[1], self.RallyPoint[3])
+                if self.Brain:GetNumUnitsAroundPoint(categories.STRUCTURE, self.RallyPoint, 15, 'Ally') > 0 then
+                    -- LOG('*AI DEBUG: Searching for a new Rally Point Location')
+                    for x = -30, 30, 5 do
+                        for z = -30, 30, 5 do
+                            local height = GetTerrainHeight(self.RallyPoint[1] + x, self.RallyPoint[3] + z)
+                            if GetSurfaceHeight(self.RallyPoint[1] + x, self.RallyPoint[3] + z) > height or rallyheight > height + 10 or rallyheight < height - 10 then
+                                continue
+                            end
+                            local tempPos = { self.RallyPoint[1] + x, height, self.RallyPoint[3] + z }
+                            if navalLocation and not RUtils.PositionInWater(tempPos) then
+                                continue
+                            end
+                            if self.Brain:GetNumUnitsAroundPoint(categories.STRUCTURE, tempPos, 15, 'Ally') > 0 then
+                                continue
+                            end
+                            if not newRally or VDist2(tempPos[1], tempPos[3], self.RallyPoint[1], self.RallyPoint[3]) < bestDist then
+                                newRally = tempPos
+                                bestDist = VDist2(tempPos[1], tempPos[3], self.RallyPoint[1], self.RallyPoint[3])
+                            end
+                        end
+                    end
+                    if newRally then
+                        self.RallyPoint = newRally
+                        -- LOG('*AI DEBUG: Setting a new Rally Point Location')
+                        for k,v in self.FactoryList do
+                            IssueClearFactoryCommands({v})
+                            IssueFactoryRallyPoint({v}, self.RallyPoint)
+                        end
+                    end
+                end
+            end
+            WaitSeconds(300)
+        end
+    end,
+
     DelayBuildOrder = function(self,factory,bType,time)
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.DelayBuildOrder(self,factory,bType,time)
@@ -136,7 +185,6 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
             elseif EntityCategoryContains(categories.AIR, unit) then
                 self:SetupNewFactory(unit, 'Air')
             elseif EntityCategoryContains(categories.NAVAL, unit) then
-                --LOG('New naval factory setup for base '..self.LocationType)
                 self:SetupNewFactory(unit, 'Sea')
             else
                 self:SetupNewFactory(unit, 'Gate')

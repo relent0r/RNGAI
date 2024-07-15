@@ -764,18 +764,13 @@ function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory, 
     local baseposition = aiBrain.BuilderManagers[locationType].FactoryManager.Location
     --RNGLOG('Searching water path from base ['..locationType..'] position '..repr(baseposition))
     local EnemyNavalUnits = aiBrain:GetUnitsAroundPoint(unitCategory, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ, 'Enemy')
-    local path, reason
     for _, EnemyUnit in EnemyNavalUnits do
         if not EnemyUnit.Dead then
-            --RNGLOG('checking enemy factories '..repr(EnemyUnit:GetPosition()))
-            --RNGLOG('reason'..repr(reason))
             if NavUtils.CanPathTo('Water', baseposition, EnemyUnit:GetPosition()) then
-                --RNGLOG('Found a water path from base ['..locationType..'] to enemy position '..repr(EnemyUnit:GetPosition()))
                 return true
             end
         end
     end
-    --RNGLOG('Found no path to any target from naval base ['..locationType..']')
     return false
 end
 
@@ -1130,7 +1125,6 @@ function ArmyManagerBuild(aiBrain, uType, tier, unit)
     --RNGLOG('aiBrain.amanager.current[tier][unit] :'..aiBrain.amanager.Current[uType][tier][unit])
     local factionIndex = aiBrain:GetFactionIndex()
     if factionIndex > 4 then factionIndex = 5 end
-
     if not aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] or aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] == 0 then 
         --RNGLOG('Cant find unit '..unit..' in faction index ratio table') 
         return false 
@@ -1294,7 +1288,6 @@ function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
             return true
         end
         if availableIncome - aiBrain.cmanager.buildpower.eng.T3 > 0 then
-            LOG('Available income '..availableIncome..' minus t3 build power is true '..aiBrain.cmanager.buildpower.eng.T3)
             return true
         end
         if aiBrain.cmanager.income.r.m > (100 * multiplier) and aiBrain.cmanager.buildpower.eng.T3 < (225 * multiplier) then
@@ -1501,7 +1494,6 @@ function DefensiveClusterCloseRNG(aiBrain, locationType)
     local manager = aiBrain.BuilderManagers[locationType]
     if manager.FactoryManager.Location then
         if RUtils.DefensiveClusterCheck(aiBrain, manager.FactoryManager.Location) then
-            LOG('Build Condition Defensive Cluster Check is true')
             return true
         end
     end
@@ -1565,7 +1557,6 @@ function ExpansionBaseCountRNG(aiBrain, compareType, checkNum)
             count = count + 1
         end
     end
-    LOG('Expansion base count '..count)
     return count
 end
 

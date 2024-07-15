@@ -9,9 +9,6 @@ end
 function OnKilled(self, instigator, type, overkillRatio)
 
     local sourceUnit
-    if self.UnitId == 'uaa0203' then
-        LOG('Aeon Gunship just died')
-    end
     if instigator then
         if IsUnit(instigator) then
             sourceUnit = instigator

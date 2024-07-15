@@ -153,8 +153,9 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
                     end
                 end
                 if unit:IsUnitState("Moving") then
-                    if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, pos, 45, 'Enemy') > 0 then
-                        local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, pos, 45, 'Enemy')
+                    if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE + categories.MASSEXTRACTION, pos, 45, 'Enemy') > 0 then
+                        local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE + categories.MASSEXTRACTION, pos, 45, 'Enemy')
+                        local massExtractors = {}
                         for _, eunit in enemyUnits do
                             local enemyUnitPos = eunit:GetPosition()
                             if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, eunit) then
@@ -186,6 +187,18 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
                                     IssueMove({unit}, RUtils.AvoidLocation(enemyUnitPos, pos, 50))
                                     brokenPathMovement = true
                                     coroutine.yield(60)
+                                end
+                            elseif EntityCategoryContains(categories.MASSEXTRACTION, eunit) then
+                                table.insert(massExtractors, {Position = enemyUnitPos, Unit = eunit})
+                            end
+                        end
+                        if not brokenPathMovement and not table.empty(massExtractors) then
+                            for _, v in massExtractors do
+                                if not v.Unit.Dead and VDist3Sq(pos, v.Position) < 225 and v.Unit:GetFractionComplete() == 1 then
+                                    IssueClearCommands({unit})
+                                    IssueCapture({unit}, v.Unit)
+                                    brokenPathMovement = true
+                                    break
                                 end
                             end
                         end
@@ -753,12 +766,9 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
                         end
                     end
                 elseif (not retUnit) or (not distance or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
-                    LOG('Satellite, no shield found blocking target so we should be assigning it, numshields was '..tostring(numShields))
                     retUnit = unit
                     distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                     targetShields = 0
-                else
-                    LOG('Satellite, no target for some reason, number shields was '..tostring(numShields))
                 end
             end
         end
@@ -779,8 +789,6 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
         if retUnit then
             --RNGLOG('Satellite has target')
             return retUnit
-        else
-            LOG('Satellite did not get target')
         end
     end
 

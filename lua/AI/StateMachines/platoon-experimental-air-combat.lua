@@ -63,6 +63,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
 
         ---@param self AIExperimentalAirBehavior
         Main = function(self)
+            self:LogDebug(string.format('Welcome to the ExperimentalAirBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             if not self.MovementLayer then
                 AIAttackUtils.GetMostRestrictiveLayerRNG(self)
@@ -320,7 +321,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             end
             if not target then
                 self:LogDebug(string.format('No target, searching for standard experimental target'))
-                target, _ = StateUtils.FindExperimentalTargetRNG(aiBrain, self, experimentalPosition)
+                target, _ = StateUtils.FindExperimentalTargetRNG(aiBrain, self, self.MovementLayer, experimentalPosition)
             end
             if target and not IsDestroyed(target) then
                 self:LogDebug(string.format('Target found'))
@@ -394,10 +395,12 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             local endPoint = false
 
             local cache = { 0, 0, 0 }
+            IssueClearCommands({experimental})
 
-            while not IsDestroyed(self.ExperimentalUnit) do
-                local origin = self.ExperimentalUnit:GetPosition()
+            while not IsDestroyed(experimental) do
+                local origin = experimental:GetPosition()
                 waypoint, length = NavUtils.DirectionTo('Air', origin, destination, 120)
+                self:LogWarning(string.format('At start of navigation loop, waypoint is '..tostring(waypoint[1])..":"..tostring(waypoint[3])))
                 if StateUtils.PositionInWater(origin) then
                     self.VentGuardPlatoon = true
                     --LOG('GuardPlatoon Vent has gone true')
@@ -430,6 +433,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                 if experimental.GetNavigator then
                     local navigator = experimental:GetNavigator()
                     if navigator then
+                        self:LogWarning(string.format('Navigator goal is  '..tostring(waypoint[1])..":"..tostring(waypoint[3])))
                         navigator:SetGoal(waypoint)
                     end
                 else
@@ -438,12 +442,15 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                 -- check for opportunities
                 local wx = waypoint[1]
                 local wz = waypoint[3]
-                while not IsDestroyed(self.ExperimentalUnit) do
+                local lastDist
+                local timeout = 0
+                while not IsDestroyed(experimental) do
                     WaitTicks(20)
-                    if IsDestroyed(self.ExperimentalUnit) then
+                    
+                    if IsDestroyed(experimental) then
                         return
                     end
-                    local position = self.ExperimentalUnit:GetPosition()
+                    local position = experimental:GetPosition()
                     if self.EnemyThreatTable.TotalSuroundingThreat > 50 then
                         self:ChangeState(self.DecideWhatToDo)
                         return
@@ -451,12 +458,21 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     -- check if we're near our current waypoint
                     local dx = position[1] - wx
                     local dz = position[3] - wz
-                    if dx * dx + dz * dz < navigateDistanceCutOff then
+                    local wayPointDist = dx * dx + dz * dz
+                    if wayPointDist < navigateDistanceCutOff then
                         --LOG('close to waypoint position in second loop')
                         --LOG('distance is '..(dx * dx + dz * dz))
                         --LOG('CutOff is '..navigateDistanceCutOff)
                         break
                     end
+                    if not lastDist or lastDist == wayPointDist then
+                        timeout = timeout + 1
+                        if timeout > 6 then
+                            break
+                        end
+                    end
+                    lastDist = wayPointDist
+                    self:LogWarning(string.format('Inside navigation loop, distance to waypoint is  '..tostring(dx * dx + dz * dz)))
                     --LOG('Current TotalSuroundingThreat '..repr(self.EnemyThreatTable.TotalSuroundingThreat))
                     -- check for threats
                     WaitTicks(10)

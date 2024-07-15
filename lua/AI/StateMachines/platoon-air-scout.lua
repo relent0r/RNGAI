@@ -39,6 +39,7 @@ AIPlatoonAirScoutBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonAirScoutBehavior
         Main = function(self)
+            self:LogDebug(string.format('Welcome to the AirScoutBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             self.BaseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
             self.BaseMilitaryArea = aiBrain.OperatingAreas['BaseMilitaryArea']

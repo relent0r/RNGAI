@@ -40,13 +40,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonACUBehavior
         Main = function(self)
-            -- requires expansion markers
-            --LOG('ACU State machine is starting')
-            if not import("/lua/sim/markerutilities/expansions.lua").IsGenerated() then
-                self:LogWarning('requires generated expansion markers')
-                self:ChangeState(self.Error)
-                return
-            end
+            self:LogDebug(string.format('Welcome to the ACUBehavior StateMachine'))
 
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
@@ -145,13 +139,20 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.Navigating)
                     return
                 end
-                if expansionCount < 2 and VDist3Sq(cdr.Position, self.BuilderData.Position) <= 900 and not cdr.Caution then
+                if expansionCount < 2 and VDist3Sq(cdr.Position, self.BuilderData.Position) <= 900 and not cdr.Caution and not self.BuilderData.ExpansionBuilt then
                     self:LogDebug(string.format('We are at an expansion location, building base'))
                     self:ChangeState(self.Expand)
                     return
                 else
                     self:LogDebug(string.format('Remove expansion data'))
-                    self.BuilderData = {}
+                    self:LogDebug(string.format('Energy Stored at this point is '..tostring(brain:GetEconomyStored('ENERGY'))))
+                    if brain:GetEconomyStored('ENERGY') < 500 then
+                        self.BuilderData = {
+                            Loiter = true
+                        }
+                    else
+                        self.BuilderData = { }
+                    end
                 end
             end
             if (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) and GetEconomyIncome(brain, 'ENERGY') > 40 
@@ -446,7 +447,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.Retreating)
                     return
                 end
-                if table.getn(defenseTargets) > 0 then
+                if defenseTargets and table.getn(defenseTargets) > 0 then
                     self:LogDebug(string.format('We found defense targets'))
                     local acuDistance
                     for _, defUnit in defenseTargets do
@@ -457,19 +458,19 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 if defUnit.distance < acuDistance or defUnit.distance - acuDistance < 225 then
                                     if defUnit.unit.GetHealth and defUnit.unit:GetHealth() < 500 then
                                         target = defUnit.unit
-                                        LOG('ACU Def Targets : Health low PD target is '..tostring(target.UnitId))
+                                        --LOG('ACU Def Targets : Health low PD target is '..tostring(target.UnitId))
                                         self:LogDebug(string.format('We are switching targets to a PD'))
                                         break
                                     end
                                     if defUnit.Blueprint.Weapon[1].MaxRadius and cdr.WeaponRange > defUnit.Blueprint.Weapon[1].MaxRadius then
                                         target = defUnit.unit
-                                        LOG('ACU Def Targets : Advantage range available on PD target is '..tostring(target.UnitId))
+                                        --LOG('ACU Def Targets : Advantage range available on PD target is '..tostring(target.UnitId))
                                         self:LogDebug(string.format('We are switching targets to a PD'))
                                         break
                                     end
                                     if brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
                                         target = defUnit.unit
-                                        LOG('ACU Def Targets : OverCharge Available on PD target is '..tostring(target.UnitId))
+                                        --LOG('ACU Def Targets : OverCharge Available on PD target is '..tostring(target.UnitId))
                                         self:LogDebug(string.format('OverCharge Available on PD target'))
                                         break
                                     end
@@ -529,7 +530,20 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 end
-            elseif self.BuilderData.DefendExpansion then
+            elseif self.BuilderData.Loiter then
+                LOG('ACU : We are defending our expansion current stored energy is '..tostring(brain:GetEconomyStoredRatio('ENERGY')))
+                if brain:GetEconomyStored('ENERGY') < 500 and not brain:IsAnyEngineerBuilding(categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)) 
+                    and brain:GetCurrentUnits(categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)) < 1 then
+                    self.BuilderData.Construction = {
+                            BuildStructures = {
+                                'T1EnergyProduction',
+                            },
+                        }
+                    LOG('ACU : We are going to try and build a pgen')
+                    self:LogDebug(string.format('Trying to build energy'))
+                    self:ChangeState(self.StructureBuild)
+                    return
+                end
                 coroutine.yield(10)
             end
             if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < 6400 and not cdr.Caution and cdr.CurrentEnemyThreat < 25 then
@@ -989,8 +1003,11 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            --LOG('Wipe BuilderData in Structure build')
-            self.BuilderData = {}      
+            if self.BuilderData.Loiter then
+                self.BuilderData.Construction = nil
+            else
+                self.BuilderData = {}
+            end
             coroutine.yield(10)
             self:ChangeState(self.DecideWhatToDo)
             return

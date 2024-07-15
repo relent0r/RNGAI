@@ -36,12 +36,7 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonLandBombCombatBehavior
         Main = function(self)
-            -- requires expansion markers
-            if not import("/lua/sim/markerutilities/expansions.lua").IsGenerated() then
-                self:LogWarning('requires generated expansion markers')
-                self:ChangeState(self.Error)
-                return
-            end
+            self:LogDebug(string.format('Welcome to the LandBombCombatBehavior StateMachine'))
 
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
@@ -420,10 +415,6 @@ AssignToUnitsMachine = function(data, platoon, units)
             categories.STRUCTURE,
             categories.ALLUNITS,
         }
-        if data.Vented then
-            --LOG('This is a state machine that was vented from ACU support')
-            platoon.Vented = true
-        end
         if not platoon.LocationType then
             platoon.LocationType = platoon.PlatoonData.LocationType or 'MAIN'
         end

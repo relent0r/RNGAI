@@ -43,7 +43,6 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
             if not self.MovementLayer then
                 AIAttackUtils.GetMostRestrictiveLayerRNG(self)
             end
-            LOG('Data that came into the novax '..repr(self.PlatoonData))
             self.MachineStarted = true
             self.LocationType = self.PlatoonData.LocationType or 'MAIN'
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
@@ -77,7 +76,6 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
                 self.MaxSearchRadius = self.PlatoonData.SearchRadius or 50
             end
             self:SetPrioritizedTargetList('attack',self.atkPri)
-            LOG('Check platoon NovaxUnits table '..repr(self.NovaxUnits))
             self:LogDebug(string.format('Novax Max Weapon Range is '..tostring(self.MaxPlatoonWeaponRange)))
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -96,7 +94,6 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
             if not targetsAssigned then
                 local novaxCount = 0
                 local targetCount = 0
-                LOG('Looking for director target, max dps is '..tostring(self.MaxPlatoonDPS)..' self.Home is '..repr(self.Home))
                 local target = aiBrain:CheckDirectorTargetAvailable(false, false, 'SATELLITE', false, self.MaxPlatoonDPS, self.Home)
                 if target and not target.Dead then
                     self:LogDebug(string.format('Novax Director Target Found'))
@@ -121,7 +118,6 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
             if not targetsAssigned then
                 local novaxCount = 0
                 local targetCount = 0
-                LOG('Performing braintargetinrange, range is '..tostring(self.MaxSearchRadius))
                 self:LogDebug(string.format('Novax No director target, searching for prioritized at range '..self.MaxSearchRadius))
                 local target = AIUtils.AIFindUndefendedBrainTargetInRangeRNG(aiBrain, self, 'Attack', self.MaxSearchRadius, self.atkPri)
                 if target and not target.Dead then
@@ -236,7 +232,6 @@ ThreatThread = function(aiBrain, platoon)
 
     while aiBrain:PlatoonExists(platoon) do
         platoon.MaxPlatoonDPS = GetPlatoonDPS(platoon)
-        LOG('Current max dps '..platoon.MaxPlatoonDPS)
         coroutine.yield(35)
     end
 end

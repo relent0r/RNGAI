@@ -19,6 +19,7 @@ local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
+local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
 local LandRadiusDetectionCategory = (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * categories.LAND - categories.SCOUT)
 local LandRadiusScanCategory = categories.ALLUNITS - categories.NAVAL - categories.AIR - categories.SCOUT - categories.WALL - categories.INSIGNIFICANTUNIT
@@ -560,7 +561,17 @@ Platoon = Class(RNGAIPlatoonClass) {
             --aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
         end
         if not hydroPresent then
+            local failureCount = 0
             while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                if failureCount < 10 and GetEconomyStored(aiBrain, 'MASS') == 0 and GetEconomyTrend(aiBrain, 'MASS') == 0 then
+                    if not eng:IsPaused() then
+                        failureCount = failureCount + 1
+                        eng:SetPaused( true )
+                        coroutine.yield(7)
+                    end
+                elseif eng:IsPaused() then
+                    eng:SetPaused( false )
+                end
                 coroutine.yield(5)
             end
         end
@@ -608,7 +619,17 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
         end
         if not hydroPresent then
+            local failureCount = 0
             while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                if failureCount < 10 and GetEconomyStored(aiBrain, 'MASS') == 0 and GetEconomyTrend(aiBrain, 'MASS') == 0 then
+                    if not eng:IsPaused() then
+                        failureCount = failureCount + 1
+                        eng:SetPaused( true )
+                        coroutine.yield(7)
+                    end
+                elseif eng:IsPaused() then
+                    eng:SetPaused( false )
+                end
                 coroutine.yield(5)
             end
         end
@@ -704,7 +725,17 @@ Platoon = Class(RNGAIPlatoonClass) {
                         else
                             WARN('No buildLocation or whatToBuild during ACU initialization')
                         end
+                        local failureCount = 0
                         while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                            if failureCount < 10 and GetEconomyStored(aiBrain, 'MASS') == 0 and GetEconomyTrend(aiBrain, 'MASS') == 0 then
+                                if not eng:IsPaused() then
+                                    failureCount = failureCount + 1
+                                    eng:SetPaused( true )
+                                    coroutine.yield(7)
+                                end
+                            elseif eng:IsPaused() then
+                                eng:SetPaused( false )
+                            end
                             coroutine.yield(5)
                         end
                         if not aiBrain:IsAnyEngineerBuilding(categories.FACTORY * categories.AIR) then
@@ -766,7 +797,17 @@ Platoon = Class(RNGAIPlatoonClass) {
                             end
                         end
                     end
+                    local failureCount = 0
                     while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                        if failureCount < 10 and GetEconomyStored(aiBrain, 'MASS') == 0 and GetEconomyTrend(aiBrain, 'MASS') == 0 then
+                            if not eng:IsPaused() then
+                                failureCount = failureCount + 1
+                                eng:SetPaused( true )
+                                coroutine.yield(7)
+                            end
+                        elseif eng:IsPaused() then
+                            eng:SetPaused( false )
+                        end
                         coroutine.yield(5)
                     end
                 else
@@ -850,6 +891,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             if not eng:IsPaused() then
                                 failureCount = failureCount + 1
                                 eng:SetPaused( true )
+                                coroutine.yield(7)
                             end
                         elseif eng:IsPaused() then
                             eng:SetPaused( false )
@@ -858,7 +900,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             IssueClearCommands({eng})
                             break
                         end
-                        coroutine.yield(7)
+                        coroutine.yield(5)
                     end
                 end
             end
@@ -1194,10 +1236,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         if not aiBrain.RNG then
             return RNGAIPlatoonClass.PlatoonDisband(self)
         end
-        if self.Vented then
-            LOG('PlatoonDisband is is killing a vented platoon')
-            LOG(reprsl(debug.traceback()))
-        end
         if self.ArmyPool then
             WARN('AI WARNING: Platoon trying to disband ArmyPool')
             --LOG(reprsl(debug.traceback()))
@@ -1214,10 +1252,6 @@ Platoon = Class(RNGAIPlatoonClass) {
             v.ReclaimInProgress = nil
             v.CaptureInProgress = nil
             v.JobType = nil
-            if v.Blueprint.CategoriesHash.TRANSPORTFOCUS then
-                LOG('Disbanding platoon with transport in it')
-                LOG(reprsl(debug.traceback()))
-            end
             if v:IsPaused() then
                 v:SetPaused( false )
             end
@@ -1347,7 +1381,7 @@ Platoon = Class(RNGAIPlatoonClass) {
 
         while aiBrain:PlatoonExists(self) do
             coroutine.yield(1)
-            RNGLOG('aiBrain.EngineerAssistManagerEngineerCount '..aiBrain.EngineerAssistManagerEngineerCount)
+            --RNGLOG('aiBrain.EngineerAssistManagerEngineerCount '..aiBrain.EngineerAssistManagerEngineerCount)
             local totalBuildRate = 0
             local tech1Engineers = {}
             local tech2Engineers = {}
@@ -1357,12 +1391,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             local totalTech3BuilderRate = 0
             local platoonCount = 0
             local platUnits = GetPlatoonUnits(self)
-            LOG('Actual count '..tostring(table.getn(platUnits)))
+            --LOG('Actual count '..tostring(table.getn(platUnits)))
             for _, eng in platUnits do
                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
-                    if aiBrain.RNGDEBUG then
-                        eng:SetCustomName('I am at the start of the assist manager loop')
-                    end
                     local bp = eng.Blueprint
                     if bp.CategoriesHash.TECH1 then
                         totalTech1BuilderRate = totalTech1BuilderRate + bp.Economy.BuildRate
@@ -1374,6 +1405,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         totalTech3BuilderRate = totalTech3BuilderRate + bp.Economy.BuildRate
                         table.insert(tech3Engineers, eng)
                     end
+                    --[[
                     if eng:IsIdleState() then
                         LOG('Engineer in assist manager is idle id '..tostring(eng.UnitId))
                         if eng.UnitBeingAssist then
@@ -1385,12 +1417,16 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 LOG('This is a state machine engineer')
                             end
                         end
-                    end
+                    end]]
                     totalBuildRate = totalBuildRate + bp.Economy.BuildRate
                     eng.Active = true
                     platoonCount = platoonCount + 1
                 end
             end
+            --LOG('TotalBuildPower '..tostring(totalBuildRate))
+            --LOG('T1 Build Power '..tostring(totalTech1BuilderRate))
+            --LOG('T2 Build Power '..tostring(totalTech2BuilderRate))
+            --LOG('T3 Build Power '..tostring(totalTech3BuilderRate))
             aiBrain.EngineerAssistManagerBuildPower = totalBuildRate
             aiBrain.EngineerAssistManagerBuildPowerTech1 = totalTech1BuilderRate
             aiBrain.EngineerAssistManagerBuildPowerTech2 = totalTech2BuilderRate
@@ -1431,7 +1467,7 @@ Platoon = Class(RNGAIPlatoonClass) {
 
             for k, assistData in aiBrain.EngineerAssistManagerPriorityTable do
                 if assistData.type == 'Upgrade' then
-                    LOG('Trying to find upgrade')
+                    --LOG('Trying to find upgrade')
                     assistDesc = GetUnitsAroundPoint(aiBrain, assistData.cat, managerPosition, engineerRadius, 'Ally')
                     if assistDesc then
                         local low = false
@@ -1450,8 +1486,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                             end
                         end
                         if bestUnit then
-                            LOG('Best assist unit found for upgrade '..tostring(aiBrain.Nickname))
-                            LOG('Unit ID is '..tostring(bestUnit.UnitId))
+                            --LOG('Best assist unit found for upgrade '..tostring(aiBrain.Nickname))
+                            --LOG('Unit ID is '..tostring(bestUnit.UnitId))
                             assistFound = true
                             for _, eng in GetPlatoonUnits(self) do
                                 if eng and not IsDestroyed(eng) then
@@ -1476,7 +1512,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         --RNGLOG('No assiestDesc for Upgrades')
                     end
                 elseif assistData.type == 'AssistFactory' then
-                    LOG('Trying to find factory assist')
+                   --LOG('Trying to find factory assist')
                     assistDesc = GetUnitsAroundPoint(aiBrain, assistData.cat, managerPosition, engineerRadius, 'Ally')
                     if assistDesc then
                         local low = false
@@ -1492,13 +1528,13 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 if (not low or dist < low) and NumAssist < 20 and dist < (engineerRadius * engineerRadius) then
                                     low = dist
                                     bestUnit = unit
-                                    LOG('EngineerAssistManager has best unit')
+                                    --LOG('EngineerAssistManager has best unit')
                                 end
                             end
                         end
                         if bestUnit then
-                            LOG('Best assist unit found for assistfactory for '..tostring(aiBrain.Nickname))
-                            LOG('Unit ID is '..tostring(bestUnit.UnitId))
+                            --LOG('Best assist unit found for assistfactory for '..tostring(aiBrain.Nickname))
+                            --LOG('Unit ID is '..tostring(bestUnit.UnitId))
                             assistFound = true
                            --RNGLOG('Factory Assist Best unit is true looking through platoon units')
                             for _, eng in GetPlatoonUnits(self) do
@@ -1510,7 +1546,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                         IssueGuard({eng}, eng.UnitBeingAssist)
                                         --eng:SetCustomName('Ive been ordered to guard')
                                         coroutine.yield(1)
-                                        LOG('Forking Engineer Assist Thread for Factory')
+                                        --LOG('Forking Engineer Assist Thread for Factory')
                                         self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit, assistData.type)
                                     end
                                 end
@@ -1524,7 +1560,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                 elseif assistData.type == 'Completion' then
                     --RNGLOG('Completion Assist happening')
-                    LOG('Trying to find completion')
                     assistDesc = GetUnitsAroundPoint(aiBrain, assistData.cat, managerPosition, engineerRadius, 'Ally')
                     if assistDesc then
                         local low = false
@@ -1545,8 +1580,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                             end
                         end
                         if bestUnit then
-                            LOG('Best assist unit found for completion '..tostring(aiBrain.Nickname))
-                            LOG('Unit ID is '..tostring(bestUnit.UnitId))
                             assistFound = true
                             --RNGLOG('Completion Assist Best unit is true looking through platoon units '..bestUnit.UnitId)
                             --RNGLOG('Number of platoon units is '..RNGGETN(platoonUnits))
@@ -1559,7 +1592,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                         IssueGuard({eng}, eng.UnitBeingAssist)
                                         --eng:SetCustomName('Ive been ordered to guard')
                                         coroutine.yield(1)
-                                        LOG('Forking Engineer Assist Thread for Completion')
+                                        --LOG('Forking Engineer Assist Thread for Completion')
                                         self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit, assistData.type)
                                     end
                                 end
@@ -1574,9 +1607,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
             if not assistFound then
-                LOG('No unit to assist found')
+                --LOG('No unit to assist found')
             end
-            LOG('Engineer assist manager loop completed')
+            --LOG('Engineer assist manager loop completed')
             --RNGLOG('Engineer Assist Manager Priority Table loop completed for '..aiBrain.Nickname)
             coroutine.yield(40)
         end
@@ -1585,9 +1618,6 @@ Platoon = Class(RNGAIPlatoonClass) {
     EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist, jobType)
         coroutine.yield(math.random(1, 20))
         while eng and not eng.Dead and aiBrain:PlatoonExists(self) and not eng:IsIdleState() and eng.UnitBeingAssist do
-            if aiBrain.RNGDEBUG then
-                eng:SetCustomName('I should be assisting')
-            end
             --RNGLOG('EngineerAssistLoop runing for '..aiBrain.Nickname)
             coroutine.yield(1)
             if not eng.UnitBeingAssist or IsDestroyed(eng.UnitBeingAssist) then
@@ -1730,7 +1760,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         elseif machineType == 'Novax' then
             local aiBrain = self:GetBrain()
             local platoonName = 'NovaxStateMachine'
-            local platoonData = self.PlatoonData
             local novaxPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed(platoonName)
             if not novaxPlatoonAvailable then
                 novaxPlatoonAvailable = aiBrain:MakePlatoon(platoonName, '')
@@ -1751,8 +1780,6 @@ Platoon = Class(RNGAIPlatoonClass) {
             aiBrain:AssignUnitsToPlatoon(nukePlatoonAvailable, platoonUnits, 'attack', 'None')
             import("/mods/rngai/lua/ai/statemachines/platoon-structure-nuke.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, nukePlatoonAvailable, platoonUnits)
         elseif machineType == 'PreAllocatedTask' or machineType == 'EngineerBuilder' then
-            LOG('StateMachine initializing with PreAllocatedTask or EngineerBuilder')
-            LOG('BuilderName '..tostring(self.BuilderName))
             import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'TML' then
             local aiBrain = self:GetBrain()

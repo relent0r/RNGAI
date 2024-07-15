@@ -194,7 +194,6 @@ ThreatThread = function(aiBrain, platoon)
 
     while aiBrain:PlatoonExists(platoon) do
         platoon.MaxPlatoonDPS = GetPlatoonDPS(platoon)
-        LOG('Current max dps '..platoon.MaxPlatoonDPS)
         coroutine.yield(35)
     end
 end

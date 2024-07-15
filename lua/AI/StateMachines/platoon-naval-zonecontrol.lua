@@ -30,12 +30,8 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonNavalZoneControlBehavior
         Main = function(self)
 
-            if not import("/lua/sim/markerutilities/expansions.lua").IsGenerated() then
-                self:LogWarning('requires generated expansion markers')
-                self:ChangeState(self.Error)
-                return
-            end
-            self:LogDebug(string.format('Starting Naval Zone Control'))
+            self:LogDebug(string.format('Welcome to the NavalZoneControlBehavior StateMachine'))
+
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
                 self:LogWarning('requires generated navigational mesh')
@@ -113,12 +109,8 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                 local bz = self.Pos[3] - basePos[3]
                 local baseDistance = bx * bx + bz * bz
                 if baseDistance > 900 then
-                    self:LogDebug(string.format('DecideWhatToDo Ordered to retreat due to local threat'))
-                    LOG('Naval Zone Control DecideWhatToDo Ordered to retreat due to local threat ')
                     self:ChangeState(self.Retreating)
                     return
-                else
-                    self:LogDebug(string.format('DecideWhatToDo Ordered to retreat but already close to base, stand and fight'))
                 end
             end
             local target
@@ -133,17 +125,13 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             end
             local attackTable = AIAttackUtils.GetBestNavalTargetRNG(aiBrain, self)
             if not table.empty(attackTable) then
-                LOG('attackTable has items')
-                self:LogDebug(string.format('attackTable has items'))
                 for k, v in attackTable do
-                    LOG('attackTable itme '..tostring(k..' has a threat value of '..tostring(v[3])))
                     local attackPosition = {v[1], GetSurfaceHeight(v[1], v[2]), v[2]}
                     self:LogDebug(string.format('Attack Position is '..tostring(attackPosition[1])..':'..tostring(attackPosition[3])))
                     if NavUtils.CanPathTo(self.MovementLayer, self.Pos, attackPosition) then
                         local rx = self.Pos[1] - attackPosition[1]
                         local rz = self.Pos[3] - attackPosition[3]
                         local posDistance = rx * rx + rz * rz
-                        self:LogDebug(string.format('distance is '..posDistance))
                         if posDistance > 6400 then
                             self.BuilderData = {
                                 Position = attackPosition,
@@ -154,28 +142,16 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                             if path and RNGGETN(path) > 0 then
                                 self.path = path
                                 self:LogDebug(string.format('Navigating to attack position'..tostring(attackPosition)))
-                                LOG('Navigating to Attack position is found')
                                 self:ChangeState(self.Navigating)
                                 return
-                            else
-                                LOG('No path to attack pos')
-                                self:LogDebug(string.format('No path or no entries in path returned'..tostring(self.Pos)))
                             end
                         else
-                            LOG('close to Attack position')
                             if StateUtils.SimpleNavalTarget(self,aiBrain) then
                                 self:LogDebug(string.format('DecideWhatToDo found simple target'))
                                 self:ChangeState(self.CombatLoop)
                                 return
-                            else
-                                LOG('no local enemies found')
-                                self:LogDebug(string.format('no local enemies found'))
                             end
                         end
-                    else
-                        self:LogDebug(string.format('Have attack position but cant path to it, movement layer is '..tostring(self.MovementLayer)))
-                        self:LogDebug(string.format('Attack Position is '..tostring(attackPosition[1])..':'..tostring(attackPosition[3])))
-                        self:LogDebug(string.format('Current platoon position is '..tostring(self.Pos)))
                     end
                 end
             end
@@ -254,7 +230,6 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             if basePos then
                 self:LogDebug(string.format('No positions or targets found, retreating back to base'))
                 coroutine.yield(25)
-                LOG('Naval Zone Control DecideWhatToDo Ordered to retreat due to no target')
                 self:ChangeState(self.Retreating)
                 return
             end
@@ -302,7 +277,6 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             if pathNodesCount == 0 then
                 self:LogDebug(string.format('Number of nodes in path is zero, we are going to retreat for now'))
                 coroutine.yield(25)
-                LOG('Naval Zone Control DecideWhatToDo Ordered to retreat due to node paths being 0 ')
                 self:ChangeState(self.Retreating)
             end
             
@@ -329,10 +303,10 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                         local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, self.Pos, 'Attack', searchRange, (categories.MOBILE * (categories.NAVAL + categories.AMPHIBIOUS) + categories.STRUCTURE * categories.ANTINAVY) - categories.AIR - categories.SCOUT - categories.WALL, categoryList, false)
                         IssueClearCommands(self:GetSquadUnits('Attack'))
                         self:LogDebug(string.format('Enemy found while pathing'))
-                        --self:LogDebug(string.format('Our antisurface threat '..repr(self.CurrentPlatoonThreatAntiSurface)))
-                        --self:LogDebug(string.format('enemy antisurface threat '..repr(totalThreat['AntiSurface'])))
-                        --self:LogDebug(string.format('Our antinavy threat '..repr(self.CurrentPlatoonThreatAntiNavy)))
-                        --self:LogDebug(string.format('enemy threat '..repr(totalThreat['AntiNaval'])))
+                        self:LogDebug(string.format('Our antisurface threat '..repr(self.CurrentPlatoonThreatAntiSurface)))
+                        self:LogDebug(string.format('enemy antisurface threat '..repr(totalThreat['AntiSurface'])))
+                        self:LogDebug(string.format('Our antinavy threat '..repr(self.CurrentPlatoonThreatAntiNavy)))
+                        self:LogDebug(string.format('enemy threat '..repr(totalThreat['AntiNaval'])))
                         if (self.CurrentPlatoonThreatAntiSurface < totalThreat['AntiSurface'] and self.CurrentPlatoonThreatAntiNavy < totalThreat['AntiNaval'] or self.CurrentPlatoonThreatAntiNavy < totalThreat['AntiNaval']) and (target and not target.Dead or acuUnit) then
                             self:LogDebug(string.format('High threat taking action'))
                             if target and not target.Dead then

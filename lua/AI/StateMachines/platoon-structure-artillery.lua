@@ -92,7 +92,6 @@ AIArtilleryBehavior = Class(AIPlatoonRNG) {
                              categories.ALLUNITS,
                         }
             self:SetPrioritizedTargetList('artillery',atkPri)
-            LOG('Check platoon ArtilleryUnits table '..repr(self.ArtilleryUnits))
             self:LogDebug(string.format('Strategic Artillery Max Weapon Range is '..tostring(self.MaxPlatoonWeaponRange)))
             self:ChangeState(self.DecideWhatToDo)
             return

@@ -143,7 +143,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
         local needEnergy = aiBrain:GetEconomyStoredRatio('ENERGY') < 0.5
         if platoon.PlatoonData.CheckCivUnits then
-            LOG('Reclaim is looking for units to capture')
             local captureUnit = CheckForCivilianUnitCapture(aiBrain, self, platoon.MovementLayer)
             if captureUnit then
                 platoon.PlatoonData.StateMachine = 'PreAllocatedTask'
@@ -151,7 +150,6 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 platoon.PlatoonData.Task = 'CaptureUnit'
                 platoon.PlatoonData.PreAllocatedTask = true
                 platoon:StateMachineAIRNG(self)
-                LOG('CaptureUnit Return after StateMachine initialized')
                 return
             end
         end
@@ -987,53 +985,23 @@ function HaveUnitVisual(aiBrain, unit, checkBlipOnly)
     if unitBrain and unitBrain:GetArmyIndex() == iArmyIndex then 
         return true
     else
-        if unit.Blueprint.CategoriesHash.COMMAND then
-            LOG('We are looking for an ACU')
-        end
         local bCanSeeUnit = false
         if not(unit.Dead) then
-            if unit.Blueprint.CategoriesHash.COMMAND then
-                LOG('ACU is not dead')
-            end
             if not(unit.GetBlip) then
-                if unit.Blueprint.CategoriesHash.COMMAND then
-                    LOG('ACU has not GetBlip function')
-                end
                 if unit.GetPosition then
                     return true
-                else
-                    if unit.Blueprint.CategoriesHash.COMMAND then
-                        LOG('ACU has no getposition function tho')
-                    end
                 end
             else
                 local blip = unit:GetBlip(iArmyIndex)
                 if blip then
-                    if unit.Blueprint.CategoriesHash.COMMAND then
-                        LOG('Found blip for acu')
-                    end
                     if checkBlipOnly then 
                         return true
                     elseif blip:IsSeenEver(iArmyIndex) then 
                         return true 
                     end
-                    if unit.Blueprint.CategoriesHash.COMMAND then
-                        LOG('We did not find the unit')
-                    end
-                else
-                    if unit.Blueprint.CategoriesHash.COMMAND then
-                        LOG('No blip for acu detection so this will return false')
-                        if unit.GetPosition then
-                            local unitPos = unit:GetPosition()
-                            LOG('We have no visual but can get the position of '..tostring(unitPos[1])..':'..tostring(unitPos[3]))
-                        end
-                    end
                 end
             end
         end
-    end
-    if unit.Blueprint.CategoriesHash.COMMAND then
-        LOG('We did not find the ACU unit')
     end
     return false
 end
@@ -2060,7 +2028,8 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                     end
                     if Target.EntityId and not unitThreatTable[Target.EntityId] then
                         if platoon.MovementLayer == 'Water' then
-                            threatTable['AntiNaval'] = threatTable['AntiNaval'] + Target.Blueprint.Defense.SurfaceThreatLevel + Target.Blueprint.Defense.SubThreatLevel
+                            threatTable['AntiNaval'] = threatTable['AntiNaval'] +  Target.Blueprint.Defense.SubThreatLevel
+                            threatTable['AntiSurface'] = threatTable['AntiSurface'] + Target.Blueprint.Defense.SurfaceThreatLevel
                         elseif platoon.MovementLayer == 'Air' then
                             threatTable['Air'] = threatTable['Air'] + Target.Blueprint.Defense.AirThreatLevel
                         else
@@ -3613,9 +3582,6 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position)
         for _, v in im.ZoneExpansions.Pathable do
             local skipPos = false
             if v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive and (not zoneSet[v.ZoneID].engineerplatoonallocated or IsDestroyed(zoneSet[v.ZoneID].engineerplatoonallocated)) then
-                if zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive then
-                    LOG('Selecting base that already has an active factory manager')
-                end
                 retPos = zoneSet[v.ZoneID].pos
                 retName = 'ZONE_'..v.ZoneID
                 refZone = v.ZoneID
@@ -3624,7 +3590,6 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position)
         end
     end
     if retPos then
-        RNGLOG('Returning zone expansion position '..repr(retPos)..' with name '..repr(retName))
         return retPos, retName, refZone
     end
     return false
@@ -4681,7 +4646,6 @@ AddDefenseUnit = function(aiBrain, locationType, finishedUnit)
                 if not closestPoint then
                     --LOG('AddDefenseUnit No closest point found defensive point dump '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints))
                 end
-                LOG('ClosestPoint distance is '..math.sqrt(closestDistance)..'radius is '..aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Radius)
                 if closestPoint and math.sqrt(closestDistance) <= aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].Radius then
                     if finishedUnit.Blueprint.CategoriesHash.ANTIMISSILE and not aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TMD[finishedUnit.EntityId] then
                         aiBrain.BuilderManagers[locationType].DefensivePoints[2][closestPoint].TMD[finishedUnit.EntityId] = finishedUnit
@@ -5485,6 +5449,7 @@ CheckACUSnipe = function(aiBrain, layerType)
     -- checks if less than 500 seconds have passed since an acu snipe mission was added
     local potentialTarget = false
     local requiredCount = 0
+    local requiredStrikeDamage
     local acuIndex
     for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
         if layerType == 'Land' then
@@ -5500,25 +5465,14 @@ CheckACUSnipe = function(aiBrain, layerType)
             end
         elseif layerType == 'Air' then
             if v.AIR and v.AIR.GameTime then
-                LOG('ACU Snipe found in tactical missions')
-                LOG('Game time is'..tostring(v.AIR.GameTime)..' current game time is '..tostring(GetGameTimeSeconds())..' game time plus 500 is '..tostring(v.AIR.GameTime + 500))
                 if v.AIR.GameTime + 500 > GetGameTimeSeconds() then
-                    LOG('Game time is within range')
                     local unit = aiBrain.EnemyIntel.ACU[k].Unit
-                    if unit then
-                        LOG('Unit is present')
-                        if unit.UnitId then
-                            LOG('Unit ID is '..unit.UnitId)
-                        end
-                    end
                     if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
-                        LOG('Have unit visual on acu, returning data')
                         potentialTarget = aiBrain.EnemyIntel.ACU[k].Unit
                         requiredCount = v.AIR.CountRequired
+                        requiredStrikeDamage = v.AIR.StrikeDamage
                         acuIndex = k
                         break
-                    else
-                        LOG('We have no unit visual on acu')
                     end
                 end
             end
@@ -5535,7 +5489,7 @@ CheckACUSnipe = function(aiBrain, layerType)
             end
         end
     end
-    return potentialTarget, requiredCount, acuIndex
+    return potentialTarget, requiredCount, acuIndex, requiredStrikeDamage
 end
 
 CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu)
@@ -6433,35 +6387,36 @@ function SetCoreResources(aiBrain, position, baseName)
         return {}
     else
         WARN('No resource table found in GetCoreResources')
-        LOG('Zone attempted '..repr(targetZone))
-        LOG('ZoneTable '..repr(aiBrain.Zones.Land.zones[targetZone]))
         return
     end
 end
 
 function VentToPlatoon(platoon, aiBrain, plan)
-    --RNGLOG('Venting to new trueplatoon platoon')
+    LOG('Venting to new trueplatoon platoon')
     local ventPlatoon
     local platoonUnits = platoon:GetPlatoonUnits()
-    local validUnits = {}
-    for k, v in platoonUnits do
-        if not v.Dead then
-            table.insert(validUnits, v)
+    local count = 0
+    for _, v in platoonUnits do
+        if v and not v.Dead then
+            count = count + 1
         end
+
     end
+    LOG('We should be venting '..table.getn(platoonUnits)..' units')
+    LOG('After we have filtered dead units we get '..count..' units')
     if plan == 'LandCombatBehavior' then
-        LOG('We are venting to a new state machine')
+        --LOG('We are venting to a new state machine')
         ventPlatoon = aiBrain:MakePlatoon('', '')
-        aiBrain:AssignUnitsToPlatoon(ventPlatoon, validUnits, 'Attack', 'None')
-        import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ Vented = true}, ventPlatoon, validUnits)
+        aiBrain:AssignUnitsToPlatoon(ventPlatoon, platoonUnits, 'Attack', 'None')
+        import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ Vented = true}, ventPlatoon, platoonUnits)
     elseif plan =='LandAssaultBehavior' then
         ventPlatoon = aiBrain:MakePlatoon('', '')
-        aiBrain:AssignUnitsToPlatoon(ventPlatoon, validUnits, 'Attack', 'None')
-        import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ Vented = true }, ventPlatoon, validUnits)
+        aiBrain:AssignUnitsToPlatoon(ventPlatoon, platoonUnits, 'Attack', 'None')
+        import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ Vented = true }, ventPlatoon, platoonUnits)
     else
         ventPlatoon = aiBrain:MakePlatoon('', plan)
         ventPlatoon.PlanName = 'Vented Platoon'
-        aiBrain:AssignUnitsToPlatoon(ventPlatoon, validUnits, 'Attack', 'None')
+        aiBrain:AssignUnitsToPlatoon(ventPlatoon, platoonUnits, 'Attack', 'None')
     end
 end
 
@@ -7039,18 +6994,12 @@ GetBaseType = function(baseName)
     else
         baseType = MarkerUtils.GetMarker(baseName).Type
     end
-    if not baseType then
-        LOG('baseName provided was '..tostring(baseName))
-    end
-    LOG('Returning baseType '..tostring(baseType))
     return baseType
 end
 
 CheckForCivilianUnitCapture = function(aiBrain, eng, movementLayer)
-    LOG('Check for civilian units to capture')
 
     if aiBrain.EnemyIntel.CivilianCaptureUnits and not table.empty(aiBrain.EnemyIntel.CivilianCaptureUnits) then
-        LOG('We have capturable units')
         local closestUnit
         local closestDistance
         local engPos = eng:GetPosition()
@@ -7071,11 +7020,88 @@ CheckForCivilianUnitCapture = function(aiBrain, eng, movementLayer)
         end
         
         if closestUnit and not IsDestroyed(closestUnit) then
-            LOG('We have the closest unit')
             return closestUnit
         end
     end
 
+end
+
+GetRallyPoint = function(aiBrain, layer, position, minRadius, maxRadius)
+
+    local rallyCheckPoints = NavUtils.GetPositionsInRadius(layer, position, maxRadius)
+    local shortlist = {}
+
+    if not table.empty(rallyCheckPoints) then
+        minRadius = minRadius * minRadius
+        maxRadius = maxRadius * maxRadius
+        for _, m in rallyCheckPoints do
+            local dx = position[1] - m[1]
+            local dz = position[3] - m[3]
+            local posDist = dx * dx + dz * dz
+            if posDist > minRadius and posDist < maxRadius then
+                if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE, m, 15, 'Ally') < 1 and NavUtils.CanPathTo(layer, position, m) then
+                    RNGINSERT(shortlist, {Position = m, Distance = posDist})
+                end
+            end
+        end
+        if not table.empty(shortlist) then
+            local referencePosition
+            local teamAveragePositions = aiBrain.IntelManager:GetTeamAveragePositions()
+
+            local teamAveragePosition = {teamAveragePositions['Enemy'].x,GetSurfaceHeight(teamAveragePositions['Enemy'].x, teamAveragePositions['Enemy'].z), teamAveragePositions['Enemy'].z}
+            if teamAveragePosition[1] then
+                referencePosition = teamAveragePosition
+            else
+                referencePosition = aiBrain.MapCenterPoint
+            end
+            
+            -- Function to calculate the dot product of two vectors
+            function NormalizeVector(v)
+                if v.x then
+                    v = {v.x, v.y, v.z}
+                end
+                
+                local length = math.sqrt(math.pow(v[1], 2) + math.pow(v[2], 2) + math.pow(v[3], 2))
+                
+                if length > 0 then
+                    local invlength = 1 / length
+                    return {v[1] * invlength, v[2] * invlength, v[3] * invlength}
+                else
+                    return {0, 0, 0}
+                end
+            end
+            
+            function GetDirectionVector(v1, v2)
+                return NormalizeVector({v1[1] - v2[1], v1[2] - v2[2], v1[3] - v2[3]})
+            end
+            
+            function DotProduct(v1, v2)
+                return v1[1] * v2[1] + v1[2] * v2[2] + v1[3] * v2[3]
+            end
+
+            local direction = GetDirectionVector(position, referencePosition)
+
+            -- Sort the shortlist based on distance and alignment with the target direction
+            table.sort(shortlist, function(a, b)
+                -- Calculate the direction vectors from current position to positions a and b
+                local directionA = GetDirectionVector(position, a.Position)
+                local directionB = GetDirectionVector(position, b.Position)
+            
+                -- Calculate the dot product with the target direction
+                local dotA = DotProduct(direction, directionA)
+                local dotB = DotProduct(direction, directionB)
+            
+                -- First, sort by alignment with the target direction
+                if dotA ~= dotB then
+                    return dotA > dotB
+                end
+            
+                -- If alignments are equal, sort by distance
+                return a.Distance < b.Distance
+            end)
+        end
+        return shortlist[1].Position
+    end
 end
 
 

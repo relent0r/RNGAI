@@ -30,12 +30,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonNavalCombatBehavior
         Main = function(self)
 
-            if not import("/lua/sim/markerutilities/expansions.lua").IsGenerated() then
-                self:LogWarning('requires generated expansion markers')
-                self:ChangeState(self.Error)
-                return
-            end
-            self:LogDebug(string.format('Starting Naval Zone Combat'))
+            self:LogDebug(string.format('Welcome to the NavalCombatBehavior StateMachine'))
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
                 self:LogWarning('requires generated navigational mesh')
@@ -111,7 +106,6 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                 local baseDistance = bx * bx + bz * bz
                 if baseDistance > 900 then
                     self:LogDebug(string.format('DecideWhatToDo Ordered to retreat due to local threat'))
-                    LOG('Naval Zone Combat DecideWhatToDo Ordered to retreat due to local threat ')
                     self:ChangeState(self.Retreating)
                     return
                 else
@@ -285,7 +279,6 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             if currentStatus == 'Hostile' then
                 self:LogDebug(string.format('No attack position found and in hostile territory, should we look for a platoon to merge with'))
                 coroutine.yield(25)
-                LOG('Naval Combat DecideWhatToDo No attack position found and in hostile territory ')
                 self:ChangeState(self.Retreating)
                 return
             end

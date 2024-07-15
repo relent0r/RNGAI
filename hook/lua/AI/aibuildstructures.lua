@@ -62,35 +62,8 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToB
             end 
         end 
     end 
-    LOG('AIBuildBaseTemplateOrderedRNG Unsuccessful build, trying to build '..tostring(whatToBuild))
     return
 end
-
-function TMLStartUpLogic(buildingType, builder)
-    if buildingType == 'T2StrategicMissile' then
-        local unitInstance = false
-
-        builder:ForkThread(function()
-            while true do
-                if not unitInstance then
-                    unitInstance = builder.UnitBeingBuilt
-                end
-                local aiBrain = builder:GetAIBrain()
-                if unitInstance then
-                    TriggerFile.CreateUnitStopBeingBuiltTrigger(function(unitBeingBuilt)
-                        local newPlatoon = aiBrain:MakePlatoon('', '')
-                        aiBrain:AssignUnitsToPlatoon(newPlatoon, {unitBeingBuilt}, 'Attack', 'None')
-                        newPlatoon:StopAI()
-                        newPlatoon:ForkAIThread(newPlatoon.TacticalAI)
-                    end, unitInstance)
-                    break
-                end
-                WaitSeconds(1)
-            end
-        end)
-    end
-end
-
 
 local AntiSpamList = {}
 function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, closeToBuilder, relative, buildingTemplate, baseTemplate, reference, constructionData)
