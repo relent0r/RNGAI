@@ -136,6 +136,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 local target, countRequired , acuIndex, strikeDamage = RUtils.CheckACUSnipe(aiBrain, 'Air')
                 if target then
                     --LOG('ACU Snipe found for bombers, strike damage required is '..tostring(strikeDamage))
+                    --LOG('Bomber has acu via ACUSnipe')
                     local enemyAcuHealth = aiBrain.EnemyIntel.ACU[acuIndex].HP
                     if self.PlatoonStrikeDamage > enemyAcuHealth * 0.80 or enemyAcuHealth < 2500 then
                         self.BuilderData = {
