@@ -69,10 +69,10 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
             -- This returned the grid location of the threat that blocked the path which allows missions to clear it if possible.
             -- I'm thinking long range unit triggers, bomber, tml etc. Or just eco.
             --LOG('Threats returned '..repr(threats))
-        --end
-        --if msg ~= 'Unpathable' and platoonLayer ~= 'Land' then
-        --    LOG('No path from '..repr(start)..' to '..repr(destination)..' reason is '..repr(msg)..' platoon layer was '..platoonLayer)
-        --end
+        end
+        if msg ~= 'Unpathable' and platoonLayer ~= 'Land' then
+           --LOG('No path from '..repr(start)..' to '..repr(destination)..' reason is '..repr(msg)..' platoon layer was '..platoonLayer)
+        end
         return false, msg, distance, threats
     end
     -- Insert the path nodes (minus the start node and end nodes, which are close enough to our start and destination) into our command queue.
@@ -375,7 +375,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     local mapSizeX = ScenarioInfo.size[1]
     local mapSizeZ = ScenarioInfo.size[2]
     local maxMapLengthSq = math.sqrt((mapSizeX * mapSizeX) + (mapSizeZ * mapSizeZ))
-    local logCount = 0
+    local--LOGCount = 0
 
     local unitCapRatio = GetArmyUnitCostTotal(aiBrain:GetArmyIndex()) / GetArmyUnitCap(aiBrain:GetArmyIndex())
 

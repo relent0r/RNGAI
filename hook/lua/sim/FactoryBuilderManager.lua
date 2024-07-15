@@ -112,12 +112,12 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         local navalLocation = self.Brain.BuilderManagers[self.LocationType].Layer == 'Water'
         while true do
             if self.LocationActive and self.RallyPoint then
-                -- LOG('*AI DEBUG: Checking Active Rally Point')
+                ----LOG('*AI DEBUG: Checking Active Rally Point')
                 local newRally = false
                 local bestDist = 99999
                 local rallyheight = GetTerrainHeight(self.RallyPoint[1], self.RallyPoint[3])
                 if self.Brain:GetNumUnitsAroundPoint(categories.STRUCTURE, self.RallyPoint, 15, 'Ally') > 0 then
-                    -- LOG('*AI DEBUG: Searching for a new Rally Point Location')
+                    ----LOG('*AI DEBUG: Searching for a new Rally Point Location')
                     for x = -30, 30, 5 do
                         for z = -30, 30, 5 do
                             local height = GetTerrainHeight(self.RallyPoint[1] + x, self.RallyPoint[3] + z)
@@ -139,7 +139,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                     end
                     if newRally then
                         self.RallyPoint = newRally
-                        -- LOG('*AI DEBUG: Setting a new Rally Point Location')
+                        ----LOG('*AI DEBUG: Setting a new Rally Point Location')
                         for k,v in self.FactoryList do
                             IssueClearFactoryCommands({v})
                             IssueFactoryRallyPoint({v}, self.RallyPoint)
@@ -293,7 +293,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
             local customData = self.Brain.CustomUnits[v]
             for c, b in templateData.FactionSquads[faction] do
                 if customData and customData[faction] then
-                    -- LOG('*AI DEBUG: Replacement unit found!')
+                    ----LOG('*AI DEBUG: Replacement unit found!')
                     local replacement = self:GetCustomReplacement(b, v, faction)
                     if replacement then
                         table.insert(template, replacement)
@@ -755,7 +755,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
             if faction and templateData.FactionSquads[faction] then
                 for k,v in templateData.FactionSquads[faction] do
                     if customData and customData[faction] then
-                        -- LOG('*AI DEBUG: Replacement unit found!')
+                        ----LOG('*AI DEBUG: Replacement unit found!')
                         local replacement = self:GetCustomReplacement(v, templateName, faction)
                         if replacement then
                             table.insert(template, replacement)
