@@ -6459,7 +6459,6 @@ function VentToPlatoon(platoon, aiBrain, plan)
             count = count + 1
         end
     end
-    platoon.MachineStarted = false
     if plan == 'LandCombatBehavior' then
        --'We are venting to a new state machine '..aiBrain.Nickname..' platoon count is '..count)
         ventPlatoon = aiBrain:MakePlatoon('', '')
