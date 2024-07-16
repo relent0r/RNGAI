@@ -153,20 +153,19 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T4 Mavor Exp Nuke',
-        PlatoonTemplate = 'EngineerStateT3SACURNG',
+        BuilderName = 'RNGAI T4 Mavor Exp',
+        PlatoonTemplate = 'EngineerStateUEFT3SACURNG',
         DelayEqualBuildPlattons = {'HighValue', 20},
         Priority = 750,
         InstanceCount = 1,
         BuilderConditions = {
             { EBC, 'HighValueGateRNG', {}},
-            { MIBC, 'FactionIndex', {1,4} }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.STRATEGIC * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE - categories.ORBITALSYSTEM}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY * categories.UEF}},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', {35, 1500}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2}},
         },
@@ -187,20 +186,52 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T4 RapidFire',
-        PlatoonTemplate = 'EngineerStateT3SACURNG',
+        BuilderName = 'RNGAI T4 Nuke Exp',
+        PlatoonTemplate = 'EngineerStateSeraT3SACURNG',
         DelayEqualBuildPlattons = {'HighValue', 20},
         Priority = 750,
         InstanceCount = 1,
         BuilderConditions = {
             { EBC, 'HighValueGateRNG', {}},
-            { MIBC, 'FactionIndex', { 2 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
+            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.STRATEGIC * categories.TECH3}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
+            { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.NUKE * categories.SERAPHIM}},
+            { EBC, 'GreaterThanEconIncomeCombinedRNG', {35, 1500}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2}},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            NumAssistees = 35,
+            Construction = {
+                BuildClose = true,
+                AdjacencyPriority = {categories.SHIELD * categories.STRUCTURE},
+                HighValue = true,
+                BuildStructures = {
+                    { Unit = 'T4Artillery', Categories = categories.STRUCTURE * categories.NUKE * categories.EXPERIMENTAL * categories.SERAPHIM },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T4 RapidFire',
+        PlatoonTemplate = 'EngineerStateAeonT3SACURNG',
+        DelayEqualBuildPlattons = {'HighValue', 20},
+        Priority = 750,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.STRATEGIC * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY * categories.AEON}},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', {35, 1500}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2}},
         },
@@ -222,19 +253,18 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T4 Scathis',
-        PlatoonTemplate = 'EngineerStateT3SACURNG',
+        PlatoonTemplate = 'EngineerStateCybranT3SACURNG',
         DelayEqualBuildPlattons = {'HighValue', 20},
         Priority = 750,
         InstanceCount = 1,
         BuilderConditions = {
             { EBC, 'HighValueGateRNG', {}},
-            { MIBC, 'FactionIndex', { 3 } }, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.STRATEGIC * categories.TECH3}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.STRUCTURE}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.STRUCTURE * categories.ARTILLERY * categories.CYBRAN}},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', {35, 1500}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2}},
         },

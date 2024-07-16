@@ -610,7 +610,6 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerStateUEFT2RNG',
         Priority = 500,
         BuilderConditions = {
-            { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 6, categories.ENGINEERSTATION }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 1, 10}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.85}},
@@ -635,7 +634,6 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerBuilderCybranT2RNG',
         Priority = 500,
         BuilderConditions = {
-            { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 6, categories.ENGINEERSTATION }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 1, 10}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.60, 0.85}},

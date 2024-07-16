@@ -100,7 +100,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Radar T3 Optics',
-        PlatoonTemplate = 'EngineerStateT3SACURNG',
+        PlatoonTemplate = 'EngineerStateAeonT3SACURNG',
         Priority = 650,
         BuilderConditions = {
             { UCBC, 'StructureBuildDemand', { 'Structure', 'Intel', 'optics'} },

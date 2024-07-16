@@ -136,13 +136,12 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 Megabot',
-        PlatoonTemplate = 'EngineerStateT3SACURNG',
+        PlatoonTemplate = 'EngineerStateCybranT3SACURNG',
         Priority = 550,
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
             { EBC, 'HighValueGateRNG', {}},
-            { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
@@ -201,17 +200,14 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 Sea',
-        PlatoonTemplate = 'EngineerStateT3SACURNG',
+        PlatoonTemplate = 'EngineerStateAeonT3SACURNG',
         Priority = 500,
         PriorityFunction = NavalExpansionAdjust,
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
             { EBC, 'HighValueGateRNG', {}},
-            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
-            -- Have we the eco to build it ?
-            --{ UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 600.0 }},                    -- Base income
@@ -234,15 +230,13 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 Novax',
-        PlatoonTemplate = 'EngineerStateT3SACURNG',
+        PlatoonTemplate = 'EngineerStateUEFT3SACURNG',
         Priority = 650,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
             { EBC, 'HighValueGateRNG', {}},
-            { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
-            -- Have we the eco to build it ?
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 600.0 }},                    -- Base income
