@@ -1560,12 +1560,21 @@ function ExpansionBaseCountRNG(aiBrain, compareType, checkNum)
     return count
 end
 
-function RequireTMDCheckRNG(aiBrain)
+function RequireTMDCheckRNG(aiBrain, locationType)
     local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
     local smInstance = StructureManagerRNG.GetStructureManager(aiBrain)
     if smInstance.TMDRequired then
         --LOG('TMD is required for a MEX')
         return true
+    end
+    if locationType ~= 'FLOATING' and aiBrain.BasePerimeterMonitor[locationType].EnemyMobileSiloDetected then
+        LOG('Mobile Silo builder has triggered true')
+        local basePos = aiBrain.BuilderManagers[locationType].Position
+        local numUnits = aiBrain:GetNumUnitsAroundPoint( categories.ANTIMISSILE * categories.TECH2, basePos, 120, 'Ally' )
+        if numUnits < 4 then
+            LOG('We have less than 4 TMD at base')
+            return true
+        end
     end
     return false
 end

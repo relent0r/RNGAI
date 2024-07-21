@@ -4372,6 +4372,28 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
             defensivePoint = bestPoint.Position
         end
         --RNGLOG('defensivePoint being passed to engineer build platoon function'..repr(defensivePoint)..' bestpointangle is '..bestPoint.Angle)
+    elseif type == 'Silo' then
+        local bestPoint = false
+        local bestIndex = false
+        if not RNGTableEmpty(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
+            if aiBrain.BasePerimeterMonitor[baseLocation].RecentMobileSiloAngle then
+                LOG('MobileSilo recent angle '..tostring(aiBrain.BasePerimeterMonitor[baseLocation].RecentMobileSiloAngle))
+                LOG('Point Tier '..tostring(pointTier))
+                local pointCheck = aiBrain.BasePerimeterMonitor[baseLocation].RecentMobileSiloAngle
+                for _, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
+                    local pointAngle = GetAngleToPosition(basePosition, v.Position)
+                    if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                        if bestPoint then
+                            --RNGLOG('Angle to find '..aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle..' bestPoint was '..bestPoint.Angle..' but is now '..repr({ Position = v, Angle = pointAngle}))
+                        end
+                        bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                    end
+                end
+            end
+        end
+        if bestPoint then
+            defensivePoint = bestPoint.Position
+        end
     elseif type == 'TML' then
         local bestPoint = false
         local bestIndex = false

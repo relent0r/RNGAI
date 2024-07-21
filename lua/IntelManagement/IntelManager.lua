@@ -903,9 +903,13 @@ IntelManager = Class {
                     for k, v in zoneSet do
                         if v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
                             if requireSameLabel and platoonLabel and v.label > 0 and platoonLabel ~= v.label then
+                                LOG('Label is not the same, platoon label'..tostring(platoonLabel)..' zone label '..tostring(v.label))
                                 continue
                             end
                             if v.friendlyantiairallocatedthreat > math.max(v.enemyairthreat * 2, enemyThreatRatio) then
+                                LOG('Already enough aa threat allocated')
+                                LOG('Current antiair allocated '..tostring(v.friendlyantiairallocatedthreat))
+                                LOG('Maximum Allowed '..tostring(math.max(v.enemyairthreat * 2, enemyThreatRatio)))
                                 continue
                             end
                             local distanceModifier = VDist3Sq(originPos, v.pos)
@@ -937,6 +941,9 @@ IntelManager = Class {
                                 normalizedFriendLandThreatValue * weightageValues['friendlyantisurfacethreat'] -
                                 normalizedFriendAirThreatValue * weightageValues['friendlylandantiairthreat']
                             )
+                            LOG('Priority Score '..tostring(priorityScore))
+                            LOG('Current antiair allocated '..tostring(v.friendlyantiairallocatedthreat))
+                            LOG('Maximum Allowed '..tostring(math.max(v.enemyairthreat * 2, enemyThreatRatio)))
                             if not selection or priorityScore > selection then
                                 selection = priorityScore
                                 zoneSelection = v.id

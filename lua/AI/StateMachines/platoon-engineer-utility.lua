@@ -633,10 +633,18 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             StateUtils.SetupStateBuildAICallbacksRNG(eng)
             if cons.NearDefensivePoints then
                 if cons.Type == 'TMD' then
-                    local tmdPositions = RUtils.GetTMDPosition(aiBrain, eng, cons.LocationType)
-                    for _, v in tmdPositions do
-                        reference = v
-                        break
+                    if aiBrain.BasePerimeterMonitor[cons.LocationType].EnemyMobileSiloDetected then
+                        LOG('Trying to get Defensive point for TMD due to mobile silo')
+                        reference = RUtils.GetDefensivePointRNG(aiBrain, cons.LocationType or 'MAIN', cons.Tier or 2, 'Silo')
+                        LOG('Reference returned '..tostring(repr(reference)))
+                    else
+                        local tmdPositions = RUtils.GetTMDPosition(aiBrain, eng, cons.LocationType)
+                        if tmdPositions then
+                            for _, v in tmdPositions do
+                                reference = v
+                                break
+                            end
+                        end
                     end
                 else
                     reference = RUtils.GetDefensivePointRNG(aiBrain, cons.LocationType or 'MAIN', cons.Tier or 2, cons.Type)

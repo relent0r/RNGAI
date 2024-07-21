@@ -313,7 +313,7 @@ BuilderGroup {
         Priority = 825,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'RequireTMDCheckRNG', { }},
+            { UCBC, 'RequireTMDCheckRNG', { 'LocationType' }},
             --{ UCBC, 'LastKnownUnitDetection', { 'LocationType', 'tml'}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -667,7 +667,7 @@ BuilderGroup {
         Priority = 825,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'RequireTMDCheckRNG', { }},
+            { UCBC, 'RequireTMDCheckRNG', { 'LocationType' }},
             --{ UCBC, 'LastKnownUnitDetection', { 'LocationType', 'tml'}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8}},
             { UCBC, 'UnitCapCheckLess', { .9 } },

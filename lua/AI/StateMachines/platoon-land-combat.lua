@@ -605,6 +605,11 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 self.path = path
+                if not self.path then
+                    coroutine.yield(30)
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
             end
             while PlatoonExists(aiBrain, self) do
                 coroutine.yield(1)

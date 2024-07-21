@@ -61,6 +61,16 @@ local ReclaimBasedFactoryPriority = function(self, aiBrain, builderManager)
     return 0
 end
 
+local ReclaimMinFactoryPriority = function(self, aiBrain, builderManager)
+    local gameTime = GetGameTimeSeconds()
+    local locationType = builderManager.LocationType
+    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+    if gameTime > 380 or (factoryManager and factoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND) > 2) then
+        return 900
+    end
+    return 0
+end
+
 local MinimumAntiAirThreat = function(self, aiBrain, builderManager, builderData)
     local myAntiAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
     if myAntiAirThreat > 12 then
@@ -950,11 +960,11 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1',
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
+        PriorityFunction = ReclaimMinFactoryPriority,
         DelayEqualBuildPlattons = {'EngineerReclaim', 1},
-        Priority = 900,
-        InstanceCount = 5,
+        Priority = 0,
+        InstanceCount = 6,
         BuilderConditions = {
-                { UCBC, 'GreaterThanGameTimeSecondsRNG', { 380 } },
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 0.0 } },
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
@@ -964,7 +974,7 @@ BuilderGroup {
             LocationType = 'LocationType',
             ReclaimTable = true,
             ReclaimTime = 80,
-            MinimumReclaim = 15
+            MinimumReclaim = 8
         },
         BuilderType = 'Any',
     },
