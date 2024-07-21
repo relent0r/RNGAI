@@ -39,7 +39,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonFighterBehavior
         Main = function(self)
-            self:LogDebug(string.format('Welcome to the FighterBehavior StateMachine'))
+            --self:LogDebug(string.format('Welcome to the FighterBehavior StateMachine'))
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
                 self:LogWarning('requires generated navigational mesh')

@@ -937,7 +937,7 @@ IntelManager = Class {
                                 normalizedFriendLandThreatValue * weightageValues['friendlyantisurfacethreat'] -
                                 normalizedFriendAirThreatValue * weightageValues['friendlylandantiairthreat']
                             )
-                            if priorityScore > selection then
+                            if not selection or priorityScore > selection then
                                 selection = priorityScore
                                 zoneSelection = v.id
                             end
@@ -1761,8 +1761,6 @@ IntelManager = Class {
                                         if v1.enemyantiairthreat < data.MaxThreat then
                                             --RNGLOG('Zone air threat level below max')
                                             if GetThreatBetweenPositions(aiBrain, aiBrain.BrainIntel.StartPos, v1.pos, nil, threatType) < data.MaxThreat * 2 then
-                                                RNGLOG('Zone air threat between points below max '..tostring(GetThreatBetweenPositions(aiBrain, aiBrain.BrainIntel.StartPos, v1.pos, nil, threatType)))
-                                                RNGLOG('Adding zone as potential strike target')
                                                 table.insert( potentialStrikes, { ZoneID = v1.id, Position = v1.pos, Type = 'Zone'} )
                                                 desiredStrikeDamage = desiredStrikeDamage + (v1.resourcevalue * 200)
                                             end
@@ -2288,10 +2286,11 @@ IntelManager = Class {
             --LOG('experimentalNukeCount '..experimentalNukeCount)
         elseif type == 'IntelStructure' then
             if data.Tier == 'T3' and data.Structure == 'optics' then
-                if aiBrain.EconomyOverTimeCurrent.EnergyIncome > 1000 and aiBrain.smanager.Current.Structure['Intel']['T3']['optics'] < 1 and aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime > 500 then
-                    aiBrain.smanager.Demand.Structure.Intel.optics = 1
+                if aiBrain.smanager.Current.Structure['intel']['T3']['Optics'] < 1 and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 1000 and aiBrain:GetEconomyIncome('ENERGY') > 1000 
+                and aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime > 500 and aiBrain:GetEconomyTrend('ENERGY') > 500 then
+                    aiBrain.smanager.Demand.Structure.intel.Optics = 1
                 else
-                    aiBrain.smanager.Demand.Structure.Intel.optics = 0
+                    aiBrain.smanager.Demand.Structure.intel.Optics = 0
                 end
             end
         end
@@ -3132,7 +3131,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                     --LOG('EnemyIntelTML unit has not been validated')
                     local extractors = GetListOfUnits(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL - categories.TECH1, false, false)
                     for c, b in extractors do
-                        if VDist3Sq(b:GetPosition(), v.position) < v.range * v.range then
+                        if VDist3Sq(b:GetPosition(), v.position) < (v.range * v.range) + 100 then
                             --LOG('EnemyIntelTML there is an extractor that is in range')
                             if not b.TMLInRange then
                                 b.TMLInRange = setmetatable({}, WeakValueTable)
@@ -3295,6 +3294,7 @@ LastKnownThread = function(aiBrain)
                                             if not aiBrain.EnemyIntel.Experimental[id] then
                                                 aiBrain.EnemyIntel.Experimental[id] = {object = v, position=unitPosition }
                                             end
+                                            im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='exp'
                                         elseif unitCat.ANTIAIR then
                                             im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='aa'
                                         elseif unitCat.DIRECTFIRE then
@@ -3457,6 +3457,8 @@ TruePlatoonPriorityDirector = function(aiBrain)
                                     priority=anglePriority + 30
                                 elseif b.type=='tank' then
                                     priority=anglePriority + 30
+                                elseif b.type=='exp' then
+                                    priority=anglePriority + 100
                                 else
                                     priority=anglePriority + 20
                                 end
@@ -3465,7 +3467,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                             unitAddedCount = unitAddedCount + 1
                             aiBrain.prioritypoints[c..i..k]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object,time=b.time}
                             if im.MapIntelGrid[i][k].DistanceToMain < baseRestrictedArea or priority > 250 then
-                                if b.type == 'tank' or b.type == 'arty' then
+                                if b.type == 'tank' or b.type == 'arty' or b.type == 'exp' then
                                     priority = priority + 100
                                 end
                                 aiBrain.prioritypointshighvalue[c..i..k]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object,time=b.time}

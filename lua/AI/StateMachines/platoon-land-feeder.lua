@@ -25,7 +25,7 @@ AIPlatoonLandFeederBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonLandFeederBehavior
         Main = function(self)
-            self:LogDebug(string.format('Welcome to the LandFeederBehavior StateMachine'))
+            --self:LogDebug(string.format('Welcome to the LandFeederBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             self.PlatoonType = self.PlatoonData.PlatoonType
@@ -86,7 +86,7 @@ AIPlatoonLandFeederBehavior = Class(AIPlatoonRNG) {
             
 
             coroutine.yield(25)
-            self:LogDebug(string.format('Air Feeder has nothing to do'))
+            --self:LogDebug(string.format('Air Feeder has nothing to do'))
             self:ChangeState(self.DecideWhatToDo)
             return
         end,

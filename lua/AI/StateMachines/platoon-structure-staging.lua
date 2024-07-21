@@ -25,7 +25,7 @@ AIPlatoonAirStagingBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonAirStagingBehavior
         Main = function(self)
-            self:LogDebug(string.format('Welcome to the AirStagingBehavior StateMachine'))
+            --self:LogDebug(string.format('Welcome to the AirStagingBehavior StateMachine'))
             self.MachineStarted = true
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -50,7 +50,7 @@ AIPlatoonAirStagingBehavior = Class(AIPlatoonRNG) {
                     
                     local releaseUnits = true
                     if not table.empty(attachedUnits) then
-                        self:LogDebug(string.format('Air Staging platform has cargo'))
+                        --self:LogDebug(string.format('Air Staging platform has cargo'))
                         for _, v in attachedUnits do
                             if not IsDestroyed(v) then
                                 if v.GetFuelRatio then
@@ -63,7 +63,7 @@ AIPlatoonAirStagingBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if releaseUnits then
-                            self:LogDebug(string.format('Air Staging releasing units'))
+                            --self:LogDebug(string.format('Air Staging releasing units'))
                             IssueTransportUnload({platform}, {platFormPos[1] + 5, platFormPos[2], platFormPos[3] + 5})
                             for _, v in attachedUnits do
                                 if not IsDestroyed(v) then

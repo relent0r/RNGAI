@@ -39,7 +39,7 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
         ---@param self AINovaxBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
-            self:LogDebug(string.format('Starting Novax Machine'))
+            --self:LogDebug(string.format('Starting Novax Machine'))
             if not self.MovementLayer then
                 AIAttackUtils.GetMostRestrictiveLayerRNG(self)
             end
@@ -76,7 +76,7 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
                 self.MaxSearchRadius = self.PlatoonData.SearchRadius or 50
             end
             self:SetPrioritizedTargetList('attack',self.atkPri)
-            self:LogDebug(string.format('Novax Max Weapon Range is '..tostring(self.MaxPlatoonWeaponRange)))
+            --self:LogDebug(string.format('Novax Max Weapon Range is '..tostring(self.MaxPlatoonWeaponRange)))
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -88,7 +88,7 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
 
         ---@param self AINovaxBehavior
         Main = function(self)
-            self:LogDebug(string.format('Novax DecideWhatToDo'))
+            --self:LogDebug(string.format('Novax DecideWhatToDo'))
             local aiBrain = self:GetBrain()
             local targetsAssigned
             if not targetsAssigned then
@@ -96,7 +96,7 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
                 local targetCount = 0
                 local target = aiBrain:CheckDirectorTargetAvailable(false, false, 'SATELLITE', false, self.MaxPlatoonDPS, self.Home)
                 if target and not target.Dead then
-                    self:LogDebug(string.format('Novax Director Target Found'))
+                    --self:LogDebug(string.format('Novax Director Target Found'))
                     for _, v in self.NovaxUnits do
                         if not v.Unit.Dead then
                             novaxCount = novaxCount + 1
@@ -107,10 +107,10 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    self:LogDebug(string.format('NovaxCount '..novaxCount))
-                    self:LogDebug(string.format('targetCount '..targetCount))
+                    --self:LogDebug(string.format('NovaxCount '..novaxCount))
+                    --self:LogDebug(string.format('targetCount '..targetCount))
                     if novaxCount == targetCount then
-                        self:LogDebug(string.format('Novax targetsAssgined is true'))
+                        --self:LogDebug(string.format('Novax targetsAssgined is true'))
                         targetsAssigned = true
                     end
                 end
@@ -118,10 +118,10 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
             if not targetsAssigned then
                 local novaxCount = 0
                 local targetCount = 0
-                self:LogDebug(string.format('Novax No director target, searching for prioritized at range '..self.MaxSearchRadius))
+                --self:LogDebug(string.format('Novax No director target, searching for prioritized at range '..self.MaxSearchRadius))
                 local target = AIUtils.AIFindUndefendedBrainTargetInRangeRNG(aiBrain, self, 'Attack', self.MaxSearchRadius, self.atkPri)
                 if target and not target.Dead then
-                    self:LogDebug(string.format('Novax Prioritized Target Found'))
+                    --self:LogDebug(string.format('Novax Prioritized Target Found'))
                     for _, v in self.NovaxUnits do
                         if not v.Unit.Dead then
                             novaxCount = novaxCount + 1
@@ -132,20 +132,20 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    self:LogDebug(string.format('novaxCount '..novaxCount))
-                    self:LogDebug(string.format('targetCount '..targetCount))
+                    --self:LogDebug(string.format('novaxCount '..novaxCount))
+                    --self:LogDebug(string.format('targetCount '..targetCount))
                     if novaxCount == targetCount then
-                        self:LogDebug(string.format('Novax targetsAssgined is true'))
+                        --self:LogDebug(string.format('Novax targetsAssgined is true'))
                         targetsAssigned = true
                     end
                 end
             end
             if targetsAssigned then
-                self:LogDebug(string.format('Novax Attacking targets'))
+                --self:LogDebug(string.format('Novax Attacking targets'))
                 self:ChangeState(self.AttackTarget)
                 return
             end
-            self:LogDebug(string.format('Novax no target, rerunning DecideWhatToDo'))
+            --self:LogDebug(string.format('Novax no target, rerunning DecideWhatToDo'))
             coroutine.yield(30)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -170,23 +170,23 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
                 end
             end
             while not breakRotation do
-                self:LogDebug(string.format('Novax Attack loop'))
+                --self:LogDebug(string.format('Novax Attack loop'))
                 targetRotation = targetRotation + 1
                 coroutine.yield(200)
                 for _, v in self.NovaxUnits do
                     if v.CurrentTarget.Dead then
-                        self:LogDebug(string.format('Novax target dead, break rotation'))
+                        --self:LogDebug(string.format('Novax target dead, break rotation'))
                         breakRotation = true
                     end
                     if not v.Unit.Dead then
                         if v.CurrentTarget and not v.CurrentTarget.Dead then
-                            self:LogDebug(string.format('Issuing Attack for unit'))
+                            --self:LogDebug(string.format('Issuing Attack for unit'))
                             IssueAttack({v.Unit}, v.CurrentTarget)
                         end
                     end
                 end
                 if (targetRotation > 6) then
-                    self:LogDebug(string.format('Novax target rotation expired'))
+                    --self:LogDebug(string.format('Novax target rotation expired'))
                     breakRotation = true
                 end
             end

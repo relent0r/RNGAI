@@ -25,7 +25,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonAirRefuelBehavior
         Main = function(self)
-            self:LogDebug(string.format('Welcome to the AirRefuel StateMachine'))
+            --self:LogDebug(string.format('Welcome to the AirRefuel StateMachine'))
             local aiBrain = self:GetBrain()
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             self:ChangeState(self.DecideWhatToDo)
@@ -49,7 +49,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                 local health = unit:GetHealthPercent()
                 if not IsDestroyed(unit) and not unit.Loading and (fuel < 0.4 or health < 0.6) then
                     if aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM * categories.STRUCTURE + categories.AIRSTAGINGPLATFORM * categories.CARRIER) > 0 then
-                        self:LogDebug(string.format('Air Refuel we have a staging platform available'))
+                        ----self:LogDebug(string.format('Air Refuel we have a staging platform available'))
                         local unitPos = unit:GetPosition()
                         local plats = AIUtils.GetOwnUnitsAroundPoint(aiBrain, categories.AIRSTAGINGPLATFORM * categories.STRUCTURE + categories.AIRSTAGINGPLATFORM * categories.CARRIER, unitPos, 400)
                         --RNGLOG('AirStaging Units found '..table.getn(plats))
@@ -95,7 +95,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                     self.BuilderData = {
                                         Position = closestAirStaging,
                                     }
-                                    self:LogDebug(string.format('Air Refuel navigating to air staging platform'))
+                                    ----self:LogDebug(string.format('Air Refuel navigating to air staging platform'))
                                     self:ChangeState(self.Navigating)
                                     return
                                 end
@@ -104,7 +104,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                 refuel = true
                                 unit.Loading = true
                             end
-                            self:LogDebug(string.format('Air Refuel we have an air staging platform but we didnt use it'))
+                            ----self:LogDebug(string.format('Air Refuel we have an air staging platform but we didnt use it'))
                         else
                             local platPos = self:GetPlatoonPosition()
                             local basePos = aiBrain.BuilderManagers['MAIN'].Position
@@ -147,7 +147,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                 aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
                                 import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, plat, {unit})
                             else
-                                self:LogDebug(string.format('AirFefuel, moving fighter into existing platoon'))
+                                ----self:LogDebug(string.format('AirFefuel, moving fighter into existing platoon'))
                                 aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
                             end
                         elseif self.PreviousStateMachine == 'Bomber' then
@@ -163,7 +163,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                 return
             end
             coroutine.yield(25)
-            self:LogDebug(string.format('Air Refuel has nothing to do'))
+            ----self:LogDebug(string.format('Air Refuel has nothing to do'))
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -232,21 +232,18 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                     local fuel = unit:GetFuelRatio()
                     local health = unit:GetHealthPercent()
                     if (not unit.Loading or (fuel >= 1.0 and health >= 1.0)) and (not unit:IsUnitState('Attached')) then
-                        self:LogDebug(string.format('Air Refuel complete is true '))
+                        ----self:LogDebug(string.format('Air Refuel complete is true '))
                         refuelComplete = true
                         unit.Loading = false
                     end
-                    self:LogDebug(string.format('Air Refuel fuel is '..fuel))
-                    self:LogDebug(string.format('Air Refuel health is '..health))
+                    ----self:LogDebug(string.format('Air Refuel fuel is '..fuel))
+                    ----self:LogDebug(string.format('Air Refuel health is '..health))
                 end
                 if IsDestroyed(self) then
                     return
                 end
                 refuelTimeout = refuelTimeout + 1
-                self:LogDebug(string.format('Air Refuel timeout is '..refuelTimeout))
-                if not refuelComplete then
-                    self:LogDebug(string.format('Air Refuel timeout is not complete'))
-                end
+                ----self:LogDebug(string.format('Air Refuel timeout is '..refuelTimeout))
             end
             local platUnits = self:GetPlatoonUnits()
             if refuelTimeout >= 30 then

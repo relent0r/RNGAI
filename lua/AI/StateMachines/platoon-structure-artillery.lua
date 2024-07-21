@@ -69,7 +69,7 @@ AIArtilleryBehavior = Class(AIPlatoonRNG) {
         ---@param self AIArtilleryBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
-            self:LogDebug(string.format('Starting Strategic Artillery Machine'))
+            --self:LogDebug(string.format('Starting Strategic Artillery Machine'))
             if not self.MovementLayer then
                 AIAttackUtils.GetMostRestrictiveLayerRNG(self)
             end
@@ -92,7 +92,7 @@ AIArtilleryBehavior = Class(AIPlatoonRNG) {
                              categories.ALLUNITS,
                         }
             self:SetPrioritizedTargetList('artillery',atkPri)
-            self:LogDebug(string.format('Strategic Artillery Max Weapon Range is '..tostring(self.MaxPlatoonWeaponRange)))
+            --self:LogDebug(string.format('Strategic Artillery Max Weapon Range is '..tostring(self.MaxPlatoonWeaponRange)))
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -104,7 +104,7 @@ AIArtilleryBehavior = Class(AIPlatoonRNG) {
 
         ---@param self AIArtilleryBehavior
         Main = function(self)
-            self:LogDebug(string.format('Strategic Artillery DecideWhatToDo'))
+            --self:LogDebug(string.format('Strategic Artillery DecideWhatToDo'))
             local aiBrain = self:GetBrain()
             local targetsAssigned
             if not targetsAssigned then
@@ -112,7 +112,7 @@ AIArtilleryBehavior = Class(AIPlatoonRNG) {
                 local targetCount = 0
                 local target = aiBrain:CheckDirectorTargetAvailable(false, false)
                 if target and not target.Dead then
-                    self:LogDebug(string.format('Strategic Artillery Director Target Found'))
+                    --self:LogDebug(string.format('Strategic Artillery Director Target Found'))
                     local targetPos = target:GetPosition()
                     for _, v in self.ArtilleryUnits do
                         if not v.Unit.Dead then
@@ -130,10 +130,10 @@ AIArtilleryBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    self:LogDebug(string.format('artilleryCount '..artilleryCount))
-                    self:LogDebug(string.format('targetCount '..targetCount))
+                    --self:LogDebug(string.format('artilleryCount '..artilleryCount))
+                    --self:LogDebug(string.format('targetCount '..targetCount))
                     if artilleryCount == targetCount then
-                        self:LogDebug(string.format('Strategic Artillery targetsAssgined is true'))
+                        --self:LogDebug(string.format('Strategic Artillery targetsAssgined is true'))
                         targetsAssigned = true
                     end
                 end
@@ -141,10 +141,10 @@ AIArtilleryBehavior = Class(AIPlatoonRNG) {
             if not targetsAssigned then
                 local artilleryCount = 0
                 local targetCount = 0
-                self:LogDebug(string.format('Strategic Artillery No director target, searching for prioritized'))
+                --self:LogDebug(string.format('Strategic Artillery No director target, searching for prioritized'))
                 local target = self:FindPrioritizedUnit('artillery', 'Enemy', true, self.Home, self.MaxPlatoonWeaponRange + 50)
                 if target and not target.Dead then
-                    self:LogDebug(string.format('Strategic Artillery Prioritized Target Found'))
+                    --self:LogDebug(string.format('Strategic Artillery Prioritized Target Found'))
                     local targetPos = target:GetPosition()
                     for _, v in self.ArtilleryUnits do
                         if not v.Unit.Dead then
@@ -162,20 +162,20 @@ AIArtilleryBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    self:LogDebug(string.format('artilleryCount '..artilleryCount))
-                    self:LogDebug(string.format('targetCount '..targetCount))
+                    --self:LogDebug(string.format('artilleryCount '..artilleryCount))
+                    --self:LogDebug(string.format('targetCount '..targetCount))
                     if artilleryCount == targetCount then
-                        self:LogDebug(string.format('Strategic Artillery targetsAssgined is true'))
+                        --self:LogDebug(string.format('Strategic Artillery targetsAssgined is true'))
                         targetsAssigned = true
                     end
                 end
             end
             if targetsAssigned then
-                self:LogDebug(string.format('Strategic Artillery Attacking targets'))
+                --self:LogDebug(string.format('Strategic Artillery Attacking targets'))
                 self:ChangeState(self.AttackTarget)
                 return
             end
-            self:LogDebug(string.format('Strategic Artillery no target, rerunning DecideWhatToDo'))
+            --self:LogDebug(string.format('Strategic Artillery no target, rerunning DecideWhatToDo'))
             coroutine.yield(30)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -201,23 +201,23 @@ AIArtilleryBehavior = Class(AIPlatoonRNG) {
                 end
             end
             while not breakRotation do
-                self:LogDebug(string.format('Strategic Artillery Attack loop'))
+                --self:LogDebug(string.format('Strategic Artillery Attack loop'))
                 targetRotation = targetRotation + 1
                 coroutine.yield(200)
                 for _, v in self.ArtilleryUnits do
                     if v.CurrentTarget.Dead then
-                        self:LogDebug(string.format('Strategic Artillery target dead, break rotation'))
+                        --self:LogDebug(string.format('Strategic Artillery target dead, break rotation'))
                         breakRotation = true
                     end
                     if not v.Unit.Dead then
                         if v.CurrentTarget and not v.CurrentTarget.Dead then
-                            self:LogDebug(string.format('Issuing Attack for unit'))
+                            --self:LogDebug(string.format('Issuing Attack for unit'))
                             IssueAttack({v.Unit}, v.CurrentTarget)
                         end
                     end
                 end
                 if (targetRotation > 6) then
-                    self:LogDebug(string.format('Strategic Artillery target rotation expired'))
+                    --self:LogDebug(string.format('Strategic Artillery target rotation expired'))
                     breakRotation = true
                 end
             end

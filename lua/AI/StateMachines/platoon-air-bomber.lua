@@ -27,7 +27,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
 
             local aiBrain = self:GetBrain()
-            self:LogDebug(string.format('Welcome to the BomberBehavior StateMachine'))
+            --self:LogDebug(string.format('Welcome to the BomberBehavior StateMachine'))
             if self.PlatoonData.LocationType then
                 self.LocationType = self.PlatoonData.LocationType
             else
@@ -86,7 +86,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             local target
             local platPos = self:GetPlatoonPosition()
             if not platPos then
-                self:LogDebug(string.format('Bomber No Platpos, return'))
+                ----self:LogDebug(string.format('Bomber No Platpos, return'))
                 return
             end
             local homeDist = VDist3Sq(platPos, self.Home)
@@ -95,16 +95,37 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                     AttackTarget = aiBrain.BrainIntel.SuicideModeTarget,
                     Position = aiBrain.BrainIntel.SuicideModeTarget:GetPosition()
                 }
-                --LOG('Bomber attacking target ')
-                self:LogDebug(string.format('Bomber Attacking suicide target'))
+                ----self:LogDebug(string.format('Bomber Attacking suicide target'))
                 self:ChangeState(self.AttackTarget)
                 return
+            end
+            if not target then
+                local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, nil, nil, nil, true)
+                if target then
+                    --LOG('Gunship high Priority Target Found '..target.UnitId)
+                    self.BuilderData = {
+                        AttackTarget = target,
+                        Position = target:GetPosition()
+                    }
+                    local targetPosition = self.BuilderData.Position
+                    local tx = platPos[1] - targetPosition[1]
+                    local tz = platPos[3] - targetPosition[3]
+                    local targetDistance = tx * tx + tz * tz
+                    if targetDistance < 22500 then
+                        ----self:LogDebug(string.format('Bomber AttackTarget on high priority target'))
+                        self:ChangeState(self.AttackTarget)
+                        return
+                    else
+                        ----self:LogDebug(string.format('Bomber navigating to high priority experimental'))
+                        self:ChangeState(self.Navigating)
+                        return
+                    end
+                end
             end
             if self.BuilderData.AttackTarget then
                 local target = self.BuilderData.AttackTarget
                 if not target.Dead and not target.Tractored and self:CanAttackTarget('attack', target) then
-                    --LOG('Bomber attacking target ')
-                    self:LogDebug(string.format('Bomber Attacking existing target'))
+                    ----self:LogDebug(string.format('Bomber Attacking existing target'))
                     self:ChangeState(self.AttackTarget)
                     return
                 else
@@ -112,11 +133,9 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if not target then
-                self:LogDebug(string.format('Checking for ACU Snipe'))
                 local target, countRequired , acuIndex, strikeDamage = RUtils.CheckACUSnipe(aiBrain, 'Air')
                 if target then
-                    --LOG('ACU Snipe found for bombers, strike damage required is '..tostring(strikeDamage))
-                    --LOG('Bomber has acu via ACUSnipe')
+                    LOG('ACU Snipe found for bombers, strike damage required is '..tostring(strikeDamage))
                     local enemyAcuHealth = aiBrain.EnemyIntel.ACU[acuIndex].HP
                     if self.PlatoonStrikeDamage > enemyAcuHealth * 0.80 or enemyAcuHealth < 2500 then
                         self.BuilderData = {
@@ -129,11 +148,11 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         local tz = platPos[3] - targetPosition[3]
                         local targetDistance = tx * tx + tz * tz
                         if targetDistance < 22500 then
-                            self:LogDebug(string.format('Bomber AttackTarget on ACU Snipe'))
+                            ----self:LogDebug(string.format('Bomber AttackTarget on ACU Snipe'))
                             self:ChangeState(self.AttackTarget)
                             return
                         else
-                            self:LogDebug(string.format('Bomber navigating to snipe ACU'))
+                            ----self:LogDebug(string.format('Bomber navigating to snipe ACU'))
                             self:ChangeState(self.Navigating)
                             return
                         end
@@ -141,21 +160,19 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if not target then
-                self:LogDebug(string.format('Checking for High Priority Target'))
+                ----self:LogDebug(string.format('Checking for High Priority Target'))
                 local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, false, false, true)
                 if target then
-                    --LOG('Bomber high Priority Target Found '..target.UnitId)
                     self.BuilderData = {
                         AttackTarget = target,
                         Position = target:GetPosition()
                     }
-                    --LOG('Bomber navigating to target')
                     local targetPosition = self.BuilderData.Position
                     local tx = platPos[1] - targetPosition[1]
                     local tz = platPos[3] - targetPosition[3]
                     local targetDistance = tx * tx + tz * tz
                     if targetDistance < 22500 then
-                        self:LogDebug(string.format('Bomber AttackTarget on high priority target'))
+                        ----self:LogDebug(string.format('Bomber AttackTarget on high priority target'))
                         self:ChangeState(self.AttackTarget)
                         return
                     else
@@ -166,13 +183,13 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                             if targetThreat > potentialThreat then
                                 local closestBase, closestBaseDistance = StateUtils.GetClosestBaseRNG(aiBrain, self, targetPosition)
                                 if closestBase and closestBaseDistance > 14400 then 
-                                    self:LogDebug(string.format('Target has high air threat and is fare from a base'))
+                                    ----self:LogDebug(string.format('Target has high air threat and is fare from a base'))
                                     targetValidated = false
                                 end
                             end
                         end
                         if targetValidated then
-                            self:LogDebug(string.format('Bomber navigating to high priority target'))
+                            ----self:LogDebug(string.format('Bomber navigating to high priority target'))
                             self:ChangeState(self.Navigating)
                             return
                         end
@@ -180,7 +197,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if not self.PlatoonData.Defensive then
-                self:LogDebug(string.format('Checking for director target'))
+                ----self:LogDebug(string.format('Checking for director target'))
                 target = aiBrain:CheckDirectorTargetAvailable('AntiAir', self.CurrentPlatoonThreatAntiSurface, 'BOMBER', self.PlatoonStrikeDamage)
                 if target then
                     self.BuilderData = {
@@ -193,18 +210,18 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                     local tz = platPos[3] - targetPosition[3]
                     local targetDistance = tx * tx + tz * tz
                     if targetDistance < 22500 then
-                        self:LogDebug(string.format('Bomber AttackTarget on director target of '..tostring(target.UnitId)))
+                        ----self:LogDebug(string.format('Bomber AttackTarget on director target of '..tostring(target.UnitId)))
                         self:ChangeState(self.AttackTarget)
                         return
                     else
-                        self:LogDebug(string.format('Bomber navigating to director target '..tostring(target.UnitId)))
+                        ----self:LogDebug(string.format('Bomber navigating to director target '..tostring(target.UnitId)))
                         self:ChangeState(self.Navigating)
                         return
                     end
                 end
             end
             if not target and not self.PlatoonData.Defensive then
-                self:LogDebug(string.format('Checking priority points'))
+                ----self:LogDebug(string.format('Checking priority points'))
                 if not table.empty(aiBrain.prioritypoints) then
                     local pointHighest = 0
                     local point = false
@@ -240,11 +257,11 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                             local tz = platPos[3] - targetPosition[3]
                             local targetDistance = tx * tx + tz * tz
                             if targetDistance < 22500 then
-                                self:LogDebug(string.format('Bomber AttackTarget on high priority points'))
+                                ----self:LogDebug(string.format('Bomber AttackTarget on high priority points'))
                                 self:ChangeState(self.AttackTarget)
                                 return
                             else
-                                self:LogDebug(string.format('Bomber navigating on high priority points'))
+                                ----self:LogDebug(string.format('Bomber navigating on high priority points'))
                                 self:ChangeState(self.Navigating)
                                 return
                             end
@@ -265,7 +282,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                 Position = raidPos.pos,
                                 EnemyStartPosition = aiBrain.EnemyIntel.EnemyStartLocations[enemyIndex].Position
                             }
-                            self:LogDebug(string.format('Bomber performing aggresive raid'))
+                            ----self:LogDebug(string.format('Bomber performing aggresive raid'))
                             self:ChangeState(self.Navigating)
                             return
                         end
@@ -277,25 +294,25 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                     Position = self.Home
                 }
                 --LOG('Bomber has not target and is navigating back home')
-                self:LogDebug(string.format('Bomber has no target and is navigating back home'))
+                ----self:LogDebug(string.format('Bomber has no target and is navigating back home'))
                 self:ChangeState(self.Navigating)
                 return
             end
             if not target and VDist3Sq(platPos, self.Home) < 900 then
-                self:LogDebug(string.format('trying to merge with another platoon'))
+                ----self:LogDebug(string.format('trying to merge with another platoon'))
                 if self.PlatoonCount < 10 then
                     local plat = StateUtils.GetClosestPlatoonRNG(self, 'BomberBehavior', false, 60)
                     if plat and plat.PlatoonCount and plat.PlatoonCount < 10 then
-                        self:LogDebug(string.format('Bomber platoon is merging with another'))
+                        ----self:LogDebug(string.format('Bomber platoon is merging with another'))
                         local platUnits = plat:GetPlatoonUnits()
                         aiBrain:AssignUnitsToPlatoon(self, platUnits, 'Attack', 'None')
                         import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, plat, platUnits)
-                        self:LogDebug(string.format('Merged'))
+                        ----self:LogDebug(string.format('Merged'))
                     end
                 end
             end
             coroutine.yield(25)
-            self:LogDebug(string.format('Bomber has nothing to do'))
+            ----self:LogDebug(string.format('Bomber has nothing to do'))
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -327,7 +344,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 local path = builderData.AggressiveMovePath
                 local pathLength = RNGGETN(path)
                 if path and pathLength and pathLength > 1 then
-                    self:LogDebug(string.format('Performing aggressive path move'))
+                    ----self:LogDebug(string.format('Performing aggressive path move'))
                     for i=1, pathLength do
                         IssueMove(platoonUnits, path[i].pos)
                         --self:MoveToLocation(path[i], false)
@@ -344,7 +361,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                             AttackTarget = target,
                                             Position = target:GetPosition()
                                         }
-                                        self:LogDebug(string.format('Bomber on raid has spotted engineer'))
+                                        ----self:LogDebug(string.format('Bomber on raid has spotted engineer'))
                                         self:ChangeState(self.AttackTarget)
                                         return
                                     end
@@ -379,7 +396,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                                 AttackTarget = target,
                                                 Position = target:GetPosition()
                                             }
-                                            self:LogDebug(string.format('Bomber on raid has spotted engineer'))
+                                            ----self:LogDebug(string.format('Bomber on raid has spotted engineer'))
                                             self:ChangeState(self.AttackTarget)
                                             return
                                         end
@@ -398,7 +415,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 else
-                    self:LogDebug(string.format('Path too short, aggressive move to destination'))
+                    ----self:LogDebug(string.format('Path too short, aggressive move to destination'))
                     IssueAggressiveMove(platoonUnits, destination)
                     while not IsDestroyed(self) do
                         coroutine.yield(1)
@@ -414,7 +431,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                         AttackTarget = target,
                                         Position = target:GetPosition()
                                     }
-                                    self:LogDebug(string.format('Bomber on raid has spotted engineer'))
+                                    ----self:LogDebug(string.format('Bomber on raid has spotted engineer'))
                                     self:ChangeState(self.AttackTarget)
                                     return
                                 end
@@ -448,7 +465,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                         AttackTarget = target,
                                         Position = target:GetPosition()
                                     }
-                                    self:LogDebug(string.format('Bomber on raid has spotted engineer'))
+                                    ----self:LogDebug(string.format('Bomber on raid has spotted engineer'))
                                     self:ChangeState(self.AttackTarget)
                                     return
                                 end
@@ -473,7 +490,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 if path then
                     local pathLength = RNGGETN(path)
                     if pathLength and pathLength > 1 then
-                        self:LogDebug(string.format('Performing aggressive path move'))
+                        ----self:LogDebug(string.format('Performing aggressive path move'))
                         for i=1, pathLength do
                             local movementPositions = StateUtils.GenerateGridPositions(path[i], 6, self.PlatoonCount)
                             for k, unit in platoonUnits do
@@ -497,7 +514,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                                 AttackTarget = target,
                                                 Position = target:GetPosition()
                                             }
-                                            self:LogDebug(string.format('Bomber on raid has spotted engineer'))
+                                            ----self:LogDebug(string.format('Bomber on raid has spotted engineer'))
                                             self:ChangeState(self.AttackTarget)
                                             return
                                         end
@@ -517,7 +534,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                     local pz = targetPos[3] - platoonPosition[3]
                                     local targetDistance = px * px + pz * pz
                                     if targetDistance < 14400 then
-                                        self:LogDebug(string.format('Within strike range of target, switch to attack'))
+                                        ----self:LogDebug(string.format('Within strike range of target, switch to attack'))
                                         self:ChangeState(self.AttackTarget)
                                     end
                                 elseif builderData.AttackTarget.Dead then
@@ -530,7 +547,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     else
-                        self:LogDebug(string.format('Path too short, moving to destination. This shouldnt happen.'))
+                        ----self:LogDebug(string.format('Path too short, moving to destination. This shouldnt happen.'))
                         IssueMove(platoonUnits, destination)
                         coroutine.yield(25)
                         self:ChangeState(self.DecideWhatToDo)
@@ -611,9 +628,6 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             if self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Dead and not self.BuilderData.AttackTarget.Tractored then
                 IssueClearCommands(platoonUnits)
                 local target = self.BuilderData.AttackTarget
-                if target.Blueprint.CategoriesHash.COMMAND then
-                    self:LogDebug(string.format('Attack target has ACU as target'))
-                end
                 local platPos = self:GetPlatoonPosition()
                 local targetPosition = target:GetPosition()
                 local tx = platPos[1] - targetPosition[1]
@@ -628,25 +642,19 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         IssueAttack(platoonUnits, target)
                     end
                 else
-                    if target.Blueprint.CategoriesHash.COMMAND then
-                        self:LogDebug(string.format('Attack target has give attack command on ACU '))
-                    end
                     IssueAttack(platoonUnits, target)
                 end
                 while not target.Dead do
                     if not self:CanAttackTarget('attack', target) then
-                        self:LogDebug(string.format('Can no longer attack target, could have been picked up by transport'))
+                        ----self:LogDebug(string.format('Can no longer attack target, could have been picked up by transport'))
                         self:ChangeState(self.DecideWhatToDo)
                         return
-                    end
-                    if target.Blueprint.CategoriesHash.COMMAND then
-                        self:LogDebug(string.format('Attack target is waiting for acu to be dead'))
                     end
                     coroutine.yield(25)
                 end
                 coroutine.yield(5)
             else
-                self:LogDebug(string.format('Bomber has no attack target after activating AttackTarget'))
+                ----self:LogDebug(string.format('Bomber has no attack target after activating AttackTarget'))
                 self.BuilderData = {}
             end
             self:ChangeState(self.DecideWhatToDo)
@@ -718,8 +726,7 @@ BomberThreatThreads = function(aiBrain, platoon)
                         if not aiBrain.BrainIntel.AirStagingRequired and aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) < 1 then
                             aiBrain.BrainIntel.AirStagingRequired = true
                         elseif not platoon.BuilderData.AttackTarget or platoon.BuilderData.AttackTarget.Dead then
-                            --LOG('Assigning unit to refuel platoon from refuel')
-                            platoon:LogDebug(string.format('Bomber is low on fuel or health and is going to refuel'))
+                            --platoon:LogDebug(string.format('Bomber is low on fuel or health and is going to refuel'))
                             local plat = aiBrain:MakePlatoon('', '')
                             aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'attack', 'None')
                             import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Bomber', LocationType = platoon.LocationType}, plat, {unit})

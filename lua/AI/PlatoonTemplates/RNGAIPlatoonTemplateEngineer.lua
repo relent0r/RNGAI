@@ -63,6 +63,38 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
+    Name = 'EngineerStateAeonT3SACURNG',
+    Plan = 'StateMachineAIRNG',
+    GlobalSquads = {
+        { categories.AEON * categories.ENGINEER * (categories.TECH3 + categories.SUBCOMMANDER) - categories.ENGINEERSTATION - categories.COMMAND, 1, 1, 'support', 'None' }
+    },
+}
+
+PlatoonTemplate {
+    Name = 'EngineerStateUEFT3SACURNG',
+    Plan = 'StateMachineAIRNG',
+    GlobalSquads = {
+        { categories.UEF * categories.ENGINEER * (categories.TECH3 + categories.SUBCOMMANDER) - categories.ENGINEERSTATION - categories.COMMAND, 1, 1, 'support', 'None' }
+    },
+}
+
+PlatoonTemplate {
+    Name = 'EngineerStateCybranT3SACURNG',
+    Plan = 'StateMachineAIRNG',
+    GlobalSquads = {
+        { categories.CYBRAN * categories.ENGINEER * (categories.TECH3 + categories.SUBCOMMANDER) - categories.ENGINEERSTATION - categories.COMMAND, 1, 1, 'support', 'None' }
+    },
+}
+
+PlatoonTemplate {
+    Name = 'EngineerStateSeraT3SACURNG',
+    Plan = 'StateMachineAIRNG',
+    GlobalSquads = {
+        { categories.SERAPHIM * categories.ENGINEER * (categories.TECH3 + categories.SUBCOMMANDER) - categories.ENGINEERSTATION - categories.COMMAND, 1, 1, 'support', 'None' }
+    },
+}
+
+PlatoonTemplate {
     Name = 'EngineerStateT23RNG',
     Plan = 'StateMachineAIRNG',
     GlobalSquads = {

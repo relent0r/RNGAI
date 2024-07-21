@@ -848,7 +848,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2ArtilleryStructure',
         Priority = 1,
         InstanceCount = 1000,
-        FormRadius = 10000,
+        FormRadius = 160,
         BuilderConditions = {
             -- Have we the eco to build it ?
             -- When do we want to build this ?

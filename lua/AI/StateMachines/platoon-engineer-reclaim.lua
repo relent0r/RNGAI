@@ -26,7 +26,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
         --- Initial state of any state machine
         ---@param self AIPlatoonAdaptiveReclaimBehavior
         Main = function(self)
-            self:LogDebug(string.format('Welcome to the EngineerReclaimBehavior StateMachine'))
+            --self:LogDebug(string.format('Welcome to the EngineerReclaimBehavior StateMachine'))
             local brain = self:GetBrain()
 
             if not self.SearchRadius then
@@ -112,7 +112,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
 
                 searchLoop = searchLoop + 1
                 if searchLoop == searchRadius and (not (reclaimTargetX and reclaimTargetZ)) and TableGetn(pathFailTable) > 0 then
-                    self:LogDebug(string.format('Loop failed and we have unpathable reclaim'))
+                    ----self:LogDebug(string.format('Loop failed and we have unpathable reclaim'))
                     local closestReclaimDistance
                     local closestReclaim
                     for _, v in pathFailTable do
@@ -124,7 +124,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                         end
                     end
                 end
-                self:LogDebug('Search loop is ' .. searchLoop .. ' out of a possible ' .. searchRadius)
+                ----self:LogDebug('Search loop is ' .. searchLoop .. ' out of a possible ' .. searchRadius)
             end
             if reclaimTargetX and reclaimTargetZ then
                 local brainCell = brainGridInstance:ToCellFromGridSpace(reclaimTargetX, reclaimTargetZ)
@@ -137,11 +137,11 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
             else
                 if self.SearchRadius < 8 then
                     self.SearchRadius = 8
-                    self:LogDebug(string.format('No reclaim found, extending search range to 8'))
+                    ----self:LogDebug(string.format('No reclaim found, extending search range to 8'))
                     self:ChangeState(self.Searching)
                     return
                 end
-                self:LogWarning(string.format('no reclaim target found'))
+                --self:LogWarning(string.format('no reclaim target found'))
                 local closestManager 
                 local returnPos
                 if eng.BuilderManagerData.EngineerManager.Location then
@@ -195,7 +195,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                 WARN('GridPresence does not exist, unable to detect conflict line')
             end
             if not NavUtils.CanPathToCell(self.MovementLayer, eng:GetPosition(), destination) then
-                self:LogDebug(string.format('Reclaim engineer is going to use transport'))
+                ----self:LogDebug(string.format('Reclaim engineer is going to use transport'))
                 self:ChangeState(self.Transporting)
                 return
             end
@@ -292,7 +292,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                 return
             end
 
-            self:LogDebug('Attempting to build a mass point or two')
+            ----self:LogDebug('Attempting to build a mass point or two')
             local eng = self:GetPlatoonUnits()[1]
             local brain = self:GetBrain()
             IssueClearCommands({ eng })
@@ -429,10 +429,10 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
             local brain = self:GetBrain()
             local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, self.LocationToReclaim, 3, false)
             if usedTransports then
-                self:LogDebug(string.format('Engineer used transports'))
+                ----self:LogDebug(string.format('Engineer used transports'))
                 self:ChangeState(self.Navigating)
             else
-                self:LogDebug(string.format('Engineer tried but didnt use transports'))
+                ----self:LogDebug(string.format('Engineer tried but didnt use transports'))
                 self:ChangeState(self.Searching)
             end
             return
