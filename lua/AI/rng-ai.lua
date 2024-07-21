@@ -991,19 +991,18 @@ AIBrain = Class(RNGAIBrainClass) {
                         T3=0
                     },
                     intel= {
+                        Optics=0
+                    },
+                    radar= {
                         T1=0,
                         T2=0,
                         T3=0,
-                        Optics=0
                     },
                 }
             },
             Demand = {
                 Structure = {
-                    Intel = {
-                        T1=0,
-                        T2=0,
-                        T3=0,
+                    intel = {
                         Optics=0
                     }
                 }
@@ -1682,10 +1681,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Set the layer of the builder manager so that factory managers and platoon managers know if we should be graphing to land or naval production.
         -- Used for identifying if we can graph to an enemy factory for multi landmass situations
         local baseLayer = 'Land'
-		position[2] = GetTerrainHeight( position[1], position[3] )
-        if GetSurfaceHeight( position[1], position[3] ) > position[2] then
-            --LOG('Created water builder manager')
-            position[2] = GetSurfaceHeight( position[1], position[3] )
+        if RUtils.PositionInWater(position) then
 			baseLayer = 'Water'
         end
         self.BuilderManagers[baseName] = {
@@ -1836,7 +1832,6 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Waiting for markers to be infected in order to CalculateMassMarkers')
             coroutine.yield(20)
         end
-        LOG('Calculating Mass Markers')
         local MassMarker = {}
         local massMarkerBuildable = 0
         local markerCount = 0
@@ -1888,14 +1883,12 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
-        LOG('Mass marker loop completed')
         for _, v in self.GraphZones do
             if v.MassMarkersInGraph and v.MassMarkersInGraph > maximumGraphValue then
                 maximumGraphValue = v.MassMarkersInGraph
             end
         end
         if maximumGraphValue then
-            LOG('Setting MaximumGraphValue to '..tostring(maximumGraphValue))
             self.IntelManager.MapMaximumValues.MaximumGraphValue = maximumGraphValue
         end
         if graphCheck then
@@ -4892,7 +4885,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         --LOG('Naval Factory Deficit is '..deficit)
                         if self.BuilderManagers then
                             for k, v in self.BuilderManagers do
-                                if self.BuilderManagers[k].FactoryManager then
+                                if v.Layer == 'Water' and self.BuilderManagers[k].FactoryManager then
                                     if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
                                         for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
                                             if not f.Dead and not f.Upgrading then
@@ -5042,29 +5035,23 @@ AIBrain = Class(RNGAIBrainClass) {
                     if self.BuilderManagers then
                         for k, v in self.BuilderManagers do
                             if v.Layer == 'Water' and self.BuilderManagers[k].FactoryManager then
-                                --RNGLOG('Naval Factory Manager has this many factories'..RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList))
                                 if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
                                     for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                        --RNGLOG('Naval Factory found')
                                         if not f.Dead and not f.Upgrading then
-                                            --RNGLOG('Offline check '..repr(f.Offline))
                                             --RNGLOG('Naval Factory not dead or upgrading')
                                             if EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
                                                 if f.Offline then
                                                     f.Offline = false
-                                                    --LOG('Naval T1 Factory put online')
                                                     surplus = surplus - 4
                                                 end
                                             elseif EntityCategoryContains(categories.TECH2 * categories.NAVAL, f) then
                                                 if f.Offline then
                                                     f.Offline = false
-                                                    --RNGLOG('Naval T2 Factory put online')
                                                     surplus = surplus - 10
                                                 end
                                             elseif EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
                                                 if f.Offline then
                                                     f.Offline = false
-                                                    --RNGLOG('Naval T3 Factory put online')
                                                     surplus = surplus - 20
                                                 end
                                             end
@@ -5484,9 +5471,9 @@ AIBrain = Class(RNGAIBrainClass) {
             elseif not CoreMassNumberAchieved and self.EcoManager.CoreMassPush and self.EngineerAssistManagerBuildPower <= 75 then
                 --RNGLOG('CoreMassPush is true')
                 self.EngineerAssistManagerBuildPowerRequired = 75
-            elseif self.EngineerAssistManagerFocusHighValue and self.EngineerAssistManagerBuildPower <= math.ceil( 150 * multiplier) then
-                --RNGLOG('EngineerAssistManagerFocusHighValue is true')
-                self.EngineerAssistManagerBuildPowerRequired = math.ceil((150 * multiplier))
+            elseif self.EngineerAssistManagerFocusHighValue and self.EngineerAssistManagerBuildPower <= math.ceil(math.max((150 * multiplier), minAssistPower)) then
+                --LOG('EngineerAssistManagerFocusHighValue is true')
+                self.EngineerAssistManagerBuildPowerRequired = math.ceil(math.max((150 * multiplier), minAssistPower))
             elseif massStorage > 150 and energyStorage > 150 and self.EngineerAssistManagerBuildPower < math.max(minAssistPower, 5) and not self.EngineerAssistManagerFocusHighValue and not self.EcoManager.CoreMassPush then
                 if self.EngineerAssistManagerBuildPower <= 30 and self.EngineerAssistManagerBuildPowerRequired <= 26 then
                     self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
@@ -5516,6 +5503,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.EngineerAssistManagerBuildPowerRequired = minAssistPower
                 end
             end
+            --LOG('Current build power required '..tostring(self.EngineerAssistManagerBuildPowerRequired))
+            --LOG('MinAssist Build Power '..tostring(minAssistPower))
             coroutine.yield(10)
         end
     end,
@@ -5566,6 +5555,8 @@ AIBrain = Class(RNGAIBrainClass) {
         local extractors = { }
         local hydros = { }
         local fabs = {T2=0,T3=0}
+        local radars = {T1=0,T2=0,T3=0}
+        local intels = {Optics=0}
         local coms = {acu=0,sacu=0}
         local pgens = {T1=0,T2=0,T3=0,hydro=0}
         local silo = {T2=0,T3=0}
@@ -5939,6 +5930,16 @@ AIBrain = Class(RNGAIBrainClass) {
                             silo.T3=silo.T3+1
                             launcherspend.T3=launcherspend.T3+spendm
                         end
+                    elseif unitCat.STRUCTURE and unitCat.INTELLIGENCE then
+                        if unitCat.TECH2 and unitCat.RADAR then
+                            radars.T1=radars.T1+1
+                        elseif unitCat.TECH2 and unitCat.RADAR then
+                            radars.T2=radars.T2+1
+                        elseif unitCat.TECH3 and unitCat.OMNI then
+                            radars.T3=radars.T3+1
+                        elseif unitCat.TECH3 and unitCat.OPTICS then
+                            intels.Optics=intels.Optics+1
+                        end
                     end
                 end
             end
@@ -5978,7 +5979,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SelfThreat.ExtractorCount = totalExtractorCount
         self.BrainIntel.SelfThreat.Extractor = totalEconomyThreat
         self.EngineerDistributionTable = engineerDistribution
-        self.smanager.Current.Structure={fact=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,hydrocarbon=hydros}
+        self.smanager.Current.Structure={fact=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,hydrocarbon=hydros, intel=intels, radar=radars}
         local totalCoreExtractors = mainBaseExtractors.T1 + mainBaseExtractors.T2 + mainBaseExtractors.T3
         if totalCoreExtractors > 0 then
             --RNGLOG('Mainbase T1 Extractors '..mainBaseExtractors.T1)
@@ -6946,6 +6947,21 @@ AIBrain = Class(RNGAIBrainClass) {
                 fabs= {
                     T2=0,
                     T3=0
+                },
+                intel= {
+                    Optics=0
+                },
+                radar= {
+                    T1=0,
+                    T2=0,
+                    T3=0,
+                },
+            },
+            Demand = {
+                Structure = {
+                    intel = {
+                        Optics=0
+                    }
                 }
             }
         }

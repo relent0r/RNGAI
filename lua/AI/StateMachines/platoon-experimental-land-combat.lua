@@ -68,7 +68,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
 
         ---@param self AIExperimentalLandBehavior
         Main = function(self)
-            self:LogDebug(string.format('Welcome to the ExperimentalLandBehavior StateMachine'))
+            --self:LogDebug(string.format('Welcome to the ExperimentalLandBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             if not self.MovementLayer then
                 AIAttackUtils.GetMostRestrictiveLayerRNG(self)
@@ -173,7 +173,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                             Retreat = true,
                             RetreatReason = 'NoShield'
                         }
-                        self:LogDebug(string.format('Experimental has low shield, retreating'))
+                        --self:LogDebug(string.format('Experimental has low shield, retreating'))
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -184,7 +184,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                             Retreat = true,
                             RetreatReason = 'NoShield'
                         }
-                        self:LogDebug(string.format('Experimental shield is low and there is artillery threat, retreat'))
+                        --self:LogDebug(string.format('Experimental shield is low and there is artillery threat, retreat'))
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -194,7 +194,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         Retreat = true,
                         RetreatReason = 'LowHealth'
                     }
-                    self:LogDebug(string.format('Experimental retreating due to very low health '))
+                    --self:LogDebug(string.format('Experimental retreating due to very low health '))
                     self:ChangeState(self.Retreating)
                     return
                 end
@@ -218,7 +218,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         Retreat = true,
                         RetreatReason = 'LowHealth'
                     }
-                    self:LogDebug(string.format('Experimental retreating due to very low health '))
+                    --self:LogDebug(string.format('Experimental retreating due to very low health '))
                     self:ChangeState(self.Retreating)
                     return
                 end
@@ -236,7 +236,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                 RetreatReason = 'AirThreat'
                             }
                             antiAirSupportNeeded = true
-                            self:LogDebug(string.format('Experimental has high air surface threat around it, retreat'))
+                            --self:LogDebug(string.format('Experimental has high air surface threat around it, retreat'))
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -256,7 +256,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                             AttackTarget = target,
                                             Position = target:GetPosition()
                                         }
-                                        self:LogDebug(string.format('Experimental ACU in range, going for suicide distance is '..tostring(enemyUnit.Distance)..' cutoff is '..tostring((self.MaxPlatoonWeaponRangeSq + 40 * 40))))
+                                        --self:LogDebug(string.format('Experimental ACU in range, going for suicide distance is '..tostring(enemyUnit.Distance)..' cutoff is '..tostring((self.MaxPlatoonWeaponRangeSq + 40 * 40))))
                                         self:ChangeState(self.SuicideMode)
                                         return
                                     end
@@ -266,7 +266,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                 Retreat = true,
                                 RetreatReason = 'DefenseThreat'
                             }
-                            self:LogDebug(string.format('Experimental enemy defense threat of '..threatTable.DefenseThreat.TotalThreat..' and friendly surface threat of '..localFriendlyLandThreat..' retreating'))
+                            --self:LogDebug(string.format('Experimental enemy defense threat of '..threatTable.DefenseThreat.TotalThreat..' and friendly surface threat of '..localFriendlyLandThreat..' retreating'))
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -288,7 +288,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                         AttackTarget = target,
                                         Position = target:GetPosition()
                                     }
-                                    self:LogDebug(string.format('Experimental ACU in range, going for suicide distance is '..tostring(enemyUnit.Distance)..' cutoff is '..tostring((self.MaxPlatoonWeaponRangeSq + 35 * 35))))
+                                    --self:LogDebug(string.format('Experimental ACU in range, going for suicide distance is '..tostring(enemyUnit.Distance)..' cutoff is '..tostring((self.MaxPlatoonWeaponRangeSq + 35 * 35))))
                                     self:ChangeState(self.SuicideMode)
                                     return
                                 end
@@ -308,7 +308,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                         RetreatReason = 'ExperimentalThreat',
                                         AttackTarget = enemyUnit.Object
                                     }
-                                    self:LogDebug(string.format('Experimental has experimental threat that outranges it, retreat'))
+                                    --self:LogDebug(string.format('Experimental has experimental threat that outranges it, retreat'))
                                     self:ChangeState(self.Retreating)
                                 end
                                 if not closestUnit or (enemyUnit.Distance < closestUnitDistance and closestUnitDistance > 25) then
@@ -319,9 +319,9 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if not target and threatTable.RangedUnitThreat.TotalThreat > 0 or threatTable.ArtilleryThreat.TotalThreat > 0 then
-                        self:LogDebug(string.format('We have Artillery or Ranged unit threat around us'))
-                        self:LogDebug(string.format('Artillery Threat '..threatTable.ArtilleryThreat.TotalThreat))
-                        self:LogDebug(string.format('Ranged Threat '..threatTable.RangedUnitThreat.TotalThreat))
+                        --self:LogDebug(string.format('We have Artillery or Ranged unit threat around us'))
+                        --self:LogDebug(string.format('Artillery Threat '..threatTable.ArtilleryThreat.TotalThreat))
+                        --self:LogDebug(string.format('Ranged Threat '..threatTable.RangedUnitThreat.TotalThreat))
                         for _, enemyUnit in threatTable.ArtilleryThreat.Units do
                             if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored and enemyUnit.Object:GetFractionComplete() >= 1 then
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object) or 10
@@ -336,7 +336,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                         RetreatReason = 'ArtilleryThreat',
                                         AttackTarget = enemyUnit.Object
                                     }
-                                    self:LogDebug(string.format('Experimental has more than one T2 arty within range of it, retreat'))
+                                    --self:LogDebug(string.format('Experimental has more than one T2 arty within range of it, retreat'))
                                     self:ChangeState(self.Retreating)
                                 end
                                 if not closestUnit or (enemyUnit.Distance < closestUnitDistance and closestUnitDistance > 25) then
@@ -360,7 +360,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                         RetreatReason = 'ArtilleryThreat',
                                         AttackTarget = enemyUnit.Object
                                     }
-                                    self:LogDebug(string.format('Experimental has more than 3 units with more range than the Experimental, retreat'))
+                                    --self:LogDebug(string.format('Experimental has more than 3 units with more range than the Experimental, retreat'))
                                     self:ChangeState(self.Retreating)
                                 end
                                 if not closestUnit or (enemyUnit.Distance < closestUnitDistance and closestUnitDistance > 25) then
@@ -401,7 +401,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                         RetreatReason = 'NavalThreat',
                                         AttackTarget = enemyUnit.Object
                                     }
-                                    self:LogDebug(string.format('Experimental has naval threat that outranges it, retreat'))
+                                    --self:LogDebug(string.format('Experimental has naval threat that outranges it, retreat'))
                                     self:ChangeState(self.Retreating)
                                 end
                                 if not closestUnit or (enemyUnit.Distance < closestUnitDistance and closestUnitDistance > 25) then
@@ -422,7 +422,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     AttackTarget = target,
                     Position = target:GetPosition()
                 }
-                self:LogDebug(string.format('Experimental Attacking target'))
+                --self:LogDebug(string.format('Experimental Attacking target'))
                 self:ChangeState(self.AttackTarget)
                 return
             end
@@ -486,7 +486,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                 self:LogWarning(string.format('no destination to navigate to'))
                 coroutine.yield(10)
                 --LOG('No destiantion break out of Navigating')
-                self:LogDebug(string.format('No destination recorded, decidewhattodo'))
+                --self:LogDebug(string.format('No destination recorded, decidewhattodo'))
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
@@ -512,7 +512,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     endPoint = true
                     if dx * dx + dz * dz < navigateDistanceCutOff then
                     IssueMove({self.ExperimentalUnit}, destination)
-                        self:LogDebug(string.format('Close to destination, DecideWhatToDo '))
+                        --self:LogDebug(string.format('Close to destination, DecideWhatToDo '))
                         WaitTicks(30)
                         self:ChangeState(self.DecideWhatToDo)
                         return
@@ -520,7 +520,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                 end
                 -- navigate towards waypoint 
                 if not waypoint then
-                    self:LogDebug(string.format('No waypoint returned'))
+                    --self:LogDebug(string.format('No waypoint returned'))
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
@@ -537,7 +537,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     end
                     local position = self.ExperimentalUnit:GetPosition()
                     if self.EnemyThreatTable.TotalSuroundingThreat > 25 and not StateUtils.PositionInWater(position) then
-                        self:LogDebug(string.format('Threat while navigating, decide what to do'))
+                        --self:LogDebug(string.format('Threat while navigating, decide what to do'))
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end

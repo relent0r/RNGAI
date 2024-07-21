@@ -19,7 +19,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 600.0 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.NUKE * categories.STRUCTURE}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) }},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION * categories.TECH3 } },
         },
         BuilderType = 'Any',
@@ -295,7 +295,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3NukeStructureRNG',
         Priority = 10,
         InstanceCount = 5,
-        FormRadius = 10000,
+        FormRadius = 160,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanArmyPoolWithCategoryRNG', { 0, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) } },
         },
@@ -310,7 +310,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3ArtilleryStructureRNG',
         Priority = 10,
         InstanceCount = 5,
-        FormRadius = 10000,
+        FormRadius = 160,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanArmyPoolWithCategoryRNG', { 0, categories.STRUCTURE * categories.ARTILLERY * (categories.TECH3 + categories.EXPERIMENTAL) } },
         },

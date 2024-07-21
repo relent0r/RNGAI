@@ -36,7 +36,7 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonLandBombCombatBehavior
         Main = function(self)
-            self:LogDebug(string.format('Welcome to the LandBombCombatBehavior StateMachine'))
+            --self:LogDebug(string.format('Welcome to the LandBombCombatBehavior StateMachine'))
 
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
@@ -79,13 +79,13 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
             local target
             
             if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
-                self:LogDebug('Checking for SuicideModeActive')
+                --self:LogDebug('Checking for SuicideModeActive')
                 local enemyAcuPosition = aiBrain.BrainIntel.SuicideModeTarget:GetPosition()
                 local rx = self.Pos[1] - enemyAcuPosition[1]
                 local rz = self.Pos[3] - enemyAcuPosition[3]
                 local acuDistance = rx * rx + rz * rz
                 if NavUtils.CanPathTo(self.MovementLayer, self.Pos, enemyAcuPosition) then
-                    self:LogDebug('Found SuicideMode enemy acu')
+                    --self:LogDebug('Found SuicideMode enemy acu')
                     if acuDistance > 6400 then
                         self.BuilderData = {
                             AttackTarget = aiBrain.BrainIntel.SuicideModeTarget,
@@ -106,25 +106,25 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
             local platoonUnits = self:GetPlatoonUnits()
             local currentPlatoonCount = RNGGETN(platoonUnits)
             if not target then
-                self:LogDebug('Checking for ACUSnipe Opporunity')
+                --self:LogDebug('Checking for ACUSnipe Opporunity')
                 target, requiredCount, acuIndex = RUtils.CheckACUSnipe(aiBrain, self.MovementLayer)
                 if target then
-                    self:LogDebug('Found ACUSnipe enemy acu')
+                    --self:LogDebug('Found ACUSnipe enemy acu')
                     local hp = aiBrain.EnemyIntel.ACU[acuIndex].HP
                     requiredCount = math.ceil(hp / self.WeaponDamage)
                 end
                 if not target then
                     if RNGGETN(platoonUnits) >= 2 then
-                        self:LogDebug('Checking for Closest enemy acu')
+                        --self:LogDebug('Checking for Closest enemy acu')
                         target = self:FindClosestUnit('Attack', 'Enemy', true, categories.COMMAND )
                         if target then
-                            self:LogDebug('Found closest enemy acu')
+                            --self:LogDebug('Found closest enemy acu')
                             local hp = target:GetHealth()
                             requiredCount = math.ceil(hp / self.WeaponDamage)
-                            self:LogDebug('Count required is '..tostring(requiredCount))
-                            self:LogDebug('Current platoon count is '..tostring(currentPlatoonCount))
+                            --self:LogDebug('Count required is '..tostring(requiredCount))
+                            --self:LogDebug('Current platoon count is '..tostring(currentPlatoonCount))
                             if currentPlatoonCount < requiredCount then
-                                self:LogDebug('Trying to merge with other bomb platoons ')
+                                --self:LogDebug('Trying to merge with other bomb platoons ')
                                 StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandBombMergeStateMachine', 80, 35, true)
                             end
                         end
@@ -143,12 +143,12 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
                         CutOff = 400
                     }
                     if acuDistance > 6400 then
-                        self:LogDebug('Navigating to target ')
+                        --self:LogDebug('Navigating to target ')
                         self.dest = self.BuilderData.Position
                         self:ChangeState(self.Navigating)
                         return
                     else
-                        self:LogDebug('Suicide Loop')
+                        --self:LogDebug('Suicide Loop')
                         self:ChangeState(self.SuicideLoop)
                         return
                     end
@@ -174,20 +174,20 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
             local targetPos =  self.BuilderData.Position
             local waitTime = RUtils.CenterPlatoonUnitsRNG(self, self.Pos)
             waitTime = waitTime * 10
-            self:LogDebug('Wait for platoon center '..tostring(waitTime))
+            --self:LogDebug('Wait for platoon center '..tostring(waitTime))
             coroutine.yield(waitTime)
-            self:LogDebug('Issuing attack')
+            --self:LogDebug('Issuing attack')
             while not IsDestroyed(self) do
-                self:LogDebug('Waiting for target')
+                --self:LogDebug('Waiting for target')
                 if target.Dead then
                     break
                 end
                 local unitRange = StateUtils.GetUnitMaxWeaponRange(target, 'Direct Fire') or 15
-                self:LogDebug('Unit Range is '..tostring(unitRange))
+                --self:LogDebug('Unit Range is '..tostring(unitRange))
                 local targetPos = target:GetPosition()
                 local allyUnits = aiBrain:GetNumUnitsAroundPoint(categories.ALLUNITS - categories.SCOUT - categories.INSIGNIFICANTUNIT, targetPos, unitRange , 'Ally')
                 if allyUnits > 3 then
-                    self:LogDebug('More than 3 units around target, move to attack')
+                    --self:LogDebug('More than 3 units around target, move to attack')
                     local units=GetPlatoonUnits(self)
                     for _,v in units do
                         if v and not v.Dead then
@@ -196,7 +196,7 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 else
-                    self:LogDebug('Less than 3 units around target, move to lerp')
+                    --self:LogDebug('Less than 3 units around target, move to lerp')
                     local units=GetPlatoonUnits(self)
                     local currentDistance = VDist3(targetPos, self.Pos)
                     for _,v in units do
@@ -228,13 +228,13 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
             local platPos = self:GetPlatoonPosition()
             if not builderData then
                 coroutine.yield(10)
-                self:LogDebug(string.format('MobileBomb had no builderData in navigation'))
+                --self:LogDebug(string.format('MobileBomb had no builderData in navigation'))
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
             if not destination then
                 coroutine.yield(10)
-                self:LogDebug(string.format('MobileBomb had no destination in navigation'))
+                --self:LogDebug(string.format('MobileBomb had no destination in navigation'))
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
@@ -243,7 +243,7 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
                 self.BuilderData = {}
                 --LOG('No Path in scout navigation, reason is '..repr(reason))
                 coroutine.yield(10)
-                self:LogDebug(string.format('MobileBomb had no path in navigation'))
+                --self:LogDebug(string.format('MobileBomb had no path in navigation'))
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
@@ -295,7 +295,7 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
                 end
             end
             --LOG('Scout exiting navigating')
-            self:LogDebug(string.format('Scout exiting navigating'))
+            --self:LogDebug(string.format('Scout exiting navigating'))
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -334,7 +334,7 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
                         if targetRange < self.MaxPlatoonWeaponRange then
                             attackStructure = true
                             for _, v in platUnits do
-                                --self:LogDebug('Role is '..repr(v.Role))
+                                ----self:LogDebug('Role is '..repr(v.Role))
                                 if v.Role == 'Artillery' or v.Role == 'Silo' and not v:IsUnitState("Attacking") then
                                     IssueClearCommands({v})
                                     IssueAttack({v},target)

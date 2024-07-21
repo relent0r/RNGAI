@@ -63,7 +63,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
 
         ---@param self AIExperimentalAirBehavior
         Main = function(self)
-            self:LogDebug(string.format('Welcome to the ExperimentalAirBehavior StateMachine'))
+            --self:LogDebug(string.format('Welcome to the ExperimentalAirBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             if not self.MovementLayer then
                 AIAttackUtils.GetMostRestrictiveLayerRNG(self)
@@ -172,23 +172,23 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                             Retreat = true,
                             RetreatReason = 'NoShield'
                         }
-                        self:LogDebug(string.format('Experimental has low shield, retreating'))
+                        --self:LogDebug(string.format('Experimental has low shield, retreating'))
                         self:ChangeState(self.Retreating)
                         return
                     end
                     --LOG('Shield is in caution our threat table is '..repr(threatTable))
                 end
-                self:LogDebug(string.format('Total Surrounding threat is '..tostring(threatTable.TotalSuroundingThreat)))
-                self:LogDebug(string.format('Air Surrounding threat is '..tostring(threatTable.AirThreat.TotalThreat)))
-                self:LogDebug(string.format('AirSurface Surrounding threat is '..tostring(threatTable.AirSurfaceThreat.TotalThreat)))
-                self:LogDebug(string.format('Defense Surrounding threat is '..tostring(threatTable.DefenseThreat.TotalThreat)))
-                self:LogDebug(string.format('Current experimental health percent is '..tostring(experimentalHealthPercent)))
+                --self:LogDebug(string.format('Total Surrounding threat is '..tostring(threatTable.TotalSuroundingThreat)))
+                --self:LogDebug(string.format('Air Surrounding threat is '..tostring(threatTable.AirThreat.TotalThreat)))
+                --self:LogDebug(string.format('AirSurface Surrounding threat is '..tostring(threatTable.AirSurfaceThreat.TotalThreat)))
+                --self:LogDebug(string.format('Defense Surrounding threat is '..tostring(threatTable.DefenseThreat.TotalThreat)))
+                --self:LogDebug(string.format('Current experimental health percent is '..tostring(experimentalHealthPercent)))
                 if experimentalHealthPercent < 0.20 and not self.SuicideMode then
                     self.BuilderData = {
                         Retreat = true,
                         RetreatReason = 'LowHealth'
                     }
-                    self:LogDebug(string.format('Experimental retreating due to very low health '))
+                    --self:LogDebug(string.format('Experimental retreating due to very low health '))
                     self:ChangeState(self.Retreating)
                     return
                 end
@@ -200,7 +200,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                                 Retreat = true,
                                 RetreatReason = 'AirThreat'
                             }
-                            self:LogDebug(string.format('Experimental enemy air threat of '..threatTable.AirThreat.TotalThreat..' and friendly air threat of '..localFriendlyAirThreat..' retreating'))
+                            --self:LogDebug(string.format('Experimental enemy air threat of '..threatTable.AirThreat.TotalThreat..' and friendly air threat of '..localFriendlyAirThreat..' retreating'))
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -212,7 +212,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                                 Retreat = true,
                                 RetreatReason = 'AirThreat'
                             }
-                            self:LogDebug(string.format('Experimental enemy land threat of '..threatTable.DefenseThreat.TotalThreat..' and friendly surface threat of '..localFriendlyLandThreat..' retreating'))
+                            --self:LogDebug(string.format('Experimental enemy land threat of '..threatTable.DefenseThreat.TotalThreat..' and friendly surface threat of '..localFriendlyLandThreat..' retreating'))
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -224,7 +224,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                                 Retreat = true,
                                 RetreatReason = 'AirThreat'
                             }
-                            self:LogDebug(string.format('Experimental enemy defense threat of '..threatTable.DefenseThreat.TotalThreat..' and friendly surface threat of '..localFriendlyLandThreat..' retreating'))
+                            --self:LogDebug(string.format('Experimental enemy defense threat of '..threatTable.DefenseThreat.TotalThreat..' and friendly surface threat of '..localFriendlyLandThreat..' retreating'))
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -311,7 +311,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     AttackTarget = target,
                     Position = target:GetPosition()
                 }
-                self:LogDebug(string.format('Experimental Attacking target'))
+                --self:LogDebug(string.format('Experimental Attacking target'))
                 if self.Bomber then
                     self:ChangeState(self.AttackRun)
                 else
@@ -320,18 +320,18 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                 return
             end
             if not target then
-                self:LogDebug(string.format('No target, searching for standard experimental target'))
+                --self:LogDebug(string.format('No target, searching for standard experimental target'))
                 target, _ = StateUtils.FindExperimentalTargetRNG(aiBrain, self, self.MovementLayer, experimentalPosition)
             end
             if target and not IsDestroyed(target) then
-                self:LogDebug(string.format('Target found'))
+                --self:LogDebug(string.format('Target found'))
                 --LOG('We have a target from FindExperimentalTargetRNG')
                 local targetPos = target:GetPosition()
                 local dx = targetPos[1] - experimentalPosition[1]
                 local dz = targetPos[3] - experimentalPosition[3]
                 local distance = dx * dx + dz * dz
-                self:LogDebug(string.format('Target is '..repr(target.UnitId)))
-                self:LogDebug(string.format('Target distance is '..distance))
+                --self:LogDebug(string.format('Target is '..repr(target.UnitId)))
+                --self:LogDebug(string.format('Target distance is '..distance))
                 if distance > self.MaxPlatoonWeaponRange * self.MaxPlatoonWeaponRange then
                     self.BuilderData = {
                         Position = targetPos,
@@ -517,7 +517,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     elseif maxPlatoonRange < self.MaxPlatoonWeaponRange then
                         maxPlatoonRange = self.MaxPlatoonWeaponRange
                     end
-                    self:LogDebug(string.format('Experimental of unit '..self.ExperimentalUnit.UnitId..' has a max platoon range of '..repr(maxPlatoonRange)))
+                    --self:LogDebug(string.format('Experimental of unit '..self.ExperimentalUnit.UnitId..' has a max platoon range of '..repr(maxPlatoonRange)))
                     local targetDistance = VDist3Sq(unitPos, targetPosition)
                     -- check if the move position is new or target has moved
                     if targetDistance < maxPlatoonRange * maxPlatoonRange then

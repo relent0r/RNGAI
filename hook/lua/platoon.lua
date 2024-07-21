@@ -1381,7 +1381,7 @@ Platoon = Class(RNGAIPlatoonClass) {
 
         while aiBrain:PlatoonExists(self) do
             coroutine.yield(1)
-            --RNGLOG('aiBrain.EngineerAssistManagerEngineerCount '..aiBrain.EngineerAssistManagerEngineerCount)
+            --LOG('aiBrain.EngineerAssistManagerEngineerCount '..aiBrain.EngineerAssistManagerEngineerCount)
             local totalBuildRate = 0
             local tech1Engineers = {}
             local tech2Engineers = {}
@@ -1455,14 +1455,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                 self:PlatoonDisband()
                 return
             end
-            --RNGLOG('EngineerAssistPlatoon total build rate is '..totalBuildRate)
+            --LOG('EngineerAssistPlatoon total build rate is '..totalBuildRate)
 
             local assistDesc = false
             --RNGLOG('aiBrain Engineer Assist Manager '..aiBrain.Nickname)
             --RNGLOG('EngineerAssistManager current priority table '..repr(aiBrain.EngineerAssistManagerPriorityTable))
-            if aiBrain.EngineerAssistManagerFocusCategory then
-                --RNGLOG('Focus category is '..repr(aiBrain.EngineerAssistManagerFocusCategory))
-            end
             local assistFound = false
 
             for k, assistData in aiBrain.EngineerAssistManagerPriorityTable do

@@ -267,7 +267,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T4 Exp Land',
         PlatoonTemplate = 'T4ExperimentalLandRNG',
         Priority = 1000,
-        FormRadius = 10000,
+        FormRadius = 160,
         InstanceCount = 50,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL - categories.uel0401 - categories.ARTILLERY } },
@@ -287,7 +287,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T4 Exp FatBoy',
         PlatoonTemplate = 'T4ExperimentalLandRNG',
         Priority = 1000,
-        FormRadius = 10000,
+        FormRadius = 160,
         InstanceCount = 50,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL * categories.uel0401 } },
@@ -307,7 +307,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T4 Exp Mobile Artillery',
         PlatoonTemplate = 'T4ExperimentalLandRNG',
         Priority = 1000,
-        FormRadius = 10000,
+        FormRadius = 160,
         InstanceCount = 50,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL * categories.ARTILLERY } },
@@ -327,7 +327,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T4 Exp Air',
         PlatoonTemplate = 'T4ExperimentalAirRNG',
         Priority = 1000,
-        FormRadius = 10000,
+        FormRadius = 160,
         InstanceCount = 50,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.EXPERIMENTAL } },
@@ -346,7 +346,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T4 Exp Sea',
         PlatoonTemplate = 'T4ExperimentalSea',
         Priority = 1000,
-        FormRadius = 10000,
+        FormRadius = 1000,
         InstanceCount = 50,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.NAVAL * categories.EXPERIMENTAL } },

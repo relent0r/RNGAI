@@ -38,7 +38,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonBehavior
         Main = function(self)
-            self:LogDebug(string.format('Welcome to the ZoneControlDefenseBehavior StateMachine'))
+            --self:LogDebug(string.format('Welcome to the ZoneControlDefenseBehavior StateMachine'))
 
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
@@ -90,10 +90,10 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonZoneControlDefenseBehavior
         Main = function(self)
-            self:LogDebug(string.format('DecideWhatToDo starting'))
+            --self:LogDebug(string.format('DecideWhatToDo starting'))
             local aiBrain = self:GetBrain()
             if not PlatoonExists(aiBrain, self) then
-                self:LogDebug(string.format('DecideWhatToDo platoon doesnt exist'))
+                --self:LogDebug(string.format('DecideWhatToDo platoon doesnt exist'))
                 return
             end
             local platPos = self:GetPlatoonPosition()
@@ -111,14 +111,14 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         if not self.BuilderData.Position then
                             --LOG('No self.BuilderData.Position in DecideWhatToDo suicide')
                         end
-                        self:LogDebug(string.format('DecideWhatToDo acu needs help navigating'))
+                        --self:LogDebug(string.format('DecideWhatToDo acu needs help navigating'))
                         self:ChangeState(self.Navigating)
                         return
                     else
                         self.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.AIR - categories.INSIGNIFICANTUNIT, platPos, self.MaxRadius, 'Enemy')
-                        self:LogDebug(string.format('DecideWhatToDo number of candidates acu protection')..table.getn(self.targetcandidates))
+                        --self:LogDebug(string.format('DecideWhatToDo number of candidates acu protection')..table.getn(self.targetcandidates))
                         if not table.empty(self.targetcandidates) then
-                            self:LogDebug(string.format('DecideWhatToDo found simple target'))
+                            --self:LogDebug(string.format('DecideWhatToDo found simple target'))
                             self:ChangeState(self.CombatLoop)
                             return
                         end
@@ -127,7 +127,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             end
             local threat=RUtils.GrabPosDangerRNG(aiBrain,platPos,self.EnemyRadius, true, false, false)
             if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then
-                self:LogDebug(string.format('DecideWhatToDo high threat retreating'))
+                --self:LogDebug(string.format('DecideWhatToDo high threat retreating'))
                 self.retreat=true
                 self:ChangeState(self.Retreating)
                 return
@@ -139,18 +139,18 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 local ax = platPos[1] - targetPos[1]
                 local az = platPos[3] - targetPos[3]
                 if ax * ax + az * az < self.EnemyRadiusSq then
-                    self:LogDebug(string.format('DecideWhatToDo previous target combatloop'))
+                    --self:LogDebug(string.format('DecideWhatToDo previous target combatloop'))
                     self:ChangeState(self.CombatLoop)
                     return
                 end
             end
             local target
             if not target then
-                self:LogDebug(string.format('DecideWhatToDo no target look around at max radius'))
+                --self:LogDebug(string.format('DecideWhatToDo no target look around at max radius'))
                 self.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.AIR - categories.INSIGNIFICANTUNIT, platPos, self.MaxRadius, 'Enemy')
-                self:LogDebug(string.format('DecideWhatToDo number of candidates')..table.getn(self.targetcandidates))
+                --self:LogDebug(string.format('DecideWhatToDo number of candidates')..table.getn(self.targetcandidates))
                 if not table.empty(self.targetcandidates) then
-                    self:LogDebug(string.format('DecideWhatToDo found simple target'))
+                    --self:LogDebug(string.format('DecideWhatToDo found simple target'))
                     self:ChangeState(self.CombatLoop)
                     return
                 end
@@ -158,7 +158,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local targetZone
             if not target then
                 -- look for main base attacks?
-                self:LogDebug(string.format('DecideWhatToDo no target look at main base'))
+                --self:LogDebug(string.format('DecideWhatToDo no target look at main base'))
                 local targetThreat
                 local basePosition
                 if aiBrain.BuilderManagers[self.LocationType].FactoryManager.LocationActive then
@@ -172,20 +172,20 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         Position = basePosition,
                         CutOff = 400
                     }
-                    self:LogDebug(string.format('TargetZone is MAIN'..tostring(self.BuilderData)))
+                    --self:LogDebug(string.format('TargetZone is MAIN'..tostring(self.BuilderData)))
                     if not self.BuilderData.Position then
-                        self:LogDebug(string.format('No self.BuilderData.Position in DecideWhatToDo targetzone'))
+                        --self:LogDebug(string.format('No self.BuilderData.Position in DecideWhatToDo targetzone'))
                     end
-                    self:LogDebug(string.format('DecideWhatToDo target zone navigate'))
+                    --self:LogDebug(string.format('DecideWhatToDo target zone navigate'))
                     self:ChangeState(self.Navigating)
                     return
                 end
             end
             if not targetZone then
-                self:LogDebug(string.format('DecideWhatToDo no target zone, look for one'))
+                --self:LogDebug(string.format('DecideWhatToDo no target zone, look for one'))
                 targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType, true)
                 if targetZone then
-                    self:LogDebug(string.format('DecideWhatToDo Target zone '..targetZone))
+                    --self:LogDebug(string.format('DecideWhatToDo Target zone '..targetZone))
                     self.BuilderData = {
                         TargetZone = targetZone,
                         Position = aiBrain.Zones.Land.zones[targetZone].pos,
@@ -199,11 +199,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         IssueClearCommands(platUnits)
                         self:MoveToLocation(self.BuilderData.Position,false)
                         coroutine.yield(45)
-                        self:LogDebug(string.format('DecideWhatToDo we are already close to zone, restart'))
+                        --self:LogDebug(string.format('DecideWhatToDo we are already close to zone, restart'))
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
-                    self:LogDebug(string.format('DecideWhatToDo target zone navigate'))
+                    --self:LogDebug(string.format('DecideWhatToDo target zone navigate'))
                     self:ChangeState(self.Navigating)
                     return
                 else
@@ -215,7 +215,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 local hz = self.Pos[3] - self.Home[3]
                 local homeDistance = hx * hx + hz * hz
                 if homeDistance < 6400 and aiBrain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint then
-                    self:LogDebug(string.format('No transport used and close to base, move to rally point'))
+                    --self:LogDebug(string.format('No transport used and close to base, move to rally point'))
                     local rallyPoint = aiBrain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint
                     local rx = self.Pos[1] - self.Home[1]
                     local rz = self.Pos[3] - self.Home[3]
@@ -229,7 +229,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             end
             coroutine.yield(30)
             --LOG('aa defense end of decidewhattodoloop')
-            self:LogDebug(string.format('DecideWhatToDo ending, repeat'))
+            --self:LogDebug(string.format('DecideWhatToDo ending, repeat'))
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -353,18 +353,18 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     Position = self.Home,
                     CutOff = 400
                 }
-                self:LogDebug(string.format('No self.BuilderData.Position in retreat'))
+                --self:LogDebug(string.format('No self.BuilderData.Position in retreat'))
             end
             local rx = self.Pos[1] - self.BuilderData.Position[1]
             local rz = self.Pos[3] - self.BuilderData.Position[3]
             if rx * rx + rz * rz < 14400 then
                 self:MoveToLocation(self.BuilderData.Position, false)
                 coroutine.yield(25)
-                self:LogDebug(string.format('Already closes to retreat position '..tostring(self.BuilderData.Position)))
+                --self:LogDebug(string.format('Already closes to retreat position '..tostring(self.BuilderData.Position)))
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
-            self:LogDebug(string.format('retreating to position '..tostring(self.BuilderData.Position)))
+            --self:LogDebug(string.format('retreating to position '..tostring(self.BuilderData.Position)))
             self:ChangeState(self.Navigating)
             return
         end,
@@ -386,21 +386,21 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             end
             local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
             if usedTransports then
-                self:LogDebug(string.format('platoon used transports'))
+                --self:LogDebug(string.format('platoon used transports'))
                 if not self.BuilderData.Position then
                     --LOG('No self.BuilderData.Position in Transporting')
                 end
                 self:ChangeState(self.Navigating)
                 return
             else
-                self:LogDebug(string.format('platoon tried but didnt use transports'))
+                --self:LogDebug(string.format('platoon tried but didnt use transports'))
                 coroutine.yield(20)
                 if self.Home and self.LocationType then
                     local hx = self.Pos[1] - self.Home[1]
                     local hz = self.Pos[3] - self.Home[3]
                     local homeDistance = hx * hx + hz * hz
                     if homeDistance < 6400 and brain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint then
-                        self:LogDebug(string.format('No transport used and close to base, move to rally point'))
+                        --self:LogDebug(string.format('No transport used and close to base, move to rally point'))
                         local rallyPoint = brain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint
                         local rx = self.Pos[1] - self.Home[1]
                         local rz = self.Pos[3] - self.Home[3]
@@ -438,7 +438,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 local path, reason, distance, threats = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.BuilderData.Position, 1, 150,80)
                 if not path then
                     if reason ~= "TooMuchThreat" then
-                        self:LogDebug(string.format('platoon is going to use transport'))
+                        --self:LogDebug(string.format('platoon is going to use transport'))
                         self:ChangeState(self.Transporting)
                         return
                     elseif reason == "TooMuchThreat" and NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.BuilderData.Position) then
@@ -463,7 +463,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     if self.retreat then
                         self.retreat = false
                     end
-                    self:LogDebug(string.format('platoon is at destination, exiting'))
+                    --self:LogDebug(string.format('platoon is at destination, exiting'))
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
@@ -485,7 +485,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     if NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.path[nodenum]) then
                         self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.path[nodenum], 1, 150,80)
                         coroutine.yield(10)
-                        self:LogDebug(string.format('platoon is doing the lastfinaldist thing'))
+                        --self:LogDebug(string.format('platoon is doing the lastfinaldist thing'))
                         continue
                     end
                 end
@@ -493,12 +493,12 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     self.navigating=false
                     self.path=nil
                     coroutine.yield(20)
-                    self:LogDebug(string.format('Navigating path failure or path in water, decidewhattodo'))
+                    --self:LogDebug(string.format('Navigating path failure or path in water, decidewhattodo'))
                     if (self.dest and not NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.dest)) then
-                        self:LogDebug(string.format('CanPathTo failure'))
-                        self:LogDebug(string.format(self.MovementLayer))
-                        self:LogDebug(string.format(tostring(self.Pos)))
-                        self:LogDebug(string.format(tostring(self.dest)))
+                        --self:LogDebug(string.format('CanPathTo failure'))
+                        --self:LogDebug(string.format(self.MovementLayer))
+                        --self:LogDebug(string.format(tostring(self.Pos)))
+                        --self:LogDebug(string.format(tostring(self.dest)))
                     end
                     self:ChangeState(self.DecideWhatToDo)
                     return
@@ -567,7 +567,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         StateUtils.SpreadMove(platoonUnits,StateUtils.Midpoint(self.path[1],self.path[2],0.1))
                     else
                         if not self.BuilderData.Position then
-                            self:LogDebug(string.format('No BuilderData.Position '))
+                            --self:LogDebug(string.format('No BuilderData.Position '))
                         end
                         self.dest=self.BuilderData.Position
                         self:MoveToLocation(self.dest,false)
@@ -583,7 +583,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 coroutine.yield(25)
-                self:LogDebug(string.format('platoon is at end of navigating loop starting again'))
+                --self:LogDebug(string.format('platoon is at end of navigating loop starting again'))
             end
         end,
 

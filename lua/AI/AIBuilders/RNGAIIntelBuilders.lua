@@ -103,7 +103,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerStateAeonT3SACURNG',
         Priority = 650,
         BuilderConditions = {
-            { UCBC, 'StructureBuildDemand', { 'Structure', 'Intel', 'optics'} },
+            { UCBC, 'StructureBuildDemand', { 'Structure', 'intel', 'Optics'} },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.AEON * categories.OPTICS * categories.STRUCTURE}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.3 }},
         },
@@ -285,7 +285,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3OpticsStructureRNG',
         Priority = 10,
         InstanceCount = 1,
-        FormRadius = 10000,
+        FormRadius = 160,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanArmyPoolWithCategoryRNG', { 0, categories.AEON * categories.OPTICS * categories.STRUCTURE } },
         },

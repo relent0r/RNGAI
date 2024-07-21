@@ -39,7 +39,7 @@ AIPlatoonAirScoutBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonAirScoutBehavior
         Main = function(self)
-            self:LogDebug(string.format('Welcome to the AirScoutBehavior StateMachine'))
+            --self:LogDebug(string.format('Welcome to the AirScoutBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             self.BaseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
             self.BaseMilitaryArea = aiBrain.OperatingAreas['BaseMilitaryArea']
@@ -89,11 +89,11 @@ AIPlatoonAirScoutBehavior = Class(AIPlatoonRNG) {
             local scout = self.Scout
             local cdr = aiBrain.CDRUnit
             if cdr.AirScout and not cdr.AirScout.Dead then
-                self:LogDebug(string.format('ACU already have a scout assigned'))
+                ----self:LogDebug(string.format('ACU already have a scout assigned'))
             end
             if not cdr.Dead and cdr.Active and (not cdr.AirScout or cdr.AirScout.Dead) and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 then
                 self.BuilderData = {PatrolUnit = cdr}
-                self:LogDebug(string.format('Scout is assigning itself to acu'))
+                ----self:LogDebug(string.format('Scout is assigning itself to acu'))
                 self:ChangeState(self.PatrolUnit)
                 return
             end
@@ -184,7 +184,7 @@ AIPlatoonAirScoutBehavior = Class(AIPlatoonRNG) {
                 if not movePosition then
                     WARN('AI-RNG : Fighter no builderdata position passed')
                 end
-                self:LogDebug(string.format('Setting goal to movePosition '..tostring(movePosition[1])..' : '..tostring(movePosition[3])))
+                ----self:LogDebug(string.format('Setting goal to movePosition '..tostring(movePosition[1])..' : '..tostring(movePosition[3])))
                 if navigator then
                     navigator:SetGoal(movePosition)
                 end
@@ -251,7 +251,7 @@ AIPlatoonAirScoutBehavior = Class(AIPlatoonRNG) {
                 IssuePatrol({self.Scout}, StateUtils.RandomLocation(unitPos[1], unitPos[3]))
                 IssuePatrol({self.Scout}, StateUtils.RandomLocation(unitPos[1], unitPos[3]))
                 if currentTime + patrolTime < GetGameTimeSeconds() then
-                    self:LogDebug(string.format('Clearing Scout flag from acu'))
+                    ----self:LogDebug(string.format('Clearing Scout flag from acu'))
                     unit.AirScout = nil
                     self:ChangeState(self.DecideWhatToDo)
                     return

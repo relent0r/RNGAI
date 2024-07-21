@@ -39,7 +39,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonFighterBehavior
         Main = function(self)
-            self:LogDebug(string.format('Welcome to the FighterBehavior StateMachine'))
+            --self:LogDebug(string.format('Welcome to the FighterBehavior StateMachine'))
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
                 self:LogWarning('requires generated navigational mesh')
@@ -584,7 +584,7 @@ FighterThreatThreads = function(aiBrain, platoon)
                         if not aiBrain.BrainIntel.AirStagingRequired and aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) < 1 then
                             aiBrain.BrainIntel.AirStagingRequired = true
                         elseif not platoon.BuilderData.AttackTarget or platoon.BuilderData.AttackTarget.Dead then
-                            LOG('Assigning unit to refuel platoon from refuel')
+                            --LOG('Assigning unit to refuel platoon from refuel')
                             local plat = aiBrain:MakePlatoon('', '')
                             aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'attack', 'None')
                             import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Fighter', LocationType = platoon.LocationType}, plat, {unit})

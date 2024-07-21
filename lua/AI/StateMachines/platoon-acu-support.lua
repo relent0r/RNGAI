@@ -35,7 +35,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonBehavior
         Main = function(self)
-            self:LogDebug(string.format('Welcome to the ACUSupportBehavior StateMachine'))
+            --self:LogDebug(string.format('Welcome to the ACUSupportBehavior StateMachine'))
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
                 self:LogWarning('requires generated navigational mesh')
@@ -74,7 +74,6 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             self.CurrentPlatoonThreatAntiAir = 0
             self.MachineStarted = true
             self.threatTimeout = 0
-            LOG('PlatoonCount at time of acu support startup is '..table.getn(self:GetPlatoonUnits()))
             StartACUSupportThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -120,17 +119,16 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             end
             local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, true, true)
             if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
-                self:LogDebug(string.format('DecideWhatToDo we have no antiair threat and there are air units around'))
+                --self:LogDebug(string.format('DecideWhatToDo we have no antiair threat and there are air units around'))
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
                 local label = NavUtils.GetLabel('Water', self.Pos)
                 aiBrain:PlatoonReinforcementRequestRNG(self, 'AntiAir', closestBase, label)
             end
-            if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then
+            if not acu.Caution and threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then
                 if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*1.5 > (threat.enemySurface - threat.enemyStructure) then
                     rangedAttack = true
                 else
-                    self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
-                    LOG('ACU Support is itself retreating')
+                    --self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
                     self.retreat=true
                     self:ChangeState(self.Retreating)
                     return
@@ -144,16 +142,13 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 local ax = self.Pos[1] - targetPos[1]
                 local az = self.Pos[3] - targetPos[3]
                 if ax * ax + az * az < self.EnemyRadiusSq then
-                    self:LogDebug(string.format('DecideWhatToDo previous target combatloop'))
+                    --self:LogDebug(string.format('DecideWhatToDo previous target combatloop'))
                     self:ChangeState(self.CombatLoop)
                     return
                 end
             end
             local target
             if StateUtils.SimpleTarget(self,aiBrain) then
-                LOG('ACU Support is moving to combat loop')
-                local units = self:GetPlatoonUnits()
-                LOG('Current platoon unit count is '..table.getn(units))
                 if rangedAttack then
                     self:ChangeState(self.RangedCombatLoop)
                     return
@@ -163,62 +158,38 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if not acu.Retreating and (VDist2Sq(acu.CDRHome[1], acu.CDRHome[3], acu.Position[1], acu.Position[3]) < 14400) and acu.CurrentEnemyThreat < 5 then
-                --RNGLOG('CDR is not active and not retreating, vent')
-                self:LogDebug(string.format('Request to vent platoon due to distance from home base, current distance is '..tostring(VDist2Sq(acu.CDRHome[1], acu.CDRHome[3], acu.Position[1], acu.Position[3]))))
-                LOG('Request to vent platoon due to distance from home base, current distance is '..tostring(VDist2Sq(acu.CDRHome[1], acu.CDRHome[3], acu.Position[1], acu.Position[3])))
-                LOG('PlatoonCount at time of vent is '..table.getn(self:GetPlatoonUnits()))
+                --self:LogDebug(string.format('Request to vent platoon due to distance from home base, current distance is '..tostring(VDist2Sq(acu.CDRHome[1], acu.CDRHome[3], acu.Position[1], acu.Position[3]))))
                 RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
                 coroutine.yield(20)
-                if PlatoonExists(aiBrain, self) then
-                    LOG('ACU Support is exiting due to acu retreating or close to base')
-                    --self:ExitStateMachine()
-                end
                 return
             end
             if acu.Retreating and acu.CurrentEnemyThreat < 5 then
                 --RNGLOG('CDR is not in danger and retreating, vent')
-                self:LogDebug(string.format('Request to vent platoon due to retreating acu and low enemy threat'))
-                LOG('PlatoonCount at time of vent is '..table.getn(self:GetPlatoonUnits()))
+                --self:LogDebug(string.format('Request to vent platoon due to retreating acu and low enemy threat'))
                 RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
                 coroutine.yield(20)
-                if PlatoonExists(aiBrain, self) then
-                    LOG('ACU Support is exiting due to acu retreating and low threat')
-                    --self:ExitStateMachine()
-                end
                 return
             end
             if acu.CurrentEnemyThreat < 5 and acu.CurrentFriendlyThreat > 15 then
                 --RNGLOG('CDR is not in danger, threatTimeout increased')
                 self.threatTimeout = self.threatTimeout + 1
                 if self.threatTimeout > 10 then
-                    self:LogDebug(string.format('Request to vent platoon due to low enemy threat and high friendly threat'))
-                    LOG('PlatoonCount at time of vent is '..table.getn(self:GetPlatoonUnits()))
+                    --self:LogDebug(string.format('Request to vent platoon due to low enemy threat and high friendly threat'))
                     RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
                     coroutine.yield(20)
-                    if PlatoonExists(aiBrain, self) then
-                        LOG('ACU Support is exiting due to low acu threat')
-                        --self:ExitStateMachine()
-                    end
                     return
                 end
             end
             if self.MovementLayer == 'Land' and RUtils.PositionOnWater(acu.Position[1], acu.Position[3]) then
-                LOG('PlatoonCount at time of vent is '..table.getn(self:GetPlatoonUnits()))
-                self:LogDebug(string.format('Request to vent platoon just to acu in water'))
+                --self:LogDebug(string.format('Request to vent platoon just to acu in water'))
                 RUtils.VentToPlatoon(self, aiBrain, 'LandAssaultBehavior')
                 coroutine.yield(20)
-                if PlatoonExists(aiBrain, self) then
-                    LOG('ACU Support is exiting due to acu in water')
-                    --self:ExitStateMachine()
-                end
                 return
             end
             if acu.Position and NavUtils.CanPathTo(self.MovementLayer, self.Pos, acu.Position) then
-                LOG('ACU Support is navigating to acu')
                 local rx = self.Pos[1] - acu.Position[1]
                 local rz = self.Pos[3] - acu.Position[3]
                 local acuDistance = rx * rx + rz * rz
-                LOG('ACU Support acu distance is '..tostring(acuDistance))
                 if acuDistance > 14400 then
                     self.BuilderData = {
                         Position = acu.Position,
@@ -345,7 +316,6 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
-            LOG('ACU Support is supporting ACU')
             local aiBrain = self:GetBrain()
             local acuUnit = aiBrain.CDRUnit
             local platUnits=GetPlatoonUnits(self)
@@ -353,7 +323,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local az = self.Pos[3] - acuUnit.Position[3]
             local acuDistance = ax * ax + az * az
             if acuUnit.Active and acuDistance > 1600 then
-                self:LogDebug(string.format('ACU Support ACU is active and further than 1600 units'))
+                --self:LogDebug(string.format('ACU Support ACU is active and further than 1600 units'))
                 self.MoveToPosition = StateUtils.GetSupportPosition(aiBrain, self)
                 if not self.MoveToPosition then
                     self.MoveToPosition = RUtils.AvoidLocation(acuUnit.Position, self.Pos, 15)
@@ -402,14 +372,9 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 --RNGLOG('Target distance is '..VDist2Sq(targetPosition[1], targetPosition[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3]))
                 if targetDistance < math.max(targetRange, 1225) and targetRange <= 2500 then
                     if not NavUtils.CanPathTo(self.MovementLayer, self.Pos, targetPosition) then 
-                        self:LogDebug(string.format('Request to vent platoon as we cant path to them'))
-                        LOG('PlatoonCount at time of vent is '..table.getn(self:GetPlatoonUnits()))
+                        --self:LogDebug(string.format('Request to vent platoon as we cant path to them'))
                         RUtils.VentToPlatoon(self, aiBrain, 'LandAssaultBehavior')
                         coroutine.yield(20)
-                        if PlatoonExists(aiBrain, self) then
-                            LOG('ACU Support is exiting due to pathing issues')
-                            --self:ExitStateMachine()
-                        end
                         return
                     end
                     if not self.Pos then
@@ -609,7 +574,6 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 end
                 --RNGLOG('Target kite has completed')
             end
-            LOG('ACU Support is exiting supporting ACU')
             coroutine.yield(30)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -623,7 +587,6 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
-            LOG('ACU Support ranged combat loop')
             local aiBrain = self:GetBrain()
             local units=GetPlatoonUnits(self)
             if not aiBrain.BrainIntel.SuicideModeActive then
@@ -694,7 +657,6 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         --- The platoon retreats from a threat
         ---@param self AIPlatoonACUSupportBehavior
         Main = function(self)
-            LOG('ACU Support is retreating')
             local aiBrain = self:GetBrain()
             local location = false
             local avoidTargetPos
@@ -730,7 +692,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     end
                     local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, targetPos, true)
                     if attackStructure then
-                        self:LogDebug(string.format('Non Artillery retreating'))
+                        --self:LogDebug(string.format('Non Artillery retreating'))
                         for _, v in platUnits do
                             if v.Role ~= 'Artillery' and v.Role ~= 'Silo' then
                                 if zoneRetreat then
@@ -742,7 +704,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                         end
                     else
                         if zoneRetreat then
-                            self:LogDebug(string.format('Performing zone retreat to '..tostring(aiBrain.Zones.Land.zones[zoneRetreat].pos[1])..' : '..tostring(aiBrain.Zones.Land.zones[zoneRetreat].pos[3])))
+                            --self:LogDebug(string.format('Performing zone retreat to '..tostring(aiBrain.Zones.Land.zones[zoneRetreat].pos[1])..' : '..tostring(aiBrain.Zones.Land.zones[zoneRetreat].pos[3])))
                             self:MoveToLocation(aiBrain.Zones.Land.zones[zoneRetreat].pos, false)
                         else
                             self:MoveToLocation(self.Home, false)
@@ -775,7 +737,6 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 --LOG('No self.BuilderData.Position in retreat')
             end
             self.dest = self.BuilderData.Position
-            LOG('ACU Support is exiting retreating back to navigating')
             self:ChangeState(self.Navigating)
             return
         end,
@@ -797,18 +758,18 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             end
             local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
             if usedTransports then
-                self:LogDebug(string.format('platoon used transports'))
+                --self:LogDebug(string.format('platoon used transports'))
                 self:ChangeState(self.Navigating)
                 return
             else
-                self:LogDebug(string.format('platoon tried but didnt use transports'))
+                --self:LogDebug(string.format('platoon tried but didnt use transports'))
                 coroutine.yield(20)
                 if self.Home and self.LocationType then
                     local hx = self.Pos[1] - self.Home[1]
                     local hz = self.Pos[3] - self.Home[3]
                     local homeDistance = hx * hx + hz * hz
                     if homeDistance < 6400 and brain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint then
-                        self:LogDebug(string.format('No transport used and close to base, move to rally point'))
+                        --self:LogDebug(string.format('No transport used and close to base, move to rally point'))
                         local rallyPoint = brain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint
                         local rx = self.Pos[1] - self.Home[1]
                         local rz = self.Pos[3] - self.Home[3]
@@ -844,7 +805,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             end
             local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
             if usedTransports then
-                self:LogDebug(string.format('platoon used transports'))
+                --self:LogDebug(string.format('platoon used transports'))
                 if not self.BuilderData.Position then
                     --LOG('No self.BuilderData.Position in Transporting')
                 end
@@ -852,14 +813,14 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Navigating)
                 return
             else
-                self:LogDebug(string.format('platoon tried but didnt use transports'))
+                --self:LogDebug(string.format('platoon tried but didnt use transports'))
                 coroutine.yield(20)
                 if self.Home and self.LocationType then
                     local hx = self.Pos[1] - self.Home[1]
                     local hz = self.Pos[3] - self.Home[3]
                     local homeDistance = hx * hx + hz * hz
                     if homeDistance < 6400 and brain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint then
-                        self:LogDebug(string.format('No transport used and close to base, move to rally point'))
+                        --self:LogDebug(string.format('No transport used and close to base, move to rally point'))
                         local rallyPoint = brain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint
                         local rx = self.Pos[1] - self.Home[1]
                         local rz = self.Pos[3] - self.Home[3]
@@ -887,7 +848,6 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         --- The platoon retreats from a threat
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
-            LOG('ACU Support is navigating')
             local aiBrain = self:GetBrain()
             local platoonUnits = GetPlatoonUnits(self)
             local pathmaxdist=0
@@ -897,12 +857,9 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             if not self.path and self.BuilderData.Position and self.BuilderData.CutOff then
                 local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.BuilderData.Position, 1, 150,80)
                 self.path = path
-                if not path then
-                    LOG('No path due to '..tostring(reason))
-                end
             end
             if not self.path then
-                self:LogDebug(string.format('platoon is going to use transport'))
+                --self:LogDebug(string.format('platoon is going to use transport'))
                 self:ChangeState(self.Transporting)
                 return
             end
@@ -913,7 +870,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     self.path=false
                     self.dest=false
                     coroutine.yield(10)
-                    self:LogDebug(string.format('Navigating exit condition met, decidewhattodo'))
+                    --self:LogDebug(string.format('Navigating exit condition met, decidewhattodo'))
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 else
@@ -1025,7 +982,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                         StateUtils.SpreadMove(scouts,StateUtils.Midpoint(self.path[1],self.path[2],0.15))
                         StateUtils.SpreadMove(aa,StateUtils.Midpoint(self.path[1],self.path[2],0.1))
                     else
-                        self:LogDebug(string.format('ACUSupport final movement'..nodenum))
+                        --self:LogDebug(string.format('ACUSupport final movement'..nodenum))
                         self.dest=self.BuilderData.Position
                         self:MoveToLocation(self.dest,false)
                     end
@@ -1088,7 +1045,8 @@ AssignToUnitsMachine = function(data, platoon, units)
                 end
             end
         end
-        if not platoon.MachineStarted then
+        if not platoon.MachineInitialized then
+            platoon.MachineInitialized = true
             setmetatable(platoon, AIPlatoonACUSupportBehavior)
             platoon.PlatoonData = data.PlatoonData
         end
