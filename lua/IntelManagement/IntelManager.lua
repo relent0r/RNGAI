@@ -1662,7 +1662,7 @@ IntelManager = Class {
         return false, false
     end,
 
-    AdaptiveProductionThread = function(self, type, data)
+    AdaptiveProductionThread = function(self, productiontype, data)
         local aiBrain = self.Brain
         local baseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
         local baseMilitaryArea = aiBrain.OperatingAreas['BaseMilitaryArea']
@@ -1677,16 +1677,16 @@ IntelManager = Class {
         local potentialStrikes = {}
         local minThreatRisk = 0
         local abortZone = true
-        if type == 'AirAntiSurface' then
+        if productiontype == 'AirAntiSurface' then
             threatType = 'AntiAir'
             minimumExtractorTier = 2
         end
-        if type == 'AirAntiNaval' then
+        if productiontype == 'AirAntiNaval' then
             threatType = 'AntiAir'
             minimumExtractorTier = 2
         end
         -- note to self. When dividing using vdist3sq the division also needs to be squared. e.g instead of divide by 3, divide by 9.
-        if type == 'AirAntiSurface' then
+        if productiontype == 'AirAntiSurface' then
             --RNGLOG('aiBrain.BrainIntel.SelfThreat.AirNow '..aiBrain.BrainIntel.SelfThreat.AirNow)
             --RNGLOG('aiBrain.EnemyIntel.EnemyThreatCurrent.Air '..aiBrain.EnemyIntel.EnemyThreatCurrent.Air)
             if aiBrain.BrainIntel.SelfThreat.AirNow > aiBrain.EnemyIntel.EnemyThreatCurrent.Air * 1.5 then
@@ -1749,7 +1749,7 @@ IntelManager = Class {
                             if aiBrain.emanager.mex[v1.id].T2 > 0 or aiBrain.emanager.mex[v1.id].T3 > 0 then
                                 --RNGLOG('Enemy has T2+ mexes in zone')
                                 --RNGLOG('Enemystartdata '..repr(v1.enemystartdata))
-                                if type == 'AirAntiSurface' then
+                                if productiontype == 'AirAntiSurface' then
                                     if minThreatRisk < 60 then
                                         for c, b in v1.enemystartdata do
                                             if b.startdistance > baseRestrictedArea * baseRestrictedArea then
@@ -1773,7 +1773,7 @@ IntelManager = Class {
                     end
                 end
             end
-        elseif type == 'DefensiveAntiSurface' then
+        elseif productiontype == 'DefensiveAntiSurface' then
             local defensiveUnitsFound = false
             local defensiveUnitThreat = 0
             if not RNGTableEmpty(aiBrain.EnemyIntel.DirectorData.Defense) then
@@ -1832,7 +1832,7 @@ IntelManager = Class {
             end
             --RNGLOG('Directordata current mml production count '..aiBrain.amanager.Demand.Land.T2.mml)
             
-        elseif type == 'LandAntiSurface' then
+        elseif productiontype == 'LandAntiSurface' then
             for k, v in aiBrain.EnemyIntel.ACU do
                 --if v.Position[1] then
                 --    RNGLOG('Current Distance '..VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos))
@@ -1857,7 +1857,7 @@ IntelManager = Class {
                     end
                 end
             end
-        elseif type == 'AirAntiNaval' then
+        elseif productiontype == 'AirAntiNaval' then
             --RNGLOG(aiBrain.Nickname)
             --RNGLOG('aiBrain.BrainIntel.SelfThreat.AirNow '..aiBrain.BrainIntel.SelfThreat.AirNow)
             --RNGLOG('ally air threat is '..aiBrain.BrainIntel.SelfThreat.AllyAirThreat)
@@ -1934,7 +1934,7 @@ IntelManager = Class {
         
         --RNGLOG('CheckStrikPotential')
         --RNGLOG('ThreatRisk is '..minThreatRisk)
-        if type == 'AirAntiSurface' then
+        if productiontype == 'AirAntiSurface' then
             if not self.StrategyFlags.T3BomberRushActivated then
                 if aiBrain.BrainIntel.AirPhase == 3 and aiBrain.EnemyIntel.AirPhase < 3 then
                     aiBrain.amanager.Demand.Air.T3.bomber = 1
@@ -2095,7 +2095,7 @@ IntelManager = Class {
                     aiBrain.EngineerAssistManagerFocusSnipe = false
                 end
             end
-        elseif type == 'LandAntiSurface' then
+        elseif productiontype == 'LandAntiSurface' then
             local acuSnipe = false
             if not table.empty(potentialStrikes) then
                 local count = math.ceil(desiredStrikeDamage / 1000)
@@ -2162,7 +2162,7 @@ IntelManager = Class {
             if disableRangedBot and aiBrain.amanager.Current['Land']['T3']['sniper'] > 1 then
                 aiBrain.amanager.Demand.Land.T3.sniper = 0
             end
-        elseif type == 'AirAntiNaval' then
+        elseif productiontype == 'AirAntiNaval' then
             if not table.empty(potentialStrikes) then
                 --RNGLOG('potentialStrikes for navy '..repr(potentialStrikes))
                 local count = math.ceil(desiredStrikeDamage / 1000)
@@ -2214,7 +2214,7 @@ IntelManager = Class {
                 end
             end
             --RNGLOG('Current T2 torpcount is '..aiBrain.amanager.Demand.Air.T2.torpedo)
-        elseif type == 'MobileAntiAir' then
+        elseif productiontype == 'MobileAntiAir' then
             local selfThreat = aiBrain.BrainIntel.SelfThreat
             local enemyThreat = aiBrain.EnemyIntel.EnemyThreatCurrent
             if selfThreat.LandNow * 1.5 > enemyThreat.Land and selfThreat.AntiAirNow < enemyThreat.Air then
@@ -2246,7 +2246,7 @@ IntelManager = Class {
                 aiBrain.amanager.Demand.Land.T2.aa = 0
                 aiBrain.amanager.Demand.Land.T3.aa = 0
             end
-        elseif type == 'ExperimentalArtillery' then
+        elseif productiontype == 'ExperimentalArtillery' then
             local t3ArtilleryCount = 0
             local t3NukeCount = 0
             local experimentalNovaxCount = 0
@@ -2284,7 +2284,7 @@ IntelManager = Class {
             --LOG('experimentalNovaxCount '..experimentalNovaxCount)
             --LOG('experimentalArtilleryCount '..experimentalArtilleryCount)
             --LOG('experimentalNukeCount '..experimentalNukeCount)
-        elseif type == 'IntelStructure' then
+        elseif productiontype == 'IntelStructure' then
             if data.Tier == 'T3' and data.Structure == 'optics' then
                 if aiBrain.smanager.Current.Structure['intel']['T3']['Optics'] < 1 and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 1000 and aiBrain:GetEconomyIncome('ENERGY') > 1000 
                 and aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime > 500 and aiBrain:GetEconomyTrend('ENERGY') > 500 then
