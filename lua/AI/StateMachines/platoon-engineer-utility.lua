@@ -794,6 +794,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             local blueprints = StateUtils.GetBuildableUnitId(aiBrain, eng, v.Categories)
                             local whatToBuild = blueprints[1]
                             --self:LogDebug(string.format('Engineer is going to build '..tostring(whatToBuild)..' from unit '..tostring(v.Unit)))
+                            if cons.Type == 'TMD' then
+                                LOG('Build Function Triggered from engineer')
+                            end
                             buildFunction(aiBrain, eng, v.Unit, whatToBuild, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons)
                         else
                             if aiBrain:PlatoonExists(self) then

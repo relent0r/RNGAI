@@ -1809,6 +1809,9 @@ function AddToBuildQueueRNG(aiBrain, builder, whatToBuild, buildLocation, relati
 end
 
 function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType, whatToBuild, closeToBuilder, relative, buildingTemplate, baseTemplate, reference)
+    if buildingType == 'T2MissileDefense' then
+        LOG('Build function for T2MissileDefense')
+    end
     if whatToBuild then
         if IsResource(buildingType) then
             return AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, whatToBuild, closeToBuilder, relative, buildingTemplate, baseTemplate, reference)
@@ -1825,6 +1828,9 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType, whatToBui
                                 end
                                 table.remove(bType,n)
                                 return
+                            end
+                            if n > 1 and buildingType == 'T2MissileDefense' and not aiBrain:CanBuildStructureAt(whatToBuild, {position[1], GetSurfaceHeight(position[1], position[2]), position[2]}) then
+                                LOG('Build function for T2MissileDefense failed due to not being able to build at position  '..tostring(position[1])..':'..tostring(position[2]))
                             end
                         end 
                         break

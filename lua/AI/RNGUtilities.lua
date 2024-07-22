@@ -5518,6 +5518,7 @@ CheckACUSnipe = function(aiBrain, layerType)
                         requiredCount = v.AIR.CountRequired
                         requiredStrikeDamage = v.AIR.StrikeDamage
                         acuIndex = k
+                        LOG('An air snipe has been verified with a unit of '..tostring(potentialTarget.UnitId))
                         break
                     end
                 end
