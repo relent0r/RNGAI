@@ -2228,7 +2228,10 @@ IntelManager = Class {
                 local zoneCount = aiBrain.BuilderManagers['MAIN'].PathableZones.PathableZoneCount
                 -- We are going to look at the threat in the pathable zones and see which ones are in our territory and make sure we have a theoretical number of air units there
                 -- I want to do this on a per base method, but I realised I'm not keeping information.
-                local totalMobileAARequired = math.min(math.ceil((zoneCount * 0.70) * (enemyThreat.Air / selfThreat.AirNow)), zoneCount * 1.5) or 0
+                local totalMobileAARequired = 0 
+                if selfThreat.AntiAirNow > 0 then
+                    totalMobileAARequired = math.min(math.ceil((zoneCount * 0.70) * (enemyThreat.Air / selfThreat.AntiAirNow)), zoneCount * 1.5) or 0
+                end
                 if aiBrain.BrainIntel.LandPhase == 1 then
                     aiBrain.amanager.Demand.Land.T1.aa = totalMobileAARequired
                 elseif aiBrain.BrainIntel.LandPhase == 2 then
