@@ -162,14 +162,14 @@ function CDRBrainThread(cdr)
                     --RNGLOG('CDR Support Platoon doesnt exist and I need it, calling platoon')
                     --RNGLOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
                     cdr.PlatoonHandle:LogDebug(string.format('ACU enemy threat greater than friendly and no support platoon CDRCallPlatoon'))
-                    CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.2 - cdr.CurrentFriendlyThreat)
+                    CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.3 - cdr.CurrentFriendlyThreat)
                     lastPlatoonCall = gameTime
                 elseif cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat and (gameTime - 25) > lastPlatoonCall then
                     --LOG('Calling platoon, last call was '..tostring(lastPlatoonCall)..' game time is '..tostring(gameTime))
                     --RNGLOG('CDR Support Platoon exist but we have too much threat, calling platoon')
                     --RNGLOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
                     cdr.PlatoonHandle:LogDebug(string.format('enemy threat greater than friendly CDRCallPlatoon'))
-                    CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.2 - cdr.CurrentFriendlyThreat)
+                    CDRCallPlatoon(cdr, cdr.CurrentEnemyThreat * 1.3 - cdr.CurrentFriendlyThreat)
                     lastPlatoonCall = gameTime
                 elseif cdr.Health < 6000 and cdr.CurrentFriendlyThreat < 20 and (gameTime - 15) > lastPlatoonCall then
                     --LOG('Calling platoon, last call was '..tostring(lastPlatoonCall)..' game time is '..tostring(gameTime))
@@ -590,14 +590,14 @@ GetStartingReclaim = function(aiBrain)
     end
 end
 
-function CDRCallPlatoon(cdr, threatRequired)
+function CDRCallPlatoon(cdr, surfaceThreatRequired, antiAirThreatRequired)
     -- A way of maintaining an up to date health check
     local aiBrain = cdr:GetAIBrain()
     if not aiBrain then
         return
     end
     --LOG('ACU call platoon , threat required '..threatRequired)
-    threatRequired = threatRequired + 10
+    surfaceThreatRequired = surfaceThreatRequired + 10
     local supportPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
     --local platoonPos = GetPlatoonPosition(supportPlatoonAvailable)
     --LOG('Support Platoon exist, where is it?'..repr(platoonPos))
@@ -636,7 +636,8 @@ function CDRCallPlatoon(cdr, threatRequired)
     end
     RNGSORT(platoonTable, function(a,b) return a.Distance < b.Distance end)
     local bValidUnits = false
-    local threatValue = 0
+    local surfaceThreatValue = 0
+    local antiAirThreatValue = 0
     local validUnits = {
         Attack = {},
         Guard = {},
@@ -646,10 +647,11 @@ function CDRCallPlatoon(cdr, threatRequired)
         for _, plat in platoonTable do
             if PlatoonExists(aiBrain, plat.Platoon) then
                 if NavUtils.CanPathTo(cdr.MovementLayer, cdr.Position, plat.Position) then
-                    local units = GetPlatoonUnits(plat.Platoon)
+                    local units = plat.Platoon:GetPlatoonUnits()
                     for _,u in units do
                         if not u.Dead and not u:IsUnitState('Attached') then
-                            threatValue = threatValue + u.Blueprint.Defense.SurfaceThreatLevel
+                            surfaceThreatValue = surfaceThreatValue + u.Blueprint.Defense.SurfaceThreatLevel
+                            antiAirThreatValue = antiAirThreatValue + u.Blueprint.Defense.AirThreatLevel
                             local cats = u.Blueprint.CategoriesHash
                             if cats.DIRECTFIRE then
                                 RNGINSERT(validUnits.Attack, u)
@@ -663,10 +665,10 @@ function CDRCallPlatoon(cdr, threatRequired)
                             bValidUnits = true
                         end
                     end
-                    if bValidUnits and threatValue >= threatRequired * 1.2 then
+                    if bValidUnits and (surfaceThreatValue >= surfaceThreatRequired * 1.2 and antiAirThreatValue >= antiAirThreatRequired * 1.2) then
                         break
                     end
-                    if not threatRequired and bValidUnits then
+                    if (not surfaceThreatRequired or not antiAirThreatRequired )and bValidUnits then
                         break
                     end
                 end
@@ -676,7 +678,7 @@ function CDRCallPlatoon(cdr, threatRequired)
         return false
     end
     if aiBrain.RNGDEBUG then
-        RNGLOG('ACU call platoon , threat required '..threatRequired..' threat from surounding units '..threatValue)
+        RNGLOG('ACU call platoon , threat required '..surfaceThreatRequired..' threat from surounding units '..surfaceThreatValue)
     end
     local dontStopPlatoon = false
     if bValidUnits and not supportPlatoonAvailable then
