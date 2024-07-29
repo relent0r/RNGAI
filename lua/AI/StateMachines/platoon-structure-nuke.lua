@@ -39,7 +39,7 @@ AINukeBehavior = Class(AIPlatoonRNG) {
 
         ---@param self AINukeBehavior
         Main = function(self)
-            self:LogDebug(string.format('Starting Nuke Machine'))
+            --self:LogDebug(string.format('Starting Nuke Machine'))
             self.MachineStarted = true
             local platoonUnits = GetPlatoonUnits(self)
             self.PlatoonStrikeDamage = 0
@@ -72,7 +72,7 @@ AINukeBehavior = Class(AIPlatoonRNG) {
 
         ---@param self AINukeBehavior
         Main = function(self)
-            self:LogDebug(string.format('Nuke DecideWhatToDo'))
+            --self:LogDebug(string.format('Nuke DecideWhatToDo'))
             local aiBrain = self:GetBrain()
             --RNGLOG('NukeAIRNG main loop beginning')
             local experimentalPresent = false
@@ -115,11 +115,11 @@ AINukeBehavior = Class(AIPlatoonRNG) {
                     AttackTarget = validTarget,
                     PositionTable = nukePosTable
                 }
-                self:LogDebug(string.format('Nuke Attacking targets'))
+                --self:LogDebug(string.format('Nuke Attacking targets'))
                 self:ChangeState(self.AttackTarget)
                 return
             end
-            self:LogDebug(string.format('Nuke no target, rerunning DecideWhatToDo'))
+            --self:LogDebug(string.format('Nuke no target, rerunning DecideWhatToDo'))
             coroutine.yield(30)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -137,7 +137,7 @@ AINukeBehavior = Class(AIPlatoonRNG) {
             self.TargetsAvailable = true
             for _, firingPosition in builderData.PositionTable do
                 RNGINSERT(aiBrain.BrainIntel.SMLTargetPositions, {Position = firingPosition.IMAPPos, Time=GetGameTimeSeconds()})
-                self:LogDebug(string.format('Triggering launch for '..tostring(firingPosition.Launcher.EntityId)))
+                --self:LogDebug(string.format('Triggering launch for '..tostring(firingPosition.Launcher.EntityId)))
                 IssueNuke({firingPosition.Launcher}, firingPosition.Position)
             end
             coroutine.yield(70)

@@ -26,7 +26,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonEngineerBehavior
         Main = function(self)
-            self:LogDebug(string.format('Welcome to the EngineerResourceBehavior StateMachine'))
+            --self:LogDebug(string.format('Welcome to the EngineerResourceBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             self.LocationType = self.PlatoonData.LocationType
             self.StartCycle = 0
@@ -41,7 +41,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                    eng.BuilderManagerData.EngineerManager = aiBrain.BuilderManagers['FLOATING'].EngineerManager
                 end
                 if eng:IsUnitState('Attached') then
-                    self:LogDebug(string.format('Engineer is attached to a transport, try to detach'))
+                    --self:LogDebug(string.format('Engineer is attached to a transport, try to detach'))
                     if aiBrain:GetNumUnitsAroundPoint(categories.TRANSPORTFOCUS,eng:GetPosition(), 10, 'Ally') > 0 then
                        eng:DetachFrom()
                         coroutine.yield(20)
@@ -137,8 +137,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             self.CurentZoneIndex=nil
             self.CurrentMarkerIndex=nil
             local zoneFound = false
-            self:LogDebug(string.format('Looping through remaining zone markers'))
-            self:LogDebug(string.format('eng id is '..tostring(eng.EntityId)))
+            --self:LogDebug(string.format('Looping through remaining zone markers'))
+            --self:LogDebug(string.format('eng id is '..tostring(eng.EntityId)))
             for i,v in self.ZoneMarkers do
                 for j, m in v.ResourceMarkers do
                     if aiBrain:CanBuildStructureAt('ueb1103', m.position) then
@@ -157,7 +157,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             end
             if not zoneFound then
                 if self.StartCycle > 3 then
-                    self:LogDebug(string.format('Start Cycle is greater than 3, disband platoon, eng id is '..tostring(eng.EntityId)))
+                    --self:LogDebug(string.format('Start Cycle is greater than 3, disband platoon, eng id is '..tostring(eng.EntityId)))
                     self:ExitStateMachine()
                 end
                 local zoneMarkers = {}
@@ -181,7 +181,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 local threat = RUtils.GrabPosDangerRNG(aiBrain, currentmarker.position, 30, true, false, false)
                 if threat.enemySurface > threat.allySurface then
                     table.remove(self.ZoneMarkers[self.CurentZoneIndex].ResourceMarkers,self.CurrentMarkerIndex)
-                    self:LogDebug(string.format('Threat too high at destination mass marker '..tostring(currentmarker.position[1])..' '..tostring(currentmarker.position[3])))
+                    --self:LogDebug(string.format('Threat too high at destination mass marker '..tostring(currentmarker.position[1])..' '..tostring(currentmarker.position[3])))
                     coroutine.yield(1)
                     self:ChangeState(self.DecideWhatToDo)
                     return
@@ -240,7 +240,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 local ax = platoonPos[1] - currentmarker.position[1]
                 local az = platoonPos[3] - currentmarker.position[3]
                 if ax * ax + az * az < 3600 and NavUtils.CanPathTo(self.MovementLayer, platoonPos, currentmarker.position) then
-                    self:LogDebug(string.format('DecideWhatToDo high priority target close combatloop'))
+                    --self:LogDebug(string.format('DecideWhatToDo high priority target close combatloop'))
                     self:ChangeState(self.Constructing)
                     return
                 else
@@ -255,7 +255,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if eng.Dead then return end
-            self:LogDebug(string.format('No Action Taken in decide what to do loop'))
+            --self:LogDebug(string.format('No Action Taken in decide what to do loop'))
             coroutine.yield(10)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -274,15 +274,15 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local builderData = self.BuilderData
             local pos = eng:GetPosition()
             local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, pos, builderData.Position, 10 , 10000)
-            self:LogDebug(string.format('Navigating to position, path reason is '..tostring(reason)))
+            --self:LogDebug(string.format('Navigating to position, path reason is '..tostring(reason)))
             local result, navReason
             local whatToBuildM = self.ExtractorBuildID
             local bUsedTransports
             if reason ~= 'PathOK' then
-                self:LogDebug(string.format('Path is not ok '))
+                --self:LogDebug(string.format('Path is not ok '))
                 -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
                 if VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) < 300*300 then
-                    self:LogDebug(string.format('Distance is less than 300'))
+                    --self:LogDebug(string.format('Distance is less than 300'))
                     --SPEW('* AI-RNG: engineerMoveWithSafePath(): executing CanPathTo(). LUA GenerateSafePathTo returned: ('..repr(reason)..') '..VDist2Sq(pos[1], pos[3], destination[1], destination[3]))
                     -- be really sure we don't try a pathing with a destoryed c-object
                     if IsDestroyed(eng) then
@@ -290,7 +290,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                     result, navReason = NavUtils.CanPathTo('Amphibious', pos, builderData.Position)
-                    self:LogDebug(string.format('Can we path to it '..tostring(result)))
+                    --self:LogDebug(string.format('Can we path to it '..tostring(result)))
                 end 
             end
             if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 300 * 300
@@ -301,7 +301,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     needTransports = true
                 end
                 if needTransports and reason == 'Unpathable' then
-                    self:LogDebug(string.format('We need a transport'))
+                    --self:LogDebug(string.format('We need a transport'))
                 end
 
                 -- Skip the last move... we want to return and do a build
@@ -310,14 +310,14 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                eng.WaitingForTransport = false
 
                 if bUsedTransports then
-                    self:LogDebug(string.format('Used a transport'))
+                    --self:LogDebug(string.format('Used a transport'))
                     coroutine.yield(10)
                     self:ChangeState(self.Constructing)
                     return
                 elseif reason == 'Unpathable' or VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 512 * 512 then
                     -- If over 512 and no transports dont try and walk!
                     table.remove(self.ZoneMarkers[self.CurentZoneIndex].ResourceMarkers,self.CurrentMarkerIndex)
-                    self:LogDebug(string.format('No path to position or greater than 500 and unable to use transport'))
+                    --self:LogDebug(string.format('No path to position or greater than 500 and unable to use transport'))
                     IssueClearCommands({eng})
                     coroutine.yield(10)
                     self:ChangeState(self.DecideWhatToDo)
@@ -330,13 +330,13 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, builderData.Position)
                 end
                 if path then
-                    self:LogDebug(string.format('We are going to walk to the destination (a transport might have brought us)'))
+                    --self:LogDebug(string.format('We are going to walk to the destination (a transport might have brought us)'))
                     --RNGLOG('* AI-RNG: engineerMoveWithSafePath(): path 0 true')
                     -- Move to way points (but not to destination... leave that for the final command)
                     --RNGLOG('We are issuing move commands for the path')
                     local dist
                     local pathLength = RNGGETN(path)
-                    self:LogDebug(string.format('Path length is '..tostring(pathLength)))
+                    --self:LogDebug(string.format('Path length is '..tostring(pathLength)))
                     local brokenPathMovement = false
                     local currentPathNode = 1
                     IssueClearCommands({eng})
@@ -368,7 +368,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if (i - math.floor(i/2)*2)==0 or VDist3Sq(builderData.Position,path[i])<40*40 then continue end
-                        self:LogDebug(string.format('We are issuing the move command to path node '..tostring(i)))
+                        --self:LogDebug(string.format('We are issuing the move command to path node '..tostring(i)))
                         IssueMove({eng}, path[i])
                     end
                     if eng.EngineerBuildQueue then
@@ -436,7 +436,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if VDist3Sq(builderData.Position, pos) < 3600 then
-                            self:LogDebug(string.format('We are within 60 units of destination, break from while loop'))
+                            --self:LogDebug(string.format('We are within 60 units of destination, break from while loop'))
                             break
                         end
                         coroutine.yield(15)
@@ -444,7 +444,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                         if eng:IsIdleState() then
-                            self:LogDebug(string.format('We are idle for some reason, go back to decide what to do'))
+                            --self:LogDebug(string.format('We are idle for some reason, go back to decide what to do'))
                             self:ChangeState(self.DecideWhatToDo)
                           return
                         end
@@ -515,7 +515,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     return
                 end
                 coroutine.yield(10)
-                self:LogDebug(string.format('Set to constructing state'))
+                --self:LogDebug(string.format('Set to constructing state'))
                 self:ChangeState(self.Constructing)
                 return
             end

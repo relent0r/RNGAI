@@ -346,16 +346,16 @@ ExitConditions = function(self,aiBrain)
         return true
     end
     if not self.dest then
-        self:LogDebug(string.format('No self.dest in ExitConditions'))
+        --self:LogDebug(string.format('No self.dest in ExitConditions'))
         self:ChangeState(self.DecideWhatToDo)
         return
     end
     if VDist3Sq(self.dest,self.Pos) < 400 then
-        self:LogDebug(string.format('Close to destination exit condition true'))
+        --self:LogDebug(string.format('Close to destination exit condition true'))
         return true
     end
     if VDist3Sq(self.path[RNGGETN(self.path)],self.Pos) < 400 then
-        self:LogDebug(string.format('Close to end of path exition condition true'))
+        --self:LogDebug(string.format('Close to end of path exition condition true'))
         return true
     end
     if self.navigating then
@@ -374,7 +374,7 @@ ExitConditions = function(self,aiBrain)
                     if self.raid or self.guard then
                         if dist<2025 then
                             --RNGLOG('Exit Path Navigation for raid')
-                            self:LogDebug(string.format('Enemy detected during navigation and less than 45'))
+                            --self:LogDebug(string.format('Enemy detected during navigation and less than 45'))
                             return true
                         end
                     else
@@ -1690,7 +1690,6 @@ end
 function ScryTargetPosition(unit, position)
     if unit.Blueprint.CategoriesHash.OPTICS then
         IssueScript( {unit}, {TaskName = "TargetLocation", Location = position} )
-        --unit:OnTargetLocation(position)
     else
         WARN("Invalid unit passed to ScryTargetPosition")
     end

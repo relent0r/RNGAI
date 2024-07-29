@@ -136,13 +136,12 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 Megabot',
-        PlatoonTemplate = 'EngineerStateT3SACURNG',
+        PlatoonTemplate = 'EngineerStateCybranT3SACURNG',
         Priority = 550,
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
             { EBC, 'HighValueGateRNG', {}},
-            { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
@@ -201,17 +200,14 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 Sea',
-        PlatoonTemplate = 'EngineerStateT3SACURNG',
+        PlatoonTemplate = 'EngineerStateAeonT3SACURNG',
         Priority = 500,
         PriorityFunction = NavalExpansionAdjust,
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
             { EBC, 'HighValueGateRNG', {}},
-            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
-            -- Have we the eco to build it ?
-            --{ UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 600.0 }},                    -- Base income
@@ -234,15 +230,13 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 Novax',
-        PlatoonTemplate = 'EngineerStateT3SACURNG',
+        PlatoonTemplate = 'EngineerStateUEFT3SACURNG',
         Priority = 650,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
             { EBC, 'HighValueGateRNG', {}},
-            { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
-            -- Have we the eco to build it ?
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 600.0 }},                    -- Base income
@@ -273,7 +267,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T4 Exp Land',
         PlatoonTemplate = 'T4ExperimentalLandRNG',
         Priority = 1000,
-        FormRadius = 10000,
+        FormRadius = 160,
         InstanceCount = 50,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL - categories.uel0401 - categories.ARTILLERY } },
@@ -293,7 +287,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T4 Exp FatBoy',
         PlatoonTemplate = 'T4ExperimentalLandRNG',
         Priority = 1000,
-        FormRadius = 10000,
+        FormRadius = 160,
         InstanceCount = 50,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL * categories.uel0401 } },
@@ -313,7 +307,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T4 Exp Mobile Artillery',
         PlatoonTemplate = 'T4ExperimentalLandRNG',
         Priority = 1000,
-        FormRadius = 10000,
+        FormRadius = 160,
         InstanceCount = 50,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL * categories.ARTILLERY } },
@@ -333,7 +327,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T4 Exp Air',
         PlatoonTemplate = 'T4ExperimentalAirRNG',
         Priority = 1000,
-        FormRadius = 10000,
+        FormRadius = 160,
         InstanceCount = 50,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.AIR * categories.EXPERIMENTAL } },
@@ -352,7 +346,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T4 Exp Sea',
         PlatoonTemplate = 'T4ExperimentalSea',
         Priority = 1000,
-        FormRadius = 10000,
+        FormRadius = 1000,
         InstanceCount = 50,
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.NAVAL * categories.EXPERIMENTAL } },

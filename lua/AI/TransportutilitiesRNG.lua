@@ -957,9 +957,11 @@ function SendPlatoonWithTransports(aiBrain, platoon, destination, attempts, bSki
 	if (not platoon.MovementLayer) then
         import("/lua/ai/aiattackutilities.lua").GetMostRestrictiveLayer(platoon)
     end
-	LOG('Requesting platoon transport')
-	if platoon.BuilderName then
-		LOG('Requester is '..platoon.BuilderName..' wait attempts is set to '..tostring(attempts))
+	if TransportDialog then	
+		LOG('Requesting platoon transport')
+		if platoon.BuilderName then
+			LOG('Requester is '..platoon.BuilderName..' wait attempts is set to '..tostring(attempts))
+		end
 	end
 
     local MovementLayer = platoon.MovementLayer    
@@ -2178,10 +2180,10 @@ function WatchUnitUnload( transport, unitlist, destination, aiBrain, UnitPlatoon
             -- watch the count and try to force the unload
 			if unloading and (not transport:IsUnitState('TransportUnloading')) then
 				if watchcount >= 12 then
-					LOG("*AI DEBUG "..aiBrain.Nickname.." "..UnitPlatoon.BuilderName.." "..transport.PlatoonHandle.BuilderName.." transport "..transport.EntityId.." FAILS TO UNLOAD after "..watchcount.." seconds")
+					--LOG("*AI DEBUG "..aiBrain.Nickname.." "..UnitPlatoon.BuilderName.." "..transport.PlatoonHandle.BuilderName.." transport "..transport.EntityId.." FAILS TO UNLOAD after "..watchcount.." seconds")
 					break			
 				elseif watchcount >= 8 then
-					LOG("*AI DEBUG "..aiBrain.Nickname.." "..UnitPlatoon.BuilderName.." "..transport.PlatoonHandle.BuilderName.." transport "..transport.EntityId.." watched unload for "..watchcount.." seconds")
+					--LOG("*AI DEBUG "..aiBrain.Nickname.." "..UnitPlatoon.BuilderName.." "..transport.PlatoonHandle.BuilderName.." transport "..transport.EntityId.." watched unload for "..watchcount.." seconds")
 					IssueTransportUnload( {transport}, GetPosition(transport))
 				elseif watchcount > 4 then
 					IssueTransportUnload( {transport}, GetPosition(transport))

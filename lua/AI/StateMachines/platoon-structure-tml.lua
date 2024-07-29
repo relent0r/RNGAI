@@ -39,7 +39,7 @@ AITMLBehavior = Class(AIPlatoonRNG) {
         ---@param self AITMLBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
-            self:LogDebug(string.format('Starting Strategic TML Machine'))
+            --self:LogDebug(string.format('Starting Strategic TML Machine'))
             if not self.MovementLayer then
                 AIAttackUtils.GetMostRestrictiveLayerRNG(self)
             end
