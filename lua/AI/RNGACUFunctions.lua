@@ -656,7 +656,6 @@ function CDRCallPlatoon(cdr, surfaceThreatRequired, antiAirThreatRequired)
         Artillery = {}
     }
     if RNGGETN(platoonTable) > 0 then
-        local count = 0
         for _, plat in platoonTable do
             if PlatoonExists(aiBrain, plat.Platoon) then
                 if NavUtils.CanPathTo(cdr.MovementLayer, cdr.Position, plat.Position) then
@@ -667,16 +666,12 @@ function CDRCallPlatoon(cdr, surfaceThreatRequired, antiAirThreatRequired)
                             antiAirThreatValue = antiAirThreatValue + u.Blueprint.Defense.AirThreatLevel
                             local cats = u.Blueprint.CategoriesHash
                             if cats.DIRECTFIRE then
-                                count = count + 1
                                 RNGINSERT(validUnits.Attack, u)
                             elseif cats.INDIRECTFIRE then
-                                count = count + 1
                                 RNGINSERT(validUnits.Artillery, u)
                             elseif cats.ANTIAIR or cats.SHIELD then
-                                count = count + 1
                                 RNGINSERT(validUnits.Guard, u)
                             else
-                                count = count + 1
                                 RNGINSERT(validUnits.Attack, u)
                             end
                             bValidUnits = true
@@ -691,7 +686,6 @@ function CDRCallPlatoon(cdr, surfaceThreatRequired, antiAirThreatRequired)
                 end
             end
         end
-        --LOG('CDRCall platoon table should have '..count..' units')
     else
         return false
     end

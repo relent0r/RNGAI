@@ -378,7 +378,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                         if (v.Role ~= 'Sniper' or v.Role ~= 'Silo' or v.Role ~= 'Scout') and closestTarget>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface then
                                 IssueClearCommands({v}) 
-                                if v.Role == 'Shield' or v.Role == 'Stealth' then
+                                if v.Role == 'Shield' or v.Role == 'Stealth' and closestTarget then
                                     if v.GetNavigator then
                                         local navigator = v:GetNavigator()
                                         if navigator then
@@ -433,7 +433,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                 StateUtils.VariableKite(self,v,target)
                             end
                         else
-                            if v.Role == 'Shield' or v.Role == 'Stealth' then
+                            if v.Role == 'Shield' or v.Role == 'Stealth' and closestTarget then
                                 if v.GetNavigator then
                                     local navigator = v:GetNavigator()
                                     if navigator then
@@ -442,7 +442,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                 else
                                     IssueMove({v},RUtils.lerpy(RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4})))
                                 end
-                            elseif v.Role == 'Scout' then
+                            elseif v.Role == 'Scout' and closestTarget then
                                 if v.GetNavigator then
                                     local navigator = v:GetNavigator()
                                     if navigator then
@@ -508,6 +508,12 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                 local rx = unitPos[1] - enemyPos[1]
                                 local rz = unitPos[3] - enemyPos[3]
                                 local tmpDistance = rx * rx + rz * rz
+                                local targetCandidateCat = m.Blueprint.CategoriesHash
+                                if (targetCandidateCat.DIRECTFIRE and targetCandidateCat.STRUCTURE and targetCandidateCat.DEFENSE and tmpDistance < v.MaxWeaponRange * v.MaxWeaponRange) then
+                                    target = m
+                                    closestTarget = tmpDistance
+                                    break
+                                end
                                 if not closestTarget or tmpDistance < closestTarget then
                                     target = m
                                     closestTarget = tmpDistance
@@ -1091,9 +1097,6 @@ ThreatThread = function(aiBrain, platoon)
         local platoonUnits = platoon:GetPlatoonUnits()
         for _, unit in platoonUnits do
             currentPlatoonCount = currentPlatoonCount + 1
-            if platoon.Vented then
-                unit:SetCustomName('Vented Platoon '..currentTime)
-            end
         end
         if currentPlatoonCount > platoon.PlatoonLimit then
             platoon.PlatoonFull = true

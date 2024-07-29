@@ -8,7 +8,6 @@ local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
-local AltGetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 
 local Random = Random
 local IsDestroyed = IsDestroyed
@@ -132,6 +131,30 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             else
+                if threat.allyACU > 0 and threat.enemyStructure > 0 and not table.empty(threat.enemyStructureUnits) then
+                    for _, v in threat.enemyStructureUnits do
+                        if not v.Dead then
+                            local structurePos = v:GetPosition()
+                            local sx = self.Pos[1] - structurePos[1]
+                            local sz = self.Pos[3] - structurePos[3]
+                            local structureDistance = sx * sx + sz * sz
+                            local acuDistance = 0
+                            for _, c in threat.allyACUUnits do
+                                if not c.Dead then
+                                    local allyACUPos = c:GetPosition()
+                                    local ax = structurePos[1] - allyACUPos[1]
+                                    local az = structurePos[3] - allyACUPos[3]
+                                    acuDistance = ax * ax + az * az
+                                end
+                            end
+                            if structureDistance < acuDistance + 25 and threat.allySurface - threat.allyACU < threat.enemyStructure then
+                                self.retreat=true
+                                self:ChangeState(self.Retreating)
+                                return
+                            end
+                        end
+                    end
+                end
                 self.retreat=false
             end
             
@@ -261,7 +284,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface then
                                 IssueClearCommands({v}) 
                                 --IssueMove({v},target:GetPosition())
-                                if v.Role == 'Shield' or v.Role == 'Stealth' then
+                                if v.Role == 'Shield' or v.Role == 'Stealth' and closestTarget then
                                     IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
                                 else
                                     IssueAggressiveMove({v},targetPos)
@@ -284,7 +307,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                         if not skipKite then
                             if approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface*1.5 and target.Blueprint.CategoriesHash.MOBILE and v.MaxWeaponRange <= unitRange then
                                 IssueClearCommands({v})
-                                if v.Role == 'Shield' or v.Role == 'Stealth' then
+                                if v.Role == 'Shield' or v.Role == 'Stealth' and closestTarget then
                                     IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
                                 elseif v.Role == 'Scout' then
                                     IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self.IntelRange or self.MaxPlatoonWeaponRange) }))
@@ -610,6 +633,12 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                 local rx = unitPos[1] - enemyPos[1]
                                 local rz = unitPos[3] - enemyPos[3]
                                 local tmpDistance = rx * rx + rz * rz
+                                local targetCandidateCat = m.Blueprint.CategoriesHash
+                                if (targetCandidateCat.DIRECTFIRE and targetCandidateCat.STRUCTURE and targetCandidateCat.DEFENSE and tmpDistance < v.MaxWeaponRange * v.MaxWeaponRange) then
+                                    target = m
+                                    closestTarget = tmpDistance
+                                    break
+                                end
                                 if not closestTarget or tmpDistance < closestTarget then
                                     target = m
                                     closestTarget = tmpDistance
@@ -1026,9 +1055,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         local platoonhealth=0
         local platoonhealthtotal=0
         if units then
-            local count = 0
             for _, v in units do
-                count = count + 1
                 v.PlatoonHandle = platoon
                 if not platoon.machinedata then
                     platoon.machinedata = {name = 'ACUSupport',id=v.EntityId}

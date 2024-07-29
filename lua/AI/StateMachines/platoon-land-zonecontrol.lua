@@ -365,7 +365,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         if (v.Role ~= 'Sniper' or v.Role ~= 'Silo'or v.Role ~= 'Scout') and closestTarget>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface then
                                 IssueClearCommands({v}) 
-                                if v.Role == 'Shield' or v.Role == 'Stealth' then
+                                if v.Role == 'Shield' or v.Role == 'Stealth' and closestTarget then
                                     if v.GetNavigator then
                                         local navigator = v:GetNavigator()
                                         if navigator then
@@ -395,7 +395,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         if not skipKite then
                             if approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface*1.5 and target.Blueprint.CategoriesHash.MOBILE and v.MaxWeaponRange <= unitRange then
                                 IssueClearCommands({v})
-                                if v.Role == 'Shield' or v.Role == 'Stealth' then
+                                if v.Role == 'Shield' or v.Role == 'Stealth' and closestTarget then
                                     if v.GetNavigator then
                                         local navigator = v:GetNavigator()
                                         if navigator then
@@ -404,7 +404,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                     else
                                         IssueMove({v},RUtils.lerpy(RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4})))
                                     end
-                                elseif v.Role == 'Scout' then
+                                elseif v.Role == 'Scout' and closestTarget then
                                     if v.GetNavigator then
                                         local navigator = v:GetNavigator()
                                         if navigator then
@@ -420,7 +420,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                 StateUtils.VariableKite(self,v,target)
                             end
                         else
-                            if v.Role == 'Shield' or v.Role == 'Stealth' then
+                            if v.Role == 'Shield' or v.Role == 'Stealth' and closestTarget then
                                 if v.GetNavigator then
                                     local navigator = v:GetNavigator()
                                     if navigator then
@@ -429,7 +429,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                 else
                                     IssueMove({v},RUtils.lerpy(RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4})))
                                 end
-                            elseif v.Role == 'Scout' then
+                            elseif v.Role == 'Scout' and closestTarget then
                                 if v.GetNavigator then
                                     local navigator = v:GetNavigator()
                                     if navigator then
@@ -497,7 +497,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                 local rx = unitPos[1] - enemyPos[1]
                                 local rz = unitPos[3] - enemyPos[3]
                                 local tmpDistance = rx * rx + rz * rz
-                                LOG('Target Candidate is '..tostring(m.UnitId))
                                 local targetCandidateCat = m.Blueprint.CategoriesHash
                                 if (targetCandidateCat.DIRECTFIRE and targetCandidateCat.STRUCTURE and targetCandidateCat.DEFENSE and tmpDistance < v.MaxWeaponRange * v.MaxWeaponRange) then
                                     target = m
@@ -528,16 +527,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if not skipKite then
-                            if v.Blueprint.CategoriesHash.INDIRECTFIRE then
-                                LOG('Zone control ranged attack is kiting with an arty why')
-                                LOG('Role is '..tostring(v.Role))
-                                LOG('Unit ID is '..tostring(target.UnitId))
-                                if targetCats.DIRECTFIRE and targetCats.STRUCTURE and targetCats.DEFENSE then
-                                    LOG('Enemy unit is a PD')
-                                    LOG('My Range '..tostring(v.MaxWeaponRange))
-                                    LOG('Enemy Range '..tostring(unitRange))
-                                end
-                            end
                             StateUtils.VariableKite(self,v,target, true)
                         end
                     end

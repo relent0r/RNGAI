@@ -264,7 +264,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                                     if rallyPointDist > 100 then
                                         IssueMove({unit}, rallyPoint )
                                     end
-                                    coroutine.yield(50)
+                                    coroutine.yield(20)
                                 end
                             end
                         end
