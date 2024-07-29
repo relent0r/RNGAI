@@ -25,7 +25,7 @@ AIPlatoonAirFeederBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonAirFeederBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the AirFeeder StateMachine'))
+            self:LogDebug(string.format('Welcome to the AirFeeder StateMachine'))
             local aiBrain = self:GetBrain()
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             self.PlatoonType = self.PlatoonData.PlatoonType

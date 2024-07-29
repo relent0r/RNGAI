@@ -35,7 +35,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the ZoneControlBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the ZoneControlBehavior StateMachine'))
 
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
@@ -140,6 +140,30 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             else
+                if threat.allyACU > 0 and threat.enemyStructure > 0 and not table.empty(threat.enemyStructureUnits) then
+                    for _, v in threat.enemyStructureUnits do
+                        if not v.Dead then
+                            local structurePos = v:GetPosition()
+                            local sx = self.Pos[1] - structurePos[1]
+                            local sz = self.Pos[3] - structurePos[3]
+                            local structureDistance = sx * sx + sz * sz
+                            local acuDistance = 0
+                            for _, c in threat.allyACUUnits do
+                                if not c.Dead then
+                                    local allyACUPos = c:GetPosition()
+                                    local ax = structurePos[1] - allyACUPos[1]
+                                    local az = structurePos[3] - allyACUPos[3]
+                                    acuDistance = ax * ax + az * az
+                                end
+                            end
+                            if structureDistance < acuDistance + 25 and threat.allySurface - threat.allyACU < threat.enemyStructure then
+                                self.retreat=true
+                                self:ChangeState(self.Retreating)
+                                return
+                            end
+                        end
+                    end
+                end
                 self.retreat=false
             end
             if enemyACU and enemyACU.GetPosition and enemyACUDistance < 1225 then
@@ -265,7 +289,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-            if not not targetZone and self.Home and self.LocationType then
+            if not targetZone and self.Home and self.LocationType then
                 local hx = self.Pos[1] - self.Home[1]
                 local hz = self.Pos[3] - self.Home[3]
                 local homeDistance = hx * hx + hz * hz
@@ -462,6 +486,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local targetPos
             for _,v in units do
                 if v and not v.Dead then
+                    
                     local unitPos = v:GetPosition()
                     if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
                         target = aiBrain.BrainIntel.SuicideModeTarget
@@ -472,6 +497,13 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                 local rx = unitPos[1] - enemyPos[1]
                                 local rz = unitPos[3] - enemyPos[3]
                                 local tmpDistance = rx * rx + rz * rz
+                                LOG('Target Candidate is '..tostring(m.UnitId))
+                                local targetCandidateCat = m.Blueprint.CategoriesHash
+                                if (targetCandidateCat.DIRECTFIRE and targetCandidateCat.STRUCTURE and targetCandidateCat.DEFENSE and tmpDistance < v.MaxWeaponRange * v.MaxWeaponRange) then
+                                    target = m
+                                    closestTarget = tmpDistance
+                                    break
+                                end
                                 if not closestTarget or tmpDistance < closestTarget then
                                     target = m
                                     closestTarget = tmpDistance
@@ -480,13 +512,13 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if target then
+                        local targetCats = target.Blueprint.CategoriesHash
                         local skipKite = false
                         local unitRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
                         targetPos = target:GetPosition()
-                        local targetCats = target.Blueprint.CategoriesHash
                         if v.Role == 'Artillery' or v.Role == 'Silo' or v.Role == 'Sniper' then
                             if targetCats.DIRECTFIRE and targetCats.STRUCTURE and targetCats.DEFENSE then
-                                if v.MaxWeaponRange > unitRange then
+                                if v.MaxWeaponRange > unitRange and closestTarget > unitRange then
                                     skipKite = true
                                     if not v:IsUnitState("Attacking") then
                                         IssueClearCommands({v})
@@ -496,6 +528,16 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if not skipKite then
+                            if v.Blueprint.CategoriesHash.INDIRECTFIRE then
+                                LOG('Zone control ranged attack is kiting with an arty why')
+                                LOG('Role is '..tostring(v.Role))
+                                LOG('Unit ID is '..tostring(target.UnitId))
+                                if targetCats.DIRECTFIRE and targetCats.STRUCTURE and targetCats.DEFENSE then
+                                    LOG('Enemy unit is a PD')
+                                    LOG('My Range '..tostring(v.MaxWeaponRange))
+                                    LOG('Enemy Range '..tostring(unitRange))
+                                end
+                            end
                             StateUtils.VariableKite(self,v,target, true)
                         end
                     end

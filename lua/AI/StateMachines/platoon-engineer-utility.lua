@@ -27,7 +27,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonEngineerBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the EngineerUtilityBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the EngineerUtilityBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             self.LocationType = self.BuilderData.LocationType
             self.MovementLayer = self:GetNavigationalLayer()
@@ -634,9 +634,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             if cons.NearDefensivePoints then
                 if cons.Type == 'TMD' then
                     if aiBrain.BasePerimeterMonitor[cons.LocationType].EnemyMobileSiloDetected then
-                        LOG('Trying to get Defensive point for TMD due to mobile silo')
+                        --LOG('Trying to get Defensive point for TMD due to mobile silo')
                         reference = RUtils.GetDefensivePointRNG(aiBrain, cons.LocationType or 'MAIN', cons.Tier or 2, 'Silo')
-                        LOG('Reference returned '..tostring(repr(reference)))
+                        --LOG('Reference returned '..tostring(repr(reference)))
                     else
                         local tmdPositions = RUtils.GetTMDPosition(aiBrain, eng, cons.LocationType)
                         if tmdPositions then
@@ -794,9 +794,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             local blueprints = StateUtils.GetBuildableUnitId(aiBrain, eng, v.Categories)
                             local whatToBuild = blueprints[1]
                             --self:LogDebug(string.format('Engineer is going to build '..tostring(whatToBuild)..' from unit '..tostring(v.Unit)))
-                            if cons.Type == 'TMD' then
-                                LOG('Build Function Triggered from engineer')
-                            end
                             buildFunction(aiBrain, eng, v.Unit, whatToBuild, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons)
                         else
                             if aiBrain:PlatoonExists(self) then

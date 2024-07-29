@@ -38,7 +38,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonACUBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the ACUBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the ACUBehavior StateMachine'))
 
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
@@ -418,7 +418,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 elseif cdr.SuicideMode then
                     self:LogDebug(string.format('Are we in suicide mode?'))
                     target = brain.BrainIntel.SuicideModeTarget or nil
-                    if not target then
+                    if not target or IsDestroyed(target) then
                         self:LogDebug(string.format('We are in suicide mode and have no target so will disable suicide mode'))
                         cdr.SuicideMode = false
                     end

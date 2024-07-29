@@ -30,7 +30,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonNavalZoneControlBehavior
         Main = function(self)
 
-            --self:LogDebug(string.format('Welcome to the NavalZoneControlBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the NavalZoneControlBehavior StateMachine'))
 
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then

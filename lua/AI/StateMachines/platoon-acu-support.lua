@@ -8,6 +8,7 @@ local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
+local AltGetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 
 local Random = Random
 local IsDestroyed = IsDestroyed
@@ -35,7 +36,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the ACUSupportBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the ACUSupportBehavior StateMachine'))
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
                 self:LogWarning('requires generated navigational mesh')
@@ -88,11 +89,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonACUSupportBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
-            local rangedAttack = false
-            if not PlatoonExists(aiBrain, self) then
-                return
-            end
             local acu = aiBrain.CDRUnit
+            local rangedAttack 
             if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
                 local enemyAcuPosition = aiBrain.BrainIntel.SuicideModeTarget:GetPosition()
                 local rx = self.Pos[1] - enemyAcuPosition[1]
@@ -754,7 +752,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local builderData = self.BuilderData
             if not builderData.Position then
                 WARN('No position passed to ACUSupport')
-                return false
+                self:ChangeState(self.DecideWhatToDo)
+                return
             end
             local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
             if usedTransports then
@@ -801,6 +800,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local builderData = self.BuilderData
             if not builderData.Position then
                 WARN('No position passed to ACUSupport')
+                self:ChangeState(self.DecideWhatToDo)
                 return false
             end
             local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
@@ -860,6 +860,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             end
             if not self.path then
                 --self:LogDebug(string.format('platoon is going to use transport'))
+                --LOG('ACU Support platoon has not path to position '..tostring(self.BuilderData.Position[1])..':'..tostring(self.BuilderData.Position[3]))
                 self:ChangeState(self.Transporting)
                 return
             end
@@ -1025,7 +1026,9 @@ AssignToUnitsMachine = function(data, platoon, units)
         local platoonhealth=0
         local platoonhealthtotal=0
         if units then
+            local count = 0
             for _, v in units do
+                count = count + 1
                 v.PlatoonHandle = platoon
                 if not platoon.machinedata then
                     platoon.machinedata = {name = 'ACUSupport',id=v.EntityId}
@@ -1069,7 +1072,7 @@ end
 ---@param aiBrain AIBrain
 ---@param platoon AIPlatoon
 ACUSupportPositionThread = function(aiBrain, platoon)
-    while aiBrain:PlatoonExists(platoon) do
+    while not IsDestroyed(platoon) do
         local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, platoon)
         if platBiasUnit and not platBiasUnit.Dead then
             platoon.Pos=platBiasUnit:GetPosition()

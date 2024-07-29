@@ -36,7 +36,7 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonLandBombCombatBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the LandBombCombatBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the LandBombCombatBehavior StateMachine'))
 
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then

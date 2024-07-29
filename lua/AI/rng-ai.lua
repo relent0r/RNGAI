@@ -947,6 +947,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         shield=0
                     }
                 },
+                Bases = {
+                }
             },
         }
         self.smanager = {
@@ -1553,11 +1555,33 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.Zones.Land.zones do
                 if NavUtils.CanPathTo('Land', position, v.pos) then
                     zoneTable.PathableZoneCount = zoneTable.PathableZoneCount + 1
-                    RNGINSERT(zoneTable.Zones, v.id)
+                    RNGINSERT(zoneTable.Zones, {PathType = 'Land', ZoneID = v.id})
+                elseif NavUtils.CanPathTo('Amphibious', position, v.pos) then
+                    zoneTable.PathableZoneCount = zoneTable.PathableZoneCount + 1
+                    RNGINSERT(zoneTable.Zones, {PathType = 'Amphibious', ZoneID = v.id})
                 end
             end
         else
             WARN('AI DEBUG: No land zones found for expansion base marker to check')
+        end
+        if not self.amanager.Demand.Bases[baseName] then
+            self.amanager.Demand.Bases[baseName] = {
+                Land = {
+                    T1 = {
+                        arty = 0,
+                        aa = 0
+                    },
+                    T2 = {
+                        mml = 0,
+                        aa = 0
+                    },
+                    T3 = {
+                        arty = 0,
+                        mml = 0,
+                        aa = 0
+                    }
+                }
+            }
         end
         self.BuilderManagers[baseName].PathableZones = zoneTable
         --LOG('Pathable zone table for base name '..baseName..' '..repr(self.BuilderManagers[baseName].PathableZones))
@@ -2988,7 +3012,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     if enemyMobileSilo then
                         self.BasePerimeterMonitor[k].EnemyMobileSiloDetected = enemyMobileSilo
                         self.BasePerimeterMonitor[k].RecentMobileSiloAngle = enemyMobileSiloAngle
-                        LOG('Recording enemyMobileAngle at base '..tostring(k)..' angle is '..tostring(self.BasePerimeterMonitor[k].RecentMobileSiloAngle))
+                        --LOG('Recording enemyMobileAngle at base '..tostring(k)..' angle is '..tostring(self.BasePerimeterMonitor[k].RecentMobileSiloAngle))
                     else
                         self.BasePerimeterMonitor[k].EnemyMobileSiloDetected = false
                     end
@@ -6925,6 +6949,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         shield=0
                     }
                 },
+                Bases = {
+                }
             },
         }
         self.smanager = {
@@ -7055,7 +7081,8 @@ AIBrain = Class(RNGAIBrainClass) {
             TacticalSACUMode = false,
             TacticalMissions = {
                 ACUSnipe = {},
-                MassStrike = {}
+                MassStrike = {},
+                RangedAssaultPositions = {}
             }
         }
         -- Intel Data

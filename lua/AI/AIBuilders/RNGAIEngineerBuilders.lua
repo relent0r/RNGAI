@@ -590,9 +590,9 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistPgen', 1},
         InstanceCount = 8,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 0.0 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
-            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 100.0 }},
+            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 80.0 }},
         },
         BuilderType = 'Any',
         BuilderData = {

@@ -119,7 +119,7 @@ RNGLandResourceSet = Class(ZoneSet){
                 zoneList[k] = nil
             end
             for _, v in startLocations do
-                zoneList[head] = {pos=v.Position, component=MAP:GetComponent(v.Position,self.layer), weight=table.getn(v.resourcemarkers), startpositionclose=true, enemylandthreat=0, enemyantiairthreat=0, friendlyantisurfacethreat=0, friendlylandantiairthreat=0, friendlydirectfireantisurfacethreat=0, friendlyindirectantisurfacethreat=0,resourcevalue=table.getn(v.resourcemarkers), resourcemarkers=v.resourcemarkers, zonealert=false, control=1, enemystartdata = { }, allystartdata = { },  bestarmy = false, teamvalue = 1, friendlyantiairallocatedthreat=0, label = 0, BuilderManager = {}, lastexpansionattempt = 0, engineerplatoonallocated = false, intelassignment = {}}
+                zoneList[head] = {pos=v.Position, component=MAP:GetComponent(v.Position,self.layer), weight=table.getn(v.resourcemarkers), startpositionclose=true, enemystructurethreat=0, enemylandthreat=0, enemyantiairthreat=0, friendlyantisurfacethreat=0, friendlylandantiairthreat=0, friendlydirectfireantisurfacethreat=0, friendlyindirectantisurfacethreat=0,resourcevalue=table.getn(v.resourcemarkers), resourcemarkers=v.resourcemarkers, zonealert=false, control=1, enemystartdata = { }, allystartdata = { },  bestarmy = false, teamvalue = 1, friendlyantiairallocatedthreat=0, label = 0, BuilderManager = {}, lastexpansionattempt = 0, engineerplatoonallocated = false, intelassignment = {}}
                 head = head + 1
             end
         

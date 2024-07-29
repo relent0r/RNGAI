@@ -26,7 +26,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonTorpedoBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the TorpedoBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the TorpedoBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             if self.PlatoonData.LocationType then
                 self.LocationType = self.PlatoonData.LocationType

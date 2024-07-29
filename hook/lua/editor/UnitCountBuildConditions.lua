@@ -1169,12 +1169,14 @@ function ValidateLateGameBuild(aiBrain, locationType)
     local queuedCount = 0
     local timeStamp = GetGameTimeSeconds()
     local multiplier = aiBrain.EcoManager.EcoMultiplier
-    for _, v in queuedStructures do
-        for _, c in v do
-            --LOG('Checking queue item '..repr(c))
-            if c.Engineer and not c.Engineer.Dead then
-                if c.TimeStamp + 30 > timeStamp then
-                    queuedCount = queuedCount + 1
+    if queuedStructures then
+        for _, v in queuedStructures do
+            for _, c in v do
+                --LOG('Checking queue item '..repr(c))
+                if c.Engineer and not c.Engineer.Dead then
+                    if c.TimeStamp + 30 > timeStamp then
+                        queuedCount = queuedCount + 1
+                    end
                 end
             end
         end
@@ -1186,11 +1188,13 @@ function ValidateLateGameBuild(aiBrain, locationType)
     end
     local unitsBeingBuilt = 0
     local structuresBeingBuilt = aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt
-    for _, v in structuresBeingBuilt do
-        for _, c in v do
-            if c and not c.Dead then
-                if c:GetFractionComplete() < 0.98 then
-                    unitsBeingBuilt = unitsBeingBuilt + 1
+    if structuresBeingBuilt then
+        for _, v in structuresBeingBuilt do
+            for _, c in v do
+                if c and not c.Dead then
+                    if c:GetFractionComplete() < 0.98 then
+                        unitsBeingBuilt = unitsBeingBuilt + 1
+                    end
                 end
             end
         end
@@ -1465,13 +1469,15 @@ function DefensivePointShieldRequired(aiBrain, locationType)
     return false
 end
 
-function UnitBuildDemand(aiBrain, type, tier, unit)
-
+function UnitBuildDemand(aiBrain, locationType, type, tier, unit)
     if aiBrain.amanager.Demand[type][tier][unit] > aiBrain.amanager.Current[type][tier][unit] then
         return true
     end
+    if aiBrain.amanager.Demand.Bases[locationType] and aiBrain.amanager.Demand.Bases[locationType][type][tier][unit] > aiBrain.amanager.Current[type][tier][unit] then
+        LOG('Demand for base '..tostring(locationType)..' is true for unit of type '..tostring(unit))
+        return true
+    end
     return false
-
 end
 
 function StructureBuildDemand(aiBrain, type, tier, unit)
@@ -1568,11 +1574,9 @@ function RequireTMDCheckRNG(aiBrain, locationType)
         return true
     end
     if locationType ~= 'FLOATING' and aiBrain.BasePerimeterMonitor[locationType].EnemyMobileSiloDetected then
-        LOG('Mobile Silo builder has triggered true')
         local basePos = aiBrain.BuilderManagers[locationType].Position
         local numUnits = aiBrain:GetNumUnitsAroundPoint( categories.ANTIMISSILE * categories.TECH2, basePos, 120, 'Ally' )
         if numUnits < 4 then
-            LOG('We have less than 4 TMD at base')
             return true
         end
     end

@@ -22,7 +22,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1AirScout',
         Priority = 750, -- After second engie group
         BuilderConditions = {
-            { UCBC, 'UnitBuildDemand', { 'Air', 'T1', 'scout'} },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T1', 'scout'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
         },
         BuilderType = 'Air',
@@ -60,7 +60,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1Gunship',
         Priority = 881,
         BuilderConditions = {
-            { UCBC, 'UnitBuildDemand', {'Air', 'T1', 'gunship'} },
+            { UCBC, 'UnitBuildDemand', {'LocationType','Air', 'T1', 'gunship'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -79,7 +79,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2FighterBomber',
         Priority = 891,
         BuilderConditions = {
-            { UCBC, 'UnitBuildDemand', {'Air', 'T2', 'bomber'} },
+            { UCBC, 'UnitBuildDemand', {'LocationType','Air', 'T2', 'bomber'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -95,7 +95,7 @@ BuilderGroup {
         BuilderType = 'Air',
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'UnitBuildDemand', {'Air', 'T2', 'mercy'} },
+            { UCBC, 'UnitBuildDemand', {'LocationType','Air', 'T2', 'mercy'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -105,7 +105,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2AirTorpedoBomber',
         Priority = 890,
         BuilderConditions = {
-            { UCBC, 'UnitBuildDemand', { 'Air', 'T2', 'torpedo'} },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T2', 'torpedo'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -116,7 +116,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2AirGunship',
         Priority = 889,
         BuilderConditions = {
-            { UCBC, 'UnitBuildDemand', { 'Air', 'T2', 'gunship'} },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T2', 'gunship'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -135,7 +135,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3AirScout',
         Priority = 755,
         BuilderConditions = {
-            { UCBC, 'UnitBuildDemand', { 'Air', 'T3', 'scout'} },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T3', 'scout'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -163,7 +163,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3AirBomber',
         Priority = 896,
         BuilderConditions = {
-            { UCBC, 'UnitBuildDemand', { 'Air', 'T3', 'bomber'} },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T3', 'bomber'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -177,7 +177,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3AirGunship',
         Priority = 890,
         BuilderConditions = {
-            { UCBC, 'UnitBuildDemand', { 'Air', 'T3', 'gunship'} },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T3', 'gunship'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -191,7 +191,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3TorpedoBomber',
         Priority = 891,
         BuilderConditions = {
-            { UCBC, 'UnitBuildDemand', { 'Air', 'T3', 'torpedo'} },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T3', 'torpedo'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

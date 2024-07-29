@@ -27,7 +27,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
 
             local aiBrain = self:GetBrain()
-            --self:LogDebug(string.format('Welcome to the BomberBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the BomberBehavior StateMachine'))
             if self.PlatoonData.LocationType then
                 self.LocationType = self.PlatoonData.LocationType
             else
