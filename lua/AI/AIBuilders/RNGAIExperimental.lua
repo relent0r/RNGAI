@@ -28,85 +28,98 @@ local ExperimentalDelayWaterMap = function(self, aiBrain, builderManager)
     return 910
 end
 
+local NavalExpansionAdjust = function(self, aiBrain, builderManager)
+    if aiBrain.MapWaterRatio < 0.20 and not aiBrain.MassMarkersInWater then
+        return 0
+    else
+        return 500
+    end
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Experimental Builders',
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Experimental1 1st',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         PriorityFunction = ExperimentalDelayWaterMap,
         Priority = 910,
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.LAND } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.5, 250.0 }},
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
-            NumAssistees = 25,
+            NumAssistees = 30,
             Construction = {
                 DesiresAssist = true,
                 BuildClose = true,
                 HighValue = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
-                    'T4LandExperimental1',
+                    { Unit = 'T4LandExperimental1', Categories = categories.EXPERIMENTAL * categories.MOBILE * categories.LAND - categories.CYBRAN * categories.ARTILLERY - categories.UNSELECTABLE - categories.UNTARGETABLE },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 MultiBuild',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         Priority = 500,
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.40, 0.95 } },
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.25, 0.95 } },
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.MOBILE }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
-            NumAssistees = 20,
+            NumAssistees = 30,
             Construction = {
                 DesiresAssist = true,
                 BuildClose = true,
                 HighValue = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
-                    'T4LandExperimental1',
+                    { Unit = 'T4LandExperimental1', Categories = categories.EXPERIMENTAL * categories.MOBILE * categories.LAND - categories.CYBRAN * categories.ARTILLERY - categories.UNSELECTABLE - categories.UNTARGETABLE },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 Excess',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         Priority = 300,
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 3,
         BuilderConditions = {
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { EBC, 'HighValueGateRNG', {}},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 4, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2 }},
-            { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.95 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
@@ -115,29 +128,31 @@ BuilderGroup {
                 HighValue = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
-                    'T4LandExperimental1',
+                    { Unit = 'T4LandExperimental1', Categories = categories.EXPERIMENTAL * categories.MOBILE * categories.LAND - categories.CYBRAN * categories.ARTILLERY - categories.UNSELECTABLE - categories.UNTARGETABLE },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 Megabot',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        Priority = 500,
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
+        Priority = 550,
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
-            { UCBC, 'ValidateLateGameBuild', { }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 30,
             Construction = {
@@ -146,29 +161,31 @@ BuilderGroup {
                 HighValue = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
-                    'T4LandExperimental3',
+                    { Unit = 'T4LandExperimental3', Categories = categories.EXPERIMENTAL * categories.MOBILE * categories.LAND * categories.BOT * categories.DIRECTFIRE * categories.SNIPER - categories.CYBRAN * categories.ARTILLERY - categories.UNSELECTABLE - categories.UNTARGETABLE },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 Air',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         Priority = 550,
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { MIBC, 'FactionIndex', { 2, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             -- Have we the eco to build it ?
             --{ UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 600.0 }},                    -- Base income
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 25,
             Construction = {
@@ -176,29 +193,32 @@ BuilderGroup {
                 BuildClose = true,
                 HighValue = true,
                 BuildStructures = {
-                    'T4AirExperimental1',
+                    { Unit = 'T4AirExperimental1', Categories = categories.EXPERIMENTAL * categories.MOBILE * categories.AIR },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 Sea',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
         Priority = 500,
+        PriorityFunction = NavalExpansionAdjust,
         DelayEqualBuildPlattons = {'HighValue', 20},
         InstanceCount = 1,
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             -- Have we the eco to build it ?
             --{ UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 600.0 }},                    -- Base income
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 15,
             Construction = {
@@ -206,28 +226,31 @@ BuilderGroup {
                 BuildClose = true,
                 HighValue = true,
                 BuildStructures = {
-                    'T4SeaExperimental1',
+                    { Unit = 'T4SeaExperimental1', Categories = categories.EXPERIMENTAL * categories.NAVAL  * categories.MOBILE },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI Experimental1 Novax',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        Priority = 700,
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
+        Priority = 650,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
             { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            { UCBC, 'ValidateLateGameBuild', { }},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             -- Have we the eco to build it ?
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 600.0 }},                    -- Base income
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.EXPERIMENTAL}},
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
@@ -235,224 +258,9 @@ BuilderGroup {
                 BuildClose = true,
                 HighValue = true,
                 BuildStructures = {
-                    'T4SatelliteExperimental',
+                    { Unit = 'T4SatelliteExperimental', Categories = categories.EXPERIMENTAL * categories.ORBITALSYSTEM  * categories.STRUCTURE * categories.UEF },
                 },
-                Location = 'LocationType',
-            }
-        }
-    },
-}
-
-BuilderGroup {
-    BuilderGroupName = 'RNGEXP Experimental Builders',
-    BuildersType = 'EngineerBuilder',
-    Builder {
-        BuilderName = 'RNGEXP Experimental1 1st',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
-        Priority = 800,
-        PriorityFunction = ExperimentalDelayWaterMap,
-        DelayEqualBuildPlattons = {'HighValue', 20},
-        InstanceCount = 1,
-        BuilderConditions = {
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
-            { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.LAND}},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3}},
-            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.TECH3 } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.LAND } },
-            { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 400.0 }},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            NumAssistees = 30,
-            Construction = {
-                DesiresAssist = true,
-                BuildClose = true,
-                HighValue = true,
-                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
-                BuildStructures = {
-                    'T4LandExperimental1',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGEXP Experimental1 MultiBuild',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
-        Priority = 500,
-        DelayEqualBuildPlattons = {'HighValue', 20},
-        InstanceCount = 1,
-        BuilderConditions = {
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 5, categories.MASSEXTRACTION * categories.TECH3}},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION * categories.TECH3}},
-            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
-            { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            NumAssistees = 20,
-            Construction = {
-                DesiresAssist = true,
-                BuildClose = true,
-                HighValue = true,
-                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
-                BuildStructures = {
-                    'T4LandExperimental1',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGEXP Experimental1 Excess',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
-        Priority = 300,
-        DelayEqualBuildPlattons = {'HighValue', 20},
-        InstanceCount = 3,
-        BuilderConditions = {
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 4, categories.EXPERIMENTAL * categories.LAND}},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
-            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
-            { EBC, 'GreaterThanEconIncomeCombinedRNG', { 30.0, 0.0 } },
-            { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            NumAssistees = 10,
-            Construction = {
-                DesiresAssist = true,
-                BuildClose = true,
-                HighValue = true,
-                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
-                BuildStructures = {
-                    'T4LandExperimental1',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGEXP Experimental1 Megabot',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        Priority = 500,
-        DelayEqualBuildPlattons = {'HighValue', 20},
-        InstanceCount = 1,
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
-            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.LAND}},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
-            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.TECH3 } },
-            { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            NumAssistees = 20,
-            Construction = {
-                DesiresAssist = true,
-                BuildClose = false,
-                HighValue = true,
-                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
-                BuildStructures = {
-                    'T4LandExperimental3',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGEXP Experimental1 Air',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        Priority = 550,
-        DelayEqualBuildPlattons = {'HighValue', 20},
-        InstanceCount = 1,
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 2, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            -- Have we the eco to build it ?
-            --{ UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
-            { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.95 } },
-            { EBC, 'GreaterThanEconIncomeCombinedRNG', { 40.0, 60.0 }},                    -- Base income
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            NumAssistees = 20,
-            Construction = {
-                DesiresAssist = true,
-                BuildClose = true,
-                HighValue = true,
-                BuildStructures = {
-                    'T4AirExperimental1',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGEXP Experimental1 Sea',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        Priority = 500,
-        DelayEqualBuildPlattons = {'HighValue', 20},
-        InstanceCount = 1,
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            -- Have we the eco to build it ?
-            --{ UCBC, 'CanBuildCategoryRNG', { categories.MOBILE * categories.AIR * categories.EXPERIMENTAL - categories.SATELLITE } },
-            { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.95 } },
-            { EBC, 'GreaterThanEconIncomeCombinedRNG', { 20.0, 60.0 }},                    -- Base income
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            NumAssistees = 10,
-            Construction = {
-                DesiresAssist = true,
-                BuildClose = true,
-                HighValue = true,
-                BuildStructures = {
-                    'T4SeaExperimental1',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGEXP Experimental1 Novax',
-        PlatoonTemplate = 'T3SACUEngineerBuilderRNG',
-        Priority = 700,
-        InstanceCount = 1,
-        DelayEqualBuildPlattons = {'HighValue', 20},
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
-            -- Have we the eco to build it ?
-            { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.90 } },
-            { EBC, 'GreaterThanEconIncomeCombinedRNG', { 50.0, 60.0 }},                    -- Base income
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            NumAssistees = 10,
-            Construction = {
-                DesiresAssist = true,
-                BuildClose = true,
-                HighValue = true,
-                BuildStructures = {
-                    'T4SatelliteExperimental',
-                },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -468,10 +276,51 @@ BuilderGroup {
         FormRadius = 10000,
         InstanceCount = 50,
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL - categories.uel0401 - categories.ARTILLERY } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'LandExperimental',
+            ThreatWeights = {
+                TargetThreatType = 'Commander',
+            },
+            UseMoveOrder = true,
+            LocationType = 'LocationType',
+            PrioritizedCategories = { 'EXPERIMENTAL LAND', 'COMMAND', 'FACTORY LAND', 'MASSPRODUCTION', 'ENERGYPRODUCTION', 'STRUCTURE STRATEGIC', 'STRUCTURE' },
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T4 Exp FatBoy',
+        PlatoonTemplate = 'T4ExperimentalLandRNG',
+        Priority = 1000,
+        FormRadius = 10000,
+        InstanceCount = 50,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL * categories.uel0401 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'FatBoy',
+            ThreatWeights = {
+                TargetThreatType = 'Commander',
+            },
+            UseMoveOrder = true,
+            LocationType = 'LocationType',
+            PrioritizedCategories = { 'EXPERIMENTAL LAND', 'COMMAND', 'FACTORY LAND', 'MASSPRODUCTION', 'ENERGYPRODUCTION', 'STRUCTURE STRATEGIC', 'STRUCTURE' },
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T4 Exp Mobile Artillery',
+        PlatoonTemplate = 'T4ExperimentalLandRNG',
+        Priority = 1000,
+        FormRadius = 10000,
+        InstanceCount = 50,
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL * categories.ARTILLERY } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'StrategicArtillery',
             ThreatWeights = {
                 TargetThreatType = 'Commander',
             },
@@ -491,6 +340,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'AirExperimental',
             ThreatWeights = {
                 TargetThreatType = 'Commander',
             },
@@ -527,8 +377,9 @@ BuilderGroup {
         InstanceCount = 50,
         BuilderType = 'Any',
         BuilderData = {
-            SearchRadius = 6000,
-            UnitType = 'SATELLITE',
+            SearchRadius = 'BaseEnemyArea',
+            StateMachine = 'Novax',
+            LocationType = 'LocationType',
             PrioritizedCategories = { 
                 categories.STRUCTURE * categories.ANTIMISSILE * categories.TECH3, 
                 categories.MASSEXTRACTION * categories.STRUCTURE * categories.TECH3,

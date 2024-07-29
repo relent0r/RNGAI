@@ -68,9 +68,8 @@ BuilderGroup {
         Priority = 743,
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'aa'} },
+            { UCBC, 'UnitBuildDemand', {'Land', 'T1', 'aa'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -129,6 +128,22 @@ BuilderGroup {
         },
     },
     Builder {
+        BuilderName = 'RNGAI T2 Bot Demand',
+        PlatoonTemplate = 'RNGAIT2AttackBot',
+        Priority = 879,
+        BuilderConditions = {
+            { UCBC, 'UnitBuildDemand', {'Land', 'T2', 'bot'} },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
+            { EBC, 'FactorySpendRatioRNG', {'Land'}},
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'bot'} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 2
+        },
+    },
+    Builder {
         BuilderName = 'RNGAI T2 AA',
         PlatoonTemplate = 'T2LandAA',
         Priority = 747,
@@ -149,9 +164,8 @@ BuilderGroup {
         Priority = 879,
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
+            { UCBC, 'UnitBuildDemand', {'Land', 'T2', 'aa'} },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'aa'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -162,7 +176,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Shield',
         PlatoonTemplate = 'T2MobileShields',
-        Priority = 747,
+        Priority = 748,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
@@ -203,6 +217,18 @@ BuilderGroup {
         BuilderData = {
             TechLevel = 2
         },
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Amphib Demand',
+        PlatoonTemplate = 'T2LandAmphibious',
+        Priority = 880,
+        BuilderConditions = {
+            { UCBC, 'UnitBuildDemand', {'Land', 'T2', 'amphib'} },
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
+            { EBC, 'FactorySpendRatioRNG', {'Land'}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
     },
 }
 
@@ -302,8 +328,24 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 Mobile Sniper',
         PlatoonTemplate = 'T3SniperBots',
+        Priority = 890,
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
+            { EBC, 'FactorySpendRatioRNG', {'Land'}},
+            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'sniper'} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 3
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Mobile Sniper Demand',
+        PlatoonTemplate = 'T3SniperBots',
         Priority = 754,
         BuilderConditions = {
+            { UCBC, 'UnitBuildDemand', {'Land', 'T3', 'sniper'} },
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'sniper'} },
@@ -356,6 +398,7 @@ BuilderGroup {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.20}},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -372,6 +415,7 @@ BuilderGroup {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.20}},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',

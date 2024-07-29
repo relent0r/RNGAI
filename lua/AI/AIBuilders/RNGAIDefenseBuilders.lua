@@ -49,7 +49,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Defence Engineer Restricted Breach Land',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT1RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
@@ -57,10 +57,12 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.DIRECTFIRE}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.6 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 1, 'LAND'}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
@@ -73,23 +75,23 @@ BuilderGroup {
                 Type = 'Land',
                 Tier = 1,
                 BuildStructures = {
-                    'T1GroundDefense',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
+                    { Unit = 'T1GroundDefense', Categories = categories.STRUCTURE * categories.DIRECTFIRE * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T1 Defence Engineer Restricted Breach Air',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT1RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
@@ -97,35 +99,39 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.ANTIAIR}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 1, 'AIR'}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
                 BuildClose = true,
                 BuildStructures = {
-                    'T1AADefense',
+                    { Unit = 'T1AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH1 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T2 Defence Engineer Restricted Breach Land',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LANDNAVAL' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 0.6 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 2, 'LANDNAVAL'}},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 18, categories.DEFENSE * categories.TECH2 * categories.DIRECTFIRE}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
@@ -140,25 +146,27 @@ BuilderGroup {
                 maxRadius = 5,
                 BuildClose = true,
                 BuildStructures = {
-                    'T2GroundDefense',
+                    { Unit = 'T2GroundDefense', Categories = categories.STRUCTURE * categories.DIRECTFIRE * categories.DEFENSE * categories.TECH2 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T2 Defence Engineer Restricted Breach Air',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 2, 'AIR'}},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 6, categories.DEFENSE * categories.TECH2 * categories.ANTIAIR}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
@@ -170,15 +178,15 @@ BuilderGroup {
                 BuildClose = true,
                 NearDefensivePoints = false,
                 BuildStructures = {
-                    'T2AADefense',
+                    { Unit = 'T2AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH2 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T2 Defence Engineer Snipe Air',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
@@ -189,6 +197,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
@@ -203,17 +212,16 @@ BuilderGroup {
                 NearDefensivePoints = true,
                 Type = 'AntiAir',
                 Tier = 2,
-                Location = 'LocationType',
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T2AADefense',
+                    { Unit = 'T2AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH2 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T2 Defence Engineer ACUClose Artillery',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 800,
         InstanceCount = 1,
         BuilderType = 'Any',
@@ -223,6 +231,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.TECH2 * categories.ARTILLERY}},
         },
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 5,
             Construction = {
@@ -233,15 +242,15 @@ BuilderGroup {
                 Type = 'Land',
                 Tier = 1,
                 BuildStructures = {
-                    'T2Artillery',
+                    { Unit = 'T2Artillery', Categories = categories.STRUCTURE * categories.ARTILLERY * categories.STRATEGIC * categories.TECH2 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T3 Defence Single',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 970,
         InstanceCount = 1,
         BuilderConditions = {
@@ -251,6 +260,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
@@ -260,15 +270,15 @@ BuilderGroup {
                 BuildClose = true,
                 NearDefensivePoints = false,
                 BuildStructures = {
-                    'T3AADefense',
+                    { Unit = 'T3AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH3 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T3 Defence Engineer Restricted Breach Air',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
@@ -279,6 +289,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
@@ -289,46 +300,16 @@ BuilderGroup {
                 BuildClose = true,
                 NearDefensivePoints = false,
                 BuildStructures = {
-                    'T3AADefense',
+                    { Unit = 'T3AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH3 },
                 },
                 AdjacencyPriority = {categories.STRUCTURE * (categories.SHIELD + categories.FACTORY)},
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
-    --[[
-    Builder {
-        BuilderName = 'RNGAI T2 Defence Engineer TMD',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
-        Priority = 825,
-        InstanceCount = 1,
-        BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1}},
-            { UCBC, 'UnitCapCheckLess', { .9 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            NumAssistees = 5,
-            Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
-                BaseTemplate = 'DefenseTemplate',
-                BuildClose = true,
-                NearDefensivePoints = true,
-                Type = 'TML',
-                Tier = 1,
-                BuildStructures = {
-                    'T2MissileDefense',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },]]
     Builder {
         BuilderName = 'RNGAI T2 Defence Reactive TMD',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 825,
         InstanceCount = 1,
         BuilderConditions = {
@@ -339,26 +320,26 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 5,
             Construction = {
                 NearDefensivePoints = true,
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
                 BaseTemplate = 'BaseTemplates',
-                LocationType = 'LocationType',
                 BuildClose = true,
                 NoPause = true,
                 Type = 'TMD',
                 BuildStructures = {
-                    'T2MissileDefense',
+                    { Unit = 'T2MissileDefense', Categories = categories.STRUCTURE * categories.ANTIMISSILE * categories.DEFENSE * categories.TECH2 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T2TMLEngineer',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 825,
         InstanceCount = 1,
         BuilderConditions = {
@@ -372,6 +353,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
@@ -385,15 +367,15 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildStructures = {
-                    'T2StrategicMissile',
+                    { Unit = 'T2StrategicMissile', Categories = categories.STRUCTURE * categories.STRATEGIC * categories.TACTICALMISSILEPLATFORM * categories.TECH2 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T3 Base D Engineer AA',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 900,
         InstanceCount = 1,
         BuilderConditions = {
@@ -405,6 +387,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 1,
             Construction = {
@@ -413,16 +396,15 @@ BuilderGroup {
                 maxUnits = 1,
                 AdjacencyPriority = {categories.STRUCTURE * (categories.SHIELD + categories.FACTORY)},
                 BuildStructures = {
-                    'T3AADefense',
+                    { Unit = 'T3AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH3 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T1 Engineer Reclaim Enemy Walls',
-        PlatoonTemplate = 'EngineerBuilderRNG',
-        PlatoonAIPlan = 'ReclaimUnitsAIRNG',
+        PlatoonTemplate = 'EngineerReclaimWallsT1RNG',
         Priority = 400,
         BuilderConditions = {
             { UCBC, 'HaveUnitsWithCategoryAndAllianceRNG', { true, 10, categories.WALL, 'Enemy'}},
@@ -442,18 +424,19 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Base Defenses Expansion',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI T1 Defence Restricted Breach Land Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        BuilderName = 'RNGAI T1 Defence High Value Land Expansion',
+        PlatoonTemplate = 'EngineerStateT1RNG',
         Priority = 950,
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.DIRECTFIRE}},
-            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.DEFENSE * categories.DIRECTFIRE}},
+            { UCBC, 'HighValueZone', {'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
@@ -464,33 +447,74 @@ BuilderGroup {
                 NearDefensivePoints = false,
                 OrderedTemplate = true,
                 BuildStructures = {
-                    'T1GroundDefense',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
+                    { Unit = 'T1GroundDefense', Categories = categories.STRUCTURE * categories.DIRECTFIRE * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Defence Restricted Breach Land Expansion',
+        PlatoonTemplate = 'EngineerStateT1RNG',
+        Priority = 950,
+        InstanceCount = 2,
+        BuilderConditions = {
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.DIRECTFIRE}},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 1, 'LAND'}},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIT1PDTemplate.lua',
+                BaseTemplate = 'T1PDTemplate',
+                BuildClose = false,
+                NearDefensivePoints = false,
+                OrderedTemplate = true,
+                BuildStructures = {
+                    { Unit = 'T1GroundDefense', Categories = categories.STRUCTURE * categories.DIRECTFIRE * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                },
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T1 Defence Restricted Breach Air Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT1RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.ANTIAIR}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 1, 'AIR'}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
             BaseTemplate = 'BaseTemplates',
@@ -500,15 +524,15 @@ BuilderGroup {
                 BuildClose = false,
                 NearDefensivePoints = false,
                 BuildStructures = {
-                    'T1AADefense',
+                    { Unit = 'T1AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH1 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T1 Defence Restricted Breach Sea Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT1RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
@@ -519,6 +543,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
@@ -532,25 +557,27 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildStructures = {
-                    'T1NavalDefense',
+                    { Unit = 'T1NavalDefense', Categories = categories.STRUCTURE * categories.ANTINAVY * categories.DEFENSE * categories.TECH1 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T2 Defence Engineer Restricted Breach Land Expansion',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LANDNAVAL' }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.DIRECTFIRE}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 2, 'LANDNAVAL'}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
@@ -564,25 +591,27 @@ BuilderGroup {
                 BuildClose = false,
                 NearDefensivePoints = false,
                 BuildStructures = {
-                    'T2GroundDefense',
+                    { Unit = 'T2GroundDefense', Categories = categories.STRUCTURE * categories.DIRECTFIRE * categories.DEFENSE * categories.TECH2 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T2 Defence Engineer Restricted Breach Air Expansion',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.DEFENSE * categories.TECH2 * categories.ANTIAIR}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 2, 'AIR'}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
@@ -596,9 +625,9 @@ BuilderGroup {
                 BuildClose = false,
                 NearDefensivePoints = false,
                 BuildStructures = {
-                    'T2AADefense',
+                    { Unit = 'T2AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH2 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -608,7 +637,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T2TMLEngineer Expansion',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 0,
         PriorityFunction = ActiveExpansion,
         BuilderConditions = {
@@ -620,20 +649,21 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BuildClose = false,
                 NearDefensivePoints = false,
                 BuildStructures = {
-                    'T2StrategicMissile',
+                    { Unit = 'T2StrategicMissile', Categories = categories.STRUCTURE * categories.STRATEGIC * categories.TACTICALMISSILEPLATFORM * categories.TECH2 }
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T2 Defence Reactive TMD Expansion',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 825,
         InstanceCount = 1,
         BuilderConditions = {
@@ -644,6 +674,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 5,
             Construction = {
@@ -654,94 +685,27 @@ BuilderGroup {
                 NoPause = true,
                 Type = 'TMD',
                 BuildStructures = {
-                    'T2MissileDefense',
+                    { Unit = 'T2MissileDefense', Categories = categories.STRUCTURE * categories.ANTIMISSILE * categories.DEFENSE * categories.TECH2 },
                 },
-                Location = 'LocationType',
-            }
-        }
-    },
-    --[[
-    Builder {
-        BuilderName = 'RNGAI T2 Defence Engineer TMD Expansion',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
-        Priority = 0,
-        PriorityFunction = ActiveExpansion,
-        InstanceCount = 1,
-        BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 720 } },
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0}},
-            { UCBC, 'UnitCapCheckLess', { .9 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            NumAssistees = 2,
-            Construction = {
-                BuildClose = true,
-                NearDefensivePoints = false,
-                AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY},
-                AvoidCategory = categories.STRUCTURE * categories.ANTIMISSILE * categories.TECH2 * categories.DEFENSE,
-                maxUnits = 1,
-                maxRadius = 5,
-                BuildStructures = {
-                    'T2MissileDefense',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },]]
-}
-
-BuilderGroup {
-    BuilderGroupName = 'RNGAI Perimeter Defenses Expansions',
-    BuildersType = 'EngineerBuilder',
-    Builder {
-        BuilderName = 'RNGAI T1 Defence Land - Perimeter Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 0,
-        PriorityFunction = ActiveExpansion,
-        InstanceCount = 1,
-        BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.DEFENSE * categories.TECH1}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.9}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2 }},
-            { UCBC, 'UnitCapCheckLess', { .6 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            NumAssistees = 5,
-            Construction = {
-                NearPerimeterPoints = true,
-                Radius = 18,
-                BasePerimeterOrientation = 'FRONT',
-                BasePerimeterSelection = true,
-                BuildClose = false,
-                NearBasePatrolPoints = false,
-                BuildStructures = {
-                    'T1GroundDefense',
-                    'T1AADefense',
-                },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T2 Defence Engineer Artillery Counter',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 0,
         PriorityFunction = ActiveExpansion,
         InstanceCount = 1,
         BuilderType = 'Any',
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 1.0 }},
             { UCBC, 'DefensiveClusterCloseRNG', {'LocationType'}},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.STRUCTURE * categories.TECH2 * categories.ARTILLERY}},
         },
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 5,
             Construction = {
@@ -751,159 +715,21 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 35,
                 BuildStructures = {
-                    'T2Artillery',
+                    { Unit = 'T2Artillery', Categories = categories.STRUCTURE * categories.ARTILLERY * categories.STRATEGIC * categories.TECH2 },
                 },
-                Location = 'LocationType',
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T1 Defence Sea - Perimeter Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
-        PriorityFunction = NavalExpansionAdjust,
-        Priority = 650,
-        InstanceCount = 2,
-        BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.ANTINAVY}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.9, 'DEFENSE'}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2 }},
-            { UCBC, 'UnitCapCheckLess', { .6 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            NumAssistees = 5,
-            Construction = {
-                BuildClose = false,
-                NearMarkerType = 'Naval Area',
-                LocationRadius = 250,
                 LocationType = 'LocationType',
-                ThreatMin = -1000,
-                ThreatMax = 100,
-                ThreatRings = 1,
-                ThreatType = 'AntiSurface',
-                ExpansionRadius = 120,
-                BuildStructures = {
-                    'T1AADefense',
-                    'T1NavalDefense',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Defence Engineer - Perimeter Expansion',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
-        Priority = 0,
-        PriorityFunction = ActiveExpansion,
-        InstanceCount = 1,
-        BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 12, categories.DEFENSE * categories.TECH2}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.9}},
-            { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2 }},
-            { UCBC, 'LocationEngineersBuildingLess', { 'LocationType', 1, categories.DEFENSE * categories.TECH2 } },
-            { UCBC, 'UnitCapCheckLess', { .9 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            NumAssistees = 5,
-            Construction = {
-                NearPerimeterPoints = true,
-                Radius = 14,
-                BasePerimeterOrientation = 'FRONT',
-                BasePerimeterSelection = true,
-                BuildClose = false,
-                BuildStructures = {
-                    'T2AADefense',
-                    'T2GroundDefense',
-                    'T2MissileDefense',
-                },
-                Location = 'LocationType',
             }
         }
     },
 }
 
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI T12 Perimeter Defenses Naval',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI T1 Defence Sea - Perimeter Naval',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
-        PriorityFunction = NavalExpansionAdjust,
-        Priority = 650,
-        InstanceCount = 1,
-        BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.ANTINAVY}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.9}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2 }},
-            { UCBC, 'UnitCapCheckLess', { .6 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            NumAssistees = 5,
-            Construction = {
-                BuildClose = false,
-                NearMarkerType = 'Naval Area',
-                LocationRadius = 250,
-                LocationType = 'LocationType',
-                ThreatMin = -1000,
-                ThreatMax = 100,
-                ThreatRings = 1,
-                ThreatType = 'AntiSurface',
-                ExpansionRadius = 80,
-                BuildStructures = {
-                    'T1AADefense',
-                    'T1NavalDefense',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Defence Sea - Perimeter Naval',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
-        PriorityFunction = NavalExpansionAdjust,
-        Priority = 650,
-        InstanceCount = 1,
-        BuilderConditions = {
-            { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.DEFENSE * categories.TECH1 * categories.ANTINAVY}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.20, 0.9}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.2, 1.2 }},
-            { UCBC, 'UnitCapCheckLess', { .6 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'BuildStructure',
-            NumAssistees = 2,
-            Construction = {
-                BuildClose = false,
-                NearMarkerType = 'Naval Area',
-                LocationRadius = 250,
-                LocationType = 'LocationType',
-                ThreatMin = -1000,
-                ThreatMax = 100,
-                ThreatRings = 1,
-                ThreatType = 'AntiSurface',
-                ExpansionRadius = 60,
-                BuildStructures = {
-                    'T2AADefense',
-                    'T2NavalDefense',
-                    'T2MissileDefense',
-                },
-                Location = 'LocationType',
-            }
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T1 Defence Restricted Breach Sea',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
@@ -915,6 +741,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
@@ -925,15 +752,15 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 3,
                 BuildStructures = {
-                    'T1NavalDefense',
+                    { Unit = 'T1NavalDefense', Categories = categories.STRUCTURE * categories.ANTINAVY * categories.DEFENSE * categories.TECH1 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T2 Defence Restricted Breach Sea',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
@@ -945,6 +772,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
@@ -955,15 +783,15 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 3,
                 BuildStructures = {
-                    'T2NavalDefense',
+                    { Unit = 'T2NavalDefense', Categories = categories.STRUCTURE * categories.ANTINAVY * categories.DEFENSE * categories.TECH2 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T2 Defence Restricted Breach Cruisers',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
@@ -975,6 +803,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             DesiresAssist = true,
             NumAssistees = 5,
@@ -985,9 +814,9 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildStructures = {
-                    'T2MissileDefense',
+                    { Unit = 'T2MissileDefense', Categories = categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE }
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -997,7 +826,7 @@ BuilderGroup {
     BuildersType = 'PlatoonFormBuilder',
     Builder {
         BuilderName = 'RNGAI T2 TML Silo',
-        PlatoonTemplate = 'AddToTMLPlatoonRNG',
+        PlatoonTemplate = 'T2TMLStructureRNG',
         Priority = 1,
         InstanceCount = 1000,
         FormRadius = 100,
@@ -1007,8 +836,9 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanArmyPoolWithCategoryRNG', { 0, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM * categories.TECH2 } },
         },
         BuilderData = {
+            StateMachine = 'TML',
             PlatoonPlan = 'TMLAIRNG',
-            Location = 'LocationType'
+            LocationType = 'LocationType'
         },
         BuilderType = 'Any',
     },
@@ -1033,7 +863,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI SMD 1st Main',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 800,
         BuilderConditions = {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
@@ -1044,6 +874,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             Construction = {
                 DesiresAssist = true,
                 NumAssistees = 5,
@@ -1054,15 +885,15 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 20,
                 BuildStructures = {
-                    'T3StrategicMissileDefense',
+                    { Unit = 'T3StrategicMissileDefense', Categories = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI SMD Response',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
@@ -1072,6 +903,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             NumAssistees = 8,
             Construction = {
                 DesiresAssist = true,
@@ -1083,9 +915,9 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 20,
                 BuildStructures = {
-                    'T3StrategicMissileDefense',
+                    { Unit = 'T3StrategicMissileDefense', Categories = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 },
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },

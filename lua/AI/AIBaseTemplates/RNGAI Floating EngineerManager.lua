@@ -12,7 +12,7 @@ BaseBuilderTemplate {
                 'RNGAI Mass Builder Floating',
                 'RNGAI T1 Reclaim Floating',
                 'RNGAI Mass Storage Builder Floating',
-
+                'RNGAI Engineer Zone Expansion Builders',
 		},
     NonCheatBuilders = { },
     BaseSettings = {

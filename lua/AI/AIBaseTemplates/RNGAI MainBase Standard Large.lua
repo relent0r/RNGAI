@@ -12,11 +12,12 @@ BaseBuilderTemplate {
         'RNGAI Initial ACU Builder Large',
 
         -- ACU MainBase Builder --
-        'RNGAI ACU Structure Builders Large',
+        'RNGAI ACU Structure Builders',
         'RNGAI ACU Build Assist',
 
         -- Expansion Builders --
-        'RNGAI Engineer Expansion Builders Large',
+        'RNGAI Engineer Naval Expansion Builders Large',
+        'RNGAI Engineer Zone Expansion Builders',
 
         -- Engineer Builders --
         'RNGAI Engineer Builder',
@@ -32,7 +33,7 @@ BaseBuilderTemplate {
         -- Intel Builders --
         'RNGAI RadarBuilders',
         'RNGAI RadarUpgrade',
-        'RNGAI RadarUpgrade T1 Expansion',
+        'RNGAI Intel Formers',
         
         -- Economy Builder --
         'RNGAI Energy Builder',
@@ -60,15 +61,14 @@ BaseBuilderTemplate {
 
         -- Land Unit Builders --
         'RNGAI TankLandBuilder Large',
-        'RNGAI Land AA 2',
+        'RNGAI Land AntiAir Response',
         'RNGAI T3 AttackLandBuilder Large',
         'RNGAI Island Large FormBuilders',
 
 
         -- Land Unit Formers T1 --
         'RNGAI Land Mass Raid',
-        'RNGAI Land FormBuilders Large',
-        'RNGAI Mass Hunter Labs FormBuilders',
+        'RNGAI Land FormBuilders',
         'RNGAI Land Response Formers',
 
         -- Air Unit Builders --
@@ -104,7 +104,7 @@ BaseBuilderTemplate {
 
         -- Strategic Builders
         'RNGAI SML Builders',
-        'RNGAI Strategic Artillery Builders Large',
+        'RNGAI Strategic Artillery Builders',
         'RNGAI Strategic Formers',
 
         -- Experimentals --
@@ -116,10 +116,10 @@ BaseBuilderTemplate {
     },
     BaseSettings = {
         EngineerCount = {
-            Tech1 = 25,
-            Tech2 = 18,
-            Tech3 = 12,
-            SCU = 10,
+            Tech1 = 45,
+            Tech2 = 35,
+            Tech3 = 25,
+            SCU = 16,
         },
         FactoryCount = {
             Land = 12,
@@ -128,11 +128,11 @@ BaseBuilderTemplate {
             Gate = 1,
         },
         MassToFactoryValues = {
-            T1LandValue = 4.5,
-            T2LandValue = 14,
+            T1LandValue = 4,
+            T2LandValue = 12,
             T3LandValue = 25,
             T1AirValue = 3.5,
-            T2AirValue = 12,
+            T2AirValue = 10,
             T3AirValue = 24,
             T1NavalValue = 4,
             T2NavalValue = 16,

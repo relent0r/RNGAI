@@ -55,7 +55,7 @@ BuilderGroup {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'NAVAL' }},
             { UCBC, 'LessThanFactoryCountRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 } },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 10,  categories.MOBILE * categories.NAVAL } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
         },
         BuilderType = 'Sea',
     },
@@ -67,7 +67,7 @@ BuilderGroup {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'ANTISURFACEAIR' }},
             { UCBC, 'LessThanFactoryCountRNG', { 2, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2 } },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 10,  categories.MOBILE * categories.NAVAL } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
         },
         BuilderType = 'Sea',
     },
@@ -92,9 +92,9 @@ BuilderGroup {
         PlatoonTemplate = 'T1SeaFrigate',
         Priority = 500,
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.FRIGATE } }, -- Build engies until we have 3 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.FRIGATE } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.30 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.10 } },
         },
         BuilderType = 'Sea',
     },
@@ -103,21 +103,21 @@ BuilderGroup {
         PlatoonTemplate = 'T1SeaSub',
         Priority = 500,
         BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.SUBMERSIBLE } }, -- Build engies until we have 3 of them.
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.SUBMERSIBLE } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.30 } },             -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.10 } },
         },
         BuilderType = 'Sea',
     },
     Builder {
         BuilderName = 'RNGAI Factory Sub Enemy Threat T1',
-        PlatoonTemplate = 'RNGAIT1SeaSubQueue',
+        PlatoonTemplate = 'T1SeaSub',
         Priority = 0,
         PriorityFunction = SeaDefenseMode,
         BuilderConditions = { 
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.NAVAL * categories.TECH2 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.30}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.20}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -211,7 +211,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Factory Sub Enemy Threat T2',
-        PlatoonTemplate = 'RNGAIT2SeaSubQueue',
+        PlatoonTemplate = 'T2SubKiller',
         Priority = 0,
         PriorityFunction = SeaDefenseMode,
         BuilderConditions = { 
@@ -222,6 +222,7 @@ BuilderGroup {
         },
         BuilderType = 'Sea',
     },
+    --[[
     Builder { 
         BuilderName = 'RNGAI Sea Ranged T2 Queue',
         PlatoonTemplate = 'RNGAIT2SeaAttackRangedQueue',
@@ -234,6 +235,7 @@ BuilderGroup {
         },
         BuilderType = 'Sea',
     },
+    ]]
     Builder {
         BuilderName = 'RNGAI T3 Battleship',
         PlatoonTemplate = 'T3SeaBattleship',
@@ -251,7 +253,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Factory Sub Enemy Threat T3',
-        PlatoonTemplate = 'RNGAIT3SeaSubQueue',
+        PlatoonTemplate = 'T3SubKiller',
         Priority = 0,
         PriorityFunction = SeaDefenseMode,
         BuilderConditions = { 
@@ -262,6 +264,7 @@ BuilderGroup {
         },
         BuilderType = 'Sea',
     },
+    --[[
     Builder { 
         BuilderName = 'RNGAI Sea T3 Queue',
         PlatoonTemplate = 'RNGAIT3SeaAttackQueue',
@@ -288,7 +291,7 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { 0.95 } },
         },
         BuilderType = 'Sea',
-    },
+    },]]
 }
 
 BuilderGroup {
@@ -444,6 +447,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE * categories.TECH1 }},
             },
         BuilderData = {
+            StateMachine = 'NavalZoneControl',
             MarkerType = 'Mass',            
             WaterOnly = true,
             MoveFirst = 'Random',
@@ -481,6 +485,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MOBILE * categories.NAVAL * categories.FRIGATE * categories.TECH1 }},
             },
         BuilderData = {
+            StateMachine = 'NavalZoneControl',
             MarkerType = 'Mass',            
             FrigateRaid = true,
             WaterOnly = false,

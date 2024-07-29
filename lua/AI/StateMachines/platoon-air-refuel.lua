@@ -25,7 +25,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonAirRefuelBehavior
         Main = function(self)
-
+            self:LogDebug(string.format('Welcome to the AirRefuel StateMachine'))
             local aiBrain = self:GetBrain()
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             self:ChangeState(self.DecideWhatToDo)
@@ -48,15 +48,15 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                 local fuel = unit:GetFuelRatio()
                 local health = unit:GetHealthPercent()
                 if not IsDestroyed(unit) and not unit.Loading and (fuel < 0.4 or health < 0.6) then
-                    if aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) > 0 then
+                    if aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM * categories.STRUCTURE + categories.AIRSTAGINGPLATFORM * categories.CARRIER) > 0 then
                         self:LogDebug(string.format('Air Refuel we have a staging platform available'))
                         local unitPos = unit:GetPosition()
-                        local plats = AIUtils.GetOwnUnitsAroundPoint(aiBrain, categories.AIRSTAGINGPLATFORM, unitPos, 400)
+                        local plats = AIUtils.GetOwnUnitsAroundPoint(aiBrain, categories.AIRSTAGINGPLATFORM * categories.STRUCTURE + categories.AIRSTAGINGPLATFORM * categories.CARRIER, unitPos, 400)
                         --RNGLOG('AirStaging Units found '..table.getn(plats))
                         if not table.empty(plats) then
                             local closest, distance
                             for _, v in plats do
-                                if not v.Dead then
+                                if not v.Dead and v:GetFractionComplete() == 1 then
                                     local roomAvailable = false
                                     if not EntityCategoryContains(categories.CARRIER, v) then
                                         roomAvailable = v:TransportHasSpaceFor(unit)
@@ -72,6 +72,20 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                             if closest and not IsDestroyed(unit) and not unit.Dead then
+                                local platCats = closest.Blueprint.CategoriesHash
+                                if platCats.AIRSTAGINGPLATFORM and not platCats.MOBILE and not closest.AIPlatoonReference then
+                                    local platoonName = 'AirStagingPlatoon'
+                                    local AirStagingPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed(platoonName)
+                                    if not AirStagingPlatoonAvailable then
+                                        AirStagingPlatoonAvailable = aiBrain:MakePlatoon(platoonName, '')
+                                        AirStagingPlatoonAvailable:UniquelyNamePlatoon(platoonName)
+                                    end
+                                    aiBrain:AssignUnitsToPlatoon(AirStagingPlatoonAvailable, {closest}, 'attack', 'None')
+                                    import("/mods/rngai/lua/ai/statemachines/platoon-structure-staging.lua").AssignToUnitsMachine({ }, AirStagingPlatoonAvailable, {closest})
+                                elseif platCats.CARRIER and not closest.CarrierStaging then
+                                    closest.CarrierStaging = closest:ForkThread(behaviors.CarrierStagingThread)
+                                    closest.Refueling = {}
+                                end
                                 local platPos = self:GetPlatoonPosition()
                                 local closestAirStaging = closest:GetPosition()
                                 local dx = platPos[1] - closestAirStaging[1]
@@ -86,21 +100,8 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                     return
                                 end
                                 IssueClearCommands({unit})
-                                if table.getn({unit}) == 0 then
-                                    --LOG('unit table is zero '..repr(unit))
-                                end
-                                safecall("Unable to IssueTransportLoad units are "..repr(unit), IssueTransportLoad, {unit}, closest )
-                                --RNGLOG('Transport load issued')
-                                if EntityCategoryContains(categories.AIRSTAGINGPLATFORM, closest) and not closest.AirStaging then
-                                    --LOG('Air Refuel Forking AirStaging Thread for fighter')
-                                    closest.AirStaging = closest:ForkThread(behaviors.AirStagingThreadRNG)
-                                    closest.Refueling = {}
-                                elseif EntityCategoryContains(categories.CARRIER, closest) and not closest.CarrierStaging then
-                                    closest.CarrierStaging = closest:ForkThread(behaviors.CarrierStagingThread)
-                                    closest.Refueling = {}
-                                end
+                                safecall("Unable to IssueTransportLoad units are "..tostring(unit.EntityId), IssueTransportLoad, {unit}, closest )
                                 refuel = true
-                                RNGINSERT(closest.Refueling, unit)
                                 unit.Loading = true
                             end
                             self:LogDebug(string.format('Air Refuel we have an air staging platform but we didnt use it'))
@@ -140,7 +141,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                             aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
                             import("/mods/rngai/lua/ai/statemachines/platoon-air-gunship.lua").AssignToUnitsMachine({ }, plat, {unit})
                         elseif self.PreviousStateMachine == 'Fighter' then
-                            local plat = StateUtils.GetClosestPlatoonRNG(self, 'FighterBehavior', 450)
+                            local plat = StateUtils.GetClosestPlatoonRNG(self, 'FighterBehavior', false, 450)
                             if not plat then
                                 plat = aiBrain:MakePlatoon('', 'none')
                                 aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
@@ -149,6 +150,10 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                 self:LogDebug(string.format('AirFefuel, moving fighter into existing platoon'))
                                 aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
                             end
+                        elseif self.PreviousStateMachine == 'Bomber' then
+                            local plat = aiBrain:MakePlatoon('', 'none')
+                            aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
+                            import("/mods/rngai/lua/ai/statemachines/platoon-air-bomber.lua").AssignToUnitsMachine({ }, plat, {unit})
                         end
                     end
                 end
@@ -229,6 +234,7 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                     if (not unit.Loading or (fuel >= 1.0 and health >= 1.0)) and (not unit:IsUnitState('Attached')) then
                         self:LogDebug(string.format('Air Refuel complete is true '))
                         refuelComplete = true
+                        unit.Loading = false
                     end
                     self:LogDebug(string.format('Air Refuel fuel is '..fuel))
                     self:LogDebug(string.format('Air Refuel health is '..health))
@@ -243,6 +249,11 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                 end
             end
             local platUnits = self:GetPlatoonUnits()
+            if refuelTimeout >= 30 then
+                for _, unit in platUnits do
+                    unit.Loading = false
+                end
+            end
             IssueClearCommands(platUnits)
             self:ChangeState(self.DecideWhatToDo)
             return

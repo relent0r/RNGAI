@@ -53,23 +53,83 @@ RNGLandResourceSet = Class(ZoneSet){
         self.name = 'RNGLandResourceSet'
     end,
     GenerateZoneList = function(self)
-        -- Step 1: Get a set of markers that are in the layer we're currently interested in.
-       --RNGLOG('GenerateZoneList for custom Zone')
-        local armyStarts = {}
-        local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
-        local mapCenterPoint = { (ScenarioInfo.size[1] / 2), 0 ,(ScenarioInfo.size[2] / 2) }
-        local zoneRadius = 50 * 50
-        if maxmapdimension < 512 then
-            zoneRadius = 35 * 35
-        end
-        --RNGLOG('Zone Radius is '..zoneRadius)
-        for i = 1, 16 do
-            local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
-            local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
-            if army and startPos then
-                table.insert(armyStarts, startPos)
+        local function AssimilateZones(zoneList, zoneCount)
+
+            local startLocations, startLocationCount = import("/lua/sim/markerutilities.lua").GetMarkersByType('Start Location')
+            local mapSize = math.max(ScenarioInfo.size[1], ScenarioInfo.size[2])
+            local threshold = 30 + 0.02 * mapSize
+        
+            ---------------------------------------------------------------------------
+            -- prepare the start locations
+        
+            for k = 1, startLocationCount do
+                local startLocation = startLocations[k]
+                startLocation.resourcemarkers = { }
+                --startLocation.HydrocarbonPlants = { }
             end
+        
+            ---------------------------------------------------------------------------
+            -- assimilate expansions
+        
+            local head = 1
+            for k = 1, zoneCount do
+                local zone = zoneList[k]
+                local center = zone.pos
+        
+                -- find nearest spawn location
+                local nearestStartLocation
+                local nearestStartLocationDistance
+                for k = 1, startLocationCount do
+                    local startLocation = startLocations[k]
+                    local dx = startLocation.position[1] - center[1]
+                    local dz = startLocation.position[3] - center[3]
+                    local startLocationDistance = dx * dx + dz * dz
+                    if not nearestStartLocation then
+                        nearestStartLocation = startLocation
+                        nearestStartLocationDistance = startLocationDistance
+                    else
+                        if startLocationDistance <  nearestStartLocationDistance then
+                            nearestStartLocation = startLocation
+                            nearestStartLocationDistance = startLocationDistance
+                        end
+                    end
+                end
+        
+                -- assimilate it into the spawn location
+                if nearestStartLocationDistance and math.sqrt(nearestStartLocationDistance) < threshold then
+                    local extractors = nearestStartLocation.resourcemarkers
+                    for k, resource in zone.resourcemarkers do
+                        table.insert(extractors, resource)
+                    end
+        
+                    --local hydrocarbonPlants = nearestStartLocation.HydrocarbonPlants
+                    --for k, resource in expansion.HydrocarbonPlants do
+                    --    table.insert(hydrocarbonPlants, resource)
+                    --end
+                else
+                    zoneList[head] = zone
+                    head = head + 1
+                end
+            end
+        
+            ---------------------------------------------------------------------------
+            -- clean up remaining expansions
+        
+            for k = head, zoneCount do
+                zoneList[k] = nil
+            end
+            for _, v in startLocations do
+                zoneList[head] = {pos=v.Position, component=MAP:GetComponent(v.Position,self.layer), weight=table.getn(v.resourcemarkers), startpositionclose=true, enemylandthreat=0, enemyantiairthreat=0, friendlyantisurfacethreat=0, friendlylandantiairthreat=0, friendlydirectfireantisurfacethreat=0, friendlyindirectantisurfacethreat=0,resourcevalue=table.getn(v.resourcemarkers), resourcemarkers=v.resourcemarkers, zonealert=false, control=1, enemystartdata = { }, allystartdata = { },  bestarmy = false, teamvalue = 1, friendlyantiairallocatedthreat=0, label = 0, BuilderManager = {}, lastexpansionattempt = 0, engineerplatoonallocated = false, intelassignment = {}}
+                head = head + 1
+            end
+        
+            return zoneList, head - 1
         end
+        -- Step 1: Get a set of markers that are in the layer we're currently interested in.
+        local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
+        local threshold = 400 + maxmapdimension
+        local zoneRadius = threshold
+
         local markers = {}
         for _, marker in GetMarkers() do
             if marker.type == 'Mass' then
@@ -78,7 +138,12 @@ RNGLandResourceSet = Class(ZoneSet){
                 end
             end
         end
+        for _, v in markers do
+            v.component = MAP:GetComponent(v.position,self.layer)
+        end
         local complete = (RNGGETN(markers) == 0)
+        local initialZones = {}
+        local initialZoneCount = 0
        --RNGLOG('Starting GenerateZoneList Loop')
         while not complete do
             complete = true
@@ -92,7 +157,7 @@ RNGLandResourceSet = Class(ZoneSet){
             for _, v1 in markers do
                 if not v1.claimed then
                     for _, v2 in markers do
-                        if (not v2.claimed) and VDist2Sq(v1.position[1], v1.position[3], v2.position[1], v2.position[3]) < zoneRadius then
+                        if (not v2.claimed) and (v1 ~= v2) and v1.component == v2.component and VDist2Sq(v1.position[1], v1.position[3], v2.position[1], v2.position[3]) < zoneRadius then
                             v1.weight = v1.weight + 1
                             v1.aggX = v1.aggX + v2.position[1]
                             v1.aggZ = v1.aggZ + v2.position[3]
@@ -112,13 +177,6 @@ RNGLandResourceSet = Class(ZoneSet){
             best.claimed = true
             local x = best.aggX/best.weight
             local z = best.aggZ/best.weight
-            for _, p in armyStarts do
-                if VDist2Sq(p[1], p[3],x, z) < (zoneRadius) then
-                   --RNGLOG('Start Position Taken '..repr(p))
-                    startPos = true
-                    break
-                end
-            end
 
             -- Claim nearby points
             for _, v in markers do
@@ -129,8 +187,12 @@ RNGLandResourceSet = Class(ZoneSet){
                     complete = false
                 end
             end
-            --LOG('Resource Group value '..table.getn(resourceGroup))
-            self:AddZone({pos={x,GetSurfaceHeight(x,z),z}, component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), weight=best.weight, startpositionclose=startPos, enemylandthreat=0, enemyantiairthreat=0, friendlythreat=0, friendlyantiairthreat=0, resourcevalue=table.getn(resourceGroup), resourcemarkers=resourceGroup, zonealert=false, control=1, enemystartdata = { }, allystartdata = { },  bestarmy = false})
+            initialZoneCount = initialZoneCount + 1
+            table.insert(initialZones, {pos={x,GetSurfaceHeight(x,z),z}, component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), weight=best.weight, startpositionclose=startPos, enemylandthreat=0, enemyantiairthreat=0, friendlyantisurfacethreat=0, friendlylandantiairthreat=0, friendlydirectfireantisurfacethreat=0, friendlyindirectantisurfacethreat=0,resourcevalue=table.getn(resourceGroup), resourcemarkers=resourceGroup, zonealert=false, control=1, enemystartdata = { }, allystartdata = { },  bestarmy = false, teamvalue = 1, friendlyantiairallocatedthreat=0, label = 0, BuilderManager = false, lastexpansionattempt = 0, engineerplatoonallocated = false, intelassignment = {}})
+        end
+        local finalZonesList, zoneCount = AssimilateZones(initialZones, initialZoneCount)
+        for i=1, zoneCount do
+            self:AddZone(finalZonesList[i])
         end
     end,
 }

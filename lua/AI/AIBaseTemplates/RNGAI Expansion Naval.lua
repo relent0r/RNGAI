@@ -3,7 +3,6 @@ BaseBuilderTemplate {
     BaseTemplateName = 'RNGAI Standard Expansion Naval',
     Builders = {
         'RNGAI Engineer Builder Naval Expansion',
-        --'RNGAI Mass Builder Expansion',
         'RNGAI Naval Assist',
         'RNGAI Naval Factory Reclaim',
 
@@ -42,8 +41,8 @@ BaseBuilderTemplate {
             T1AirValue = 7,
             T2AirValue = 25,
             T3AirValue = 45,
-            T1NavalValue = 6,
-            T2NavalValue = 25,
+            T1NavalValue = 5,
+            T2NavalValue = 24,
             T3NavalValue = 45,
         },
     },

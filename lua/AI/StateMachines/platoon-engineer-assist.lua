@@ -16,10 +16,10 @@ AIPlatoonEngineerAssistBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonEngineerAssistBehavior
         Main = function(self)
+            self:LogDebug(string.format('Welcome to the EngineerAssistBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             self.LocationType = self.BuilderData.LocationType
             self.MovementLayer = self:GetNavigationalLayer()
-            LOG('Welcome to the engineer state machine')
             local platoonUnits = self:GetPlatoonUnits()
             for _, v in platoonUnits do
                 if not v.BuilderManagerData then

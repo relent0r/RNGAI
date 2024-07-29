@@ -39,14 +39,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonFighterBehavior
         Main = function(self)
-            -- requires expansion markers
-            --LOG('start Fighter platoon')
-            if not import("/lua/sim/markerutilities/expansions.lua").IsGenerated() then
-                self:LogWarning('requires generated expansion markers')
-                self:ChangeState(self.Error)
-                return
-            end
-
+            self:LogDebug(string.format('Welcome to the FighterBehavior StateMachine'))
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
                 self:LogWarning('requires generated navigational mesh')
@@ -62,8 +55,8 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             else
                 self.LocationType = 'MAIN'
             end
-            self.CurrentEnemyThreat = 0
-            self.CurrentPlatoonThreat = 0
+            self.CurrentEnemyThreatAntiAir = 0
+            self.CurrentPlatoonThreatAntiAir = 0
             self.AttackPriorities = self.PlatoonData.PrioritizedCategories or {categories.AIR - categories.UNTARGETABLE}
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             StartFighterThreads(aiBrain, self)
@@ -87,13 +80,13 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local target
             local platPos = self:GetPlatoonPosition()
-            if self.CurrentEnemyThreat > self.CurrentPlatoonThreat and not self.BuilderData.ProtectUnit then
+            if self.CurrentEnemyThreatAntiAir > self.CurrentPlatoonThreatAntiAir and not self.BuilderData.ProtectUnit and not self.BuilderData.AttackTarget.Blueprint.CategoriesHash.EXPERIMENTAL then
                 if platPos and VDist3Sq(platPos, self.Home) > 6400 then
                     self:ChangeState(self.Retreating)
                     return
                 end
             end
-            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) then
+            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
                 --LOG('FighterBehavior DecideWhatToDo already has target, attacking')
                 self:ChangeState(self.AttackTarget)
                 return
@@ -108,7 +101,8 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                             if target then
                                 self.BuilderData = {
                                     AttackTarget = target,
-                                    Position = target:GetPosition()
+                                    Position = target:GetPosition(),
+                                    ProtectUnit = true
                                 }
                                 --LOG('FighterBehavior DecideWhatToDo found acu target AttackTarget')
                                 self:ChangeState(self.AttackTarget)
@@ -123,7 +117,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     if v.object and not v.object.Dead and v.object.Blueprint.CategoriesHash.AIR then
                         local expPos = v.object:GetPosition()
                         if expPos and GetThreatAtPosition(aiBrain, expPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') < self.CurrentPlatoonThreat
-                        or VDist2(expPos[1], expPos[3], self.Home[1], self.Home[3]) < self.BaseMilitaryArea then
+                        or VDist2(expPos[1], expPos[3], self.Home[1], self.Home[3]) < math.min(self.BaseMilitaryArea, 200) then
                             target = v.object
                             break
                         end
@@ -222,6 +216,9 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 IssueAggressiveMove(GetPlatoonUnits(self), self.BuilderData.Position)
             end
             local movePosition = self.BuilderData.Position
+            if not movePosition then
+                WARN('AI-RNG : Fighter no builderdata position passed')
+            end
             local lastDist
             local timeout = 0
             while aiBrain:PlatoonExists(self) do
@@ -230,6 +227,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     return
                 end
                 local platPos = self:GetPlatoonPosition()
+                if not platPos then return end
                 local dx = platPos[1] - movePosition[1]
                 local dz = platPos[3] - movePosition[3]
                 local posDist = dx * dx + dz * dz
@@ -284,9 +282,9 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 return
             end
             IssueClearCommands(GetPlatoonUnits(self))
-            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) then
+            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
                 local target = self.BuilderData.AttackTarget
-                if target.Blueprint.CategoriesHash.BOMBER or target.Blueprint.CategoriesHash.GROUNDATTACK or target.Blueprint.CategoriesHash.TRANSPORTFOCUS then
+                if target.Blueprint.CategoriesHash.BOMBER or target.Blueprint.CategoriesHash.GROUNDATTACK or target.Blueprint.CategoriesHash.TRANSPORTFOCUS or target.Blueprint.CategoriesHash.EXPERIMENTAL then
                     IssueAttack(GetPlatoonUnits(self), target)
                 else
                     IssueAggressiveMove(GetPlatoonUnits(self), target:GetPosition())
@@ -386,10 +384,10 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             local platPos = self:GetPlatoonPosition()
             local distanceToHome = VDist2Sq(platPos[1], platPos[3], self.Home[1], self.Home[3])
             for _,aPlat in AlliedPlatoons do
-                if aPlat.EntityId ~= self.EntityId then
+                if not aPlat.Dead and not table.equal(aPlat, self) and aPlat.CalculatePlatoonThreat then
                     local aPlatAirThreat = aPlat:CalculatePlatoonThreat('Air', categories.ALLUNITS)
-                    if aPlatAirThreat > self.CurrentEnemyThreat / 2 then
-                        local aPlatPos = GetPlatoonPosition(aPlat)
+                    if aPlatAirThreat > self.CurrentPlatoonThreatAntiAir / 2 then
+                        local aPlatPos = aPlat:GetPlatoonPosition()
                         local aPlatDistance = VDist2Sq(platPos[1],platPos[3],aPlatPos[1],aPlatPos[3])
                         local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],self.Home[1],self.Home[3])
                         if aPlatToHomeDistance < distanceToHome then
@@ -521,6 +519,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIPlatoonFighterBehavior)
+        platoon.PlatoonData = data.PlatoonData
         local platoonUnits = GetPlatoonUnits(platoon)
         if platoonUnits then
             for _, unit in platoonUnits do
@@ -557,18 +556,18 @@ FighterThreatThreads = function(aiBrain, platoon)
                     end
                 end
             end
-            platoon.CurrentEnemyThreat = enemyThreat
-            --LOG('CurrentEnemyThreat '..platoon.CurrentEnemyThreat)
-            platoon.CurrentPlatoonThreat = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
-            --LOG('CurrentPlatoonThreat '..platoon.CurrentPlatoonThreat)
-            if not platoon.BuilderData.Retreat and platoon.CurrentEnemyThreat > platoon.CurrentPlatoonThreat * 1.3 and not platoon.BuilderData.ProtectACU then
+            platoon.CurrentEnemyThreatAntiAir = enemyThreat
+            --LOG('CurrentEnemyThreatAntiAir '..platoon.CurrentEnemyThreatAntiAir)
+            platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
+            --LOG('CurrentPlatoonThreat '..platoon.CurrentPlatoonThreatAntiAir)
+            if not platoon.BuilderData.Retreat and platoon.CurrentEnemyThreatAntiAir > platoon.CurrentPlatoonThreatAntiAir * 1.3 and not platoon.BuilderData.ProtectACU and not platoon.BuilderData.AttackTarget.Blueprint.CategoriesHash.EXPERIMENTAL then
                 if VDist3Sq(platPos, platoon.Home) > 6400 then
                     platoon.BuilderData = {}
                     platoon:ChangeState(platoon.DecideWhatToDo)
                 end
             end
         end
-        if platoon.CurrentPlatoonThreat < 15 and aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
+        if platoon.CurrentPlatoonThreatAntiAir < 15 and aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
             platoon.MaxRadius = platoon.BaseRestrictedArea * 1.5
         elseif aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
             platoon.MaxRadius = platoon.BaseMilitaryArea
@@ -580,7 +579,7 @@ FighterThreatThreads = function(aiBrain, platoon)
                 if unit and not IsDestroyed(unit) then
                     local fuel = unit:GetFuelRatio()
                     local health = unit:GetHealthPercent()
-                    if not unit.Loading and (fuel < 0.3 or health < 0.5) then
+                    if not unit.Loading and ((fuel > -1 and fuel < 0.3) or health < 0.5) then
                         --LOG('Fighter needs refuel')
                         if not aiBrain.BrainIntel.AirStagingRequired and aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) < 1 then
                             aiBrain.BrainIntel.AirStagingRequired = true

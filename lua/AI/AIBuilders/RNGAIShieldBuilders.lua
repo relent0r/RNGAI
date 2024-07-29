@@ -16,12 +16,21 @@ local ActiveExpansion = function(self, aiBrain, builderManager)
     end
 end
 
+local ShieldResponse = function(self, aiBrain, builderManager)
+    --RNGLOG('LocationType is '..builderManager.LocationType)
+    if aiBrain.emanager.Artillery.T3 > 0 or aiBrain.emanager.Artillery.T4 > 0 or aiBrain.emanager.Satellite.T4 > 0 then
+        return 950
+    else
+        return 0
+    end
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Shield Builder',                   
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T2 Shield Single',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 700,
         DelayEqualBuildPlattons = {'Shield', 5},
         InstanceCount = 1,
@@ -33,6 +42,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 DesiresAssist = true,
@@ -44,14 +54,14 @@ BuilderGroup {
                 maxRadius = 35,
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T2ShieldDefense',
+                    { Unit = 'T2ShieldDefense', Categories = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE * categories.TECH2 },
                 },
             },
         },
     },
     Builder {
         BuilderName = 'RNGAI T2 Shield DefensivePoint',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 700,
         DelayEqualBuildPlattons = {'Shield', 5},
         InstanceCount = 1,
@@ -63,6 +73,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
@@ -77,14 +88,14 @@ BuilderGroup {
                 Tier = 2,
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T2ShieldDefense',
+                    { Unit = 'T2ShieldDefense', Categories = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE * categories.TECH2 },
                 },
             },
         },
     },
     Builder {
         BuilderName = 'RNGAI T2 Shield Ratio',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 625,
         DelayEqualBuildPlattons = {'Shield', 5},
         InstanceCount = 1,
@@ -92,13 +103,14 @@ BuilderGroup {
             { UCBC, 'HaveUnitRatioAtLocationRNG', { 'LocationType', 1.0, categories.STRUCTURE * categories.SHIELD, '<=',categories.STRUCTURE * categories.TECH3 * (categories.ENERGYPRODUCTION + categories.FACTORY) } },
             { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.95 } },
-            { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 0.0 } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.95, 1.1 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.SHIELD}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'HaveUnitRatioVersusCapRNG', { 0.12 / 2, '<', categories.STRUCTURE * categories.DEFENSE * categories.SHIELD } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 8,
             Construction = {
@@ -119,21 +131,21 @@ BuilderGroup {
                 --maxRadius = 35,
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T2ShieldDefense',
+                    { Unit = 'T2ShieldDefense', Categories = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE * categories.TECH2 },
                 },
             },
         },
     },
     Builder {
         BuilderName = 'RNGAI T3 Shield Ratio',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 650,
         DelayEqualBuildPlattons = {'Shield', 5},
         InstanceCount = 2,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2, 5 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.95 } },
-            { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 0.0 } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.95, 1.1 }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.SHIELD}},
             { UCBC, 'HaveUnitRatioAtLocationRNG', { 'LocationType', 1.0, categories.STRUCTURE * categories.SHIELD, '<=',categories.STRUCTURE * categories.TECH3 * (categories.ENERGYPRODUCTION + categories.FACTORY) } },
@@ -142,15 +154,12 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 8,
             Construction = {
                 DesiresAssist = true,
                 BuildClose = false,
-                --AdjacencyCategory = (categories.ENERGYPRODUCTION * categories.TECH3) + (categories.ENERGYPRODUCTION * categories.EXPERIMENTAL) + (categories.STRUCTURE * categories.FACTORY),
-                --AvoidCategory = categories.STRUCTURE * categories.SHIELD,
-                --maxUnits = 1,
-                --maxRadius = 35,
                 Centered = true,
                 AdjacencyPriority = {
                     categories.EXPERIMENTAL * categories.STRUCTURE,
@@ -163,7 +172,7 @@ BuilderGroup {
                 },
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T3ShieldDefense',
+                    { Unit = 'T3ShieldDefense', Categories = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE * categories.TECH3 },
                 }
             }
         }
@@ -175,7 +184,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T2 Shield Single Expansion Active',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 0,
         PriorityFunction = ActiveExpansion,
         DelayEqualBuildPlattons = {'Shield', 5},
@@ -187,6 +196,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 8,
             Construction = {
@@ -198,7 +208,38 @@ BuilderGroup {
                 maxRadius = 35,
                 LocationType = 'LocationType',
                 BuildStructures = {
-                    'T2ShieldDefense',
+                    { Unit = 'T2ShieldDefense', Categories = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE * categories.TECH2 },
+                },
+            },
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Shield Expansion Response',
+        PlatoonTemplate = 'EngineerStateT23RNG',
+        Priority = 0,
+        PriorityFunction = ShieldResponse,
+        DelayEqualBuildPlattons = {'Shield', 5},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
+            { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.SHIELD}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3)} },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            NumAssistees = 8,
+            Construction = {
+                DesiresAssist = true,
+                BuildClose = false,
+                AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY},
+                AvoidCategory = categories.STRUCTURE * categories.SHIELD,
+                maxUnits = 1,
+                maxRadius = 35,
+                LocationType = 'LocationType',
+                BuildStructures = {
+                    { Unit = 'T2ShieldDefense', Categories = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE * categories.TECH2 },
                 },
             },
         },

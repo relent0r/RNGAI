@@ -42,6 +42,7 @@ local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 ]]
 local mainWeaponPriorities = {
     categories.EXPERIMENTAL,
+    categories.COMMAND,
     categories.SUBCOMMANDER,
     categories.TECH3 * categories.MOBILE,
     categories.STRUCTURE * categories.DEFENSE - categories.ANTIMISSILE,
@@ -66,6 +67,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
 
         ---@param self AIExperimentalFatBoyBehavior
         Main = function(self)
+            self:LogDebug(string.format('Welcome to the ExperimentalFatBoyBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             if not self.MovementLayer then
                 AIAttackUtils.GetMostRestrictiveLayerRNG(self)
@@ -96,7 +98,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                         if finishedUnit.Blueprint.CategoriesHash.ENGINEER and finishedUnit.Blueprint.CategoriesHash.TECH3 then
                             local plat = aiBrain:MakePlatoon('', '')
                             aiBrain:AssignUnitsToPlatoon(plat, {finishedUnit}, 'attack', 'None')
-                            import("/mods/rngai/lua/ai/statemachines/platoon-engineer-task.lua").AssignToUnitsMachine({ 
+                            import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ 
                                 StateMachine = 'Engineer',
                                 LocationType = 'FLOATING',
                                 BuilderData = {
@@ -114,16 +116,18 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 import("/lua/scenariotriggers.lua").CreateUnitBuiltTrigger(factoryWorkFinish, self.ExperimentalUnit.ExternalFactory, categories.ALLUNITS)
+                self.ExperimentalUnit.ExternalFactory.EngineerManager = {
+                    Task = nil,
+                    Engineers = {}
+                }
             end
-            self.ExperimentalUnit.ExternalFactory.EngineerManager = {
-                Task = nil,
-                Engineers = {}
-            }
             
-            self.UnitRatios = {}
             self.SupportT1MobileScout = 0
             self.SupportT2MobileAA = 3
             self.SupportT3MobileAA = 0
+            self.DefaultSurfaceThreat = self.ExperimentalUnit.Blueprint.Defense.SurfaceThreatLevel
+            self.DefaultAirThreat = self.ExperimentalUnit.Blueprint.Defense.AirThreatLevel
+            self.DefaultSubThreat = self.ExperimentalUnit.Blueprint.Defense.SubThreatLevel
             StartFatBoyThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -210,15 +214,15 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                         self:LogDebug(string.format('We have Artillery or Ranged unit threat around us'))
                         self:LogDebug(string.format('Artillery Threat '..threatTable.ArtilleryThreat.TotalThreat))
                         self:LogDebug(string.format('Ranged Threat '..threatTable.RangedUnitThreat.TotalThreat))
-                        
+                        local shieldPercent = (self.ExperimentalUnit.MyShield:GetHealth() / self.ExperimentalUnit.MyShield:GetMaxHealth()) or 0.45
                         for _, enemyUnit in threatTable.ArtilleryThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) then
+                            if not IsDestroyed(enemyUnit.Object) and enemyUnit.Object:GetFractionComplete() >= 1 then
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object)
                                 --LOG('Artillery Range is greater than FATBOY')
                                 if unitRange > self.MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
                                 end
-                                if overRangedCount > 1 then
+                                if overRangedCount > 1 and shieldPercent and shieldPercent < 0.50 then
                                     self.BuilderData = {
                                         Retreat = true,
                                         RetreatReason = 'ArtilleryThreat',
@@ -239,7 +243,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                                 if unitRange > self.MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
                                 end
-                                if overRangedCount > 3 then
+                                if overRangedCount > 3 and shieldPercent and shieldPercent < 0.50 then
                                     self.BuilderData = {
                                         Retreat = true,
                                         RetreatReason = 'ArtilleryThreat',
@@ -312,7 +316,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                 return
             end
             if not target then
-                target, _ = StateUtils.FindExperimentalTargetRNG(aiBrain, self, experimentalPosition)
+                target, _ = StateUtils.FindExperimentalTargetRNG(aiBrain, self, self.MovementLayer, experimentalPosition)
             end
             if target and not IsDestroyed(target) then
                 --LOG('We have a target from FindExperimentalTargetRNG')
@@ -382,7 +386,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
 
             while not IsDestroyed(self.ExperimentalUnit) do
                 local origin = self.ExperimentalUnit:GetPosition()
-                waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 50)
+                waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 60)
                 if StateUtils.PositionInWater(origin) then
                     self.VentGuardPlatoon = true
                     --LOG('GuardPlatoon Vent has gone true')
@@ -409,6 +413,8 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                 -- check for opportunities
                 local wx = waypoint[1]
                 local wz = waypoint[3]
+                local lastDist
+                local timeout = 0
                 while not IsDestroyed(self.ExperimentalUnit) do
                     WaitTicks(20)
                     if IsDestroyed(self.ExperimentalUnit) then
@@ -422,6 +428,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     -- check if we're near our current waypoint
                     local dx = position[1] - wx
                     local dz = position[3] - wz
+                    local wayPointDist = dx * dx + dz * dz
                     if dx * dx + dz * dz < navigateDistanceCutOff then
                         --LOG('close to waypoint position in second loop')
                         --LOG('distance is '..(dx * dx + dz * dz))
@@ -431,9 +438,16 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                         end
                         break
                     end
+                    if not lastDist or lastDist == wayPointDist then
+                        timeout = timeout + 1
+                        if timeout > 6 then
+                            break
+                        end
+                    end
+                    lastDist = wayPointDist
                     --LOG('Current TotalSuroundingThreat '..repr(self.EnemyThreatTable.TotalSuroundingThreat))
                     -- check for threats
-                    WaitTicks(10)
+                    WaitTicks(20)
                 end
                 WaitTicks(1)
             end
@@ -460,10 +474,11 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     end
                     if threatTable.ArtilleryThreat.TotalThreat > 0 then
                         local artilleryCount = 0
+                        local shieldPercent = (experimental.MyShield:GetHealth() / experimental.MyShield:GetMaxHealth()) or 0.45
                         for _, unit in threatTable.ArtilleryThreat.Units do
                             if unit.Distance < 16384 then
                                 artilleryCount = artilleryCount + 1
-                                if artilleryCount > 1 then
+                                if artilleryCount > 1 and (experimental.ShieldCaution or shieldPercent < 0.50) then
                                     --LOG('Fatboy is within range of Artillery and count is greater than one')
                                     self:ChangeState(self.DecideWhatToDo)
                                     return 
@@ -479,11 +494,12 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     local targetPosition = target:GetPosition()
                     if not maxPlatoonRange then
                         coroutine.yield(3)
-                        WARN('Warning : Experimental has no max weapon range')
-                        continue
+                        WARN('AI-RNG* Warning : Experimental has no max weapon range, unable to attack')
+                        self:ChangeState(self.Error)
+                        return
                     end
                     local unitPos = experimental:GetPosition()
-                    if StateUtils.PositionInWater(unitPos) then
+                    if StateUtils.PositionInWater(unitPos) and experimental.Blueprint.CategoriesHash.ANTINAVY then
                         maxPlatoonRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Anti Navy')
                     elseif maxPlatoonRange < self.MaxPlatoonWeaponRange then
                         maxPlatoonRange = self.MaxPlatoonWeaponRange
@@ -526,7 +542,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
-                coroutine.yield(25)
+                coroutine.yield(35)
             end
         end,
     },
@@ -652,14 +668,14 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
             local closestAPlatPos
             local AlliedPlatoons = aiBrain:GetPlatoonsList()
             for _,aPlat in AlliedPlatoons do
-                if aPlat.EntityId ~= self.EntityId then
-                    local aPlatAirThreat = aPlat:CalculatePlatoonThreat('Air', categories.ALLUNITS)
-                    if aPlatAirThreat > self.CurrentEnemyThreat / 2 then
-                        local aPlatPos = GetPlatoonPosition(aPlat)
+                if not aPlat.Dead and not table.equal(aPlat, self) then
+                    local aPlatSurfaceThreat = aPlat:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+                    if aPlatSurfaceThreat > self.EnemyThreatTable.TotalSuroundingThreat / 2 then
+                        local aPlatPos = aPlat:GetPlatoonPosition()
                         local aPlatDistance = VDist2Sq(experimentalPosition[1],experimentalPosition[3],aPlatPos[1],aPlatPos[3])
                         local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],self.Home[1],self.Home[3])
                         if aPlatToHomeDistance < distanceToHome then
-                            local platoonValue = aPlatDistance * aPlatDistance / aPlatAirThreat
+                            local platoonValue = aPlatDistance * aPlatDistance / aPlatSurfaceThreat
                             if not closestPlatoonValue or platoonValue <= closestPlatoonValue then
                                 if NavUtils.CanPathTo(self.MovementLayer, experimentalPosition, aPlatPos) then
                                     closestPlatoon = aPlat
@@ -783,6 +799,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIExperimentalFatBoyBehavior)
+        platoon.PlatoonData = data.PlatoonData
         local platoonUnits = platoon:GetPlatoonUnits()
         if platoonUnits then
             for _, unit in platoonUnits do
@@ -820,7 +837,9 @@ end
 ---@param data { Behavior: 'AIBehaviorZoneControl' }
 ---@param units Unit[]
 StartFatBoyThreads = function(brain, platoon)
-    brain:ForkThread(GuardThread, platoon)
+    if platoon.ExperimentalUnit.ExternalFactory then
+        brain:ForkThread(GuardThread, platoon)
+    end
     brain:ForkThread(ThreatThread, platoon)
     brain:ForkThread(StateUtils.ZoneUpdate, platoon)
 end
@@ -900,7 +919,7 @@ GuardThread = function(aiBrain, platoon)
                     elseif v.Blueprint.CategoriesHash.SHIELD and v.Blueprint.CategoriesHash.DEFENSE and v.Blueprint.CategoriesHash.MOBILE then
                         currentShieldCount = currentShieldCount + 1
                     elseif v.Blueprint.CategoriesHash.DIRECTFIRE and v.Blueprint.CategoriesHash.LAND then
-                        currentLandThreat = currentLandThreat + v.Blueprint.CategoriesHash.SurfaceThreatLevel
+                        currentLandThreat = currentLandThreat + v.Blueprint.Defense.SurfaceThreatLevel
                         currentLandCount = currentLandCount + 1
                     end
                 end
@@ -969,18 +988,19 @@ ThreatThread = function(aiBrain, platoon)
         if imapThreat > 0 then
             platoon.EnemyThreatTable = StateUtils.ExperimentalTargetLocalCheckRNG(aiBrain, experimentalPos, platoon, 135, false)
         end
-        if shieldEnabled and experimental.MyShield.DepletedByEnergy and platoon.EnemyThreatTable.TotalSuroundingThreat < 1 and aiBrain:GetEconomyStoredRatio( 'ENERGY') < 0.20 then
+        if shieldEnabled and experimental.MyShield and experimental.MyShield.DepletedByEnergy and platoon.EnemyThreatTable.TotalSuroundingThreat < 1 and aiBrain:GetEconomyStoredRatio( 'ENERGY') < 0.20 then
             experimental:DisableShield()
             shieldEnabled = false
-        elseif not shieldEnabled and not experimental:ShieldIsOn() and aiBrain:GetEconomyStoredRatio( 'ENERGY') > 0.50 then
+        elseif experimental.MyShield and not shieldEnabled and not experimental:ShieldIsOn() and aiBrain:GetEconomyStoredRatio( 'ENERGY') > 0.50 then
             experimental:EnableShield()
             shieldEnabled = true
         end
-        if experimental.MyShield.DepletedByEnergy or experimental.MyShield.DepletedByDamage then
+        if experimental.MyShield and experimental.MyShield.DepletedByEnergy or experimental.MyShield.DepletedByDamage then
             experimental.ShieldCaution = true
-        elseif experimental.ShieldCaution then
+        elseif experimental.MyShield and experimental.ShieldCaution then
             experimental.ShieldCaution = false
         end
+
         coroutine.yield(35)
     end
 end

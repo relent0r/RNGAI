@@ -10,6 +10,7 @@ local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local RNGGETN = table.getn
+local RNGTableEmpty = table.empty
 local RNGINSERT = table.insert
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
@@ -157,9 +158,16 @@ function CanBuildOnHydroLessThanDistanceRNG(aiBrain, locationType, distance, thr
 end
 
 function NavalBaseLimitRNG(aiBrain, limit)
-    local expBaseCount = aiBrain:GetManagerCount('Naval Area')
-    --LOG('Naval base count is '..expBaseCount)
-    return CompareBody(expBaseCount, limit, '<')
+    local count = 0
+    for k, v in aiBrain.BuilderManagers do
+        if v.Layer == 'Water' then
+            if v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) > 0 then
+                count = count + 1
+            end
+        end
+    end
+    --LOG('Naval base count is '..count)
+    return CompareBody(count, limit, '<')
 end
 
 function LessThanLandExpansions(aiBrain, expansionCount)
@@ -170,17 +178,45 @@ function LessThanLandExpansions(aiBrain, expansionCount)
         if not v.BaseType then
             continue
         end
-        if v.BaseType ~= 'MAIN' and v.BaseType ~= 'Naval Area' and v.BaseType ~= 'FLOATING' and not string.find(v.BaseType, 'DYNAMIC_') then
+        if v.BaseType ~= 'MAIN' and v.BaseType ~= 'Naval Area' and v.BaseType ~= 'FLOATING' then
             count = count + 1
         end
         if count >= expansionCount then
-            --RNGLOG('We have 1 expansion called '..v.BaseType)
+            --RNGLOG('We have  '..count..' expansions '..'more than the expansion limit of '..expansionCount)
             return false
         end
         --RNGLOG('Expansion Base Type is '..v.BaseType)
     end
     --RNGLOG('We have no expansions count '..count..' expansion max '..expansionCount)
     return true
+end
+
+function RequirePresenceOnLabelRNG(aiBrain, expansionCount)
+    if aiBrain.GraphZones then
+        for id, v in aiBrain.GraphZones do
+            local baseDetected = false
+            if v.MassMarkersInGraph > 5 then
+                for _, b in aiBrain.BuilderManagers do
+                    if not v.BaseType then
+                        continue
+                    end
+                    if v.BaseType ~= 'Naval Area' and v.BaseType ~= 'FLOATING' then
+                        if v.GraphArea and v.GraphArea == id then
+                            --LOG('Found base in label '..id..' base name is '..v.BaseType)
+                            baseDetected = true
+                            break
+                        end
+                    end
+                end
+            end
+            if not baseDetected then
+                --LOG('RequirePresenceOnLabelRNG returning true')
+                return true
+            end
+        end
+    end
+    --LOG('RequirePresenceOnLabelRNG returning false')
+    return false
 end
 
 --    Uveso Function          { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * (categories.TECH1 + categories.TECH2 + categories.TECH2)  }},
@@ -250,16 +286,6 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
         BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
         BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
-    elseif aiBrain:PBMHasPlatoonList() then
-        for k,v in aiBrain.PBM.Locations do
-            if v.LocationType == locType then
-                baseposition = v.Location
-                radius = v.Radius
-                BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
-                BASEPOSTITIONS[AIName][locType] = {baseposition, radius}
-                break
-            end
-        end
     end
     if not baseposition then
         --RNGLOG('No Base Position for GetUnitsBeingBuildlocation')
@@ -305,16 +331,6 @@ function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, b
         radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
         BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
         BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
-    elseif aiBrain:PBMHasPlatoonList() then
-        for k,v in aiBrain.PBM.Locations do
-            if v.LocationType == locType then
-                baseposition = v.Location
-                radius = v.Radius
-                BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
-                BASEPOSTITIONS[AIName][locType] = {baseposition, radius}
-                break
-            end
-        end
     end
     if not baseposition then
         return false
@@ -359,16 +375,6 @@ function StartLocationNeedsEngineerRNG( aiBrain, locationType, locationRadius, t
     return false
 end
 
-function LargeExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType )
-    local pos, name = RUtils.AIFindLargeExpansionMarkerNeedsEngineerRNG( aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
-    if pos then
-        --RNGLOG('LargeExpansionNeedsEngineer is True')
-        return true
-    end
-    --RNGLOG('LargeExpansionNeedsEngineer is False')
-    return false
-end
-
 function NavalAreaNeedsEngineerRNG(aiBrain, locationType, validateLabel, locationRadius, threatMin, threatMax, threatRings, threatType)
     local pos, name = RUtils.AIFindNavalAreaNeedsEngineerRNG(aiBrain, locationType, validateLabel, locationRadius, threatMin, threatMax, threatRings, threatType)
     if pos then
@@ -386,14 +392,6 @@ function UnmarkedExpansionNeedsEngineerRNG( aiBrain, locationType, locationRadiu
         return true
     end
     --RNGLOG('UnmarkedExpansionNeedsEngineer is False')
-    return false
-end
-
-function ExpansionAreaNeedsEngineerRNG(aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
-    local pos, name = RUtils.AIFindExpansionAreaNeedsEngineerRNG(aiBrain, locationType, locationRadius, threatMin, threatMax, threatRings, threatType)
-    if pos then
-        return true
-    end
     return false
 end
 
@@ -526,7 +524,12 @@ function EnemyUnitsGreaterAtRestrictedRNG(aiBrain, locationType, number, type)
                 return true
             end
         elseif type == 'AIR' then
-            if aiBrain.BasePerimeterMonitor[locationType].AirUnits > number or aiBrain.BasePerimeterMonitor[locationType].AntiSurfaceAirUnits > number then
+            if aiBrain.BasePerimeterMonitor[locationType].AirUnits > number then
+                --RNGLOG('Air units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'ANTIAIR' then
+            if aiBrain.BasePerimeterMonitor[locationType].AntiAirUnits > number then
                 --RNGLOG('Air units greater than '..number..' at base location '..locationType)
                 return true
             end
@@ -550,6 +553,121 @@ function EnemyUnitsGreaterAtRestrictedRNG(aiBrain, locationType, number, type)
     return false
 end
 
+function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, pointTier, type)
+    if aiBrain.BasePerimeterMonitor[locationType] then
+        local basePosition = aiBrain.BuilderManagers[locationType].Position
+        local bestPoint
+        local bestKey
+        if type == 'LAND' then
+            if not RNGTableEmpty(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier]) then
+                if aiBrain.BasePerimeterMonitor[locationType].RecentLandAngle then
+                    local pointCheck = aiBrain.BasePerimeterMonitor[locationType].RecentLandAngle
+                    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier] do
+                        local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
+                        if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                            bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                            bestKey = k
+                        end
+                    end
+                end
+            end
+            if bestPoint then
+                if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5 then
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5))
+                    return true
+                else
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5))
+                end
+            end
+        elseif type == 'AIR' then
+            if not RNGTableEmpty(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier]) then
+                if aiBrain.BasePerimeterMonitor[locationType].RecentAirAngle then
+                    local pointCheck = aiBrain.BasePerimeterMonitor[locationType].RecentAirAngle
+                    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier] do
+                        local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
+                        if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                            bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                            bestKey = k
+                        end
+                    end
+                end
+            end
+            if bestPoint then
+                if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat < aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5 then
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
+                    return true
+                else
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
+                end
+            end
+        elseif type == 'ANTISURFACEAIR' then
+            if not RNGTableEmpty(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier]) then
+                if aiBrain.BasePerimeterMonitor[locationType].RecentSurfaceAirAngle then
+                    local pointCheck = aiBrain.BasePerimeterMonitor[locationType].RecentSurfaceAirAngle
+                    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier] do
+                        local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
+                        if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                            bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                            bestKey = k
+                        end
+                    end
+                end
+            end
+            if bestPoint then
+                if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat < aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5 then
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
+                    return true
+                else
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
+                end
+            end
+        elseif type == 'NAVAL' then
+            if not RNGTableEmpty(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier]) then
+                if aiBrain.BasePerimeterMonitor[locationType].RecentNavalAngle then
+                    local pointCheck = aiBrain.BasePerimeterMonitor[locationType].RecentNavalAngle
+                    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier] do
+                        local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
+                        if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                            bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                            bestKey = k
+                        end
+                    end
+                end
+            end
+            if bestPoint then
+                if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5 then
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5))
+                    return true
+                else
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5))
+                end
+            end
+        elseif type == 'LANDNAVAL' then
+            if not RNGTableEmpty(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier]) then
+                if aiBrain.BasePerimeterMonitor[locationType].RecentLandAngle or aiBrain.BasePerimeterMonitor[locationType].RecentNavalAngle then
+                    local pointCheck = aiBrain.BasePerimeterMonitor[locationType].RecentLandAngle or aiBrain.BasePerimeterMonitor[locationType].RecentNavalAngle
+                    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier] do
+                        local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
+                        if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                            bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                            bestKey = k
+                        end
+                    end
+                end
+            end
+            if bestPoint then
+                if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < (aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5 or aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5) then
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..repr((aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5)..' or land of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5)))
+                    return true
+                else
+                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..repr((aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5)..' or land of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5)))
+                end
+            end
+        end
+    end
+    return false
+end
+
 function EnemyUnitsLessAtRestrictedRNG(aiBrain, locationType, number, type)
     if aiBrain.BasePerimeterMonitor[locationType] then
         if type == 'LAND' then
@@ -558,7 +676,12 @@ function EnemyUnitsLessAtRestrictedRNG(aiBrain, locationType, number, type)
                 return true
             end
         elseif type == 'AIR' then
-            if aiBrain.BasePerimeterMonitor[locationType].AirUnits < number or aiBrain.BasePerimeterMonitor[locationType].AntiSurfaceAirUnits > number then
+            if aiBrain.BasePerimeterMonitor[locationType].AirUnits < number then
+                --RNGLOG('Air units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'ANTIAIR' then
+            if aiBrain.BasePerimeterMonitor[locationType].AntiAirUnits < number then
                 --RNGLOG('Air units greater than '..number..' at base location '..locationType)
                 return true
             end
@@ -614,16 +737,6 @@ function HaveUnitRatioAtLocationRNG(aiBrain, locType, ratio, categoryNeed, compa
         radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
         BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
         BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
-    elseif aiBrain:PBMHasPlatoonList() then
-        for k,v in aiBrain.PBM.Locations do
-            if v.LocationType == locType then
-                baseposition = v.Location
-                radius = v.Radius
-                BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
-                BASEPOSTITIONS[AIName][locType] = {baseposition, radius}
-                break
-            end
-        end
     end
     if not baseposition then
         return false
@@ -651,18 +764,13 @@ function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory, 
     local baseposition = aiBrain.BuilderManagers[locationType].FactoryManager.Location
     --RNGLOG('Searching water path from base ['..locationType..'] position '..repr(baseposition))
     local EnemyNavalUnits = aiBrain:GetUnitsAroundPoint(unitCategory, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ, 'Enemy')
-    local path, reason
     for _, EnemyUnit in EnemyNavalUnits do
         if not EnemyUnit.Dead then
-            --RNGLOG('checking enemy factories '..repr(EnemyUnit:GetPosition()))
-            --RNGLOG('reason'..repr(reason))
             if NavUtils.CanPathTo('Water', baseposition, EnemyUnit:GetPosition()) then
-                --RNGLOG('Found a water path from base ['..locationType..'] to enemy position '..repr(EnemyUnit:GetPosition()))
                 return true
             end
         end
     end
-    --RNGLOG('Found no path to any target from naval base ['..locationType..']')
     return false
 end
 
@@ -729,16 +837,6 @@ function HaveUnitRatioVersusEnemyRNG(aiBrain, ratio, locType, radius, categoryOw
         radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
         BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
         BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
-    elseif aiBrain:PBMHasPlatoonList() then
-        for k,v in aiBrain.PBM.Locations do
-            if v.LocationType == locType then
-                baseposition = v.Location
-                radius = v.Radius
-                BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
-                BASEPOSTITIONS[AIName][locType] = {baseposition, radius}
-                break
-            end
-        end
     end
     if not baseposition then
         return false
@@ -942,7 +1040,7 @@ function ForcePathLimitRNG(aiBrain, locationType, unitCategory, pathType, unitCo
                     end
                 end
             end
-            if numUnits > unitCount then
+            if numUnits >= unitCount then
                 return false
             end
         end
@@ -987,9 +1085,9 @@ function EngineerManagerUnitsAtActiveExpansionRNG(aiBrain, compareType, numUnits
 end
 
 -- { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 'Naval Area', 3,  categories.FACTORY * categories.STRUCTURE * categories.TECH3 }},
-function ExistingNavalExpansionFactoryGreaterRNG( aiBrain, markerType, numReq, category )
+function ExistingNavalExpansionFactoryGreaterRNG( aiBrain, numReq, category )
     for k,v in aiBrain.BuilderManagers do
-        if v.FactoryManager.LocationActive and markerType == v.BaseType and v.FactoryManager.FactoryList then
+        if v.FactoryManager.LocationActive and v.Layer == 'Water' and v.FactoryManager.FactoryList then
             if numReq > EntityCategoryCount(category, v.FactoryManager.FactoryList) then
                 --RNGLOG('ExistingExpansionFactoryGreater = false')
 				return false
@@ -1016,7 +1114,7 @@ end
 
 function EngineerAssistManagerNeedsEngineers(aiBrain)
 
-    if aiBrain.EngineerAssistManagerActive and aiBrain.EngineerAssistManagerBuildPowerRequired > aiBrain.EngineerAssistManagerBuildPower then
+    if aiBrain.EconomyOverTimeCurrent.MassIncome > 1.0 and aiBrain.EngineerAssistManagerActive and aiBrain.EngineerAssistManagerBuildPowerRequired > aiBrain.EngineerAssistManagerBuildPower then
         return true
     end
     return false
@@ -1027,7 +1125,6 @@ function ArmyManagerBuild(aiBrain, uType, tier, unit)
     --RNGLOG('aiBrain.amanager.current[tier][unit] :'..aiBrain.amanager.Current[uType][tier][unit])
     local factionIndex = aiBrain:GetFactionIndex()
     if factionIndex > 4 then factionIndex = 5 end
-
     if not aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] or aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] == 0 then 
         --RNGLOG('Cant find unit '..unit..' in faction index ratio table') 
         return false 
@@ -1041,7 +1138,19 @@ function ArmyManagerBuild(aiBrain, uType, tier, unit)
         return true
     end
     return false
+end
 
+function PlatoonDemandMet(aiBrain, uType, unit)
+    local current = 0
+    local totalDemand = 0
+    for i = 1, 4 do
+        current = current + (aiBrain.amanager.Current[uType][i][unit] or 0)
+        totalDemand = totalDemand + (aiBrain.amanager.Demand[uType][i][unit] or 0)
+    end
+    if current < totalDemand then
+        return true
+    end
+    return false
 end
 
 function IsEngineerNotBuilding(aiBrain, category)
@@ -1052,18 +1161,45 @@ function IsEngineerNotBuilding(aiBrain, category)
     return true 
 end
 
-function ValidateLateGameBuild(aiBrain)
+function ValidateLateGameBuild(aiBrain, locationType)
     -- Returns true if no engineer is building anything in the category and if the economy is good. 
     -- Used to avoid building multiple late game things when the AI can't support them but other conditions are right.
-    if IsAnyEngineerBuilding(aiBrain, categories.EXPERIMENTAL + (categories.STRATEGIC * categories.TECH3)) then
-        if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime < 1.3 or aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 1.2 or GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 then
+    
+    local queuedStructures = aiBrain.BuilderManagers[locationType].EngineerManager.QueuedStructures
+    local queuedCount = 0
+    local timeStamp = GetGameTimeSeconds()
+    local multiplier = aiBrain.EcoManager.EcoMultiplier
+    for _, v in queuedStructures do
+        for _, c in v do
+            --LOG('Checking queue item '..repr(c))
+            if c.Engineer and not c.Engineer.Dead then
+                if c.TimeStamp + 30 > timeStamp then
+                    queuedCount = queuedCount + 1
+                end
+            end
+        end
+    end
+    if queuedCount > 0 then
+        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + ((275 * multiplier) * queuedCount) then
             return false
         end
-        --RNGLOG('Validate late game bulid is returning true even tho an experimental is being built')
-        --RNGLOG('Energy Eco over time '..aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime)
-        --RNGLOG('Mass eco over time '..aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime)
     end
-    --RNGLOG('Validate late game bulid is returning true')
+    local unitsBeingBuilt = 0
+    local structuresBeingBuilt = aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt
+    for _, v in structuresBeingBuilt do
+        for _, c in v do
+            if c and not c.Dead then
+                if c:GetFractionComplete() < 0.98 then
+                    unitsBeingBuilt = unitsBeingBuilt + 1
+                end
+            end
+        end
+    end
+    if unitsBeingBuilt > 0 then
+        if aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + ((275 * multiplier) * unitsBeingBuilt) then
+            return false
+        end
+    end
   return true
 end
 
@@ -1077,20 +1213,6 @@ function UnitsLessAtLocationRNG( aiBrain, locationType, unitCount, testCat )
 	end
     
 	return false
-end
-
-function DynamicExpansionAvailableRNG(aiBrain)
-    local expansionCount = 0
-    if aiBrain.BrainIntel.DynamicExpansionPositions and RNGGETN(aiBrain.BrainIntel.DynamicExpansionPositions) > 0 then
-        for k, v in aiBrain.BrainIntel.DynamicExpansionPositions do
-            if aiBrain.BuilderManagers[v.Zone] then
-                continue
-            end
-           --RNGLOG('DynamicExpansionAvailableRNG is true')
-            return true
-        end
-    end
-    return false
 end
 
 function GreaterThanFactoryCountRNG(aiBrain, count, category, navalOnly)
@@ -1155,7 +1277,10 @@ function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
         if availableIncome - aiBrain.cmanager.buildpower.eng.T2 > 0 then
             return true
         end
-        if aiBrain.cmanager.income.r.m > 55 and aiBrain.cmanager.buildpower.eng.T2 < 75 then
+        if aiBrain.cmanager.income.r.m > (55 * multiplier) and aiBrain.cmanager.buildpower.eng.T2 < (75 * multiplier) then
+            return true
+        end
+        if aiBrain.cmanager.income.r.m > (80 * multiplier) and aiBrain.cmanager.buildpower.eng.T2 < (160 * multiplier) then
             return true
         end
     elseif type == 3 then
@@ -1165,10 +1290,13 @@ function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
         if availableIncome - aiBrain.cmanager.buildpower.eng.T3 > 0 then
             return true
         end
-        if aiBrain.cmanager.income.r.m > 100 and aiBrain.cmanager.buildpower.eng.T3 < 225 then
+        if aiBrain.cmanager.income.r.m > (100 * multiplier) and aiBrain.cmanager.buildpower.eng.T3 < (225 * multiplier) then
             return true
         end
-        if aiBrain.cmanager.income.r.m > 160 and aiBrain.cmanager.buildpower.eng.T3 < 400 then
+        if aiBrain.cmanager.income.r.m > (160 * multiplier) and aiBrain.cmanager.buildpower.eng.T3 < (400 * multiplier) then
+            return true
+        end
+        if aiBrain.cmanager.income.r.m > (300 * multiplier) and aiBrain.cmanager.buildpower.eng.T3 < (800 * multiplier) then
             return true
         end
     elseif type == 4 then
@@ -1219,16 +1347,15 @@ function AdjacencyMassCheckRNG(aiBrain, locationType, category, radius)
     local baseTemplate = BaseTemplateFile['CappedExtractorTemplate'][factionIndex]
     local unitId = RUtils.GetUnitIDFromTemplate(aiBrain, 'MassStorage')
     for _, v in refunits do
-        local unitPosition = v:GetPosition()
+        local extratorPos = v:GetPosition()
         if not IsDestroyed(v) then
             for l,bType in baseTemplate do
                 for m,bString in bType[1] do
                     if bString == 'MassStorage' then
                         for n,position in bType do
                             if n > 1 then
-                                local relativeLoc = {position[1], 0, position[2]}
-                                relativeLoc = {relativeLoc[1] + unitPosition[1], relativeLoc[2] + unitPosition[2], relativeLoc[3] + unitPosition[3]}
-                                if aiBrain:CanBuildStructureAt(unitId, relativeLoc) then
+                                local reference = {position[1] + extratorPos[1], position[2] + extratorPos[2], position[3] + extratorPos[3]}
+                                if aiBrain:CanBuildStructureAt(unitId, reference) then
                                     return true
                                 end
                             end
@@ -1341,9 +1468,15 @@ end
 function UnitBuildDemand(aiBrain, type, tier, unit)
 
     if aiBrain.amanager.Demand[type][tier][unit] > aiBrain.amanager.Current[type][tier][unit] then
-        --RNGLOG('UnitBuild Demand has gone true ')
-        --RNGLOG('Unit Demand  of type '..type..' tier '..tier..' unit '..unit..' count '..repr(aiBrain.amanager.Demand[type][tier][unit]))
-        --RNGLOG('Current units '..repr(aiBrain.amanager.Current[type][tier][unit]))
+        return true
+    end
+    return false
+
+end
+
+function StructureBuildDemand(aiBrain, type, tier, unit)
+
+    if aiBrain.smanager.Demand[type][tier][unit] > aiBrain.smanager.Current[type][tier][unit] then
         return true
     end
     return false
@@ -1358,8 +1491,9 @@ function PlatoonTemplateExist(aiBrain, template)
 end
 
 function DefensiveClusterCloseRNG(aiBrain, locationType)
-    if aiBrain.BuilderManagers[locationType].FactoryManager.Location then
-        if RUtils.DefensiveClusterCheck(aiBrain, aiBrain.BuilderManagers[locationType].FactoryManager.Location) then
+    local manager = aiBrain.BuilderManagers[locationType]
+    if manager.FactoryManager.Location then
+        if RUtils.DefensiveClusterCheck(aiBrain, manager.FactoryManager.Location) then
             return true
         end
     end
@@ -1401,7 +1535,6 @@ function MinimumFactoryCheckRNG(aiBrain, locationType, structureType)
                         return false
                     end
                 end
-                
             end
         end
     end
@@ -1415,10 +1548,16 @@ function ExpansionBaseCheckRNG(aiBrain)
 end
 
 function ExpansionBaseCountRNG(aiBrain, compareType, checkNum)
-    local expBaseCount = aiBrain:GetManagerCount('Start Location')
-    expBaseCount = expBaseCount + aiBrain:GetManagerCount('Expansion Area')
-    --LOG('*AI DEBUG: Expansion base count is ' .. expBaseCount .. ' checkNum is ' .. checkNum)
-    return CompareBody(expBaseCount, checkNum, compareType)
+    local count = 0
+    for k, v in aiBrain.BuilderManagers do
+        if v.BaseType and v.Layer ~= 'Water' and k ~= 'FLOATING' and k ~= 'MAIN' then
+            if v.EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) <= 0 and v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) <= 0 then
+                continue
+            end
+            count = count + 1
+        end
+    end
+    return count
 end
 
 function RequireTMDCheckRNG(aiBrain)
@@ -1429,6 +1568,113 @@ function RequireTMDCheckRNG(aiBrain)
         return true
     end
     return false
+end
+
+--- Buildcondition to decide if radars should upgrade based on other radar locations.
+---@param aiBrain AIBrain
+---@param locationType string
+---@param radarTech string
+---@return boolean
+function RequireRadarUpgradeRNG(aiBrain, locationType, radarTech)
+
+    -- loop over radars that are one tech higher
+    local basePos = aiBrain.BuilderManagers[locationType].Position
+    local otherRadars = aiBrain.Radars[radarTech]
+    for _, other in otherRadars do
+        -- determine if we're too close to higher tech radars
+        local range = other.Blueprint.Intel.RadarRadius
+        if range then
+            local squared = 0.64 * (range * range)
+            local ox, _, oz = other:GetPositionXYZ()
+            local dx = ox - basePos[1]
+            local dz = oz - basePos[3]
+            if dx * dx + dz * dz < squared then
+                return false
+            end
+        end
+    end
+    return true
+end
+
+function ZoneAvailableRNG(aiBrain)
+    local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
+    local im = IntelManagerRNG.GetIntelManager(aiBrain)
+    local gameTime = GetGameTimeSeconds()
+    if not table.empty(im.ZoneExpansions.Pathable) then
+        for _, v in im.ZoneExpansions.Pathable do
+            if v.ZoneID then
+                local zone = aiBrain.Zones.Land.zones[v.ZoneID]
+                if (not zone.BuilderManager.FactoryManager.LocationActive or zone.BuilderManagerDisabled) and (not zone.engineerplatoonallocated or IsDestroyed(zone.engineerplatoonallocated)) and (zone.lastexpansionattempt == 0 or zone.lastexpansionattempt + 30 < gameTime) then
+                    if aiBrain:GetThreatAtPosition(zone.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 5 then
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    return false
+end
+
+function HighValueZone(aiBrain, locationType)
+    local zoneId = aiBrain.BuilderManagers[locationType].Zone
+    if aiBrain.Zones.Land.zones[zoneId] then
+        local resourceValue = aiBrain.Zones.Land.zones[zoneId].resourcevalue
+        if resourceValue > 2 then
+            local basePos = aiBrain.BuilderManagers[locationType].Position
+            local startPos = aiBrain.BrainIntel.StartPos
+            local dx = basePos[1] - startPos[1]
+            local dz = basePos[3] - startPos[3]
+            local distanceToMain = dx * dx + dz * dz
+            if distanceToMain > 22500 then
+                return true
+            end
+        end
+    end
+end
+
+function UnfinishedUnitsAtLocationRNG(aiBrain, locationType, category)
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+    if not engineerManager then
+        return false
+    end
+    local unfinishedUnits = aiBrain:GetUnitsAroundPoint(category, engineerManager.Location, engineerManager.Radius, 'Ally')
+    for num, unit in unfinishedUnits do
+        if unit:GetFractionComplete() < 1 and table.getn(unit:GetGuards()) < 1 then
+            return true
+        end
+    end
+    return false
+end
+
+function PlayerRoleCheck(aiBrain, locationType, unitCount, unitCategory, checkType)
+    if aiBrain.BrainIntel.AirPlayer and checkType == 'AIR' and aiBrain.BrainIntel.AllyCount > 1 then
+        local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+        if not factoryManager then
+            WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
+            return true
+        end
+        if factoryManager.LocationActive then
+            local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
+            if  numUnits >= unitCount then
+                --RNGLOG('We are air player and have hit land factory limit')
+                return false
+            end
+        end
+    elseif aiBrain.BrainIntel.SpamPlayer and checkType == 'SPAM' and aiBrain.BrainIntel.AllyCount > 1 then
+        local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+        if not factoryManager then
+            WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
+            return true
+        end
+        if factoryManager.LocationActive then
+            local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
+            if  numUnits >= unitCount then
+                RNGLOG('We are spam player and have hit air factory limit')
+                return false
+            end
+        end
+    end
+    return true
 end
 
 --[[

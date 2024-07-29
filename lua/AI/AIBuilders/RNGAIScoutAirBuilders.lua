@@ -26,11 +26,12 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Factory AirScout T1 Burst',
-        PlatoonTemplate = 'RNGAIT1AirScoutBurst',
+        PlatoonTemplate = 'T1AirScout',
         Priority = 895,
         BuilderConditions = {
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { UCBC, 'UnitBuildDemand', { 'Air', 'T1', 'scout'} },
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'ANTIAIR' }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 1.0 }},
             { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
             { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 20}},
@@ -43,7 +44,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3AirScout',
         Priority = 900,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.7 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.SCOUT * categories.AIR}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
         },
@@ -76,7 +77,7 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.SCOUT } },
         },
         BuilderData = {
-            ScanWait = 20,
+            StateMachine = 'AirScout'
         },
         LocationType = 'LocationType',
         BuilderType = 'Any',
@@ -90,11 +91,11 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.AIR * categories.SCOUT } },
         },
         BuilderData = {
+            StateMachine = 'AirScout',
             PerimeterPoints = true,
             ExpansionPatrol = true,
-            ScanWait = 20,
+            LocationType = 'LocationType',
         },
-        LocationType = 'LocationType',
         BuilderType = 'Any',
     },
     Builder {
@@ -108,10 +109,11 @@ BuilderGroup {
             
         },
         BuilderData = {
+            StateMachine = 'AirScout',
             ACUSupport = true,
             PatrolTime = 10,
+            LocationType = 'LocationType',
         },
-        LocationType = 'LocationType',
         BuilderType = 'Any',
     },
     Builder {
@@ -123,10 +125,11 @@ BuilderGroup {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.AIR * categories.SCOUT } },
         },
         BuilderData = {
+            StateMachine = 'AirScout',
             Patrol = true,
             PatrolTime = 120,
+            LocationType = 'LocationType',
         },
-        LocationType = 'LocationType',
         BuilderType = 'Any',
     },
 }

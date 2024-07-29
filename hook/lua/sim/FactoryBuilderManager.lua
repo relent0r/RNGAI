@@ -27,19 +27,22 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         end
 
         if not self.UseCenterPoint then
-            -- Find closest marker to averaged location
             rally = AIUtils.AIGetClosestMarkerLocationRNG(self, rallyType, position[1], position[3])
         elseif self.UseCenterPoint then
             -- use BuilderManager location
             rally = AIUtils.AIGetClosestMarkerLocationRNG(self, rallyType, position[1], position[3])
-            local expPoint = AIUtils.AIGetClosestMarkerLocationRNG(self, 'Expansion Area', position[1], position[3])
-
-            if expPoint and rally then
+            local altRally
+            if rallyType == 'Naval Rally Point' then
+                altRally = RUtils.GetRallyPoint(self.Brain, 'Water', position, 20, 60)
+            else
+                altRally = RUtils.GetRallyPoint(self.Brain, 'Land', position, 20, 60)
+            end
+            if altRally and rally then
                 local rallyPointDistance = VDist2(position[1], position[3], rally[1], rally[3])
-                local expansionDistance = VDist2(position[1], position[3], expPoint[1], expPoint[3])
+                local zoneDistance = VDist2(position[1], position[3], altRally[1], altRally[3])
 
-                if expansionDistance < rallyPointDistance then
-                    rally = expPoint
+                if zoneDistance < rallyPointDistance then
+                    rally = altRally
                 end
             end
         end
@@ -101,19 +104,56 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         return true
     end,
 
+    ---@param self FactoryBuilderManager
+    RallyPointMonitor = function(self)
+        if not self.Brain.RNG then
+            return RNGFactoryBuilderManager.RallyPointMonitor(self)
+        end
+        local navalLocation = self.Brain.BuilderManagers[self.LocationType].Layer == 'Water'
+        while true do
+            if self.LocationActive and self.RallyPoint then
+                ----LOG('*AI DEBUG: Checking Active Rally Point')
+                local newRally = false
+                local bestDist = 99999
+                local rallyheight = GetTerrainHeight(self.RallyPoint[1], self.RallyPoint[3])
+                if self.Brain:GetNumUnitsAroundPoint(categories.STRUCTURE, self.RallyPoint, 15, 'Ally') > 0 then
+                    ----LOG('*AI DEBUG: Searching for a new Rally Point Location')
+                    for x = -30, 30, 5 do
+                        for z = -30, 30, 5 do
+                            local height = GetTerrainHeight(self.RallyPoint[1] + x, self.RallyPoint[3] + z)
+                            if GetSurfaceHeight(self.RallyPoint[1] + x, self.RallyPoint[3] + z) > height or rallyheight > height + 10 or rallyheight < height - 10 then
+                                continue
+                            end
+                            local tempPos = { self.RallyPoint[1] + x, height, self.RallyPoint[3] + z }
+                            if navalLocation and not RUtils.PositionInWater(tempPos) then
+                                continue
+                            end
+                            if self.Brain:GetNumUnitsAroundPoint(categories.STRUCTURE, tempPos, 15, 'Ally') > 0 then
+                                continue
+                            end
+                            if not newRally or VDist2(tempPos[1], tempPos[3], self.RallyPoint[1], self.RallyPoint[3]) < bestDist then
+                                newRally = tempPos
+                                bestDist = VDist2(tempPos[1], tempPos[3], self.RallyPoint[1], self.RallyPoint[3])
+                            end
+                        end
+                    end
+                    if newRally then
+                        self.RallyPoint = newRally
+                        ----LOG('*AI DEBUG: Setting a new Rally Point Location')
+                        for k,v in self.FactoryList do
+                            IssueClearFactoryCommands({v})
+                            IssueFactoryRallyPoint({v}, self.RallyPoint)
+                        end
+                    end
+                end
+            end
+            WaitSeconds(300)
+        end
+    end,
+
     DelayBuildOrder = function(self,factory,bType,time)
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.DelayBuildOrder(self,factory,bType,time)
-        end
-        local guards = factory:GetGuards()
-        for k,v in guards do
-            if not v.Dead and v.AssistPlatoon then
-                if self.Brain:PlatoonExists(v.AssistPlatoon) and not v.Active then
-                    v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
-                else
-                    v.AssistPlatoon = nil
-                end
-            end
         end
         if factory.DelayThread then
             return
@@ -145,12 +185,19 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
             elseif EntityCategoryContains(categories.AIR, unit) then
                 self:SetupNewFactory(unit, 'Air')
             elseif EntityCategoryContains(categories.NAVAL, unit) then
-                --LOG('New naval factory setup for base '..self.LocationType)
                 self:SetupNewFactory(unit, 'Sea')
             else
                 self:SetupNewFactory(unit, 'Gate')
             end
             self.LocationActive = true
+            if self.LocationType then
+                local zone = self.Brain.BuilderManagers[self.LocationType].Zone
+                if zone then
+                    if self.Brain.Zones.Land.zones[zone].engineerplatoonallocated then
+                        self.Brain.Zones.Land.zones[zone].engineerplatoonallocated = nil
+                    end
+                end
+            end
         end
     end,
 
@@ -173,11 +220,22 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         elseif self.Brain.TransportPool and EntityCategoryContains(categories.TRANSPORTFOCUS - categories.uea0203, finishedUnit ) then
             self.Brain.TransportRequested = nil
             finishedUnit:ForkThread( import('/lua/ai/transportutilities.lua').AssignTransportToPool, finishedUnit:GetAIBrain() )
-		elseif finishedUnit.Blueprint.CategoriesHash.AIR and finishedUnit.Blueprint.CategoriesHash.GROUNDATTACK and not finishedUnit.Blueprint.CategoriesHash.EXPERIMENTAL then
+		elseif finishedUnit.Blueprint.CategoriesHash.AIR then
             local unitStats = self.Brain.IntelManager.UnitStats
+            local unitValue = finishedUnit.Blueprint.Economy.BuildCostMass or 0
             if unitStats then
-                local unitValue = finishedUnit.Blueprint.Economy.BuildCostMass or 0
-                unitStats['Gunship'].Built.Mass = unitStats['Gunship'].Built.Mass + unitValue
+                if finishedUnit.Blueprint.CategoriesHash.GROUNDATTACK and not finishedUnit.Blueprint.CategoriesHash.EXPERIMENTAL then
+                    unitStats['Gunship'].Built.Mass = unitStats['Gunship'].Built.Mass + unitValue
+                elseif finishedUnit.Blueprint.CategoriesHash.BOMBER and not finishedUnit.Blueprint.CategoriesHash.EXPERIMENTAL and not finishedUnit.Blueprint.CategoriesHash.BOMB then
+                    unitStats['Bomber'].Built.Mass = unitStats['Bomber'].Built.Mass + unitValue
+                end
+            end
+        elseif finishedUnit.Blueprint.CategoriesHash.LAND then
+            local unitStats = self.Brain.IntelManager.UnitStats
+            local unitCat = finishedUnit.Blueprint.CategoriesHash
+            local unitValue = finishedUnit.Blueprint.Economy.BuildCostMass or 0
+            if ( unitCat.UEF or unitCat.CYBRAN ) and unitCat.BOT and unitCat.TECH2 and unitCat.DIRECTFIRE or unitCat.SNIPER and unitCat.TECH3 then
+                unitStats['RangedBot'].Built.Mass = unitStats['RangedBot'].Built.Mass + unitValue
             end
         end
         self:AssignBuildOrder(factory, factory.BuilderManagerData.BuilderType)
@@ -187,19 +245,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         if not self.Brain.RNG then
             return RNGFactoryBuilderManager.FactoryDestroyed(self, factory)
         end
-        --RNGLOG('Factory Destroyed '..factory.UnitId)
-        --RNGLOG('We have '..table.getn(self.FactoryList) ' at the start of the FactoryDestroyed function')
-        local guards = factory:GetGuards()
         local factoryDestroyed = false
-        for k,v in guards do
-            if not v.Dead and v.AssistPlatoon then
-                if self.Brain:PlatoonExists(v.AssistPlatoon) then
-                    v.AssistPlatoon:ForkThread(v.AssistPlatoon.EconAssistBodyRNG)
-                else
-                    v.AssistPlatoon = nil
-                end
-            end
-        end
         for k,v in self.FactoryList do
             if (not v.EntityId) or v.Dead then
                 --RNGLOG('Removing factory from FactoryList'..v.UnitId)
@@ -248,7 +294,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
             local customData = self.Brain.CustomUnits[v]
             for c, b in templateData.FactionSquads[faction] do
                 if customData and customData[faction] then
-                    -- LOG('*AI DEBUG: Replacement unit found!')
+                    ----LOG('*AI DEBUG: Replacement unit found!')
                     local replacement = self:GetCustomReplacement(b, v, faction)
                     if replacement then
                         table.insert(template, replacement)
@@ -485,7 +531,6 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                 table.insert(queue, 'T1LandScout')
                 table.insert(queue, 'T1LandScout')
             elseif mapSizeX >= 500 and mapSizeZ >= 500 then
-                --RNGLOG('10 KM Map Check true')
                 if EnemyIndex and self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
                     for i=1, 1 do
                         table.insert(queue, 'T1BuildEngineer')
@@ -588,6 +633,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                         table.insert(queue, 'T1LandScout')
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1BuildEngineer')
                         table.insert(queue, 'T1LandScout')
                         table.insert(queue, 'T1LandDFTank')
                     else
@@ -597,6 +643,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                         table.insert(queue, 'T1LandScout')
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1LandDFTank')
+                        table.insert(queue, 'T1BuildEngineer')
                         table.insert(queue, 'T1LandScout')
                         table.insert(queue, 'T1LandDFTank')
                     end
@@ -709,7 +756,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
             if faction and templateData.FactionSquads[faction] then
                 for k,v in templateData.FactionSquads[faction] do
                     if customData and customData[faction] then
-                        -- LOG('*AI DEBUG: Replacement unit found!')
+                        ----LOG('*AI DEBUG: Replacement unit found!')
                         local replacement = self:GetCustomReplacement(v, templateName, faction)
                         if replacement then
                             table.insert(template, replacement)
@@ -736,7 +783,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                 -- if we don't have a template use a dummy.
                 if not Squad then
                     -- this will only happen if we have a empty template. Warn the programmer!
-                    SPEW('*AI WARNING: No faction squad found for '..templateName..'. using Dummy! '..repr(templateData.FactionSquads) )
+                    SPEW('*AI WARNING: No faction squad found for '..templateName..'. using Dummy! '..tostring(templateData.FactionSquads) )
                     Squad = { "NoOriginalUnit", 1, 1, "attack", "none" }
                 end
                 local replacement = self:GetCustomReplacement(Squad, templateName, faction)

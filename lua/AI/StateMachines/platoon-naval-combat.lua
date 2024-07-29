@@ -30,12 +30,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonNavalCombatBehavior
         Main = function(self)
 
-            if not import("/lua/sim/markerutilities/expansions.lua").IsGenerated() then
-                self:LogWarning('requires generated expansion markers')
-                self:ChangeState(self.Error)
-                return
-            end
-            self:LogDebug(string.format('Starting Naval Zone Control'))
+            self:LogDebug(string.format('Welcome to the NavalCombatBehavior StateMachine'))
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
                 self:LogWarning('requires generated navigational mesh')
@@ -46,6 +41,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                 self.MovementLayer = self:GetNavigationalLayer()
             end
             local aiBrain = self:GetBrain()
+            self.MergeType = 'NavalMergeStateMachine'
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
             if aiBrain.EnemyIntel.Phase > 2 then
                 self.EnemyRadius = 70
@@ -81,7 +77,11 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonNavalCombatBehavior
         Main = function(self)
+            if IsDestroyed(self) then
+                return
+            end
             local aiBrain = self:GetBrain()
+            self:LogDebug(string.format('DecideWhatToDo for Naval Zone Combat'))
             local threat
             local currentStatus = aiBrain.GridPresence:GetInferredStatus(self.Pos)
             if self.CurrentPlatoonThreatAntiSurface > 0 then
@@ -89,17 +89,23 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             else
                 threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, false, true, false)
             end
-            if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy then
-                self:LogDebug(string.format('Current status at position is '..repr(currentStatus)))
+            if threat.allyTotal and threat.enemyTotal and threat.allyTotal*1.1 < threat.enemyTotal then
+                self:LogDebug(string.format('Current status at position is '..tostring(currentStatus)))
             end
-            if threat.ally and threat.enemy and threat.ally*1.1 < threat.enemy and currentStatus ~= 'Allied' then
+            if threat.allySub and threat.enemySub and threat.enemyrange > 0 
+            and (threat.allySub*1.1 < threat.enemySub and threat.enemyrange >= self.MaxPlatoonWeaponRange or threat.allySub*1.3 < threat.enemySub) and currentStatus ~= 'Allied'
+            or threat.allySub and threat.enemySub and threat.allySurface and threat.enemySurface and threat.enemyrange > 0 and (threat.allySurface*1.1 < threat.enemySurface 
+            and threat.allySub*1.1 < threat.enemySub and threat.enemyrange >= self.MaxPlatoonWeaponRange or threat.allySub*1.3 < threat.enemySub and threat.allySurface*1.1 < threat.enemySurface) and currentStatus ~= 'Allied' then
+                self:LogDebug(string.format('Retreating due to threat'))
+                self:LogDebug(string.format('Enemy Threat '..threat.enemyTotal..' max enemy weapon range '..threat.enemyrange))
+                self:LogDebug(string.format('Ally Threat '..threat.allyTotal..' max ally weapon range '..threat.allyrange))
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos, true)
                 local basePos = aiBrain.BuilderManagers[closestBase].Position
                 local bx = self.Pos[1] - basePos[1]
                 local bz = self.Pos[3] - basePos[3]
                 local baseDistance = bx * bx + bz * bz
                 if baseDistance > 900 then
-                    self:LogDebug(string.format('DecideWhatToDo Ordered to retreat'))
+                    self:LogDebug(string.format('DecideWhatToDo Ordered to retreat due to local threat'))
                     self:ChangeState(self.Retreating)
                     return
                 else
@@ -120,7 +126,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             local homeDistance = hx * hx + hz * hz
             if homeDistance > 10000 then
                 --LOG('DecideWhatToDo Look for priority points ')
-                local acuSnipeUnit = RUtils.CheckACUSnipe(aiBrain, 'AIRANTINAVY')
+                local acuSnipeUnit = RUtils.CheckACUSnipe(aiBrain, 'AirAntiNavy')
                 if acuSnipeUnit then
                     if not acuSnipeUnit.Dead then
                         local acuTargetPosition = acuSnipeUnit:GetPosition()
@@ -138,7 +144,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             end
             if not target then
                 local targetCandidates
-                local searchFilter = (categories.NAVAL + categories.AMPHIBIOUS + categories.STRUCTURE) - categories.INSIGNIFICANTUNIT
+                local searchFilter = (categories.NAVAL + categories.AMPHIBIOUS + categories.HOVER + categories.HOVER + categories.STRUCTURE) - categories.INSIGNIFICANTUNIT
                 if self.CurrentPlatoonThreatAntiSurface == 0 then
                     self:LogDebug(string.format('Looking for sub target via IMAP'))
                     targetCandidates = StateUtils.GetClosestTargetByIMAP(aiBrain, self, self.Home, 'Naval', searchFilter, 'AntiSub', 'Sub')
@@ -185,11 +191,12 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                             return
                         else
                             self:LogDebug(string.format('target is close, combat loop'))
+                            self.targetcandidates = {target}
                             self:ChangeState(self.CombatLoop)
                             return
                         end
                     else
-                        self:LogDebug(string.format('Have attack position but cant path to it, position is '..repr(closestTargetPos)))
+                        self:LogDebug(string.format('Have attack position but cant path to it, position is '..tostring(closestTargetPos)))
                     end
                 else
                     self:LogDebug(string.format('No targetCandidate table'))
@@ -197,6 +204,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             end
             local markerLocations = RUtils.AIGetMassMarkerLocations(aiBrain, false, true)
             if not table.empty(markerLocations) then
+                local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
                 local massMarkers = {}
                 for _, v in markerLocations do
                     if v.Position[1] > playableArea[1] and v.Position[1] < playableArea[3] and v.Position[3] > playableArea[2] and v.Position[3] < playableArea[4] then
@@ -257,7 +265,11 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.Navigating)
                         return
                     else
-                        self:ChangeState(self.CombatLoop)
+                        if StateUtils.SimpleNavalTarget(self,aiBrain) then
+                            self:LogDebug(string.format('DecideWhatToDo found simple target'))
+                            self:ChangeState(self.CombatLoop)
+                            return
+                        end
                         return
                     end
                 end
@@ -357,7 +369,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                         if IsDestroyed(self) then
                             return
                         end
-                        local mergePlatoon, alternatePos = StateUtils.GetClosestPlatoonRNG(self,'NavalCombatBehavior', 122500)
+                        local mergePlatoon, alternatePos = StateUtils.GetClosestPlatoonRNG(self,'NavalCombatBehavior', false, 122500)
                         if alternatePos then
                             self:LogDebug(string.format('Centering Platoon Units'))
                             local waitTime = RUtils.CenterPlatoonUnitsRNG(self, self.Pos)
@@ -420,6 +432,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                             CutOff = 400
                         }
                         self:LogDebug(string.format('Target found, moving to combat loop'))
+                        self.targetcandidates = {target}
                         self:ChangeState(self.CombatLoop)
                         return
                     else
@@ -494,7 +507,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             if IsDestroyed(self) then
                 return
             end
-            local mergePlatoon, alternatePos = StateUtils.GetClosestPlatoonRNG(self,'NavalCombatBehavior', mergeDistance)
+            local mergePlatoon, alternatePos = StateUtils.GetClosestPlatoonRNG(self,'NavalCombatBehavior', false, mergeDistance)
             local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos, true)
             if alternatePos and closestBase then
                 self:LogDebug(string.format('Found mergePlatoon, checking if base is closer'))
@@ -538,7 +551,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                         if IsDestroyed(self) then
                             return
                         end
-                        local tempPlatoon, tempPos = StateUtils.GetClosestPlatoonRNG(self,'NavalCombatBehavior', mergeDistance)
+                        local tempPlatoon, tempPos = StateUtils.GetClosestPlatoonRNG(self,'NavalCombatBehavior', false, mergeDistance)
                         if tempPlatoon and tempPos then
                             local px = tempPos[1] - self.Pos[1]
                             local pz = tempPos[3] - self.Pos[3]
@@ -583,6 +596,13 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                     end
+                    if baseRetreat then
+                        local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, false)
+                        if threat.allyTotal and threat.enemyTotal and threat.enemyrange > 0 and (threat.allyTotal > threat.enemyTotal*1.1 and threat.enemyrange <= self.MaxPlatoonWeaponRange or threat.allySub > threat.enemySub*1.2) then
+                            self:ChangeState(self.DecideWhatToDo)
+                            return
+                        end
+                    end
                     coroutine.yield(30)
                     --RNGLOG('End of movement loop we are '..VDist3(PlatoonPosition, alternatePos)..' from alternate position')
                 end
@@ -618,7 +638,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             for _,v in units do
                 if v and not v.Dead then
                     local unitPos = v:GetPosition()
-                    if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
+                    if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
                         target = aiBrain.BrainIntel.SuicideModeTarget
                     else
                         for l, m in self.targetcandidates do
@@ -642,7 +662,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                             if not approxThreat then
                                 approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, true, false)
                             end
-                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.ally and approxThreat.enemy and approxThreat.ally > approxThreat.enemy then
+                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allyTotal and approxThreat.enemyTotal and approxThreat.allyTotal > approxThreat.enemyTotal then
                                 IssueClearCommands({v}) 
                                 IssueMove({v},target:GetPosition())
                                 continue
@@ -652,7 +672,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            coroutine.yield(35)
+            coroutine.yield(40)
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -691,11 +711,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIPlatoonNavalCombatBehavior)
-        platoon.UnitRatios = {
-            DIRECTFIRE = 0,
-            INDIRECTFIRE = 0,
-            ANTIAIR = 0,
-        }
+        platoon.PlatoonData = data.PlatoonData
         local platoonUnits = platoon:GetPlatoonUnits()
         if platoonUnits then
             for _, unit in platoonUnits do
@@ -749,7 +765,9 @@ ThreatThread = function(aiBrain, platoon)
         else
             platoon.PlatoonFull = false
         end
-        platoon.CurrentPlatoonThreatAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+        platoon.CurrentPlatoonThreatDirectFireAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.DIRECTFIRE)
+        platoon.CurrentPlatoonThreatIndirectFireAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.INDIRECTFIRE)
+        platoon.CurrentPlatoonThreatAntiSurface = platoon.CurrentPlatoonThreatDirectFireAntiSurface + platoon.CurrentPlatoonThreatIndirectFireAntiSurface
         platoon.CurrentPlatoonThreatAntiNavy = platoon:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
         platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
         coroutine.yield(35)

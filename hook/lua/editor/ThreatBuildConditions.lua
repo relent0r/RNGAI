@@ -22,16 +22,6 @@ function EnemyThreatGreaterThanValueAtBaseRNG(aiBrain, locationType, threatValue
         radius = aiBrain.BuilderManagers[locationType].FactoryManager:GetLocationRadius()
         MAPBASEPOSTITIONSRNG[AIName] = MAPBASEPOSTITIONSRNG[AIName] or {} 
         MAPBASEPOSTITIONSRNG[AIName][locationType] = {Pos=baseposition, Rad=radius}
-    elseif aiBrain:PBMHasPlatoonList() then
-        for k,v in aiBrain.PBM.Locations do
-            if v.LocationType == locationType then
-                baseposition = v.Location
-                radius = v.Radius
-                MAPBASEPOSTITIONSRNG[AIName] = MAPBASEPOSTITIONSRNG[AIName] or {} 
-                MAPBASEPOSTITIONSRNG[AIName][locationType] = {baseposition, radius}
-                break
-            end
-        end
     end
     if not baseposition then
         return false
@@ -95,41 +85,77 @@ function EnemyInT3ArtilleryRangeRNG(aiBrain, locationtype, inrange)
     return false
 end
 
-function ThreatPresentInGraphRNG(aiBrain, locationtype, tType)
+function EnemyThreatInT3ArtilleryRangeRNG(aiBrain, locationtype, ratio)
+    -- This will look at all structure threat on the map and figure out what ratio exist within the radius of a T3 static artillery
+    local basePos = aiBrain.BuilderManagers[locationtype].Position
+    local radius = 825 * 825
+    local structureThreats = aiBrain:GetThreatsAroundPosition(basePos, 16, true, 'Economy')
+    local inRangeThreat = 0
+    local totalThreat = 0
+    for _, v in structureThreats do
+        local tx = v[1] - basePos[1]
+        local tz = v[2] - basePos[3]
+        local threatDistance = tx * tx + tz * tz
+        if threatDistance < radius then
+            inRangeThreat = inRangeThreat + v[3]
+            
+        end
+        totalThreat = totalThreat + v[3]
+    end
+    if totalThreat > 0 and inRangeThreat > 0 then
+        if inRangeThreat / totalThreat > ratio then
+            return true
+        end
+    end
+    return false
+end
+
+function ThreatPresentOnLabelRNG(aiBrain, locationtype, tType, ratioRequired)
     local factoryManager = aiBrain.BuilderManagers[locationtype].FactoryManager
     if not factoryManager then
         return false
     end
-    local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
     local graphArea = aiBrain.BuilderManagers[locationtype].GraphArea
     if not graphArea then
-        WARN('Missing RNGArea for expansion land node or no path markers')
+        WARN('Missing GraphArea for expansion land node or no path markers')
         return false
     end
-    if expansionMarkers then
-        --RNGLOG('Initial expansionMarker list is '..repr(expansionMarkers))
-        for k, v in expansionMarkers do
-            if v.type == 'Expansion Area' or v.type == 'Large Expansion Area' or v.type == 'Blank Marker' or v.type == 'Spawn' then
-                if v.RNGArea then
-                    if string.find(graphArea, v.RNGArea) then
-                        local threat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, tType)
-                        if threat > 2 then
-                            -- I had to do this because neutral civilians show up as structure threat
-                            if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE - categories.WALL, v.position, 60, 'Enemy') > 0 then
-                                --RNGLOG('Number of enemy structure '..aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE - categories.WALL, v.position, 60, 'Enemy'))
-                                --RNGLOG('StructuresNotMex threat present for base '..locationtype)
-                                --RNGLOG('Expansion position detected is '..repr(v.position))
-                                --RNGLOG('There is '..threat..' enemy structure threat on the graph area expansion markers')
-                                --RNGLOG('Distance is '..VDist3(v.position, factoryManager.Location))
-                                return true
-                            end
-                        end
+    local gameTime = GetGameTimeSeconds()
+    if not table.empty(aiBrain.EnemyIntel.EnemyThreatLocations) then
+        local threatTotal = 0
+        for k, x in aiBrain.EnemyIntel.EnemyThreatLocations do
+            for _, z in x do
+                if tType == 'Defensive' then
+                    if z.LandLabel == graphArea and z.LandDefStructureCount and z.LandDefStructureCount > 0 and (gameTime - z.UpdateTime) < 45 then
+                        threatTotal = threatTotal + z.LandDefStructureThreat
                     end
+                elseif z[tType] and z[tType] > 0 and z.LandLabel == graphArea and (gameTime - z.UpdateTime) < 45 then
+                    --LOG('ThreatPresentOnLabelRNG Threat is present in graph area of type '..tType)
+                    threatTotal = threatTotal + z[tType]
                 end
             end
         end
+        if tType == 'Air' and aiBrain.GraphZones and aiBrain.GraphZones[graphArea].FriendlyLandAntiAirThreat < threatTotal then
+            return true
+        end
+        if tType == 'Land' and aiBrain.GraphZones and aiBrain.GraphZones[graphArea].FriendlySurfaceDirectFireThreat < threatTotal then
+            return true
+        end
+        if tType == 'StructuresNotMex' and aiBrain.GraphZones and aiBrain.GraphZones[graphArea].FriendlySurfaceInDirectFireThreat < threatTotal then
+            return true
+        end
+        if tType == 'Defensive' and aiBrain.GraphZones and aiBrain.GraphZones[graphArea].FriendlySurfaceInDirectFireThreat < threatTotal then
+            --LOG('ThreatPresentOnLabelRNG Defensive threat found in graph for threat type '..tostring(tType))
+            return true
+        end
     end
-    --RNGLOG('No threat in graph area')
+    if tType == 'Air' and aiBrain.GraphZones then
+        if aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface and aiBrain.GraphZones[graphArea].FriendlyLandAntiAirThreat then
+            if aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface > 10 and aiBrain.GraphZones[graphArea].FriendlyLandAntiAirThreat < 10 then
+                return true
+            end
+        end
+    end
     return false
 end
 
@@ -137,6 +163,23 @@ function LandThreatAtBaseOwnZones(aiBrain)
     -- used for bomber response former
     if aiBrain.BasePerimeterMonitor['MAIN'].LandUnits > 0 or aiBrain.EnemyIntel.HighPriorityTargetAvailable then
         return true
+    end
+    return false
+end
+
+function GreaterThanAlliedThreatInZone(aiBrain, locationType, threat)
+    if aiBrain.BuilderManagers[locationType].FactoryManager.LocationActive and aiBrain.BasePerimeterMonitor[locationType] then
+        if aiBrain.BasePerimeterMonitor[locationType].LandUnits > 1 then
+            local zoneId = aiBrain.BuilderManagers[locationType].Zone
+            if aiBrain.Zones.Land.zones[zoneId] then
+                local zoneData = aiBrain.Zones.Land.zones[zoneId]
+                if zoneData.friendlydirectfireantisurfacethreat and zoneData.friendlydirectfireantisurfacethreat > threat then
+                    return true
+                end
+            end
+        else
+            return true
+        end
     end
     return false
 end

@@ -9,6 +9,7 @@ local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MABC = '/lua/editor/MarkerBuildConditions.lua'
+local TBC = '/lua/editor/ThreatBuildConditions.lua'
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 local AirDefenseScramble = function(self, aiBrain, builderManager)
@@ -62,11 +63,24 @@ end
 
 local MinimumAntiAirThreat = function(self, aiBrain, builderManager, builderData)
     local myAntiAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
-    if myAntiAirThreat > 8 then
+    if myAntiAirThreat > 12 then
         return 893
     end
     return 0
 
+end
+
+local AggressiveExpansion = function(self, aiBrain, builderManager)
+    --RNGLOG('LocationType is '..builderManager.LocationType)
+    if aiBrain.BrainIntel.AggressiveExpansion == builderManager.LocationType then
+        --RNGLOG('Active Expansion is set'..builderManager.LocationType)
+        --RNGLOG('Active Expansion builders are set to 900')
+        return 950
+    else
+        --RNGLOG('Disable Air Intie Pool Builder')
+        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        return 0
+    end
 end
 
 BuilderGroup {
@@ -94,6 +108,18 @@ BuilderGroup {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 30, categories.ENGINEER * categories.TECH1 - categories.COMMAND } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Engineer T1 Reclaim Available',
+        PlatoonTemplate = 'T1BuildEngineer',
+        Priority = 879,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 2, categories.ENGINEER - categories.COMMAND }},
+            { MIBC, 'ReclaimablesAvailableAtBase', {'LocationType'}},
         },
         BuilderType = 'All',
     },
@@ -345,6 +371,18 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Builder Expansion',
     BuildersType = 'FactoryBuilder',
     Builder {
+        BuilderName = 'RNGAI Factory Engineer T1 Aggression Count',
+        PlatoonTemplate = 'T1BuildEngineer',
+        PriorityFunction = AggressiveExpansion,
+        Priority = 0,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 2 of them.
+            { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Expansion Count',
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 870,
@@ -383,13 +421,24 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Reclaim Expansion',
         PlatoonTemplate = 'T1BuildEngineer',
-        Priority = 0,
-        PriorityFunction = ReclaimBasedFactoryPriority,
+        Priority = 900,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH1 - categories.COMMAND }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 30, categories.ENGINEER * categories.TECH1 - categories.COMMAND } },
+            { MIBC, 'ReclaimablesAvailableAtBase', {'LocationType'}},
+        },
+        BuilderType = 'All',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Engineer T2 Expansion Minimum',
+        PlatoonTemplate = 'T2BuildEngineer',
+        Priority = 890, -- low factory priority
+        BuilderConditions = {
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.ENGINEER * (categories.TECH2 + categories.TECH3) - categories.COMMAND } }, -- Build engies until we have 2 of them.
+            { TBC, 'GreaterThanAlliedThreatInZone', { 'LocationType', 15 }},
+            { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'All',
     },
@@ -420,12 +469,24 @@ BuilderGroup {
         BuilderType = 'All',
     },
     Builder {
+        BuilderName = 'RNGAI Factory Engineer T3 Expansion Minimum',
+        PlatoonTemplate = 'T3BuildEngineer',
+        Priority = 891, -- low factory priority
+        BuilderConditions = {
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 2 of them.
+            { TBC, 'GreaterThanAlliedThreatInZone', { 'LocationType', 15 }},
+            { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech3' } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
         BuilderName = 'RNGAI Factory Engineer T3 Small Expansion',
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 500, -- Top factory priority
         BuilderConditions = {
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.ENGINEER * categories.TECH3 } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.ENGINEER * categories.TECH3 } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech3' } },
         },
         BuilderType = 'All',
@@ -437,148 +498,30 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Assist Builders',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI T1 Engineer Assist Factory T2 Upgrade',
-        PlatoonTemplate = 'T12EngineerAssistRNG',
-        Priority = 500,
-        DelayEqualBuildPlattons = {'EngineerAssistFactory', 1},
-        InstanceCount = 12,
-        BuilderConditions = {
-            { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * ( categories.LAND + categories.AIR ) , categories.STRUCTURE * categories.FACTORY * categories.TECH1 * ( categories.LAND + categories.AIR ) }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'Assist',
-            Assist = {
-                AssistLocation = 'LocationType',
-                AssistUntilFinished = true,
-                AssisteeType = categories.FACTORY,
-                AssistRange = 80,
-                BeingBuiltCategories = {categories.STRUCTURE * categories.LAND * categories.FACTORY * categories.TECH2},
-            },
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T1 Engineer Assist Factory T3 Upgrade',
-        PlatoonTemplate = 'T12EngineerAssistRNG',
-        Priority = 550,
-        DelayEqualBuildPlattons = {'EngineerAssistFactory', 1},
-        InstanceCount = 12,
-        BuilderConditions = {
-            { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.FACTORY * categories.TECH3 * ( categories.LAND + categories.AIR ) , categories.STRUCTURE * categories.FACTORY * categories.TECH2 * ( categories.LAND + categories.AIR ) }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'Assist',
-            Assist = {
-                AssistLocation = 'LocationType',
-                AssistUntilFinished = true,
-                AssisteeType = categories.FACTORY,
-                AssistRange = 80,
-                BeingBuiltCategories = {categories.STRUCTURE * categories.LAND * categories.FACTORY * categories.TECH3, categories.STRUCTURE * categories.AIR * categories.FACTORY * categories.TECH3 },
-            },
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI Engineer Assist Artillery',
-        PlatoonTemplate = 'T123EngineerAssistRNG',
-        Priority = 500,
-        DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
-        InstanceCount = 12,
-        BuilderConditions = {
-            { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ARTILLERY * categories.STRATEGIC}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'Assist',
-            Assist = {
-                AssistLocation = 'LocationType',
-                AssistUntilFinished = true,
-                AssisteeType = categories.STRUCTURE,
-                AssistRange = 80,
-                BeingBuiltCategories = {categories.STRUCTURE * categories.ARTILLERY * categories.STRATEGIC},
-            },
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI Assist Factory Air AA T123',
-        PlatoonTemplate = 'T12EngineerAssistRNG',
-        Priority = 0,
-        DelayEqualBuildPlattons = {'EngineerAssistFactory', 1},
-        PriorityFunction = AirDefenseScramble,
-        InstanceCount = 10,
-        BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.90, 1.0 }},
-        },
-        BuilderData = {
-            JobType = 'Assist',
-            Assist = {
-                AssistLocation = 'LocationType',
-                AssisteeType = categories.FACTORY,
-                AssistRange = 120,
-                AssistFactoryUnit = true,
-                BeingBuiltCategories = {categories.AIR * categories.MOBILE * categories.ANTIAIR},                   
-                AssistClosestUnit = false,  
-                AssistHighestTier = true,                                     
-                AssistUntilFinished = false,
-                Time = 120,
-            },
-        },
-        BuilderType = 'Any',
-    },
-    Builder {
         BuilderName = 'RNGAI Engineer Unfinished Structures',
-        PlatoonTemplate = 'T123EngineerFinishRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1005,
         DelayEqualBuildPlattons = {'EngineerAssistUnfinished', 1},
         InstanceCount = 4,
         BuilderConditions = {
-                { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * (categories.DEFENSE + categories.FACTORY + categories.ENERGYPRODUCTION + categories.MASSEXTRACTION) }},
+                { UCBC, 'UnfinishedUnitsAtLocationRNG', { 'LocationType', categories.STRUCTURE * (categories.DEFENSE + categories.FACTORY + categories.ENERGYPRODUCTION) }},
                 { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             },
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'FinishUnit',
             Assist = {
                 AssistLocation = 'LocationType',
-                BeingBuiltCategories = categories.STRUCTURE * (categories.FACTORY + categories.ENERGYPRODUCTION + categories.MASSEXTRACTION),
-            },
-        },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI T1 Engineer Unfinished PGEN',
-        PlatoonTemplate = 'T1EngineerAssistRNG',
-        Priority = 1010,
-        DelayEqualBuildPlattons = {'EngineerAssistPgen', 1},
-        InstanceCount = 4,
-        BuilderConditions = {
-            { UCBC, 'GreaterThanGameTimeSecondsRNG', { 180 } },
-            { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.5 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.1 }},
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION}},
-            },
-        BuilderData = {
-            JobType = 'Assist',
-            Assist = {
-                AssistUntilFinished = true,
-                AssistLocation = 'LocationType',
-                AssisteeType = categories.STRUCTURE,
-                AssistRange = 100,
-                BeingBuiltCategories = {categories.STRUCTURE * categories.ENERGYPRODUCTION},
-                AssistClosestUnit = true,
+                BeingBuiltCategories = categories.STRUCTURE * (categories.DEFENSE + categories.FACTORY + categories.ENERGYPRODUCTION),
             },
         },
         BuilderType = 'Any',
     },
     Builder {
         BuilderName = 'RNGAI Engineer Unfinished Defense',
-        PlatoonTemplate = 'T123EngineerAssistRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1010,
         InstanceCount = 4,
         BuilderConditions = {
@@ -588,6 +531,9 @@ BuilderGroup {
             },
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -601,7 +547,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T123 Engineer Unfinished SMD',
-        PlatoonTemplate = 'T123EngineerAssistRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 650,
         InstanceCount = 10,
         BuilderConditions = {
@@ -613,6 +559,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -625,110 +574,11 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T123 Unfinished Experimental Small',
-        PlatoonTemplate = 'T23EngineerAssistRNG',
-        Priority = 800,
-        InstanceCount = 3,
-        BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.EXPERIMENTAL * categories.MOBILE }},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'Assist',
-            Assist = {
-                AssistUntilFinished = true,
-                AssistLocation = 'LocationType',
-                AssisteeType = categories.STRUCTURE,
-                AssistRange = 100,
-                AssistClosestUnit = true,
-                BeingBuiltCategories = {categories.EXPERIMENTAL * categories.MOBILE},
-                Time = 120,
-            },
-        }
-    },
-
-    Builder {
-        BuilderName = 'RNGAI T123 Engineer Unfinished Experimental',
-        PlatoonTemplate = 'T123EngineerAssistRNG',
-        Priority = 600,
-        DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
-        InstanceCount = 16,
-        BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.EXPERIMENTAL * categories.MOBILE }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'Assist',
-            Assist = {
-                AssistUntilFinished = true,
-                AssistLocation = 'LocationType',
-                AssisteeType = categories.STRUCTURE,
-                AssistRange = 100,
-                AssistClosestUnit = true,
-                BeingBuiltCategories = {categories.EXPERIMENTAL * categories.MOBILE},
-                Time = 120,
-            },
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T123 Engineer Unfinished Strategic',
-        PlatoonTemplate = 'T123EngineerAssistRNG',
-        Priority = 500,
-        DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
-        InstanceCount = 12,
-        BuilderConditions = {
-            { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.STRATEGIC }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'Assist',
-            Assist = {
-                AssistUntilFinished = true,
-                AssistLocation = 'LocationType',
-                AssisteeType = categories.STRUCTURE,
-                AssistRange = 100,
-                AssistClosestUnit = true,
-                BeingBuiltCategories = {categories.STRUCTURE * categories.STRATEGIC},
-                Time = 120,
-            },
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T123 Engineer Unfinished Novax',
-        PlatoonTemplate = 'T123EngineerAssistRNG',
-        Priority = 500,
-        DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
-        InstanceCount = 12,
-        BuilderConditions = {
-            { EBC, 'GreaterThanMassTrendRNG', { 0.0 } },
-            { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.EXPERIMENTAL * categories.ORBITALSYSTEM }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.80}},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'Assist',
-            Assist = {
-                AssistUntilFinished = true,
-                AssistLocation = 'LocationType',
-                AssisteeType = categories.STRUCTURE,
-                AssistRange = 100,
-                AssistClosestUnit = true,
-                BeingBuiltCategories = {categories.EXPERIMENTAL * categories.ORBITALSYSTEM},
-                Time = 120,
-            },
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T123 Engineer Unfinished PGEN',
-        PlatoonTemplate = 'T123EngineerAssistRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 810,
         DelayEqualBuildPlattons = {'EngineerAssistPgen', 1},
-        InstanceCount = 12,
+        InstanceCount = 8,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.0 }},
             { UCBC, 'HaveGreaterThanUnitsInCategoryBeingBuiltAtLocationRNG', { 'LocationType', 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }},
@@ -737,6 +587,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -754,7 +607,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T2 Engineering Support UEF',
-        PlatoonTemplate = 'UEFT2EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateUEFT2RNG',
         Priority = 500,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 1 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
@@ -765,20 +618,21 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 AdjacencyCategory = categories.FACTORY,
                 BuildClose = true,
                 FactionIndex = 1,
                 BuildStructures = {
-                    'T2EngineerSupport',
+                    { Unit = 'T2EngineerSupport', Categories = categories.STRUCTURE * categories.ENGINEERSTATION * categories.TECH2 },
                 },
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T2 Engineering Support Cybran',
-        PlatoonTemplate = 'CybranT2EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderCybranT2RNG',
         Priority = 500,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
@@ -789,13 +643,14 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 AdjacencyCategory = categories.FACTORY,
                 BuildClose = true,
                 FactionIndex = 3,
                 BuildStructures = {
-                    'T2EngineerSupport',
+                    { Unit = 'T2EngineerSupport', Categories = categories.STRUCTURE * categories.ENGINEERSTATION * categories.TECH2 },
                 },
             }
         }
@@ -822,8 +677,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T12 Engineer Reclaim T1 Land',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
-        PlatoonAIPlan = 'ReclaimStructuresRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1050,
         InstanceCount = 1,
         BuilderConditions = {
@@ -831,11 +685,14 @@ BuilderGroup {
                 --{ UCBC, 'HaveGreaterThanUnitsInCategoryBeingUpgradedRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.LAND}},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
-                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
+                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType', true }},
             },
         BuilderData = {
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'ReclaimStructure',
             JobType = 'ReclaimStructure',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.LAND * categories.FACTORY},
         },
@@ -843,19 +700,21 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T12 Engineer Reclaim T2 Land',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
-        PlatoonAIPlan = 'ReclaimStructuresRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1040,
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH2 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.TECH3 * categories.SUPPORTFACTORY * categories.LAND }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH3 * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
-                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
+                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType', true }},
             },
         BuilderData = {
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'ReclaimStructure',
             JobType = 'ReclaimStructure',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH2 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY},
         },
@@ -863,18 +722,20 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2 Engineer Reclaim T3 Land',
-        PlatoonTemplate = 'EngineerBuilderT23RNG',
-        PlatoonAIPlan = 'ReclaimStructuresRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1030,
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 3, categories.TECH3 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH3 * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
-                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
+                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType', true }},
             },
         BuilderData = {
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'ReclaimStructure',
             JobType = 'ReclaimStructure',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH3 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY},
         },
@@ -887,8 +748,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T12 Engineer Reclaim T1 Air',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
-        PlatoonAIPlan = 'ReclaimStructuresRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1050,
         InstanceCount = 1,
         BuilderConditions = {
@@ -899,8 +759,11 @@ BuilderGroup {
                 { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
             },
         BuilderData = {
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'ReclaimStructure',
             JobType = 'ReclaimStructure',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.AIR * categories.FACTORY},
         },
@@ -908,8 +771,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T12 Engineer Reclaim T2 Air',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
-        PlatoonAIPlan = 'ReclaimStructuresRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1040,
         InstanceCount = 1,
         BuilderConditions = {
@@ -920,8 +782,11 @@ BuilderGroup {
                 { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
             },
         BuilderData = {
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'ReclaimStructure',
             JobType = 'ReclaimStructure',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH2 * categories.AIR * categories.FACTORY * categories.SUPPORTFACTORY},
         },
@@ -934,8 +799,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T12 Engineer Reclaim T1 Naval',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
-        PlatoonAIPlan = 'ReclaimStructuresRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1050,
         InstanceCount = 1,
         BuilderConditions = {
@@ -945,8 +809,11 @@ BuilderGroup {
                 { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
             },
         BuilderData = {
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'ReclaimStructure',
             JobType = 'ReclaimStructure',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.NAVAL * categories.FACTORY},
         },
@@ -954,8 +821,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T12 Engineer Reclaim T2 Naval',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
-        PlatoonAIPlan = 'ReclaimStructuresRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1040,
         InstanceCount = 1,
         BuilderConditions = {
@@ -965,8 +831,11 @@ BuilderGroup {
                 { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
             },
         BuilderData = {
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'ReclaimStructure',
             JobType = 'ReclaimStructure',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH2 * categories.NAVAL * categories.FACTORY * categories.SUPPORTFACTORY},
         },
@@ -979,8 +848,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1 Engineer Reclaim T1 Pgens',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
-        PlatoonAIPlan = 'ReclaimStructuresRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 800,
         InstanceCount = 2,
         BuilderConditions = {
@@ -990,8 +858,11 @@ BuilderGroup {
                 { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.1 }},
             },
         BuilderData = {
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'ReclaimStructure',
             JobType = 'ReclaimT1Power',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 5,
             Reclaim = {categories.STRUCTURE * categories.TECH1 * categories.ENERGYPRODUCTION - categories.HYDROCARBON},
         },
@@ -999,8 +870,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1 Engineer Reclaim T2 Pgens',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
-        PlatoonAIPlan = 'ReclaimStructuresRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 600,
         InstanceCount = 2,
         BuilderConditions = {
@@ -1010,8 +880,11 @@ BuilderGroup {
                 { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.3 }},
             },
         BuilderData = {
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'ReclaimStructure',
             JobType = 'ReclaimPower',
-            Location = 'LocationType',
+            LocationType = 'LocationType',
             ReclaimMax = 1,
             Reclaim = {categories.STRUCTURE * categories.TECH2 * categories.ENERGYPRODUCTION - categories.HYDROCARBON},
         },
@@ -1025,7 +898,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Engineer Assist Factory Naval',
-        PlatoonTemplate = 'T12EconAssistRNG',
+        PlatoonTemplate = 'EngineerStateT12RNG',
         DelayEqualBuildPlattons = {'Assist', 3},
         Priority = 500,
         InstanceCount = 8,
@@ -1035,6 +908,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistFactoryUnit = true,
@@ -1056,7 +932,7 @@ BuilderGroup {
         PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
         PriorityFunction = StartingReclaimPresent,
         Priority = 950,
-        InstanceCount = 2,
+        InstanceCount = 3,
         BuilderConditions = {
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 --{ EBC, 'GreaterThanEnergyStorageRatioRNG', { 0.40 } },
@@ -1145,13 +1021,13 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'EngineerAssistManagerNeedsEngineers', {} },
+            { UCBC, 'EngineerAssistManagerNeedsEngineers', { } },
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 180 } },
         },
         BuilderData = {
             JobType = 'Assist',
             PlatoonPlan = 'EngineerAssistManagerRNG',
-            Location = 'LocationType'
+            LocationType = 'LocationType'
         },
         BuilderType = 'Any',
     },
@@ -1162,13 +1038,13 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'EngineerAssistManagerNeedsEngineers', {} },
-            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH2 }},
+            { UCBC, 'EngineerAssistManagerNeedsEngineers', { } },
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH2 }},
         },
         BuilderData = {
             JobType = 'Assist',
             PlatoonPlan = 'EngineerAssistManagerRNG',
-            Location = 'LocationType'
+            LocationType = 'LocationType'
         },
         BuilderType = 'Any',
     },
@@ -1179,13 +1055,13 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
         InstanceCount = 1,
         BuilderConditions = {
+            { UCBC, 'EngineerAssistManagerNeedsEngineers', { } },
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH3 }},
-            { UCBC, 'EngineerAssistManagerNeedsEngineers', {} },
         },
         BuilderData = {
             JobType = 'Assist',
             PlatoonPlan = 'EngineerAssistManagerRNG',
-            Location = 'LocationType'
+            LocationType = 'LocationType'
         },
         BuilderType = 'Any',
     },
@@ -1208,7 +1084,8 @@ BuilderGroup {
             ReclaimTable = true,
             LocationType = 'LocationType',
             ReclaimTime = 80,
-            MinimumReclaim = 4
+            MinimumReclaim = 4,
+            CheckCivUnits = true
         },
         BuilderType = 'Any',
     },
@@ -1480,7 +1357,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGEXP Engineer Assist Quantum Gateway',
-        PlatoonTemplate = 'T123EngineerAssistRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 510,
         DelayEqualBuildPlattons = {'EngineerAssistFactory', 1},
         InstanceCount = 12,
@@ -1493,6 +1370,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
@@ -1504,7 +1384,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGEXP Engineer Assist HQ Upgrade',
-        PlatoonTemplate = 'T123EngineerAssistRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 550,
         DelayEqualBuildPlattons = {'EngineerAssistFactory', 1},
         InstanceCount = 5,
@@ -1516,6 +1396,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistLocation = 'LocationType',
                 AssistUntilFinished = true,
@@ -1527,16 +1410,19 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGEXP Engineer Unfinished Structures',
-        PlatoonTemplate = 'T123EngineerFinishRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 750,
         DelayEqualBuildPlattons = {'EngineerAssistUnfinished', 1},
         InstanceCount = 8,
         BuilderConditions = {
-                { UCBC, 'UnfinishedUnits', { 'LocationType', categories.STRUCTURE * (categories.FACTORY + categories.MASSEXTRACTION + categories.MASSFABRICATION + categories.ENERGYPRODUCTION)}},
+                { UCBC, 'UnfinishedUnitsAtLocationRNG', { 'LocationType', categories.STRUCTURE * (categories.FACTORY + categories.MASSEXTRACTION + categories.MASSFABRICATION + categories.ENERGYPRODUCTION)}},
                 { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             },
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'FinishUnit',
             Assist = {
                 AssistLocation = 'LocationType',
                 BeingBuiltCategories = categories.STRUCTURE * (categories.FACTORY + categories.MASSEXTRACTION + categories.MASSFABRICATION + categories.ENERGYPRODUCTION),
@@ -1546,7 +1432,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGEXP T123 Engineer Upgrade Mex T2',
-        PlatoonTemplate = 'T123EngineerAssistRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 850,
         InstanceCount = 8,
         BuilderConditions = {
@@ -1556,6 +1442,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -1569,7 +1458,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGEXP T123 Engineer Upgrade Mex T3',
-        PlatoonTemplate = 'T123EngineerAssistRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 840,
         InstanceCount = 8,
         BuilderConditions = {
@@ -1580,6 +1469,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',
@@ -1593,7 +1485,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGEXP T123 Engineer Unfinished Experimental',
-        PlatoonTemplate = 'T123EngineerAssistRNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 640,
         DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
         InstanceCount = 20,
@@ -1605,6 +1497,9 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Assist',
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'EngineerAssist',
             Assist = {
                 AssistUntilFinished = true,
                 AssistLocation = 'LocationType',

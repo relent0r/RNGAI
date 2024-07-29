@@ -1,7 +1,7 @@
 local AIPlatoon = import("/lua/aibrains/platoons/platoon-base.lua").AIPlatoon
 local NavUtils = import("/lua/sim/navutils.lua")
 local MarkerUtils = import("/lua/sim/markerutilities.lua")
-local TransportUtils = import("/lua/ai/transportutilities.lua")
+local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
 local AIUtils = import("/lua/ai/aiutilities.lua")
 
 local IsDestroyed = IsDestroyed
@@ -26,6 +26,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
         --- Initial state of any state machine
         ---@param self AIPlatoonAdaptiveReclaimBehavior
         Main = function(self)
+            self:LogDebug(string.format('Welcome to the EngineerReclaimBehavior StateMachine'))
             local brain = self:GetBrain()
 
             if not self.SearchRadius then
@@ -451,6 +452,7 @@ AssignToUnitsMachine = function(data, platoon, units)
         import("/lua/sim/markerutilities.lua").GenerateExpansionMarkers()
         -- create the platoon
         setmetatable(platoon, AIPlatoonAdaptiveReclaimBehavior)
+        platoon.PlatoonData = data.PlatoonData
         local count = TableGetn(platoon:GetPlatoonUnits())
         local engineers = platoon:GetPlatoonUnits()
         if engineers then

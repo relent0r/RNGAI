@@ -26,7 +26,6 @@ BaseBuilderTemplate {
         'RNGAI Mass Storage Builder',
         'RNGAI Hydro Builder',
         'RNGAI Mass Fab',
-        --'RNGEXP Crazyrush Builder',
 
         -- Engineer Builders --
         'RNGEXP Engineer Builder',
@@ -50,7 +49,6 @@ BaseBuilderTemplate {
         'RNGAI ScoutLandFormer',
         'RNGAI Land Mass Raid',
         'RNGAI Land FormBuilders',
-        'RNGAI Mass Hunter Labs FormBuilders',
         'RNGAI Land Response Formers',
 
         -- Air Factory Builders --
@@ -69,11 +67,8 @@ BaseBuilderTemplate {
 
         -- Air Unit Formers --
         'RNGAI ScoutAirFormer',
-        'RNGEXP Air Platoon Builder',
+        'RNGAI Air Platoon Builder',
         'RNGAI Air Response Formers',
-
-        -- Sea Unit Builders
-        --'RNGAI Sea Builders T1',
         
         -- Sea Unit Formers
         --'RNGAI Sea Formers',
@@ -86,7 +81,6 @@ BaseBuilderTemplate {
         'RNGAI Shield Builder',
         'RNGAI Shields Upgrader',
         'RNGAI SMD Builders',
-        'RNGAI Perimeter Defenses Expansions',
 
         -- SACU Builders --
         'RNGAI Gate Builders',
@@ -94,11 +88,11 @@ BaseBuilderTemplate {
 
         --Strategic Builders
         'RNGAI SML Builders',
-        'RNGAI Strategic Artillery Builders Small',
+        'RNGAI Strategic Artillery Builders',
         'RNGAI Strategic Formers',
 
         --Experimentals --
-        'RNGEXP Experimental Builders',
+        'RNGAI Experimental Builders',
         'RNGAI Experimental Formers',
     },
     NonCheatBuilders = {

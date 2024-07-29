@@ -6,44 +6,13 @@ local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
-local TransportUtils = import("/lua/ai/transportutilities.lua")
+local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
 local MarkerUtils = import("/lua/sim/MarkerUtilities.lua")
 local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local RNGINSERT = table.insert
 local RNGGETN = table.getn
-
-function AIGetMarkerLocationsNotFriendly(aiBrain, markerType)
-    local markerList = {}
-    --RNGLOG('* AI-RNG: Marker Type for AIGetMarkerLocationsNotFriendly is '..markerType)
-    if markerType == 'Start Location' then
-        local tempMarkers = AIGetMarkerLocationsRNG(aiBrain, 'Spawn')
-        for k, v in tempMarkers do
-            local ecoStructures = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * (categories.MASSEXTRACTION + categories.MASSPRODUCTION), v.Position, 30, 'Ally')
-            local ecoThreat = 0
-            for _, v in ecoStructures do
-                local bp = v.Blueprint
-                local ecoStructThreat = bp.Defense.EconomyThreatLevel
-                --RNGLOG('* AI-RNG: Eco Structure'..ecoStructThreat)
-                ecoThreat = ecoThreat + ecoStructThreat
-            end
-            if ecoThreat < 10 then
-                table.insert(markerList, {Position = v.Position, Name = v.Name})
-            end
-        end
-    else
-        local markers = Scenario.MasterChain._MASTERCHAIN_.Markers
-        if markers then
-            for k, v in markers do
-                if v.type == markerType then
-                    table.insert(markerList, {Position = v.Position, Name = k})
-                end
-            end
-        end
-    end
-    return markerList
-end
 
 function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGeneratePath, transportWait)
     local ALLBPS = __blueprints
@@ -57,10 +26,8 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
     end
     local jobType = unit.PlatoonHandle.PlatoonData.JobType or 'None'
     -- don't check a path if we are in build range
-    if not alwaysGeneratePath and VDist3Sq(pos, destination) < 1225 then
-        if NavUtils.CanPathTo('Amphibious', pos, destination) then
-            return true
-        end
+    if not alwaysGeneratePath and VDist3Sq(pos, destination) < 2025 and NavUtils.CanPathTo('Amphibious', pos, destination) then
+        return true
     end
     if not transportWait then
         transportWait = 2
@@ -186,8 +153,9 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
                     end
                 end
                 if unit:IsUnitState("Moving") then
-                    if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, pos, 45, 'Enemy') > 0 then
-                        local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, pos, 45, 'Enemy')
+                    if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE + categories.MASSEXTRACTION, pos, 45, 'Enemy') > 0 then
+                        local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE + categories.MASSEXTRACTION, pos, 45, 'Enemy')
+                        local massExtractors = {}
                         for _, eunit in enemyUnits do
                             local enemyUnitPos = eunit:GetPosition()
                             if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, eunit) then
@@ -220,11 +188,23 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
                                     brokenPathMovement = true
                                     coroutine.yield(60)
                                 end
+                            elseif EntityCategoryContains(categories.MASSEXTRACTION, eunit) then
+                                table.insert(massExtractors, {Position = enemyUnitPos, Unit = eunit})
+                            end
+                        end
+                        if not brokenPathMovement and not table.empty(massExtractors) then
+                            for _, v in massExtractors do
+                                if not v.Unit.Dead and VDist3Sq(pos, v.Position) < 225 and v.Unit:GetFractionComplete() == 1 then
+                                    IssueClearCommands({unit})
+                                    IssueCapture({unit}, v.Unit)
+                                    brokenPathMovement = true
+                                    break
+                                end
                             end
                         end
                     end
                 end
-                if unit:IsIdleState() then
+                if not IsDestroyed(unit) and unit:IsIdleState() then
                     movementTimeout = movementTimeout + 1
                     if movementTimeout > 10 then
                         break
@@ -433,7 +413,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                     break
                 end
                 coroutine.yield(15)
-                if eng.Dead or eng:IsIdleState() then
+                if IsDestroyed(eng) or eng:IsIdleState() then
                     return
                 end
                 if eng.EngineerBuildQueue then
@@ -497,330 +477,6 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
         return true, path
     end
     return false
-end
-
-function GetTransportsRNG(platoon, units, t1EngOnly)
-    if not units then
-        units = platoon:GetPlatoonUnits()
-    end
-    
-    -- Check for empty platoon
-    if table.empty(units) then
-        return 0
-    end
-
-    local neededTable = GetNumTransports(units)
-    local transportsNeeded = false
-    if neededTable.Small > 0 or neededTable.Medium > 0 or neededTable.Large > 0 then
-        transportsNeeded = true
-    end
-
-
-    local aiBrain = platoon:GetBrain()
-    local pool = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
-
-    -- Make sure more are needed
-    local tempNeeded = {}
-    tempNeeded.Small = neededTable.Small
-    tempNeeded.Medium = neededTable.Medium
-    tempNeeded.Large = neededTable.Large
-
-    local location = platoon:GetPlatoonPosition()
-    if not location then
-        -- We can assume we have at least one unit here
-        location = units[1]:GetPosition()
-    end
-
-    if not location then
-        return 0
-    end
-
-    -- Determine distance of transports from platoon
-    local transports = {}
-    for _, unit in pool:GetPlatoonUnits() do
-        if not unit.Dead and EntityCategoryContains(categories.TRANSPORTATION - categories.uea0203, unit) and not unit:IsUnitState('Busy') and not unit:IsUnitState('TransportLoading') and table.empty(unit:GetCargo()) and unit:GetFractionComplete() == 1 then
-            if t1EngOnly then
-                if EntityCategoryContains(categories.TECH1, unit) then
-                    local unitPos = unit:GetPosition()
-                    local curr = {Unit = unit, Distance = VDist2(unitPos[1], unitPos[3], location[1], location[3]), Id = unit.UnitId}
-                    table.insert(transports, curr)
-                end
-            else
-                local unitPos = unit:GetPosition()
-                local curr = {Unit = unit, Distance = VDist2(unitPos[1], unitPos[3], location[1], location[3]), Id = unit.UnitId}
-                table.insert(transports, curr)
-            end
-        end
-    end
-
-    local numTransports = 0
-    local transSlotTable = {}
-    if not table.empty(transports) then
-        local sortedList = {}
-        -- Sort distances
-        for k = 1, table.getn(transports) do
-            local lowest = -1
-            local key, value
-            for j, u in transports do
-                if lowest == -1 or u.Distance < lowest then
-                    lowest = u.Distance
-                    value = u
-                    key = j
-                end
-            end
-            sortedList[k] = value
-            -- Remove from unsorted table
-            table.remove(transports, key)
-        end
-
-        -- Take transports as needed
-        for i = 1, table.getn(sortedList) do
-            if transportsNeeded and table.empty(sortedList[i].Unit:GetCargo()) and not sortedList[i].Unit:IsUnitState('TransportLoading') then
-                local id = sortedList[i].Id
-                aiBrain:AssignUnitsToPlatoon(platoon, {sortedList[i].Unit}, 'Scout', 'GrowthFormation')
-                numTransports = numTransports + 1
-                if not transSlotTable[id] then
-                    transSlotTable[id] = GetNumTransportSlots(sortedList[i].Unit)
-                end
-                local tempSlots = {}
-                tempSlots.Small = transSlotTable[id].Small
-                tempSlots.Medium = transSlotTable[id].Medium
-                tempSlots.Large = transSlotTable[id].Large
-                -- Update number of slots needed
-                while tempNeeded.Large > 0 and tempSlots.Large > 0 do
-                    tempNeeded.Large = tempNeeded.Large - 1
-                    tempSlots.Large = tempSlots.Large - 1
-                    tempSlots.Medium = tempSlots.Medium - 2
-                    tempSlots.Small = tempSlots.Small - 4
-                end
-                while tempNeeded.Medium > 0 and tempSlots.Medium > 0 do
-                    tempNeeded.Medium = tempNeeded.Medium - 1
-                    tempSlots.Medium = tempSlots.Medium - 1
-                    tempSlots.Small = tempSlots.Small - 2
-                end
-                while tempNeeded.Small > 0 and tempSlots.Small > 0 do
-                    tempNeeded.Small = tempNeeded.Small - 1
-                    tempSlots.Small = tempSlots.Small - 1
-                end
-                if tempNeeded.Small <= 0 and tempNeeded.Medium <= 0 and tempNeeded.Large <= 0 then
-                    transportsNeeded = false
-                end
-            end
-        end
-    end
-
-    if transportsNeeded then
-        ReturnTransportsToPool(platoon:GetSquadUnits('Scout'), false)
-        return false, tempNeeded.Small, tempNeeded.Medium, tempNeeded.Large
-    else
-        platoon.UsingTransport = true
-        return numTransports, 0, 0, 0
-    end
-end
-
--- not in use
-function UseTransportsRNG(units, transports, location, transportPlatoon)
-    local aiBrain
-    for k, v in units do
-        if not v.Dead then
-            aiBrain = v:GetAIBrain()
-            break
-        end
-    end
-
-    if not aiBrain then
-        return false
-    end
-
-    -- Load transports
-    local transportTable = {}
-    local transSlotTable = {}
-    if not transports then
-        return false
-    end
-
-    IssueClearCommands(transports)
-
-    for num, unit in transports do
-        local id = unit.UnitId
-        if not transSlotTable[id] then
-            transSlotTable[id] = GetNumTransportSlots(unit)
-        end
-        table.insert(transportTable,
-            {
-                Transport = unit,
-                LargeSlots = transSlotTable[id].Large,
-                MediumSlots = transSlotTable[id].Medium,
-                SmallSlots = transSlotTable[id].Small,
-                Units = {}
-            }
-        )
-    end
-
-    local shields = {}
-    local remainingSize3 = {}
-    local remainingSize2 = {}
-    local remainingSize1 = {}
-    local pool = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
-    for num, unit in units do
-        if not unit.Dead then
-            if unit:IsUnitState('Attached') then
-                aiBrain:AssignUnitsToPlatoon(pool, {unit}, 'Unassigned', 'None')
-            elseif EntityCategoryContains(categories.url0306 + categories.DEFENSE, unit) then
-                table.insert(shields, unit)
-            elseif unit:GetBlueprint().Transport.TransportClass == 3 then
-                table.insert(remainingSize3, unit)
-            elseif unit:GetBlueprint().Transport.TransportClass == 2 then
-                table.insert(remainingSize2, unit)
-            elseif unit:GetBlueprint().Transport.TransportClass == 1 then
-                table.insert(remainingSize1, unit)
-            else
-                table.insert(remainingSize1, unit)
-            end
-        end
-    end
-
-    local needed = GetNumTransports(units)
-    local largeHave = 0
-    for num, data in transportTable do
-        largeHave = largeHave + data.LargeSlots
-    end
-
-    local leftoverUnits = {}
-    local currLeftovers = {}
-    local leftoverShields = {}
-    transportTable, leftoverShields = SortUnitsOnTransports(transportTable, shields, largeHave - needed.Large)
-
-    transportTable, leftoverUnits = SortUnitsOnTransports(transportTable, remainingSize3, -1)
-
-    transportTable, currLeftovers = SortUnitsOnTransports(transportTable, leftoverShields, -1)
-
-    for _, v in currLeftovers do table.insert(leftoverUnits, v) end
-    transportTable, currLeftovers = SortUnitsOnTransports(transportTable, remainingSize2, -1)
-
-    for _, v in currLeftovers do table.insert(leftoverUnits, v) end
-    transportTable, currLeftovers = SortUnitsOnTransports(transportTable, remainingSize1, -1)
-
-    for _, v in currLeftovers do table.insert(leftoverUnits, v) end
-    transportTable, currLeftovers = SortUnitsOnTransports(transportTable, currLeftovers, -1)
-
-    aiBrain:AssignUnitsToPlatoon(pool, currLeftovers, 'Unassigned', 'None')
-    if transportPlatoon then
-        transportPlatoon.UsingTransport = true
-    end
-
-    local monitorUnits = {}
-    for num, data in transportTable do
-        if not table.empty(data.Units) then
-            IssueClearCommands(data.Units)
-            IssueTransportLoad(data.Units, data.Transport)
-            for k, v in data.Units do table.insert(monitorUnits, v) end
-        end
-    end
-
-    local attached = true
-    repeat
-        coroutine.yield(20)
-        local allDead = true
-        local transDead = true
-        for k, v in units do
-            if not v.Dead then
-                allDead = false
-                break
-            end
-        end
-        for k, v in transports do
-            if not v.Dead then
-                transDead = false
-                break
-            end
-        end
-        if allDead or transDead then return false end
-        attached = true
-        for k, v in monitorUnits do
-            if not v.Dead and not v:IsIdleState() then
-                attached = false
-                break
-            end
-        end
-    until attached
-
-    -- Any units that aren't transports and aren't attached send back to pool
-    for k, unit in units do
-        if not unit.Dead and not EntityCategoryContains(categories.TRANSPORTATION, unit) then
-            if not unit:IsUnitState('Attached') then
-                aiBrain:AssignUnitsToPlatoon(pool, {unit}, 'Unassigned', 'None')
-            end
-        elseif not unit.Dead and EntityCategoryContains(categories.TRANSPORTATION, unit) and table.getn(unit:GetCargo()) < 1 then
-            ReturnTransportsToPool({unit}, true)
-            table.remove(transports, k)
-        end
-    end
-
-    -- If some transports have no units return to pool
-    for k, t in transports do
-        if not t.Dead and table.getn(t:GetCargo()) < 1 then
-            aiBrain:AssignUnitsToPlatoon('ArmyPool', {t}, 'Scout', 'None')
-            table.remove(transports, k)
-        end
-    end
-
-    if table.getn(transports) ~= 0 then
-        -- If no location then we have loaded transports then return true
-        if location then
-            local safePath = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Air', transports[1]:GetPosition(), location, 200)
-            if safePath then
-                for _, p in safePath do
-                    IssueMove(transports, p)
-                end
-            end
-        else
-            if transportPlatoon then
-                transportPlatoon.UsingTransport = false
-            end
-            return true
-        end
-    else
-        -- If no transports return false
-        if transportPlatoon then
-            transportPlatoon.UsingTransport = false
-        end
-        return false
-    end
-
-    -- Adding Surface Height, so thetransporter get not confused, because the target is under the map (reduces unload time)
-    location = {location[1], GetSurfaceHeight(location[1],location[3]), location[3]}
-    IssueTransportUnload(transports, location)
-    local attached = true
-    while attached do
-        coroutine.yield(20)
-        local allDead = true
-        for _, v in transports do
-            if not v.Dead then
-                allDead = false
-                break
-            end
-        end
-
-        if allDead then
-            return false
-        end
-
-        attached = false
-        for num, unit in units do
-            if not unit.Dead and unit:IsUnitState('Attached') then
-                attached = true
-                break
-            end
-        end
-    end
-
-    if transportPlatoon then
-        transportPlatoon.UsingTransport = false
-    end
-    ReturnTransportsToPool(transports, true)
-
-    return true
 end
 
 function RandomLocation(x, z)
@@ -1079,7 +735,6 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
         return false
     end
 
-    local numUnits = table.getn(platoon:GetPlatoonUnits())
     local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS - categories.INSIGNIFICANTUNIT, position, maxRange, 'Enemy')
     for _, v in atkPri do
         local retUnit = false
@@ -1090,12 +745,12 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
                 local unitPos = unit:GetPosition()
                 local numShields = aiBrain:GetNumUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
                 --RNGLOG('Satellite Distance of unit to platoon '..VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]))
-                if numShields > 0 and (not retUnit) and (not distance or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
+                if numShields > 0 and (not retUnit) or numShields > 0 and (not distance or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                     local shieldUnits = aiBrain:GetUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
                     local totalShieldHealth = 0
                     for _, sUnit in shieldUnits do
                         if not sUnit.Dead and sUnit.MyShield then
-                            if sUnit.bp.Defense.ShieldSize and VDist3Sq(unitPos, sUnit:GetPosition()) < sUnit.bp.Defense.ShieldSize and sUnit.MyShield.GetHealth then
+                            if sUnit.Blueprint.Defense.ShieldSize and VDist3Sq(unitPos, sUnit:GetPosition()) < sUnit.Blueprint.Defense.ShieldSize and sUnit.MyShield.GetHealth then
                                 totalShieldHealth = totalShieldHealth + sUnit.MyShield:GetHealth()
                             end
                         end
@@ -1110,8 +765,7 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
                             targetShields = numShields
                         end
                     end
-                elseif (not retUnit) or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance then
-                    --RNGLOG('Satellite, no shield found blocking target')
+                elseif (not retUnit) or (not distance or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                     retUnit = unit
                     distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                     targetShields = 0
@@ -1135,8 +789,6 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
         if retUnit then
             --RNGLOG('Satellite has target')
             return retUnit
-        else
-            --RNGLOG('Satellite did not get target')
         end
     end
 

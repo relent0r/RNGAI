@@ -18,6 +18,7 @@ BaseBuilderTemplate {
         -- Intel Builders --
         'RNGAI RadarBuilders',
         'RNGAI RadarUpgrade',
+        'RNGAI Intel Formers',
 
         -- Economy Builders --
         'RNGAI Energy Builder',
@@ -43,7 +44,7 @@ BaseBuilderTemplate {
         'RNGAI ScoutLandBuilder',
         --'RNGAI LabLandBuilder', -- Remove to use queue
         'RNGAI TankLandBuilder Small',
-        'RNGAI Land AA 2',
+        'RNGAI Land AntiAir Response',
         'RNGAI Reaction Tanks',
         'RNGAI T3 AttackLandBuilder Small',
 
@@ -51,7 +52,6 @@ BaseBuilderTemplate {
         'RNGAI ScoutLandFormer',
         'RNGAI Land Mass Raid',
         'RNGAI Land FormBuilders',
-        'RNGAI Mass Hunter Labs FormBuilders',
         'RNGAI Land Response Formers',
 
         -- Land Factory Builders --
@@ -87,10 +87,10 @@ BaseBuilderTemplate {
         'RNGAI Shield Builder',
         'RNGAI Shields Upgrader',
         'RNGAI SMD Builders',
-        'RNGAI Perimeter Defenses Expansions',
 
         -- Expansions --
-        'RNGAI Engineer Expansion Builders Small',
+        'RNGAI Engineer Naval Expansion Builders Small',
+        'RNGAI Engineer Zone Expansion Builders',
 
         -- SACU Builders --
         'RNGAI Gate Builders',
@@ -98,7 +98,7 @@ BaseBuilderTemplate {
 
         --Strategic Builders
         'RNGAI SML Builders',
-        'RNGAI Strategic Artillery Builders Small',
+        'RNGAI Strategic Artillery Builders',
         'RNGAI Strategic Formers',
 
         --Experimentals --
@@ -109,10 +109,10 @@ BaseBuilderTemplate {
     },
     BaseSettings = {
         EngineerCount = {
-            Tech1 = 25,
-            Tech2 = 18,
-            Tech3 = 12,
-            SCU = 8,
+            Tech1 = 45,
+            Tech2 = 35,
+            Tech3 = 25,
+            SCU = 16,
         },
         FactoryCount = {
             Land = 20,
@@ -121,12 +121,12 @@ BaseBuilderTemplate {
             Gate = 1,
         },
         MassToFactoryValues = {
-            T1LandValue = 4.5,
-            T2LandValue = 14,
+            T1LandValue = 4,
+            T2LandValue = 12,
             T3LandValue = 25,
             T1AirValue = 3.5,
-            T2AirValue = 12,
-            T3AirValue = 24,
+            T2AirValue = 10,
+            T3AirValue = 25,
             T1NavalValue = 4,
             T2NavalValue = 16,
             T3NavalValue = 30,

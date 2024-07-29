@@ -40,12 +40,8 @@ function GreaterThanEconStorageRatioRNG(aiBrain, mStorageRatio, eStorageRatio, m
         elseif GetEconomyStoredRatio(aiBrain, 'MASS') >= mStorageRatio and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= eStorageRatio then
             return true
         end
-    elseif aiBrain.UpgradeMode == 'Aggressive' then
-        if GetEconomyStoredRatio(aiBrain, 'MASS') >= mStorageRatio * 1.5 and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= eStorageRatio then
-            return true
-        end
     elseif mult == true then
-        if GetEconomyStoredRatio(aiBrain, 'MASS') >= mStorageRatio * aiBrain.EcoManager.EcoMultiplier and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= eStorageRatio then
+        if GetEconomyStoredRatio(aiBrain, 'MASS') >= mStorageRatio and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= eStorageRatio then
             return true
         end
     elseif GetEconomyStoredRatio(aiBrain, 'MASS') >= mStorageRatio and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= eStorageRatio then
@@ -302,13 +298,20 @@ function GreaterThanEconIncomeCombinedRNG(aiBrain, mIncome, eIncome)
     return false
 end
 
+function HighValueGateRNG(aiBrain)
+
+    local multiplier = aiBrain.EcoManager.EcoMultiplier
+    if GetEconomyStoredRatio(aiBrain, 'MASS') >= 0.70 then
+        return true
+    end
+    if aiBrain.EcoManager.CoreExtractorT3Percentage < 1.0 and aiBrain.cmanager.income.r.m < (160 * multiplier) and not aiBrain.RNGEXP then
+        return false
+    end
+    return true
+end
 
 
-
-function MassIncomeToFactoryRNG(aiBrain, compareType, factoryDrain)
-
-    local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
-
+function MassIncomeToFactoryRNG(aiBrain, compareType, factoryDrain, requireBuilt)
 
     local factoryList = aiBrain:GetListOfUnits(categories.STRUCTURE * categories.FACTORY)
     local t1LandFactories = 0
@@ -322,6 +325,9 @@ function MassIncomeToFactoryRNG(aiBrain, compareType, factoryDrain)
     local t3NavalFactories = 0
 
     for _, v in factoryList do
+        if requireBuilt and v:GetFractionComplete() ~= 1 then
+            continue
+        end
         if v.Blueprint.CategoriesHash.TECH1 then
             if v.Blueprint.CategoriesHash.LAND then
                 t1LandFactories = t1LandFactories + 1
@@ -392,7 +398,7 @@ function LessThanEconIncomeOverTimeRNG(aiBrain, massIncome, energyIncome)
     return false
 end
 
-function GreaterThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
+function GreaterThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType, requireBuilt)
     local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
     if not factoryManager then
         WARN('*AI WARNING: FactoryCapCheck - Invalid location - ' .. locationType)
@@ -426,10 +432,10 @@ function GreaterThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
     end
     --RNGLOG('Total Factory Drain '..repr(factoryDrain))
 
-    return MassIncomeToFactoryRNG(aiBrain,'>', factoryDrain)
+    return MassIncomeToFactoryRNG(aiBrain,'>', factoryDrain, requireBuilt)
 end
 
-function LessThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
+function LessThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType,requireBuilt)
     local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
     if not factoryManager then
         WARN('*AI WARNING: FactoryCapCheck - Invalid location - ' .. locationType)
@@ -463,13 +469,13 @@ function LessThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType)
     end
     --RNGLOG('Total Factory Drain '..repr(factoryDrain))
 
-    return MassIncomeToFactoryRNG(aiBrain,'<', factoryDrain)
+    return MassIncomeToFactoryRNG(aiBrain,'<', factoryDrain, requireBuilt)
 end
 
 function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)
     --RNGLOG('Current Spend Ratio '..(aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m))
     local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3) or 0
-    if aiBrain.cmanager.categoryspend.fact[uType] / (aiBrain.cmanager.income.r.m - mexSpend) < aiBrain.ProductionRatios[uType] then
+    if aiBrain.cmanager.categoryspend.fact[uType] / ( aiBrain.cmanager.income.r.m - mexSpend ) < aiBrain.ProductionRatios[uType] then
         if aiBrain.EnemyIntel.ChokeFlag and uType == 'Land' then 
             if (GetEconomyStoredRatio(aiBrain, 'MASS') >= 0.10 and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= 0.95) then
                 return true
@@ -481,7 +487,7 @@ function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)
                 return true
             end
         elseif uType == 'Land' then
-            if GetEconomyStored(aiBrain, 'MASS') >= 5 and GetEconomyStored(aiBrain, 'ENERGY') >= 100 then
+            if GetEconomyStored(aiBrain, 'MASS') >= 5 and GetEconomyStored(aiBrain, 'ENERGY') >= 100 or aiBrain.BrainIntel.SpamPlayer then
                 return true
             end
         else
@@ -505,6 +511,18 @@ function NavalAssistControlRNG(aiBrain, MassEfficiency, EnergyEfficiency, locati
         end
     end
     return false
-
 end
+
+function MinimumPowerRequired(aiBrain, trend)
+    local energyIncome = aiBrain.EconomyOverTimeCurrent.EnergyIncome * 10
+    if energyIncome < aiBrain.EcoManager.MinimumPowerRequired then
+        return true
+    end
+    local energyTrend = aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime
+    if energyTrend < trend then
+        return true
+    end
+    return false
+end
+
     

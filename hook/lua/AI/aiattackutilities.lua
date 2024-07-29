@@ -6,7 +6,7 @@ local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetThreatBetweenPositions = moho.aibrain_methods.GetThreatBetweenPositions
-local TransportUtils = import("/lua/ai/transportutilities.lua")
+local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
 local RNGPOW = math.pow
@@ -28,8 +28,10 @@ function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, 
     optThreatWeight = optThreatWeight or 1
 
     --Generate the safest path between the start and destination
-    local path, msg, distance = NavUtils.PathToWithThreatThreshold(platoonLayer, startPos, endPos, aiBrain, NavUtils.ThreatFunctions.AntiSurface, 1000, aiBrain.BrainIntel.IMAPConfig.Rings)
-    if not path then return false, 'NoPath' end
+    local path, msg, distance, threats = NavUtils.PathToWithThreatThreshold(platoonLayer, startPos, endPos, aiBrain, NavUtils.ThreatFunctions.AntiSurface, 1000, aiBrain.BrainIntel.IMAPConfig.Rings)
+    if not path then 
+        return false, msg, distance, threats
+    end
 
     -- Insert the path nodes (minus the start node and end nodes, which are close enough to our start and destination) into our command queue.
     -- delete the first and last node only if they are very near (under 30 map units) to the start or end destination.
@@ -59,11 +61,23 @@ function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination,
     end
 
     --Generate the safest path between the start and destination
-    local path = NavUtils.PathToWithThreatThreshold(platoonLayer, start, destination, aiBrain, threatType, 1000, aiBrain.BrainIntel.IMAPConfig.Rings)
-    if not path then return false, 'NoPath' end
+    local path, msg, distance, threats = NavUtils.PathToWithThreatThreshold(platoonLayer, start, destination, aiBrain, threatType, 1000, aiBrain.BrainIntel.IMAPConfig.Rings)
+    if not path then 
+        if msg == 'TooMuchThreat' then
+            -- We need to do something here
+            -- Ideally the platoon needs to either be more powerful, or we need to completely change strategy.
+            -- This returned the grid location of the threat that blocked the path which allows missions to clear it if possible.
+            -- I'm thinking long range unit triggers, bomber, tml etc. Or just eco.
+            --LOG('Threats returned '..repr(threats))
+        end
+        if msg ~= 'Unpathable' and platoonLayer ~= 'Land' then
+           --LOG('No path from '..repr(start)..' to '..repr(destination)..' reason is '..repr(msg)..' platoon layer was '..platoonLayer)
+        end
+        return false, msg, distance, threats
+    end
     -- Insert the path nodes (minus the start node and end nodes, which are close enough to our start and destination) into our command queue.
 
-    return path, false, path.totalThreat
+    return path, 'PathOK', distance
 end
 
 function PlatoonGeneratePathToRNG(platoonLayer, start, destination, optMaxMarkerDist, minPathDistance)
@@ -86,69 +100,6 @@ function PlatoonGeneratePathToRNG(platoonLayer, start, destination, optMaxMarker
     if not path then return false, msg end
 
     return path, false, distance
-end
-
-function GetPathGraphsRNG()
-    if ScenarioInfo.PathGraphsRNG then
-        return ScenarioInfo.PathGraphsRNG
-    else
-        if ScenarioInfo.MarkersInfectedRNG then
-            ScenarioInfo.PathGraphsRNG = {}
-        else 
-            return false
-        end
-    end
-
-    local markerGroups = {
-        Land = AIUtils.AIGetMarkerLocationsEx(nil, 'Land Path Node') or {},
-        Water = AIUtils.AIGetMarkerLocationsEx(nil, 'Water Path Node') or {},
-        Air = AIUtils.AIGetMarkerLocationsEx(nil, 'Air Path Node') or {},
-        Amphibious = AIUtils.AIGetMarkerLocationsEx(nil, 'Amphibious Path Node') or {},
-    }
-
-    for gk, markerGroup in markerGroups do
-        for mk, marker in markerGroup do
-            --Create stuff if it doesn't exist
-            ScenarioInfo.PathGraphsRNG[gk] = ScenarioInfo.PathGraphsRNG[gk] or {}
-            ScenarioInfo.PathGraphsRNG[gk][marker.graph] = ScenarioInfo.PathGraphsRNG[gk][marker.graph] or {}
-            -- If the marker has no adjacentTo then don't use it. We can't build a path with this node.
-            if not (marker.adjacentTo) then
-                WARN('*AI DEBUG: GetPathGraphsRNG(): Path Node '..marker.name..' has no adjacentTo entry!')
-                continue
-            end
-            --Add the marker to the graph.
-            ScenarioInfo.PathGraphsRNG[gk][marker.graph][marker.name] = {name = marker.name, layer = gk, graphName = marker.graph, position = marker.position, RNGArea = marker.RNGArea, BestArmy = marker.bestarmy ,adjacent = STR_GetTokens(marker.adjacentTo, ' '), color = marker.color}
-        end
-    end
-
-    return ScenarioInfo.PathGraphsRNG or {}
-end
-
-function GetClosestPathNodeInRadiusByLayerRNG(location, radius, layer)
-
-    local bestDist = radius*radius
-    local bestMarker = false
-
-    local graphTable =  GetPathGraphsRNG()[layer]
-    if graphTable == false then
-        --RNGLOG('graphTable doesnt exist yet')
-        return false
-    end
-
-    if graphTable then
-        for name, graph in graphTable do
-            for mn, markerInfo in graph do
-                local dist2 = VDist2Sq(location[1], location[3], markerInfo.position[1], markerInfo.position[3])
-
-                if dist2 < bestDist then
-                    bestDist = dist2
-                    bestMarker = markerInfo
-                end
-            end
-        end
-    end
-
-    return bestMarker
 end
 
 -- Sproutos work
@@ -182,194 +133,6 @@ function GetRealThreatAtPosition(aiBrain, position, range )
     end
 
     return surthreat, airthreat
-end
-
--- Sproutos work
-function FindSafeDropZoneWithPathRNG(aiBrain, platoon, markerTypes, markerrange, destination, threatMax, airthreatMax, threatType, layer, safeZone)
-
-    local markerlist = {}
-    local VDist2Sq = VDist2Sq
-
-    -- locate the requested markers within markerrange of the supplied location	that the platoon can safely land at
-    for _,v in markerTypes do
-    
-        markerlist = RNGCAT( markerlist, AIUtils.AIGetMarkersAroundLocationRNG(aiBrain, v, destination, markerrange, 0, threatMax, 0, 'AntiSurface') )
-    end
-    --RNGLOG('Marker List is '..repr(markerlist))
-    
-    -- sort the markers by closest distance to final destination
-    if not safeZone then
-        RNGSORT( markerlist, function(a,b) return VDist2Sq( a.Position[1],a.Position[3], destination[1],destination[3] ) < VDist2Sq( b.Position[1],b.Position[3], destination[1],destination[3] )  end )
-    else
-        RNGSORT( markerlist, function(a,b) return VDist2Sq( a.Position[1],a.Position[3], destination[1],destination[3] ) > VDist2Sq( b.Position[1],b.Position[3], destination[1],destination[3] )  end )
-        --RNGLOG('SafeZone Sorted marker list '..repr(markerlist))
-    end
-   
-    -- loop thru each marker -- see if you can form a safe path on the surface 
-    -- and a safe path for the transports -- use the first one that satisfies both
-    for _, v in markerlist do
-
-        -- test the real values for that position
-        local stest, atest = GetRealThreatAtPosition(aiBrain, v.Position, 75 )
-        coroutine.yield(1)
-        --RNGLOG('stest is '..stest..'atest is '..atest)
-
-        if stest <= threatMax and atest <= airthreatMax then
-            --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." FINDSAFEDROP for "..repr(destination).." is testing "..repr(v.Position).." "..v.Name)
-            --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." Position "..repr(v.Position).." says Surface threat is "..stest.." vs "..threatMax.." and Air threat is "..atest.." vs "..airthreatMax )
-            --RNGLOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." drop distance is "..repr( VDist3(destination, v.Position) ) )
-            -- can the platoon path safely from this marker to the final destination 
-            if NavUtils.CanPathTo(layer, v.Position, destination) then
-                return v.Position, v.Name
-            end
-        end
-    end
-    --RNGLOG('Safe landing Location returning false')
-    return false, nil
-end
-
-function NormalizeVector( v )
-	if v.x then
-		v = {v.x, v.y, v.z}
-    end
-    local length = math.sqrt( math.pow( v[1], 2 ) + math.pow( v[2], 2 ) + math.pow(v[3], 2 ) )
-
-    if length > 0 then
-        local invlength = 1 / length
-        return Vector( v[1] * invlength, v[2] * invlength, v[3] * invlength )
-    else
-        return Vector( 0,0,0 )
-    end
-end
-
-function GetDirectionVector( v1, v2 )
-    return NormalizeVector( Vector(v1[1] - v2[1], v1[2] - v2[2], v1[3] - v2[3]) )
-end
-
-function GetDirectionInDegrees( v1, v2 )
-	local vec = GetDirectionVector( v1, v2)
-
-	if vec[1] >= 0 then
-		return math.acos(vec[3]) * (360/(math.pi*2))
-	end
-	return 360 - (math.acos(vec[3]) * (360/(math.pi*2)))
-end
-
-function AIPlatoonSquadAttackVectorRNG(aiBrain, platoon, bAggro)
-
-    --Engine handles whether or not we can occupy our vector now, so this should always be a valid, occupiable spot.
-    local attackPos = GetBestThreatTarget(aiBrain, platoon)
-    --RNGLOG('* AI-RNG: AttackForceAIRNG Platoon Squad Attack Vector starting')
-
-    local bNeedTransports = false
-    local PlatoonFormation = platoon.PlatoonData.UseFormation
-    -- if no pathable attack spot found
-    if not attackPos then
-        -- try skipping pathability
-        --RNGLOG('* AI-RNG: AttackForceAIRNG No attack position found')
-        attackPos = GetBestThreatTarget(aiBrain, platoon, true)
-        bNeedTransports = true
-        if not attackPos then
-            platoon:StopAttack()
-            return {}
-        end
-    end
-
-
-    -- avoid mountains by slowly moving away from higher areas
-    GetMostRestrictiveLayerRNG(platoon)
-    if platoon.MovementLayer == 'Land' then
-        local bestPos = attackPos
-        local attackPosHeight = GetTerrainHeight(attackPos[1], attackPos[3])
-        -- if we're land
-        if attackPosHeight >= GetSurfaceHeight(attackPos[1], attackPos[3]) then
-            local lookAroundTable = {1,0,-2,-1,2}
-            local squareRadius = (ScenarioInfo.size[1] / 16) / table.getn(lookAroundTable)
-            for ix, offsetX in lookAroundTable do
-                for iz, offsetZ in lookAroundTable do
-                    local surf = GetSurfaceHeight(bestPos[1]+offsetX, bestPos[3]+offsetZ)
-                    local terr = GetTerrainHeight(bestPos[1]+offsetX, bestPos[3]+offsetZ)
-                    -- is it lower land... make it our new position to continue searching around
-                    if terr >= surf and terr < attackPosHeight then
-                        bestPos[1] = bestPos[1] + offsetX
-                        bestPos[3] = bestPos[3] + offsetZ
-                        attackPosHeight = terr
-                    end
-                end
-            end
-        end
-        attackPos = bestPos
-    end
-
-    local oldPathSize = table.getn(platoon.LastAttackDestination)
-
-    -- if we don't have an old path or our old destination and new destination are different
-    if oldPathSize == 0 or attackPos[1] ~= platoon.LastAttackDestination[oldPathSize][1] or
-    attackPos[3] ~= platoon.LastAttackDestination[oldPathSize][3] then
-
-        GetMostRestrictiveLayerRNG(platoon)
-        -- check if we can path to here safely... give a large threat weight to sort by threat first
-        local path, reason = PlatoonGenerateSafePathToRNG(aiBrain, platoon.MovementLayer, platoon:GetPlatoonPosition(), attackPos, platoon.PlatoonData.NodeWeight or 10)
-
-        -- clear command queue
-        platoon:Stop()
-
-        local usedTransports = false
-        local position = platoon:GetPlatoonPosition()
-        if (not path and reason == 'NoPath') or bNeedTransports then
-            usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, platoon, attackPos, 5, true)
-        -- Require transports over 500 away
-        elseif VDist2Sq(position[1], position[3], attackPos[1], attackPos[3]) > 512*512 then
-            usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, platoon, attackPos, 5, true)
-        -- use if possible at 250
-        elseif VDist2Sq(position[1], position[3], attackPos[1], attackPos[3]) > 256*256 then
-            usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, platoon, attackPos, 3, false)
-        end
-
-        if not usedTransports then
-            if not path then
-                if reason == 'NoStartNode' or reason == 'NoEndNode' then
-                    --Couldn't find a valid pathing node. Just use shortest path.
-                    platoon:AggressiveMoveToLocation(attackPos)
-                end
-                -- force reevaluation
-                platoon.LastAttackDestination = {attackPos}
-            else
-                --RNGLOG('* AI-RNG: AttackForceAIRNG not usedTransports starting movement queue')
-                local pathSize = table.getn(path)
-                local prevpoint = platoon:GetPlatoonPosition() or false
-                -- store path
-                platoon.LastAttackDestination = path
-                -- move to new location
-                for wpidx,waypointPath in path do
-                    local direction = GetDirectionInDegrees( prevpoint, waypointPath )
-                    --RNGLOG('* AI-RNG: AttackForceAIRNG direction is '..direction)
-                    --RNGLOG('* AI-RNG: AttackForceAIRNG prevpoint is '..repr(prevpoint)..' waypointPath is '..repr(waypointPath))
-                    if wpidx == pathSize or bAggro then
-                        --platoon:AggressiveMoveToLocation(waypointPath)
-                        IssueFormAggressiveMove( platoon:GetPlatoonUnits(), waypointPath, PlatoonFormation, direction)
-                    else
-                        --platoon:MoveToLocation(waypointPath, false)
-                        IssueFormMove( platoon:GetPlatoonUnits(), waypointPath, PlatoonFormation, direction)
-                    end
-                    prevpoint = table.copy(waypointPath)
-                end
-            end
-        end
-    end
-
-    -- return current command queue
-    local cmd = {}
-    for k,v in platoon:GetPlatoonUnits() do
-        if not v.Dead then
-            local unitCmdQ = v:GetCommandQueue()
-            for cmdIdx,cmdVal in unitCmdQ do
-                RNGINSERT(cmd, cmdVal)
-                break
-            end
-        end
-    end
-    return cmd
 end
 
 function AIFindUnitRadiusThreatRNG(aiBrain, alliance, priTable, position, radius, tMin, tMax, tRing)
@@ -466,7 +229,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
 
     
     local PrimaryTargetThreatType = 'Naval'
-    local SecondaryTargetThreatType = 'StructuresNotMex'
+    local SecondaryTargetThreatType = 'Structures'
     --RNGLOG('GetBestNavalTargetRNG Running')
 
 
@@ -496,16 +259,16 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     -- the desirability for the distance category
 
     local VeryNearThreatWeight = 20000
-    local VeryNearThreatRadius = 50
+    local VeryNearThreatRadius = 125
 
     local NearThreatWeight = 2500
-    local NearThreatRadius = 120
+    local NearThreatRadius = 250
 
     local MidThreatWeight = 500
-    local MidThreatRadius = 250
+    local MidThreatRadius = 350
 
     local FarThreatWeight = 100
-    local FarThreatRadius = 350
+    local FarThreatRadius = 500
 
     -- anything that's farther than the FarThreatRadius is considered VeryFar
     local VeryFarThreatWeight = 1
@@ -612,7 +375,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     local mapSizeX = ScenarioInfo.size[1]
     local mapSizeZ = ScenarioInfo.size[2]
     local maxMapLengthSq = math.sqrt((mapSizeX * mapSizeX) + (mapSizeZ * mapSizeZ))
-    local logCount = 0
+    local--LOGCount = 0
 
     local unitCapRatio = GetArmyUnitCostTotal(aiBrain:GetArmyIndex()) / GetArmyUnitCap(aiBrain:GetArmyIndex())
 
@@ -653,7 +416,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
         -- We are multipling the structure threat because the default threat allocation is shit. A T1 naval factory is only worth 3 threat which is not enough to make
         -- frigates / subs want to attack them over something else.
         secondaryThreat = aiBrain:GetThreatAtPosition({threat[1], 0, threat[2]}, aiBrain.BrainIntel.IMAPConfig.Rings, true, SecondaryTargetThreatType)
-        --RNGLOG('GetBestNavalTarget Primary Threat is '..primaryThreat..' secondaryThreat is '..secondaryThreat)
+        --LOG('GetBestNavalTarget Primary Threat is '..primaryThreat..' secondaryThreat is '..secondaryThreat..' at pos '..tostring(threat[1])..':'..tostring(threat[2]))
 
         baseThreat = primaryThreat + secondaryThreat
 
@@ -671,17 +434,20 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
         if myThreat <= IgnoreStrongerTargetsIfWeakerThan
                 and (myThreat == 0 or enemyThreat / (myThreat + friendlyThreat) > IgnoreStrongerTargetsRatio)
                 and unitCapRatio < IgnoreStrongerUnitCap then
-            --RNGLOG('*AI DEBUG: Skipping threat')
+            --LOG('*AI DEBUG: Skipping threat due to something way strong')
             continue
         end
-
+        local weakPlatoon = false
         if threatDiff <= 0 then
             -- if we're weaker than the enemy... make the target less attractive anyway
             --LOG('NavalAttackAI is weaker than the enemy')
+            --LOG('My threat was '..tostring(myThreat)..'enemy threat was '..tostring(enemyThreat))
+            weakPlatoon = true
             threat[3] = threat[3] + threatDiff * WeakAttackThreatWeight
         else
             -- ignore overall threats that are really low, otherwise we want to defeat the enemy wherever they are
             if (baseThreat <= IgnoreThreatLessThan) or (myThreat >= IgnoreWeakerTargetsIfStrongerThan and (enemyThreat == 0 or myThreat / enemyThreat > IgnoreWeakerTargetsRatio)) then
+                --LOG('NavalAttackAI is ignoring threat due to it being low')
                 continue
             end
             threat[3] = threat[3] + threatDiff * StrongAttackThreatWeight
@@ -728,12 +494,11 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     if not foundPathableThreat or curMaxThreat == 0 then
         return false
     end
-    local x = threatTable[curMaxIndex][1]
-    local y = GetTerrainHeight(threatTable[curMaxIndex][1], threatTable[curMaxIndex][2])
-    local z = threatTable[curMaxIndex][2]
+    table.sort(threatTable, function(a,b) return a[3] > b[3] end)
+    --LOG('Returning threat table with '..tostring(table.getn(threatTable))..' entries')
     --local pathablePos = CheckNavalPathingRNG(aiBrain, platoon, {x, y, z}, maxRange, selectedWeaponArc)
     
-    return {x, y, z}
+    return threatTable
 end
 
 function CheckNavalPathingRNG(aiBrain, platoon, location, maxRange, selectedWeaponArc)

@@ -16,7 +16,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 45',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 1005,
         InstanceCount = 2,
         BuilderConditions = { 
@@ -25,6 +25,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -40,34 +41,9 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1Engineer Mass 80',
-        PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 950,
-        InstanceCount = 3,
-        BuilderConditions = { 
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 80, nil, nil, 0, 'AntiSurface', 1}},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'Mass',
-            NeedGuard = false,
-            DesiresAssist = false,
-            Construction = {
-                MaxDistance = 80,
-                MinDistance = 0,
-                ThreatMin = -500,
-                ThreatMax = 0,
-                ThreatType = 'AntiSurface',
-                BuildStructures = {
-                    'T1Resource',
-                },
-            }
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T1Engineer Mass 120',
-        PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 992,
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
+        Priority = 997,
         InstanceCount = 3,
         BuilderConditions = { 
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 120, nil, nil, 0, 'AntiSurface', 1}},
@@ -76,6 +52,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -94,34 +71,8 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1Engineer Mass 400 MexBuild',
-        PlatoonTemplate = 'EngineerBuilderRNGMex',
-        Priority = 997,
-        InstanceCount = 3,
-        BuilderConditions = { 
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 400, -500, 2, 0, 'AntiSurface', 1}},
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'Mass',
-            NeedGuard = false,
-            DesiresAssist = false,
-            Construction = {
-                RepeatBuild = true,
-                Type = 'Mass',
-                MaxDistance = 400,
-                ThreatMin = -500,
-                ThreatMax = 0,
-                ThreatType = 'AntiSurface',
-                BuildStructures = {
-                    'T1Resource',
-                },
-            }
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T2Engineer Mass 120',
-        PlatoonTemplate = 'T23EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 850,
         InstanceCount = 1,
         BuilderConditions = { 
@@ -131,6 +82,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -147,7 +99,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 240',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 800,
         InstanceCount = 4,
         BuilderConditions = { 
@@ -157,6 +109,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -176,7 +129,7 @@ BuilderGroup {
 
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 480',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 700,
         InstanceCount = 4,
         BuilderConditions = { 
@@ -188,6 +141,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -208,7 +162,7 @@ BuilderGroup {
 
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 2000',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 300,
         InstanceCount = 4,
         BuilderConditions = { 
@@ -220,6 +174,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -246,7 +201,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Mass Fab',
-        PlatoonTemplate = 'T3EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 500,
         DelayEqualBuildPlattons = {'MassFab', 7},
         BuilderConditions = {
@@ -262,6 +217,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             NumAssistees = 4,
             Construction = {
@@ -273,7 +229,7 @@ BuilderGroup {
                 maxRadius = 15,
                 BuildClose = true,
                 BuildStructures = {
-                    'T3MassCreation',
+                    { Unit = 'T3MassCreation', Categories = categories.STRUCTURE * categories.MASSFABRICATION * categories.TECH3 }, 
                 },
             }
         }
@@ -286,7 +242,7 @@ BuilderGroup {
     
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 2000 Floating',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 910,
         InstanceCount = 5,
         BuilderConditions = {
@@ -295,8 +251,10 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
+            CheckCivUnits = true,
             Construction = {
                 MaxDistance = 2000,
                 ThreatMin = -500,
@@ -305,13 +263,12 @@ BuilderGroup {
                 BuildStructures = {
                     'T1Resource',
                 },
-                CheckCivUnits = true
             }
         }
     },
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 2000 Floating Excess',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 890,
         InstanceCount = 10,
         BuilderConditions = {
@@ -320,8 +277,10 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
+            CheckCivUnits = true,
             Construction = {
                 MaxDistance = 2000,
                 ThreatMin = -500,
@@ -330,7 +289,6 @@ BuilderGroup {
                 BuildStructures = {
                     'T1Resource',
                 },
-                CheckCivUnits = true
             }
         }
     },
@@ -341,7 +299,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 30 Expansion',
-        PlatoonTemplate = 'EngineerBuilderT12RNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 850,
         InstanceCount = 2,
         BuilderConditions = {
@@ -350,6 +308,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -366,7 +325,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 150 Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 700,
         InstanceCount = 2,
         BuilderConditions = {
@@ -375,6 +334,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
@@ -390,7 +350,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 2000 Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerBuilderRNGMex',
         Priority = 550,
         InstanceCount = 2,
         BuilderConditions = {
@@ -399,8 +359,10 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             JobType = 'Mass',
+            StateMachine = 'MexBuild',
             NeedGuard = false,
             DesiresAssist = false,
+            CheckCivUnits = true,
             Construction = {
                 MaxDistance = 2000,
                 ThreatMin = -500,
@@ -419,7 +381,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Single',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT1RNG',
         Priority = 930,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 1,
@@ -427,12 +389,13 @@ BuilderGroup {
             -- { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.80, 0.85 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.80, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 150 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
@@ -444,19 +407,19 @@ BuilderGroup {
                 NoPause = true,
                 Radius = 150,
                 BuildStructures = {
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
 
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT1RNG',
         Priority = 925,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 1,
@@ -464,38 +427,37 @@ BuilderGroup {
             -- { UCBC, 'CheckBuildPlatoonDelayRNG', { 'MassStorage' }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.90 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 150 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
-                Construction = {
-                    BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
-                    BaseTemplate = 'CappedExtractorTemplate',
-                    BuildClose = false,
-                    CappingTemplate = true,
-                    Categories = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
-                    NearDefensivePoints = false,
-                    NoPause = true,
-                    Radius = 150,
-                    BuildStructures = {
-                        'MassStorage',
-                        'MassStorage',
-                        'MassStorage',
-                        'MassStorage',
-    
-                    },
-                    Location = 'LocationType',
-                }
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
+                BaseTemplate = 'CappedExtractorTemplate',
+                BuildClose = false,
+                CappingTemplate = true,
+                Categories = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
+                NearDefensivePoints = false,
+                NoPause = true,
+                Radius = 150,
+                BuildStructures = {
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+
+                },
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNG T2 Mass Adjacency Engineer',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 945,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 1,
@@ -505,10 +467,11 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 80 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
@@ -519,19 +482,19 @@ BuilderGroup {
                 Radius = 80,
                 NearDefensivePoints = false,
                 BuildStructures = {
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
 
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Distant',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT1RNG',
         Priority = 400,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
@@ -541,10 +504,11 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 500 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 500, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
@@ -555,19 +519,19 @@ BuilderGroup {
                 Radius = 80,
                 NearDefensivePoints = false,
                 BuildStructures = {
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
 
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Excess',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
+        PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 800,
         InstanceCount = 2,
         BuilderConditions = {
@@ -575,10 +539,11 @@ BuilderGroup {
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 0, 0}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.20}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION, 150, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION, 80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
                 BaseTemplate = 'CappedExtractorTemplate',
@@ -588,13 +553,13 @@ BuilderGroup {
                 Radius = 80,
                 NearDefensivePoints = false,
                 BuildStructures = {
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
 
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -605,7 +570,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT12RNG',
         Priority = 925,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
@@ -615,10 +580,11 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 100, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
@@ -629,19 +595,19 @@ BuilderGroup {
                 Radius = 80,
                 NearDefensivePoints = false,
                 BuildStructures = {
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
 
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Engineer Distant Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT12RNG',
         Priority = 400,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 2,
@@ -651,10 +617,11 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 500 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 500, 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 80 } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
@@ -665,13 +632,13 @@ BuilderGroup {
                 Radius = 80,
                 NearDefensivePoints = false,
                 BuildStructures = {
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
 
                 },
-                Location = 'LocationType',
+                LocationType = 'LocationType',
             }
         }
     },
@@ -683,7 +650,7 @@ BuilderGroup {
     
     Builder {
         BuilderName = 'RNG T1 Mass Adjacency Floating',
-        PlatoonTemplate = 'EngineerBuilderRNG',
+        PlatoonTemplate = 'EngineerStateT12RNG',
         Priority = 905,
         DelayEqualBuildPlattons = {'MassStorage', 5},
         InstanceCount = 1,
@@ -693,10 +660,11 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 'BaseDMZArea' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.95, 1.05 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'MAIN', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 'BaseDMZArea', 'ueb1106' } },
+            { UCBC, 'AdjacencyMassCheckRNG', { 'MAIN', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 'BaseDMZArea' } },
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'EngineerBuilder',
             JobType = 'BuildStructure',
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICappedExtractor.lua',
@@ -706,79 +674,15 @@ BuilderGroup {
                 Categories = categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3),
                 NearDefensivePoints = false,
                 NoPause = true,
-                Radius = 150,
+                Radius = 'BaseDMZArea',
                 BuildStructures = {
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
-                    'MassStorage',
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
+                    { Unit = 'MassStorage', Categories = categories.MASSSTORAGE * categories.TECH1 * categories.STRUCTURE },
 
                 },
-                Location = 'MAIN',
-            }
-        }
-    },
-}
-
-BuilderGroup {
-    BuilderGroupName = 'RNGEXP Crazyrush Builder',                               -- BuilderGroupName, initalized from AIBaseTemplates in "\lua\AI\AIBaseTemplates\"
-    BuildersType = 'EngineerBuilder',
-    Builder {
-        BuilderName = 'RNGEXP T1 Mex Adjacency Engineer',
-        PlatoonTemplate = 'EngineerBuilderT123RNG',
-        Priority = 900,
-        InstanceCount = 12,
-        BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MASSEXTRACTION}},
-            { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { -0.1, 0.1 }},
-            { EBC, 'LessThanEconStorageRatioRNG', { 1, 1.1 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 200, categories.MASSEXTRACTION}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION, 100, 'ueb1103' } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'Mass',
-            Construction = {
-                AdjacencyCategory = categories.MASSEXTRACTION,
-                AdjacencyDistance = 100,
-                BuildClose = false,
-                ThreatMin = -1000,
-                ThreatMax = 5,
-                ThreatRings = 0,
-                BuildStructures = {
-                    'T1Resource',
-                }
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGEXP T1 Mex Adjacency Engineer Distant',
-        PlatoonTemplate = 'EngineerBuilderRNG',
-        Priority = 400,
-        InstanceCount = 12,
-        BuilderConditions = {
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MASSEXTRACTION}},
-            { MABC, 'MassMarkerLessThanDistanceRNG',  { 500 }},
-            { EBC, 'LessThanEconStorageRatioRNG', { 0.2, 1.1 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 200, categories.MASSEXTRACTION}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-            { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION, 500, 'ueb1103' } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            JobType = 'Mass',
-            Construction = {
-                AdjacencyPriority = categories.MASSEXTRACTION,
-                AdjacencyDistance = 500,
-                BuildClose = false,
-                ThreatMin = -3,
-                ThreatMax = 0,
-                ThreatRings = 0,
-                BuildStructures = {
-                    'T1Resource',
-                }
+                LocationType = 'MAIN',
             }
         }
     },

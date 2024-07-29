@@ -1,12 +1,4 @@
 PlatoonTemplate {
-    Name = 'T1EngineerAssistRNG',
-    Plan = 'ManagerEngineerAssistAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * categories.TECH1, 1, 1, 'support', 'None' }
-    },
-}
-
-PlatoonTemplate {
     Name = 'EngineerAssistManagerT1RNG',
     Plan = 'PlatoonMergeRNG',
     GlobalSquads = {
@@ -31,56 +23,72 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'T123EngineerFinishRNG',
-    Plan = 'FinishStructureAIRNG',
+    Name = 'EngineerStateT1RNG',
+    Plan = 'StateMachineAIRNG',
+    GlobalSquads = {
+        { categories.ENGINEER * categories.TECH1 , 1, 1, 'support', 'None' }
+    },
+}
+
+PlatoonTemplate {
+    Name = 'EngineerStateT123RNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.ENGINEER * (categories.TECH1 + categories.TECH2 + categories.TECH3), 1, 1, 'support', 'None' }
     },
 }
 
 PlatoonTemplate {
-    Name = 'T123EngineerAssistRNG',
-    Plan = 'ManagerEngineerAssistAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * (categories.TECH1 + categories.TECH2 + categories.TECH3), 1, 1, 'support', 'None' }
-    },
-}
-
-PlatoonTemplate {
-    Name = 'T23EngineerAssistRNG',
-    Plan = 'ManagerEngineerAssistAIRNG',
+    Name = 'EngineerStateT23RNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.ENGINEER * (categories.TECH2 + categories.TECH3), 1, 1, 'support', 'None' }
     },
 }
 
 PlatoonTemplate {
-    Name = 'T12EngineerAssistRNG',
-    Plan = 'ManagerEngineerAssistAIRNG',
+    Name = 'EngineerStateT3RNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
-        { categories.ENGINEER * (categories.TECH1 + categories.TECH2), 1, 1, 'support', 'None' }
+        { categories.ENGINEER * categories.TECH3, 1, 1, 'support', 'None' }
     },
 }
 
 PlatoonTemplate {
-    Name = 'T12EconAssistRNG',
-    Plan = 'ManagerEngineerAssistAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * (categories.TECH1 + categories.TECH2), 1, 1, 'support', 'None' }
-    },
-}
-
-PlatoonTemplate {
-    Name = 'T3SACUEngineerAssistRNG',
-    Plan = 'ManagerEngineerAssistAIRNG',
+    Name = 'EngineerStateT3SACURNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.ENGINEER * (categories.TECH3 + categories.SUBCOMMANDER) - categories.ENGINEERSTATION - categories.COMMAND, 1, 1, 'support', 'None' }
     },
 }
 
 PlatoonTemplate {
-    Name = 'CommanderBuilderRNG',
-    Plan = 'EngineerBuildAIRNG',
+    Name = 'EngineerStateT23RNG',
+    Plan = 'StateMachineAIRNG',
+    GlobalSquads = {
+        { categories.ENGINEER * (categories.TECH2 + categories.TECH3), 1, 1, 'support', 'None' }
+    },
+}
+
+PlatoonTemplate {
+    Name = 'EngineerStateT12RNG',
+    Plan = 'StateMachineAIRNG',
+    GlobalSquads = {
+        { categories.ENGINEER * (categories.TECH1 + categories.TECH2), 1, 1, 'support', 'None' }
+    },
+}
+
+PlatoonTemplate {
+    Name = 'EngineerStateT3SACURNG',
+    Plan = 'StateMachineAIRNG',
+    GlobalSquads = {
+        { categories.ENGINEER * (categories.TECH3 + categories.SUBCOMMANDER) - categories.ENGINEERSTATION - categories.COMMAND, 1, 1, 'support', 'None' }
+    },
+}
+
+PlatoonTemplate {
+    Name = 'CommanderDummyRNG',
+    Plan = 'DummyPlatoonAIRNG',
     GlobalSquads = {
         { categories.COMMAND, 1, 1, 'support', 'None' }
     },
@@ -104,79 +112,17 @@ PlatoonTemplate {
 
 PlatoonTemplate {
     Name = 'CommanderAssistRNG',
-    Plan = 'ManagerEngineerAssistAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.COMMAND, 1, 1, 'support', 'None' },
     },
 }
 
 PlatoonTemplate {
-    Name = 'EngineerBuilderRNG',
-    Plan = 'EngineerBuildAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * categories.TECH1 - categories.COMMAND , 1, 1, 'support', 'None' }
-    },
-}
-
-PlatoonTemplate {
     Name = 'EngineerBuilderRNGMex',
-    Plan = 'MexBuildAIRNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.ENGINEER * categories.TECH1 - categories.COMMAND , 1, 1, 'support', 'None' }
-    },
-}
-
-PlatoonTemplate {
-    Name = 'EngineerBuilderT123RNG',
-    Plan = 'EngineerBuildAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.COMMAND - categories.ENGINEERSTATION , 1, 1, 'support', 'None' }
-    },
-}
-
-PlatoonTemplate {
-    Name = 'EngineerBuilderT12RNG',
-    Plan = 'EngineerBuildAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND - categories.ENGINEERSTATION , 1, 1, 'support', 'None' }
-    },
-}
-
-PlatoonTemplate {
-    Name = 'EngineerBuilderT23RNG',
-    Plan = 'EngineerBuildAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * (categories.TECH2 + categories.TECH3) - categories.COMMAND , 1, 1, 'support', 'None' }
-    },
-}
-
-PlatoonTemplate {
-    Name = 'T2EngineerBuilderRNG',
-    Plan = 'EngineerBuildAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * categories.TECH2 - categories.ENGINEERSTATION - categories.COMMAND, 1, 1, 'support', 'None' }
-    },
-}
-
-PlatoonTemplate {
-    Name = 'T3EngineerBuilderRNG',
-    Plan = 'EngineerBuildAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * categories.TECH3 - categories.ENGINEERSTATION - categories.COMMAND , 1, 1, 'support', 'None' }
-    },
-}
-PlatoonTemplate {
-    Name = 'T23EngineerBuilderRNG',
-    Plan = 'EngineerBuildAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * (categories.TECH2 + categories.TECH3) - categories.ENGINEERSTATION - categories.COMMAND, 1, 1, 'support', 'None' }
-    },
-}
-PlatoonTemplate {
-    Name = 'T3SACUEngineerBuilderRNG',
-    Plan = 'EngineerBuildAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * (categories.TECH3 + categories.SUBCOMMANDER) - categories.ENGINEERSTATION - categories.COMMAND, 1, 1, 'support', 'None' }
     },
 }
 
@@ -185,6 +131,14 @@ PlatoonTemplate {
     Plan = 'RepairAIRNG',
     GlobalSquads = {
         { categories.ENGINEER * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) , 1, 1, 'support', 'None' }
+    },
+}
+
+PlatoonTemplate {
+    Name = 'EngineerReclaimWallsT1RNG',
+    Plan = 'ReclaimUnitsAIRNG',
+    GlobalSquads = {
+        { categories.ENGINEER * categories.TECH1, 1, 1, 'support', 'None' }
     },
 }
 
@@ -211,16 +165,16 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'UEFT2EngineerBuilderRNG',
-    Plan = 'EngineerBuildAIRNG',
+    Name = 'EngineerStateUEFT2RNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
-        { categories.UEF * categories.ENGINEER * categories.TECH2, 1, 1, 'support', 'None' }
+        { categories.UEF * categories.ENGINEER * categories.TECH2 - categories.ENGINEERSTATION - categories.FIELDENGINEER, 1, 1, 'support', 'None' }
     },
 }
 
 PlatoonTemplate {
-    Name = 'CybranT2EngineerBuilderRNG',
-    Plan = 'EngineerBuildAIRNG',
+    Name = 'EngineerBuilderCybranT2RNG',
+    Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.CYBRAN * categories.ENGINEER * categories.TECH2 - categories.ENGINEERSTATION, 1, 1, 'support', 'None' }
     },
