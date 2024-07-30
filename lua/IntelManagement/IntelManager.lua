@@ -687,7 +687,7 @@ IntelManager = Class {
                                     local compare
                                     local enemyDistanceModifier = VDist2(v.pos[1],v.pos[3],enemyX, enemyZ)
                                     local zoneDistanceModifier = VDist2(v.pos[1],v.pos[3],platoonPosition[1], platoonPosition[3])
-                                    local enemyModifier = v.enemylandthreat
+                                    local enemyModifier = v.enemyantisurfacethreat
                                     local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
                                     if enemyModifier > 0 then
                                         enemyModifier = enemyModifier * 10
@@ -764,11 +764,11 @@ IntelManager = Class {
                             local enemyModifier = 1
                             local startPos = 1
                             local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
-                            if v.enemylandthreat > 0 then
+                            if v.enemyantisurfacethreat > 0 then
                                 enemyModifier = enemyModifier + 2
                             end
                             if v.friendlyantisurfacethreat > 0 then
-                                if v.enemylandthreat == 0 or v.enemylandthreat < v.friendlyantisurfacethreat then
+                                if v.enemyantisurfacethreat == 0 or v.enemyantisurfacethreat < v.friendlyantisurfacethreat then
                                     enemyModifier = enemyModifier - 1
                                 else
                                     enemyModifier = enemyModifier + 1
@@ -791,8 +791,8 @@ IntelManager = Class {
                             if v.startpositionclose then
                                 startPos = 0.7
                             end
-                            if v.enemylandthreat > v.friendlyantisurfacethreat then
-                                if platoon.CurrentPlatoonThreatAntiSurface and platoon.CurrentPlatoonThreatAntiSurface < v.enemylandthreat then
+                            if v.enemyantisurfacethreat > v.friendlyantisurfacethreat then
+                                if platoon.CurrentPlatoonThreatAntiSurface and platoon.CurrentPlatoonThreatAntiSurface < v.enemyantisurfacethreat then
                                     enemyDanger = 0.4
                                 end
                             end
@@ -827,11 +827,11 @@ IntelManager = Class {
                                     local distanceModifier = VDist2(v.pos[1],v.pos[3],enemyX, enemyZ)
                                     local enemyModifier = 1
                                     local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
-                                    if v.enemylandthreat > 0 then
+                                    if v.enemyantisurfacethreat > 0 then
                                         enemyModifier = enemyModifier + 2
                                     end
                                     if v.friendlyantisurfacethreat > 0 then
-                                        if v.enemylandthreat < v.friendlyantisurfacethreat then
+                                        if v.enemyantisurfacethreat < v.friendlyantisurfacethreat then
                                             enemyModifier = enemyModifier - 1
                                         else
                                             enemyModifier = enemyModifier + 1
@@ -873,7 +873,7 @@ IntelManager = Class {
                     local weightageValues = {
                         teamValue = 0.3,
                         massValue = 0.2,
-                        enemyLand = 0.1,
+                        enemyAntiSurface = 0.1,
                         enemyAir = 0.5,
                         friendlyantisurfacethreat = 0.05,
                         friendlylandantiairthreat = 0.05,
@@ -891,7 +891,7 @@ IntelManager = Class {
                     else
                         originPos = aiBrain.BrainIntel.StartPos
                     end
-                    local maxEnemyLandThreat = 25
+                    local maxEnemyAntiSurfaceThreat = 25
                     local maxEnemyAirThreat = 25
                     local maxFriendlyLandThreat = 25
                     local maxFriendlyAirThreat = 25
@@ -929,20 +929,20 @@ IntelManager = Class {
                             end
                             local normalizedTeamValue = v.teamvalue / maxTeamValue
                             local normalizedResourceValue = v.resourcevalue / maxResourceValue
-                            local normalizedEnemyLandThreatValue = v.enemylandthreat / maxEnemyLandThreat
+                            local normalizedEnemyAntiSurfaceThreatValue = v.enemyantisurfacethreat / maxEnemyAntiSurfaceThreat
                             local normalizedEnemyAirThreatValue = v.enemyairthreat / maxEnemyAirThreat
-                            local normalizedFriendLandThreatValue = v.friendlyantisurfacethreat / maxFriendlyLandThreat
+                            local normalizedFriendAntiSurfaceThreatValue = v.friendlyantisurfacethreat / maxFriendlyAntiSurfaceThreat
                             local normalizedFriendAirThreatValue = v.friendlylandantiairthreat / maxFriendlyAirThreat
                             local normalizedStartPosValue = startPos
                             local normalizedControlValue = controlValue
                             local priorityScore = (
                                 normalizedTeamValue * weightageValues['teamValue'] +
                                 normalizedResourceValue * weightageValues['massValue'] -
-                                normalizedEnemyLandThreatValue * weightageValues['enemyLand'] -
+                                normalizedEnemyAntiSurfaceThreatValue * weightageValues['enemyAntiSurface'] -
                                 normalizedStartPosValue * weightageValues['startPos'] +
                                 normalizedControlValue * weightageValues['control'] +
                                 normalizedEnemyAirThreatValue * weightageValues['enemyAir'] +
-                                normalizedFriendLandThreatValue * weightageValues['friendlyantisurfacethreat'] -
+                                normalizedFriendAntiSurfaceThreatValue * weightageValues['friendlyantisurfacethreat'] -
                                 normalizedFriendAirThreatValue * weightageValues['friendlylandantiairthreat']
                             )
                             --LOG('Priority Score '..tostring(priorityScore))
@@ -1008,7 +1008,8 @@ IntelManager = Class {
         while aiBrain.Status ~= "Defeat" do
             for k, v in Zones do
                 for k1, v1 in aiBrain.Zones[v].zones do
-                    v1.enemylandthreat = GetThreatAtPosition(aiBrain, v1.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+                    v1.enemylandthreat = GetThreatAtPosition(aiBrain, v1.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Land')
+                    v1.enemyantisurfacethreat = GetThreatAtPosition(aiBrain, v1.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
                     v1.enemyantiairthreat = GetThreatAtPosition(aiBrain, v1.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
                     v1.enemyairthreat = GetThreatAtPosition(aiBrain, v1.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Air')
                     v1.enemystructurethreat = GetThreatAtPosition(aiBrain, v1.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'StructuresNotMex')
