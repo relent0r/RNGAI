@@ -893,7 +893,7 @@ IntelManager = Class {
                     end
                     local maxEnemyAntiSurfaceThreat = 25
                     local maxEnemyAirThreat = 25
-                    local maxFriendlyLandThreat = 25
+                    local maxFriendlyAntiSurfaceThreat = 25
                     local maxFriendlyAirThreat = 25
                     local zoneCount = aiBrain.BuilderManagers[platoon.LocationType].PathableZones.PathableZoneCount or 0
                     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
@@ -2306,8 +2306,10 @@ IntelManager = Class {
                 end
             end
         elseif productiontype == 'LandIndirectFire' then
+            local threatDillutionRatio = 17
             local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
             local OwnIndex = aiBrain:GetArmyIndex()
+            local enemyDefenseThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.DefenseSurface or 0
             --if EnemyIndex and OwnIndex and aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] ~= 'LAND' then
                 for k, v in aiBrain.BuilderManagers do
                     local totalEnemyStructureThreat = 0
@@ -2339,8 +2341,11 @@ IntelManager = Class {
                         end
                         local threatRatio
                         local indirectFireCount = 0
-                        if totalEnemyStructureThreat > 0
-                            indirectFireCount = math.max(3, totalEnemyStructureThreat / 25)
+                        if totalEnemyStructureThreat > 0 then
+                            if enemyDefenseThreat > 0 and totalEnemyStructureThreat > enemyDefenseThreat then
+                                totalEnemyStructureThreat = enemyDefenseThreat
+                            end
+                            indirectFireCount = math.max(3, totalEnemyStructureThreat / threatDillutionRatio)
                             LOG('Initial indirectFireCount '..tostring(indirectFireCount)..'enemy structure threat was '..tostring(totalEnemyStructureThreat))
                             if indirectFireCount > 3 then
                                 if totalEnemyLandThreat > 0 then
