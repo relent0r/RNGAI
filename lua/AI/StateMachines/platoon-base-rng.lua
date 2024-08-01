@@ -251,9 +251,25 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                     if not unit.Dead and unit.BuilderManagerData then
                         if unit.BuilderManagerData.EngineerManager then
                             unit.BuilderManagerData.EngineerManager:TaskFinishedRNG(unit)
+                            if unit.PlatoonHandle.Home and unit.PlatoonHandle.LocationType and unit.PlatoonHandle.LocationType ~= 'FLOATING' then
+                                local hx = unit.PlatoonHandle.Pos[1] - unit.PlatoonHandle.Home[1]
+                                local hz = unit.PlatoonHandle.Pos[3] - unit.PlatoonHandle.Home[3]
+                                local homeDistance = hx * hx + hz * hz
+                                if homeDistance < 6400 and brain.BuilderManagers[unit.PlatoonHandle.LocationType].FactoryManager.RallyPoint then
+                                    --self:LogDebug(string.format('No transport used and close to base, move to rally point'))
+                                    local rallyPoint = aiBrain.BuilderManagers[unit.PlatoonHandle.LocationType].FactoryManager.RallyPoint
+                                    local rx = unit.PlatoonHandle.Pos[1] - unit.PlatoonHandle.Home[1]
+                                    local rz = unit.PlatoonHandle.Pos[3] - unit.PlatoonHandle.Home[3]
+                                    local rallyPointDist = rx * rx + rz * rz
+                                    if rallyPointDist > 100 then
+                                        IssueMove({unit}, rallyPoint )
+                                    end
+                                    coroutine.yield(20)
+                                end
+                            end
                         end
                     end
-                    unit:SetCustomName('EngineerDisbanded')
+                    --unit:SetCustomName('EngineerDisbanded')
                 end
                 if not unit.Dead then
                     IssueClearCommands({ unit })

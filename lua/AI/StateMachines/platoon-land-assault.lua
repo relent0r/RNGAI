@@ -39,7 +39,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonLandAssaultBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the LandAssaultBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the LandAssaultBehavior StateMachine'))
 
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
@@ -139,6 +139,30 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                     self.retreat=true
                     self:ChangeState(self.Retreating)
                     return
+                end
+                if threat.allyACU > 0 and threat.enemyStructure > 0 and not table.empty(threat.enemyStructureUnits) then
+                    for _, v in threat.enemyStructureUnits do
+                        if not v.Dead then
+                            local structurePos = v:GetPosition()
+                            local sx = self.Pos[1] - structurePos[1]
+                            local sz = self.Pos[3] - structurePos[3]
+                            local structureDistance = sx * sx + sz * sz
+                            local acuDistance = 0
+                            for _, c in threat.allyACUUnits do
+                                if not c.Dead then
+                                    local allyACUPos = c:GetPosition()
+                                    local ax = structurePos[1] - allyACUPos[1]
+                                    local az = structurePos[3] - allyACUPos[3]
+                                    acuDistance = ax * ax + az * az
+                                end
+                            end
+                            if structureDistance < acuDistance + 25 and threat.allySurface - threat.allyACU < threat.enemyStructure then
+                                self.retreat=true
+                                self:ChangeState(self.Retreating)
+                                return
+                            end
+                        end
+                    end
                 end
             end
             if enemyACU and enemyACU.GetPosition and enemyACUDistance < 1225 then

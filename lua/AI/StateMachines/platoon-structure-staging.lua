@@ -25,7 +25,7 @@ AIPlatoonAirStagingBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonAirStagingBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the AirStagingBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the AirStagingBehavior StateMachine'))
             self.MachineStarted = true
             self:ChangeState(self.DecideWhatToDo)
             return

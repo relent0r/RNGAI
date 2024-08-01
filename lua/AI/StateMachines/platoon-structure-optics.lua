@@ -27,7 +27,7 @@ AIOpticsBehavior = Class(AIPlatoonRNG) {
         ---@param self AIOpticsBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
-            --self:LogDebug(string.format('Starting Optics Machine'))
+            self:LogDebug(string.format('Starting Optics Machine'))
             self.MachineStarted = true
             self.LocationType = self.PlatoonData.LocationType or 'MAIN'
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position

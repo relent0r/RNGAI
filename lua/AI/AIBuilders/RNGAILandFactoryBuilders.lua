@@ -48,6 +48,20 @@ BuilderGroup {
         },
     },
     Builder {
+        BuilderName = 'RNGAI T1 Artillery Demand',
+        PlatoonTemplate = 'T1LandArtillery',
+        Priority = 746,
+        BuilderConditions = {
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T1', 'arty'} },
+            { EBC, 'FactorySpendRatioRNG', {'Land'}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 1
+        },
+    },
+    Builder {
         BuilderName = 'RNGAI T1 AA',
         PlatoonTemplate = 'T1LandAA',
         Priority = 743,
@@ -67,9 +81,9 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandAA',
         Priority = 743,
         BuilderConditions = {
-            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
+            { UCBC, 'BuildOnlyOnLocationRNG', {'LocationType', 'MAIN' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
-            { UCBC, 'UnitBuildDemand', {'Land', 'T1', 'aa'} },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T1', 'aa'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -88,7 +102,7 @@ BuilderGroup {
         Priority = 891,
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'UnitBuildDemand', {'Land', 'T2', 'mobilebomb'} },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T2', 'mobilebomb'} },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -130,9 +144,9 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Bot Demand',
         PlatoonTemplate = 'RNGAIT2AttackBot',
-        Priority = 879,
+        Priority = 751,
         BuilderConditions = {
-            { UCBC, 'UnitBuildDemand', {'Land', 'T2', 'bot'} },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T2', 'bot'} },
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'bot'} },
@@ -161,10 +175,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 AA Demand',
         PlatoonTemplate = 'T2LandAA',
-        Priority = 879,
+        Priority = 751,
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'UnitBuildDemand', {'Land', 'T2', 'aa'} },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T2', 'aa'} },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -189,12 +203,11 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI T2 MML',
+        BuilderName = 'RNGAI T2 MML Demand',
         PlatoonTemplate = 'T2LandArtillery',
-        Priority = 750,
+        Priority = 751,
         BuilderConditions = {
-            { UCBC, 'UnitBuildDemand', {'Land', 'T2', 'mml'} },
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T2', 'mml'} },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -221,9 +234,9 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Amphib Demand',
         PlatoonTemplate = 'T2LandAmphibious',
-        Priority = 880,
+        Priority = 751,
         BuilderConditions = {
-            { UCBC, 'UnitBuildDemand', {'Land', 'T2', 'amphib'} },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T2', 'amphib'} },
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -283,10 +296,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 AA Demand',
         PlatoonTemplate = 'T3LandAA',
-        Priority = 890,
+        Priority = 756,
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
-            { UCBC, 'UnitBuildDemand', {'Land', 'T3', 'aa'} },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T3', 'aa'} },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -296,13 +309,12 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI T3 Artillery',
+        BuilderName = 'RNGAI T3 Artillery Demand',
         PlatoonTemplate = 'T3LandArtillery',
-        Priority = 753,
+        Priority = 756,
         BuilderConditions = {
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T3', 'arty'} },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'arty'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -328,7 +340,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 Mobile Sniper',
         PlatoonTemplate = 'T3SniperBots',
-        Priority = 890,
+        Priority = 754,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
@@ -343,12 +355,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 Mobile Sniper Demand',
         PlatoonTemplate = 'T3SniperBots',
-        Priority = 754,
+        Priority = 756,
         BuilderConditions = {
-            { UCBC, 'UnitBuildDemand', {'Land', 'T3', 'sniper'} },
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T3', 'sniper'} },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'sniper'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -357,14 +367,13 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI T3 Mobile Missile',
+        BuilderName = 'RNGAI T3 Mobile Missile Demand',
         PlatoonTemplate = 'T3MobileMissile',
-        Priority = 754,
+        Priority = 756,
         BuilderConditions = {
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T3', 'mml'} },
             { EBC, 'FactorySpendRatioRNG', {'Land'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'mml'} },
-
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',

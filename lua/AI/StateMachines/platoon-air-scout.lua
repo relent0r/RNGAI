@@ -39,7 +39,7 @@ AIPlatoonAirScoutBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonAirScoutBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the AirScoutBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the AirScoutBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             self.BaseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
             self.BaseMilitaryArea = aiBrain.OperatingAreas['BaseMilitaryArea']
@@ -93,6 +93,7 @@ AIPlatoonAirScoutBehavior = Class(AIPlatoonRNG) {
             end
             if not cdr.Dead and cdr.Active and (not cdr.AirScout or cdr.AirScout.Dead) and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 then
                 self.BuilderData = {PatrolUnit = cdr}
+                --LOG('AIR-SCOUT Assigning air scout to acu')
                 ----self:LogDebug(string.format('Scout is assigning itself to acu'))
                 self:ChangeState(self.PatrolUnit)
                 return

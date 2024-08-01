@@ -63,7 +63,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
 
         ---@param self AIExperimentalAirBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the ExperimentalAirBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the ExperimentalAirBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             if not self.MovementLayer then
                 AIAttackUtils.GetMostRestrictiveLayerRNG(self)

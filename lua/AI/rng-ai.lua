@@ -947,6 +947,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         shield=0
                     }
                 },
+                Bases = {
+                }
             },
         }
         self.smanager = {
@@ -1553,11 +1555,33 @@ AIBrain = Class(RNGAIBrainClass) {
             for k, v in self.Zones.Land.zones do
                 if NavUtils.CanPathTo('Land', position, v.pos) then
                     zoneTable.PathableZoneCount = zoneTable.PathableZoneCount + 1
-                    RNGINSERT(zoneTable.Zones, v.id)
+                    RNGINSERT(zoneTable.Zones, {PathType = 'Land', ZoneID = v.id})
+                elseif NavUtils.CanPathTo('Amphibious', position, v.pos) then
+                    zoneTable.PathableZoneCount = zoneTable.PathableZoneCount + 1
+                    RNGINSERT(zoneTable.Zones, {PathType = 'Amphibious', ZoneID = v.id})
                 end
             end
         else
             WARN('AI DEBUG: No land zones found for expansion base marker to check')
+        end
+        if not self.amanager.Demand.Bases[baseName] then
+            self.amanager.Demand.Bases[baseName] = {
+                Land = {
+                    T1 = {
+                        arty = 0,
+                        aa = 0
+                    },
+                    T2 = {
+                        mml = 0,
+                        aa = 0
+                    },
+                    T3 = {
+                        arty = 0,
+                        mml = 0,
+                        aa = 0
+                    }
+                }
+            }
         end
         self.BuilderManagers[baseName].PathableZones = zoneTable
         --LOG('Pathable zone table for base name '..baseName..' '..repr(self.BuilderManagers[baseName].PathableZones))
@@ -2897,11 +2921,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 local antiAirUnits = 0
                 local antiAirThreat = 0
                 local navalThreat = 0
-                local enemyLandAngle = false
+                local enemyLandAngle
                 local enemyLandDistance = 0
-                local enemySurfaceAirAngle = false
-                local enemyAirAngle = false
-                local enemyNavalAngle = false
+                local enemySurfaceAirAngle
+                local enemyAirAngle
+                local enemyNavalAngle
+                local enemyMobileSilo = false
+                local enemyMobileSiloAngle
                 local unitCat
                 if k == 'MAIN' then
                     perimeterMonitorRadius = baseRestrictedArea * 1.3
@@ -2922,6 +2948,11 @@ AIBrain = Class(RNGAIBrainClass) {
                                     landThreat = landThreat + unit.Blueprint.Defense.SurfaceThreatLevel
                                     if unit.Blueprint.Defense.AirThreatLevel then
                                         airThreat = airThreat + unit.Blueprint.Defense.AirThreatLevel
+                                    end
+                                    if unitCat.SILO and not enemyMobileSilo then
+                                        local unitPos = unit:GetPosition()
+                                        enemyMobileSilo = true
+                                        enemyMobileSiloAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
                                     end
                                     if landUnits == 1 then
                                         local unitPos = unit:GetPosition()
@@ -2962,6 +2993,11 @@ AIBrain = Class(RNGAIBrainClass) {
                                         local unitPos = unit:GetPosition()
                                         enemyNavalAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
                                     end
+                                    if unitCat.SILO and not enemyMobileSilo then
+                                        local unitPos = unit:GetPosition()
+                                        enemyMobileSilo = true
+                                        enemyMobileSiloAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
+                                    end
                                     continue
                                 end
                             end
@@ -2972,6 +3008,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     if enemyLandAngle then
                         self.BasePerimeterMonitor[k].RecentLandAngle = enemyLandAngle
                         self.BasePerimeterMonitor[k].RecentLandDistance = enemyLandDistance
+                    end
+                    if enemyMobileSilo then
+                        self.BasePerimeterMonitor[k].EnemyMobileSiloDetected = enemyMobileSilo
+                        self.BasePerimeterMonitor[k].RecentMobileSiloAngle = enemyMobileSiloAngle
+                        --LOG('Recording enemyMobileAngle at base '..tostring(k)..' angle is '..tostring(self.BasePerimeterMonitor[k].RecentMobileSiloAngle))
+                    else
+                        self.BasePerimeterMonitor[k].EnemyMobileSiloDetected = false
                     end
                     self.BasePerimeterMonitor[k].AirUnits = airUnits
                     if enemySurfaceAirAngle then
@@ -6906,6 +6949,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         shield=0
                     }
                 },
+                Bases = {
+                }
             },
         }
         self.smanager = {
@@ -7036,7 +7081,8 @@ AIBrain = Class(RNGAIBrainClass) {
             TacticalSACUMode = false,
             TacticalMissions = {
                 ACUSnipe = {},
-                MassStrike = {}
+                MassStrike = {},
+                RangedAssaultPositions = {}
             }
         }
         -- Intel Data

@@ -69,7 +69,7 @@ AIArtilleryBehavior = Class(AIPlatoonRNG) {
         ---@param self AIArtilleryBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
-            --self:LogDebug(string.format('Starting Strategic Artillery Machine'))
+            self:LogDebug(string.format('Starting Strategic Artillery Machine'))
             if not self.MovementLayer then
                 AIAttackUtils.GetMostRestrictiveLayerRNG(self)
             end

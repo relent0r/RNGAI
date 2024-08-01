@@ -39,7 +39,7 @@ AINukeBehavior = Class(AIPlatoonRNG) {
 
         ---@param self AINukeBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Starting Nuke Machine'))
+            self:LogDebug(string.format('Starting Nuke Machine'))
             self.MachineStarted = true
             local platoonUnits = GetPlatoonUnits(self)
             self.PlatoonStrikeDamage = 0
