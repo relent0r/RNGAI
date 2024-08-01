@@ -35,7 +35,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the ACUSupportBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the ACUSupportBehavior StateMachine'))
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
                 self:LogWarning('requires generated navigational mesh')
@@ -88,11 +88,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonACUSupportBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
-            local rangedAttack = false
-            if not PlatoonExists(aiBrain, self) then
-                return
-            end
             local acu = aiBrain.CDRUnit
+            local rangedAttack 
             if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
                 local enemyAcuPosition = aiBrain.BrainIntel.SuicideModeTarget:GetPosition()
                 local rx = self.Pos[1] - enemyAcuPosition[1]
@@ -134,6 +131,30 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             else
+                if threat.allyACU > 0 and threat.enemyStructure > 0 and not table.empty(threat.enemyStructureUnits) then
+                    for _, v in threat.enemyStructureUnits do
+                        if not v.Dead then
+                            local structurePos = v:GetPosition()
+                            local sx = self.Pos[1] - structurePos[1]
+                            local sz = self.Pos[3] - structurePos[3]
+                            local structureDistance = sx * sx + sz * sz
+                            local acuDistance = 0
+                            for _, c in threat.allyACUUnits do
+                                if not c.Dead then
+                                    local allyACUPos = c:GetPosition()
+                                    local ax = structurePos[1] - allyACUPos[1]
+                                    local az = structurePos[3] - allyACUPos[3]
+                                    acuDistance = ax * ax + az * az
+                                end
+                            end
+                            if structureDistance < acuDistance + 25 and threat.allySurface - threat.allyACU < threat.enemyStructure then
+                                self.retreat=true
+                                self:ChangeState(self.Retreating)
+                                return
+                            end
+                        end
+                    end
+                end
                 self.retreat=false
             end
             
@@ -263,7 +284,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface then
                                 IssueClearCommands({v}) 
                                 --IssueMove({v},target:GetPosition())
-                                if v.Role == 'Shield' or v.Role == 'Stealth' then
+                                if v.Role == 'Shield' or v.Role == 'Stealth' and closestTarget then
                                     IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
                                 else
                                     IssueAggressiveMove({v},targetPos)
@@ -286,7 +307,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                         if not skipKite then
                             if approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface*1.5 and target.Blueprint.CategoriesHash.MOBILE and v.MaxWeaponRange <= unitRange then
                                 IssueClearCommands({v})
-                                if v.Role == 'Shield' or v.Role == 'Stealth' then
+                                if v.Role == 'Shield' or v.Role == 'Stealth' and closestTarget then
                                     IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
                                 elseif v.Role == 'Scout' then
                                     IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self.IntelRange or self.MaxPlatoonWeaponRange) }))
@@ -612,6 +633,12 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                 local rx = unitPos[1] - enemyPos[1]
                                 local rz = unitPos[3] - enemyPos[3]
                                 local tmpDistance = rx * rx + rz * rz
+                                local targetCandidateCat = m.Blueprint.CategoriesHash
+                                if (targetCandidateCat.DIRECTFIRE and targetCandidateCat.STRUCTURE and targetCandidateCat.DEFENSE and tmpDistance < v.MaxWeaponRange * v.MaxWeaponRange) then
+                                    target = m
+                                    closestTarget = tmpDistance
+                                    break
+                                end
                                 if not closestTarget or tmpDistance < closestTarget then
                                     target = m
                                     closestTarget = tmpDistance
@@ -754,7 +781,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local builderData = self.BuilderData
             if not builderData.Position then
                 WARN('No position passed to ACUSupport')
-                return false
+                self:ChangeState(self.DecideWhatToDo)
+                return
             end
             local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
             if usedTransports then
@@ -801,6 +829,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local builderData = self.BuilderData
             if not builderData.Position then
                 WARN('No position passed to ACUSupport')
+                self:ChangeState(self.DecideWhatToDo)
                 return false
             end
             local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
@@ -860,6 +889,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             end
             if not self.path then
                 --self:LogDebug(string.format('platoon is going to use transport'))
+                --LOG('ACU Support platoon has not path to position '..tostring(self.BuilderData.Position[1])..':'..tostring(self.BuilderData.Position[3]))
                 self:ChangeState(self.Transporting)
                 return
             end
@@ -1069,7 +1099,7 @@ end
 ---@param aiBrain AIBrain
 ---@param platoon AIPlatoon
 ACUSupportPositionThread = function(aiBrain, platoon)
-    while aiBrain:PlatoonExists(platoon) do
+    while not IsDestroyed(platoon) do
         local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, platoon)
         if platBiasUnit and not platBiasUnit.Dead then
             platoon.Pos=platBiasUnit:GetPosition()

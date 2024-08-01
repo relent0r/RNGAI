@@ -67,7 +67,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
 
         ---@param self AIExperimentalFatBoyBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the ExperimentalFatBoyBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the ExperimentalFatBoyBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             if not self.MovementLayer then
                 AIAttackUtils.GetMostRestrictiveLayerRNG(self)

@@ -14,8 +14,14 @@ function ReclaimablesAvailableAtBase(aiBrain, locType)
     if aiBrain:GetEconomyStoredRatio('MASS') < .80 then
         for k, v in aiBrain.BuilderManagers do
             if locType == k then
-                if v.ReclaimData.ReclaimAvailable and v.EngineerManager.ConsumptionUnits.Engineers.Count and v.EngineerManager.ConsumptionUnits.Engineers.Count < (v.ReclaimData.EngineersRequired + 3) then
-                    return true
+                if v.ReclaimData.ReclaimAvailable then
+                    local engineersRequired = v.ReclaimData.EngineersRequired or 4
+                    if locType == 'MAIN' then
+                        engineersRequired = engineersRequired * 3
+                    end
+                    if v.EngineerManager.ConsumptionUnits.Engineers.Count and v.EngineerManager.ConsumptionUnits.Engineers.Count < engineersRequired then
+                        return true
+                    end
                 end
             end
         end

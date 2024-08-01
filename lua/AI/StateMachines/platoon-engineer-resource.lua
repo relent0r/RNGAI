@@ -26,7 +26,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonEngineerBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the EngineerResourceBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the EngineerResourceBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             self.LocationType = self.PlatoonData.LocationType
             self.StartCycle = 0

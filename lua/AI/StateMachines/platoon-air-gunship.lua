@@ -34,7 +34,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonGunshipBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the GunshipBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the GunshipBehavior StateMachine'))
             local aiBrain = self:GetBrain()
             if self.PlatoonData.LocationType then
                 self.LocationType = self.PlatoonData.LocationType

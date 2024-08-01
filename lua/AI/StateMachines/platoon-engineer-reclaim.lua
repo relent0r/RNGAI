@@ -26,7 +26,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
         --- Initial state of any state machine
         ---@param self AIPlatoonAdaptiveReclaimBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the EngineerReclaimBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the EngineerReclaimBehavior StateMachine'))
             local brain = self:GetBrain()
 
             if not self.SearchRadius then

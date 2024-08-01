@@ -41,7 +41,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonLandScoutBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the LandScoutBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the LandScoutBehavior StateMachine'))
 
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
@@ -645,13 +645,19 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     local rz = platPos[3] - enemyPos[3]
                     local enemyDistance = rx * rx + rz * rz
                     if enemyDistance < avoidRange * avoidRange then
+                        local idealRange
+                        if self.BuilderData.RetreatFromWeaponRange and self.BuilderData.RetreatFromWeaponRange < avoidRange then
+                            idealRange = math.min(self.BuilderData.RetreatFromWeaponRange + 8, avoidRange)
+                        else
+                            idealRange = avoidRange
+                        end
                         if scout.GetNavigator then
                             local navigator = scout:GetNavigator()
                             if navigator then
-                                navigator:SetGoal(RUtils.AvoidLocation(enemyPos, platPos, avoidRange))
+                                navigator:SetGoal(RUtils.AvoidLocation(enemyPos, platPos, idealRange))
                             end
                         else
-                            IssueMove({scout},RUtils.AvoidLocation(enemyPos, platPos, avoidRange))
+                            IssueMove({scout},RUtils.AvoidLocation(enemyPos, platPos, idealRange))
                         end
                     elseif enemyDistance > (avoidRange * avoidRange) * 1.3 then
                         if self.BuilderData.ScoutType == 'AssistPlatoon' and not IsDestroyed(self.BuilderData.SupportPlatoon) then
@@ -779,6 +785,7 @@ LandScoutThreatThread = function(aiBrain, platoon)
                     --LOG('Seraphim scout vsself.engineer')
                     unitToAttack = v
                 elseif platoon.StateName ~= 'Retreating' and not v.Dead and ( platoon.StateName ~= 'Navigating' and not platoon.BuilderData.Retreat )then
+                    local enemyUnitRange
                     unitToRetreat = v
                     if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
                         supportUnit = platoon.BuilderData.SupportUnit
@@ -786,9 +793,13 @@ LandScoutThreatThread = function(aiBrain, platoon)
                     if platoon.BuilderData.SupportPlatoon and not IsDestroyed(platoon.BuilderData.SupportPlatoon) then
                         supportPlatoon = platoon.BuilderData.SupportPlatoon
                     end
+                    if unitToRetreat then
+                        enemyUnitRange = StateUtils.GetUnitMaxWeaponRange(unitToRetreat)
+                    end
                     platoon.BuilderData = {
                         Position = unitToRetreat:GetPosition(),
                         RetreatFrom = unitToRetreat,
+                        RetreatFromWeaponRange = enemyUnitRange,
                         SupportUnit = supportUnit or nil,
                         SupportPlatoon = supportPlatoon or nil
                     }
@@ -836,15 +847,20 @@ LandScoutThreatThread = function(aiBrain, platoon)
                         local cz = platPos[3] - oldEnemyPos[3]
                         local oldEnemyDistance = cx * cx + cz * cz
                         if enemyDistance < oldEnemyDistance then
+                            local enemyUnitRange
                             if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
                                 supportUnit = platoon.BuilderData.SupportUnit
                             end
                             if platoon.BuilderData.SupportPlatoon and not IsDestroyed(platoon.BuilderData.SupportPlatoon) then
                                 supportPlatoon = platoon.BuilderData.SupportPlatoon
                             end
+                            if unitToRetreat then
+                                enemyUnitRange = StateUtils.GetUnitMaxWeaponRange(unitToRetreat)
+                            end
                             platoon.BuilderData = {
                                 Position = unitPos,
                                 RetreatFrom = v,
+                                RetreatFromWeaponRange = enemyUnitRange,
                                 SupportUnit = supportUnit or nil,
                                 SupportPlatoon = supportPlatoon or nil
                             }
@@ -854,15 +870,20 @@ LandScoutThreatThread = function(aiBrain, platoon)
                             break
                         end
                     elseif enemyDistance < checkRadius * checkRadius then
+                        local enemyUnitRange
                         if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
                             supportUnit = platoon.BuilderData.SupportUnit
                         end
                         if platoon.BuilderData.SupportPlatoon and not IsDestroyed(platoon.BuilderData.SupportPlatoon) then
                             supportPlatoon = platoon.BuilderData.SupportPlatoon
                         end
+                        if unitToRetreat then
+                            enemyUnitRange = StateUtils.GetUnitMaxWeaponRange(unitToRetreat)
+                        end
                         platoon.BuilderData = {
                             Position = unitPos,
                             RetreatFrom = v,
+                            RetreatFromWeaponRange = enemyUnitRange,
                             SupportUnit = supportUnit or nil,
                             SupportPlatoon = supportPlatoon or nil
                         }

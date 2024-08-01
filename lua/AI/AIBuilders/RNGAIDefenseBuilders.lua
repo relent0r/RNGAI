@@ -313,7 +313,7 @@ BuilderGroup {
         Priority = 825,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'RequireTMDCheckRNG', { }},
+            { UCBC, 'RequireTMDCheckRNG', { 'LocationType' }},
             --{ UCBC, 'LastKnownUnitDetection', { 'LocationType', 'tml'}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -664,12 +664,12 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Defence Reactive TMD Expansion',
         PlatoonTemplate = 'EngineerStateT23RNG',
-        Priority = 825,
+        Priority = 845,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'RequireTMDCheckRNG', { }},
+            { UCBC, 'RequireTMDCheckRNG', { 'LocationType' }},
             --{ UCBC, 'LastKnownUnitDetection', { 'LocationType', 'tml'}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 0.8}},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
@@ -684,6 +684,7 @@ BuilderGroup {
                 BuildClose = true,
                 NoPause = true,
                 Type = 'TMD',
+                Tier = 1,
                 BuildStructures = {
                     { Unit = 'T2MissileDefense', Categories = categories.STRUCTURE * categories.ANTIMISSILE * categories.DEFENSE * categories.TECH2 },
                 },

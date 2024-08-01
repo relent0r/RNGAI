@@ -18,6 +18,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandScout',
         Priority = 895,
         BuilderConditions = {
+            { UCBC, 'BuildOnlyOnLocationRNG', {'LocationType', 'MAIN' } },
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.LAND * categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
@@ -40,7 +41,7 @@ BuilderGroup {
         InstanceCount = 30,
         BuilderType = 'Any',
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.LAND * categories.SCOUT } },
+            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.LAND * categories.SCOUT } },
         },
         BuilderData = {
             LocationType = 'LocationType',

@@ -30,7 +30,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonNavalCombatBehavior
         Main = function(self)
 
-            --self:LogDebug(string.format('Welcome to the NavalCombatBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the NavalCombatBehavior StateMachine'))
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
                 self:LogWarning('requires generated navigational mesh')

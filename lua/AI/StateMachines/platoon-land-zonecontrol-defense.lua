@@ -38,7 +38,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Welcome to the ZoneControlDefenseBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the ZoneControlDefenseBehavior StateMachine'))
 
             -- requires navigational mesh
             if not NavUtils.IsGenerated() then
@@ -183,6 +183,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             end
             if not targetZone then
                 --self:LogDebug(string.format('DecideWhatToDo no target zone, look for one'))
+                --Note this yield is to try and avoid a bunch of platoons all selecting the same zone before the allocation thread has looped.
+                coroutine.yield(Random(5,35))
                 targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType, true)
                 if targetZone then
                     --self:LogDebug(string.format('DecideWhatToDo Target zone '..targetZone))
@@ -192,6 +194,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         CutOff = 400
                     }
                     self.ZoneAllocated = targetZone
+                    aiBrain.Zones.Land.zones[targetZone].friendlyantiairallocatedthreat = aiBrain.Zones.Land.zones[targetZone].friendlyantiairallocatedthreat + (self.CurrentPlatoonThreatAntiAir or 0)
                     local zx = platPos[1] - self.BuilderData.Position[1]
                     local zz = platPos[3] - self.BuilderData.Position[3]
                     if zx * zx + zz * zz < 3600 then
@@ -210,7 +213,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     --LOG('No target zone returned, continue')
                 end
             end
-            if not not targetZone and self.Home and self.LocationType then
+            if not targetZone and self.Home and self.LocationType then
                 local hx = self.Pos[1] - self.Home[1]
                 local hz = self.Pos[3] - self.Home[3]
                 local homeDistance = hx * hx + hz * hz
@@ -455,6 +458,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 self.path = path
+                if not self.path then
+                    coroutine.yield(30)
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
             end
             while PlatoonExists(aiBrain, self) do
                 if VDist3Sq(self.BuilderData.Position,self.Pos) < 400 then
