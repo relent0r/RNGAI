@@ -1474,7 +1474,7 @@ function UnitBuildDemand(aiBrain, locationType, type, tier, unit)
         return true
     end
     if aiBrain.amanager.Demand.Bases[locationType] and aiBrain.amanager.Demand.Bases[locationType][type][tier][unit] > aiBrain.amanager.Current[type][tier][unit] then
-        LOG('Demand for base '..tostring(locationType)..' is true for unit of type '..tostring(unit))
+        --LOG('Demand for base '..tostring(locationType)..' is true for unit of type '..tostring(unit))
         return true
     end
     return false

@@ -996,6 +996,7 @@ function PerformACUReclaim(aiBrain, cdr, minimumReclaim, nextWaypoint)
                 end
                 if cdr.CurrentEnemyInnerCircle > 10 then
                     reclaiming = false
+                    IssueClearCommands({cdr})
                 end
                 counter = counter + 1
             end

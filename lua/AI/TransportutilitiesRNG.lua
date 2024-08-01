@@ -176,7 +176,9 @@ function CheckTransportPool( aiBrain )
 			end
 			if platoon and PlatoonExists(aiBrain,platoon) then
 				if platoon ~= ArmyPool and platoon ~= RefuelPool and platoon ~= StructurePool then
-					LOG('*AI DEBUG Disbanding platoon that belongs to unit '..tostring(v.EntityId))
+					if TransportDialog then
+						LOG('*AI DEBUG Disbanding platoon that belongs to unit '..tostring(v.EntityId))
+					end            
 					aiBrain:DisbandPlatoon(platoon)
 				end
 			end

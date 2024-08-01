@@ -341,7 +341,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             end
             numUnits = GetNumUnitsAroundPoint(brain, categories.LAND + categories.MASSEXTRACTION + (categories.STRUCTURE * categories.DIRECTFIRE) - categories.SCOUT, targetSearchPosition, targetSearchRange, 'Enemy')
             if numUnits > 0 then
-                self:LogDebug(string.format('numUnits > 1 '..tostring(numUnits)))
+                self:LogDebug(string.format('numUnits > 1 '..tostring(numUnits)..'enemy threat is '..tostring(cdr.CurrentEnemyThreat)..' friendly threat is '..tostring(cdr.CurrentFriendlyThreat)))
+                self:LogDebug(string.format(' friendly inner circle '..tostring(cdr.CurrentFriendlyInnerCircle)..' enemy inner circle '..tostring(cdr.CurrentEnemyInnerCircle)))
                 local target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition, defenseTargets
                 cdr.Combat = true
                 local acuDistanceToBase = VDist3Sq(cdr.Position, cdr.CDRHome)
@@ -405,15 +406,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     else
                         self:LogDebug(string.format('Look for normal target'))
                         target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition, defenseTargets = RUtils.AIAdvancedFindACUTargetRNG(brain)
-                        if not target then
-                            self:LogDebug(string.format('No Target found '))
-                            if highThreatCount then
-                                self:LogDebug(string.format('No Target but our threat count is '..tostring(highThreatCount)))
-                            end
-                            if closestThreatUnit then
-                                self:LogDebug(string.format('We have a closestThreatUnit of '..tostring(closestThreatUnit.UnitId)))
-                            end
-                        end
                     end
                 elseif cdr.SuicideMode then
                     self:LogDebug(string.format('Are we in suicide mode?'))
@@ -746,7 +738,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    if not endPoint and (not cdr.GunUpgradeRequired) and (not cdr.HighThreatUpgradeRequired) and cdr.Health > 6000 and (not builderData.Retreat or (cdr.CurrentEnemyInnerCircle < 10 and cdr.CurrentEnemyThreat < 50)) and GetEconomyStoredRatio(brain, 'MASS') < 0.70 then
+                    if not endPoint and (not cdr.GunUpgradeRequired) and (not cdr.HighThreatUpgradeRequired) and cdr.Health > 6000 and (not builderData.Retreat and cdr.CurrentEnemyInnerCircle < 10 and cdr.CurrentEnemyThreat < 50) and GetEconomyStoredRatio(brain, 'MASS') < 0.70 then
                         ACUFunc.PerformACUReclaim(brain, cdr, 25, waypoint)
                         --LOG('acu performed reclaim')
                     end

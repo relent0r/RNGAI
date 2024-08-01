@@ -2339,36 +2339,37 @@ IntelManager = Class {
                                 end
                             end
                         end
-                        local threatRatio
                         local indirectFireCount = 0
                         if totalEnemyStructureThreat > 0 then
                             if enemyDefenseThreat > 0 and totalEnemyStructureThreat > enemyDefenseThreat then
                                 totalEnemyStructureThreat = enemyDefenseThreat
+                            elseif enemyDefenseThreat == 0 and totalEnemyStructureThreat > 100 then
+                                totalEnemyStructureThreat = 100
                             end
                             indirectFireCount = math.max(3, totalEnemyStructureThreat / threatDillutionRatio)
-                            LOG('Initial indirectFireCount '..tostring(indirectFireCount)..'enemy structure threat was '..tostring(totalEnemyStructureThreat))
+                            --LOG('Initial indirectFireCount '..tostring(indirectFireCount)..'enemy structure threat was '..tostring(totalEnemyStructureThreat)..' enemy defense threat was '..tostring(enemyDefenseThreat))
                             if indirectFireCount > 3 then
                                 if totalEnemyLandThreat > 0 then
                                     if totalFriendlyDirectFireThreat > 0 then
                                         local threatRatio = totalFriendlyDirectFireThreat / totalEnemyLandThreat
                                         if threatRatio < 1 then
                                             indirectFireCount = math.max(3, math.ceil(indirectFireCount * threatRatio))
-                                            LOG('indirectFireCount modified to'..tostring(indirectFireCount))
+                                            --LOG('indirectFireCount modified to'..tostring(indirectFireCount))
                                         end
                                     end
                                 end
                             end
                             if indirectFireCount > 0 then
                                 if v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH1) > 0 then
-                                    LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T1 artillery for base '..tostring(k))
+                                    --LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T1 artillery for base '..tostring(k))
                                     aiBrain.amanager.Demand.Bases[k].Land.T1.arty= indirectFireCount
                                 end
                                 if v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH2) > 0 then
-                                    LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T2 mml for base '..tostring(k))
+                                    --LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T2 mml for base '..tostring(k))
                                     aiBrain.amanager.Demand.Bases[k].Land.T2.mml = indirectFireCount
                                 end
                                 if v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH3) > 0 then
-                                    LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T3 artillery for base '..tostring(k))
+                                    --LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T3 artillery for base '..tostring(k))
                                     aiBrain.amanager.Demand.Bases[k].Land.T3.arty = indirectFireCount
                                     aiBrain.amanager.Demand.Bases[k].Land.T3.mml = indirectFireCount
                                 end
