@@ -232,6 +232,31 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 end
+
+                --RNGLOG('Scout Has targetData and is performing path')
+                --RNGLOG('Position to scout is '..repr(targetData.Position))
+                if targetData.Position then
+                    self.BuilderData = {
+                        ScoutPosition = targetData.Position,
+                        ScoutType = scoutType
+                    }
+                    local rx = scoutPos[1] - targetData.Position[1]
+                    local rz = scoutPos[3] - targetData.Position[3]
+                    if rx * rx + rz * rz > 4225 then
+                        self:LogDebug(string.format('We have targetData from unknown scoutType Position why? navigate'))
+                       --LOG('Unknown targetData '..repr(targetData))
+                        self:ChangeState(self.Navigating)
+                        return
+                    else
+                        self:LogDebug(string.format('We have targetData from unknown scoutType Position why? HoldPosition'))
+                       --LOG('Unknown targetData '..repr(targetData))
+                        self:ChangeState(self.HoldPosition)
+                        return
+                    end
+                else
+                    self:LogDebug(string.format('We have no targetData Position..50 tick wait.'))
+                    coroutine.yield(50)
+                end
             else
                 --self:LogDebug(string.format('We have no targetData at all..50 tick wait.'))
             end

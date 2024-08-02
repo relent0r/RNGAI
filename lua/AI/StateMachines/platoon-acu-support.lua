@@ -74,6 +74,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             self.CurrentPlatoonThreatAntiAir = 0
             self.MachineStarted = true
             self.threatTimeout = 0
+            --LOG('PlatoonCount at time of acu support startup is '..table.getn(self:GetPlatoonUnits()))
             StartACUSupportThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -125,7 +126,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*1.5 > (threat.enemySurface - threat.enemyStructure) then
                     rangedAttack = true
                 else
-                    --self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
+                    self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
+                    --LOG('ACU Support is itself retreating')
                     self.retreat=true
                     self:ChangeState(self.Retreating)
                     return
@@ -170,6 +172,9 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             end
             local target
             if StateUtils.SimpleTarget(self,aiBrain) then
+                --LOG('ACU Support is moving to combat loop')
+                local units = self:GetPlatoonUnits()
+                --LOG('Current platoon unit count is '..table.getn(units))
                 if rangedAttack then
                     self:ChangeState(self.RangedCombatLoop)
                     return
@@ -179,14 +184,18 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if not acu.Retreating and (VDist2Sq(acu.CDRHome[1], acu.CDRHome[3], acu.Position[1], acu.Position[3]) < 14400) and acu.CurrentEnemyThreat < 5 then
-                --self:LogDebug(string.format('Request to vent platoon due to distance from home base, current distance is '..tostring(VDist2Sq(acu.CDRHome[1], acu.CDRHome[3], acu.Position[1], acu.Position[3]))))
+                --RNGLOG('CDR is not active and not retreating, vent')
+                self:LogDebug(string.format('Request to vent platoon due to distance from home base, current distance is '..tostring(VDist2Sq(acu.CDRHome[1], acu.CDRHome[3], acu.Position[1], acu.Position[3]))))
+                --LOG('Request to vent platoon due to distance from home base, current distance is '..tostring(VDist2Sq(acu.CDRHome[1], acu.CDRHome[3], acu.Position[1], acu.Position[3])))
+                --LOG('PlatoonCount at time of vent is '..table.getn(self:GetPlatoonUnits()))
                 RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
                 coroutine.yield(20)
                 return
             end
             if acu.Retreating and acu.CurrentEnemyThreat < 5 then
                 --RNGLOG('CDR is not in danger and retreating, vent')
-                --self:LogDebug(string.format('Request to vent platoon due to retreating acu and low enemy threat'))
+                self:LogDebug(string.format('Request to vent platoon due to retreating acu and low enemy threat'))
+                --LOG('PlatoonCount at time of vent is '..table.getn(self:GetPlatoonUnits()))
                 RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
                 coroutine.yield(20)
                 return
@@ -195,22 +204,26 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 --RNGLOG('CDR is not in danger, threatTimeout increased')
                 self.threatTimeout = self.threatTimeout + 1
                 if self.threatTimeout > 10 then
-                    --self:LogDebug(string.format('Request to vent platoon due to low enemy threat and high friendly threat'))
+                    self:LogDebug(string.format('Request to vent platoon due to low enemy threat and high friendly threat'))
+                    --LOG('PlatoonCount at time of vent is '..table.getn(self:GetPlatoonUnits()))
                     RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
                     coroutine.yield(20)
                     return
                 end
             end
             if self.MovementLayer == 'Land' and RUtils.PositionOnWater(acu.Position[1], acu.Position[3]) then
-                --self:LogDebug(string.format('Request to vent platoon just to acu in water'))
+                --LOG('PlatoonCount at time of vent is '..table.getn(self:GetPlatoonUnits()))
+                self:LogDebug(string.format('Request to vent platoon just to acu in water'))
                 RUtils.VentToPlatoon(self, aiBrain, 'LandAssaultBehavior')
                 coroutine.yield(20)
                 return
             end
             if acu.Position and NavUtils.CanPathTo(self.MovementLayer, self.Pos, acu.Position) then
+                --LOG('ACU Support is navigating to acu')
                 local rx = self.Pos[1] - acu.Position[1]
                 local rz = self.Pos[3] - acu.Position[3]
                 local acuDistance = rx * rx + rz * rz
+                --LOG('ACU Support acu distance is '..tostring(acuDistance))
                 if acuDistance > 14400 then
                     self.BuilderData = {
                         Position = acu.Position,
@@ -337,6 +350,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
+            --LOG('ACU Support is supporting ACU')
             local aiBrain = self:GetBrain()
             local acuUnit = aiBrain.CDRUnit
             local platUnits=GetPlatoonUnits(self)
@@ -393,7 +407,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 --RNGLOG('Target distance is '..VDist2Sq(targetPosition[1], targetPosition[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3]))
                 if targetDistance < math.max(targetRange, 1225) and targetRange <= 2500 then
                     if not NavUtils.CanPathTo(self.MovementLayer, self.Pos, targetPosition) then 
-                        --self:LogDebug(string.format('Request to vent platoon as we cant path to them'))
+                        self:LogDebug(string.format('Request to vent platoon as we cant path to them'))
+                        --LOG('PlatoonCount at time of vent is '..table.getn(self:GetPlatoonUnits()))
                         RUtils.VentToPlatoon(self, aiBrain, 'LandAssaultBehavior')
                         coroutine.yield(20)
                         return
@@ -595,6 +610,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 end
                 --RNGLOG('Target kite has completed')
             end
+            --LOG('ACU Support is exiting supporting ACU')
             coroutine.yield(30)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -608,6 +624,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
+            --LOG('ACU Support ranged combat loop')
             local aiBrain = self:GetBrain()
             local units=GetPlatoonUnits(self)
             if not aiBrain.BrainIntel.SuicideModeActive then
@@ -684,6 +701,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         --- The platoon retreats from a threat
         ---@param self AIPlatoonACUSupportBehavior
         Main = function(self)
+            --LOG('ACU Support is retreating')
             local aiBrain = self:GetBrain()
             local location = false
             local avoidTargetPos
@@ -764,6 +782,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 --LOG('No self.BuilderData.Position in retreat')
             end
             self.dest = self.BuilderData.Position
+            --LOG('ACU Support is exiting retreating back to navigating')
             self:ChangeState(self.Navigating)
             return
         end,
@@ -877,6 +896,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         --- The platoon retreats from a threat
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
+            --LOG('ACU Support is navigating')
             local aiBrain = self:GetBrain()
             local platoonUnits = GetPlatoonUnits(self)
             local pathmaxdist=0
@@ -886,6 +906,9 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             if not self.path and self.BuilderData.Position and self.BuilderData.CutOff then
                 local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.BuilderData.Position, 1, 150,80)
                 self.path = path
+                if not path then
+                    --LOG('No path due to '..tostring(reason))
+                end
             end
             if not self.path then
                 --self:LogDebug(string.format('platoon is going to use transport'))
