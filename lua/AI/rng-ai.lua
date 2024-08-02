@@ -1319,7 +1319,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
-   --LOGDataThreadRNG = function(self)
+   LOGDataThreadRNG = function(self)
         coroutine.yield(50)
         
         coroutine.yield(300)
