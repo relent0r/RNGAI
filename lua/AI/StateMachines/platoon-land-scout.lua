@@ -135,6 +135,10 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                 else
                     WARN('Scout has been asked to support something but the data is nil')
                 end
+                if not supportPos[1] then
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
                 local px = supportPos[1] - scoutPos[1]
                 local pz = supportPos[3] - scoutPos[3]
                 local dist = px * px + pz * pz

@@ -509,10 +509,9 @@ IntelManager = Class {
                                 end
                             end
                         elseif zone.TeamValue < 0.8 or zone.TeamValue > 1.2 then
+                            --LOG('Zone is less than 0.8 or more than 1.2')
                             for _, resValue in ipairs(labelResourceValue[zone.Label] or {}) do
                                 if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive then
-                                    --LOG('Already have an active factory manager on lagbel '..tostring(zone.Label))
-                                    --LOG('Location is '..tostring(zoneSet[resValue.ZoneID].pos[1])..' : '..tostring(zoneSet[resValue.ZoneID].pos[3]))
                                     higherValueExists = true
                                     break
                                 end
@@ -1454,7 +1453,7 @@ IntelManager = Class {
         local startTime = GetGameTimeSeconds()
         while not cancelSpam do
             coroutine.yield(50)
-            if GetGameTimeSeconds() - startTime > 300 then
+            if GetGameTimeSeconds() - startTime > 360 then
                 cancelSpam = true
             end
         end
@@ -2759,23 +2758,25 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
             for _, expansion in im.ZoneExpansions.Pathable do
                 local skipPos = false
                 local expLabel, reason = NavUtils.GetLabel('Land', expansion.Position)
+                --LOG('Pre Distance check expansion has '..tostring(aiBrain.Zones.Land.zones[expansion.ZoneID].resourcevalue)..' mass points')
                 if expLabel == label then
                     local expansionDistance = VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3])
+                    --LOG('Expansion distance is '..tostring(expansionDistance)..' max allowed distance is '..tostring(radius * radius))
                     if expansionDistance < radius * radius then
-                        --RNGLOG('Expansion Zone is within radius')
+                        --LOG('Expansion Zone is within radius '..tostring(expansion.ZoneID))
                         if type == 'acu' or VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]) < (VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]) + 900) then
                             local zone = aiBrain.Zones.Land.zones[expansion.ZoneID]
-                            --RNGLOG('Expansion has '..expansion.MassPoints..' mass points')
-                            --RNGLOG('Expansion is '..expansion.Name..' at '..repr(expansion.Position))
+                            --LOG('Expansion has '..zone.resourcevalue..' mass points')
+                            --LOG('Expansion is '..expansion.ZoneID..' at '..tostring(repr(expansion.Position)))
                             local extractorCount = zone.resourcevalue
                             if extractorCount > 1 then
                                 -- Lets ponder this a bit more, the acu is strong, but I don't want him to waste half his hp on civilian PD's
                                 if type == 'acu' and GetThreatAtPosition( aiBrain, expansion.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 5 then
-                                    --RNGLOG('Threat at location too high for easy building')
+                                    --LOG('Threat at location too high for easy building')
                                     continue
                                 end
                                 if type == 'acu' and GetNumUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, expansion.Position, 30, 'Ally') >= (extractorCount / 2) then
-                                    --RNGLOG('ACU Location has enough masspoints to indicate its already taken')
+                                    --LOG('ACU Location has enough masspoints to indicate its already taken')
                                     continue
                                 end
                                 RNGINSERT(options, {Expansion = expansion, Value = extractorCount * extractorCount, Key = zone.id, Distance = expansionDistance})
@@ -2794,10 +2795,10 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
         
         for k, withinRadius in options do
             if mainBaseToCenter > VDist2Sq(withinRadius.Expansion.Position[1], withinRadius.Expansion.Position[3], centerPoint[1], centerPoint[3]) then
-                --RNGLOG('Expansion has high mass value at location '..withinRadius.Expansion.Name..' at position '..repr(withinRadius.Expansion.Position))
+                --LOG('Expansion has high mass value at location '..withinRadius.Expansion.Name..' at position '..repr(withinRadius.Expansion.Position))
                 RNGINSERT(bestExpansions, withinRadius)
             else
-                --RNGLOG('Expansion is behind the main base , position '..repr(withinRadius.Expansion.Position))
+                --LOG('Expansion is behind the main base , position '..repr(withinRadius.Expansion.Position))
             end
         end
     else
@@ -2814,7 +2815,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                     local alreadySecure = false
                     for k, b in aiBrain.BuilderManagers do
                         if b.Zone == v.Key and not table.empty(aiBrain.BuilderManagers[k].FactoryManager.FactoryList) then
-                           --RNGLOG('Already a builder manager with factory present, set')
+                           --LOG('Already a builder manager with factory present, set')
                             alreadySecure = true
                             break
                         end
@@ -2833,7 +2834,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
             end
             if aiBrain.BrainIntel.AllyCount < 2 and secondBestOption and bestOption then
                 local acuOptions = { bestOption, secondBestOption }
-               --RNGLOG('ACU is having a random expansion returned')
+                --LOG('ACU is having a random expansion returned')
                 return acuOptions[Random(1,2)]
             end
            --RNGLOG('ACU is having the best expansion returned')

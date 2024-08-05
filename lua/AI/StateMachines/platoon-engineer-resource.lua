@@ -293,16 +293,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     --self:LogDebug(string.format('Can we path to it '..tostring(result)))
                 end 
             end
-            if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 300 * 300
+            if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 350 * 350
             and eng.PlatoonHandle and not EntityCategoryContains(categories.COMMAND, eng) then
-                -- If we can't path to our destination, we need, rather than want, transports
-                local needTransports = not result and reason ~= 'PathOK'
-                if VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 350 * 350 then
-                    needTransports = true
-                end
-                if needTransports and reason == 'Unpathable' then
-                    --self:LogDebug(string.format('We need a transport'))
-                end
 
                 -- Skip the last move... we want to return and do a build
                eng.WaitingForTransport = true
@@ -453,6 +445,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                 if not eng:IsUnitState('Reclaiming') then
                                     brokenPathMovement = RUtils.PerformEngReclaim(aiBrain, eng, 5)
                                     reclaimed = true
+                                    if IsDestroyed(eng) then
+                                        return
+                                    end
                                 end
                             end
                         end

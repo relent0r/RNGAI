@@ -548,9 +548,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 [1] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
-                            arty=15,
+                            scout=10,
+                            tank=75,
+                            arty=10,
                             aa=12,
                             total=0
                         },
@@ -614,9 +614,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 [2] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
-                            arty=15,
+                            scout=10,
+                            tank=75,
+                            arty=10,
                             aa=12,
                             total=0
                         },
@@ -679,9 +679,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 [3] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
-                            arty=15,
+                            scout=10,
+                            tank=75,
+                            arty=10,
                             aa=12,
                             total=0
                         },
@@ -745,9 +745,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 [4] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
-                            arty=15,
+                            scout=10,
+                            tank=75,
+                            arty=10,
                             aa=12,
                             total=0
                         },
@@ -808,9 +808,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 [5] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
-                            arty=15,
+                            scout=10,
+                            tank=75,
+                            arty=10,
                             aa=12,
                             total=0
                         },
@@ -3774,14 +3774,6 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         local gameTime = GetGameTimeSeconds()
         --RNGLOG('gameTime is '..gameTime..' Upgrade Mode is '..self.UpgradeMode)
-        if self.earlyFlag and gameTime < (360 / multiplier) then
-            self.amanager.Ratios[factionIndex].Land.T1.arty = 0
-            self.amanager.Ratios[factionIndex].Land.T1.aa = 0
-        elseif self.earlyFlag then
-            self.amanager.Ratios[factionIndex].Land.T1.arty = 15
-            self.amanager.Ratios[factionIndex].Land.T1.aa = 12
-            self.earlyFlag = false
-        end
         if self.BrainIntel.SelfThreat.AirNow < (self.EnemyIntel.EnemyThreatCurrent.Air / self.EnemyIntel.EnemyCount) then
             --RNGLOG('Less than enemy air threat, increase mobile aa numbers')
             self.amanager.Ratios[factionIndex].Land.T1.aa = 30

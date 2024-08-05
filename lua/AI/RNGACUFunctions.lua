@@ -1004,6 +1004,50 @@ function PerformACUReclaim(aiBrain, cdr, minimumReclaim, nextWaypoint)
     end
 end
 
+function IdentifyACUEnhancement(aiBrain, enhancementTable, gameTime)
+    local bestEnhancement = nil
+    local bestScore
+    local massIncome = aiBrain.EconomyOverTimeCurrent.MassIncome
+    local energyIncome = aiBrain.EconomyOverTimeCurrent.EnergyIncome
+
+    for name, enhancement in pairs(enhancementTable) do
+        if type(enhancement) == "table" and enhancement.BuildCostEnergy then
+            local isCombatType = enhancement.NewRoF or enhancement.NewMaxRadius
+            local isEngineeringType = enhancement.NewBuildRate or enhancement.NewHealth or enhancement.NewRegenRate
+            local isCombatPriority = gameTime <= 1500 and isCombatType  -- First 25 minutes prioritize combat
+
+            if isCombatPriority or isEngineeringType then
+                -- Calculate the score of the enhancement based on desired criteria
+                local score = 0
+                if isCombatType then
+                    score = score + (enhancement.NewRoF or 0) * 10
+                    score = score + (enhancement.NewMaxRadius or 0) * 5
+                end
+                if isEngineeringType then
+                    score = score + (enhancement.NewBuildRate or 0) * 2
+                    score = score + (enhancement.NewHealth or 0) * 1
+                    score = score + (enhancement.NewRegenRate or 0) * 3
+                end
+
+                -- Penalize score based on build cost relative to income
+                local massCost = enhancement.BuildCostMass or 0
+                local energyCost = enhancement.BuildCostEnergy or 0
+                local massPenalty = massCost / massIncome
+                local energyPenalty = energyCost / energyIncome
+                score = score - massPenalty - energyPenalty
+
+                -- Check if this enhancement has a better score
+                if not bestScore or score > bestScore then
+                    bestScore = score
+                    bestEnhancement = name
+                end
+            end
+        end
+    end
+
+    return bestEnhancement
+end
+
 -- debug stuff
 
 function drawRect(aiBrain, cdr)

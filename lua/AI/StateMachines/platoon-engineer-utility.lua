@@ -375,16 +375,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     --self:LogDebug(string.format('Can we path to it '..tostring(result)))
                 end 
             end
-            if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 300 * 300
+            if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 350 * 350
             and eng.PlatoonHandle and not EntityCategoryContains(categories.COMMAND, eng) then
-                -- If we can't path to our destination, we need, rather than want, transports
-                local needTransports = not result and reason ~= 'PathOK'
-                if VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 350 * 350 then
-                    needTransports = true
-                end
-                if needTransports then
-                    --self:LogDebug(string.format('We need a transport'))
-                end
 
                 -- Skip the last move... we want to return and do a build
                eng.WaitingForTransport = true
@@ -399,7 +391,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 elseif VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 512 * 512 then
                     -- If over 512 and no transports dont try and walk!
                     --self:LogDebug(string.format('No transport available and distance is greater than 512, decide what to do'))
-                    coroutine.yield(10)
+                    coroutine.yield(20)
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
@@ -1271,7 +1263,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local eng = self.eng
             local aiBrain = self:GetBrain()
 
-            while not IsDestroyed(eng) and ((0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving"))) do
+            while not IsDestroyed(eng) and (eng.GetCommandQueue and (0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving"))) do
                 coroutine.yield(1)
                 local platPos = self:GetPlatoonPosition()
                 if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then

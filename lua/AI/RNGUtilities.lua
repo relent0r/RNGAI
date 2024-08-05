@@ -4197,11 +4197,11 @@ function PerformEngReclaim(aiBrain, eng, minimumReclaim)
             end
         end
         if RNGGETN(closeReclaim) > 0 then
-            --RNGLOG('Close Reclaim, attempting to clear and reclaim')
             IssueClearCommands({eng})
             for _, rec in closeReclaim do
                 IssueReclaim({eng}, rec)
             end
+            coroutine.yield(20)
             reclaimed = true
         end
     end
