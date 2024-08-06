@@ -1004,47 +1004,96 @@ function PerformACUReclaim(aiBrain, cdr, minimumReclaim, nextWaypoint)
     end
 end
 
-function IdentifyACUEnhancement(aiBrain, enhancementTable, gameTime)
+-- Function to select the best enhancement based on criteria
+function IdentifyACUEnhancement(aiBrain, unit, enhancementTable, gameTime)
     local bestEnhancement = nil
     local bestScore
-    local massIncome = aiBrain.EconomyOverTimeCurrent.MassIncome
-    local energyIncome = aiBrain.EconomyOverTimeCurrent.EnergyIncome
+    local massIncome = aiBrain.EconomyOverTimeCurrent.MassIncome * 10 or 1
+    local energyIncome = aiBrain.EconomyOverTimeCurrent.EnergyIncome * 10 or 1
+    local buildRate = unit.Blueprint.Economy.BuildRate or 10
+    local unitEnhancements = import('/lua/enhancementcommon.lua').GetEnhancements(unit.EntityId)
+    LOG('Identify enhancement massIncome '..tostring(massIncome)..' energyIncome '..tostring(energyIncome)..' build rate '..tostring(buildRate))
 
     for name, enhancement in pairs(enhancementTable) do
         if type(enhancement) == "table" and enhancement.BuildCostEnergy then
-            local isCombatType = enhancement.NewRoF or enhancement.NewMaxRadius
-            local isEngineeringType = enhancement.NewBuildRate or enhancement.NewHealth or enhancement.NewRegenRate
-            local isCombatPriority = gameTime <= 1500 and isCombatType  -- First 25 minutes prioritize combat
+            -- Check if the unit already has this enhancement
+            if not unit:HasEnhancement(name) then
+                local isCombatType = enhancement.NewRoF or enhancement.NewMaxRadius or enhancement.NewRateOfFire or enhancement.NewRadius or enhancement.NewDamage or enhancement.DamageMod
+                local isEngineeringType = enhancement.NewBuildRate or enhancement.NewHealth or enhancement.NewRegenRate
+                local isCombatPriority = gameTime <= 1500
 
-            if isCombatPriority or isEngineeringType then
-                -- Calculate the score of the enhancement based on desired criteria
-                local score = 0
-                if isCombatType then
-                    score = score + (enhancement.NewRoF or 0) * 10
-                    score = score + (enhancement.NewMaxRadius or 0) * 5
-                end
-                if isEngineeringType then
-                    score = score + (enhancement.NewBuildRate or 0) * 2
-                    score = score + (enhancement.NewHealth or 0) * 1
-                    score = score + (enhancement.NewRegenRate or 0) * 3
-                end
+                -- Only consider combat enhancements during the first 25 minutes
+                if (isCombatPriority and isCombatType) or (not isCombatPriority and isEngineeringType) then
+                    -- Validate prerequisites
+                    local prerequisite = enhancement.Prerequisite
+                    if unitEnhancements[enhancement.Slot] then
+                        local currentSlotEnhancement = unitEnhancements[enhancement.Slot]
+                        LOG('CurrentSlotEnhancement '..tostring(currentSlotEnhancement))
+                        if enhancementTable[currentSlotEnhancement].Prerequisite == name then
+                            LOG('We already have the thing that '..tostring(name)..' builds up to so we dont need it')
+                            continue
+                        end
+                    end
+                    if not prerequisite or unit:HasEnhancement(prerequisite) then
+                        local score = 0
+                        if isCombatType then
+                            score = score + ( enhancement.NewRoF or enhancement.NewRateOfFire or 0 ) * 10
+                            score = score + ( enhancement.NewMaxRadius or enhancement.NewRadius or 0 ) * 5
+                            score = score + ( enhancement.NewDamage or enhancement.DamageMod or 0 ) * 5
+                        end
+                        if isEngineeringType then
+                            score = score + (enhancement.NewBuildRate or 0) * 2
+                            score = score + (enhancement.NewHealth or 0) * 1
+                            score = score + (enhancement.NewRegenRate or 0) * 3
+                        end
 
-                -- Penalize score based on build cost relative to income
-                local massCost = enhancement.BuildCostMass or 0
-                local energyCost = enhancement.BuildCostEnergy or 0
-                local massPenalty = massCost / massIncome
-                local energyPenalty = energyCost / energyIncome
-                score = score - massPenalty - energyPenalty
+                        -- Penalize score based on build cost relative to income
+                        local massCost = enhancement.BuildCostMass or 0
+                        local energyCost = enhancement.BuildCostEnergy or 0
+                        local buildTime = enhancement.BuildTime or 1
 
-                -- Check if this enhancement has a better score
-                if not bestScore or score > bestScore then
-                    bestScore = score
-                    bestEnhancement = name
+                        local massBuildConsumption = massCost / buildTime * buildRate
+                        local energyBuildConsumption = energyCost / buildTime * buildRate
+                        local massPenalty = massBuildConsumption / massIncome
+                        local energyPenalty = energyBuildConsumption / energyIncome
+                        score = score - massPenalty - energyPenalty
+                        LOG('Check enhancement '..tostring(name)..' current score is '..tostring(score))
+
+                        -- Check if this enhancement has a better score
+                        if not bestScore or score > bestScore then
+                            bestScore = score
+                            bestEnhancement = name
+                        end
+                    else
+                        if enhancementTable[prerequisite] and not unit:HasEnhancement(prerequisite) then
+                            -- Check if the prerequisite enhancement should be selected
+                            local prereqEnhancement = enhancementTable[prerequisite]
+                            local prereqScore = 0
+
+                            -- Penalize score based on build cost relative to income
+                            local prereqMassCost = prereqEnhancement.BuildCostMass or 0
+                            local prereqEnergyCost = prereqEnhancement.BuildCostEnergy or 0
+                            local prereqBuildTime = prereqEnhancement.BuildTime or 1
+
+                            local prereqMassBuildConsumption = prereqMassCost / prereqBuildTime * buildRate
+                            local prereqEnergyBuildConsumption = prereqEnergyCost / prereqBuildTime * buildRate
+                            local prereqMassPenalty = prereqMassBuildConsumption / massIncome
+                            local prereqEnergyPenalty = prereqEnergyBuildConsumption / energyIncome
+                            prereqScore = prereqScore - prereqMassPenalty - prereqEnergyPenalty
+                            LOG('Check enhancement prereq '..tostring(name)..' current prereqScore is '..tostring(prereqScore))
+
+                            -- Check if this prerequisite enhancement has a better score
+                            if prereqScore > bestScore then
+                                bestScore = prereqScore
+                                bestEnhancement = prerequisite
+                            end
+                        end
+                    end
                 end
             end
         end
     end
-
+    LOG('Enhancement being returned is '..tostring(bestEnhancement))
     return bestEnhancement
 end
 

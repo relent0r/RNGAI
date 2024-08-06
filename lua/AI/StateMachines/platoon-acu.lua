@@ -1750,8 +1750,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     }
                     local ACUUpgradeList = ACUEnhancements[cdr.Blueprint.BlueprintId][upgradeMode]
                     if not ACUUpgradeList and cdr.Blueprint.Enhancements then
-                        LOG('There is no enhancement table for this unit, search for a new one')
-                        foundEnhancement = ACUFunc.IdentifyACUEnhancement(brain, cdr.Blueprint.Enhancements, gameTime)
+                        LOG('There is no enhancement table for this unit, search for a new one, unit id is '..cdr.UnitId)
+                        foundEnhancement = ACUFunc.IdentifyACUEnhancement(brain, cdr, cdr.Blueprint.Enhancements, gameTime)
                     end
                     local NextEnhancement = false
                     local HaveEcoForEnhancement = false
@@ -1780,7 +1780,13 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                         end
+                    elseif NextEnhancement then
+                        local wantedEnhancementBP = cdr.Blueprint.Enhancements[NextEnhancement]
+                        if ACUFunc.EnhancementEcoCheckRNG(brain, cdr, wantedEnhancementBP, NextEnhancement) or (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) then
+                            HaveEcoForEnhancement = true
+                        end
                     end
+
                     if NextEnhancement and HaveEcoForEnhancement then
                         local priorityUpgrades = {
                             'HeavyAntiMatterCannon',
