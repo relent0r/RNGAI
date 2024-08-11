@@ -1781,65 +1781,6 @@ IntelManager = Class {
                     end
                 end
             end
-        elseif productiontype == 'DefensiveAntiSurface' then
-            local defensiveUnitsFound = false
-            local defensiveUnitThreat = 0
-            if not RNGTableEmpty(aiBrain.EnemyIntel.DirectorData.Defense) then
-                for k, v in aiBrain.EnemyIntel.DirectorData.Defense do
-                    if v.Object and not v.Object.Dead then
-                        --RNGLOG('Found Defensive unit in directordata defense table '..v.Object.UnitId)
-                        --RNGLOG('Table entry '..repr(v))
-                        --RNGLOG('Land threat at position '..aiBrain:GetThreatAtPosition(v.IMAP, 0, true, 'Land'))
-                        --RNGLOG('AntiSurface threat at position '..aiBrain:GetThreatAtPosition(v.IMAP, 0, true, 'AntiSurface'))
-                        if v.AntiSurface > 0 then
-                            local gridXID, gridZID = self:GetIntelGrid(v.IMAP)
-                            self.MapIntelGrid[gridXID][gridZID].DefenseThreat = self.MapIntelGrid[gridXID][gridZID].DefenseThreat + v.AntiSurface
-                            if not self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked then
-                                if NavUtils.CanPathTo('Land', aiBrain.BuilderManagers['MAIN'].Position, self.MapIntelGrid[gridXID][gridZID].Position) then
-                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked = true
-                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.Land = true
-                                elseif NavUtils.CanPathTo('Amphibious', aiBrain.BuilderManagers['MAIN'].Position, self.MapIntelGrid[gridXID][gridZID].Position) then
-                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked = true
-                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.Amphibious = true
-                                else
-                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked = true
-                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.NoGraph = true
-                                end
-                            end
-                            if self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked and self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.Land 
-                                and (not v.Object.Blueprint.CategoriesHash.SHIELD) then
-                                defensiveUnitsFound = true
-                                defensiveUnitThreat = defensiveUnitThreat + v.AntiSurface
-                            end
-                        end
-                    end
-                    if defensiveUnitThreat > 80 then
-                        break
-                    end
-                end
-            end
-            if defensiveUnitsFound and defensiveUnitThreat > 0 then
-                local numberRequired = math.min(math.ceil(defensiveUnitThreat / 8), 16)
-                if aiBrain.amanager.Demand.Bases['MAIN'].Land.T2.mml < numberRequired then
-                    aiBrain.amanager.Demand.Bases['MAIN'].Land.T2.mml = numberRequired
-                    --RNGLOG('Directordata Increasing mml production count by '..numberRequired)
-                end
-                --[[
-                -- need to figure out how to get t3 arty to fire correctly
-                if aiBrain.amanager.Demand.Land.T3.arty < numberRequired / 2 then
-                    aiBrain.amanager.Demand.Land.T3.arty = numberRequired / 2
-                    --RNGLOG('Directordata Increasing mml production count by '..numberRequired)
-                end]]
-                aiBrain.amanager.Ratios[factionIndex]['Land']['T1']['arty'] = 20
-            end
-
-            if not defensiveUnitsFound then
-                aiBrain.amanager.Demand.Bases['MAIN'].Land.T2.mml = 0
-                aiBrain.amanager.Demand.Bases['MAIN'].Land.T3.arty = 0
-                aiBrain.amanager.Ratios[factionIndex]['Land']['T1']['arty'] = 5
-            end
-            --RNGLOG('Directordata current mml production count '..aiBrain.amanager.Demand.Land.T2.mml)
-            
         elseif productiontype == 'LandAntiSurface' then
             for k, v in aiBrain.EnemyIntel.ACU do
                 --if v.Position[1] then
@@ -2361,16 +2302,16 @@ IntelManager = Class {
                             if indirectFireCount > 0 then
                                 if v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH1) > 0 then
                                     --LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T1 artillery for base '..tostring(k))
-                                    aiBrain.amanager.Demand.Bases[k].Land.T1.arty= indirectFireCount
+                                    aiBrain.amanager.Demand.Bases[k].Land.T1.arty= math.ceil(indirectFireCount * 1.5)
                                 end
                                 if v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH2) > 0 then
                                     --LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T2 mml for base '..tostring(k))
-                                    aiBrain.amanager.Demand.Bases[k].Land.T2.mml = indirectFireCount
+                                    aiBrain.amanager.Demand.Bases[k].Land.T2.mml = math.ceil(indirectFireCount * 1.3)
                                 end
                                 if v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH3) > 0 then
                                     --LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T3 artillery for base '..tostring(k))
                                     aiBrain.amanager.Demand.Bases[k].Land.T3.arty = indirectFireCount
-                                    aiBrain.amanager.Demand.Bases[k].Land.T3.mml = indirectFireCount
+                                    aiBrain.amanager.Demand.Bases[k].Land.T3.mml = math.ceil(indirectFireCount * 1.3)
                                 end
                             end
                         end
@@ -3416,6 +3357,8 @@ LastKnownThread = function(aiBrain)
                                         end
                                     elseif unitCat.RADAR then
                                         im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='radar'
+                                    elseif unitCat.DEFENSE and unitCat.DIRECTFIRE then
+                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='pointdefense'
                                     elseif unitCat.TACTICALMISSILEPLATFORM then
                                         im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='tml'
                                         if not aiBrain.EnemyIntel.TML[id] then
@@ -3559,7 +3502,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                             unitAddedCount = unitAddedCount + 1
                             aiBrain.prioritypoints[c..i..k]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object,time=b.time}
                             if im.MapIntelGrid[i][k].DistanceToMain < baseRestrictedArea or priority > 250 then
-                                if b.type == 'tank' or b.type == 'arty' or b.type == 'exp' then
+                                if b.type == 'arty' or b.type == 'exp' or b.type == 'pointdefense' then
                                     priority = priority + 100
                                 end
                                 aiBrain.prioritypointshighvalue[c..i..k]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object,time=b.time}

@@ -1682,7 +1682,7 @@ function PlayerRoleCheck(aiBrain, locationType, unitCount, unitCategory, checkTy
         if factoryManager.LocationActive then
             local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
             if  numUnits >= unitCount then
-                RNGLOG('We are spam player and have hit air factory limit')
+                --RNGLOG('We are spam player and have hit air factory limit')
                 return false
             end
         end

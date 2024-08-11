@@ -49,6 +49,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local brain = self:GetBrain()
             self.cdr = self:GetPlatoonUnits()[1]
             self.cdr.Active = true
+            self.CheckEarlyLandFactory = false
             if self.PlatoonData.LocationType then
                 self.LocationType = self.PlatoonData.LocationType
             else
@@ -62,6 +63,17 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
                 self:ChangeState(self.EngineerTask)
                 return
+            end
+            local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+            local EnemyIndex = brain:GetCurrentEnemy():GetArmyIndex()
+            local OwnIndex = brain:GetArmyIndex()
+            if brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                LOG('We can path to the enemy')
+                LOG('PlayableArea = '..tostring(repr(playableArea)))
+                if playableArea[3] and playableArea[3] <= 512 or playableArea[4] and playableArea[4] <= 512 then
+                    LOG('10km or less land map, check if we can get more factories')
+                    self.CheckEarlyLandFactory = true
+                end
             end
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -103,6 +115,84 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
             elseif cdr.EnemyAirPresent then
                 cdr.EnemyAirPresent = false
+            end
+            if self.CheckEarlyLandFactory then
+                self.CheckEarlyLandFactory = false
+                if brain.BrainIntel.SpamPlayer and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < 6400 and not cdr.Caution and cdr.CurrentEnemyThreat < 25 then
+                    local numUnits = brain:GetCurrentUnits(categories.FACTORY * categories.LAND)
+                    if numUnits < 4 and brain:GetEconomyStored('MASS') > 240 and brain:GetEconomyStored('ENERGY') > 1000 then
+                        local factionIndex = ACUFunc.GetEngineerFactionIndexRNG(cdr)
+                        local templateKey
+                        local baseTmplFile
+                        if factionIndex < 5 then
+                            templateKey = 'ACUBaseTemplate'
+                            baseTmplFile = import('/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua' or '/lua/BaseTemplates.lua')
+                        else
+                            templateKey = 'BaseTemplates'
+                            baseTmplFile = import('/lua/BaseTemplates.lua')
+                        end
+                        local buildingTmplFile = import(self.BuilderData.Construction.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
+                        local buildingTmpl = buildingTmplFile[('BuildingTemplates')][factionIndex]
+                        local location, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(brain, buildingTmpl, baseTmplFile[templateKey][factionIndex], 'T1LandFactory', cdr, false, nil, nil, true)
+                        local newEntry = {whatToBuild, location, false, Position=location}
+                        cdr.EngineerBuildQueue = {}
+                        RNGINSERT(cdr.EngineerBuildQueue, newEntry)
+                        --LOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
+                        if not table.empty(cdr.EngineerBuildQueue) then
+                            local abortBuild = false
+                            for k,v in cdr.EngineerBuildQueue do
+                                if abortBuild then
+                                    cdr.EngineerBuildQueue[k] = nil
+                                    break
+                                end
+                                while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
+                                    IssueClearCommands({cdr})
+                                    IssueMove({cdr},{v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]})
+                                    if VDist3Sq(cdr:GetPosition(),{v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]}) < 144 then
+                                        IssueClearCommands({cdr})
+                                        RUtils.EngineerTryReclaimCaptureArea(brain, cdr, v.Position, 5)
+                                        if borderWarning then
+                                            IssueBuildMobile({cdr}, {v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]}, whatToBuild, {})
+                                        else
+                                            brain:BuildStructure(cdr, whatToBuild, v.Position)
+                                        end
+                                        local failureCount = 0
+                                        while (not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr:IsUnitState('Building')) or (cdr:IsUnitState("Moving")) do
+                                            coroutine.yield(10)
+                                            if failureCount < 5 and brain:GetEconomyStored('MASS') == 0 and brain:GetEconomyTrend('MASS') == 0 then
+                                                if not cdr:IsPaused() then
+                                                    failureCount = failureCount + 1
+                                                    cdr:SetPaused( true )
+                                                    coroutine.yield(7)
+                                                end
+                                            elseif cdr:IsPaused() then
+                                                cdr:SetPaused( false )
+                                            end
+                                            if cdr.Caution then
+                                                ----self:LogDebug(string.format('cdr.Caution while building expansion'))
+                                                self:ChangeState(self.DecideWhatToDo)
+                                                return
+                                            end
+                                            if cdr.EnemyCDRPresent and cdr.UnitBeingBuilt then
+                                                if GetNumUnitsAroundPoint(brain, categories.COMMAND, cdr.Position, 25, 'Enemy') > 0 and cdr.UnitBeingBuilt:GetFractionComplete() < 0.5 then
+                                                    abortBuild = true
+                                                    cdr.EngineerBuildQueue[k] = nil
+                                                    break
+                                                end
+                                            end
+                                        end
+                                        cdr.EngineerBuildQueue[k] = nil
+                                        break
+                                    end
+                                    coroutine.yield(10)
+                                end
+                            end
+                        end
+                        self:LogDebug(string.format('We are at base and want to perform an engineering task'))
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
+                end
             end
             if self.BuilderData.Expansion then
                 if self.BuilderData.ExpansionBuilt then
@@ -1336,7 +1426,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             --RNGLOG('No platoon found, trying for base')
             local closestBase
             local closestBaseDistance
-            if cdr.Phase > 2 and brain.EnemyIntel.Phase > 2 then
+            if cdr.Phase > 2 or brain.EnemyIntel.Phase > 2 then
                 closestBase = 'MAIN'
             end
             if not closestBase and brain.BuilderManagers then
@@ -1827,6 +1917,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         local enhancementPaused = false
                         local lastTick
                         local lastProgress
+                        if cdr.SuicideMode then
+                            cdr.SuicideMode = false
+                        end
                         while not cdr.Dead and not cdr:HasEnhancement(NextEnhancement) do
                             -- note eta will be in ticks not seconds
                             local eta = -1
@@ -1869,7 +1962,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         ----self:LogDebug(string.format('Enhancement should be completed '))
                         for _, v in priorityUpgrades do
                             if NextEnhancement == v then
-                                if not ACUFunc.CDRGunCheck(brain, cdr) then
+                                if ACUFunc.CDRGunCheck(cdr) then
                                     cdr.GunUpgradeRequired = false
                                     cdr.GunUpgradePresent = true
                                 end

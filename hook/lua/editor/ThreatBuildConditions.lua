@@ -5,10 +5,9 @@
         Threat Build Conditions
 ]]
 local MAPBASEPOSTITIONSRNG = {}
-local AIUtils = import('/lua/ai/AIUtilities.lua')
-local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
+local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 
 function EnemyThreatGreaterThanValueAtBaseRNG(aiBrain, locationType, threatValue, threatType, rings, builder)
     local testRings = rings or 10
@@ -55,12 +54,16 @@ function EnemyThreatGreaterThanAI(aiBrain, threatType)
     return false
 end
 
-function EnemyACUCloseToBase(aiBrain)
+function ThreatCloseToBase(aiBrain)
 
     if aiBrain.EnemyIntel.ACUEnemyClose then
         return true
-    else
-        return false
+    end
+    local manager = aiBrain.BuilderManagers['MAIN']
+    if manager.FactoryManager.Location then
+        if RUtils.DefensiveClusterCheck(aiBrain, manager.FactoryManager.Location) then
+            return true
+        end
     end
     return false
 end

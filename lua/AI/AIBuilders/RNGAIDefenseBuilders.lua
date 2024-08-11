@@ -220,14 +220,14 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T2 Defence Engineer ACUClose Artillery',
+        BuilderName = 'RNGAI T2 Defence Engineer Threat Artillery',
         PlatoonTemplate = 'EngineerStateT23RNG',
-        Priority = 800,
+        Priority = 960,
         InstanceCount = 1,
         BuilderType = 'Any',
         BuilderConditions = {
-            { TBC, 'EnemyACUCloseToBase', {}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
+            { TBC, 'ThreatCloseToBase', {}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 0.9 }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.TECH2 * categories.ARTILLERY}},
         },
         BuilderData = {
@@ -235,9 +235,15 @@ BuilderGroup {
             JobType = 'BuildStructure',
             NumAssistees = 5,
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
+                BaseTemplate = 'DefenseTemplate',
+                DesiresAssist = true,
+                NumAssistees = 4,
                 BuildClose = false,
                 maxUnits = 1,
                 maxRadius = 35,
+                NoPause = true,
+                OrderedTemplate = true,
                 NearDefensivePoints = true,
                 Type = 'Land',
                 Tier = 1,
@@ -701,7 +707,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
             { UCBC, 'DefensiveClusterCloseRNG', {'LocationType'}},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.STRUCTURE * categories.TECH2 * categories.ARTILLERY}},
         },

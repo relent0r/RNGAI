@@ -207,6 +207,37 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI ACU T1 Factory Builder Land T1 MainBase Storage',
+        PlatoonTemplate = 'EngineerStateT123RNG',
+        Priority = 1010,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
+            { EBC, 'GreaterThanEconStorageCurrentRNG', { 240, 1050 } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.70, 0.80 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { UCBC, 'PlayerRoleCheck', {'LocationType', 3, categories.FACTORY * categories.LAND, 'AIR' } },
+            { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
+            --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
+            --{ UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
+         },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            Construction = {
+                LocationType = 'LocationType',
+                BuildClose = true,
+                BuildStructures = {
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI ACU T1 Land Factory Lower Pri',
         PlatoonTemplate = 'CommanderDummyRNG',
         Priority = 750,

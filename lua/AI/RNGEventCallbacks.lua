@@ -34,6 +34,22 @@ function OnStopBeingCaptured(self, captor)
     end
 end
 
+function UnitEnhancementCreate(unit, enh)
+
+    if unit.Blueprint.Enhancements then
+        local enhancementBp = unit.Blueprint.Enhancements[enh]
+        local isCombatType = enhancementBp.NewRoF or enhancementBp.NewMaxRadius or enhancementBp.NewRateOfFire or enhancementBp.NewRadius 
+        or enhancementBp.NewDamage or enhancementBp.DamageMod or enhancementBp.ZephyrDamageMod
+        if isCombatType then
+            if not unit['rngdata'] then
+                unit['rngdata'] = {}
+            end
+            unit['rngdata']['HasGunUpgrade'] = true
+            --LOG('GunUpgrade is set to true '..tostring(enh))
+        end
+    end
+end
+
 function MissileCallbackRNG(unit, targetPos, impactPos)
     if unit and not unit.Dead and targetPos then
         if not unit.TargetBlackList then

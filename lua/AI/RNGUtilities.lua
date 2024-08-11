@@ -4253,13 +4253,16 @@ GenerateDefensivePointTable = function (aiBrain, baseName, range, position)
     }
     local defensivePointsT1 = DrawCirclePoints(8, range/3, position)
     local defensivePointT1Key = 1
+    if position[2] == 0 then
+        position[2] = GetTerrainHeight(position[1], position[3])
+    end
     --RNGLOG('DefensivePoints being generated')
     for _, v in defensivePointsT1 do
         if v[1] <= 15 or v[1] >= ScenarioInfo.size[1] - 15 or v[3] <= 15 or v[3] >= ScenarioInfo.size[2] - 15 then
             continue
         end
         --RNGLOG('Surface Height  '..GetSurfaceHeight(v[1], v[3])..' vs base pos height'..position[2])
-        if GetSurfaceHeight(v[1], v[3]) - 4 > position[2] then
+        if GetTerrainHeight(v[1], v[3]) - 4 > position[2] then
             --RNGLOG('SurfaceHeight of base position '..position[2]..'surface height of modified defensivepoint '..GetSurfaceHeight(v[1], v[3]))
             continue
         end
@@ -4279,7 +4282,7 @@ GenerateDefensivePointTable = function (aiBrain, baseName, range, position)
             continue
         end
         --RNGLOG('Surface Height  '..GetSurfaceHeight(v[1], v[3])..' vs base pos height'..position[2])
-        if GetSurfaceHeight(v[1], v[3]) - 4 > position[2] then
+        if GetTerrainHeight(v[1], v[3]) - 4 > position[2] then
             --RNGLOG('SurfaceHeight of base position '..position[2]..'surface height of modified defensivepoint '..GetSurfaceHeight(v[1], v[3]))
             continue
         end

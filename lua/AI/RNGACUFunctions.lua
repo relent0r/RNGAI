@@ -108,7 +108,7 @@ function CDRBrainThread(cdr)
         cdr.Position = cdr:GetPosition()
         aiBrain.ACUSupport.Position = cdr.Position
         if (not cdr.GunUpgradePresent) and aiBrain.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades > 0 and gameTime < 1500 then
-            if CDRGunCheck(aiBrain, cdr) then
+            if not CDRGunCheck(cdr) then
                 --RNGLOG('ACU Requires Gun set upgrade flag to true')
                 cdr.GunUpgradeRequired = true
             else
@@ -118,7 +118,7 @@ function CDRBrainThread(cdr)
         if aiBrain.EnemyIntel.Phase == 2 then
             cdr.Phase = 2
             if (not cdr.GunUpgradePresent) then
-                if CDRGunCheck(aiBrain, cdr) then
+                if not CDRGunCheck(cdr) then
                     --RNGLOG('Enemy is phase 2 and I dont have gun')
                     cdr.Phase = 2
                     cdr.GunUpgradeRequired = true
@@ -508,24 +508,10 @@ function CDRThreatAssessmentRNG(cdr)
     end
 end
 
-function CDRGunCheck(aiBrain, cdr)
-    local factionIndex = aiBrain:GetFactionIndex()
-    if factionIndex == 1 then
-        if not cdr:HasEnhancement('HeavyAntiMatterCannon') then
-            return true
-        end
-    elseif factionIndex == 2 then
-        if not cdr:HasEnhancement('CrysalisBeam') or not cdr:HasEnhancement('HeatSink') then
-            return true
-        end
-    elseif factionIndex == 3 then
-        if not cdr:HasEnhancement('CoolingUpgrade') then
-            return true
-        end
-    elseif factionIndex == 4 then
-        if not cdr:HasEnhancement('RateOfFire') then
-            return true
-        end
+function CDRGunCheck(cdr)
+    if cdr['rngdata']['HasGunUpgrade'] then
+        --LOG('CDR Gun check is returning true for unit '..tostring(cdr.UnitId))
+        return true
     end
     return false
 end
@@ -1012,7 +998,7 @@ function IdentifyACUEnhancement(aiBrain, unit, enhancementTable, gameTime)
     local energyIncome = aiBrain.EconomyOverTimeCurrent.EnergyIncome * 10 or 1
     local buildRate = unit.Blueprint.Economy.BuildRate or 10
     local unitEnhancements = import('/lua/enhancementcommon.lua').GetEnhancements(unit.EntityId)
-    LOG('Identify enhancement massIncome '..tostring(massIncome)..' energyIncome '..tostring(energyIncome)..' build rate '..tostring(buildRate))
+    --LOG('Identify enhancement massIncome '..tostring(massIncome)..' energyIncome '..tostring(energyIncome)..' build rate '..tostring(buildRate))
 
     for name, enhancement in pairs(enhancementTable) do
         if type(enhancement) == "table" and enhancement.BuildCostEnergy then
@@ -1028,9 +1014,9 @@ function IdentifyACUEnhancement(aiBrain, unit, enhancementTable, gameTime)
                     local prerequisite = enhancement.Prerequisite
                     if unitEnhancements[enhancement.Slot] then
                         local currentSlotEnhancement = unitEnhancements[enhancement.Slot]
-                        LOG('CurrentSlotEnhancement '..tostring(currentSlotEnhancement))
+                        --LOG('CurrentSlotEnhancement '..tostring(currentSlotEnhancement))
                         if enhancementTable[currentSlotEnhancement].Prerequisite == name then
-                            LOG('We already have the thing that '..tostring(name)..' builds up to so we dont need it')
+                            --LOG('We already have the thing that '..tostring(name)..' builds up to so we dont need it')
                             continue
                         end
                     end
@@ -1057,7 +1043,7 @@ function IdentifyACUEnhancement(aiBrain, unit, enhancementTable, gameTime)
                         local massPenalty = massBuildConsumption / massIncome
                         local energyPenalty = energyBuildConsumption / energyIncome
                         score = score - massPenalty - energyPenalty
-                        LOG('Check enhancement '..tostring(name)..' current score is '..tostring(score))
+                        --LOG('Check enhancement '..tostring(name)..' current score is '..tostring(score))
 
                         -- Check if this enhancement has a better score
                         if not bestScore or score > bestScore then
@@ -1080,7 +1066,7 @@ function IdentifyACUEnhancement(aiBrain, unit, enhancementTable, gameTime)
                             local prereqMassPenalty = prereqMassBuildConsumption / massIncome
                             local prereqEnergyPenalty = prereqEnergyBuildConsumption / energyIncome
                             prereqScore = prereqScore - prereqMassPenalty - prereqEnergyPenalty
-                            LOG('Check enhancement prereq '..tostring(name)..' current prereqScore is '..tostring(prereqScore))
+                            --LOG('Check enhancement prereq '..tostring(name)..' current prereqScore is '..tostring(prereqScore))
 
                             -- Check if this prerequisite enhancement has a better score
                             if prereqScore > bestScore then
@@ -1093,7 +1079,7 @@ function IdentifyACUEnhancement(aiBrain, unit, enhancementTable, gameTime)
             end
         end
     end
-    LOG('Enhancement being returned is '..tostring(bestEnhancement))
+    --LOG('Enhancement being returned is '..tostring(bestEnhancement))
     return bestEnhancement
 end
 
