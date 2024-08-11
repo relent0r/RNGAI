@@ -562,7 +562,8 @@ StructureManager = Class {
         if totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 then
             --LOG('Factory T1 Upgrade HQ Check passed '..self.Brain.Nickname)
             if (not self.Brain.RNGEXP and (actualMexIncome > (23 * multiplier) or self.Brain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier)) 
-            or self.Brain.RNGEXP and (actualMexIncome > (18 * multiplier) or self.Brain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier))) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 26.0 then
+            or self.Brain.RNGEXP and (actualMexIncome > (18 * multiplier) or self.Brain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier))) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 26.0 
+            or self.EnemyIntel.Phase > 1 and actualMexIncome > (18 * multiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 26.0 then
                 --LOG('Factory Upgrade actual mex income is '..actualMexIncome..' for '..self.Brain.Nickname)
                 if (self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.015 or GetEconomyStored(self.Brain, 'MASS') >= 250) and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                     --LOG('Factory Upgrade efficiency over time check passed '..self.Brain.Nickname)

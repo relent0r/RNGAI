@@ -149,11 +149,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             end
             if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 300 * 300
             and eng.PlatoonHandle and not EntityCategoryContains(categories.COMMAND, eng) then
-                -- If we can't path to our destination, we need, rather than want, transports
-                local needTransports = not result and reason ~= 'PathOK'
-                if VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 350 * 350 then
-                    needTransports = true
-                end
 
                 -- Skip the last move... we want to return and do a build
                eng.WaitingForTransport = true

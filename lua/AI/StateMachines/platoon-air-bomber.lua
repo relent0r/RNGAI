@@ -99,7 +99,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.AttackTarget)
                 return
             end
-            if not target then
+            if self.PlatoonData.Defensive and homeDist and homeDist > 25600 and self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Dead then
                 local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, nil, nil, nil, true)
                 if target then
                     --LOG('Gunship high Priority Target Found '..target.UnitId)
@@ -172,7 +172,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                     local tx = platPos[1] - targetPosition[1]
                     local tz = platPos[3] - targetPosition[3]
                     local targetDistance = tx * tx + tz * tz
-                    if targetDistance < 22500 then
+                    if targetDistance < 16900 then
                         ----self:LogDebug(string.format('Bomber AttackTarget on high priority target'))
                         self:ChangeState(self.AttackTarget)
                         return
@@ -331,7 +331,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             local platoonUnits = self:GetPlatoonUnits()
             local builderData = self.BuilderData
             local destination = builderData.Position
-            local navigateDistanceCutOff = builderData.CutOff or 3600
+            local navigateDistanceCutOff = builderData.CutOff or 6400
             local destCutOff = math.sqrt(navigateDistanceCutOff) + 10
             if not destination then
                 --LOG('no destination BuilderData '..repr(builderData))

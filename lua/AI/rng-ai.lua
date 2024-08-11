@@ -548,9 +548,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 [1] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
-                            arty=15,
+                            scout=10,
+                            tank=75,
+                            arty=10,
                             aa=12,
                             total=0
                         },
@@ -614,9 +614,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 [2] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
-                            arty=15,
+                            scout=10,
+                            tank=75,
+                            arty=10,
                             aa=12,
                             total=0
                         },
@@ -679,9 +679,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 [3] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
-                            arty=15,
+                            scout=10,
+                            tank=75,
+                            arty=10,
                             aa=12,
                             total=0
                         },
@@ -745,9 +745,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 [4] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
-                            arty=15,
+                            scout=10,
+                            tank=75,
+                            arty=10,
                             aa=12,
                             total=0
                         },
@@ -808,9 +808,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 [5] = {
                     Land = {
                         T1 = {
-                            scout=15,
-                            tank=65,
-                            arty=15,
+                            scout=10,
+                            tank=75,
+                            arty=10,
                             aa=12,
                             total=0
                         },
@@ -3317,24 +3317,10 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     ACUVisualThread = function(self, index, unit)
-        local function CDRGunCheck(aiBrain, cdr)
-            local factionIndex = aiBrain:GetFactionIndex()
-            if factionIndex == 1 then
-                if cdr:HasEnhancement('HeavyAntiMatterCannon') then
-                    return true
-                end
-            elseif factionIndex == 2 then
-                if cdr:HasEnhancement('CrysalisBeam') or cdr:HasEnhancement('HeatSink') then
-                    return true
-                end
-            elseif factionIndex == 3 then
-                if cdr:HasEnhancement('CoolingUpgrade') then
-                    return true
-                end
-            elseif factionIndex == 4 then
-                if cdr:HasEnhancement('RateOfFire') then
-                    return true
-                end
+        local function CDRGunCheck(cdr)
+            if cdr['rngdata']['HasGunUpgrade'] then
+                --LOG('CDR Gun check is returning true for unit '..tostring(cdr.UnitId))
+                return true
             end
             return false
         end
@@ -3351,7 +3337,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     acuTable[index].DistanceToBase = VDist3Sq(acuPos, self.BrainIntel.StartPos)
                     acuTable[index].HP = unit:GetHealth()
                     if not acuTable[index].Range or acuTable[index].LastSpotted + 30 < currentGameTime then
-                        if CDRGunCheck(self, unit) then
+                        if CDRGunCheck(unit) then
                             acuTable[index].Range = unit.Blueprint.Weapon[1].MaxRadius + 8
                             acuTable[index].Gun = true
                         else
@@ -3364,7 +3350,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     else
                         acuTable[index].OnField = false
                     end
-                    if acuTable[index].DistanceToBase < 19600 then
+                    if acuTable[index].DistanceToBase < 22500 then
                         self.EnemyIntel.ACUEnemyClose = true
                     else
                         self.EnemyIntel.ACUEnemyClose = false
@@ -3511,6 +3497,13 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     EnemyThreatCheckRNG = function(self, ALLBPS)
+        local function CDRGunCheck(cdr)
+            if cdr['rngdata']['HasGunUpgrade'] then
+                --LOG('CDR Gun check is returning true for unit '..tostring(cdr.UnitId))
+                return true
+            end
+            return false
+        end
         local selfIndex = self:GetArmyIndex()
         local enemyBrains = {}
         local enemyAirThreat = 0
@@ -3587,27 +3580,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     local enemyACU = GetListOfUnits( enemy, categories.COMMAND, false, false )
                     for _,v in enemyACU do
-                        local factionIndex = enemy:GetFactionIndex()
-                        if factionIndex == 1 then
-                            if v:HasEnhancement('HeavyAntiMatterCannon') then
-                                enemyACUGun = enemyACUGun + 1
-                                gunBool = true
-                            end
-                        elseif factionIndex == 2 then
-                            if v:HasEnhancement('CrysalisBeam') then
-                                enemyACUGun = enemyACUGun + 1
-                                gunBool = true
-                            end
-                        elseif factionIndex == 3 then
-                            if v:HasEnhancement('CoolingUpgrade') then
-                                enemyACUGun = enemyACUGun + 1
-                                gunBool = true
-                            end
-                        elseif factionIndex == 4 then
-                            if v:HasEnhancement('RateOfFire') then
-                                enemyACUGun = enemyACUGun + 1
-                                gunBool = true
-                            end
+                        if CDRGunCheck(v) then
+                            enemyACUGun = enemyACUGun + 1
+                            gunBool = true
                         end
                         if self.CheatEnabled then
                             acuHealth = v:GetHealth()
@@ -3774,14 +3749,6 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         local gameTime = GetGameTimeSeconds()
         --RNGLOG('gameTime is '..gameTime..' Upgrade Mode is '..self.UpgradeMode)
-        if self.earlyFlag and gameTime < (360 / multiplier) then
-            self.amanager.Ratios[factionIndex].Land.T1.arty = 0
-            self.amanager.Ratios[factionIndex].Land.T1.aa = 0
-        elseif self.earlyFlag then
-            self.amanager.Ratios[factionIndex].Land.T1.arty = 15
-            self.amanager.Ratios[factionIndex].Land.T1.aa = 12
-            self.earlyFlag = false
-        end
         if self.BrainIntel.SelfThreat.AirNow < (self.EnemyIntel.EnemyThreatCurrent.Air / self.EnemyIntel.EnemyCount) then
             --RNGLOG('Less than enemy air threat, increase mobile aa numbers')
             self.amanager.Ratios[factionIndex].Land.T1.aa = 30

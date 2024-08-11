@@ -955,6 +955,7 @@ function SendPlatoonWithTransports(aiBrain, platoon, destination, attempts, bSki
     if not InPlayableArea(destination) then
         return false
     end
+	--LOG('Transport is being requested for platoon '..tostring(platoon.BuilderName))
 
 	if (not platoon.MovementLayer) then
         import("/lua/ai/aiattackutilities.lua").GetMostRestrictiveLayer(platoon)

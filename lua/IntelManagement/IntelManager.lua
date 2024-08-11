@@ -509,10 +509,9 @@ IntelManager = Class {
                                 end
                             end
                         elseif zone.TeamValue < 0.8 or zone.TeamValue > 1.2 then
+                            --LOG('Zone is less than 0.8 or more than 1.2')
                             for _, resValue in ipairs(labelResourceValue[zone.Label] or {}) do
                                 if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive then
-                                    --LOG('Already have an active factory manager on lagbel '..tostring(zone.Label))
-                                    --LOG('Location is '..tostring(zoneSet[resValue.ZoneID].pos[1])..' : '..tostring(zoneSet[resValue.ZoneID].pos[3]))
                                     higherValueExists = true
                                     break
                                 end
@@ -1454,7 +1453,7 @@ IntelManager = Class {
         local startTime = GetGameTimeSeconds()
         while not cancelSpam do
             coroutine.yield(50)
-            if GetGameTimeSeconds() - startTime > 300 then
+            if GetGameTimeSeconds() - startTime > 360 then
                 cancelSpam = true
             end
         end
@@ -1782,65 +1781,6 @@ IntelManager = Class {
                     end
                 end
             end
-        elseif productiontype == 'DefensiveAntiSurface' then
-            local defensiveUnitsFound = false
-            local defensiveUnitThreat = 0
-            if not RNGTableEmpty(aiBrain.EnemyIntel.DirectorData.Defense) then
-                for k, v in aiBrain.EnemyIntel.DirectorData.Defense do
-                    if v.Object and not v.Object.Dead then
-                        --RNGLOG('Found Defensive unit in directordata defense table '..v.Object.UnitId)
-                        --RNGLOG('Table entry '..repr(v))
-                        --RNGLOG('Land threat at position '..aiBrain:GetThreatAtPosition(v.IMAP, 0, true, 'Land'))
-                        --RNGLOG('AntiSurface threat at position '..aiBrain:GetThreatAtPosition(v.IMAP, 0, true, 'AntiSurface'))
-                        if v.AntiSurface > 0 then
-                            local gridXID, gridZID = self:GetIntelGrid(v.IMAP)
-                            self.MapIntelGrid[gridXID][gridZID].DefenseThreat = self.MapIntelGrid[gridXID][gridZID].DefenseThreat + v.AntiSurface
-                            if not self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked then
-                                if NavUtils.CanPathTo('Land', aiBrain.BuilderManagers['MAIN'].Position, self.MapIntelGrid[gridXID][gridZID].Position) then
-                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked = true
-                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.Land = true
-                                elseif NavUtils.CanPathTo('Amphibious', aiBrain.BuilderManagers['MAIN'].Position, self.MapIntelGrid[gridXID][gridZID].Position) then
-                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked = true
-                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.Amphibious = true
-                                else
-                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked = true
-                                    self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.NoGraph = true
-                                end
-                            end
-                            if self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.GraphChecked and self.MapIntelGrid[gridXID][gridZID].Graphs.MAIN.Land 
-                                and (not v.Object.Blueprint.CategoriesHash.SHIELD) then
-                                defensiveUnitsFound = true
-                                defensiveUnitThreat = defensiveUnitThreat + v.AntiSurface
-                            end
-                        end
-                    end
-                    if defensiveUnitThreat > 80 then
-                        break
-                    end
-                end
-            end
-            if defensiveUnitsFound and defensiveUnitThreat > 0 then
-                local numberRequired = math.min(math.ceil(defensiveUnitThreat / 8), 16)
-                if aiBrain.amanager.Demand.Bases['MAIN'].Land.T2.mml < numberRequired then
-                    aiBrain.amanager.Demand.Bases['MAIN'].Land.T2.mml = numberRequired
-                    --RNGLOG('Directordata Increasing mml production count by '..numberRequired)
-                end
-                --[[
-                -- need to figure out how to get t3 arty to fire correctly
-                if aiBrain.amanager.Demand.Land.T3.arty < numberRequired / 2 then
-                    aiBrain.amanager.Demand.Land.T3.arty = numberRequired / 2
-                    --RNGLOG('Directordata Increasing mml production count by '..numberRequired)
-                end]]
-                aiBrain.amanager.Ratios[factionIndex]['Land']['T1']['arty'] = 20
-            end
-
-            if not defensiveUnitsFound then
-                aiBrain.amanager.Demand.Bases['MAIN'].Land.T2.mml = 0
-                aiBrain.amanager.Demand.Bases['MAIN'].Land.T3.arty = 0
-                aiBrain.amanager.Ratios[factionIndex]['Land']['T1']['arty'] = 5
-            end
-            --RNGLOG('Directordata current mml production count '..aiBrain.amanager.Demand.Land.T2.mml)
-            
         elseif productiontype == 'LandAntiSurface' then
             for k, v in aiBrain.EnemyIntel.ACU do
                 --if v.Position[1] then
@@ -2362,16 +2302,16 @@ IntelManager = Class {
                             if indirectFireCount > 0 then
                                 if v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH1) > 0 then
                                     --LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T1 artillery for base '..tostring(k))
-                                    aiBrain.amanager.Demand.Bases[k].Land.T1.arty= indirectFireCount
+                                    aiBrain.amanager.Demand.Bases[k].Land.T1.arty= math.ceil(indirectFireCount * 1.5)
                                 end
                                 if v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH2) > 0 then
                                     --LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T2 mml for base '..tostring(k))
-                                    aiBrain.amanager.Demand.Bases[k].Land.T2.mml = indirectFireCount
+                                    aiBrain.amanager.Demand.Bases[k].Land.T2.mml = math.ceil(indirectFireCount * 1.3)
                                 end
                                 if v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH3) > 0 then
                                     --LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T3 artillery for base '..tostring(k))
                                     aiBrain.amanager.Demand.Bases[k].Land.T3.arty = indirectFireCount
-                                    aiBrain.amanager.Demand.Bases[k].Land.T3.mml = indirectFireCount
+                                    aiBrain.amanager.Demand.Bases[k].Land.T3.mml = math.ceil(indirectFireCount * 1.3)
                                 end
                             end
                         end
@@ -2759,23 +2699,25 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
             for _, expansion in im.ZoneExpansions.Pathable do
                 local skipPos = false
                 local expLabel, reason = NavUtils.GetLabel('Land', expansion.Position)
+                --LOG('Pre Distance check expansion has '..tostring(aiBrain.Zones.Land.zones[expansion.ZoneID].resourcevalue)..' mass points')
                 if expLabel == label then
                     local expansionDistance = VDist2Sq(location[1], location[3], expansion.Position[1], expansion.Position[3])
+                    --LOG('Expansion distance is '..tostring(expansionDistance)..' max allowed distance is '..tostring(radius * radius))
                     if expansionDistance < radius * radius then
-                        --RNGLOG('Expansion Zone is within radius')
+                        --LOG('Expansion Zone is within radius '..tostring(expansion.ZoneID))
                         if type == 'acu' or VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]) < (VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]) + 900) then
                             local zone = aiBrain.Zones.Land.zones[expansion.ZoneID]
-                            --RNGLOG('Expansion has '..expansion.MassPoints..' mass points')
-                            --RNGLOG('Expansion is '..expansion.Name..' at '..repr(expansion.Position))
+                            --LOG('Expansion has '..zone.resourcevalue..' mass points')
+                            --LOG('Expansion is '..expansion.ZoneID..' at '..tostring(repr(expansion.Position)))
                             local extractorCount = zone.resourcevalue
                             if extractorCount > 1 then
                                 -- Lets ponder this a bit more, the acu is strong, but I don't want him to waste half his hp on civilian PD's
                                 if type == 'acu' and GetThreatAtPosition( aiBrain, expansion.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 5 then
-                                    --RNGLOG('Threat at location too high for easy building')
+                                    --LOG('Threat at location too high for easy building')
                                     continue
                                 end
                                 if type == 'acu' and GetNumUnitsAroundPoint(aiBrain, categories.MASSEXTRACTION, expansion.Position, 30, 'Ally') >= (extractorCount / 2) then
-                                    --RNGLOG('ACU Location has enough masspoints to indicate its already taken')
+                                    --LOG('ACU Location has enough masspoints to indicate its already taken')
                                     continue
                                 end
                                 RNGINSERT(options, {Expansion = expansion, Value = extractorCount * extractorCount, Key = zone.id, Distance = expansionDistance})
@@ -2794,10 +2736,10 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
         
         for k, withinRadius in options do
             if mainBaseToCenter > VDist2Sq(withinRadius.Expansion.Position[1], withinRadius.Expansion.Position[3], centerPoint[1], centerPoint[3]) then
-                --RNGLOG('Expansion has high mass value at location '..withinRadius.Expansion.Name..' at position '..repr(withinRadius.Expansion.Position))
+                --LOG('Expansion has high mass value at location '..withinRadius.Expansion.Name..' at position '..repr(withinRadius.Expansion.Position))
                 RNGINSERT(bestExpansions, withinRadius)
             else
-                --RNGLOG('Expansion is behind the main base , position '..repr(withinRadius.Expansion.Position))
+                --LOG('Expansion is behind the main base , position '..repr(withinRadius.Expansion.Position))
             end
         end
     else
@@ -2814,7 +2756,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                     local alreadySecure = false
                     for k, b in aiBrain.BuilderManagers do
                         if b.Zone == v.Key and not table.empty(aiBrain.BuilderManagers[k].FactoryManager.FactoryList) then
-                           --RNGLOG('Already a builder manager with factory present, set')
+                           --LOG('Already a builder manager with factory present, set')
                             alreadySecure = true
                             break
                         end
@@ -2833,7 +2775,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
             end
             if aiBrain.BrainIntel.AllyCount < 2 and secondBestOption and bestOption then
                 local acuOptions = { bestOption, secondBestOption }
-               --RNGLOG('ACU is having a random expansion returned')
+                --LOG('ACU is having a random expansion returned')
                 return acuOptions[Random(1,2)]
             end
            --RNGLOG('ACU is having the best expansion returned')
@@ -3415,6 +3357,8 @@ LastKnownThread = function(aiBrain)
                                         end
                                     elseif unitCat.RADAR then
                                         im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='radar'
+                                    elseif unitCat.DEFENSE and unitCat.DIRECTFIRE then
+                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='pointdefense'
                                     elseif unitCat.TACTICALMISSILEPLATFORM then
                                         im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='tml'
                                         if not aiBrain.EnemyIntel.TML[id] then
@@ -3558,7 +3502,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                             unitAddedCount = unitAddedCount + 1
                             aiBrain.prioritypoints[c..i..k]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object,time=b.time}
                             if im.MapIntelGrid[i][k].DistanceToMain < baseRestrictedArea or priority > 250 then
-                                if b.type == 'tank' or b.type == 'arty' or b.type == 'exp' then
+                                if b.type == 'arty' or b.type == 'exp' or b.type == 'pointdefense' then
                                     priority = priority + 100
                                 end
                                 aiBrain.prioritypointshighvalue[c..i..k]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object,time=b.time}

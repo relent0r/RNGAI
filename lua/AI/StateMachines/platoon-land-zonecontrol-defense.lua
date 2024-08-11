@@ -464,6 +464,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
+            if not self.path then
+                coroutine.yield(30)
+                self:ChangeState(self.DecideWhatToDo)
+                return
+            end
             while PlatoonExists(aiBrain, self) do
                 if VDist3Sq(self.BuilderData.Position,self.Pos) < 400 then
                     self.path = false

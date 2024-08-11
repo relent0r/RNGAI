@@ -148,7 +148,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'GreaterThanEconStorageCurrentRNG', { 240, 1050 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.70, 0.90 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.70, 0.80 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'PlayerRoleCheck', {'LocationType', 3, categories.FACTORY * categories.LAND, 'AIR' } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
