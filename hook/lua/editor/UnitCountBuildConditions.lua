@@ -846,6 +846,28 @@ function HaveUnitRatioVersusEnemyRNG(aiBrain, ratio, locType, radius, categoryOw
     return CompareBody(numNeedUnits / numEnemyUnits, ratio, compareType)
 end
 
+function HaveSMDRatioVersusEnemySMLRNG(aiBrain, ratio, locType, radius, categoryOwn, compareType, categoryEnemy)
+    local AIName = aiBrain.Nickname
+    local baseposition, radius
+    if BASEPOSTITIONS[AIName][locType] then
+        baseposition = BASEPOSTITIONS[AIName][locType].Pos
+        radius = BASEPOSTITIONS[AIName][locType].Rad
+    elseif aiBrain.BuilderManagers[locType] then
+        baseposition = aiBrain.BuilderManagers[locType].FactoryManager.Location
+        radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
+        BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
+        BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
+    end
+    if not baseposition then
+        return false
+    end
+    local numNeedUnits = aiBrain:GetNumUnitsAroundPoint(categoryOwn, baseposition, radius , 'Ally')
+    local numEnemyUnits = aiBrain.emanager.Nuke.T3
+    return CompareBody(numNeedUnits / numEnemyUnits, ratio, compareType)
+end
+
+
+
 function GetEnemyUnitsRNG(aiBrain, unitCount, categoryEnemy, compareType)
     local numEnemyUnits = aiBrain:GetNumUnitsAroundPoint(categoryEnemy, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ , 'Enemy')
     --RNGLOG(aiBrain:GetArmyIndex()..' CompareBody {World} '..categoryEnemy..' ['..numEnemyUnits..'] '..compareType..' ['..unitCount..'] return '..repr(CompareBody(numEnemyUnits, unitCount, compareType)))

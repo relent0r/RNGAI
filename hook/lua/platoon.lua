@@ -1637,6 +1637,13 @@ Platoon = Class(RNGAIPlatoonClass) {
                 eng.UnitBeingAssist = nil
                 break
             end
+            if unitToAssist.Blueprint.CategoriesHash.ENERGYPRODUCTION and aiBrain:GetEconomyTrend('ENERGY') > 50 and aiBrain:GetEconomyStored('MASS') == 0 then
+                if not eng:IsPaused() then
+                    eng:SetPaused( true )
+                    coroutine.yield(30)
+                    eng:SetPaused( false )
+                end
+            end
             coroutine.yield(30)
         end
         eng.UnitBeingAssist = nil

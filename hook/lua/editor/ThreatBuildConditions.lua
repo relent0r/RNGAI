@@ -186,3 +186,29 @@ function GreaterThanAlliedThreatInZone(aiBrain, locationType, threat)
     end
     return false
 end
+
+function GreaterThanAlliedThreatInAdjacentZones(aiBrain, locationType, threat)
+    if aiBrain.BuilderManagers[locationType].FactoryManager.LocationActive then
+        local position = aiBrain.BuilderManagers[locationType].Position
+        local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
+        local zoneId = MAP:GetZoneID(position,aiBrain.Zones.Land.index)
+        local landZones = aiBrain.Zones.Land.zones
+        local enemyLandThreat = 0
+        local friendlyDirectFireThreat = 0
+        if landZones[zoneId].edges and table.getn(landZones[zoneId].edges) > 0 then
+            for k, v in landZones[zoneId].edges do
+                if landZones[v.zone].enemylandthreat > 0 then
+                    enemyLandThreat = enemyLandThreat + landZones[v.zone].enemylandthreat
+                end
+                if landZones[v.zone].friendlydirectfireantisurfacethreat > 0 then
+                    friendlyDirectFireThreat = friendlyDirectFireThreat + landZones[v.zone].friendlydirectfireantisurfacethreat
+                end
+            end
+        end
+        if friendlyDirectFireThreat > enemyLandThreat then
+            return false
+        end
+        return true
+    end
+    return false
+end

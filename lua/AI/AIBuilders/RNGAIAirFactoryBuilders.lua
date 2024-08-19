@@ -103,7 +103,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Torp Bomber',
         PlatoonTemplate = 'T2AirTorpedoBomber',
-        Priority = 890,
+        Priority = 893,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T2', 'torpedo'} },
             { EBC, 'FactorySpendRatioRNG', {'Air'}},

@@ -7210,6 +7210,21 @@ GetRallyPoint = function(aiBrain, layer, position, minRadius, maxRadius)
     end
 end
 
+GetLineOfSightPriority = function(aiBrain, navalPosition, startPosition)
+    local destroyerHeight = 0
+    local battlesShipHeight = 0
+    local checkPos = {navalPosition[1],navalPosition[2] ,navalPosition[3]}
+    local priority = 0.7
+    if aiBrain:CheckBlockingTerrain({navalPosition[1], navalPosition[2] + destroyerHeight, navalPosition[3]}, startPosition, 'low') then
+        priority = 2.0
+    elseif aiBrain:CheckBlockingTerrain({navalPosition[1], navalPosition[2] + battlesShipHeight, navalPosition[3]}, startPosition, 'low') then
+        priority = 1.5
+    elseif aiBrain:CheckBlockingTerrain({navalPosition[1], navalPosition[2] + 60, navalPosition[3]}, startPosition, 'low') then
+        priority = 1.0
+    end
+    return priority
+end
+
 
 --[[
     -- Calculate dot product between two 3D vectors (same as before)
