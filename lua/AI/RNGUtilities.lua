@@ -1629,7 +1629,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
     return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition, defenseTargets
 end
 
-function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted)
+function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted, navalOnly)
     if not position then
         position = platoon:GetPlatoonPosition()
     end
@@ -1689,6 +1689,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
             local targetShields = 9999
             for num, unit in targetUnits do
                 if not unit.Dead and not unit.Tractored then
+                    local unitCats = unit.Blueprint.CategoriesHash
                     if ignoreNotCompleted then
                         if unit:GetFractionComplete() ~= 1 then
                             continue
@@ -1699,6 +1700,11 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                             if unit:GetAIBrain():GetArmyIndex() == v then
                                 if not unit.CaptureInProgress and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
                                     local unitPos = unit:GetPosition()
+                                    if navalOnly then
+                                        if unitCats.HOVER or unitCats.AIR or not PositionInWater(unitPos) then
+                                            continue
+                                        end
+                                    end
                                     if platoon.Defensive and aiBrain.GridPresence then
                                         if aiBrain.GridPresence:GetInferredStatus(unitPos) == 'Hostile' then
                                             continue
@@ -1736,6 +1742,11 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                                 end
                             end
                             local unitPos = unit:GetPosition()
+                            if navalOnly then
+                                if nunitCats.HOVER or unitCats.AIR or not PositionInWater(unitPos) then
+                                    continue
+                                end
+                            end
                             if platoon.Defensive and aiBrain.GridPresence then
                                 if aiBrain.GridPresence:GetInferredStatus(unitPos)  == 'Hostile' then
                                     continue

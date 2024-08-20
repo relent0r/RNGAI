@@ -19,7 +19,7 @@ function ReclaimablesAvailableAtBase(aiBrain, locType)
                     if locType == 'MAIN' then
                         engineersRequired = engineersRequired * 3
                     end
-                    if v.EngineerManager.ConsumptionUnits.Engineers.Count and v.EngineerManager.ConsumptionUnits.Engineers.Count < engineersRequired then
+                    if v.EngineerManager.ConsumptionUnits.Engineers.Count and v.EngineerManager.ConsumptionUnits.Engineers.Count < engineersRequired + 2 then
                         return true
                     end
                 end

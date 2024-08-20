@@ -185,7 +185,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
             end
             if not target then
                 ----self:LogDebug(string.format('Checking for standard target'))
-                target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, platPos, self, 'Attack', self.MaxTargetSearchRadius, self.TargetSearchCategories, true, self.CurrentPlatoonThreatAntiNavy)
+                target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, platPos, self, 'Attack', self.MaxTargetSearchRadius, self.TargetSearchCategories, true, self.CurrentPlatoonThreatAntiNavy, nil, nil, nil, true)
                 if target and not target.Dead then
                     --LOG('Bomber point pos '..repr(point.Position)..' with a priority of '..point.priority)
                         if not self.retreat then
