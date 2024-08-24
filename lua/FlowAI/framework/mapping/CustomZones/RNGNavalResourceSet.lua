@@ -56,12 +56,12 @@ RNGNavalResourceSet = Class(ZoneSet){
        --RNGLOG('GenerateZoneList for custom Zone')
         local navalStartPositions = {}
         local maxmapdimension = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
-        local zoneRadius = 250 * 250
-        if maxmapdimension < 512 then
-            zoneRadius = 70 * 70
-        elseif maxmapdimension < 1024 then
-            zoneRadius = 180 * 180
-        end
+        local zoneRadius = 70 * 70
+        --if maxmapdimension < 512 then
+        --    zoneRadius = 70 * 70
+        --elseif maxmapdimension < 1024 then
+        --    zoneRadius = 180 * 180
+        --end
 
         --RNGLOG('Zone Radius is '..zoneRadius)
 
@@ -81,7 +81,7 @@ RNGNavalResourceSet = Class(ZoneSet){
             end
         end
         --RNGLOG('Marker table size is '..RNGGETN(markers))
-
+        
         for i = 1, 16 do
             local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
             local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
@@ -98,7 +98,7 @@ RNGNavalResourceSet = Class(ZoneSet){
                     end
                 end
                 if closestMarker then
-                    RNGINSERT(navalStartPositions, {index = i, marker = closestMarker})
+                    RNGINSERT(navalStartPositions, { index = i, marker = closestMarker, armyindex = i, distance = closestDistance })
                 end
             end
         end

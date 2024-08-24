@@ -49,6 +49,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local brain = self:GetBrain()
             self.cdr = self:GetPlatoonUnits()[1]
             self.cdr.Active = true
+            self.CheckEarlyLandFactory = false
             if self.PlatoonData.LocationType then
                 self.LocationType = self.PlatoonData.LocationType
             else
@@ -62,6 +63,17 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
                 self:ChangeState(self.EngineerTask)
                 return
+            end
+            local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+            local EnemyIndex = brain:GetCurrentEnemy():GetArmyIndex()
+            local OwnIndex = brain:GetArmyIndex()
+            if brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                LOG('We can path to the enemy')
+                LOG('PlayableArea = '..tostring(repr(playableArea)))
+                if playableArea[3] and playableArea[3] <= 512 or playableArea[4] and playableArea[4] <= 512 then
+                    LOG('10km or less land map, check if we can get more factories')
+                    self.CheckEarlyLandFactory = true
+                end
             end
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -103,6 +115,91 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
             elseif cdr.EnemyAirPresent then
                 cdr.EnemyAirPresent = false
+            end
+            if self.CheckEarlyLandFactory then
+                self.CheckEarlyLandFactory = false
+                if brain.BrainIntel.SpamPlayer and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < 6400 and not cdr.Caution and cdr.CurrentEnemyThreat < 25 then
+                    local numUnits = brain:GetCurrentUnits(categories.FACTORY * categories.LAND)
+                    if numUnits < 4 and brain:GetEconomyStored('MASS') > 240 and brain:GetEconomyStored('ENERGY') > 1000 then
+                        local factionIndex = ACUFunc.GetEngineerFactionIndexRNG(cdr)
+                        local templateKey
+                        local baseTmplFile
+                        if factionIndex < 5 then
+                            templateKey = 'ACUBaseTemplate'
+                            baseTmplFile = import('/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua' or '/lua/BaseTemplates.lua')
+                        else
+                            templateKey = 'BaseTemplates'
+                            baseTmplFile = import('/lua/BaseTemplates.lua')
+                        end
+                        local buildingTmplFile = import(self.BuilderData.Construction.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
+                        local buildingTmpl = buildingTmplFile[('BuildingTemplates')][factionIndex]
+                        local location, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(brain, buildingTmpl, baseTmplFile[templateKey][factionIndex], 'T1LandFactory', cdr, false, nil, nil, true)
+                        local newEntry = {whatToBuild, location, false, Position=location}
+                        cdr.EngineerBuildQueue = {}
+                        RNGINSERT(cdr.EngineerBuildQueue, newEntry)
+                        --LOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
+                        if not table.empty(cdr.EngineerBuildQueue) then
+                            local abortBuild = false
+                            for k,v in cdr.EngineerBuildQueue do
+                                if abortBuild then
+                                    cdr.EngineerBuildQueue[k] = nil
+                                    break
+                                end
+                                while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
+                                    if cdr.GetNavigator then
+                                        local navigator = cdr:GetNavigator()
+                                        if navigator then
+                                            navigator:SetGoal({v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]})
+                                        end
+                                    else
+                                        IssueClearCommands({cdr})
+                                        IssueMove({cdr},{v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]})
+                                    end
+                                    if VDist3Sq(cdr:GetPosition(),{v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]}) < 144 then
+                                        IssueClearCommands({cdr})
+                                        RUtils.EngineerTryReclaimCaptureArea(brain, cdr, v.Position, 5)
+                                        if borderWarning then
+                                            IssueBuildMobile({cdr}, {v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]}, whatToBuild, {})
+                                        else
+                                            brain:BuildStructure(cdr, whatToBuild, v.Position)
+                                        end
+                                        local failureCount = 0
+                                        while (not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr:IsUnitState('Building')) or (cdr:IsUnitState("Moving")) do
+                                            coroutine.yield(10)
+                                            if failureCount < 5 and brain:GetEconomyStored('MASS') == 0 and brain:GetEconomyTrend('MASS') == 0 then
+                                                if not cdr:IsPaused() then
+                                                    failureCount = failureCount + 1
+                                                    cdr:SetPaused( true )
+                                                    coroutine.yield(7)
+                                                end
+                                            elseif cdr:IsPaused() then
+                                                cdr:SetPaused( false )
+                                            end
+                                            if cdr.Caution then
+                                                ----self:LogDebug(string.format('cdr.Caution while building expansion'))
+                                                self:ChangeState(self.DecideWhatToDo)
+                                                return
+                                            end
+                                            if cdr.EnemyCDRPresent and cdr.UnitBeingBuilt then
+                                                if GetNumUnitsAroundPoint(brain, categories.COMMAND, cdr.Position, 25, 'Enemy') > 0 and cdr.UnitBeingBuilt:GetFractionComplete() < 0.5 then
+                                                    abortBuild = true
+                                                    cdr.EngineerBuildQueue[k] = nil
+                                                    break
+                                                end
+                                            end
+                                        end
+                                        cdr.EngineerBuildQueue[k] = nil
+                                        break
+                                    end
+                                    coroutine.yield(10)
+                                end
+                            end
+                        end
+                        self:LogDebug(string.format('We are at base and want to perform an engineering task'))
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
+                end
             end
             if self.BuilderData.Expansion then
                 if self.BuilderData.ExpansionBuilt then
@@ -242,7 +339,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, maxRange, 'Land', 10, 'acu')
                                 ----self:LogDebug(string.format('Distance to Expansion is '..tostring(VDist3(stageExpansion.Expansion.Position,cdr.Position))))
                             else
-                                --LOG('ACU Looking close for expansion as its mid or later')
                                 local enemyBaseRange = math.sqrt(brain.EnemyIntel.ClosestEnemyBase) / 2
                                 maxRange = math.min(enemyBaseRange, 256)
                                 stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, maxRange, 'Land', 10, 'acu')
@@ -647,7 +743,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         if cdr.EnemyNavalPresent then
                             cdr.EnemyNavalPresent = nil
                         end
-                        IssueMove({cdr}, destination)
+                        if cdr.GetNavigator then
+                            local navigator = cdr:GetNavigator()
+                            if navigator then
+                                navigator:SetGoal(destination)
+                            end
+                        else
+                            IssueClearCommands({cdr})
+                            IssueMove({cdr},destination)
+                        end
                         --LOG('ACU at position '..repr(destination))
                         --LOG('Cutoff distance was '..navigateDistanceCutOff)
                         self:ChangeState(self.DecideWhatToDo)
@@ -658,13 +762,19 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
 
 
                 -- navigate towards waypoint 
-                IssueMove({cdr}, waypoint)
+                if cdr.GetNavigator then
+                    local navigator = cdr:GetNavigator()
+                    if navigator then
+                        navigator:SetGoal(waypoint)
+                    end
+                else
+                    IssueMove({cdr},waypoint)
+                end
 
                 -- check for opportunities
                 local wx = waypoint[1]
                 local wz = waypoint[3]
                 local movementTimeout = 0
-                local lastPos
                 while not IsDestroyed(self) do
                     WaitTicks(20)
                     local position = cdr:GetPosition()
@@ -677,7 +787,14 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         --LOG('distance is '..(dx * dx + dz * dz))
                         --LOG('CutOff is '..navigateDistanceCutOff)
                         if distance < 9 then
-                            IssueMove({cdr}, destination)
+                            if cdr.GetNavigator then
+                                local navigator = cdr:GetNavigator()
+                                if navigator then
+                                    navigator:SetGoal(destination)
+                                end
+                            else
+                                IssueMove({cdr},destination)
+                            end
                             WaitTicks(100)
                         end
                         if not endPoint then
@@ -689,33 +806,27 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     if cdr.Health > 5500 and not builderData.Retreat and not builderData.EnhancementBuild and cdr.CurrentEnemyInnerCircle > 0 
                     and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < cdr.MaxBaseRange * cdr.MaxBaseRange then
                         local target, acuInRange, acuUnit, totalThreat = RUtils.AIFindBrainTargetACURNG(brain, self, cdr.Position, 'Attack', 30, (categories.LAND + categories.STRUCTURE), cdr.atkPri, false)
-                        if acuInRange then
+                        if acuInRange and not acuUnit.Dead then
                             local enemyAcuHealth = acuUnit:GetHealth()
-                            --RNGLOG('CDR : Enemy ACU in range of ACU')
-                            if enemyAcuHealth < 5000 then
-                                ----self:LogDebug(string.format('Enemy ACU has low health, setting snipe mode'))
-                                ACUFunc.SetAcuSnipeMode(cdr, 'ACU')
-                            elseif cdr.SnipeMode then
-                                ACUFunc.SetAcuSnipeMode(cdr, 'DEFAULT')
-                                cdr.SnipeMode = false
+                            local enemyAcuPos = acuUnit:GetPosition()
+                            local highThreat = false
+                            local threat=RUtils.GrabPosDangerRNG(brain,enemyAcuPos,30, true, false, true, true)
+                            if threat.enemyStructure and threat.enemyStructure > 160 or threat.enemySurface and threat.enemySurface > 250 then
+                                --LOG('High Threat around potential ACU while navigating, cancel')
+                                highThreat = true
                             end
-                            cdr.EnemyCDRPresent = true
-                            self.BuilderData = {
-                                AttackTarget = acuUnit,
-                                ACUTarget    = acuUnit,
-                            }
-                            if cdr.EnemyNavalPresent then
-                                cdr.EnemyNavalPresent = nil
-                            end
-                            --LOG('Combat while navigating resetting builderdata')
-                            self:ChangeState(self.AttackTarget)
-                            return
-                        else
-                            cdr.EnemyCDRPresent = false
-                            if target then
+                            if not highThreat then
+                                if enemyAcuHealth < 5000 then
+                                    ----self:LogDebug(string.format('Enemy ACU has low health, setting snipe mode'))
+                                    ACUFunc.SetAcuSnipeMode(cdr, 'ACU')
+                                elseif cdr.SnipeMode then
+                                    ACUFunc.SetAcuSnipeMode(cdr, 'DEFAULT')
+                                    cdr.SnipeMode = false
+                                end
+                                cdr.EnemyCDRPresent = true
                                 self.BuilderData = {
-                                    AttackTarget = target,
-                                    ACUTarget    = nil,
+                                    AttackTarget = acuUnit,
+                                    ACUTarget    = acuUnit,
                                 }
                                 if cdr.EnemyNavalPresent then
                                     cdr.EnemyNavalPresent = nil
@@ -723,6 +834,29 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 --LOG('Combat while navigating resetting builderdata')
                                 self:ChangeState(self.AttackTarget)
                                 return
+                            end
+                        else
+                            cdr.EnemyCDRPresent = false
+                            if target and not target.Dead then
+                                local highThreat = false
+                                local targetPos = target:GetPosition()
+                                local threat=RUtils.GrabPosDangerRNG(brain,targetPos,30, true, false, true, true)
+                                if threat.enemyStructure and threat.enemyStructure > 160 or threat.enemySurface and threat.enemySurface > 250 then
+                                    --LOG('High Threat around potential ACU while navigating, cancel')
+                                    highThreat = true
+                                end
+                                if not highThreat then
+                                    self.BuilderData = {
+                                        AttackTarget = target,
+                                        ACUTarget    = nil,
+                                    }
+                                    if cdr.EnemyNavalPresent then
+                                        cdr.EnemyNavalPresent = nil
+                                    end
+                                    --LOG('Combat while navigating resetting builderdata')
+                                    self:ChangeState(self.AttackTarget)
+                                    return
+                                end
                             end
                         end
                     elseif cdr.Health > 6000 and builderData.Retreat and cdr.Phase < 3 and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < cdr.MaxBaseRange * cdr.MaxBaseRange and (not cdr.Caution) and (not cdr.EnemyAirPresent) then
@@ -1040,7 +1174,14 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     cdr.Caution = true
                                     cdr.CautionReason = 'acuOverChargeTargetCheck'
                                     if RUtils.GetAngleRNG(cdrPos[1], cdrPos[3], cdr.CDRHome[1], cdr.CDRHome[3], targetPos[1], targetPos[3]) > 0.5 then
-                                        IssueMove({cdr}, cdr.CDRHome)
+                                        if cdr.GetNavigator then
+                                            local navigator = cdr:GetNavigator()
+                                            if navigator then
+                                                navigator:SetGoal(cdr.CDRHome)
+                                            end
+                                        else
+                                            IssueMove({cdr},cdr.CDRHome)
+                                        end
                                         coroutine.yield(40)
                                     end
                                     ----self:LogDebug(string.format('cdr retreating due to enemy threat within attacktarget enemy '..realThreat.enemySurface..' ally '..realThreat.allySurface..' friendly inner '..cdr.CurrentFriendlyInnerCircle))
@@ -1114,12 +1255,12 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         brain.BrainIntel.SuicideModeTarget = false
                     end
                     if target and not target.Dead and not target:BeenDestroyed() then
-                        IssueClearCommands({cdr})
                         targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                         local movePos
                         local currentLayer = cdr:GetCurrentLayer() 
                         if target.Blueprint.CategoriesHash.RECLAIMABLE and currentLayer == 'Seabed' and targetDistance < 10 then
                             ----self:LogDebug(string.format('acu is under water and target is close, attempt reclaim, current unit distance is '..VDist3(cdrPos, targetPos)))
+                            IssueClearCommands({cdr})
                             IssueReclaim({cdr}, target)
                             movePos = targetPos
                         elseif snipeAttempt then
@@ -1143,14 +1284,38 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                             if alternateFirePos then
-                                IssueMove({cdr}, movePos)
+                                if cdr.GetNavigator then
+                                    local navigator = cdr:GetNavigator()
+                                    if navigator then
+                                        navigator:SetGoal(movePos)
+                                    end
+                                else
+                                    IssueClearCommands({cdr})
+                                    IssueMove({cdr},cdr.CDRHome)
+                                end
                             else
-                                IssueMove({cdr}, cdr.CDRHome)
+                                if cdr.GetNavigator then
+                                    local navigator = cdr:GetNavigator()
+                                    if navigator then
+                                        navigator:SetGoal(cdr.CDRHome)
+                                    end
+                                else
+                                    IssueClearCommands({cdr})
+                                    IssueMove({cdr},cdr.CDRHome)
+                                end
                             end
                             coroutine.yield(30)
                             IssueClearCommands({cdr})
                         end
-                        IssueMove({cdr}, movePos)
+                        if cdr.GetNavigator then
+                            local navigator = cdr:GetNavigator()
+                            if navigator then
+                                navigator:SetGoal(movePos)
+                            end
+                        else
+                            IssueClearCommands({cdr})
+                            IssueMove({cdr},cdr.CDRHome)
+                        end
                         coroutine.yield(30)
                         if not snipeAttempt then
                             if not IsDestroyed(target) and not ACUFunc.CheckRetreat(cdrPos,targetPos,target) then
@@ -1164,7 +1329,14 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                         cdrNewPos = RUtils.GetLateralMovePos(cdrNewPos, targetPos, 6, 1)
                                     end
                                 end
-                                IssueMove({cdr}, cdrNewPos)
+                                if cdr.GetNavigator then
+                                    local navigator = cdr:GetNavigator()
+                                    if navigator then
+                                        navigator:SetGoal(cdrNewPos)
+                                    end
+                                else
+                                    IssueMove({cdr},cdrNewPos)
+                                end
                                 coroutine.yield(30)
                             end
                         end
@@ -1175,14 +1347,23 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         if innerCircleEnemies > 0 then
                             local result, newTarget = ACUFunc.CDRGetUnitClump(brain, cdr.Position, cdr.WeaponRange - 3)
                             if newTarget and VDist3Sq(cdr.Position, newTarget:GetPosition()) < (cdr.WeaponRange * cdr.WeaponRange) - 9 then
-                                IssueClearCommands({cdr})
-                                IssueOverCharge({cdr}, newTarget)
+                                if cdr.GetNavigator then
+                                    IssueOverCharge({cdr}, newTarget)
+                                else
+                                    IssueClearCommands({cdr})
+                                    IssueOverCharge({cdr}, newTarget)
+                                end
+                                
                                 overChargeFired = true
                             end
                         end
                         if not overChargeFired and VDist3Sq(cdr:GetPosition(), target:GetPosition()) < cdr.WeaponRange * cdr.WeaponRange then
-                            IssueClearCommands({cdr})
-                            IssueOverCharge({cdr}, target)
+                            if cdr.GetNavigator then
+                                IssueOverCharge({cdr}, target)
+                            else
+                                IssueClearCommands({cdr})
+                                IssueOverCharge({cdr}, target)
+                            end
                         end
                     end
                 end
@@ -1320,7 +1501,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             --RNGLOG('No platoon found, trying for base')
             local closestBase
             local closestBaseDistance
-            if cdr.Phase > 2 and brain.EnemyIntel.Phase > 2 then
+            if cdr.Phase > 2 or brain.EnemyIntel.Phase > 2 then
                 closestBase = 'MAIN'
             end
             if not closestBase and brain.BuilderManagers then
@@ -1453,8 +1634,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     for k,v in cdr.EngineerBuildQueue do
                         --LOG('Attempt to build queue item of '..repr(v))
                         while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
-                            IssueClearCommands({cdr})
-                            IssueMove({cdr},v.Position)
+                            if cdr.GetNavigator then
+                                local navigator = cdr:GetNavigator()
+                                if navigator then
+                                    navigator:SetGoal(v.Position)
+                                end
+                            else
+                                IssueClearCommands({cdr})
+                                IssueMove({cdr},v.Position)
+                            end
                             if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then
                                 IssueClearCommands({cdr})
                                 RUtils.EngineerTryReclaimCaptureArea(brain, cdr, v.Position, 5)
@@ -1564,8 +1752,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                             break
                                         end
                                         while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
-                                            IssueClearCommands({cdr})
-                                            IssueMove({cdr},v.Position)
+                                            if cdr.GetNavigator then
+                                                local navigator = cdr:GetNavigator()
+                                                if navigator then
+                                                    navigator:SetGoal(v.Position)
+                                                end
+                                            else
+                                                IssueClearCommands({cdr})
+                                                IssueMove({cdr},v.Position)
+                                            end
                                             if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then
                                                 IssueClearCommands({cdr})
                                                 RUtils.EngineerTryReclaimCaptureArea(brain, cdr, v.Position, 5)
@@ -1633,8 +1828,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                             break
                                         end
                                         while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
-                                            IssueClearCommands({cdr})
-                                            IssueMove({cdr},v.Position)
+                                            if cdr.GetNavigator then
+                                                local navigator = cdr:GetNavigator()
+                                                if navigator then
+                                                    navigator:SetGoal(v.Position)
+                                                end
+                                            else
+                                                IssueClearCommands({cdr})
+                                                IssueMove({cdr},v.Position)
+                                            end
                                             if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then
                                                 IssueClearCommands({cdr})
                                                 RUtils.EngineerTryReclaimCaptureArea(brain, cdr, v.Position, 5)
@@ -1710,6 +1912,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95) or cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired then
                     cdr.Combat = false
                     cdr.Upgrading = false
+                    local foundEnhancement
 
                     local ACUEnhancements = {
                         -- UEF
@@ -1732,29 +1935,44 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         ['xnl0001'] = {Combat = {'Capacitor', 'GunUpgrade', 'MovementSpeedIncrease', 'DoubleGuns'},},
                     }
                     local ACUUpgradeList = ACUEnhancements[cdr.Blueprint.BlueprintId][upgradeMode]
+                    if not ACUUpgradeList and cdr.Blueprint.Enhancements then
+                        LOG('There is no enhancement table for this unit, search for a new one, unit id is '..cdr.UnitId)
+                        foundEnhancement = ACUFunc.IdentifyACUEnhancement(brain, cdr, cdr.Blueprint.Enhancements, gameTime)
+                    end
                     local NextEnhancement = false
                     local HaveEcoForEnhancement = false
-                    for _,enhancement in ACUUpgradeList or {} do
-                        local wantedEnhancementBP = cdr.Blueprint.Enhancements[enhancement]
-                        local enhancementName = enhancement
-                        if not wantedEnhancementBP then
-                            SPEW('* RNGAI: no enhancement found for  = '..tostring(enhancement))
-                        elseif cdr:HasEnhancement(enhancement) then
-                            NextEnhancement = false
-                        elseif ACUFunc.EnhancementEcoCheckRNG(brain, cdr, wantedEnhancementBP, enhancementName) then
-                            if not NextEnhancement then
-                                NextEnhancement = enhancement
-                                HaveEcoForEnhancement = true
-                            end
-                        else
-                            if not NextEnhancement then
-                                NextEnhancement = enhancement
-                                HaveEcoForEnhancement = false
-                                -- if we don't have the eco for this ugrade, stop the search
-                                break
+                    if foundEnhancement then
+                        NextEnhancement = foundEnhancement
+                    end
+                    if not NextEnhancement then
+                        for _,enhancement in ACUUpgradeList or {} do
+                            local wantedEnhancementBP = cdr.Blueprint.Enhancements[enhancement]
+                            local enhancementName = enhancement
+                            if not wantedEnhancementBP then
+                                SPEW('* RNGAI: no enhancement found for  = '..tostring(enhancement))
+                            elseif cdr:HasEnhancement(enhancement) then
+                                NextEnhancement = false
+                            elseif ACUFunc.EnhancementEcoCheckRNG(brain, cdr, wantedEnhancementBP, enhancementName) then
+                                if not NextEnhancement then
+                                    NextEnhancement = enhancement
+                                    HaveEcoForEnhancement = true
+                                end
+                            else
+                                if not NextEnhancement then
+                                    NextEnhancement = enhancement
+                                    HaveEcoForEnhancement = false
+                                    -- if we don't have the eco for this ugrade, stop the search
+                                    break
+                                end
                             end
                         end
+                    elseif NextEnhancement then
+                        local wantedEnhancementBP = cdr.Blueprint.Enhancements[NextEnhancement]
+                        if ACUFunc.EnhancementEcoCheckRNG(brain, cdr, wantedEnhancementBP, NextEnhancement) or (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) then
+                            HaveEcoForEnhancement = true
+                        end
                     end
+
                     if NextEnhancement and HaveEcoForEnhancement then
                         local priorityUpgrades = {
                             'HeavyAntiMatterCannon',
@@ -1795,6 +2013,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         local enhancementPaused = false
                         local lastTick
                         local lastProgress
+                        if cdr.SuicideMode then
+                            cdr.SuicideMode = false
+                        end
                         while not cdr.Dead and not cdr:HasEnhancement(NextEnhancement) do
                             -- note eta will be in ticks not seconds
                             local eta = -1
@@ -1837,7 +2058,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         ----self:LogDebug(string.format('Enhancement should be completed '))
                         for _, v in priorityUpgrades do
                             if NextEnhancement == v then
-                                if not ACUFunc.CDRGunCheck(brain, cdr) then
+                                if ACUFunc.CDRGunCheck(cdr) then
                                     cdr.GunUpgradeRequired = false
                                     cdr.GunUpgradePresent = true
                                 end

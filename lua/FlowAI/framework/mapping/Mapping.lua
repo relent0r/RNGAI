@@ -8,7 +8,6 @@
     Previous iterations of this functionality ran in ~1 min timescales on 20x20 maps, necessitating a performance oriented re-write.
     Sorry for the inlining of functions, the repetitive code blocks, and the constant localling of variables :)
   ]]
-local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local CreatePriorityQueue = import('/mods/RNGAI/lua/FlowAI/framework/utils/PriorityQueue.lua').CreatePriorityQueue
@@ -211,14 +210,22 @@ GameMap = Class({
         --RNGLOG(string.format('FlowAI framework: CreateMapMarkers() finished, runtime: %.2f seconds.', END - START ))
         local drawStuffz = false
         if drawStuffz then
+            --[[
+            The second param is GetZoneSet is layer.
+            The param for DrawLayer is also...layer.
+            LAYER_NONE = -1
+            LAYER_AIR = 0
+            LAYER_LAND = 1
+            LAYER_NAVY = 2
+            LAYER_HOVER = 3
+            LAYER_AMPH = 4]]
             ForkThread(
                 function()
-                    local zoneSetCopy = self:GetZoneSet('RNGLandResourceSet',2)
+                    local zoneSetCopy = self:GetZoneSet('RNGNavalResourceSet',2)
                     coroutine.yield(100)
                     while true do
                         --self:DrawLayer(2)
                         self:DrawZones(zoneSetCopy.index)
-                        --zoneSetCopy:DrawZones()
                         WaitTicks(2)
                     end
                 end

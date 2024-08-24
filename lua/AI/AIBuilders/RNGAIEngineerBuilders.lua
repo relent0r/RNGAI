@@ -42,9 +42,11 @@ end
 
 local StartingReclaimPresent = function(self, aiBrain, builderManager)
     if aiBrain.StartMassReclaimTotal > 500 then
+        --LOG('StartMassReclaim > 500')
         return 1002
     end
     if aiBrain.StartEnergyReclaimTotal > 5000 then
+        --LOG('StartMassReclaim > 1000')
         return 1002
     end
     return 950
@@ -270,8 +272,10 @@ BuilderGroup {
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 900, -- Top factory priority
         BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 200, categories.ENGINEER * (categories.TECH2 + categories.TECH3) - categories.COMMAND } },
             { UCBC, 'EngineerBuildPowerRequired', { 2, true } },
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH2}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'All',
     },
@@ -307,34 +311,13 @@ BuilderGroup {
         PlatoonTemplate = 'T3BuildEngineer',
         Priority = 910, -- Top factory priority
         BuilderConditions = {
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 200, categories.ENGINEER * categories.TECH3 - categories.COMMAND } },
             { UCBC, 'EngineerBuildPowerRequired', { 3, true } },
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'All',
     },
-    --[[
-    Builder {
-        BuilderName = 'RNGAI Factory Engineer T3 Small AirOnly',
-        PlatoonTemplate = 'T3BuildEngineer',
-        Priority = 910, -- Top factory priority
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3 * categories.AIR}},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 3 of them.
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.0 }},
-        },
-        BuilderType = 'Air',
-    },
-    Builder {
-        BuilderName = 'RNGAI Factory Engineer T3 Medium',
-        PlatoonTemplate = 'T3BuildEngineer',
-        Priority = 500, -- Top factory priority
-        BuilderConditions = {
-            { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.025, 0.8} },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 15, categories.ENGINEER * categories.TECH3 - categories.COMMAND } }, -- Build engies until we have 2 of them.
-        },
-        BuilderType = 'All',
-    },]]
     Builder {
         BuilderName = 'RNGAI Factory Engineer T3 Excess',
         PlatoonTemplate = 'T3BuildEngineer',
@@ -374,6 +357,32 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'All',
+    },
+}
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Engineer Naval Expansions',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI Engineer Reclaim Naval', -- Try to get that early reclaim
+        PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
+        Priority = 950,
+        InstanceCount = 2,
+        BuilderConditions = {
+                { MIBC, 'CheckIfReclaimEnabled', {}},
+                { MIBC, 'ReclaimablesAvailableAtBase', {'LocationType'}},
+                { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MOBILE * categories.ENGINEER - categories.COMMAND}},
+                
+            },
+        BuilderData = {
+            JobType = 'Reclaim',
+            Early = true,
+            ReclaimTable = true,
+            LocationType = 'LocationType',
+            ReclaimTime = 80,
+            MinimumReclaim = 8
+        },
+        BuilderType = 'Any',
     },
 }
 
@@ -690,7 +699,6 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH1 * categories.LAND * categories.FACTORY }},
-                --{ UCBC, 'HaveGreaterThanUnitsInCategoryBeingUpgradedRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.LAND}},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
                 { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType', true }},
@@ -861,7 +869,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
                 { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 0.0 } },
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, (categories.TECH2 + categories.TECH3 ) * categories.ENERGYPRODUCTION}},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, (categories.TECH2 + categories.TECH3 ) * categories.ENERGYPRODUCTION - categories.HYDROCARBON}},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.ENERGYPRODUCTION - categories.HYDROCARBON }},
                 { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.1 }},
             },
@@ -883,8 +891,8 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
                 { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 0.0 } },
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.ENERGYPRODUCTION}},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH2 * categories.ENERGYPRODUCTION }},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.ENERGYPRODUCTION - categories.HYDROCARBON}},
+                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH2 * categories.ENERGYPRODUCTION - categories.HYDROCARBON }},
                 { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.1, 1.3 }},
             },
         BuilderData = {

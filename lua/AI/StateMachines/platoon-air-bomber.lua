@@ -99,7 +99,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.AttackTarget)
                 return
             end
-            if not target then
+            if self.PlatoonData.Defensive and homeDist and homeDist > 25600 and self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Dead then
                 local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, nil, nil, nil, true)
                 if target then
                     --LOG('Gunship high Priority Target Found '..target.UnitId)
@@ -172,7 +172,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                     local tx = platPos[1] - targetPosition[1]
                     local tz = platPos[3] - targetPosition[3]
                     local targetDistance = tx * tx + tz * tz
-                    if targetDistance < 22500 then
+                    if targetDistance < 16900 then
                         ----self:LogDebug(string.format('Bomber AttackTarget on high priority target'))
                         self:ChangeState(self.AttackTarget)
                         return
@@ -307,7 +307,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         ----self:LogDebug(string.format('Bomber platoon is merging with another'))
                         local platUnits = plat:GetPlatoonUnits()
                         aiBrain:AssignUnitsToPlatoon(self, platUnits, 'Attack', 'None')
-                        import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, plat, platUnits)
+                        import("/mods/rngai/lua/ai/statemachines/platoon-air-bomber.lua").AssignToUnitsMachine({ }, plat, platUnits)
                         ----self:LogDebug(string.format('Merged'))
                     end
                 end
@@ -331,7 +331,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             local platoonUnits = self:GetPlatoonUnits()
             local builderData = self.BuilderData
             local destination = builderData.Position
-            local navigateDistanceCutOff = builderData.CutOff or 3600
+            local navigateDistanceCutOff = builderData.CutOff or 6400
             local destCutOff = math.sqrt(navigateDistanceCutOff) + 10
             if not destination then
                 --LOG('no destination BuilderData '..repr(builderData))
@@ -370,7 +370,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                             local px = path[i].pos[1] - platoonPosition[1]
                             local pz = path[i].pos[3] - platoonPosition[3]
                             local pathDistance = px * px + pz * pz
-                            if pathDistance < 225 then
+                            if pathDistance < 1225 then
                                 -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                                 IssueClearCommands(platoonUnits)
                                 break
@@ -405,7 +405,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                 local px = shortListPath[i].pos[1] - platoonPosition[1]
                                 local pz = shortListPath[i].pos[3] - platoonPosition[3]
                                 local pathDistance = px * px + pz * pz
-                                if pathDistance < 225 then
+                                if pathDistance < 1225 then
                                     -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                                     IssueClearCommands(platoonUnits)
                                     break
@@ -441,7 +441,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         local px = destination[1] - platoonPosition[1]
                         local pz = destination[3] - platoonPosition[3]
                         local pathDistance = px * px + pz * pz
-                        if pathDistance < 225 then
+                        if pathDistance < 1225 then
                             -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                             IssueClearCommands(platoonUnits)
                             break
@@ -475,7 +475,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         local px = builderData.EnemyStartPosition[1] - platoonPosition[1]
                         local pz = builderData.EnemyStartPosition[3] - platoonPosition[3]
                         local pathDistance = px * px + pz * pz
-                        if pathDistance < 225 then
+                        if pathDistance < 1225 then
                             -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                             IssueClearCommands(platoonUnits)
                             break

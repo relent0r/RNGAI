@@ -60,11 +60,6 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
     -- Increase check to 300 for transports
     if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 250 * 250
     and unit.PlatoonHandle and not EntityCategoryContains(categories.COMMAND, unit) then
-        -- If we can't path to our destination, we need, rather than want, transports
-        local needTransports = not result and reason ~= 'PathOK'
-        if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 295 * 295 then
-            needTransports = true
-        end
 
         -- Skip the last move... we want to return and do a build
         unit.WaitingForTransport = true
@@ -262,11 +257,6 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
     -- Increase check to 300 for transports
     if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 300 * 300
     and eng.PlatoonHandle and not EntityCategoryContains(categories.COMMAND, eng) then
-        -- If we can't path to our destination, we need, rather than want, transports
-        local needTransports = not result and reason ~= 'PathOK'
-        if VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 350 * 350 then
-            needTransports = true
-        end
 
         -- Skip the last move... we want to return and do a build
         eng.WaitingForTransport = true

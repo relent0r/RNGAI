@@ -846,6 +846,28 @@ function HaveUnitRatioVersusEnemyRNG(aiBrain, ratio, locType, radius, categoryOw
     return CompareBody(numNeedUnits / numEnemyUnits, ratio, compareType)
 end
 
+function HaveSMDRatioVersusEnemySMLRNG(aiBrain, ratio, locType)
+    local AIName = aiBrain.Nickname
+    local baseposition, radius
+    if BASEPOSTITIONS[AIName][locType] then
+        baseposition = BASEPOSTITIONS[AIName][locType].Pos
+        radius = BASEPOSTITIONS[AIName][locType].Rad
+    elseif aiBrain.BuilderManagers[locType] then
+        baseposition = aiBrain.BuilderManagers[locType].FactoryManager.Location
+        radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
+        BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
+        BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
+    end
+    if not baseposition then
+        return false
+    end
+    local numNeedUnits = aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, baseposition, radius , 'Ally')
+    local numEnemyUnits = aiBrain.emanager.Nuke.T3
+    return CompareBody(numNeedUnits / numEnemyUnits, ratio, '<')
+end
+
+
+
 function GetEnemyUnitsRNG(aiBrain, unitCount, categoryEnemy, compareType)
     local numEnemyUnits = aiBrain:GetNumUnitsAroundPoint(categoryEnemy, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ , 'Enemy')
     --RNGLOG(aiBrain:GetArmyIndex()..' CompareBody {World} '..categoryEnemy..' ['..numEnemyUnits..'] '..compareType..' ['..unitCount..'] return '..repr(CompareBody(numEnemyUnits, unitCount, compareType)))
@@ -1682,7 +1704,7 @@ function PlayerRoleCheck(aiBrain, locationType, unitCount, unitCategory, checkTy
         if factoryManager.LocationActive then
             local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
             if  numUnits >= unitCount then
-                RNGLOG('We are spam player and have hit air factory limit')
+                --RNGLOG('We are spam player and have hit air factory limit')
                 return false
             end
         end

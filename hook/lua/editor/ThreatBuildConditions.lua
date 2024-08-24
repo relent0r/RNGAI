@@ -5,10 +5,9 @@
         Threat Build Conditions
 ]]
 local MAPBASEPOSTITIONSRNG = {}
-local AIUtils = import('/lua/ai/AIUtilities.lua')
-local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
+local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 
 function EnemyThreatGreaterThanValueAtBaseRNG(aiBrain, locationType, threatValue, threatType, rings, builder)
     local testRings = rings or 10
@@ -55,12 +54,16 @@ function EnemyThreatGreaterThanAI(aiBrain, threatType)
     return false
 end
 
-function EnemyACUCloseToBase(aiBrain)
+function ThreatCloseToBase(aiBrain)
 
     if aiBrain.EnemyIntel.ACUEnemyClose then
         return true
-    else
-        return false
+    end
+    local manager = aiBrain.BuilderManagers['MAIN']
+    if manager.FactoryManager.Location then
+        if RUtils.DefensiveClusterCheck(aiBrain, manager.FactoryManager.Location) then
+            return true
+        end
     end
     return false
 end
@@ -180,6 +183,32 @@ function GreaterThanAlliedThreatInZone(aiBrain, locationType, threat)
         else
             return true
         end
+    end
+    return false
+end
+
+function GreaterThanAlliedThreatInAdjacentZones(aiBrain, locationType, threat)
+    if aiBrain.BuilderManagers[locationType].FactoryManager.LocationActive then
+        local position = aiBrain.BuilderManagers[locationType].Position
+        local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
+        local zoneId = MAP:GetZoneID(position,aiBrain.Zones.Land.index)
+        local landZones = aiBrain.Zones.Land.zones
+        local enemyLandThreat = 0
+        local friendlyDirectFireThreat = 0
+        if landZones[zoneId].edges and table.getn(landZones[zoneId].edges) > 0 then
+            for k, v in landZones[zoneId].edges do
+                if landZones[v.zone].enemylandthreat > 0 then
+                    enemyLandThreat = enemyLandThreat + landZones[v.zone].enemylandthreat
+                end
+                if landZones[v.zone].friendlydirectfireantisurfacethreat > 0 then
+                    friendlyDirectFireThreat = friendlyDirectFireThreat + landZones[v.zone].friendlydirectfireantisurfacethreat
+                end
+            end
+        end
+        if friendlyDirectFireThreat > enemyLandThreat then
+            return false
+        end
+        return true
     end
     return false
 end
