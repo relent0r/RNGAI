@@ -146,8 +146,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     break
                                 end
                                 while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
-                                    IssueClearCommands({cdr})
-                                    IssueMove({cdr},{v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]})
+                                    if cdr.GetNavigator then
+                                        local navigator = cdr:GetNavigator()
+                                        if navigator then
+                                            navigator:SetGoal({v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]})
+                                        end
+                                    else
+                                        IssueClearCommands({cdr})
+                                        IssueMove({cdr},{v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]})
+                                    end
                                     if VDist3Sq(cdr:GetPosition(),{v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]}) < 144 then
                                         IssueClearCommands({cdr})
                                         RUtils.EngineerTryReclaimCaptureArea(brain, cdr, v.Position, 5)
@@ -736,7 +743,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         if cdr.EnemyNavalPresent then
                             cdr.EnemyNavalPresent = nil
                         end
-                        IssueMove({cdr}, destination)
+                        if cdr.GetNavigator then
+                            local navigator = cdr:GetNavigator()
+                            if navigator then
+                                navigator:SetGoal(destination)
+                            end
+                        else
+                            IssueClearCommands({cdr})
+                            IssueMove({cdr},destination)
+                        end
                         --LOG('ACU at position '..repr(destination))
                         --LOG('Cutoff distance was '..navigateDistanceCutOff)
                         self:ChangeState(self.DecideWhatToDo)
@@ -747,13 +762,19 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
 
 
                 -- navigate towards waypoint 
-                IssueMove({cdr}, waypoint)
+                if cdr.GetNavigator then
+                    local navigator = cdr:GetNavigator()
+                    if navigator then
+                        navigator:SetGoal(waypoint)
+                    end
+                else
+                    IssueMove({cdr},waypoint)
+                end
 
                 -- check for opportunities
                 local wx = waypoint[1]
                 local wz = waypoint[3]
                 local movementTimeout = 0
-                local lastPos
                 while not IsDestroyed(self) do
                     WaitTicks(20)
                     local position = cdr:GetPosition()
@@ -766,7 +787,14 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         --LOG('distance is '..(dx * dx + dz * dz))
                         --LOG('CutOff is '..navigateDistanceCutOff)
                         if distance < 9 then
-                            IssueMove({cdr}, destination)
+                            if cdr.GetNavigator then
+                                local navigator = cdr:GetNavigator()
+                                if navigator then
+                                    navigator:SetGoal(destination)
+                                end
+                            else
+                                IssueMove({cdr},destination)
+                            end
                             WaitTicks(100)
                         end
                         if not endPoint then
@@ -1146,7 +1174,14 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     cdr.Caution = true
                                     cdr.CautionReason = 'acuOverChargeTargetCheck'
                                     if RUtils.GetAngleRNG(cdrPos[1], cdrPos[3], cdr.CDRHome[1], cdr.CDRHome[3], targetPos[1], targetPos[3]) > 0.5 then
-                                        IssueMove({cdr}, cdr.CDRHome)
+                                        if cdr.GetNavigator then
+                                            local navigator = cdr:GetNavigator()
+                                            if navigator then
+                                                navigator:SetGoal(cdr.CDRHome)
+                                            end
+                                        else
+                                            IssueMove({cdr},cdr.CDRHome)
+                                        end
                                         coroutine.yield(40)
                                     end
                                     ----self:LogDebug(string.format('cdr retreating due to enemy threat within attacktarget enemy '..realThreat.enemySurface..' ally '..realThreat.allySurface..' friendly inner '..cdr.CurrentFriendlyInnerCircle))
@@ -1220,12 +1255,12 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         brain.BrainIntel.SuicideModeTarget = false
                     end
                     if target and not target.Dead and not target:BeenDestroyed() then
-                        IssueClearCommands({cdr})
                         targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                         local movePos
                         local currentLayer = cdr:GetCurrentLayer() 
                         if target.Blueprint.CategoriesHash.RECLAIMABLE and currentLayer == 'Seabed' and targetDistance < 10 then
                             ----self:LogDebug(string.format('acu is under water and target is close, attempt reclaim, current unit distance is '..VDist3(cdrPos, targetPos)))
+                            IssueClearCommands({cdr})
                             IssueReclaim({cdr}, target)
                             movePos = targetPos
                         elseif snipeAttempt then
@@ -1249,14 +1284,38 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                             if alternateFirePos then
-                                IssueMove({cdr}, movePos)
+                                if cdr.GetNavigator then
+                                    local navigator = cdr:GetNavigator()
+                                    if navigator then
+                                        navigator:SetGoal(movePos)
+                                    end
+                                else
+                                    IssueClearCommands({cdr})
+                                    IssueMove({cdr},cdr.CDRHome)
+                                end
                             else
-                                IssueMove({cdr}, cdr.CDRHome)
+                                if cdr.GetNavigator then
+                                    local navigator = cdr:GetNavigator()
+                                    if navigator then
+                                        navigator:SetGoal(cdr.CDRHome)
+                                    end
+                                else
+                                    IssueClearCommands({cdr})
+                                    IssueMove({cdr},cdr.CDRHome)
+                                end
                             end
                             coroutine.yield(30)
                             IssueClearCommands({cdr})
                         end
-                        IssueMove({cdr}, movePos)
+                        if cdr.GetNavigator then
+                            local navigator = cdr:GetNavigator()
+                            if navigator then
+                                navigator:SetGoal(movePos)
+                            end
+                        else
+                            IssueClearCommands({cdr})
+                            IssueMove({cdr},cdr.CDRHome)
+                        end
                         coroutine.yield(30)
                         if not snipeAttempt then
                             if not IsDestroyed(target) and not ACUFunc.CheckRetreat(cdrPos,targetPos,target) then
@@ -1270,7 +1329,14 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                         cdrNewPos = RUtils.GetLateralMovePos(cdrNewPos, targetPos, 6, 1)
                                     end
                                 end
-                                IssueMove({cdr}, cdrNewPos)
+                                if cdr.GetNavigator then
+                                    local navigator = cdr:GetNavigator()
+                                    if navigator then
+                                        navigator:SetGoal(cdrNewPos)
+                                    end
+                                else
+                                    IssueMove({cdr},cdrNewPos)
+                                end
                                 coroutine.yield(30)
                             end
                         end
@@ -1281,14 +1347,23 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         if innerCircleEnemies > 0 then
                             local result, newTarget = ACUFunc.CDRGetUnitClump(brain, cdr.Position, cdr.WeaponRange - 3)
                             if newTarget and VDist3Sq(cdr.Position, newTarget:GetPosition()) < (cdr.WeaponRange * cdr.WeaponRange) - 9 then
-                                IssueClearCommands({cdr})
-                                IssueOverCharge({cdr}, newTarget)
+                                if cdr.GetNavigator then
+                                    IssueOverCharge({cdr}, newTarget)
+                                else
+                                    IssueClearCommands({cdr})
+                                    IssueOverCharge({cdr}, newTarget)
+                                end
+                                
                                 overChargeFired = true
                             end
                         end
                         if not overChargeFired and VDist3Sq(cdr:GetPosition(), target:GetPosition()) < cdr.WeaponRange * cdr.WeaponRange then
-                            IssueClearCommands({cdr})
-                            IssueOverCharge({cdr}, target)
+                            if cdr.GetNavigator then
+                                IssueOverCharge({cdr}, target)
+                            else
+                                IssueClearCommands({cdr})
+                                IssueOverCharge({cdr}, target)
+                            end
                         end
                     end
                 end
@@ -1559,8 +1634,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     for k,v in cdr.EngineerBuildQueue do
                         --LOG('Attempt to build queue item of '..repr(v))
                         while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
-                            IssueClearCommands({cdr})
-                            IssueMove({cdr},v.Position)
+                            if cdr.GetNavigator then
+                                local navigator = cdr:GetNavigator()
+                                if navigator then
+                                    navigator:SetGoal(v.Position)
+                                end
+                            else
+                                IssueClearCommands({cdr})
+                                IssueMove({cdr},v.Position)
+                            end
                             if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then
                                 IssueClearCommands({cdr})
                                 RUtils.EngineerTryReclaimCaptureArea(brain, cdr, v.Position, 5)
@@ -1670,8 +1752,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                             break
                                         end
                                         while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
-                                            IssueClearCommands({cdr})
-                                            IssueMove({cdr},v.Position)
+                                            if cdr.GetNavigator then
+                                                local navigator = cdr:GetNavigator()
+                                                if navigator then
+                                                    navigator:SetGoal(v.Position)
+                                                end
+                                            else
+                                                IssueClearCommands({cdr})
+                                                IssueMove({cdr},v.Position)
+                                            end
                                             if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then
                                                 IssueClearCommands({cdr})
                                                 RUtils.EngineerTryReclaimCaptureArea(brain, cdr, v.Position, 5)
@@ -1739,8 +1828,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                             break
                                         end
                                         while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
-                                            IssueClearCommands({cdr})
-                                            IssueMove({cdr},v.Position)
+                                            if cdr.GetNavigator then
+                                                local navigator = cdr:GetNavigator()
+                                                if navigator then
+                                                    navigator:SetGoal(v.Position)
+                                                end
+                                            else
+                                                IssueClearCommands({cdr})
+                                                IssueMove({cdr},v.Position)
+                                            end
                                             if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then
                                                 IssueClearCommands({cdr})
                                                 RUtils.EngineerTryReclaimCaptureArea(brain, cdr, v.Position, 5)

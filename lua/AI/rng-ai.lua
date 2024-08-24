@@ -398,8 +398,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 eng = 0,
                 fact = {
                     Land = 0,
+                    LandUpgrading=0,
                     Air = 0,
-                    Naval = 0
+                    AirUpgrading=0,
+                    Naval = 0,
+                    NavalUpgrading=0
                 },
                 silo = 0,
                 mex = {
@@ -478,17 +481,16 @@ AIBrain = Class(RNGAIBrainClass) {
                         shard=0
                     },
                     T2 = {
-                        tank=0,
-                        mml=0,
-                        aa=0,
+                        destroyer=0,
+                        cruiser=0,
+                        subhunter=0,
                         shield=0
                     },
                     T3 = {
-                        tank=0,
-                        sniper=0,
-                        arty=0,
-                        mml=0,
-                        aa=0,
+                        battleship=0,
+                        nukesub=0,
+                        battlecrusier=0,
+                        missileship=0,
                         shield=0
                     }
                 },
@@ -1108,6 +1110,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.TML = {}
         self.EnemyIntel.SMD = {}
         self.EnemyIntel.SML = {}
+        self.EnemyIntel.NavalSML = {}
         self.EnemyIntel.Experimental = {}
         self.EnemyIntel.Artillery = {}
         self.EnemyIntel.DirectorData = {
@@ -1579,6 +1582,22 @@ AIBrain = Class(RNGAIBrainClass) {
                         arty = 0,
                         mml = 0,
                         aa = 0
+                    }
+                },
+                Naval = {
+                    T1 = {
+                        frigate = 0,
+                        sub = 0
+                    },
+                    T2 = {
+                        destroyer = 0,
+                        cruiser = 0
+                    },
+                    T3 = {
+                        missileship = 0,
+                        battleship = 0,
+                        nukesub = 0,
+                        subhunter = 0
                     }
                 }
             }
@@ -5580,7 +5599,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local armyNavalType={frigate=0,sub=0,shard=0,destroyer=0,cruiser=0,subhunter=0,battleship=0,carrier=0,missileship=0,subkiller=0,battlecruiser=0,nukesub=0}
         local armyNavalTiers={T1=0,T2=0,T3=0}
         local launcherspend = {T2=0,T3=0}
-        local facspend = {Land=0,Air=0,Naval=0}
+        local facspend = {Land=0,Air=0,Naval=0,LandUpgrading=0,AirUpgrading=0,NavalUpgrading=0}
         local mexspend = {T1=0,T2=0,T3=0}
         local engspend = {T1=0,T2=0,T3=0,com=0}
         local engbuildpower = {T1=0,T2=0,T3=0,com=0,sacu=0}
@@ -5608,6 +5627,8 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         local unitCat
+        local currentLandFactoryCount = 0
+        local currentUpgradingLandFactories = 0
 
         for _,unit in units do
             if unit and not unit.Dead then
@@ -5617,6 +5638,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     local spende=GetConsumptionPerSecondEnergy(unit)
                     local producem=GetProductionPerSecondMass(unit)
                     local producee=GetProductionPerSecondEnergy(unit)
+                    local unitUpgrading = false
                     tspend.m=tspend.m+spendm
                     tspend.e=tspend.e+spende
                     rincome.m=rincome.m+producem
@@ -5694,8 +5716,14 @@ AIBrain = Class(RNGAIBrainClass) {
                             engbuildpower.T3 = engbuildpower.T3 + unit.Blueprint.Economy.BuildRate
                         end
                     elseif unitCat.FACTORY then
+                        if unit:IsUnitState('Upgrading') then
+                            unitUpgrading = true
+                        end
                         if unitCat.LAND then
                             facspend.Land=facspend.Land+spendm
+                            if unitUpgrading then
+                                facspend.LandUpgrading=facspend.LandUpgrading+spendm
+                            end
                             if unitCat.TECH1 then
                                 factories.Land.T1=factories.Land.T1+1
                             elseif unitCat.TECH2 then
@@ -5705,6 +5733,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                         elseif unitCat.AIR then
                             facspend.Air=facspend.Air+spendm
+                            if unitUpgrading then
+                                facspend.AirUpgrading=facspend.AirUpgrading+spendm
+                            end
                             if unitCat.TECH1 then
                                 factories.Air.T1=factories.Air.T1+1
                             elseif unitCat.TECH2 then
@@ -5714,6 +5745,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                         elseif unitCat.NAVAL then
                             facspend.Naval=facspend.Naval+spendm
+                            if unitUpgrading then
+                                facspend.NavalUpgrading=facspend.NavalUpgrading+spendm
+                            end
                             if unitCat.TECH1 then
                                 factories.Naval.T1=factories.Naval.T1+1
                             elseif unitCat.TECH2 then
@@ -5910,7 +5944,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 armyNaval.T2.subhunter=armyNaval.T2.subhunter+1
                                 armyNavalType.subhunter=armyNavalType.subhunter+1
                             end
-                        elseif EntityCategoryContains(categories.TECH3,unit) then
+                        elseif unitCat.TECH3 then
                             armyNavalTiers.T3=armyNavalTiers.T3+1
                             if EntityCategoryContains(categories.NUKE * categories.SUBMERSIBLE,unit) then
                                 armyNaval.T3.nukesub=armyNaval.T3.nukesub+1
@@ -5921,7 +5955,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             elseif EntityCategoryContains(categories.xes0307,unit) then
                                 armyNaval.T3.battlecruiser=armyNaval.T3.battlecruiser+1
                                 armyNavalType.battlecruiser=armyNavalType.battlecruiser+1
-                            elseif EntityCategoryContains(categories.uas0303,unit) then
+                            elseif EntityCategoryContains(categories.xas0306,unit) then
                                 armyNaval.T3.missileship=armyNaval.T3.missileship+1
                                 armyNavalType.missileship=armyNavalType.missileship+1
                             elseif EntityCategoryContains(categories.CARRIER,unit) then
@@ -6367,8 +6401,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 eng = 0,
                 fact = {
                     Land = 0,
+                    LandUpgrading=0,
                     Air = 0,
-                    Naval = 0
+                    AirUpgrading=0,
+                    Naval = 0,
+                    NavalUpgrading=0
                 },
                 silo = 0,
                 mex = {
@@ -7074,6 +7111,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.TML = {}
         self.EnemyIntel.SMD = {}
         self.EnemyIntel.SML = {}
+        self.EnemyIntel.NavalSML = {}
         self.EnemyIntel.Experimental = {}
         self.EnemyIntel.Artillery = {}
         self.EnemyIntel.DirectorData = {

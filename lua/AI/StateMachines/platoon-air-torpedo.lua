@@ -137,7 +137,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                 local target, _, acuIndex = RUtils.CheckACUSnipe(aiBrain, 'AirAntiNavy')
                 if target then
                     local enemyAcuHealth = aiBrain.EnemyIntel.ACU[acuIndex].HP
-                    if self.PlatoonStrikeDamage > enemyAcuHealth * 0.80 or acuHP < 2500 then
+                    if self.PlatoonStrikeDamage > enemyAcuHealth * 0.80 or enemyAcuHealth < 2500 then
                         self.BuilderData = {
                             AttackTarget = target,
                             Position = target:GetPosition()
@@ -185,7 +185,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
             end
             if not target then
                 ----self:LogDebug(string.format('Checking for standard target'))
-                target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, platPos, self, 'Attack', self.MaxTargetSearchRadius, self.TargetSearchCategories, true, self.CurrentPlatoonThreatAntiNavy)
+                target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, platPos, self, 'Attack', self.MaxTargetSearchRadius, self.TargetSearchCategories, true, self.CurrentPlatoonThreatAntiNavy, nil, nil, nil, true)
                 if target and not target.Dead then
                     --LOG('Bomber point pos '..repr(point.Position)..' with a priority of '..point.priority)
                         if not self.retreat then
@@ -228,7 +228,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                         ----self:LogDebug(string.format('Bomber platoon is merging with another'))
                         local platUnits = plat:GetPlatoonUnits()
                         aiBrain:AssignUnitsToPlatoon(self, platUnits, 'Attack', 'None')
-                        import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, plat, platUnits)
+                        import("/mods/rngai/lua/ai/statemachines/platoon-air-torpedo.lua").AssignToUnitsMachine({ }, plat, platUnits)
                         ----self:LogDebug(string.format('Merged'))
                     end
                 end
@@ -293,7 +293,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                             local px = path[i].pos[1] - platoonPosition[1]
                             local pz = path[i].pos[3] - platoonPosition[3]
                             local pathDistance = px * px + pz * pz
-                            if pathDistance < 225 then
+                            if pathDistance < 1225 then
                                 -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                                 IssueClearCommands(platoonUnits)
                                 break
@@ -330,7 +330,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                                 local px = shortListPath[i].pos[1] - platoonPosition[1]
                                 local pz = shortListPath[i].pos[3] - platoonPosition[3]
                                 local pathDistance = px * px + pz * pz
-                                if pathDistance < 225 then
+                                if pathDistance < 1225 then
                                     -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                                     IssueClearCommands(platoonUnits)
                                     break
@@ -366,7 +366,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                         local px = destination[1] - platoonPosition[1]
                         local pz = destination[3] - platoonPosition[3]
                         local pathDistance = px * px + pz * pz
-                        if pathDistance < 225 then
+                        if pathDistance < 1225 then
                             -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                             IssueClearCommands(platoonUnits)
                             break
@@ -400,7 +400,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                         local px = builderData.EnemyStartPosition[1] - platoonPosition[1]
                         local pz = builderData.EnemyStartPosition[3] - platoonPosition[3]
                         local pathDistance = px * px + pz * pz
-                        if pathDistance < 225 then
+                        if pathDistance < 1225 then
                             -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                             IssueClearCommands(platoonUnits)
                             break

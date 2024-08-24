@@ -307,7 +307,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         ----self:LogDebug(string.format('Bomber platoon is merging with another'))
                         local platUnits = plat:GetPlatoonUnits()
                         aiBrain:AssignUnitsToPlatoon(self, platUnits, 'Attack', 'None')
-                        import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, plat, platUnits)
+                        import("/mods/rngai/lua/ai/statemachines/platoon-air-bomber.lua").AssignToUnitsMachine({ }, plat, platUnits)
                         ----self:LogDebug(string.format('Merged'))
                     end
                 end
@@ -370,7 +370,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                             local px = path[i].pos[1] - platoonPosition[1]
                             local pz = path[i].pos[3] - platoonPosition[3]
                             local pathDistance = px * px + pz * pz
-                            if pathDistance < 225 then
+                            if pathDistance < 1225 then
                                 -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                                 IssueClearCommands(platoonUnits)
                                 break
@@ -405,7 +405,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                 local px = shortListPath[i].pos[1] - platoonPosition[1]
                                 local pz = shortListPath[i].pos[3] - platoonPosition[3]
                                 local pathDistance = px * px + pz * pz
-                                if pathDistance < 225 then
+                                if pathDistance < 1225 then
                                     -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                                     IssueClearCommands(platoonUnits)
                                     break
@@ -441,7 +441,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         local px = destination[1] - platoonPosition[1]
                         local pz = destination[3] - platoonPosition[3]
                         local pathDistance = px * px + pz * pz
-                        if pathDistance < 225 then
+                        if pathDistance < 1225 then
                             -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                             IssueClearCommands(platoonUnits)
                             break
@@ -475,7 +475,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         local px = builderData.EnemyStartPosition[1] - platoonPosition[1]
                         local pz = builderData.EnemyStartPosition[3] - platoonPosition[3]
                         local pathDistance = px * px + pz * pz
-                        if pathDistance < 225 then
+                        if pathDistance < 1225 then
                             -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
                             IssueClearCommands(platoonUnits)
                             break

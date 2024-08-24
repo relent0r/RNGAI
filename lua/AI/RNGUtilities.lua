@@ -1629,7 +1629,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
     return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition, defenseTargets
 end
 
-function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted)
+function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted, navalOnly)
     if not position then
         position = platoon:GetPlatoonPosition()
     end
@@ -1689,6 +1689,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
             local targetShields = 9999
             for num, unit in targetUnits do
                 if not unit.Dead and not unit.Tractored then
+                    local unitCats = unit.Blueprint.CategoriesHash
                     if ignoreNotCompleted then
                         if unit:GetFractionComplete() ~= 1 then
                             continue
@@ -1699,6 +1700,11 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                             if unit:GetAIBrain():GetArmyIndex() == v then
                                 if not unit.CaptureInProgress and EntityCategoryContains(category, unit) and platoon:CanAttackTarget(squad, unit) then
                                     local unitPos = unit:GetPosition()
+                                    if navalOnly then
+                                        if unitCats.HOVER or unitCats.AIR or not PositionInWater(unitPos) then
+                                            continue
+                                        end
+                                    end
                                     if platoon.Defensive and aiBrain.GridPresence then
                                         if aiBrain.GridPresence:GetInferredStatus(unitPos) == 'Hostile' then
                                             continue
@@ -1736,6 +1742,11 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                                 end
                             end
                             local unitPos = unit:GetPosition()
+                            if navalOnly then
+                                if unitCats.HOVER or unitCats.AIR or not PositionInWater(unitPos) then
+                                    continue
+                                end
+                            end
                             if platoon.Defensive and aiBrain.GridPresence then
                                 if aiBrain.GridPresence:GetInferredStatus(unitPos)  == 'Hostile' then
                                     continue
@@ -3804,6 +3815,7 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
             if relativeLoc[1] - playableArea[1] <= 8 or relativeLoc[1] >= playableArea[3] - 8 or relativeLoc[2] - playableArea[2] <= 8 or relativeLoc[2] >= playableArea[4] - 8 then
                 borderWarning = true
             end
+            --LOG('Location returned is '..tostring(relativeLoc[1])..':'..tostring(relativeLoc[2]))
             return relativeLoc, whatToBuild, borderWarning
         else
             return location, whatToBuild, borderWarning
@@ -7207,6 +7219,21 @@ GetRallyPoint = function(aiBrain, layer, position, minRadius, maxRadius)
         end
         return shortlist[1].Position
     end
+end
+
+GetLineOfSightPriority = function(aiBrain, navalPosition, startPosition)
+    local destroyerHeight = 0
+    local battlesShipHeight = 0
+    local checkPos = {navalPosition[1],navalPosition[2] ,navalPosition[3]}
+    local priority = 0.7
+    if aiBrain:CheckBlockingTerrain({navalPosition[1], navalPosition[2] + destroyerHeight, navalPosition[3]}, startPosition, 'low') then
+        priority = 2.0
+    elseif aiBrain:CheckBlockingTerrain({navalPosition[1], navalPosition[2] + battlesShipHeight, navalPosition[3]}, startPosition, 'low') then
+        priority = 1.5
+    elseif aiBrain:CheckBlockingTerrain({navalPosition[1], navalPosition[2] + 60, navalPosition[3]}, startPosition, 'low') then
+        priority = 1.0
+    end
+    return priority
 end
 
 

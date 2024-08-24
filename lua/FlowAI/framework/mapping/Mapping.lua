@@ -210,12 +210,21 @@ GameMap = Class({
         --RNGLOG(string.format('FlowAI framework: CreateMapMarkers() finished, runtime: %.2f seconds.', END - START ))
         local drawStuffz = false
         if drawStuffz then
+            --[[
+            The second param is GetZoneSet is layer.
+            The param for DrawLayer is also...layer.
+            LAYER_NONE = -1
+            LAYER_AIR = 0
+            LAYER_LAND = 1
+            LAYER_NAVY = 2
+            LAYER_HOVER = 3
+            LAYER_AMPH = 4]]
             ForkThread(
                 function()
-                    local zoneSetCopy = self:GetZoneSet('RNGLandResourceSet',2)
+                    local zoneSetCopy = self:GetZoneSet('RNGNavalResourceSet',2)
                     coroutine.yield(100)
                     while true do
-                        self:DrawLayer(2)
+                        --self:DrawLayer(2)
                         self:DrawZones(zoneSetCopy.index)
                         WaitTicks(2)
                     end

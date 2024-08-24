@@ -208,7 +208,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI ACU T1 Factory Builder Land T1 MainBase Storage',
-        PlatoonTemplate = 'EngineerStateT123RNG',
+        PlatoonTemplate = 'CommanderDummyRNG',
         Priority = 1010,
         DelayEqualBuildPlattons = {'Factories', 3},
         InstanceCount = 1,
@@ -232,7 +232,7 @@ BuilderGroup {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
+                    'T1LandFactory'
                 },
             }
         }
