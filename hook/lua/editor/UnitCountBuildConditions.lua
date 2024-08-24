@@ -846,7 +846,7 @@ function HaveUnitRatioVersusEnemyRNG(aiBrain, ratio, locType, radius, categoryOw
     return CompareBody(numNeedUnits / numEnemyUnits, ratio, compareType)
 end
 
-function HaveSMDRatioVersusEnemySMLRNG(aiBrain, ratio, locType, radius, categoryOwn, compareType, categoryEnemy)
+function HaveSMDRatioVersusEnemySMLRNG(aiBrain, ratio, locType)
     local AIName = aiBrain.Nickname
     local baseposition, radius
     if BASEPOSTITIONS[AIName][locType] then
@@ -861,9 +861,9 @@ function HaveSMDRatioVersusEnemySMLRNG(aiBrain, ratio, locType, radius, category
     if not baseposition then
         return false
     end
-    local numNeedUnits = aiBrain:GetNumUnitsAroundPoint(categoryOwn, baseposition, radius , 'Ally')
+    local numNeedUnits = aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, baseposition, radius , 'Ally')
     local numEnemyUnits = aiBrain.emanager.Nuke.T3
-    return CompareBody(numNeedUnits / numEnemyUnits, ratio, compareType)
+    return CompareBody(numNeedUnits / numEnemyUnits, ratio, '<')
 end
 
 

@@ -906,13 +906,14 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
-            { UCBC, 'HaveUnitRatioVersusEnemyRNG', { 0.50, 'LocationType', 180, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, '<', categories.SILO * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL) } },
+            { UCBC, 'HaveSMDRatioVersusEnemySMLRNG', { 0.50, 'LocationType' } },
         },
         BuilderType = 'Any',
         BuilderData = {
             StateMachine = 'EngineerBuilder',
             NumAssistees = 8,
             Construction = {
+                NoPause = true,
                 DesiresAssist = true,
                 NumAssistees = 10,
                 BuildClose = false,

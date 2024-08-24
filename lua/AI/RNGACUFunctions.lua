@@ -1085,6 +1085,10 @@ function IdentifyACUEnhancement(aiBrain, unit, enhancementTable, gameTime)
     return bestEnhancement
 end
 
+function FindRadarPosition(aiBrain, cdr)
+
+end
+
 -- debug stuff
 
 function drawRect(aiBrain, cdr)

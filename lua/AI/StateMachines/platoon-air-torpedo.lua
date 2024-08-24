@@ -228,7 +228,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                         ----self:LogDebug(string.format('Bomber platoon is merging with another'))
                         local platUnits = plat:GetPlatoonUnits()
                         aiBrain:AssignUnitsToPlatoon(self, platUnits, 'Attack', 'None')
-                        import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, plat, platUnits)
+                        import("/mods/rngai/lua/ai/statemachines/platoon-air-torpedo.lua").AssignToUnitsMachine({ }, plat, platUnits)
                         ----self:LogDebug(string.format('Merged'))
                     end
                 end

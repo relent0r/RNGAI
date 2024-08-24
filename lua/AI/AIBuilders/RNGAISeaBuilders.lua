@@ -78,7 +78,7 @@ BuilderGroup {
         Priority = 747,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL, true }},
-            { EBC, 'FactorySpendRatioRNG', {'Naval', true}},
+            { EBC, 'FactorySpendRatioRNG', {'Naval', 'NavalUpgrading', true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T1', 'frigate'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -146,7 +146,7 @@ BuilderGroup {
         Priority = 750,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
-            { EBC, 'FactorySpendRatioRNG', {'Naval', true}},
+            { EBC, 'FactorySpendRatioRNG', {'Naval','NavalUpgrading',  true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T2', 'destroyer'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -161,7 +161,7 @@ BuilderGroup {
         Priority = 749,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
-            { EBC, 'FactorySpendRatioRNG', {'Naval', true}},
+            { EBC, 'FactorySpendRatioRNG', {'Naval','NavalUpgrading',  true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T2', 'cruiser'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -176,7 +176,7 @@ BuilderGroup {
         Priority = 748,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
-            { EBC, 'FactorySpendRatioRNG', {'Naval', true}},
+            { EBC, 'FactorySpendRatioRNG', {'Naval','NavalUpgrading',  true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T2', 'subhunter'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -222,27 +222,14 @@ BuilderGroup {
         },
         BuilderType = 'Sea',
     },
-    --[[
-    Builder { 
-        BuilderName = 'RNGAI Sea Ranged T2 Queue',
-        PlatoonTemplate = 'RNGAIT2SeaAttackRangedQueue',
-        Priority = 0,
-        PriorityFunction = SeaRangedMode,
-        BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
-            { UCBC, 'UnitCapCheckLess', { 0.95 } },
-        },
-        BuilderType = 'Sea',
-    },
-    ]]
+
     Builder {
         BuilderName = 'RNGAI T3 Battleship',
         PlatoonTemplate = 'T3SeaBattleship',
         Priority = 751,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
-            { EBC, 'FactorySpendRatioRNG', {'Naval', true}},
+            { EBC, 'FactorySpendRatioRNG', {'Naval','NavalUpgrading',  true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T3', 'battleship'} },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -264,34 +251,34 @@ BuilderGroup {
         },
         BuilderType = 'Sea',
     },
-    --[[
-    Builder { 
-        BuilderName = 'RNGAI Sea T3 Queue',
-        PlatoonTemplate = 'RNGAIT3SeaAttackQueue',
-        Priority = 501,
+    Builder {
+        BuilderName = 'RNGAI T3 MissileShip Demand',
+        PlatoonTemplate = 'T3MissileBoat',
+        Priority = 792,
         BuilderConditions = {
-            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.NAVAL * categories.TECH3 }},
-            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
-            { UCBC, 'UnitCapCheckLess', { 0.95 } },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Naval', 'T3', 'missileship'} },
+            { EBC, 'FactorySpendRatioRNG', {'Naval', 'NavalUpgrading'}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Sea',
+        BuilderData = {
+            TechLevel = 3
+        },
     },
-    Builder { 
-        BuilderName = 'RNGAI Sea Ranged T3 Queue',
-        PlatoonTemplate = 'RNGAIT3SeaAttackRangedQueue',
-        Priority = 500,
+    Builder {
+        BuilderName = 'RNGAI T3 NukeSub Demand',
+        PlatoonTemplate = 'T3SeaNukeSub',
+        Priority = 791,
         BuilderConditions = {
-            { MIBC, 'FactionIndex', { 1, 2, 3 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.NAVAL * categories.TECH3 }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.MOBILE * categories.NAVAL * categories.NUKE } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
-            { UCBC, 'UnitCapCheckLess', { 0.95 } },
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Naval', 'T3', 'nukesub'} },
+            { EBC, 'FactorySpendRatioRNG', {'Naval', 'NavalUpgrading'}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Sea',
-    },]]
+        BuilderData = {
+            TechLevel = 3
+        },
+    },
 }
 
 BuilderGroup {

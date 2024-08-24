@@ -210,7 +210,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                         ----self:LogDebug(string.format('Gunship platoon is merging with another'))
                         local platUnits = plat:GetPlatoonUnits()
                         aiBrain:AssignUnitsToPlatoon(self, platUnits, 'Attack', 'None')
-                        import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({ }, plat, platUnits)
+                        import("/mods/rngai/lua/ai/statemachines/platoon-air-gunship.lua").AssignToUnitsMachine({ }, plat, platUnits)
                     end
                 end
             end

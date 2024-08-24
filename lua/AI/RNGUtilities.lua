@@ -1743,7 +1743,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                             end
                             local unitPos = unit:GetPosition()
                             if navalOnly then
-                                if nunitCats.HOVER or unitCats.AIR or not PositionInWater(unitPos) then
+                                if unitCats.HOVER or unitCats.AIR or not PositionInWater(unitPos) then
                                     continue
                                 end
                             end
@@ -3815,6 +3815,7 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
             if relativeLoc[1] - playableArea[1] <= 8 or relativeLoc[1] >= playableArea[3] - 8 or relativeLoc[2] - playableArea[2] <= 8 or relativeLoc[2] >= playableArea[4] - 8 then
                 borderWarning = true
             end
+            --LOG('Location returned is '..tostring(relativeLoc[1])..':'..tostring(relativeLoc[2]))
             return relativeLoc, whatToBuild, borderWarning
         else
             return location, whatToBuild, borderWarning

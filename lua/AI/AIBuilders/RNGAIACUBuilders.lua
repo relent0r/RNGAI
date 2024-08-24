@@ -232,7 +232,7 @@ BuilderGroup {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
+                    'T1LandFactory'
                 },
             }
         }

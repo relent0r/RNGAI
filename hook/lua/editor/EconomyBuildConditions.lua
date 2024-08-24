@@ -123,7 +123,7 @@ function GreaterThanEconEfficiencyOverTimeRNG(aiBrain, MassEfficiency, EnergyEff
     return false
 end
 
-function GreaterThanEconEfficiencyCombinedRNG(aiBrain, MassEfficiency, EnergyEfficiency, debug)
+function GreaterThanEconEfficiencyCombinedRNG(aiBrain, MassEfficiency, EnergyEfficiency)
     -- Using eco over time values from the EconomyOverTimeRNG thread.
     if (aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= MassEfficiency and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= EnergyEfficiency) then
         --RNGLOG('GreaterThanEconEfficiencyOverTime passed True')
@@ -470,10 +470,11 @@ function LessThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType,requireBui
     return MassIncomeToFactoryRNG(aiBrain,'<', factoryDrain, requireBuilt)
 end
 
-function FactorySpendRatioRNG(aiBrain,uType, noStorageCheck)
+function FactorySpendRatioRNG(aiBrain,uType,upgradeType, noStorageCheck)
     --RNGLOG('Current Spend Ratio '..(aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m))
     local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3) or 0
-    if aiBrain.cmanager.categoryspend.fact[uType] / ( aiBrain.cmanager.income.r.m - mexSpend ) < aiBrain.ProductionRatios[uType] then
+    local currentFactorySpend = aiBrain.cmanager.categoryspend.fact[uType] - aiBrain.cmanager.categoryspend.fact[upgradeType]
+    if currentFactorySpend / ( aiBrain.cmanager.income.r.m - mexSpend ) < aiBrain.ProductionRatios[uType] then
         if aiBrain.EnemyIntel.ChokeFlag and uType == 'Land' then 
             if (GetEconomyStoredRatio(aiBrain, 'MASS') >= 0.10 and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= 0.95) then
                 return true

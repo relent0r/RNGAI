@@ -462,17 +462,28 @@ StructureManager = Class {
                 if v.Layer == 'Water' then
                     --RNGLOG('Found Water manager')
                     local baseDistance = VDist3Sq(v.Position, self.Brain.BuilderManagers['MAIN'].Position)
-                    if not closestBase or baseDistance < closestBase then
+                    if not closestBase or baseDistance < closestDistance then
                         local factoryList = v.FactoryManager.FactoryList
                         if factoryList then
                             for _, b in factoryList do
                                 if b.Blueprint.CategoriesHash[type] and b.Blueprint.CategoriesHash[tech] then
-                                    --RNGLOG('Found correct tech factory manager')
-                                    --RNGLOG('This should upgrade now')
-                                    closestBase = v
-                                    closestDistance = baseDistance
-                                    base = k
-                                    break
+                                    if hqFlag then
+                                        if not b.Blueprint.CategoriesHash.SUPPORTFACTORY then
+                                            --RNGLOG('Found correct tech factory manager')
+                                            --RNGLOG('This should upgrade now')
+                                            closestBase = v
+                                            closestDistance = baseDistance
+                                            base = k
+                                            break
+                                        end
+                                    else
+                                        --RNGLOG('Found correct tech factory manager')
+                                        --RNGLOG('This should upgrade now')
+                                        closestBase = v
+                                        closestDistance = baseDistance
+                                        base = k
+                                        break
+                                    end
                                 end
                             end
                         end
