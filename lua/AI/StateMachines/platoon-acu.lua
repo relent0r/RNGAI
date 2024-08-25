@@ -68,10 +68,10 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local EnemyIndex = brain:GetCurrentEnemy():GetArmyIndex()
             local OwnIndex = brain:GetArmyIndex()
             if brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
-                LOG('We can path to the enemy')
-                LOG('PlayableArea = '..tostring(repr(playableArea)))
+                --LOG('We can path to the enemy')
+                --LOG('PlayableArea = '..tostring(repr(playableArea)))
                 if playableArea[3] and playableArea[3] <= 512 or playableArea[4] and playableArea[4] <= 512 then
-                    LOG('10km or less land map, check if we can get more factories')
+                    --LOG('10km or less land map, check if we can get more factories')
                     self.CheckEarlyLandFactory = true
                 end
             end
@@ -1936,7 +1936,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     }
                     local ACUUpgradeList = ACUEnhancements[cdr.Blueprint.BlueprintId][upgradeMode]
                     if not ACUUpgradeList and cdr.Blueprint.Enhancements then
-                        LOG('There is no enhancement table for this unit, search for a new one, unit id is '..cdr.UnitId)
+                        --LOG('There is no enhancement table for this unit, search for a new one, unit id is '..cdr.UnitId)
                         foundEnhancement = ACUFunc.IdentifyACUEnhancement(brain, cdr, cdr.Blueprint.Enhancements, gameTime)
                     end
                     local NextEnhancement = false

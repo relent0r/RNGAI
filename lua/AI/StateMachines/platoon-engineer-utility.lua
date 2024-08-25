@@ -641,7 +641,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 else
                     reference = RUtils.GetDefensivePointRNG(aiBrain, cons.LocationType or 'MAIN', cons.Tier or 2, cons.Type)
                     if cons.BuildStructures[1].Unit == 'T2Artillery' then
-                        LOG('T2 Artillery Requested for Tier '..tostring(cons.Tier)..'location is '..tostring(reference[1])..':'..tostring(reference[3]))
+                        --LOG('T2 Artillery Requested for Tier '..tostring(cons.Tier)..'location is '..tostring(reference[1])..':'..tostring(reference[3]))
                     end
                 end
                 if reference then

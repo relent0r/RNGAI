@@ -307,7 +307,7 @@ end
 
 function BaseCouldBuildMobileAA(aiBrain, locationType)
     local basePosition = aiBrain.BuilderManagers[locationType].Position
-    local zoneCount = aiBrain.BuilderManagers[locationType].PathableZones.PathableZoneCount
+    local zoneCount = aiBrain.BuilderManagers[locationType].PathableZones.PathableLandZoneCount
     if zoneCount > 0 then
         for k, v in aiBrain.BuilderManagers[baseName].PathableZones.Zones do
             math.ceil(zoneCount * (enemyairthreat / myairthreat))

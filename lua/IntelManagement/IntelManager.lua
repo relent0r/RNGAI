@@ -766,15 +766,18 @@ IntelManager = Class {
                         end
                     end
                     if selection then
+                        --LOG('Looking at non start position zones')
                         return zoneSelection
                     else
+                        --LOG('Looking at start position zones')
                         for k, v in startPosZones do
                             if platoonPosition then
                                 local compare
-                                local enemyDistanceModifier = VDist2(v.pos[1],v.pos[3],enemyX, enemyZ)
-                                local zoneDistanceModifier = VDist2(v.pos[1],v.pos[3],platoonPosition[1], platoonPosition[3])
+                                local enemyDistance = math.ceil(VDist2(v.pos[1],v.pos[3],enemyX, enemyZ))
+                                local enemyDistanceModifier = enemyDistance > 0 and enemyDistance or 1
+                                local zoneDistanceModifier = math.ceil(VDist2(v.pos[1],v.pos[3],platoonPosition[1], platoonPosition[3]))
                                 local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
-                                --RNGLOG('Start Distance Calculation '..( 20000 / enemyDistanceModifier )..' Zone Distance Calculation'..(20000 / zoneDistanceModifier)..' Resource Value '..v.resourcevalue..' Control Value '..status)
+                                --LOG('Start Distance modifier'..tostring(enemyDistanceModifier)..' Calculation '..( 20000 / enemyDistanceModifier )..' Zone Distance Modifier '..tostring(zoneDistanceModifier)..' Calculation'..(20000 / zoneDistanceModifier)..' Resource Value '..v.resourcevalue..' Control Value '..status)
                                 if status == 'Allied' then
                                     compare = (20000 / zoneDistanceModifier) + ( 20000 / enemyDistanceModifier )
                                 else
@@ -912,7 +915,7 @@ IntelManager = Class {
                 elseif type == 'aadefense' then
                     --local selfThreat = aiBrain.BrainIntel.SelfThreat
                     --local enemyThreat = aiBrain.EnemyIntel.EnemyThreatCurrent
-                    --local zoneCount = aiBrain.BuilderManagers['MAIN'].PathableZones.PathableZoneCount
+                    --local zoneCount = aiBrain.BuilderManagers['MAIN'].PathableZones.PathableLandZoneCount
                     --local totalMobileAARequired = math.ceil(zoneCount * (enemyThreat.Air / selfThreat.AirNow)) or 1
                     --local threatRequired
                     local weightageValues = {
@@ -940,7 +943,7 @@ IntelManager = Class {
                     local maxEnemyAirThreat = 25
                     local maxFriendlyAntiSurfaceThreat = 25
                     local maxFriendlyAirThreat = 25
-                    local zoneCount = aiBrain.BuilderManagers[platoon.LocationType].PathableZones.PathableZoneCount or 0
+                    local zoneCount = aiBrain.BuilderManagers[platoon.LocationType].PathableZones.PathableLandZoneCount or 0
                     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
                     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
                     local enemyThreatRatio = 0
@@ -2283,13 +2286,16 @@ IntelManager = Class {
             --LOG('enemyLandThreat '..tostring(enemyThreat.Land))
             local safeAntiAir = selfThreat.AntiAirNow > 0 and selfThreat.AntiAirNow or 0.1
             if selfThreat.LandNow * 1.4 > enemyThreat.Land and safeAntiAir < enemyThreat.Air then
-                local zoneCount = aiBrain.BuilderManagers['MAIN'].PathableZones.PathableZoneCount
+                local zoneCount = aiBrain.BuilderManagers['MAIN'].PathableZones.PathableLandZoneCount
                 -- We are going to look at the threat in the pathable zones and see which ones are in our territory and make sure we have a theoretical number of air units there
                 -- I want to do this on a per base method, but I realised I'm not keeping information.
                 local totalMobileAARequired = 0 
                 if selfThreat.AntiAirNow > 0 then
                     totalMobileAARequired = math.min(math.ceil((zoneCount * 0.65) * (enemyThreat.Air / safeAntiAir)), zoneCount * 1.5) or 0
                 end
+                --LOG('Pathable Zone Count '..tostring(zoneCount))
+                --LOG('Enemy Air Threat '..tostring(enemyThreat.Air))
+                --LOG('Self AntiAir '..tostring(safeAntiAir))
                 --LOG('totalMobileAARequired '..tostring(totalMobileAARequired))
                 --LOG('EnemyThreatRatio '..tostring((enemyThreat.Air / safeAntiAir)))
                 if aiBrain.BrainIntel.LandPhase == 1 then
@@ -2390,7 +2396,7 @@ IntelManager = Class {
                     local totalFriendlyDirectFireThreat = 0
                     local totalFriendlyIndirectFireThreat = 0
                     if v.FactoryManager and v.FactoryManager.LocationActive then
-                        if v.PathableZones and v.PathableZones.PathableZoneCount > 0 and not table.empty(v.PathableZones.Zones) then
+                        if v.PathableZones and v.PathableZones.PathableLandZoneCount > 0 and not table.empty(v.PathableZones.Zones) then
                             local baseZone = aiBrain.Zones.Land.zones[v.Zone]
                             totalEnemyLandThreat = baseZone.enemylandthreat or 0
                             totalFriendlyDirectFireThreat = baseZone.friendlydirectfireantisurfacethreat or 0
@@ -2915,7 +2921,7 @@ function InitialNavalAttackCheck(aiBrain)
                 aiBrain.EnemyIntel.FrigateRaidMarkers = frigateRaidMarkers
             end
             aiBrain.EnemyIntel.MaxNavalStartRange = math.sqrt(maxNavalStartRange)
-            LOG('Lowest Enemy Start Position Range is '..tostring(aiBrain.EnemyIntel.MaxNavalStartRange))
+            --LOG('Lowest Enemy Start Position Range is '..tostring(aiBrain.EnemyIntel.MaxNavalStartRange))
         end
     end
 end

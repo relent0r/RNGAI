@@ -1550,17 +1550,18 @@ AIBrain = Class(RNGAIBrainClass) {
     SetPathableZonesForBase = function(self, position, baseName)
         --LOG('SetPathableZoneForBaseStarting for '..baseName)
         local zoneTable = {
-            PathableZoneCount = 0,
+            PathableLandZoneCount = 0,
+            PathableAmphibZoneCount = 0,
             Zones = {}
         }
         self:WaitForZoneInitialization()
         if self.Zones.Land.zones then
             for k, v in self.Zones.Land.zones do
                 if NavUtils.CanPathTo('Land', position, v.pos) then
-                    zoneTable.PathableZoneCount = zoneTable.PathableZoneCount + 1
+                    zoneTable.PathableLandZoneCount = zoneTable.PathableLandZoneCount + 1
                     RNGINSERT(zoneTable.Zones, {PathType = 'Land', ZoneID = v.id})
                 elseif NavUtils.CanPathTo('Amphibious', position, v.pos) then
-                    zoneTable.PathableZoneCount = zoneTable.PathableZoneCount + 1
+                    zoneTable.PathableAmphibZoneCount = zoneTable.PathableAmphibZoneCount + 1
                     RNGINSERT(zoneTable.Zones, {PathType = 'Amphibious', ZoneID = v.id})
                 end
             end
