@@ -1399,7 +1399,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         totalTech3BuilderRate = totalTech3BuilderRate + bp.Economy.BuildRate
                         table.insert(tech3Engineers, eng)
                     end
-                    --[[
+
                     if eng:IsIdleState() then
                         LOG('Engineer in assist manager is idle id '..tostring(eng.UnitId))
                         if eng.UnitBeingAssist then
@@ -1411,7 +1411,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 LOG('This is a state machine engineer')
                             end
                         end
-                    end]]
+                    end
                     totalBuildRate = totalBuildRate + bp.Economy.BuildRate
                     eng.Active = true
                     platoonCount = platoonCount + 1
@@ -1457,6 +1457,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local assistFound = false
 
             for k, assistData in aiBrain.EngineerAssistManagerPriorityTable do
+                LOG('Manager Priority Table type is '..tostring(assistData.type))
                 if assistData.type == 'Upgrade' then
                     --LOG('Trying to find upgrade')
                     assistDesc = GetUnitsAroundPoint(aiBrain, assistData.cat, managerPosition, engineerRadius, 'Ally')
@@ -1598,7 +1599,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
             if not assistFound then
-                --LOG('No unit to assist found')
+                LOG('No unit to assist found')
             end
             --LOG('Engineer assist manager loop completed')
             --RNGLOG('Engineer Assist Manager Priority Table loop completed for '..aiBrain.Nickname)

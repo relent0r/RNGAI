@@ -125,7 +125,7 @@ BaseBuilderTemplate {
             Land = 12,
             Air = 6,
             Sea = 6,
-            Gate = 1,
+            Gate = 3,
         },
         MassToFactoryValues = {
             T1LandValue = 4,

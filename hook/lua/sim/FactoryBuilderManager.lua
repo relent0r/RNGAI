@@ -206,6 +206,26 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         end
         --RNGLOG('RNG FactorFinishedbuilding')
         if EntityCategoryContains(categories.ENGINEER, finishedUnit) then
+            local unitCats = finishedUnit.Blueprint.CategoriesHash
+            if unitCats.SUBCOMMANDER then
+                local enhancementTable = finishedUnit.Blueprint.Enhancements
+                for name, enhancement in pairs(enhancementTable) do
+                    if type(enhancement) == "table" and enhancement.BuildCostEnergy then
+                        local isEngineeringType = enhancement.NewBuildRate
+                        if isEngineeringType and finishedUnit:HasEnhancement(name) then
+                            if not finishedUnit['rngdata'] then
+                                finishedUnit['rngdata'] = {}
+                            end
+                            if not finishedUnit['rngdata']['eng'].buildpower then
+                                finishedUnit['rngdata']['eng'] = {}
+                                finishedUnit['rngdata']['eng'].buildpower = enhancement.NewBuildRate
+                                LOG('Setting sacueng build power')
+                                break
+                            end
+                        end
+                    end
+                end
+            end
             self.Brain.BuilderManagers[self.LocationType].EngineerManager:AddUnitRNG(finishedUnit)
         elseif EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit ) then
             --RNGLOG('Factory Built by factory, attempting to kill factory.')

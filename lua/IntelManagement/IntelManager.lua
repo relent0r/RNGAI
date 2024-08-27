@@ -1737,6 +1737,12 @@ IntelManager = Class {
         local potentialStrikes = {}
         local minThreatRisk = 0
         local abortZone = true
+        local multiplier
+        if aiBrain.CheatEnabled then
+            multiplier = aiBrain.EcoManager.EcoMultiplier
+        else
+            multiplier = 1
+        end
         if productiontype == 'AirAntiSurface' then
             threatType = 'AntiAir'
             minimumExtractorTier = 2
@@ -2539,6 +2545,19 @@ IntelManager = Class {
                             aiBrain.amanager.Demand.Bases[k].Naval.T3.nukesub = 0
                         end
                     end
+                end
+            end
+        elseif productiontype == 'EngineerBuildPower' then
+            if aiBrain.cmanager.income.r.m > (450 * multiplier) and aiBrain.cmanager.buildpower.eng.T3 < (1200 * multiplier) then
+                local desiredSacuEng = math.ceil(math.max((aiBrain.cmanager.income.r.m * multiplier) - (450 * multiplier), (100 * multiplier)) / 100)
+                if aiBrain.amanager.Demand.Bases['MAIN'].Engineer.T3.sacueng and aiBrain.amanager.Current.Engineer.T3.sacueng and aiBrain.amanager.Current.Engineer.T3.sacueng < desiredSacuEng then
+                    aiBrain.amanager.Demand.Bases['MAIN'].Engineer.T3.sacueng = desiredSacuEng
+                elseif aiBrain.amanager.Demand.Bases['MAIN'].Engineer.T3.sacueng > 0 then
+                    aiBrain.amanager.Demand.Bases['MAIN'].Engineer.T3.sacueng = 0
+                end
+            else
+                if aiBrain.amanager.Demand.Bases['MAIN'].Engineer.T3.sacueng then
+                    aiBrain.amanager.Demand.Bases['MAIN'].Engineer.T3.sacueng = 0
                 end
             end
         end

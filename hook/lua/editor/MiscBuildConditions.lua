@@ -318,7 +318,15 @@ end
 
 function GatewayValidation(aiBrain)
     local multiplier = aiBrain.EcoManager.EcoMultiplier
-    if aiBrain.EcoManager.CoreExtractorT3Percentage >= 1.0 and (aiBrain.cmanager.income.r.m > (200 * multiplier) or aiBrain.RNGEXP) then
+    local numUnits = aiBrain:GetCurrentUnits(categories.FACTORY * categories.GATE * categories.TECH3)
+    local gatewayLimit = math.min(200 * (numUnits + 1), 800)
+    if aiBrain.RNGEXP then
+        gatewayLimit = math.min(100 * (numUnits + 1), 1200)
+    else
+        gatewayLimit = math.min(200 * (numUnits + 1), 800)
+    end
+    if aiBrain.EcoManager.CoreExtractorT3Percentage >= 1.0 and (aiBrain.cmanager.income.r.m > (gatewayLimit * multiplier) or aiBrain.RNGEXP) then
+        LOG('gatewayLimit went true at income of '..tostring(gatewayLimit))
         return true
     end
     return false

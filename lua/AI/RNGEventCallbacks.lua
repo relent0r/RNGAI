@@ -35,17 +35,31 @@ function OnStopBeingCaptured(self, captor)
 end
 
 function UnitEnhancementCreate(unit, enh)
+    local unitCats = unit.Blueprint.CategoriesHash
 
     if unit.Blueprint.Enhancements then
         local enhancementBp = unit.Blueprint.Enhancements[enh]
-        local isCombatType = enhancementBp.NewRoF or enhancementBp.NewMaxRadius or enhancementBp.NewRateOfFire or enhancementBp.NewRadius 
-        or enhancementBp.NewDamage or enhancementBp.DamageMod or enhancementBp.ZephyrDamageMod
-        if isCombatType then
-            if not unit['rngdata'] then
-                unit['rngdata'] = {}
+        if unitCats.COMMAND then
+            local isCombatType = enhancementBp.NewRoF or enhancementBp.NewMaxRadius or enhancementBp.NewRateOfFire or enhancementBp.NewRadius 
+            or enhancementBp.NewDamage or enhancementBp.DamageMod or enhancementBp.ZephyrDamageMod
+            if isCombatType then
+                if not unit['rngdata'] then
+                    unit['rngdata'] = {}
+                end
+                unit['rngdata']['HasGunUpgrade'] = true
+                --LOG('GunUpgrade is set to true '..tostring(enh))
             end
-            unit['rngdata']['HasGunUpgrade'] = true
-            --LOG('GunUpgrade is set to true '..tostring(enh))
+        elseif unitCats.SUBCOMMANDER then
+            if enhancementBp.NewBuildRate then
+                if not unit['rngdata'] then
+                    unit['rngdata'] = {}
+                end
+                if not unit['rngdata']['eng'].buildpower then
+                    unit['rngdata']['eng'] = {
+                        buildpower = enhancementBp.NewBuildRate
+                    }
+                end
+            end
         end
     end
 end
