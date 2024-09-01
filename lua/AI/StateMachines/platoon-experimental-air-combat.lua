@@ -527,7 +527,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                             coroutine.yield(3)
                         end
                         IssueAttack({experimental}, target)
-                        experimental.TargetPos = targetPosition
+                        experimental['rngdata'].TargetPos = targetPosition
                     -- in case we don't move, check if we can fire at the target
                     elseif targetDistance > maxPlatoonRange * maxPlatoonRange then
                         -- clear move commands if we have queued more than 4
@@ -537,10 +537,10 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                         end
                         IssueMove({experimental}, targetPosition )
                         IssueAttack({experimental}, target)
-                        experimental.TargetPos = targetPosition
+                        experimental['rngdata'].TargetPos = targetPosition
                     -- in case we don't move, check if we can fire at the target
                     else
-                        if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental.WeaponArc) then
+                        if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental['rngdata'].WeaponArc) then
                             --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
                             if experimental.GetNavigator then
                                 local navigator = experimental:GetNavigator()
@@ -589,7 +589,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     end
                     local targetPosition = target:GetPosition()
                     local unitPos = experimental:GetPosition()
-                    if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental.WeaponArc) then
+                    if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental['rngdata'].WeaponArc) then
                         if experimental.GetNavigator then
                             local navigator = experimental:GetNavigator()
                             if navigator then
@@ -883,6 +883,9 @@ AssignToUnitsMachine = function(data, platoon, units)
         if platoonUnits then
             for _, unit in platoonUnits do
                 if not unit.Dead then
+                    if not unit['rngdata'] then
+                        unit['rngdata'] = {}
+                    end
                     IssueClearCommands({unit})
                     unit.PlatoonHandle = platoon
                     if unit.ExternalFactory then
@@ -895,14 +898,14 @@ AssignToUnitsMachine = function(data, platoon, units)
                         unit:SetScriptBit('RULEUTC_CloakToggle', false)
                     end
                     local mainWeapon = unit:GetWeapon(1)
-                    unit.MaxWeaponRange = mainWeapon:GetBlueprint().MaxRadius
-                    unit.smartPos = {0,0,0}
+                    unit['rngdata'].MaxWeaponRange = mainWeapon:GetBlueprint().MaxRadius
+                    unit['rngdata'].smartPos = {0,0,0}
                     if mainWeapon.BallisticArc == 'RULEUBA_LowArc' then
-                        unit.WeaponArc = 'low'
+                        unit['rngdata'].WeaponArc = 'low'
                     elseif mainWeapon.BallisticArc == 'RULEUBA_HighArc' then
-                        unit.WeaponArc = 'high'
+                        unit['rngdata'].WeaponArc = 'high'
                     else
-                        unit.WeaponArc = 'none'
+                        unit['rngdata'].WeaponArc = 'none'
                     end
                 end
             end

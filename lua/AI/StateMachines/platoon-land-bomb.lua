@@ -334,8 +334,8 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
                         if targetRange < self.MaxPlatoonWeaponRange then
                             attackStructure = true
                             for _, v in platUnits do
-                                ----self:LogDebug('Role is '..repr(v.Role))
-                                if v.Role == 'Artillery' or v.Role == 'Silo' and not v:IsUnitState("Attacking") then
+                                ----self:LogDebug('Role is '..repr(v['rngdata'].Role))
+                                if v['rngdata'].Role == 'Artillery' or v['rngdata'].Role == 'Silo' and not v:IsUnitState("Attacking") then
                                     IssueClearCommands({v})
                                     IssueAttack({v},target)
                                 end
@@ -345,7 +345,7 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
                     local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, targetPos, true)
                     if attackStructure then
                         for _, v in platUnits do
-                            if v.Role ~= 'Artillery' and v.Role ~= 'Silo' then
+                            if v['rngdata'].Role ~= 'Artillery' and v['rngdata'].Role ~= 'Silo' then
                                 if zoneRetreat then
                                     IssueMove({v}, aiBrain.Zones.Land.zones[zoneRetreat].pos)
                                 else

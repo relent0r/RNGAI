@@ -792,8 +792,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
                 RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
             elseif cons.UseBaseTable then
-                LOG('Engineer trying to use base table for shield building')
-                LOG('Location type is '..tostring(self.LocationType))
+                --LOG('Engineer trying to use base table for shield building')
+                --LOG('Location type is '..tostring(self.LocationType))
                 local shieldCats
                 if eng.Blueprint.CategoriesHash.TECH2 then
                     shieldCats = categories.STRUCTURE * categories.SHIELD * categories.TECH2
@@ -802,16 +802,14 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 end
                 local blueprints = StateUtils.GetBuildableUnitId(aiBrain, eng, shieldCats)
                 local whatToBuild = blueprints[1]
-                if whatToBuild then
-                    LOG('Engineer has a unit to build '..tostring(whatToBuild))
-                end
                 local engineerManager = aiBrain.BuilderManagers[self.LocationType].EngineerManager
                 local structureTable = {}
                 if engineerManager then
-                    LOG('Engineer Manager exists, checking for EnergyProduction units')
+                    --LOG('Engineer Manager exists, checking for EnergyProduction units')
                     if not table.empty(engineerManager.ConsumptionUnits.EnergyProduction) then
                         for _, v in engineerManager.ConsumptionUnits.EnergyProduction do
                             if v and not v.Dead then
+                                LOG('We found an EnergyProduction unit rngdata '..tostring(repr(v['rngdata'])))
                                 if v['rngdata'].NoShieldSpace and v['rngdata'].NoShieldSpace < 5 then
                                     continue
                                 end
@@ -836,7 +834,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             local unitCats = v.Blueprint.CategoriesHash
                             if unitCats.TECH2 or unitCats.TECH3 then
                                 if not v['rngdata'].ShieldsInRange or v['rngdata'].ShieldsInRange and table.empty(v['rngdata'].ShieldsInRange) then
-                                    LOG('Found factory unit that is not shielded')
+                                    --LOG('Found factory unit that is not shielded')
                                     table.insert(structureTable, v)
                                 end
                             end
@@ -854,6 +852,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
                     RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
                 else
+                    coroutine.yield(30)
                     LOG('structureTable is empty')
                 end
             else

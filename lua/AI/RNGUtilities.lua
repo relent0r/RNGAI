@@ -3184,74 +3184,6 @@ ShowLastKnown = function(aiBrain)
     end
 end
 
-
-
-ACUPriorityDirector = function(aiBrain, platoon, platoonPosition, maxRadius)
-    -- See if anything in the ACU table looks good to attack
-    local enemyUnitThreat = 0
-    local armyIndex = aiBrain:GetArmyIndex()
-    local target = false
-    local enemyACUTable = {}
-    if not platoon.MovementLayer then
-        platoon:ConfigurePlatoon()
-    end
-    if aiBrain.EnemyIntel.ACU then
-        for k, v in aiBrain.EnemyIntel.ACU do
-            if not v.Unit.Dead and v.Position[1] then
-                if aiBrain.CDRUnit.EnemyCDRPresent then
-                    target = AIFindACUTargetInRangeRNG(aiBrain, platoon, aiBrain.CDRUnit.Position, 'Attack', maxRadius, platoon.CurrentPlatoonThreat)
-                    return target
-                elseif k ~= armyIndex and v.Ally then
-                    if ArmyBrains[k].RNG and ArmyBrains[k].CDRUnit.EnemyCDRPresent then
-                        target = AIFindACUTargetInRangeRNG(aiBrain, self, ArmyBrains[k].CDRUnit.Position, 'Attack', maxRadius, self.CurrentPlatoonThreat)
-                        --RNGLOG('Return ACU enemy acu from ally cdr')
-                        return target
-                    end
-                elseif not v.Ally and v.OnField and (v.LastSpotted + 30) < GetGameTimeSeconds() then
-                    if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
-                        if VDist2Sq(v.Position[1], v.Position[3], platoonPosition[1], platoonPosition[3]) < 6400 then
-                            local enemyUnits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE + categories.INDIRECTFIRE, v.Position, 60 ,'Enemy')
-                            for c, b in enemyUnits do
-                                if b and not b.Dead then
-                                    if EntityCategoryContains(categories.COMMAND, b) then
-                                        enemyUnitThreat = enemyUnitThreat + b:EnhancementThreatReturn()
-                                        RNGINSERT(enemyACUTable, b)
-                                    else
-                                        --RNGLOG('Unit ID is '..v.UnitId)
-                                        if b.Blueprint.Defense.SurfaceThreatLevel ~= nil then
-                                            enemyUnitThreat = enemyUnitThreat + b.Blueprint.Defense.SurfaceThreatLevel
-                                        end
-                                    end
-                                end
-                            end
-                            if not table.empty(enemyACUTable) then
-                                --Do funky stuff to see if we should try rush this acu
-                            end
-                        end
-                    elseif platoon.MovementLayer == 'Air' then
-                        local enemyUnits=GetUnitsAroundPoint(aiBrain, categories.ANTIAIR, v.Position, 60 ,'Enemy')
-                        for c, b in enemyUnits do
-                            if b and not b.Dead then
-                                if EntityCategoryContains(categories.COMMAND, b) then
-                                    RNGINSERT(enemyACUTable, b)
-                                else
-                                    --RNGLOG('Unit ID is '..v.UnitId)
-                                    if b.Blueprint.Defense.AirThreatLevel ~= nil then
-                                        enemyUnitThreat = enemyUnitThreat + b.Blueprint.Defense.AirThreatLevel
-                                    end
-                                end
-                            end
-                        end
-                        if not table.empty(enemyACUTable) then
-                            --Do funky stuff to see if we should try snipe this acu
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
-
 ToColorRNG = function(min,max,ratio)
     local ToBase16 = function(num)
         if num<10 then
@@ -6240,6 +6172,9 @@ ConfigurePlatoon = function(platoon)
     if platoonUnits > 0 then
         for k, v in platoonUnits do
             if not v.Dead then
+                if not v['rngdata'] then
+                    v['rngdata'] = {}
+                end
                 if not v.PlatoonHandle then
                     v.PlatoonHandle = platoon
                 end
@@ -6254,50 +6189,50 @@ ConfigurePlatoon = function(platoon)
                             --RNGLOG('Unit id is '..v.UnitId..' Configure Platoon Weapon Category'..weaponBlueprint.WeaponCategory..' Damage Radius '..weaponBlueprint.DamageRadius)
                         end
                         if v.Blueprint.CategoriesHash.BOMBER and (weaponBlueprint.WeaponCategory == 'Bomb' or weaponBlueprint.RangeCategory == 'UWRC_DirectFire') then
-                            v.DamageRadius = weaponBlueprint.DamageRadius
-                            v.StrikeDamage = weaponBlueprint.Damage * weaponBlueprint.MuzzleSalvoSize
+                            v['rngdata'].DamageRadius = weaponBlueprint.DamageRadius
+                            v['rngdata'].StrikeDamage = weaponBlueprint.Damage * weaponBlueprint.MuzzleSalvoSize
                             if weaponBlueprint.InitialDamage then
-                                v.StrikeDamage = v.StrikeDamage + (weaponBlueprint.InitialDamage * weaponBlueprint.MuzzleSalvoSize)
+                                v['rngdata'].StrikeDamage = v['rngdata'].StrikeDamage + (weaponBlueprint.InitialDamage * weaponBlueprint.MuzzleSalvoSize)
                             end
-                            v.StrikeRadiusDistance = weaponBlueprint.MaxRadius
-                            maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + v.StrikeDamage
+                            v['rngdata'].StrikeRadiusDistance = weaponBlueprint.MaxRadius
+                            maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + v['rngdata'].StrikeDamage
                             if weaponBlueprint.DamageRadius > 0 or  weaponBlueprint.DamageRadius < maxPlatoonStrikeRadius then
                                 maxPlatoonStrikeRadius = weaponBlueprint.DamageRadius
                             end
-                            if v.StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
-                                maxPlatoonStrikeRadiusDistance = v.StrikeRadiusDistance
+                            if v['rngdata'].StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
+                                maxPlatoonStrikeRadiusDistance = v['rngdata'].StrikeRadiusDistance
                             end
-                            --RNGLOG('Have set units DamageRadius to '..v.DamageRadius)
+                            --RNGLOG('Have set units DamageRadius to '..v['rngdata'].DamageRadius)
                         end
                         if v.Blueprint.CategoriesHash.GUNSHIP and weaponBlueprint.RangeCategory == 'UWRC_DirectFire' then
-                            v.ApproxDPS = CalculatedDPSRNG(weaponBlueprint) --weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
-                            maxPlatoonDPS = maxPlatoonDPS + v.ApproxDPS
+                            v['rngdata'].ApproxDPS = CalculatedDPSRNG(weaponBlueprint) --weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
+                            maxPlatoonDPS = maxPlatoonDPS + v['rngdata'].ApproxDPS
                         end
                     end
                 end
                 if EntityCategoryContains(categories.ARTILLERY * categories.TECH3,v) then
-                    v.Role='Artillery'
+                    v['rngdata'].Role='Artillery'
                 elseif EntityCategoryContains(categories.EXPERIMENTAL,v) then
-                    v.Role='Experimental'
+                    v['rngdata'].Role='Experimental'
                 elseif EntityCategoryContains(categories.SILO,v) then
-                    v.Role='Silo'
+                    v['rngdata'].Role='Silo'
                 elseif EntityCategoryContains(categories.xsl0202 + categories.xel0305 + categories.xrl0305,v) then
-                    v.Role='Heavy'
+                    v['rngdata'].Role='Heavy'
                 elseif EntityCategoryContains((categories.SNIPER + categories.INDIRECTFIRE) * categories.LAND + categories.ual0201 + categories.drl0204 + categories.del0204,v) then
-                    v.Role='Sniper'
+                    v['rngdata'].Role='Sniper'
                     if EntityCategoryContains(categories.ual0201,v) then
-                        v.GlassCannon=true
+                        v['rngdata'].GlassCannon=true
                     end
                 elseif EntityCategoryContains(categories.SCOUT,v) then
-                    v.Role='Scout'
+                    v['rngdata'].Role='Scout'
                     platoon.ScoutPresent = true
                     platoon.ScoutUnit = v
                 elseif EntityCategoryContains(categories.ANTIAIR,v) then
-                    v.Role='AA'
+                    v['rngdata'].Role='AA'
                 elseif EntityCategoryContains(categories.DIRECTFIRE,v) then
-                    v.Role='Bruiser'
+                    v['rngdata'].Role='Bruiser'
                 elseif EntityCategoryContains(categories.SHIELD,v) then
-                    v.Role='Shield'
+                    v['rngdata'].Role='Shield'
                 end
                 local callBacks = aiBrain:GetCallBackCheck(v)
                 local primaryWeaponDamage = 0
@@ -6305,24 +6240,24 @@ ConfigurePlatoon = function(platoon)
                     -- unit can have MaxWeaponRange entry from the last platoon
                     if weapon.Damage and weapon.Damage > primaryWeaponDamage then
                         primaryWeaponDamage = weapon.Damage
-                        if not v.MaxWeaponRange or weapon.MaxRadius > v.MaxWeaponRange then
+                        if not v['rngdata'].MaxWeaponRange or weapon.MaxRadius > v['rngdata'].MaxWeaponRange then
                             -- save the weaponrange 
-                            v.MaxWeaponRange = weapon.MaxRadius * 0.9 -- maxrange minus 10%
+                            v['rngdata'].MaxWeaponRange = weapon.MaxRadius * 0.9 -- maxrange minus 10%
                             -- save the weapon balistic arc, we need this later to check if terrain is blocking the weapon line of sight
                             if weapon.BallisticArc == 'RULEUBA_LowArc' then
-                                v.WeaponArc = 'low'
+                                v['rngdata'].WeaponArc = 'low'
                             elseif weapon.BallisticArc == 'RULEUBA_HighArc' then
-                                v.WeaponArc = 'high'
+                                v['rngdata'].WeaponArc = 'high'
                             else
-                                v.WeaponArc = 'none'
+                                v['rngdata'].WeaponArc = 'none'
                             end
                         end
                     end
-                    if not v.MaxWeaponRange then
-                        v.MaxWeaponRange = weapon.MaxRadius
+                    if not v['rngdata'].MaxWeaponRange then
+                        v['rngdata'].MaxWeaponRange = weapon.MaxRadius
                     end
-                    if not platoon.MaxPlatoonWeaponRange or platoon.MaxPlatoonWeaponRange < v.MaxWeaponRange then
-                        platoon.MaxPlatoonWeaponRange = v.MaxWeaponRange
+                    if not platoon.MaxPlatoonWeaponRange or platoon.MaxPlatoonWeaponRange < v['rngdata'].MaxWeaponRange then
+                        platoon.MaxPlatoonWeaponRange = v['rngdata'].MaxWeaponRange
                     end
                 end
                 if v:TestToggleCaps('RULEUTC_StealthToggle') then
@@ -6334,8 +6269,8 @@ ConfigurePlatoon = function(platoon)
                 if v:TestToggleCaps('RULEUTC_JammingToggle') then
                     v:SetScriptBit('RULEUTC_JammingToggle', false)
                 end
-                v.smartPos = {0,0,0}
-                if not v.MaxWeaponRange then
+                v['rngdata'].smartPos = {0,0,0}
+                if not v['rngdata'].MaxWeaponRange then
                     --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(platoon.BuilderName))
                 end
             end

@@ -6264,6 +6264,16 @@ AIBrain = Class(RNGAIBrainClass) {
                 unit:AddOnDamagedCallback( AntiAirRetreat, nil, 100)
             end
         end
+        if unit.Blueprint.CategoriesHash.TECH3 and unit.Blueprint.CategoriesHash.BATTLESHIP then
+            --RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
+            if unit.AIPlatoonReference then
+                unit:AddOnDamagedCallback( AntiAirRetreatState, nil, 100)
+                unit:AddOnDamagedCallback( AntiNavalRetreatState, nil, 100)
+            else
+                unit:AddOnDamagedCallback( AntiAirRetreat, nil, 100)
+                unit:AddOnDamagedCallback( AntiNavalRetreat, nil, 100)
+            end
+        end
         if unit.Blueprint.CategoriesHash.COMMAND then
             unit:AddOnDamagedCallback( ACUDamageDetail, nil, 100)
         end

@@ -217,7 +217,7 @@ VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride)--basic kit
     end
     local function GetRoleMod(unit)
         local healthmod=20
-        if unit.Role=='Heavy' or unit.Role=='Bruiser' then
+        if unit['rngdata'].Role=='Heavy' or unit['rngdata'].Role=='Bruiser' then
             healthmod=50
         end
         local ratio=GetWeightedHealthRatio(unit)
@@ -233,29 +233,29 @@ VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride)--basic kit
     if CheckRetreat(pos,tpos,target) then
         mod=5
     end
-    if unit.Role=='Heavy' or unit.Role=='Bruiser' or unit.GlassCannon then
+    if unit['rngdata'].Role=='Heavy' or unit['rngdata'].Role=='Bruiser' or unit['rngdata'].GlassCannon then
         strafemod=7
     end
-    if unit.Role=='AA'  then
+    if unit['rngdata'].Role=='AA'  then
         dest=KiteDist(pos,tpos,platoon.MaxPlatoonWeaponRange+3,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
-    elseif (unit.Role=='Sniper' or unit.Role=='Artillery' or unit.Role=='Silo') and unit.MaxWeaponRange then
-        dest=KiteDist(pos,tpos,unit.MaxWeaponRange,healthmod)
+    elseif (unit['rngdata'].Role=='Sniper' or unit['rngdata'].Role=='Artillery' or unit['rngdata'].Role=='Silo') and unit['rngdata'].MaxWeaponRange then
+        dest=KiteDist(pos,tpos,unit['rngdata'].MaxWeaponRange,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
-    elseif maxPlatoonRangeOverride and (unit.Role=='Shield' or unit.Role == 'Stealth') and platoon.MaxDirectFireRange > 0 then
+    elseif maxPlatoonRangeOverride and (unit['rngdata'].Role=='Shield' or unit['rngdata'].Role == 'Stealth') and platoon.MaxDirectFireRange > 0 then
         dest=KiteDist(pos,tpos,platoon.MaxDirectFireRange-math.random(1,3)-mod,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
-    elseif (unit.Role=='Shield' or unit.Role == 'Stealth') and platoon.MaxDirectFireRange > 0 then
+    elseif (unit['rngdata'].Role=='Shield' or unit['rngdata'].Role == 'Stealth') and platoon.MaxDirectFireRange > 0 then
         dest=KiteDist(pos,tpos,platoon.MaxDirectFireRange-math.random(1,3)-mod,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
-    elseif unit.Role=='Scout' then
+    elseif unit['rngdata'].Role=='Scout' then
         dest=KiteDist(pos,tpos,(platoon.IntelRange or platoon.MaxPlatoonWeaponRange),healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif maxPlatoonRangeOverride then
         dest=KiteDist(pos,tpos,platoon.MaxPlatoonWeaponRange,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
-    elseif unit.MaxWeaponRange then
-        dest=KiteDist(pos,tpos,unit.MaxWeaponRange-math.random(1,3)-mod,healthmod)
+    elseif unit['rngdata'].MaxWeaponRange then
+        dest=KiteDist(pos,tpos,unit['rngdata'].MaxWeaponRange-math.random(1,3)-mod,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     else
         dest=KiteDist(pos,tpos,platoon.MaxPlatoonWeaponRange+5-math.random(1,3)-mod,healthmod)

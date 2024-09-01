@@ -60,6 +60,9 @@ EngineerManager = Class(RNGEngineerManager) {
             return RNGEngineerManager.UnitConstructionFinished(self, unit, finishedUnit)
         end
         if finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() and finishedUnit:GetFractionComplete() == 1 then
+            if not finishedUnit['rngdata'] then
+                finishedUnit['rngdata'] = {}
+            end
             if EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit) then
                 RUtils.UpdateShieldsProtectingUnit(self.Brain, finishedUnit)
                 if finishedUnit.LocationType and finishedUnit.LocationType ~= self.LocationType then

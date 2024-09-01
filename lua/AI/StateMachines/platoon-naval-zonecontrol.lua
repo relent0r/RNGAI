@@ -622,7 +622,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                                 local rx = unitPos[1] - enemyPos[1]
                                 local rz = unitPos[3] - enemyPos[3]
                                 local tmpDistance = rx * rx + rz * rz
-                                if v.Role ~= 'Artillery' and v.Role ~= 'Silo' and v.Role ~= 'Sniper' then
+                                if v['rngdata'].Role ~= 'Artillery' and v['rngdata'].Role ~= 'Silo' and v['rngdata'].Role ~= 'Sniper' then
                                     tmpDistance = tmpDistance*m.machineworth
                                 end
                                 if not closestTarget or tmpDistance < closestTarget then
@@ -633,7 +633,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if target then
-                        if not (v.Role == 'Sniper' or v.Role == 'Silo') and closestTarget>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
+                        if not (v['rngdata'].Role == 'Sniper' or v['rngdata'].Role == 'Silo') and closestTarget>(v['rngdata'].MaxWeaponRange+20)*(v['rngdata'].MaxWeaponRange+20) then
                             if not approxThreat then
                                 approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, true, false)
                             end
@@ -658,19 +658,24 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             local units = self:GetPlatoonUnits()
             self.Units = units
             for k, unit in units do
-                unit.AIPlatoonReference = self
-                local cats = unit.Blueprint.CategoriesHash
-                if self.Debug then
-                    unit:SetCustomName(self.PlatoonName)
-                end
-                if not unit.Dead and unit:TestToggleCaps('RULEUTC_StealthToggle') then
-                    unit:SetScriptBit('RULEUTC_StealthToggle', false)
-                end
-                if not unit.Dead and unit:TestToggleCaps('RULEUTC_CloakToggle') then
-                    unit:SetScriptBit('RULEUTC_CloakToggle', false)
-                end
-                if cats.CRUISER and cats.INDIRECTFIRE then
-                    unit.Role = 'Silo'
+                if not unit.Dead then
+                    if not unit['rngdata'] then
+                        unit['rngdata'] = {}
+                    end
+                    unit.AIPlatoonReference = self
+                    local cats = unit.Blueprint.CategoriesHash
+                    if self.Debug then
+                        unit:SetCustomName(self.PlatoonName)
+                    end
+                    if unit:TestToggleCaps('RULEUTC_StealthToggle') then
+                        unit:SetScriptBit('RULEUTC_StealthToggle', false)
+                    end
+                    if unit:TestToggleCaps('RULEUTC_CloakToggle') then
+                        unit:SetScriptBit('RULEUTC_CloakToggle', false)
+                    end
+                    if cats.CRUISER and cats.INDIRECTFIRE then
+                        unit['rngdata'].Role = 'Silo'
+                    end
                 end
             end
         end,

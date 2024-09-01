@@ -863,7 +863,8 @@ function HaveSMDRatioVersusEnemySMLRNG(aiBrain, ratio, locType)
     end
     local numNeedUnits = aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, baseposition, radius , 'Ally')
     local numEnemyUnits = aiBrain.emanager.Nuke.T3
-    return CompareBody(numNeedUnits / numEnemyUnits, ratio, '<')
+    numEnemyUnits = numEnemyUnits + (aiBrain.emanager.Nuke.T4 * 3)
+    return CompareBody(numNeedUnits / numEnemyUnits, ratio, '<=')
 end
 
 
