@@ -353,7 +353,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 }
                                 brain.Zones.Land.zones[stageExpansion.Key].engineerplatoonallocated = self
                                 brain.Zones.Land.zones[stageExpansion.Key].lastexpansionattempt = GetGameTimeSeconds()
-                                ----self:LogDebug(string.format('We have found a position to expand to, navigating'))
+                                self:LogDebug(string.format('We have found a position to expand to, navigating, team value is '..tostring(brain.Zones.Land.zones[stageExpansion.Key].teamvalue)))
                                 self:ChangeState(self.Navigating)
                                 return
                             end

@@ -1294,6 +1294,8 @@ IntelManager = Class {
             self:ForkThread(self.AdaptiveProductionThread, 'LandIndirectFire')
             coroutine.yield(1)
             self:ForkThread(self.AdaptiveProductionThread, 'NavalAntiSurface')
+            coroutine.yield(1)
+            self:ForkThread(self.AdaptiveProductionThread, 'EngineerBuildPower')
         end
     end,
 
@@ -2548,7 +2550,20 @@ IntelManager = Class {
                 end
             end
         elseif productiontype == 'EngineerBuildPower' then
-            if aiBrain.cmanager.income.r.m > (450 * multiplier) and aiBrain.cmanager.buildpower.eng.T3 < (1200 * multiplier) then
+            local mainEngineers = aiBrain.BuilderManagers['MAIN'].EngineerManager.ConsumptionUnits.Engineers.UnitsList
+            local mainBuildPower = 0
+            if mainEngineers and not table.empty(mainEngineers) then
+                for _, v in mainEngineers do
+                    if v and not v.Dead then
+                        local unitCats = v.Blueprint.CategoriesHash
+                        if unitCats.TECH3 then
+                            mainBuildPower = mainBuildPower + v.Blueprint.Economy.BuildRate
+                        end
+                    end
+                    
+                end
+            end
+            if aiBrain.cmanager.income.r.m > (450 * multiplier) and mainBuildPower < (2500 * multiplier) and aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime > 200 then
                 local desiredSacuEng = math.ceil(math.max((aiBrain.cmanager.income.r.m * multiplier) - (450 * multiplier), (100 * multiplier)) / 100)
                 if aiBrain.amanager.Demand.Bases['MAIN'].Engineer.T3.sacueng and aiBrain.amanager.Current.Engineer.T3.sacueng and aiBrain.amanager.Current.Engineer.T3.sacueng < desiredSacuEng then
                     aiBrain.amanager.Demand.Bases['MAIN'].Engineer.T3.sacueng = desiredSacuEng
@@ -2980,7 +2995,8 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                             --LOG('Expansion has '..zone.resourcevalue..' mass points')
                             --LOG('Expansion is '..expansion.ZoneID..' at '..tostring(repr(expansion.Position)))
                             local extractorCount = zone.resourcevalue
-                            if extractorCount > 1 then
+                            local teamValue = zone.teamvalue
+                            if extractorCount > 1 and teamValue > 0.8 then
                                 -- Lets ponder this a bit more, the acu is strong, but I don't want him to waste half his hp on civilian PD's
                                 if type == 'acu' and GetThreatAtPosition( aiBrain, expansion.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 5 then
                                     --LOG('Threat at location too high for easy building')

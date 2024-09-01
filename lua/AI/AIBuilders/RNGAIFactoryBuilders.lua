@@ -1396,7 +1396,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Gate Builder',
         PlatoonTemplate = 'EngineerStateT3RNG',
-        Priority = 800,
+        Priority = 850,
         BuilderConditions = {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Gate' } },
             { MIBC, 'GatewayValidation', {} },

@@ -573,16 +573,15 @@ StructureManager = Class {
         if totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 then
             if self.Brain:GetCurrentUnits(categories.ENGINEER * categories.TECH1) > 2 then
                 --LOG('Factory T1 Upgrade HQ Check passed '..self.Brain.Nickname)
+                local distanceByPass = (self.Brain.EnemyIntel.ClosestEnemyBase and self.Brain.EnemyIntel.ClosestEnemyBase > 422500 or self.Brain.BrainIntel.AirPlayer) and actualMexIncome >= (15 * multiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 26.0
                 if (not self.Brain.RNGEXP and (actualMexIncome > (23 * multiplier) or self.Brain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier)) 
                 or self.Brain.RNGEXP and (actualMexIncome > (18 * multiplier) or self.Brain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier))) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 26.0 
-                or self.EnemyIntel.Phase > 1 and actualMexIncome > (18 * multiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 26.0 then
-                    --LOG('Factory Upgrade actual mex income is '..actualMexIncome..' for '..self.Brain.Nickname)
-                    if (self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.015 or GetEconomyStored(self.Brain, 'MASS') >= 250) and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
-                        --LOG('Factory Upgrade efficiency over time check passed '..self.Brain.Nickname)
+                or self.EnemyIntel.Phase > 1 and actualMexIncome > (18 * multiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 26.0 
+                or distanceByPass then
+                    if (distanceByPass or ((self.Brain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= 1.015 or GetEconomyStored(self.Brain, 'MASS') >= 250))) and self.Brain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 0.8 then
                         local EnergyEfficiency = math.min(GetEconomyIncome(self.Brain,'ENERGY') / GetEconomyRequested(self.Brain,'ENERGY'), 2)
                         local MassEfficiency = math.min(GetEconomyIncome(self.Brain,'MASS') / GetEconomyRequested(self.Brain,'MASS'), 2)
-                        if MassEfficiency >= 1.015 and EnergyEfficiency >= 0.8 then
-                            --LOG('Factory Upgrade efficiency check passed, get closest factory '..self.Brain.Nickname)
+                        if (distanceByPass or MassEfficiency >= 1.015) and EnergyEfficiency >= 0.8 then
                             local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH1')
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'LAND')
@@ -1461,7 +1460,7 @@ StructureManager = Class {
         local defended = true
         if structure.TMLInRange and not table.empty(structure.TMLInRange) then
             --LOG('TMLInRange is greater than 0')
-            for k, v in structure.TMLInRange do
+            for k, v in pairs(structure.TMLInRange) do
                 if not self.Brain.EnemyIntel.TML[k] or self.Brain.EnemyIntel.TML[k].object.Dead then
                     structure.TMLInRange[k] = nil
                     continue
@@ -1469,6 +1468,19 @@ StructureManager = Class {
             end
             if not structure.TMDInRange then
                 defended = false
+            end
+        end
+        return defended
+    end,
+
+    StructureShieldCheck = function(self, structure)
+        local defended = false
+        if structure['rngdata'].ShieldsInRange and not table.empty(structure['rngdata'].ShieldsInRange) then
+            for _, v in pairs(structure['rngdata'].ShieldsInRange) do
+                if v and not v.Dead then
+                    defended = true
+                    break
+                end    
             end
         end
         return defended
@@ -1779,10 +1791,15 @@ StructureManager = Class {
             coroutine.yield(60)
             local structures = self.Brain:GetListOfUnits((categories.MASSEXTRACTION + categories.FACTORY) - categories.TECH1  + categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3), true)
             local tmdRequired = {}
+            local shieldRequired = {}
             for _, v in structures do
-                local isDefended = self:StructureTMLCheck(v)
-                if not isDefended then
+                local isTMDDefended = self:StructureTMLCheck(v)
+                if not isTMDDefended then
                     RNGINSERT(tmdRequired, v)
+                end
+                local isShieldDefended = self:StructureShieldCheck(v)
+                if not isShieldDefended then
+                    RNGINSERT(shieldRequired, v)
                 end
             end
             if not table.empty(tmdRequired) then
@@ -1791,6 +1808,13 @@ StructureManager = Class {
                 self.StructuresRequiringTMD = tmdRequired
             else
                 self.TMDRequired = false
+            end
+            if not table.empty(shieldRequired) then
+                --LOG('Set TMD Required on structure manager')
+                self.ShieldsRequired = true
+                self.StructuresRequiringShields = shieldRequired
+            else
+                self.ShieldsRequired = false
             end
         end
     end,

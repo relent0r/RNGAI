@@ -1821,6 +1821,9 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType, whatToBui
                                 if buildingType == 'MassStorage' then
                                     AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false, true)
                                 else
+                                    if whatToBuild == 'ueb4301' then
+                                        LOG('adding to build queue t3 shield at position '..tostring(position[1]..':'..tostring(position[2])))
+                                    end
                                     AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false)
                                 end
                                 table.remove(bType,n)

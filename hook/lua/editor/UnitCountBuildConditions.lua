@@ -1712,6 +1712,60 @@ function PlayerRoleCheck(aiBrain, locationType, unitCount, unitCategory, checkTy
     return true
 end
 
+function CheckBaseShieldsRequired(aiBrain, locationType)
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+    if not table.empty(engineerManager.ConsumptionUnits.EnergyProduction) then
+        for _, v in engineerManager.ConsumptionUnits.EnergyProduction do
+            if v and not v.Dead then
+                if v['rngdata'].NoShieldSpace and v['rngdata'].NoShieldSpace < 5 then
+                    continue
+                end
+                local unitCats = v.Blueprint.CategoriesHash
+                if unitCats.TECH2 or unitCats.TECH3 then
+                    local needShield = true
+                    if v['rngdata'].ShieldsInRange then
+                        for _, s in v['rngdata'].ShieldsInRange do
+                            if s and not s.Dead then
+                                needShield = false
+                                break
+                            end
+                        end
+                    end
+                    if needShield then
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+    if factoryManager and factoryManager.LocationActive then
+        for _, v in factoryManager.FactoryList do
+            if v and not v.Dead then
+                if v['rngdata'].NoShieldSpace and v['rngdata'].NoShieldSpace < 5 then
+                    continue
+                end
+                local unitCats = v.Blueprint.CategoriesHash
+                if unitCats.TECH2 or unitCats.TECH3 then
+                    local needShield = true
+                    if v['rngdata'].ShieldsInRange then
+                        for _, s in v['rngdata'].ShieldsInRange do
+                            if s and not s.Dead then
+                                needShield = false
+                                break
+                            end
+                        end
+                    end
+                    if needShield then
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    return false
+end
+
 --[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.

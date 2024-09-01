@@ -25,6 +25,7 @@ local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local ALLBPS = __blueprints
+local WeakValueTable = { __mode = 'v' }
 
 -- TEMPORARY LOUD LOCALS
 local RNGPOW = math.pow
@@ -6538,6 +6539,89 @@ function VentToPlatoon(platoon, aiBrain, plan)
     end
 end
 
+function GetShieldPosition(aiBrain, eng, locationType, whatToBuild, unitTable)
+    local function normalposition(vec)
+        return {vec[1],GetTerrainHeight(vec[1],vec[2]),vec[2]}
+    end
+    local function heightbuildpos(vec)
+        return {vec[1],vec[2],GetTerrainHeight(vec[1],vec[2])}
+    end
+    local engPos = eng:GetPosition()
+    LOG('Getting Shield Position')
+    LOG('Structure table requiring shield has this many '..table.getn(unitTable))
+    if not table.empty(unitTable)then
+        table.sort(unitTable,function(a,b) return VDist3Sq(engPos,a:GetPosition())<VDist3Sq(engPos,b:GetPosition()) end)
+        local buildPositions = {}
+        local shieldRequired 
+        local shieldPosFound = false
+        local unitSize = ALLBPS[whatToBuild].Physics
+        for k, v in unitTable do
+            --LOG('Unit that needs protecting '..v.UnitId)
+            --LOG('Entity '..v.EntityId)
+            if not v.Dead then
+                local shieldSpaceTimeout = false
+                if v['rngdata'].NoShieldSpace then
+                    if v['rngdata'].NoShieldSpace < 5 then
+                        LOG('unit has not shield space, incrementing by 1')
+                        shieldSpaceTimeout = true
+                        v['rngdata'].NoShieldSpace = v['rngdata'].NoShieldSpace + 1
+                    else
+                        v['rngdata'].NoShieldSpace = 0
+                    end
+                end 
+                if not v['rngdata'].ShieldsInRange or v['rngdata'].ShieldsInRange and table.empty(v['rngdata'].ShieldsInRange) and not shieldSpaceTimeout then
+                    local targetSize = v.Blueprint.Physics
+                    local targetPos = v:GetPosition()
+                    local differenceX=math.abs(targetSize.SkirtSizeX-unitSize.SkirtSizeX)
+                    local offsetX=math.floor(differenceX/2)
+                    local differenceZ=math.abs(targetSize.SkirtSizeZ-unitSize.SkirtSizeZ)
+                    local offsetZ=math.floor(differenceZ/2)
+                    local offsetfactory=0
+                    if EntityCategoryContains(categories.FACTORY, v) then
+                        offsetfactory=2
+                    end
+                    -- Top/bottom of unit
+                    for i=-offsetX,offsetX do
+                        local testPos = { targetPos[1] + (i * 1), targetPos[3]-targetSize.SkirtSizeZ/2-(unitSize.SkirtSizeZ/2)-offsetfactory, 0 }
+                        local testPos2 = { targetPos[1] + (i * 1), targetPos[3]+targetSize.SkirtSizeZ/2+(unitSize.SkirtSizeZ/2)+offsetfactory, 0 }
+                        -- check if the buildplace is to close to the border or inside buildable area
+                        if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                            if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos)) then
+                                return normalposition(testPos)
+                            end
+                        end
+                        if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                            if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos2)) then
+                                return normalposition(testPos2)
+                            end
+                        end
+                    end
+                    -- Sides of unit
+                    for i=-offsetZ,offsetZ do
+                        local testPos = { targetPos[1]-targetSize.SkirtSizeX/2-(unitSize.SkirtSizeX/2)-offsetfactory, targetPos[3] + (i * 1), 0 }
+                        local testPos2 = { targetPos[1]+targetSize.SkirtSizeX/2+(unitSize.SkirtSizeX/2)+offsetfactory, targetPos[3] + (i * 1), 0 }
+                        if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                            if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos)) then
+                                return normalposition(testPos)
+                            end
+                        end
+                        if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                            if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos2)) then
+                                return normalposition(testPos2)
+                            end
+                        end
+                    end
+                end
+                if not v['rngdata'] then
+                    v['rngdata'] = {}
+                end
+                LOG('No build position, setting noshieldspace to zero')
+                v['rngdata'].NoShieldSpace = 0
+            end
+        end
+    end
+end
+
 function GetTMDPosition(aiBrain, eng, locationType)
     local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
     local smInstance = StructureManagerRNG.GetStructureManager(aiBrain)
@@ -7235,6 +7319,107 @@ GetLineOfSightPriority = function(aiBrain, navalPosition, startPosition)
         priority = 1.0
     end
     return priority
+end
+
+UpdateShieldsProtectingUnit = function(aiBrain, finishedUnit)
+    local function GetShieldRadiusAboveGroundSquaredRNG(shield)
+        local width = shield.Blueprint.Defense.Shield.ShieldSize
+        local height = shield.Blueprint.Defense.Shield.ShieldVerticalOffset
+        return width - height
+    end
+    if not finishedUnit['rngdata'] then
+        finishedUnit['rngdata'] = {}
+    end
+    local deathFunction = function(unit)
+        if unit['rngdata'].ShieldsInRange then
+            for _, v in pairs(unit['rngdata'].ShieldsInRange) do
+                if v and not v.Dead and v['rngdata'].UnitsDefended then
+                    local keyToDelete
+                    for l, c in pairs(unit['rngdata'].UnitsDefended) do
+                        if unit.EntityId == c.EntityId then
+                            LOG('Removing Unit from shield unitsdefended table')
+                            keyToDelete = l
+                            break
+                        end
+                    end
+                    if keyToDelete then
+                        table.remove(v['rngdata'].UnitsDefended, keyToDelete)
+                    end
+                end
+            end
+
+        end
+    end
+    import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, finishedUnit)
+    local finishedUnitPos = finishedUnit:GetPosition()
+    local units = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.SHIELD, finishedUnitPos, 50, 'Ally')
+    if not table.empty(units) then
+        for _, v in units do
+            if v['rngdata']['UnitsDefended'] then
+                local defenseRadius = GetShieldRadiusAboveGroundSquaredRNG(v)
+                
+            end
+        end
+    end
+    finishedUnit['rngdata']['UnitsDefended'] = {}
+    if not table.empty(units) then
+        for _, v in units do
+            if not v['rngdata'] then
+                v['rngdata'] = {}
+            end
+            if not v['rngdata'].ShieldsInRange then
+                v['rngdata'].ShieldsInRange = setmetatable({}, WeakValueTable)
+            end
+            v['rngdata'].ShieldsInRange[finishedUnit.EntityId] = finishedUnit
+            table.insert(finishedUnit['rngdata'].UnitsDefended, v)
+        end
+    end
+end
+
+UpdateUnitsProtectedByShield = function(aiBrain, finishedUnit)
+    if not finishedUnit['rngdata'] then
+        finishedUnit['rngdata'] = {}
+    end
+    local deathFunction = function(unit)
+        if unit['rngdata'].UnitsDefended then
+            for _, v in pairs(unit['rngdata'].UnitsDefended) do
+                if v and not v.Dead then
+                    if v.ShieldsInRange then
+                        if v.ShieldsInRange[unit.EntityId] then
+                            v.ShieldsInRange[unit.EntityId] = nil
+                            LOG('Shield has been destroyed, removed from '..v.UnitId)
+                        end
+                    end
+                end
+            end
+        end
+    end
+    import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, finishedUnit)
+    if not finishedUnit['rngdata']['UnitsDefended'] then
+        finishedUnit['rngdata']['UnitsDefended'] = {}
+    end
+    finishedUnit.UnitsDefended = {}
+    local function GetShieldRadiusAboveGroundSquaredRNG(shield)
+        local width = shield.Blueprint.Defense.Shield.ShieldSize
+        local height = shield.Blueprint.Defense.Shield.ShieldVerticalOffset
+    
+        return width - height
+    end
+    local defenseRadius = GetShieldRadiusAboveGroundSquaredRNG(finishedUnit)
+    local units = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, finishedUnit:GetPosition(), defenseRadius, 'Ally')
+    --LOG('Number of units around TMD '..table.getn(units))
+    if not table.empty(units) then
+        for _, v in units do
+            if not v['rngdata'] then
+                v['rngdata'] = {}
+            end
+            if not v['rngdata'].ShieldsInRange then
+                v['rngdata'].ShieldsInRange = setmetatable({}, WeakValueTable)
+            end
+            v['rngdata'].ShieldsInRange[finishedUnit.EntityId] = finishedUnit
+            table.insert(finishedUnit['rngdata'].UnitsDefended, v)
+        end
+    end
 end
 
 

@@ -18,7 +18,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             --self:LogDebug(string.format('Welcome to the EngineerTaskBehavior StateMachine'))
             local aiBrain = self:GetBrain()
-            self.LocationType = self.BuilderData.LocationType
+            self.LocationType = self.PlatoonData.LocationType
             self.MovementLayer = self:GetNavigationalLayer()
             local platoonUnits = self:GetPlatoonUnits()
             for _, eng in platoonUnits do

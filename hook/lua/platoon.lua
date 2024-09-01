@@ -1399,7 +1399,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         totalTech3BuilderRate = totalTech3BuilderRate + bp.Economy.BuildRate
                         table.insert(tech3Engineers, eng)
                     end
-
+                    --[[
                     if eng:IsIdleState() then
                         LOG('Engineer in assist manager is idle id '..tostring(eng.UnitId))
                         if eng.UnitBeingAssist then
@@ -1411,7 +1411,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 LOG('This is a state machine engineer')
                             end
                         end
-                    end
+                    end]]
                     totalBuildRate = totalBuildRate + bp.Economy.BuildRate
                     eng.Active = true
                     platoonCount = platoonCount + 1
@@ -1457,7 +1457,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local assistFound = false
 
             for k, assistData in aiBrain.EngineerAssistManagerPriorityTable do
-                LOG('Manager Priority Table type is '..tostring(assistData.type))
+                --LOG('Manager Priority Table type is '..tostring(assistData.type))
                 if assistData.type == 'Upgrade' then
                     --LOG('Trying to find upgrade')
                     assistDesc = GetUnitsAroundPoint(aiBrain, assistData.cat, managerPosition, engineerRadius, 'Ally')
@@ -1555,19 +1555,23 @@ Platoon = Class(RNGAIPlatoonClass) {
                     assistDesc = GetUnitsAroundPoint(aiBrain, assistData.cat, managerPosition, engineerRadius, 'Ally')
                     if assistDesc then
                         local low = false
+                        local completion = false
                         local bestUnit = false
                         local numBuilding = 0
                         for _, unit in assistDesc do
-                            if not unit.Dead and not unit.ReclaimInProgress and not unit:BeenDestroyed() and unit:GetFractionComplete() < 1 and unit:GetAIBrain():GetArmyIndex() == armyIndex then
+                            if not unit.Dead and not unit.ReclaimInProgress and not unit:BeenDestroyed() and unit:GetAIBrain():GetArmyIndex() == armyIndex then
+                                local unitCompletion = unit:GetFractionComplete()
+                                if unitCompletion < 1 then
                                 --RNGLOG('Completion Unit Assist '..unit.UnitId)
-                                numBuilding = numBuilding + 1
-                                local unitPos = unit:GetPosition()
-                                local NumAssist = RNGGETN(unit:GetGuards())
-                                local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
-                                if (not low or dist < low) and NumAssist < 20 and dist < (engineerRadius * engineerRadius) then
-                                    low = dist
-                                    bestUnit = unit
-                                    --RNGLOG('EngineerAssistManager has best unit')
+                                    numBuilding = numBuilding + 1
+                                    local unitPos = unit:GetPosition()
+                                    local NumAssist = RNGGETN(unit:GetGuards())
+                                    local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
+                                    if (not completion or unitCompletion > completion) and NumAssist < 30 and dist < (engineerRadius * engineerRadius) then
+                                        completion = unitCompletion
+                                        bestUnit = unit
+                                        --RNGLOG('EngineerAssistManager has best unit')
+                                    end
                                 end
                             end
                         end
@@ -1599,7 +1603,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
             end
             if not assistFound then
-                LOG('No unit to assist found')
+                --LOG('No unit to assist found')
             end
             --LOG('Engineer assist manager loop completed')
             --RNGLOG('Engineer Assist Manager Priority Table loop completed for '..aiBrain.Nickname)

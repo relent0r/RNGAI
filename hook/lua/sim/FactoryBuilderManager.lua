@@ -219,7 +219,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                             if not finishedUnit['rngdata']['eng'].buildpower then
                                 finishedUnit['rngdata']['eng'] = {}
                                 finishedUnit['rngdata']['eng'].buildpower = enhancement.NewBuildRate
-                                LOG('Setting sacueng build power')
+                                --LOG('Setting sacueng build power')
                                 break
                             end
                         end

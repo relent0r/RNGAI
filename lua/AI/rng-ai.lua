@@ -5445,7 +5445,6 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.cmanager.income.r.m then
                 minAssistPower = math.ceil(math.max(self.cmanager.income.r.m * 0.45, 5))
             end
-            LOG('MinAssistPower '..tostring(minAssistPower))
             if (gameTime < 300 and self.EconomyOverTimeCurrent.MassIncome < 2.5) then
                 state = 'Energy'
                 --RNGLOG('Assist Focus is Factory and Energy Completion')
@@ -5456,7 +5455,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             elseif self.EcoManager.EcoPowerPreemptive or self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 or self.EngineerAssistManagerFocusPower then
                 state = 'Energy'
-                LOG('Assist Focus is Energy')
+                --LOG('Assist Focus is Energy')
                 self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 , type = 'Completion'}, 
@@ -5467,7 +5466,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             elseif self.EngineerAssistManagerFocusSnipe then
                 state = 'Snipe'
-                LOG('Assist Focus is Snipe')
+                --LOG('Assist Focus is Snipe')
                 self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.FACTORY
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.daa0206, type = 'Completion'},
@@ -5481,13 +5480,10 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             elseif self.EngineerAssistManagerFocusHighValue then
                 state = 'Experimental'
-                LOG('Assist Focus is Experimental')
-                self.EngineerAssistManagerFocusCategory = categories.EXPERIMENTAL
+                self.EngineerAssistManagerFocusCategory = categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion'},
-                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
-                    {cat = categories.STRUCTURE * categories.EXPERIMENTAL, type = 'Completion'},
-                    {cat = categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC , type = 'Completion'},
+                    {cat = categories.MOBILE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC, type = 'Completion'},
                     {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
@@ -5496,7 +5492,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             elseif self.EngineerAssistManagerFocusAirUpgrade then
                 state = 'Air'
-                LOG('Assist Focus is Air Upgrade')
                 self.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
@@ -5508,7 +5503,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             elseif self.EngineerAssistManagerFocusLandUpgrade then
                 state = 'Land'
-                LOG('Assist Focus is Land Upgrade')
                 self.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
@@ -5520,7 +5514,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             else
                 state = 'Mass'
-                LOG('Assist Focus is Mass')
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion'},
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'},
@@ -5536,7 +5529,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.STRUCTURE * categories.SHIELD, type = 'Upgrade'},
                 }
             end
-            LOG('EngineerAssistManager State is '..state)
             --LOG('Current EngineerAssistManager build power '..self.EngineerAssistManagerBuildPower..' build power required '..self.EngineerAssistManagerBuildPowerRequired)
             --LOG('Min Assist Power is '..tostring(minAssistPower))
             --RNGLOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
@@ -5582,8 +5574,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.EngineerAssistManagerBuildPowerRequired = minAssistPower
                 end
             end
-            LOG('Current build power required '..tostring(self.EngineerAssistManagerBuildPowerRequired))
-            LOG('Current Build Power '..tostring(self.EngineerAssistManagerBuildPower))
+            --LOG('Current build power required '..tostring(self.EngineerAssistManagerBuildPowerRequired))
+            --LOG('Current Build Power '..tostring(self.EngineerAssistManagerBuildPower))
             --LOG('MinAssist Build Power '..tostring(minAssistPower))
             coroutine.yield(10)
         end

@@ -177,6 +177,36 @@ BuilderGroup {
             }
         }
     },
+    Builder {
+        BuilderName = 'RNGAI Shield Response',
+        PlatoonTemplate = 'EngineerStateT3RNG',
+        Priority = 0,
+        PriorityFunction = ShieldResponse,
+        DelayEqualBuildPlattons = {'Shield', 5},
+        InstanceCount = 2,
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
+            { UCBC, 'CheckBaseShieldsRequired', { 'LocationType' }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            NumAssistees = 8,
+            Construction = {
+                UseShieldTable = false,
+                UseBaseTable = true,
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
+                BaseTemplate = 'BaseTemplates',
+                DesiresAssist = true,
+                BuildClose = false,
+                LocationType = 'LocationType',
+                BuildStructures = {
+                    { Unit = 'T3ShieldDefense', Categories = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE * categories.TECH3 },
+                },
+            },
+        },
+    },
 }
 
 BuilderGroup {
@@ -222,7 +252,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
-            { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.SHIELD}},
+            { UCBC, 'CheckBaseShieldsRequired', { 'LocationType' }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3)} },
         },
         BuilderType = 'Any',
@@ -233,6 +263,8 @@ BuilderGroup {
             Construction = {
                 DesiresAssist = true,
                 BuildClose = false,
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
+                BaseTemplate = 'BaseTemplates',
                 AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY},
                 AvoidCategory = categories.STRUCTURE * categories.SHIELD,
                 maxUnits = 1,
