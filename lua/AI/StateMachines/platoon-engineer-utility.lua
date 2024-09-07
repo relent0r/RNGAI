@@ -29,7 +29,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             self:LogDebug(string.format('Welcome to the EngineerUtilityBehavior StateMachine'))
             local aiBrain = self:GetBrain()
-            self.LocationType = self.BuilderData.LocationType
+            self.LocationType = self.PlatoonData.LocationType or self.PlatoonData.Construction.LocationType
             self.MovementLayer = self:GetNavigationalLayer()
             local platoonUnits = self:GetPlatoonUnits()
             for _, eng in platoonUnits do
@@ -156,7 +156,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         unit.CaptureDoneCallbackSet = true
                     end
                     local captureUnit = self.PlatoonData.CaptureUnit
-                    if not IsDestroyed(captureUnit) and RUtils.GrabPosDangerRNG(aiBrain,captureUnit:GetPosition(), 40).enemySurface < 5 then
+                    if not IsDestroyed(captureUnit) and RUtils.GrabPosDangerRNG(aiBrain,captureUnit:GetPosition(), 40, 40, true).enemySurface < 5 then
                         local captureUnitPos = captureUnit:GetPosition()
                         self.BuilderData = {
                             CaptureUnit = captureUnit,
@@ -641,7 +641,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 else
                     reference = RUtils.GetDefensivePointRNG(aiBrain, cons.LocationType or 'MAIN', cons.Tier or 2, cons.Type)
                     if cons.BuildStructures[1].Unit == 'T2Artillery' then
-                        LOG('T2 Artillery Requested for Tier '..tostring(cons.Tier)..'location is '..tostring(reference[1])..':'..tostring(reference[3]))
+                        --LOG('T2 Artillery Requested for Tier '..tostring(cons.Tier)..'location is '..tostring(reference[1])..':'..tostring(reference[3]))
                     end
                 end
                 if reference then
@@ -768,6 +768,90 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
                 RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
                 --RNGLOG('baseTmpList is :'..repr(baseTmplList))
+            elseif cons.UseShieldTable then
+                local shieldCats
+                if eng.Blueprint.CategoriesHash.TECH2 then
+                    shieldCats = categories.STRUCTURE * categories.SHIELD * categories.TECH2
+                elseif eng.Blueprint.CategoriesHash.TECH3 then
+                    shieldCats = categories.STRUCTURE * categories.SHIELD * categories.TECH3
+                end
+                local blueprints = StateUtils.GetBuildableUnitId(aiBrain, eng, shieldCats)
+                local whatToBuild = blueprints[1]
+                local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
+                local smInstance = StructureManagerRNG.GetStructureManager(aiBrain)
+                local structureTable = table.copy(smInstance.StructuresRequiringShields)
+                reference = RUtils.GetShieldPosition(aiBrain, eng, self.LocationType, whatToBuild, structureTable)
+                if reference then
+                    --LOG('Shield reference is '..tostring(reference[1])..':'..tostring(reference[3]))
+                else
+                    --LOG('No Shield position reference returned')
+                end
+                buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
+                RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
+            elseif cons.UseBaseTable then
+                --LOG('Engineer trying to use base table for shield building')
+                --LOG('Location type is '..tostring(self.LocationType))
+                local shieldCats
+                if eng.Blueprint.CategoriesHash.TECH2 then
+                    shieldCats = categories.STRUCTURE * categories.SHIELD * categories.TECH2
+                elseif eng.Blueprint.CategoriesHash.TECH3 then
+                    shieldCats = categories.STRUCTURE * categories.SHIELD * categories.TECH3
+                end
+                local blueprints = StateUtils.GetBuildableUnitId(aiBrain, eng, shieldCats)
+                local whatToBuild = blueprints[1]
+                local engineerManager = aiBrain.BuilderManagers[self.LocationType].EngineerManager
+                local structureTable = {}
+                if engineerManager then
+                    --LOG('Engineer Manager exists, checking for EnergyProduction units')
+                    if not table.empty(engineerManager.ConsumptionUnits.EnergyProduction) then
+                        for _, v in engineerManager.ConsumptionUnits.EnergyProduction do
+                            if v and not v.Dead then
+                                --LOG('We found an EnergyProduction unit rngdata '..tostring(repr(v['rngdata'])))
+                                if v['rngdata'].NoShieldSpace and v['rngdata'].NoShieldSpace < 5 then
+                                    continue
+                                end
+                                local unitCats = v.Blueprint.CategoriesHash
+                                if unitCats.TECH2 or unitCats.TECH3 then
+                                    if not v['rngdata'].ShieldsInRange or v['rngdata'].ShieldsInRange and table.empty(v['rngdata'].ShieldsInRange) then
+                                        --LOG('Found energy production unit that is not shielded')
+                                        table.insert(structureTable, v)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                local factoryManager = aiBrain.BuilderManagers[self.LocationType].FactoryManager
+                if factoryManager and factoryManager.LocationActive then
+                    for _, v in factoryManager.FactoryList do
+                        if v and not v.Dead then
+                            if v['rngdata'].NoShieldSpace and v['rngdata'].NoShieldSpace < 5 then
+                                continue
+                            end
+                            local unitCats = v.Blueprint.CategoriesHash
+                            if unitCats.TECH2 or unitCats.TECH3 then
+                                if not v['rngdata'].ShieldsInRange or v['rngdata'].ShieldsInRange and table.empty(v['rngdata'].ShieldsInRange) then
+                                    --LOG('Found factory unit that is not shielded')
+                                    table.insert(structureTable, v)
+                                end
+                            end
+                        end
+                    end
+                end
+                if not table.empty(structureTable) then
+                    --LOG('structureTable is not empty')
+                    reference = RUtils.GetShieldPosition(aiBrain, eng, self.LocationType, whatToBuild, structureTable)
+                    if reference then
+                        --LOG('Shield reference is '..tostring(reference[1])..':'..tostring(reference[3]))
+                    else
+                        --LOG('No Shield position reference returned')
+                    end
+                    buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
+                    RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
+                else
+                    coroutine.yield(30)
+                    --LOG('structureTable is empty')
+                end
             else
                 RNGINSERT(baseTmplList, baseTmpl)
                 relative = true
@@ -903,9 +987,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local eng = self.eng
             local builderData = self.BuilderData
             local transportWait = builderData.TransportWait or 2
-
+            local emergencyBuild = builderData.Construction.EmergencyBuild or false
             while not eng.Dead and not table.empty(eng.EngineerBuildQueue) do
-
                 local whatToBuild = eng.EngineerBuildQueue[1][1]
                 local buildLocation = {eng.EngineerBuildQueue[1][2][1], 0, eng.EngineerBuildQueue[1][2][2]}
                 if GetTerrainHeight(buildLocation[1], buildLocation[3]) > GetSurfaceHeight(buildLocation[1], buildLocation[3]) then
@@ -926,7 +1009,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     movementRequired = false
                 end
                 
-                if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation, false, transportWait) then
+                if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation, false, transportWait, emergencyBuild ) then
                     if not eng or eng.Dead or not eng.PlatoonHandle or not aiBrain:PlatoonExists(eng.PlatoonHandle) then
                         if eng then eng.ProcessBuild = nil end
                         return
@@ -957,7 +1040,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                 break
                             end
                         end
-                        if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
+                        if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") and not emergencyBuild then
                             if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.MOBILE, PlatoonPos, 45, 'Enemy') > 0 then
                                 local actionTaken = RUtils.EngineerEnemyAction(aiBrain, eng)
                             end
@@ -1087,6 +1170,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         break
                     end
                     count = count + 1
+                    if eng.Dead then
+                        return
+                    end
                     if eng:IsIdleState() then break end
                 end
             end

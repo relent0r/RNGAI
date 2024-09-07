@@ -25,6 +25,7 @@ local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local ALLBPS = __blueprints
+local WeakValueTable = { __mode = 'v' }
 
 -- TEMPORARY LOUD LOCALS
 local RNGPOW = math.pow
@@ -3183,74 +3184,6 @@ ShowLastKnown = function(aiBrain)
     end
 end
 
-
-
-ACUPriorityDirector = function(aiBrain, platoon, platoonPosition, maxRadius)
-    -- See if anything in the ACU table looks good to attack
-    local enemyUnitThreat = 0
-    local armyIndex = aiBrain:GetArmyIndex()
-    local target = false
-    local enemyACUTable = {}
-    if not platoon.MovementLayer then
-        platoon:ConfigurePlatoon()
-    end
-    if aiBrain.EnemyIntel.ACU then
-        for k, v in aiBrain.EnemyIntel.ACU do
-            if not v.Unit.Dead and v.Position[1] then
-                if aiBrain.CDRUnit.EnemyCDRPresent then
-                    target = AIFindACUTargetInRangeRNG(aiBrain, platoon, aiBrain.CDRUnit.Position, 'Attack', maxRadius, platoon.CurrentPlatoonThreat)
-                    return target
-                elseif k ~= armyIndex and v.Ally then
-                    if ArmyBrains[k].RNG and ArmyBrains[k].CDRUnit.EnemyCDRPresent then
-                        target = AIFindACUTargetInRangeRNG(aiBrain, self, ArmyBrains[k].CDRUnit.Position, 'Attack', maxRadius, self.CurrentPlatoonThreat)
-                        --RNGLOG('Return ACU enemy acu from ally cdr')
-                        return target
-                    end
-                elseif not v.Ally and v.OnField and (v.LastSpotted + 30) < GetGameTimeSeconds() then
-                    if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
-                        if VDist2Sq(v.Position[1], v.Position[3], platoonPosition[1], platoonPosition[3]) < 6400 then
-                            local enemyUnits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE + categories.INDIRECTFIRE, v.Position, 60 ,'Enemy')
-                            for c, b in enemyUnits do
-                                if b and not b.Dead then
-                                    if EntityCategoryContains(categories.COMMAND, b) then
-                                        enemyUnitThreat = enemyUnitThreat + b:EnhancementThreatReturn()
-                                        RNGINSERT(enemyACUTable, b)
-                                    else
-                                        --RNGLOG('Unit ID is '..v.UnitId)
-                                        if b.Blueprint.Defense.SurfaceThreatLevel ~= nil then
-                                            enemyUnitThreat = enemyUnitThreat + b.Blueprint.Defense.SurfaceThreatLevel
-                                        end
-                                    end
-                                end
-                            end
-                            if not table.empty(enemyACUTable) then
-                                --Do funky stuff to see if we should try rush this acu
-                            end
-                        end
-                    elseif platoon.MovementLayer == 'Air' then
-                        local enemyUnits=GetUnitsAroundPoint(aiBrain, categories.ANTIAIR, v.Position, 60 ,'Enemy')
-                        for c, b in enemyUnits do
-                            if b and not b.Dead then
-                                if EntityCategoryContains(categories.COMMAND, b) then
-                                    RNGINSERT(enemyACUTable, b)
-                                else
-                                    --RNGLOG('Unit ID is '..v.UnitId)
-                                    if b.Blueprint.Defense.AirThreatLevel ~= nil then
-                                        enemyUnitThreat = enemyUnitThreat + b.Blueprint.Defense.AirThreatLevel
-                                    end
-                                end
-                            end
-                        end
-                        if not table.empty(enemyACUTable) then
-                            --Do funky stuff to see if we should try snipe this acu
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
-
 ToColorRNG = function(min,max,ratio)
     local ToBase16 = function(num)
         if num<10 then
@@ -3281,12 +3214,12 @@ end
 
 -- TruePlatoon Support functions
 
-GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, includeAir, includeStructure)
-    if pos and radius then
+GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface, includeSub, includeAir, includeStructure)
+    if pos and allyRadius and enemyRadius then
         local brainThreats = {allyTotal=0,enemyTotal=0,allySurface=0,allyACU=0, allyACUUnits = {},enemySurface=0,allyStructure=0,enemyStructure=0, enemyStructureUnits={},allyAir=0,enemyAir=0,allySub=0,enemySub=0,enemyrange=0,allyrange=0}
         local enemyMaxRadius = 0
         local allyMaxRadius = 0
-        local enemyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Enemy')
+        local enemyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,enemyRadius,'Enemy')
         local enemyUnitCount = 0
         for _,v in enemyunits do
             if not v.Dead then
@@ -3347,7 +3280,7 @@ GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, inclu
         end
         brainThreats.enemyrange = enemyMaxRadius
 
-        local allyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Ally')
+        local allyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,allyRadius,'Ally')
         for _,v in allyunits do
             if not v.Dead then
                 local mult=1
@@ -6239,6 +6172,9 @@ ConfigurePlatoon = function(platoon)
     if platoonUnits > 0 then
         for k, v in platoonUnits do
             if not v.Dead then
+                if not v['rngdata'] then
+                    v['rngdata'] = {}
+                end
                 if not v.PlatoonHandle then
                     v.PlatoonHandle = platoon
                 end
@@ -6253,50 +6189,50 @@ ConfigurePlatoon = function(platoon)
                             --RNGLOG('Unit id is '..v.UnitId..' Configure Platoon Weapon Category'..weaponBlueprint.WeaponCategory..' Damage Radius '..weaponBlueprint.DamageRadius)
                         end
                         if v.Blueprint.CategoriesHash.BOMBER and (weaponBlueprint.WeaponCategory == 'Bomb' or weaponBlueprint.RangeCategory == 'UWRC_DirectFire') then
-                            v.DamageRadius = weaponBlueprint.DamageRadius
-                            v.StrikeDamage = weaponBlueprint.Damage * weaponBlueprint.MuzzleSalvoSize
+                            v['rngdata'].DamageRadius = weaponBlueprint.DamageRadius
+                            v['rngdata'].StrikeDamage = weaponBlueprint.Damage * weaponBlueprint.MuzzleSalvoSize
                             if weaponBlueprint.InitialDamage then
-                                v.StrikeDamage = v.StrikeDamage + (weaponBlueprint.InitialDamage * weaponBlueprint.MuzzleSalvoSize)
+                                v['rngdata'].StrikeDamage = v['rngdata'].StrikeDamage + (weaponBlueprint.InitialDamage * weaponBlueprint.MuzzleSalvoSize)
                             end
-                            v.StrikeRadiusDistance = weaponBlueprint.MaxRadius
-                            maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + v.StrikeDamage
+                            v['rngdata'].StrikeRadiusDistance = weaponBlueprint.MaxRadius
+                            maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + v['rngdata'].StrikeDamage
                             if weaponBlueprint.DamageRadius > 0 or  weaponBlueprint.DamageRadius < maxPlatoonStrikeRadius then
                                 maxPlatoonStrikeRadius = weaponBlueprint.DamageRadius
                             end
-                            if v.StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
-                                maxPlatoonStrikeRadiusDistance = v.StrikeRadiusDistance
+                            if v['rngdata'].StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
+                                maxPlatoonStrikeRadiusDistance = v['rngdata'].StrikeRadiusDistance
                             end
-                            --RNGLOG('Have set units DamageRadius to '..v.DamageRadius)
+                            --RNGLOG('Have set units DamageRadius to '..v['rngdata'].DamageRadius)
                         end
                         if v.Blueprint.CategoriesHash.GUNSHIP and weaponBlueprint.RangeCategory == 'UWRC_DirectFire' then
-                            v.ApproxDPS = CalculatedDPSRNG(weaponBlueprint) --weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
-                            maxPlatoonDPS = maxPlatoonDPS + v.ApproxDPS
+                            v['rngdata'].ApproxDPS = CalculatedDPSRNG(weaponBlueprint) --weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
+                            maxPlatoonDPS = maxPlatoonDPS + v['rngdata'].ApproxDPS
                         end
                     end
                 end
                 if EntityCategoryContains(categories.ARTILLERY * categories.TECH3,v) then
-                    v.Role='Artillery'
+                    v['rngdata'].Role='Artillery'
                 elseif EntityCategoryContains(categories.EXPERIMENTAL,v) then
-                    v.Role='Experimental'
+                    v['rngdata'].Role='Experimental'
                 elseif EntityCategoryContains(categories.SILO,v) then
-                    v.Role='Silo'
+                    v['rngdata'].Role='Silo'
                 elseif EntityCategoryContains(categories.xsl0202 + categories.xel0305 + categories.xrl0305,v) then
-                    v.Role='Heavy'
+                    v['rngdata'].Role='Heavy'
                 elseif EntityCategoryContains((categories.SNIPER + categories.INDIRECTFIRE) * categories.LAND + categories.ual0201 + categories.drl0204 + categories.del0204,v) then
-                    v.Role='Sniper'
+                    v['rngdata'].Role='Sniper'
                     if EntityCategoryContains(categories.ual0201,v) then
-                        v.GlassCannon=true
+                        v['rngdata'].GlassCannon=true
                     end
                 elseif EntityCategoryContains(categories.SCOUT,v) then
-                    v.Role='Scout'
+                    v['rngdata'].Role='Scout'
                     platoon.ScoutPresent = true
                     platoon.ScoutUnit = v
                 elseif EntityCategoryContains(categories.ANTIAIR,v) then
-                    v.Role='AA'
+                    v['rngdata'].Role='AA'
                 elseif EntityCategoryContains(categories.DIRECTFIRE,v) then
-                    v.Role='Bruiser'
+                    v['rngdata'].Role='Bruiser'
                 elseif EntityCategoryContains(categories.SHIELD,v) then
-                    v.Role='Shield'
+                    v['rngdata'].Role='Shield'
                 end
                 local callBacks = aiBrain:GetCallBackCheck(v)
                 local primaryWeaponDamage = 0
@@ -6304,24 +6240,24 @@ ConfigurePlatoon = function(platoon)
                     -- unit can have MaxWeaponRange entry from the last platoon
                     if weapon.Damage and weapon.Damage > primaryWeaponDamage then
                         primaryWeaponDamage = weapon.Damage
-                        if not v.MaxWeaponRange or weapon.MaxRadius > v.MaxWeaponRange then
+                        if not v['rngdata'].MaxWeaponRange or weapon.MaxRadius > v['rngdata'].MaxWeaponRange then
                             -- save the weaponrange 
-                            v.MaxWeaponRange = weapon.MaxRadius * 0.9 -- maxrange minus 10%
+                            v['rngdata'].MaxWeaponRange = weapon.MaxRadius * 0.9 -- maxrange minus 10%
                             -- save the weapon balistic arc, we need this later to check if terrain is blocking the weapon line of sight
                             if weapon.BallisticArc == 'RULEUBA_LowArc' then
-                                v.WeaponArc = 'low'
+                                v['rngdata'].WeaponArc = 'low'
                             elseif weapon.BallisticArc == 'RULEUBA_HighArc' then
-                                v.WeaponArc = 'high'
+                                v['rngdata'].WeaponArc = 'high'
                             else
-                                v.WeaponArc = 'none'
+                                v['rngdata'].WeaponArc = 'none'
                             end
                         end
                     end
-                    if not v.MaxWeaponRange then
-                        v.MaxWeaponRange = weapon.MaxRadius
+                    if not v['rngdata'].MaxWeaponRange then
+                        v['rngdata'].MaxWeaponRange = weapon.MaxRadius
                     end
-                    if not platoon.MaxPlatoonWeaponRange or platoon.MaxPlatoonWeaponRange < v.MaxWeaponRange then
-                        platoon.MaxPlatoonWeaponRange = v.MaxWeaponRange
+                    if not platoon.MaxPlatoonWeaponRange or platoon.MaxPlatoonWeaponRange < v['rngdata'].MaxWeaponRange then
+                        platoon.MaxPlatoonWeaponRange = v['rngdata'].MaxWeaponRange
                     end
                 end
                 if v:TestToggleCaps('RULEUTC_StealthToggle') then
@@ -6333,8 +6269,8 @@ ConfigurePlatoon = function(platoon)
                 if v:TestToggleCaps('RULEUTC_JammingToggle') then
                     v:SetScriptBit('RULEUTC_JammingToggle', false)
                 end
-                v.smartPos = {0,0,0}
-                if not v.MaxWeaponRange then
+                v['rngdata'].smartPos = {0,0,0}
+                if not v['rngdata'].MaxWeaponRange then
                     --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(platoon.BuilderName))
                 end
             end
@@ -6534,6 +6470,89 @@ function VentToPlatoon(platoon, aiBrain, plan)
         ventPlatoon.PlanName = 'Vented Platoon'
         aiBrain:AssignUnitsToPlatoon(ventPlatoon, platoonUnits, 'Attack', 'None')
         aiBrain:DisbandPlatoon(platoon)
+    end
+end
+
+function GetShieldPosition(aiBrain, eng, locationType, whatToBuild, unitTable)
+    local function normalposition(vec)
+        return {vec[1],GetTerrainHeight(vec[1],vec[2]),vec[2]}
+    end
+    local function heightbuildpos(vec)
+        return {vec[1],vec[2],GetTerrainHeight(vec[1],vec[2])}
+    end
+    local engPos = eng:GetPosition()
+    --LOG('Getting Shield Position')
+    --LOG('Structure table requiring shield has this many '..table.getn(unitTable))
+    if not table.empty(unitTable)then
+        table.sort(unitTable,function(a,b) return VDist3Sq(engPos,a:GetPosition())<VDist3Sq(engPos,b:GetPosition()) end)
+        local buildPositions = {}
+        local shieldRequired 
+        local shieldPosFound = false
+        local unitSize = ALLBPS[whatToBuild].Physics
+        for k, v in unitTable do
+            --LOG('Unit that needs protecting '..v.UnitId)
+            --LOG('Entity '..v.EntityId)
+            if not v.Dead then
+                local shieldSpaceTimeout = false
+                if v['rngdata'].NoShieldSpace then
+                    if v['rngdata'].NoShieldSpace < 5 then
+                        --LOG('unit has not shield space, incrementing by 1')
+                        shieldSpaceTimeout = true
+                        v['rngdata'].NoShieldSpace = v['rngdata'].NoShieldSpace + 1
+                    else
+                        v['rngdata'].NoShieldSpace = 0
+                    end
+                end 
+                if not v['rngdata'].ShieldsInRange or v['rngdata'].ShieldsInRange and table.empty(v['rngdata'].ShieldsInRange) and not shieldSpaceTimeout then
+                    local targetSize = v.Blueprint.Physics
+                    local targetPos = v:GetPosition()
+                    local differenceX=math.abs(targetSize.SkirtSizeX-unitSize.SkirtSizeX)
+                    local offsetX=math.floor(differenceX/2)
+                    local differenceZ=math.abs(targetSize.SkirtSizeZ-unitSize.SkirtSizeZ)
+                    local offsetZ=math.floor(differenceZ/2)
+                    local offsetfactory=0
+                    if EntityCategoryContains(categories.FACTORY, v) then
+                        offsetfactory=2
+                    end
+                    -- Top/bottom of unit
+                    for i=-offsetX,offsetX do
+                        local testPos = { targetPos[1] + (i * 1), targetPos[3]-targetSize.SkirtSizeZ/2-(unitSize.SkirtSizeZ/2)-offsetfactory, 0 }
+                        local testPos2 = { targetPos[1] + (i * 1), targetPos[3]+targetSize.SkirtSizeZ/2+(unitSize.SkirtSizeZ/2)+offsetfactory, 0 }
+                        -- check if the buildplace is to close to the border or inside buildable area
+                        if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                            if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos)) then
+                                return normalposition(testPos)
+                            end
+                        end
+                        if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                            if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos2)) then
+                                return normalposition(testPos2)
+                            end
+                        end
+                    end
+                    -- Sides of unit
+                    for i=-offsetZ,offsetZ do
+                        local testPos = { targetPos[1]-targetSize.SkirtSizeX/2-(unitSize.SkirtSizeX/2)-offsetfactory, targetPos[3] + (i * 1), 0 }
+                        local testPos2 = { targetPos[1]+targetSize.SkirtSizeX/2+(unitSize.SkirtSizeX/2)+offsetfactory, targetPos[3] + (i * 1), 0 }
+                        if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
+                            if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos)) then
+                                return normalposition(testPos)
+                            end
+                        end
+                        if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
+                            if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos2)) then
+                                return normalposition(testPos2)
+                            end
+                        end
+                    end
+                end
+                if not v['rngdata'] then
+                    v['rngdata'] = {}
+                end
+                --LOG('No build position, setting noshieldspace to zero')
+                v['rngdata'].NoShieldSpace = 0
+            end
+        end
     end
 end
 
@@ -7234,6 +7253,107 @@ GetLineOfSightPriority = function(aiBrain, navalPosition, startPosition)
         priority = 1.0
     end
     return priority
+end
+
+UpdateShieldsProtectingUnit = function(aiBrain, finishedUnit)
+    local function GetShieldRadiusAboveGroundSquaredRNG(shield)
+        local width = shield.Blueprint.Defense.Shield.ShieldSize
+        local height = shield.Blueprint.Defense.Shield.ShieldVerticalOffset
+        return width - height
+    end
+    if not finishedUnit['rngdata'] then
+        finishedUnit['rngdata'] = {}
+    end
+    local deathFunction = function(unit)
+        if unit['rngdata'].ShieldsInRange then
+            for _, v in pairs(unit['rngdata'].ShieldsInRange) do
+                if v and not v.Dead and v['rngdata'].UnitsDefended then
+                    local keyToDelete
+                    for l, c in pairs(unit['rngdata'].UnitsDefended) do
+                        if unit.EntityId == c.EntityId then
+                            --LOG('Removing Unit from shield unitsdefended table')
+                            keyToDelete = l
+                            break
+                        end
+                    end
+                    if keyToDelete then
+                        table.remove(v['rngdata'].UnitsDefended, keyToDelete)
+                    end
+                end
+            end
+
+        end
+    end
+    import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, finishedUnit)
+    local finishedUnitPos = finishedUnit:GetPosition()
+    local units = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.SHIELD, finishedUnitPos, 50, 'Ally')
+    if not table.empty(units) then
+        for _, v in units do
+            if v['rngdata']['UnitsDefended'] then
+                local defenseRadius = GetShieldRadiusAboveGroundSquaredRNG(v)
+                
+            end
+        end
+    end
+    finishedUnit['rngdata']['UnitsDefended'] = {}
+    if not table.empty(units) then
+        for _, v in units do
+            if not v['rngdata'] then
+                v['rngdata'] = {}
+            end
+            if not v['rngdata'].ShieldsInRange then
+                v['rngdata'].ShieldsInRange = setmetatable({}, WeakValueTable)
+            end
+            v['rngdata'].ShieldsInRange[finishedUnit.EntityId] = finishedUnit
+            table.insert(finishedUnit['rngdata'].UnitsDefended, v)
+        end
+    end
+end
+
+UpdateUnitsProtectedByShield = function(aiBrain, finishedUnit)
+    if not finishedUnit['rngdata'] then
+        finishedUnit['rngdata'] = {}
+    end
+    local deathFunction = function(unit)
+        if unit['rngdata'].UnitsDefended then
+            for _, v in pairs(unit['rngdata'].UnitsDefended) do
+                if v and not v.Dead then
+                    if v.ShieldsInRange then
+                        if v.ShieldsInRange[unit.EntityId] then
+                            v.ShieldsInRange[unit.EntityId] = nil
+                            --LOG('Shield has been destroyed, removed from '..v.UnitId)
+                        end
+                    end
+                end
+            end
+        end
+    end
+    import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, finishedUnit)
+    if not finishedUnit['rngdata']['UnitsDefended'] then
+        finishedUnit['rngdata']['UnitsDefended'] = {}
+    end
+    finishedUnit.UnitsDefended = {}
+    local function GetShieldRadiusAboveGroundSquaredRNG(shield)
+        local width = shield.Blueprint.Defense.Shield.ShieldSize
+        local height = shield.Blueprint.Defense.Shield.ShieldVerticalOffset
+    
+        return width - height
+    end
+    local defenseRadius = GetShieldRadiusAboveGroundSquaredRNG(finishedUnit)
+    local units = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, finishedUnit:GetPosition(), defenseRadius, 'Ally')
+    --LOG('Number of units around TMD '..table.getn(units))
+    if not table.empty(units) then
+        for _, v in units do
+            if not v['rngdata'] then
+                v['rngdata'] = {}
+            end
+            if not v['rngdata'].ShieldsInRange then
+                v['rngdata'].ShieldsInRange = setmetatable({}, WeakValueTable)
+            end
+            v['rngdata'].ShieldsInRange[finishedUnit.EntityId] = finishedUnit
+            table.insert(finishedUnit['rngdata'].UnitsDefended, v)
+        end
+    end
 end
 
 

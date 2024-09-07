@@ -149,6 +149,22 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
+        BuilderName = 'RNGAI T1 Artillery Enemy Nearby',
+        PlatoonTemplate = 'T1LandArtillery',
+        Priority = 881,
+        BuilderConditions = {
+            { UCBC, 'EnemyStructuresGreaterThanMobileAtPerimeter', { 'LocationType' }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.MOBILE * categories.INDIRECTFIRE } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 1
+        },
+    },
+    Builder {
         BuilderName = 'RNGAI T2 Tank Enemy Nearby',
         PlatoonTemplate = 'T2LandDFTank',
         Priority = 890,
@@ -161,6 +177,21 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
+        BuilderName = 'RNGAI T2 MML Enemy Nearby',
+        PlatoonTemplate = 'T2LandArtillery',
+        Priority = 891,
+        BuilderConditions = {
+            { UCBC, 'EnemyStructuresGreaterThanMobileAtPerimeter', { 'LocationType' }},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.MOBILE * categories.INDIRECTFIRE } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 2
+        },
+    },
+    Builder {
         BuilderName = 'RNGAI T3 Tank Enemy Nearby',
         PlatoonTemplate = 'T3LandBot',
         Priority = 900,
@@ -171,6 +202,20 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Arty Enemy Nearby',
+        PlatoonTemplate = 'T3LandArtillery',
+        Priority = 901,
+        BuilderConditions = {
+            { UCBC, 'EnemyStructuresGreaterThanMobileAtPerimeter', { 'LocationType' } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 3
+        },
     },
 }
 
@@ -191,6 +236,22 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
+        BuilderName = 'RNGAI T1 Artillery Enemy Nearby Expansion',
+        PlatoonTemplate = 'T1LandArtillery',
+        Priority = 881,
+        BuilderConditions = {
+            { UCBC, 'EnemyStructuresGreaterThanMobileAtPerimeter', { 'LocationType' }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.MOBILE * categories.INDIRECTFIRE } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 1
+        },
+    },
+    Builder {
         BuilderName = 'RNGAI T2 Tank Enemy Nearby Expansion',
         PlatoonTemplate = 'T2LandDFTank',
         Priority = 890,
@@ -203,6 +264,21 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
+        BuilderName = 'RNGAI T2 MML Enemy Nearby Expansion',
+        PlatoonTemplate = 'T2LandArtillery',
+        Priority = 891,
+        BuilderConditions = {
+            { UCBC, 'EnemyStructuresGreaterThanMobileAtPerimeter', { 'LocationType' }},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.MOBILE * categories.INDIRECTFIRE } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 2
+        },
+    },
+    Builder {
         BuilderName = 'RNGAI T3 Tank Enemy Nearby Expansion',
         PlatoonTemplate = 'T3LandBot',
         Priority = 900,
@@ -213,6 +289,20 @@ BuilderGroup {
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Arty Enemy Nearby Expansion',
+        PlatoonTemplate = 'T3LandArtillery',
+        Priority = 901,
+        BuilderConditions = {
+            { UCBC, 'EnemyStructuresGreaterThanMobileAtPerimeter', { 'LocationType' } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 3
+        },
     },
 }
 

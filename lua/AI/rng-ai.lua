@@ -494,6 +494,22 @@ AIBrain = Class(RNGAIBrainClass) {
                         shield=0
                     }
                 },
+                Engineer = {
+                    T1 = {
+                        engineer = 0
+                    },
+                    T2 = {
+                        engineer = 0,
+                        engcombat = 0
+                    },
+                    T3 = {
+                        engineer = 0,
+                        sacucombat = 0,
+                        sacuras = 0,
+                        sacueng = 0,
+                        sacutele = 0
+                    },
+                },
             },
             Total = {
                 Land = {
@@ -949,6 +965,22 @@ AIBrain = Class(RNGAIBrainClass) {
                         shield=0
                     }
                 },
+                Engineer = {
+                    T1 = {
+                        engineer = 0
+                    },
+                    T2 = {
+                        engineer = 0,
+                        engcombat = 0
+                    },
+                    T3 = {
+                        engineer = 0,
+                        sacucombat = 0,
+                        sacuras = 0,
+                        sacueng = 0,
+                        sacutele = 0
+                    },
+                },
                 Bases = {
                 }
             },
@@ -1155,35 +1187,6 @@ AIBrain = Class(RNGAIBrainClass) {
             Land = 0,
         }
         self.EnemyIntel.CivilianCaptureUnits = {}
-        local selfIndex = self:GetArmyIndex()
-        for _, v in ArmyBrains do
-            local armyIndex = v:GetArmyIndex()
-            self.TacticalMonitor.TacticalMissions.ACUSnipe[armyIndex] = {
-                LAND = {},
-                AIR = {}
-            }
-            self.EnemyIntel.ACU[armyIndex] = {
-                Position = {},
-                DistanceToBase = 0,
-                LastSpotted = 0,
-                Threat = 0,
-                HP = 0,
-                OnField = false,
-                CloseCombat = false,
-                Unit = {},
-                Gun = false,
-                Ally = IsAlly(selfIndex, armyIndex),
-                IntelGrid = {}
-            }
-            self.EnemyIntel.DirectorData[armyIndex] = {
-                Strategic = {},
-                Energy = {},
-                Mass = {},
-                Factory = {},
-                Combat = {},
-            }
-        end
-
         local selfStartPosX, selfStartPosY = self:GetArmyStartPos()
         self.BrainIntel.StartPos = { selfStartPosX, GetSurfaceHeight(selfStartPosX, selfStartPosY), selfStartPosY }
         self.BrainIntel.MapOwnership = 0
@@ -1291,6 +1294,7 @@ AIBrain = Class(RNGAIBrainClass) {
         plat:ForkThread(plat.BaseManagersDistressAIRNG)
         self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitorRNG)
         self.EnemyPickerThread = self:ForkThread(self.PickEnemyRNG)
+        self:ForkThread(self.SetupACUData)
         self:ForkThread(self.CivilianUnitCheckRNG)
         self:ForkThread(self.EcoPowerManagerRNG)
         self:ForkThread(self.EcoPowerPreemptiveRNG)
@@ -1423,6 +1427,37 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    SetupACUData = function(self)
+        local selfIndex = self:GetArmyIndex()
+        for _, v in ArmyBrains do
+            local armyIndex = v:GetArmyIndex()
+            self.TacticalMonitor.TacticalMissions.ACUSnipe[armyIndex] = {
+                LAND = {},
+                AIR = {}
+            }
+            self.EnemyIntel.ACU[armyIndex] = {
+                Position = {},
+                DistanceToBase = 0,
+                LastSpotted = 0,
+                Threat = 0,
+                HP = 0,
+                OnField = false,
+                CloseCombat = false,
+                Unit = {},
+                Gun = false,
+                Ally = IsAlly(selfIndex, armyIndex),
+                IntelGrid = {}
+            }
+            self.EnemyIntel.DirectorData[armyIndex] = {
+                Strategic = {},
+                Energy = {},
+                Mass = {},
+                Factory = {},
+                Combat = {},
+            }
+        end
+    end,
+
     SetupPlayableArea = function(self)
         local playableArea
         while not playableArea do
@@ -1550,17 +1585,18 @@ AIBrain = Class(RNGAIBrainClass) {
     SetPathableZonesForBase = function(self, position, baseName)
         --LOG('SetPathableZoneForBaseStarting for '..baseName)
         local zoneTable = {
-            PathableZoneCount = 0,
+            PathableLandZoneCount = 0,
+            PathableAmphibZoneCount = 0,
             Zones = {}
         }
         self:WaitForZoneInitialization()
         if self.Zones.Land.zones then
             for k, v in self.Zones.Land.zones do
                 if NavUtils.CanPathTo('Land', position, v.pos) then
-                    zoneTable.PathableZoneCount = zoneTable.PathableZoneCount + 1
+                    zoneTable.PathableLandZoneCount = zoneTable.PathableLandZoneCount + 1
                     RNGINSERT(zoneTable.Zones, {PathType = 'Land', ZoneID = v.id})
                 elseif NavUtils.CanPathTo('Amphibious', position, v.pos) then
-                    zoneTable.PathableZoneCount = zoneTable.PathableZoneCount + 1
+                    zoneTable.PathableAmphibZoneCount = zoneTable.PathableAmphibZoneCount + 1
                     RNGINSERT(zoneTable.Zones, {PathType = 'Amphibious', ZoneID = v.id})
                 end
             end
@@ -1599,6 +1635,22 @@ AIBrain = Class(RNGAIBrainClass) {
                         nukesub = 0,
                         subhunter = 0
                     }
+                },
+                Engineer = {
+                    T1 = {
+                        engineer = 0
+                    },
+                    T2 = {
+                        engineer = 0,
+                        engcombat = 0
+                    },
+                    T3 = {
+                        engineer = 0,
+                        sacucombat = 0,
+                        sacuras = 0,
+                        sacueng = 0,
+                        sacutele = 0
+                    },
                 }
             }
         end
@@ -2916,6 +2968,7 @@ AIBrain = Class(RNGAIBrainClass) {
             AirThreat=0,
             AirUnits=0,
             AntiSurfaceAirUnits=0,
+            StructureAntiSurface=0,
             LandThreat=0,
             LandUnits=0,
             NavalThreat=0,
@@ -2939,6 +2992,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 local airThreat = 0
                 local antiAirUnits = 0
                 local antiAirThreat = 0
+                local structureUnits = 0
+                local structureThreat = 0
                 local navalThreat = 0
                 local enemyLandAngle
                 local enemyLandDistance = 0
@@ -3019,6 +3074,11 @@ AIBrain = Class(RNGAIBrainClass) {
                                     end
                                     continue
                                 end
+                            elseif unitCat.STRUCTURE then
+                                if unitCat.DIRECTFIRE and unitCat.DEFENSE then
+                                    structureUnits = structureUnits + 1
+                                    structureThreat = structureThreat + unit.Blueprint.Defense.SurfaceThreatLevel
+                                end
                             end
                         end
                     end
@@ -3052,6 +3112,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.BasePerimeterMonitor[k].NavalThreat = navalThreat
                     self.BasePerimeterMonitor[k].AirThreat = airThreat
                     self.BasePerimeterMonitor[k].LandThreat = landThreat
+                    self.BasePerimeterMonitor[k].StructureThreat = structureThreat
+                    self.BasePerimeterMonitor[k].StructureUnits = structureUnits
                 else
                     if self.BasePerimeterMonitor[k] then
                         self.BasePerimeterMonitor[k] = nil
@@ -3276,6 +3338,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     TacticalMonitorInitializationRNG = function(self, spec)
         --RNGLOG('* AI-RNG: Tactical Monitor Is Initializing')
+        coroutine.yield(10)
         local ALLBPS = __blueprints
         self:ForkThread(self.TacticalMonitorThreadRNG, ALLBPS)
     end,
@@ -5402,11 +5465,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
-                    {cat = categories.STRUCTURE * categories.DEFENSE, type = 'Completion' }
+                    {cat = categories.STRUCTURE * (categories.DEFENSE + categories.TECH2 * categories.ARTILLERY), type = 'Completion' }
                 }
             elseif self.EcoManager.EcoPowerPreemptive or self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 or self.EngineerAssistManagerFocusPower then
                 state = 'Energy'
-                --RNGLOG('Assist Focus is Energy')
+                --LOG('Assist Focus is Energy')
                 self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 , type = 'Completion'}, 
@@ -5417,7 +5480,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             elseif self.EngineerAssistManagerFocusSnipe then
                 state = 'Snipe'
-                --RNGLOG('Assist Focus is Snipe')
+                --LOG('Assist Focus is Snipe')
                 self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.FACTORY
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.daa0206, type = 'Completion'},
@@ -5431,13 +5494,10 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             elseif self.EngineerAssistManagerFocusHighValue then
                 state = 'Experimental'
-                --RNGLOG('Assist Focus is Experimental')
-                self.EngineerAssistManagerFocusCategory = categories.EXPERIMENTAL
+                self.EngineerAssistManagerFocusCategory = categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion'},
-                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
-                    {cat = categories.STRUCTURE * categories.EXPERIMENTAL, type = 'Completion'},
-                    {cat = categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC , type = 'Completion'},
+                    {cat = categories.MOBILE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC, type = 'Completion'},
                     {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
@@ -5446,7 +5506,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             elseif self.EngineerAssistManagerFocusAirUpgrade then
                 state = 'Air'
-                --RNGLOG('Assist Focus is Air Upgrade')
                 self.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
@@ -5458,7 +5517,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             elseif self.EngineerAssistManagerFocusLandUpgrade then
                 state = 'Land'
-                --RNGLOG('Assist Focus is Land Upgrade')
                 self.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
@@ -5470,7 +5528,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             else
                 state = 'Mass'
-                --RNGLOG('Assist Focus is Mass')
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion'},
                     {cat = categories.MASSEXTRACTION, type = 'Upgrade'},
@@ -5486,7 +5543,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     {cat = categories.STRUCTURE * categories.SHIELD, type = 'Upgrade'},
                 }
             end
-            --LOG('EngineerAssistManager State is '..state)
             --LOG('Current EngineerAssistManager build power '..self.EngineerAssistManagerBuildPower..' build power required '..self.EngineerAssistManagerBuildPowerRequired)
             --LOG('Min Assist Power is '..tostring(minAssistPower))
             --RNGLOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
@@ -5533,6 +5589,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             --LOG('Current build power required '..tostring(self.EngineerAssistManagerBuildPowerRequired))
+            --LOG('Current Build Power '..tostring(self.EngineerAssistManagerBuildPower))
             --LOG('MinAssist Build Power '..tostring(minAssistPower))
             coroutine.yield(10)
         end
@@ -5598,6 +5655,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local armyNaval={T1={frigate=0,sub=0,shard=0},T2={destroyer=0,cruiser=0,subhunter=0,transport=0},T3={battleship=0,carrier=0,missileship=0,subkiller=0,battlecruiser=0,nukesub=0}}
         local armyNavalType={frigate=0,sub=0,shard=0,destroyer=0,cruiser=0,subhunter=0,battleship=0,carrier=0,missileship=0,subkiller=0,battlecruiser=0,nukesub=0}
         local armyNavalTiers={T1=0,T2=0,T3=0}
+        local armyEngineer={T1={engineer=0},T2={engineer=0,engcombat=0},T3={engineer=0,sacueng=0,sacucombat=0,sacuras=0,sacutele=0}}
         local launcherspend = {T2=0,T3=0}
         local facspend = {Land=0,Air=0,Naval=0,LandUpgrading=0,AirUpgrading=0,NavalUpgrading=0}
         local mexspend = {T1=0,T2=0,T3=0}
@@ -5708,12 +5766,25 @@ AIBrain = Class(RNGAIBrainClass) {
                         if unitCat.TECH1 then
                             engspend.T1=engspend.T1+spendm
                             engbuildpower.T1 = engbuildpower.T1 + unit.Blueprint.Economy.BuildRate
+                            armyEngineer.T1.engineer = armyEngineer.T1.engineer + 1
                         elseif unitCat.TECH2 then
                             engspend.T2=engspend.T2+spendm
                             engbuildpower.T2 = engbuildpower.T2 + unit.Blueprint.Economy.BuildRate
+                            if unit.Blueprint.Weapon[1].WeaponCategory and unit.Blueprint.Weapon[1].WeaponCategory == "Direct Fire" then
+                                armyEngineer.T2.engcombat = armyEngineer.T2.engcombat + 1
+                            else
+                                armyEngineer.T2.engineer = armyEngineer.T2.engineer + 1
+                            end
                         elseif unitCat.TECH3 then
                             engspend.T3=engspend.T3+spendm
-                            engbuildpower.T3 = engbuildpower.T3 + unit.Blueprint.Economy.BuildRate
+                            if unitCat.SUBCOMMANDER then
+                                if unit['rngdata']['eng'].buildpower then
+                                    engbuildpower.T3 = engbuildpower.T3 + unit['rngdata']['eng'].buildpower
+                                end
+                            else
+                                engbuildpower.T3 = engbuildpower.T3 + unit.Blueprint.Economy.BuildRate
+                                armyEngineer.T3.engineer = armyEngineer.T3.engineer + 1
+                            end
                         end
                     elseif unitCat.FACTORY then
                         if unit:IsUnitState('Upgrading') then
@@ -6207,6 +6278,16 @@ AIBrain = Class(RNGAIBrainClass) {
                 unit:AddOnDamagedCallback( AntiAirRetreat, nil, 100)
             end
         end
+        if unit.Blueprint.CategoriesHash.TECH3 and unit.Blueprint.CategoriesHash.BATTLESHIP then
+            --RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
+            if unit.AIPlatoonReference then
+                unit:AddOnDamagedCallback( AntiAirRetreatState, nil, 100)
+                unit:AddOnDamagedCallback( AntiNavalRetreatState, nil, 100)
+            else
+                unit:AddOnDamagedCallback( AntiAirRetreat, nil, 100)
+                unit:AddOnDamagedCallback( AntiNavalRetreat, nil, 100)
+            end
+        end
         if unit.Blueprint.CategoriesHash.COMMAND then
             unit:AddOnDamagedCallback( ACUDamageDetail, nil, 100)
         end
@@ -6497,6 +6578,22 @@ AIBrain = Class(RNGAIBrainClass) {
                         aa=0,
                         shield=0
                     }
+                },
+                Engineer = {
+                    T1 = {
+                        engineer = 0
+                    },
+                    T2 = {
+                        engineer = 0,
+                        engcombat = 0
+                    },
+                    T3 = {
+                        engineer = 0,
+                        sacucombat = 0,
+                        sacuras = 0,
+                        sacueng = 0,
+                        sacutele = 0
+                    },
                 },
             },
             Total = {
@@ -7284,6 +7381,7 @@ AIBrain = Class(RNGAIBrainClass) {
         plat:ForkThread(plat.BaseManagersDistressAIRNG)
         self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitorRNG)
         self.EnemyPickerThread = self:ForkThread(self.PickEnemyRNG)
+        self:ForkThread(self.SetupACUData)
         self:ForkThread(self.CivilianUnitCheckRNG)
         self:ForkThread(self.EcoPowerManagerRNG)
         self:ForkThread(self.EcoPowerPreemptiveRNG)

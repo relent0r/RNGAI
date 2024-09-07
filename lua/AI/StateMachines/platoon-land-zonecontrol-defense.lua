@@ -52,11 +52,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             self.ZoneType = self.PlatoonData.ZoneType or 'aadefense'
             if aiBrain.EnemyIntel.Phase > 1 then
-                self.EnemyRadius = 70
-                self.EnemyRadiusSq = 70 * 70
+                self.EnemyRadius = 75
+                self.EnemyRadiusSq = 75 * 75
             else
-                self.EnemyRadius = 55
-                self.EnemyRadiusSq = 55 * 55
+                self.EnemyRadius = 60
+                self.EnemyRadiusSq = 60 * 60
             end
             self.MaxRadius = 120
             if type(self.PlatoonData.MaxPathDistance) == 'string' then
@@ -125,7 +125,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            local threat=RUtils.GrabPosDangerRNG(aiBrain,platPos,self.EnemyRadius, true, false, false)
+            local threat=RUtils.GrabPosDangerRNG(aiBrain,platPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false)
             if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then
                 --self:LogDebug(string.format('DecideWhatToDo high threat retreating'))
                 self.retreat=true
@@ -262,6 +262,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             for _,v in units do
                 if v and not v.Dead then
                     local unitPos = v:GetPosition()
+                    local unitRange = v['rngdata'].MaxWeaponRange
+                    local unitRole = v['rngdata'].Role
                     for l, m in self.targetcandidates do
                         if m and not m.Dead then
                             local enemyPos = m:GetPosition()
@@ -276,9 +278,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                     if target then
                         self.target = target
-                        if not (v.Role == 'Sniper' or v.Role == 'Silo') and VDist3Sq(unitPos,target:GetPosition())>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
+                        if not (unitRole == 'Sniper' or unitRole == 'Silo') and VDist3Sq(unitPos,target:GetPosition())>(unitRange+20)*(unitRange+20) then
                             if not approxThreat then
-                                approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, false, false)
+                                approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false)
                             end
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface then
                                 IssueClearCommands({v}) 
@@ -534,30 +536,30 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                     continue
                                 end
                             end
-                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>v.MaxWeaponRange/3*v.MaxWeaponRange/3+platoonNum*platoonNum then
+                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>v['rngdata'].MaxWeaponRange/3*v['rngdata'].MaxWeaponRange/3+platoonNum*platoonNum then
                                 if self.dest then
                                     if v.GetNavigator then
                                         local navigator = v:GetNavigator()
                                         if navigator then
-                                            navigator:SetGoal(RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
+                                            navigator:SetGoal(RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)}))
                                         end
                                     else
                                         IssueClearCommands({v})
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
+                                        IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)}))
                                     end
-                                    spread=spread+VDist3Sq(unitPos,self.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
+                                    spread=spread+VDist3Sq(unitPos,self.Pos)/v['rngdata'].MaxWeaponRange/v['rngdata'].MaxWeaponRange
                                     snum=snum+1
                                 else
                                     if v.GetNavigator then
                                         local navigator = v:GetNavigator()
                                         if navigator then
-                                            navigator:SetGoal(RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
+                                            navigator:SetGoal(RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)}))
                                         end
                                     else
                                         IssueClearCommands({v})
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
+                                        IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)}))
                                     end
-                                    spread=spread+VDist3Sq(unitPos,self.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
+                                    spread=spread+VDist3Sq(unitPos,self.Pos)/v['rngdata'].MaxWeaponRange/v['rngdata'].MaxWeaponRange
                                     snum=snum+1
                                 end
                             end

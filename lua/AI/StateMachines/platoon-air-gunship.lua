@@ -474,8 +474,8 @@ GunshipThreatThreads = function(aiBrain, platoon)
                             import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Gunship', LocationType = platoon.LocationType}, plat, {unit})
                         end
                     end
-                    if unit.ApproxDPS then
-                        maxPlatoonDPS = maxPlatoonDPS + unit.ApproxDPS
+                    if unit['rngdata'].ApproxDPS then
+                        maxPlatoonDPS = maxPlatoonDPS + unit['rngdata'].ApproxDPS
                     end
                     unitCount = unitCount + 1
                 end

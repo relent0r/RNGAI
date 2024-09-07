@@ -905,153 +905,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         self:PlatoonDisband()
     end,
 
-    ConfigurePlatoon = function(self)
-        local function SetZone(pos, zoneIndex)
-            --RNGLOG('Set zone with the following params position '..repr(pos)..' zoneIndex '..zoneIndex)
-            if not pos then
-                --RNGLOG('No pos in configure platoon function')
-                return false
-            end
-            local zoneID = MAP:GetZoneID(pos,zoneIndex)
-            -- zoneID <= 0 => not in a zone
-            if zoneID > 0 then
-                self.Zone = zoneID
-            else
-                self.Zone = false
-            end
-        end
-        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
-        self.CurrentPlatoonThreat = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
-        if self.MovementLayer == 'Water' or self.MovementLayer == 'Amphibious' then
-            self.CurrentPlatoonThreatDirectFireAntiSurface = self:CalculatePlatoonThreat('Surface', categories.DIRECTFIRE)
-            self.CurrentPlatoonThreatIndirectFireAntiSurface = self:CalculatePlatoonThreat('Surface', categories.INDIRECTFIRE)
-            self.CurrentPlatoonThreatAntiSurface = self.CurrentPlatoonThreatDirectFireAntiSurface + self.CurrentPlatoonThreatIndirectFireAntiSurface
-            self.CurrentPlatoonThreatAntiNavy = self:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
-            self.CurrentPlatoonThreatAntiAir = self:CalculatePlatoonThreat('Air', categories.ALLUNITS)
-        end
-        -- This is just to make the platoon functions a little easier to read
-        if not self.EnemyRadius then
-            self.EnemyRadius = 55
-        end
-        local aiBrain = self:GetBrain()
-        local platoonUnits = GetPlatoonUnits(self)
-        local maxPlatoonStrikeDamage = 0
-        local maxPlatoonDPS = 0
-        local maxPlatoonStrikeRadius = 20
-        local maxPlatoonStrikeRadiusDistance = 0
-        if platoonUnits > 0 then
-            for k, v in platoonUnits do
-                if not v.Dead then
-                    if not v.PlatoonHandle then
-                        v.PlatoonHandle = self
-                    end
-                    if self.PlatoonData.SetWeaponPriorities or self.MovementLayer == 'Air' then
-                        for i = 1, v:GetWeaponCount() do
-                            local wep = v:GetWeapon(i)
-                            local weaponBlueprint = wep:GetBlueprint()
-                            if weaponBlueprint.CannotAttackGround then
-                                continue
-                            end
-                            if self.MovementLayer == 'Air' then
-                                --RNGLOG('Unit id is '..v.UnitId..' Configure Platoon Weapon Category'..weaponBlueprint.WeaponCategory..' Damage Radius '..weaponBlueprint.DamageRadius)
-                            end
-                            if v.Blueprint.CategoriesHash.BOMBER and (weaponBlueprint.WeaponCategory == 'Bomb' or weaponBlueprint.RangeCategory == 'UWRC_DirectFire') then
-                                v.DamageRadius = weaponBlueprint.DamageRadius
-                                v.StrikeDamage = weaponBlueprint.Damage * weaponBlueprint.MuzzleSalvoSize
-                                if weaponBlueprint.InitialDamage then
-                                    v.StrikeDamage = v.StrikeDamage + (weaponBlueprint.InitialDamage * weaponBlueprint.MuzzleSalvoSize)
-                                end
-                                v.StrikeRadiusDistance = weaponBlueprint.MaxRadius
-                                maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + v.StrikeDamage
-                                if weaponBlueprint.DamageRadius > 0 or  weaponBlueprint.DamageRadius < maxPlatoonStrikeRadius then
-                                    maxPlatoonStrikeRadius = weaponBlueprint.DamageRadius
-                                end
-                                if v.StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
-                                    maxPlatoonStrikeRadiusDistance = v.StrikeRadiusDistance
-                                end
-                                --RNGLOG('Have set units DamageRadius to '..v.DamageRadius)
-                            end
-                            if v.Blueprint.CategoriesHash.GUNSHIP and weaponBlueprint.RangeCategory == 'UWRC_DirectFire' then
-                                v.ApproxDPS = RUtils.CalculatedDPSRNG(weaponBlueprint) --weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
-                                maxPlatoonDPS = maxPlatoonDPS + v.ApproxDPS
-                            end
-                            --[[if self.PlatoonData.SetWeaponPriorities then
-                                for onLayer, targetLayers in weaponBlueprint.FireTargetLayerCapsTable do
-                                    if string.find(targetLayers, 'Land') then
-                                        wep:SetWeaponPriorities(self.PlatoonData.PrioritizedCategories)
-                                        break
-                                    end
-                                end
-                            end]]
-                        end
-                    end
-                    if EntityCategoryContains(categories.SCOUT, v) then
-                        self.ScoutPresent = true
-                        self.ScoutUnit = v
-                    end
-                    local callBacks = aiBrain:GetCallBackCheck(v)
-                    local primaryWeaponDamage = 0
-                    for _, weapon in v.Blueprint.Weapon or {} do
-                        -- unit can have MaxWeaponRange entry from the last platoon
-                        if weapon.Damage and weapon.Damage > primaryWeaponDamage then
-                            primaryWeaponDamage = weapon.Damage
-                            if not v.MaxWeaponRange or weapon.MaxRadius > v.MaxWeaponRange then
-                                -- save the weaponrange 
-                                v.MaxWeaponRange = weapon.MaxRadius * 0.9 -- maxrange minus 10%
-                                -- save the weapon balistic arc, we need this later to check if terrain is blocking the weapon line of sight
-                                if weapon.BallisticArc == 'RULEUBA_LowArc' then
-                                    v.WeaponArc = 'low'
-                                elseif weapon.BallisticArc == 'RULEUBA_HighArc' then
-                                    v.WeaponArc = 'high'
-                                else
-                                    v.WeaponArc = 'none'
-                                end
-                            end
-                        end
-                        if not self.MaxPlatoonWeaponRange or self.MaxPlatoonWeaponRange < v.MaxWeaponRange then
-                            self.MaxPlatoonWeaponRange = v.MaxWeaponRange
-                        end
-                    end
-                    if v:TestToggleCaps('RULEUTC_StealthToggle') then
-                        v:SetScriptBit('RULEUTC_StealthToggle', false)
-                    end
-                    if v:TestToggleCaps('RULEUTC_CloakToggle') then
-                        v:SetScriptBit('RULEUTC_CloakToggle', false)
-                    end
-                    if v:TestToggleCaps('RULEUTC_JammingToggle') then
-                        v:SetScriptBit('RULEUTC_JammingToggle', false)
-                    end
-                    v.smartPos = {0,0,0}
-                    if not v.MaxWeaponRange then
-                        --WARN('Scanning: unit ['..repr(v.UnitId)..'] has no MaxWeaponRange - '..repr(self.BuilderName))
-                    end
-                end
-            end
-        end
-        if maxPlatoonStrikeDamage > 0 then
-            self.PlatoonStrikeDamage = maxPlatoonStrikeDamage
-        end
-        if maxPlatoonStrikeRadius > 0 then
-            self.PlatoonStrikeRadius = maxPlatoonStrikeRadius
-        end
-        if maxPlatoonStrikeRadiusDistance > 0 then
-            self.PlatoonStrikeRadiusDistance = maxPlatoonStrikeRadiusDistance
-        end
-        if maxPlatoonDPS > 0 then
-            self.MaxPlatoonDPS = maxPlatoonDPS
-        end
-        if not self.Zone then
-            if self.MovementLayer == 'Land' or self.MovementLayer == 'Amphibious' then
-               --RNGLOG('Set Zone on platoon during initial config')
-               --RNGLOG('Zone Index is '..aiBrain.Zones.Land.index)
-                SetZone(table.copy(GetPlatoonPosition(self)), aiBrain.Zones.Land.index)
-            elseif self.MovementLayer == 'Water' then
-                --SetZone(PlatoonPosition, aiBrain.Zones.Water.index)
-            end
-        end
-
-    end,
-
     ReturnToBaseAIRNG = function(self, mainBase)
 
         local aiBrain = self:GetBrain()
@@ -1444,6 +1297,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             local assistFound = false
 
             for k, assistData in aiBrain.EngineerAssistManagerPriorityTable do
+                --LOG('Manager Priority Table type is '..tostring(assistData.type))
                 if assistData.type == 'Upgrade' then
                     --LOG('Trying to find upgrade')
                     assistDesc = GetUnitsAroundPoint(aiBrain, assistData.cat, managerPosition, engineerRadius, 'Ally')
@@ -1541,19 +1395,23 @@ Platoon = Class(RNGAIPlatoonClass) {
                     assistDesc = GetUnitsAroundPoint(aiBrain, assistData.cat, managerPosition, engineerRadius, 'Ally')
                     if assistDesc then
                         local low = false
+                        local completion = false
                         local bestUnit = false
                         local numBuilding = 0
                         for _, unit in assistDesc do
-                            if not unit.Dead and not unit.ReclaimInProgress and not unit:BeenDestroyed() and unit:GetFractionComplete() < 1 and unit:GetAIBrain():GetArmyIndex() == armyIndex then
+                            if not unit.Dead and not unit.ReclaimInProgress and not unit:BeenDestroyed() and unit:GetAIBrain():GetArmyIndex() == armyIndex then
+                                local unitCompletion = unit:GetFractionComplete()
+                                if unitCompletion < 1 then
                                 --RNGLOG('Completion Unit Assist '..unit.UnitId)
-                                numBuilding = numBuilding + 1
-                                local unitPos = unit:GetPosition()
-                                local NumAssist = RNGGETN(unit:GetGuards())
-                                local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
-                                if (not low or dist < low) and NumAssist < 20 and dist < (engineerRadius * engineerRadius) then
-                                    low = dist
-                                    bestUnit = unit
-                                    --RNGLOG('EngineerAssistManager has best unit')
+                                    numBuilding = numBuilding + 1
+                                    local unitPos = unit:GetPosition()
+                                    local NumAssist = RNGGETN(unit:GetGuards())
+                                    local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
+                                    if (not completion or unitCompletion > completion) and NumAssist < 30 and dist < (engineerRadius * engineerRadius) then
+                                        completion = unitCompletion
+                                        bestUnit = unit
+                                        --RNGLOG('EngineerAssistManager has best unit')
+                                    end
                                 end
                             end
                         end

@@ -510,7 +510,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     local y = targetPosition[3] - math.sin(alpha) * (maxPlatoonRange - 10)
                     local smartPos = { x, GetTerrainHeight( x, y), y }
                     -- check if the move position is new or target has moved
-                    if VDist2Sq( smartPos[1], smartPos[3], experimental.smartPos[1], experimental.smartPos[3] ) > 4 or experimental.TargetPos ~= targetPosition  or targetDistance > maxPlatoonRange * maxPlatoonRange then
+                    if VDist2Sq( smartPos[1], smartPos[3], experimental['rngdata'].smartPos[1], experimental['rngdata'].smartPos[3] ) > 4 or experimental['rngdata'].TargetPos ~= targetPosition  or targetDistance > maxPlatoonRange * maxPlatoonRange then
                         -- clear move commands if we have queued more than 4
                         if RNGGETN(experimental:GetCommandQueue()) > 2 then
                             IssueClearCommands({experimental})
@@ -518,11 +518,11 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                         end
                         IssueMove({experimental}, smartPos )
                         IssueAttack({experimental}, target)
-                        experimental.smartPos = smartPos
-                        experimental.TargetPos = targetPosition
+                        experimental['rngdata'].smartPos = smartPos
+                        experimental['rngdata'].TargetPos = targetPosition
                     -- in case we don't move, check if we can fire at the target
                     else
-                        if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental.WeaponArc) then
+                        if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental['rngdata'].WeaponArc) then
                             --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
                             IssueMove({experimental}, targetPosition )
                             coroutine.yield(30)
@@ -804,6 +804,9 @@ AssignToUnitsMachine = function(data, platoon, units)
         if platoonUnits then
             for _, unit in platoonUnits do
                 if not unit.Dead then
+                    if not unit['rngdata'] then
+                        unit['rngdata'] = {}
+                    end
                     IssueClearCommands({unit})
                     unit.PlatoonHandle = platoon
                     if unit.ExternalFactory then
@@ -816,14 +819,14 @@ AssignToUnitsMachine = function(data, platoon, units)
                         unit:SetScriptBit('RULEUTC_CloakToggle', false)
                     end
                     local mainWeapon = unit:GetWeapon(1)
-                    unit.MaxWeaponRange = mainWeapon:GetBlueprint().MaxRadius
-                    unit.smartPos = {0,0,0}
+                    unit['rngdata'].MaxWeaponRange = mainWeapon:GetBlueprint().MaxRadius
+                    unit['rngdata'].smartPos = {0,0,0}
                     if mainWeapon.BallisticArc == 'RULEUBA_LowArc' then
-                        unit.WeaponArc = 'low'
+                        unit['rngdata'].WeaponArc = 'low'
                     elseif mainWeapon.BallisticArc == 'RULEUBA_HighArc' then
-                        unit.WeaponArc = 'high'
+                        unit['rngdata'].WeaponArc = 'high'
                     else
-                        unit.WeaponArc = 'none'
+                        unit['rngdata'].WeaponArc = 'none'
                     end
                 end
             end

@@ -523,7 +523,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistUnfinished', 1},
         InstanceCount = 4,
         BuilderConditions = {
-                { UCBC, 'UnfinishedUnitsAtLocationRNG', { 'LocationType', categories.STRUCTURE * (categories.DEFENSE + categories.FACTORY + categories.ENERGYPRODUCTION) }},
+                { UCBC, 'UnfinishedUnitsAtLocationRNG', { 'LocationType', categories.STRUCTURE * (categories.TECH2 * categories.ARTILLERY + categories.DEFENSE + categories.FACTORY + categories.ENERGYPRODUCTION) }},
                 { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             },
         BuilderData = {
@@ -533,7 +533,7 @@ BuilderGroup {
             Task = 'FinishUnit',
             Assist = {
                 AssistLocation = 'LocationType',
-                BeingBuiltCategories = categories.STRUCTURE * (categories.DEFENSE + categories.FACTORY + categories.ENERGYPRODUCTION),
+                BeingBuiltCategories = categories.STRUCTURE * (categories.TECH2 * categories.ARTILLERY + categories.DEFENSE + categories.FACTORY + categories.ENERGYPRODUCTION),
             },
         },
         BuilderType = 'Any',
