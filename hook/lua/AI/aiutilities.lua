@@ -14,7 +14,7 @@ local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local RNGINSERT = table.insert
 local RNGGETN = table.getn
 
-function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGeneratePath, transportWait)
+function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGeneratePath, transportWait, emergencyBuild)
     local ALLBPS = __blueprints
     if not destination then
         return false
@@ -136,7 +136,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
                 if unit.Dead then
                     return
                 end
-                if unit.EngineerBuildQueue or jobType == 'Reclaim' then
+                if unit.EngineerBuildQueue or jobType == 'Reclaim' and not emergencyBuild then
                     if jobType == 'Reclaim' or ALLBPS[unit.EngineerBuildQueue[1][1]].CategoriesHash.MASSEXTRACTION and ALLBPS[unit.EngineerBuildQueue[1][1]].CategoriesHash.TECH1 then
                         --RNGLOG('Attempt reclaim on eng movement')
                         if not unit:IsUnitState('Reclaiming') then
@@ -148,52 +148,54 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
                     end
                 end
                 if unit:IsUnitState("Moving") then
-                    if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE + categories.MASSEXTRACTION, pos, 45, 'Enemy') > 0 then
-                        local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE + categories.MASSEXTRACTION, pos, 45, 'Enemy')
-                        local massExtractors = {}
-                        for _, eunit in enemyUnits do
-                            local enemyUnitPos = eunit:GetPosition()
-                            if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, eunit) then
-                                if VDist3Sq(enemyUnitPos, pos) < 144 then
-                                    --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
-                                    if eunit and not eunit.Dead and unit:GetFractionComplete() == 1 then
-                                        if VDist3Sq(pos, enemyUnitPos) < 100 then
-                                            IssueClearCommands({unit})
-                                            IssueReclaim({unit}, eunit)
-                                            brokenPathMovement = true
-                                            break
+                    if not emergencyBuild then
+                        if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE + categories.MASSEXTRACTION, pos, 45, 'Enemy') > 0 then
+                            local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE + categories.MASSEXTRACTION, pos, 45, 'Enemy')
+                            local massExtractors = {}
+                            for _, eunit in enemyUnits do
+                                local enemyUnitPos = eunit:GetPosition()
+                                if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, eunit) then
+                                    if VDist3Sq(enemyUnitPos, pos) < 144 then
+                                        --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
+                                        if eunit and not eunit.Dead and unit:GetFractionComplete() == 1 then
+                                            if VDist3Sq(pos, enemyUnitPos) < 100 then
+                                                IssueClearCommands({unit})
+                                                IssueReclaim({unit}, eunit)
+                                                brokenPathMovement = true
+                                                break
+                                            end
                                         end
                                     end
-                                end
-                            elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, eunit) then
-                                --RNGLOG('MexBuild found enemy unit, try avoid it')
-                                if VDist3Sq(enemyUnitPos, pos) < 81 then
-                                    --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
-                                    if eunit and not eunit.Dead and eunit:GetFractionComplete() == 1 then
-                                        if VDist3Sq(pos, enemyUnitPos) < 100 then
-                                            IssueClearCommands({unit})
-                                            IssueReclaim({unit}, eunit)
-                                            brokenPathMovement = true
-                                            break
+                                elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, eunit) then
+                                    --RNGLOG('MexBuild found enemy unit, try avoid it')
+                                    if VDist3Sq(enemyUnitPos, pos) < 81 then
+                                        --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
+                                        if eunit and not eunit.Dead and eunit:GetFractionComplete() == 1 then
+                                            if VDist3Sq(pos, enemyUnitPos) < 100 then
+                                                IssueClearCommands({unit})
+                                                IssueReclaim({unit}, eunit)
+                                                brokenPathMovement = true
+                                                break
+                                            end
                                         end
+                                    else
+                                        IssueClearCommands({unit})
+                                        IssueMove({unit}, RUtils.AvoidLocation(enemyUnitPos, pos, 50))
+                                        brokenPathMovement = true
+                                        coroutine.yield(60)
                                     end
-                                else
-                                    IssueClearCommands({unit})
-                                    IssueMove({unit}, RUtils.AvoidLocation(enemyUnitPos, pos, 50))
-                                    brokenPathMovement = true
-                                    coroutine.yield(60)
+                                elseif EntityCategoryContains(categories.MASSEXTRACTION, eunit) then
+                                    table.insert(massExtractors, {Position = enemyUnitPos, Unit = eunit})
                                 end
-                            elseif EntityCategoryContains(categories.MASSEXTRACTION, eunit) then
-                                table.insert(massExtractors, {Position = enemyUnitPos, Unit = eunit})
                             end
-                        end
-                        if not brokenPathMovement and not table.empty(massExtractors) then
-                            for _, v in massExtractors do
-                                if not v.Unit.Dead and VDist3Sq(pos, v.Position) < 225 and v.Unit:GetFractionComplete() == 1 then
-                                    IssueClearCommands({unit})
-                                    IssueCapture({unit}, v.Unit)
-                                    brokenPathMovement = true
-                                    break
+                            if not brokenPathMovement and not table.empty(massExtractors) then
+                                for _, v in massExtractors do
+                                    if not v.Unit.Dead and VDist3Sq(pos, v.Position) < 225 and v.Unit:GetFractionComplete() == 1 then
+                                        IssueClearCommands({unit})
+                                        IssueCapture({unit}, v.Unit)
+                                        brokenPathMovement = true
+                                        break
+                                    end
                                 end
                             end
                         end

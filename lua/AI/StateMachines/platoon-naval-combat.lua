@@ -44,11 +44,11 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             self.MergeType = 'NavalMergeStateMachine'
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
             if aiBrain.EnemyIntel.Phase > 2 then
-                self.EnemyRadius = 70
-                self.EnemyRadiusSq = 70 * 70
+                self.EnemyRadius = 75
+                self.EnemyRadiusSq = 75 * 75
             else
-                self.EnemyRadius = 55
-                self.EnemyRadiusSq = 55 * 55
+                self.EnemyRadius = 60
+                self.EnemyRadiusSq = 60 * 60
             end
             if self.PlatoonData.LocationType then
                 self.LocationType = self.PlatoonData.LocationType
@@ -85,9 +85,9 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             local threat
             local currentStatus = aiBrain.GridPresence:GetInferredStatus(self.Pos)
             if self.CurrentPlatoonThreatAntiSurface > 0 then
-                threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, true, false)
+                threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius * 0.7,self.EnemyRadius, true, true, false)
             else
-                threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, false, true, false)
+                threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius * 0.7,self.EnemyRadius, false, true, false)
             end
             if threat.allyTotal and threat.enemyTotal and threat.allyTotal*1.1 < threat.enemyTotal then
                 --self:LogDebug(string.format('Current status at position is '..tostring(currentStatus)))
@@ -597,7 +597,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if baseRetreat then
-                        local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, false)
+                        local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false)
                         if threat.allyTotal and threat.enemyTotal and threat.enemyrange > 0 and (threat.allyTotal > threat.enemyTotal*1.1 and threat.enemyrange <= self.MaxPlatoonWeaponRange or threat.allySub > threat.enemySub*1.2) then
                             self:ChangeState(self.DecideWhatToDo)
                             return
@@ -638,6 +638,8 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             for _,v in units do
                 if v and not v.Dead then
                     local unitPos = v:GetPosition()
+                    local unitRange = v['rngdata'].MaxWeaponRange
+                    local unitRole = v['rngdata'].Role
                     if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
                         target = aiBrain.BrainIntel.SuicideModeTarget
                     else
@@ -647,7 +649,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                                 local rx = unitPos[1] - enemyPos[1]
                                 local rz = unitPos[3] - enemyPos[3]
                                 local tmpDistance = rx * rx + rz * rz
-                                if v['rngdata'].Role ~= 'Artillery' and v['rngdata'].Role ~= 'Silo' and v['rngdata'].Role ~= 'Sniper' then
+                                if unitRole ~= 'Artillery' and unitRole ~= 'Silo' and unitRole ~= 'Sniper' then
                                     tmpDistance = tmpDistance*m.machineworth
                                 end
                                 if not closestTarget or tmpDistance < closestTarget then
@@ -658,9 +660,9 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if target then
-                        if not (v['rngdata'].Role == 'Sniper' or v['rngdata'].Role == 'Silo') and closestTarget>(v['rngdata'].MaxWeaponRange+20)*(v['rngdata'].MaxWeaponRange+20) then
+                        if not (unitRole == 'Sniper' or unitRole == 'Silo') and closestTarget>(unitRange+20)*(unitRange+20) then
                             if not approxThreat then
-                                approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, true, false)
+                                approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, true, false)
                             end
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allyTotal and approxThreat.enemyTotal and approxThreat.allyTotal > approxThreat.enemyTotal then
                                 IssueClearCommands({v}) 

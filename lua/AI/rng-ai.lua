@@ -1187,35 +1187,6 @@ AIBrain = Class(RNGAIBrainClass) {
             Land = 0,
         }
         self.EnemyIntel.CivilianCaptureUnits = {}
-        local selfIndex = self:GetArmyIndex()
-        for _, v in ArmyBrains do
-            local armyIndex = v:GetArmyIndex()
-            self.TacticalMonitor.TacticalMissions.ACUSnipe[armyIndex] = {
-                LAND = {},
-                AIR = {}
-            }
-            self.EnemyIntel.ACU[armyIndex] = {
-                Position = {},
-                DistanceToBase = 0,
-                LastSpotted = 0,
-                Threat = 0,
-                HP = 0,
-                OnField = false,
-                CloseCombat = false,
-                Unit = {},
-                Gun = false,
-                Ally = IsAlly(selfIndex, armyIndex),
-                IntelGrid = {}
-            }
-            self.EnemyIntel.DirectorData[armyIndex] = {
-                Strategic = {},
-                Energy = {},
-                Mass = {},
-                Factory = {},
-                Combat = {},
-            }
-        end
-
         local selfStartPosX, selfStartPosY = self:GetArmyStartPos()
         self.BrainIntel.StartPos = { selfStartPosX, GetSurfaceHeight(selfStartPosX, selfStartPosY), selfStartPosY }
         self.BrainIntel.MapOwnership = 0
@@ -1323,6 +1294,7 @@ AIBrain = Class(RNGAIBrainClass) {
         plat:ForkThread(plat.BaseManagersDistressAIRNG)
         self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitorRNG)
         self.EnemyPickerThread = self:ForkThread(self.PickEnemyRNG)
+        self:ForkThread(self.SetupACUData)
         self:ForkThread(self.CivilianUnitCheckRNG)
         self:ForkThread(self.EcoPowerManagerRNG)
         self:ForkThread(self.EcoPowerPreemptiveRNG)
@@ -1452,6 +1424,37 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             RNGLOG('Enemy Build Power Table '..repr(im.EnemyBuildStrength))
             coroutine.yield(100)
+        end
+    end,
+
+    SetupACUData = function(self)
+        local selfIndex = self:GetArmyIndex()
+        for _, v in ArmyBrains do
+            local armyIndex = v:GetArmyIndex()
+            self.TacticalMonitor.TacticalMissions.ACUSnipe[armyIndex] = {
+                LAND = {},
+                AIR = {}
+            }
+            self.EnemyIntel.ACU[armyIndex] = {
+                Position = {},
+                DistanceToBase = 0,
+                LastSpotted = 0,
+                Threat = 0,
+                HP = 0,
+                OnField = false,
+                CloseCombat = false,
+                Unit = {},
+                Gun = false,
+                Ally = IsAlly(selfIndex, armyIndex),
+                IntelGrid = {}
+            }
+            self.EnemyIntel.DirectorData[armyIndex] = {
+                Strategic = {},
+                Energy = {},
+                Mass = {},
+                Factory = {},
+                Combat = {},
+            }
         end
     end,
 
@@ -2965,6 +2968,7 @@ AIBrain = Class(RNGAIBrainClass) {
             AirThreat=0,
             AirUnits=0,
             AntiSurfaceAirUnits=0,
+            StructureAntiSurface=0,
             LandThreat=0,
             LandUnits=0,
             NavalThreat=0,
@@ -2988,6 +2992,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 local airThreat = 0
                 local antiAirUnits = 0
                 local antiAirThreat = 0
+                local structureUnits = 0
+                local structureThreat = 0
                 local navalThreat = 0
                 local enemyLandAngle
                 local enemyLandDistance = 0
@@ -3068,6 +3074,11 @@ AIBrain = Class(RNGAIBrainClass) {
                                     end
                                     continue
                                 end
+                            elseif unitCat.STRUCTURE then
+                                if unitCat.DIRECTFIRE and unitCat.DEFENSE then
+                                    structureUnits = structureUnits + 1
+                                    structureThreat = structureThreat + unit.Blueprint.Defense.SurfaceThreatLevel
+                                end
                             end
                         end
                     end
@@ -3101,6 +3112,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.BasePerimeterMonitor[k].NavalThreat = navalThreat
                     self.BasePerimeterMonitor[k].AirThreat = airThreat
                     self.BasePerimeterMonitor[k].LandThreat = landThreat
+                    self.BasePerimeterMonitor[k].StructureThreat = structureThreat
+                    self.BasePerimeterMonitor[k].StructureUnits = structureUnits
                 else
                     if self.BasePerimeterMonitor[k] then
                         self.BasePerimeterMonitor[k] = nil
@@ -3325,6 +3338,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     TacticalMonitorInitializationRNG = function(self, spec)
         --RNGLOG('* AI-RNG: Tactical Monitor Is Initializing')
+        coroutine.yield(10)
         local ALLBPS = __blueprints
         self:ForkThread(self.TacticalMonitorThreadRNG, ALLBPS)
     end,
@@ -5451,7 +5465,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 self.EngineerAssistManagerPriorityTable = {
                     {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
                     {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
-                    {cat = categories.STRUCTURE * categories.DEFENSE, type = 'Completion' }
+                    {cat = categories.STRUCTURE * (categories.DEFENSE + categories.TECH2 * categories.ARTILLERY), type = 'Completion' }
                 }
             elseif self.EcoManager.EcoPowerPreemptive or self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 or self.EngineerAssistManagerFocusPower then
                 state = 'Energy'
@@ -7367,6 +7381,7 @@ AIBrain = Class(RNGAIBrainClass) {
         plat:ForkThread(plat.BaseManagersDistressAIRNG)
         self.DeadBaseThread = self:ForkThread(self.DeadBaseMonitorRNG)
         self.EnemyPickerThread = self:ForkThread(self.PickEnemyRNG)
+        self:ForkThread(self.SetupACUData)
         self:ForkThread(self.CivilianUnitCheckRNG)
         self:ForkThread(self.EcoPowerManagerRNG)
         self:ForkThread(self.EcoPowerPreemptiveRNG)

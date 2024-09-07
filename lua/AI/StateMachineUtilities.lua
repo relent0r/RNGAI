@@ -55,7 +55,7 @@ SimpleTarget = function(platoon, aiBrain)--find enemies in a range and attack th
         if ViableTargetCheck(unit, unitPos) then
             if not unit.machinepriority then unit.machinepriority={} unit.machinedistance={} end
             if not unit.dangerupdate or not unit.machinedanger or gameTime-unit.dangerupdate>10 then
-                unit.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30, true, false, false).enemyTotal)
+                unit.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30,30, true, false, false).enemyTotal)
                 unit.dangerupdate=gameTime
             end
             local unithealth = GetTrueHealth(unit, true)
@@ -108,7 +108,7 @@ SimpleNavalTarget = function(platoon, aiBrain)
         if ViableTargetCheck(unit, unitPos, platoon.MaxPlatoonWeaponRange) then
             if not unit.machinepriority then unit.machinepriority={} unit.machinedistance={} end
             if not unit.dangerupdate or not unit.machinedanger or gameTime-unit.dangerupdate>10 then
-                unit.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30, true, true, false).enemyTotal)
+                unit.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30, 30, true, true, false).enemyTotal)
                 unit.dangerupdate=gameTime
             end
             local unithealth = GetTrueHealth(unit, true)
@@ -366,7 +366,6 @@ ExitConditions = function(self,aiBrain)
                 enemyThreat = enemyThreat + enemy.Blueprint.Defense.SurfaceThreatLevel
                 if enemyThreat * 1.1 > self.CurrentPlatoonThreatAntiSurface and not self.retreat then
                     --RNGLOG('TruePlatoon enemy threat too high during navigating, exiting')
-                    self.navgood = false
                     return true
                 end
                 if enemy and not enemy.Dead and NavUtils.CanPathTo(self.MovementLayer, self.Pos, enemy:GetPosition()) then
@@ -460,6 +459,9 @@ GetUnitMaxWeaponRange = function(unit, filterType)
                 end
             end
         end
+        if not maxRange and unit.Blueprint.CategoriesHash.ENGINEER then
+            maxRange = unit.Blueprint.Economy.MaxBuildDistance
+        end
         return maxRange
     end
 end
@@ -480,10 +482,10 @@ GetNearExtractorRNG = function(aiBrain, platoon, platoonPosition, enemyPosition,
                 if unit and not unit.Dead then
                     local unitPos = unit:GetPosition()
                     if enemyPosition then
-                        if RUtils.GetAngleRNG(platoonPosition[1], platoonPosition[3], unitPos[1], unitPos[3], enemyPosition[1], enemyPosition[3]) > 0.5 then
+                        if RUtils.GetAngleRNG(platoonPosition[1], platoonPosition[3], unitPos[1], unitPos[3], enemyPosition[1], enemyPosition[3]) > 0.40 then
                             if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition,unitPos) then
                                 if threatCheck then
-                                    local threat = RUtils.GrabPosDangerRNG(aiBrain,unitPos,platoon.EnemyRadius, true, false, false)
+                                    local threat = RUtils.GrabPosDangerRNG(aiBrain,unitPos,platoon.EnemyRadius,platoon.EnemyRadius, true, false, false)
                                     if threat.enemySurface < threat.allySurface then
                                         --RNGLOG('Trueplatoon is going to try retreat towards an enemy unit')
                                         location = unitPos
@@ -499,7 +501,7 @@ GetNearExtractorRNG = function(aiBrain, platoon, platoonPosition, enemyPosition,
                     else
                         if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition,unitPos) then
                             if threatCheck then
-                                local threat = RUtils.GrabPosDangerRNG(aiBrain,unitPos,platoon.EnemyRadius, true, false, false)
+                                local threat = RUtils.GrabPosDangerRNG(aiBrain,unitPos,platoon.EnemyRadius, platoon.EnemyRadius, true, false, false)
                                 if threat.enemySurface < threat.allySurface then
                                     --RNGLOG('Trueplatoon is going to try retreat towards an enemy unit')
                                     location = unitPos
@@ -551,7 +553,7 @@ GetClosestUnitRNG = function(aiBrain, platoon, platoonPosition, unitCat, pathChe
                                 end
                             end
                             if threatCheck then
-                                local threat = RUtils.GrabPosDangerRNG(aiBrain,unitPos,platoon.EnemyRadius, true, false, false)
+                                local threat = RUtils.GrabPosDangerRNG(aiBrain,unitPos,platoon.EnemyRadius, platoon.EnemyRadius, true, false, false)
                                 if threat.enemyTotal > threat.allyTotal then
                                     threatable = false
                                 end
@@ -654,7 +656,7 @@ GetClosestPlatoonRNG = function(platoon, platoonName, mergeType, distanceLimit, 
         local aPlatDistance = VDist2Sq(platPos[1],platPos[3],aPlatPos[1],aPlatPos[3])
         if aPlatDistance < closestDistance then
             if angleTargetPos then
-                if RUtils.GetAngleRNG(platPos[1], platPos[3], aPlatPos[1], aPlatPos[3], angleTargetPos[1], angleTargetPos[3]) > 0.5 then
+                if RUtils.GetAngleRNG(platPos[1], platPos[3], aPlatPos[1], aPlatPos[3], angleTargetPos[1], angleTargetPos[3]) > 0.40 then
                     closestPlatoon = aPlat
                     closestDistance = aPlatDistance
                     closestAPlatPos = aPlatPos
@@ -886,31 +888,38 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
             if unitTable.ClosestUnitDistance == 0 or unitTable.ClosestUnitDistance > distance then
                 unitTable.ClosestUnitDistance = distance
             end
-            if unit.Blueprint.CategoriesHash.COMMAND then
+            local unitCats = unit.Blueprint.CategoriesHash
+            if unitCats.COMMAND then
                 unitTable.CommandThreat.TotalThreat = unitTable.CommandThreat.TotalThreat + unitThreat
                 unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                 RNGINSERT(unitTable.CommandThreat.Units, {Object = unit, Distance = distance})
-            elseif unit.Blueprint.CategoriesHash.EXPERIMENTAL and (unit.Blueprint.CategoriesHash.LAND or unit.Blueprint.CategoriesHash.AMPHIBIOUS) then
+            elseif unitCats.EXPERIMENTAL and (unitCats.LAND or unitCats.AMPHIBIOUS) then
                 unitTable.ExperimentalThreat.TotalThreat = unitTable.ExperimentalThreat.TotalThreat + unitThreat
                 unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                 RNGINSERT(unitTable.ExperimentalThreat.Units, {Object = unit, Distance = distance})
-            elseif unit.Blueprint.CategoriesHash.AIR and (unit.Blueprint.CategoriesHash.BOMBER or unit.Blueprint.CategoriesHash.GROUNDATTACK) then
+            elseif unitCats.AIR and (unitCats.BOMBER or unitCats.GROUNDATTACK) then
                 unitTable.AirSurfaceThreat.TotalThreat = unitTable.AirSurfaceThreat.TotalThreat + unitThreat
                 unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                 RNGINSERT(unitTable.AirSurfaceThreat.Units, {Object = unit, Distance = distance})
-            elseif (unit.Blueprint.CategoriesHash.LAND or unit.Blueprint.CategoriesHash.AMPHIBIOUS) and (unit.Blueprint.CategoriesHash.DIRECTFIRE or unit.Blueprint.CategoriesHash.INDIRECTFIRE) and not unit.Blueprint.CategoriesHash.SCOUT then
+            elseif (unitCats.LAND or unitCats.AMPHIBIOUS or unitCats.HOVER) and (unitCats.DIRECTFIRE or unitCats.INDIRECTFIRE) and not unitCats.SCOUT then
                 local unitRange = GetUnitMaxWeaponRange(unit)
                 if unitRange > 35 then
+                    if unitCats.INDIRECTFIRE and not unitCats.SNIPER then
+                        unitThreat = unitThreat * 0.3
+                    end
                     unitTable.RangedUnitThreat.TotalThreat = unitTable.RangedUnitThreat.TotalThreat + unitThreat
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                     RNGINSERT(unitTable.RangedUnitThreat.Units, {Object = unit, Distance = distance})
                 else
+                    if unitCats.INDIRECTFIRE then
+                        unitThreat = unitThreat * 0.3
+                    end
                     unitTable.CloseUnitThreat.TotalThreat = unitTable.CloseUnitThreat.TotalThreat + unitThreat
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                     RNGINSERT(unitTable.CloseUnitThreat.Units, {Object = unit, Distance = distance})
                 end
-            elseif unit.Blueprint.CategoriesHash.STRUCTURE and (unit.Blueprint.CategoriesHash.DIRECTFIRE or unit.Blueprint.CategoriesHash.INDIRECTFIRE) then
-                if unit.Blueprint.CategoriesHash.ARTILLERY and unit.Blueprint.CategoriesHash.TECH2 then
+            elseif unitCats.STRUCTURE and (unitCats.DIRECTFIRE or unitCats.INDIRECTFIRE) then
+                if unitCats.ARTILLERY and unitCats.TECH2 then
                     if unitThreat == 0 and unit.Blueprint.Weapon then
                         for _, weapon in unit.Blueprint.Weapon do
                             if weapon.RangeCategory == 'UWRC_IndirectFire' or StringFind(weapon.WeaponCategory or 'nope', 'Artillery') then
@@ -922,7 +931,7 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                     unitTable.ArtilleryThreat.TotalThreat = unitTable.ArtilleryThreat.TotalThreat + unitThreat
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                     RNGINSERT(unitTable.ArtilleryThreat.Units, {Object = unit, Distance = distance})
-                elseif unit.Blueprint.CategoriesHash.TACTICALMISSILEPLATFORM then
+                elseif unitCats.TACTICALMISSILEPLATFORM then
                     unitTable.DefenseThreat.TotalThreat = unitTable.DefenseThreat.TotalThreat + unitThreat * 0.1
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat + unitThreat * 0.1
                     RNGINSERT(unitTable.DefenseThreat.Units, {Object = unit, Distance = distance})
@@ -931,7 +940,7 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                     RNGINSERT(unitTable.DefenseThreat.Units, {Object = unit, Distance = distance})
                 end
-            elseif unit.Blueprint.CategoriesHash.NAVAL and (unit.Blueprint.CategoriesHash.DIRECTFIRE or unit.Blueprint.CategoriesHash.INDIRECTFIRE) then
+            elseif unitCats.NAVAL and (unitCats.DIRECTFIRE or unitCats.INDIRECTFIRE) then
                 local unitRange = GetUnitMaxWeaponRange(unit)
                 if unitRange > 35 or distance < 1225 then
                     unitTable.NavalUnitThreat.TotalThreat = unitTable.NavalUnitThreat.TotalThreat + unitThreat
@@ -1821,9 +1830,6 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType, whatToBui
                                 if buildingType == 'MassStorage' then
                                     AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false, true)
                                 else
-                                    if whatToBuild == 'ueb4301' then
-                                        LOG('adding to build queue t3 shield at position '..tostring(position[1]..':'..tostring(position[2])))
-                                    end
                                     AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false)
                                 end
                                 table.remove(bType,n)

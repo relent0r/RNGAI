@@ -3214,12 +3214,12 @@ end
 
 -- TruePlatoon Support functions
 
-GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, includeAir, includeStructure)
-    if pos and radius then
+GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface, includeSub, includeAir, includeStructure)
+    if pos and allyRadius and enemyRadius then
         local brainThreats = {allyTotal=0,enemyTotal=0,allySurface=0,allyACU=0, allyACUUnits = {},enemySurface=0,allyStructure=0,enemyStructure=0, enemyStructureUnits={},allyAir=0,enemyAir=0,allySub=0,enemySub=0,enemyrange=0,allyrange=0}
         local enemyMaxRadius = 0
         local allyMaxRadius = 0
-        local enemyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Enemy')
+        local enemyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,enemyRadius,'Enemy')
         local enemyUnitCount = 0
         for _,v in enemyunits do
             if not v.Dead then
@@ -3280,7 +3280,7 @@ GrabPosDangerRNG = function(aiBrain,pos,radius,includeSurface, includeSub, inclu
         end
         brainThreats.enemyrange = enemyMaxRadius
 
-        local allyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,radius,'Ally')
+        local allyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,allyRadius,'Ally')
         for _,v in allyunits do
             if not v.Dead then
                 local mult=1
@@ -6482,8 +6482,8 @@ function GetShieldPosition(aiBrain, eng, locationType, whatToBuild, unitTable)
         return {vec[1],vec[2],GetTerrainHeight(vec[1],vec[2])}
     end
     local engPos = eng:GetPosition()
-    LOG('Getting Shield Position')
-    LOG('Structure table requiring shield has this many '..table.getn(unitTable))
+    --LOG('Getting Shield Position')
+    --LOG('Structure table requiring shield has this many '..table.getn(unitTable))
     if not table.empty(unitTable)then
         table.sort(unitTable,function(a,b) return VDist3Sq(engPos,a:GetPosition())<VDist3Sq(engPos,b:GetPosition()) end)
         local buildPositions = {}
@@ -6497,7 +6497,7 @@ function GetShieldPosition(aiBrain, eng, locationType, whatToBuild, unitTable)
                 local shieldSpaceTimeout = false
                 if v['rngdata'].NoShieldSpace then
                     if v['rngdata'].NoShieldSpace < 5 then
-                        LOG('unit has not shield space, incrementing by 1')
+                        --LOG('unit has not shield space, incrementing by 1')
                         shieldSpaceTimeout = true
                         v['rngdata'].NoShieldSpace = v['rngdata'].NoShieldSpace + 1
                     else
@@ -6550,7 +6550,7 @@ function GetShieldPosition(aiBrain, eng, locationType, whatToBuild, unitTable)
                 if not v['rngdata'] then
                     v['rngdata'] = {}
                 end
-                LOG('No build position, setting noshieldspace to zero')
+                --LOG('No build position, setting noshieldspace to zero')
                 v['rngdata'].NoShieldSpace = 0
             end
         end
@@ -7272,7 +7272,7 @@ UpdateShieldsProtectingUnit = function(aiBrain, finishedUnit)
                     local keyToDelete
                     for l, c in pairs(unit['rngdata'].UnitsDefended) do
                         if unit.EntityId == c.EntityId then
-                            LOG('Removing Unit from shield unitsdefended table')
+                            --LOG('Removing Unit from shield unitsdefended table')
                             keyToDelete = l
                             break
                         end
@@ -7322,7 +7322,7 @@ UpdateUnitsProtectedByShield = function(aiBrain, finishedUnit)
                     if v.ShieldsInRange then
                         if v.ShieldsInRange[unit.EntityId] then
                             v.ShieldsInRange[unit.EntityId] = nil
-                            LOG('Shield has been destroyed, removed from '..v.UnitId)
+                            --LOG('Shield has been destroyed, removed from '..v.UnitId)
                         end
                     end
                 end

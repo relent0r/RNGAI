@@ -225,23 +225,6 @@ BuilderGroup {
             TechLevel = 3
         },
     },
-    --[[
-    Builder {
-        BuilderName = 'RNGAI T3 Air Attack Queue',
-        PlatoonTemplate = 'RNGAIT3AirAttackQueue',
-        Priority = 0,
-        PriorityFunction = AirAttackMode,
-        BuilderType = 'Air',
-        BuilderConditions = {
-            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.9}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1 }},
-        },
-        BuilderData = {
-            TechLevel = 3
-        },
-    },]]
 }
 
 BuilderGroup {

@@ -1,8 +1,8 @@
 name = "RNGAI"
-uid = "faf0863e-4c91-4bc0-ac2d-67c52b8dc885"
-version = 167
+uid = "faf0863e-4c91-4bc0-ac2d-30c60a6e7dd6"
+version = 170
 copyright = "2024 relentless"
-description = "RNG Standard AI. July 2024. This version includes full rewrites of many functionalities but may cost performance compared to previous versions or require more gameplay tuning. For best experience all host game settings should be default. Best played with OMNI cheat disabled. If you find issues please visit the FAF discord AI feedback channel, if you can provide a replay id that will make it much easier for troubleshooting."
+description = "RNG Standard AI. September 2024. For best experience all host game settings should be default. Best played with OMNI cheat disabled. If you find issues please visit the FAF discord AI feedback channel, if you can provide a replay id that will make it much easier for troubleshooting."
 author = "relentless"
 url = ""
 icon = "/mods/RNGAI/icon.jpg"

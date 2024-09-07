@@ -114,7 +114,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, true, true)
+            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, self.EnemyRadius, true, false, true, true)
             if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
                 --self:LogDebug(string.format('DecideWhatToDo we have no antiair threat and there are air units around'))
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
@@ -253,6 +253,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local targetPos
             for _,v in units do
                 if v and not v.Dead then
+                    self:LogDebug(string.format('Combat loop, unit role is '..tostring(v['rngdata'].Role)))
                     local unitPos = v:GetPosition()
                     if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
                         target = aiBrain.BrainIntel.SuicideModeTarget
@@ -278,7 +279,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                         local unitRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
                         targetPos = target:GetPosition()
                         if not approxThreat then
-                            approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, false, false)
+                            approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, self.EnemyRadius, true, false, false)
                         end
                         if not (v['rngdata'].Role == 'Sniper' or v['rngdata'].Role == 'Silo' or v['rngdata'].Role == 'Scout') and closestTarget>(v['rngdata'].MaxWeaponRange+20)*(v['rngdata'].MaxWeaponRange+20) then
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface then
@@ -293,6 +294,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if v['rngdata'].Role == 'Artillery' or v['rngdata'].Role == 'Silo' or v['rngdata'].Role == 'Sniper' then
+                            self:LogDebug(string.format('Ranged Unit has been given attack command target range is '..tostring(unitRange)..' units range is '..tostring(v['rngdata'].MaxWeaponRange)))
+                            self:LogDebug(string.format('Targets range is '..tostring(closestTarget)))
                             local targetCats = target.Blueprint.CategoriesHash
                             if targetCats.DIRECTFIRE and targetCats.STRUCTURE and targetCats.DEFENSE then
                                 if v['rngdata'].MaxWeaponRange > unitRange then
@@ -309,12 +312,15 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                 IssueClearCommands({v})
                                 if v['rngdata'].Role == 'Shield' or v['rngdata'].Role == 'Stealth' and closestTarget then
                                     IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
-                                elseif v['rngdata'].Role == 'Scout' then
+                                elseif v['rngdata'].Role == 'Scout' and closestTarget then
                                     IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self.IntelRange or self.MaxPlatoonWeaponRange) }))
                                 else
                                     IssueAggressiveMove({v},targetPos)
                                 end
                             else
+                                if v['rngdata'].Role == 'Artillery' or v['rngdata'].Role == 'Silo' or v['rngdata'].Role == 'Sniper' then
+                                    self:LogDebug(string.format('Kiting unit '))
+                                end
                                 StateUtils.VariableKite(self,v,target)
                             end
                         end
@@ -624,6 +630,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             for _,v in units do
                 if v and not v.Dead then
                     local unitPos = v:GetPosition()
+                    local unitRange = v['rngdata'].MaxWeaponRange
+                    local unitRole = v['rngdata'].Role
                     if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
                         target = aiBrain.BrainIntel.SuicideModeTarget
                     else
@@ -634,7 +642,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                 local rz = unitPos[3] - enemyPos[3]
                                 local tmpDistance = rx * rx + rz * rz
                                 local targetCandidateCat = m.Blueprint.CategoriesHash
-                                if (targetCandidateCat.DIRECTFIRE and targetCandidateCat.STRUCTURE and targetCandidateCat.DEFENSE and tmpDistance < v['rngdata'].MaxWeaponRange * v['rngdata'].MaxWeaponRange) then
+                                if (targetCandidateCat.DIRECTFIRE and targetCandidateCat.STRUCTURE and targetCandidateCat.DEFENSE and tmpDistance < unitRange * unitRange) then
                                     target = m
                                     closestTarget = tmpDistance
                                     break
@@ -648,12 +656,12 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     end
                     if target then
                         local skipKite = false
-                        local unitRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
+                        local targetRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
                         targetPos = target:GetPosition()
                         local targetCats = target.Blueprint.CategoriesHash
-                        if v['rngdata'].Role == 'Artillery' or v['rngdata'].Role == 'Silo' or v['rngdata'].Role == 'Sniper' then
+                        if unitRole == 'Artillery' or unitRole == 'Silo' or unitRole == 'Sniper' then
                             if targetCats.DIRECTFIRE and targetCats.STRUCTURE and targetCats.DEFENSE then
-                                if v['rngdata'].MaxWeaponRange > unitRange then
+                                if unitRange > targetRange and closestTarget > unitRange * unitRange then
                                     skipKite = true
                                     if not v:IsUnitState("Attacking") then
                                         IssueClearCommands({v})

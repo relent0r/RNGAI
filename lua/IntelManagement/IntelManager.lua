@@ -2394,8 +2394,6 @@ IntelManager = Class {
             end
         elseif productiontype == 'LandIndirectFire' then
             local threatDillutionRatio = 17
-            local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
-            local OwnIndex = aiBrain:GetArmyIndex()
             local enemyDefenseThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.DefenseSurface or 0
             --if EnemyIndex and OwnIndex and aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] ~= 'LAND' then
                 for k, v in aiBrain.BuilderManagers do
@@ -2404,8 +2402,8 @@ IntelManager = Class {
                     local totalFriendlyDirectFireThreat = 0
                     local totalFriendlyIndirectFireThreat = 0
                     if v.FactoryManager and v.FactoryManager.LocationActive then
+                        local baseZone = aiBrain.Zones.Land.zones[v.Zone]
                         if v.PathableZones and v.PathableZones.PathableLandZoneCount > 0 and not table.empty(v.PathableZones.Zones) then
-                            local baseZone = aiBrain.Zones.Land.zones[v.Zone]
                             totalEnemyLandThreat = baseZone.enemylandthreat or 0
                             totalFriendlyDirectFireThreat = baseZone.friendlydirectfireantisurfacethreat or 0
                             totalFriendlyIndirectFireThreat = baseZone.friendlyindirectfireantisurfacethreat or 0
@@ -3763,7 +3761,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     local statusModifier = 1
                     --RNGLOG('angle of enemy units '..angleOfEnemyUnits)
                     --RNGLOG('distance to main '..im.MapIntelGrid[i][k].DistanceToMain)
-                    im.MapIntelGrid[i][k].EnemyUnitDanger = RUtils.GrabPosDangerRNG(aiBrain,position,30, true, false, false).enemyTotal
+                    im.MapIntelGrid[i][k].EnemyUnitDanger = RUtils.GrabPosDangerRNG(aiBrain,position,30,30, true, false, false).enemyTotal
                     if aiBrain.GridPresence and aiBrain.GridPresence:GetInferredStatus(position) == 'Allied' then
                         statusModifier = 1.8
                     end
@@ -3838,7 +3836,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                 acuPriority = acuPriority + 100
             end
             unitAddedCount = unitAddedCount + 1
-            aiBrain.prioritypoints['ACU']={type='raid',Position=aiBrain.CDRUnit.Position,priority=acuPriority,danger=RUtils.GrabPosDangerRNG(aiBrain,aiBrain.CDRUnit.Position,30, true, false, false).enemyTotal,unit=nil}
+            aiBrain.prioritypoints['ACU']={type='raid',Position=aiBrain.CDRUnit.Position,priority=acuPriority,danger=RUtils.GrabPosDangerRNG(aiBrain,aiBrain.CDRUnit.Position,30,30, true, false, false).enemyTotal,unit=nil}
         end
         for k, v in aiBrain.prioritypoints do
             if v.unit.Dead or (v.time and v.time + 60 < timeStamp) then

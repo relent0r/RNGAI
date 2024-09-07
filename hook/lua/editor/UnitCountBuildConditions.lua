@@ -516,6 +516,18 @@ function EnemyUnitsGreaterAtLocationRadiusRNG(aiBrain, radius, locationType, uni
     return HaveEnemyUnitAtLocationRNG(aiBrain, radius, locationType, unitCount, categoryEnemy, '>')
 end
 
+function EnemyStructuresGreaterThanMobileAtPerimeter(aiBrain, locationType)
+    local enemyStructureThreat = aiBrain.BasePerimeterMonitor[locationType].StructureThreat
+    local enemyStructureCount = aiBrain.BasePerimeterMonitor[locationType].StructureUnits
+    local enemyLandThreat = aiBrain.BasePerimeterMonitor[locationType].LandThreat
+    if enemyStructureCount > 0 then
+        if enemyStructureThreat > enemyLandThreat then
+            return true
+        end
+    end
+    return false
+end
+
 function EnemyUnitsGreaterAtRestrictedRNG(aiBrain, locationType, number, type)
     if aiBrain.BasePerimeterMonitor[locationType] then
         if type == 'LAND' then
