@@ -45,14 +45,14 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             local maxPlatoonStrikeRadiusDistance = 0
             for _, unit in self:GetPlatoonUnits() do
                 if not unit.Dead then
-                    if unit.StrikeDamage > 0 then
-                        maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + unit.StrikeDamage
+                    if unit['rngdata'].StrikeDamage > 0 then
+                        maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + unit['rngdata'].StrikeDamage
                     end
-                    if unit.DamageRadius > maxPlatoonStrikeRadius then
-                        maxPlatoonStrikeRadius = unit.DamageRadius
+                    if unit['rngdata'].DamageRadius > maxPlatoonStrikeRadius then
+                        maxPlatoonStrikeRadius = unit['rngdata'].DamageRadius
                     end
-                    if unit.StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
-                        maxPlatoonStrikeRadiusDistance = unit.StrikeRadiusDistance
+                    if unit['rngdata'].StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
+                        maxPlatoonStrikeRadiusDistance = unit['rngdata'].StrikeRadiusDistance
                     end
                     unitCount = unitCount + 1
                 end
@@ -733,14 +733,14 @@ BomberThreatThreads = function(aiBrain, platoon)
                             import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Bomber', LocationType = platoon.LocationType}, plat, {unit})
                         end
                     end
-                    if unit.StrikeDamage > 0 then
-                        maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + unit.StrikeDamage
+                    if unit['rngdata'].StrikeDamage > 0 then
+                        maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + unit['rngdata'].StrikeDamage
                     end
-                    if unit.DamageRadius > maxPlatoonStrikeRadius then
-                        maxPlatoonStrikeRadius = unit.DamageRadius
+                    if unit['rngdata'].DamageRadius > maxPlatoonStrikeRadius then
+                        maxPlatoonStrikeRadius = unit['rngdata'].DamageRadius
                     end
-                    if unit.StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
-                        maxPlatoonStrikeRadiusDistance = unit.StrikeRadiusDistance
+                    if unit['rngdata'].StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
+                        maxPlatoonStrikeRadiusDistance = unit['rngdata'].StrikeRadiusDistance
                     end
                     unitCount = unitCount + 1
                 end

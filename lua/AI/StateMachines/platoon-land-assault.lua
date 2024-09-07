@@ -52,11 +52,11 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             self.MergeType = 'LandMergeStateMachine'
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
             if aiBrain.EnemyIntel.Phase > 1 then
-                self.EnemyRadius = 70
-                self.EnemyRadiusSq = 70 * 70
+                self.EnemyRadius = 75
+                self.EnemyRadiusSq = 75 * 75
             else
-                self.EnemyRadius = 55
-                self.EnemyRadiusSq = 55 * 55
+                self.EnemyRadius = 60
+                self.EnemyRadiusSq = 60 * 60
             end
             if type(self.PlatoonData.MaxPathDistance) == 'string' then
                 self.MaxPathDistance = aiBrain.OperatingAreas[self.PlatoonData.MaxPathDistance]
@@ -67,6 +67,9 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 self.LocationType = self.PlatoonData.LocationType
             else
                 self.LocationType = 'MAIN'
+            end
+            if not self.MovementLayer then
+                self.MovementLayer = self:GetNavigationalLayer()
             end
             self.ScoutSupported = true
             self.BaseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
@@ -120,7 +123,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             local rangedAttack = self.PlatoonData.RangedAttack and aiBrain.EnemyIntel.EnemyFireBaseDetected
             local enemyACU, enemyACUDistance = StateUtils.GetClosestEnemyACU(aiBrain, self.Pos)
 
-            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, true, true)
+            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius * 0.7, self.EnemyRadius, true, false, true, true)
             if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
                 --self:LogDebug(string.format('DecideWhatToDo we have no antiair threat and there are air units around'))
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
@@ -178,9 +181,6 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 end
                 --LOG('Enemy ACU is closest than 35 units at start of DecideWhat to do for land assault, our surface threat '..tostring(threat.allySurface)..' enemy surface threat '..tostring(threat.enemySurface))
             end
-            if not self.MovementLayer then
-                self.MovementLayer = self:GetNavigationalLayer()
-            end
             if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
                 local enemyAcuPosition = aiBrain.BrainIntel.SuicideModeTarget:GetPosition()
                 local rx = self.Pos[1] - enemyAcuPosition[1]
@@ -213,15 +213,15 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             end
             if not target or target.Dead then
                 if rangedAttack then
-                    --self:LogDebug('Ranged attack platoon, looking for defensive units')
+                    self:LogDebug('Ranged attack platoon, looking for defensive units')
                     target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, false, self, 'Attack', self.BaseEnemyArea, {categories.STRUCTURE * categories.DEFENSE, categories.STRUCTURE})
                 else
-                    --self:LogDebug('Standard attack platoon, looking for normal units')
+                    self:LogDebug('Standard attack platoon, looking for normal units')
                     target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, false, self, 'Attack', self.BaseEnemyArea, self.atkPri)
                 end
             end
             if target and not IsDestroyed(target) then
-                --self:LogDebug('Target Found of type '..target.UnitId)
+                self:LogDebug('Target Found of type '..target.UnitId)
                 local targetPos = target:GetPosition()
                 self.BuilderData = {
                     Target = target,
@@ -522,8 +522,8 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                         if targetRange < self.MaxPlatoonWeaponRange then
                             attackStructure = true
                             for _, v in platUnits do
-                                ----self:LogDebug('Role is '..repr(v.Role))
-                                if v.Role == 'Artillery' or v.Role == 'Silo' and not v:IsUnitState("Attacking") then
+                                ----self:LogDebug('Role is '..repr(v['rngdata'].Role))
+                                if v['rngdata'].Role == 'Artillery' or v['rngdata'].Role == 'Silo' and not v:IsUnitState("Attacking") then
                                     IssueClearCommands({v})
                                     IssueAttack({v},target)
                                 end
@@ -533,7 +533,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                     local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, targetPos, true)
                     if attackStructure then
                         for _, v in platUnits do
-                            if v.Role ~= 'Artillery' and v.Role ~= 'Silo' then
+                            if v['rngdata'].Role ~= 'Artillery' and v['rngdata'].Role ~= 'Silo' then
                                 if zoneRetreat then
                                     IssueMove({v}, aiBrain.Zones.Land.zones[zoneRetreat].pos)
                                 else
@@ -592,6 +592,8 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local rangeModifier = 0
             local target = builderData.Target
+            local targetCats = target.Blueprint.CategoriesHash
+            local targetRange = RUtils.GetTargetRange(target) or 30
             local attackSquad =  self:GetSquadUnits('attack')
             local guardSquad =  self:GetSquadUnits('attack')
             local targetPosition = target:GetPosition()
@@ -600,31 +602,36 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 microCap = microCap - 1
                 if microCap <= 0 then break end
                 if unit.Dead then continue end
-                if not unit.MaxWeaponRange then
+                local unitRange = unit['rngdata'].MaxWeaponRange
+                if not unitRange then
                     coroutine.yield(1)
                     continue
                 end
                 local unitPos = unit:GetPosition()
                 local alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
-                local x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange - rangeModifier or self.MaxPlatoonWeaponRange)
-                local y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange - rangeModifier or self.MaxPlatoonWeaponRange)
+                local x = targetPosition[1] - math.cos(alpha) * (unitRange - rangeModifier or self.MaxPlatoonWeaponRange)
+                local y = targetPosition[3] - math.sin(alpha) * (unitRange - rangeModifier or self.MaxPlatoonWeaponRange)
                 local smartPos = { x, GetTerrainHeight( x, y), y }
                 -- check if the move position is new or target has moved
-                if VDist2Sq( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 1 or unit.TargetPos ~= targetPosition then
+                if VDist2Sq( smartPos[1], smartPos[3], unit['rngdata'].smartPos[1], unit['rngdata'].smartPos[3] ) > 1 or unit['rngdata'].TargetPos ~= targetPosition then
                     -- clear move commands if we have queued more than 4
                     if RNGGETN(unit:GetCommandQueue()) > 2 then
                         IssueClearCommands({unit})
                         coroutine.yield(3)
                     end
-                    IssueMove({unit}, smartPos )
+                    if targetCats.SHIELD and unitRange < targetRange then
+                        IssueMove({unit}, unitPos )
+                    else
+                        IssueMove({unit}, smartPos )
+                    end
                     if target.Dead then break end
                     IssueAttack({unit}, target)
-                    unit.smartPos = smartPos
-                    unit.TargetPos = targetPosition
+                    unit['rngdata'].smartPos = smartPos
+                    unit['rngdata'].TargetPos = targetPosition
                 -- in case we don't move, check if we can fire at the target
                 else
-                    if unitPos and unit.WeaponArc then
-                        if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit.WeaponArc) then
+                    if unitPos and unit['rngdata'].WeaponArc then
+                        if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit['rngdata'].WeaponArc) then
                             IssueMove({unit}, targetPosition )
                         end
                     end
@@ -640,7 +647,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 local y = targetPosition[3] - math.sin(alpha) * self.MaxDirectFireRange + 4
                 local smartPos = { x, GetTerrainHeight( x, y), y }
                 -- check if the move position is new or target has moved
-                if VDist2Sq( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 1 or unit.TargetPos ~= targetPosition then
+                if VDist2Sq( smartPos[1], smartPos[3], unit['rngdata'].smartPos[1], unit['rngdata'].smartPos[3] ) > 1 or unit['rngdata'].TargetPos ~= targetPosition then
                     -- clear move commands if we have queued more than 4
                     if RNGGETN(unit:GetCommandQueue()) > 2 then
                         IssueClearCommands({unit})
@@ -648,8 +655,8 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                     end
                     IssueMove({unit}, smartPos )
                     if target.Dead then break end
-                    unit.smartPos = smartPos
-                    unit.TargetPos = targetPosition
+                    unit['rngdata'].smartPos = smartPos
+                    unit['rngdata'].TargetPos = targetPosition
                 -- in case we don't move, check if we can fire at the target
                 end
             end
@@ -690,22 +697,22 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 microCap = microCap - 1
                 if microCap <= 0 then break end
                 if unit.Dead then continue end
-                if not unit.MaxWeaponRange then
+                if not unit['rngdata'].MaxWeaponRange then
                     coroutine.yield(1)
                     continue
                 end
                 unitPos = unit:GetPosition()
                 alpha = math.atan2 (targetPosition[3] - unitPos[3] ,targetPosition[1] - unitPos[1])
-                if unit.MaxWeaponRange >= targetRange then
-                    x = targetPosition[1] - math.cos(alpha) * (unit.MaxWeaponRange - rangeModifier or self.MaxPlatoonWeaponRange)
-                    y = targetPosition[3] - math.sin(alpha) * (unit.MaxWeaponRange - rangeModifier or self.MaxPlatoonWeaponRange)
+                if unit['rngdata'].MaxWeaponRange >= targetRange then
+                    x = targetPosition[1] - math.cos(alpha) * (unit['rngdata'].MaxWeaponRange - rangeModifier or self.MaxPlatoonWeaponRange)
+                    y = targetPosition[3] - math.sin(alpha) * (unit['rngdata'].MaxWeaponRange - rangeModifier or self.MaxPlatoonWeaponRange)
                 else
                     x = targetPosition[1] - math.cos(alpha) * (self.MaxPlatoonWeaponRange)
                     y = targetPosition[3] - math.sin(alpha) * (self.MaxPlatoonWeaponRange)
                 end
                 smartPos = { x, GetTerrainHeight( x, y), y }
                 -- check if the move position is new or target has moved
-                if VDist2Sq( smartPos[1], smartPos[3], unit.smartPos[1], unit.smartPos[3] ) > 2.25 or unit.TargetPos ~= targetPosition then
+                if VDist2Sq( smartPos[1], smartPos[3], unit['rngdata'].smartPos[1], unit['rngdata'].smartPos[3] ) > 2.25 or unit['rngdata'].TargetPos ~= targetPosition then
                     -- clear move commands if we have queued more than 4
                     if RNGGETN(unit:GetCommandQueue()) > 2 then
                         IssueClearCommands({unit})
@@ -715,12 +722,12 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                     IssueMove({unit}, smartPos )
                     if target.Dead then break end
                     IssueAttack({unit}, target)
-                    unit.smartPos = smartPos
-                    unit.TargetPos = targetPosition
+                    unit['rngdata'].smartPos = smartPos
+                    unit['rngdata'].TargetPos = targetPosition
                 -- in case we don't move, check if we can fire at the target
                 else
-                    if unitPos and unit.WeaponArc then
-                        if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit.WeaponArc) then
+                    if unitPos and unit['rngdata'].WeaponArc then
+                        if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit['rngdata'].WeaponArc) then
                             IssueMove({unit}, targetPosition )
                         end
                     end

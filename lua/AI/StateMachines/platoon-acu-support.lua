@@ -115,7 +115,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, true, false, true, true)
+            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, self.EnemyRadius, true, false, true, true)
             if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
                 --self:LogDebug(string.format('DecideWhatToDo we have no antiair threat and there are air units around'))
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
@@ -266,6 +266,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local targetPos
             for _,v in units do
                 if v and not v.Dead then
+                    self:LogDebug(string.format('Combat loop, unit role is '..tostring(v['rngdata'].Role)))
                     local unitPos = v:GetPosition()
                     if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
                         target = aiBrain.BrainIntel.SuicideModeTarget
@@ -276,7 +277,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                 local rx = unitPos[1] - enemyPos[1]
                                 local rz = unitPos[3] - enemyPos[3]
                                 local tmpDistance = rx * rx + rz * rz
-                                if v.Role ~= 'Artillery' and v.Role ~= 'Silo' and v.Role ~= 'Sniper' then
+                                if v['rngdata'].Role ~= 'Artillery' and v['rngdata'].Role ~= 'Silo' and v['rngdata'].Role ~= 'Sniper' then
                                     tmpDistance = tmpDistance*m.machineworth
                                 end
                                 if not closestTarget or tmpDistance < closestTarget then
@@ -291,13 +292,13 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                         local unitRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
                         targetPos = target:GetPosition()
                         if not approxThreat then
-                            approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, true, false, false)
+                            approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius, self.EnemyRadius, true, false, false)
                         end
-                        if not (v.Role == 'Sniper' or v.Role == 'Silo' or v.Role == 'Scout') and closestTarget>(v.MaxWeaponRange+20)*(v.MaxWeaponRange+20) then
+                        if not (v['rngdata'].Role == 'Sniper' or v['rngdata'].Role == 'Silo' or v['rngdata'].Role == 'Scout') and closestTarget>(v['rngdata'].MaxWeaponRange+20)*(v['rngdata'].MaxWeaponRange+20) then
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface then
                                 IssueClearCommands({v}) 
                                 --IssueMove({v},target:GetPosition())
-                                if v.Role == 'Shield' or v.Role == 'Stealth' and closestTarget then
+                                if v['rngdata'].Role == 'Shield' or v['rngdata'].Role == 'Stealth' and closestTarget then
                                     IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
                                 else
                                     IssueAggressiveMove({v},targetPos)
@@ -305,10 +306,12 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                 continue
                             end
                         end
-                        if v.Role == 'Artillery' or v.Role == 'Silo' or v.Role == 'Sniper' then
+                        if v['rngdata'].Role == 'Artillery' or v['rngdata'].Role == 'Silo' or v['rngdata'].Role == 'Sniper' then
+                            self:LogDebug(string.format('Ranged Unit has been given attack command target range is '..tostring(unitRange)..' units range is '..tostring(v['rngdata'].MaxWeaponRange)))
+                            self:LogDebug(string.format('Targets range is '..tostring(closestTarget)))
                             local targetCats = target.Blueprint.CategoriesHash
                             if targetCats.DIRECTFIRE and targetCats.STRUCTURE and targetCats.DEFENSE then
-                                if v.MaxWeaponRange > unitRange then
+                                if v['rngdata'].MaxWeaponRange > unitRange then
                                     skipKite = true
                                     if not v:IsUnitState("Attacking") then
                                         IssueClearCommands({v})
@@ -318,16 +321,19 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if not skipKite then
-                            if approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface*1.5 and target.Blueprint.CategoriesHash.MOBILE and v.MaxWeaponRange <= unitRange then
+                            if approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface*1.5 and target.Blueprint.CategoriesHash.MOBILE and v['rngdata'].MaxWeaponRange <= unitRange then
                                 IssueClearCommands({v})
-                                if v.Role == 'Shield' or v.Role == 'Stealth' and closestTarget then
+                                if v['rngdata'].Role == 'Shield' or v['rngdata'].Role == 'Stealth' and closestTarget then
                                     IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4}))
-                                elseif v.Role == 'Scout' then
+                                elseif v['rngdata'].Role == 'Scout' and closestTarget then
                                     IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self.IntelRange or self.MaxPlatoonWeaponRange) }))
                                 else
                                     IssueAggressiveMove({v},targetPos)
                                 end
                             else
+                                if v['rngdata'].Role == 'Artillery' or v['rngdata'].Role == 'Silo' or v['rngdata'].Role == 'Sniper' then
+                                    self:LogDebug(string.format('Kiting unit '))
+                                end
                                 StateUtils.VariableKite(self,v,target)
                             end
                         end
@@ -471,7 +477,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                     microCap = microCap - 1
                                     if microCap <= 0 then break end
                                     if unit.Dead then continue end
-                                    if not unit.MaxWeaponRange then
+                                    if not unit['rngdata'].MaxWeaponRange then
                                         coroutine.yield(1)
                                         continue
                                     end
@@ -504,7 +510,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                     microCap = microCap - 1
                                     if microCap <= 0 then break end
                                     if unit.Dead then continue end
-                                    if not unit.MaxWeaponRange then
+                                    if not unit['rngdata'].MaxWeaponRange then
                                         coroutine.yield(1)
                                         continue
                                     end
@@ -574,7 +580,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                             microCap = microCap - 1
                             if microCap <= 0 then break end
                             if unit.Dead then continue end
-                            if not unit.MaxWeaponRange then
+                            if not unit['rngdata'].MaxWeaponRange then
                                 coroutine.yield(1)
                                 continue
                             end
@@ -591,7 +597,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                 microCap = microCap - 1
                                 if microCap <= 0 then break end
                                 if unit.Dead then continue end
-                                if not unit.MaxWeaponRange then
+                                if not unit['rngdata'].MaxWeaponRange then
                                     coroutine.yield(1)
                                     continue
                                 end
@@ -641,6 +647,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             for _,v in units do
                 if v and not v.Dead then
                     local unitPos = v:GetPosition()
+                    local unitRange = v['rngdata'].MaxWeaponRange
+                    local unitRole = v['rngdata'].Role
                     if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
                         target = aiBrain.BrainIntel.SuicideModeTarget
                     else
@@ -651,7 +659,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                 local rz = unitPos[3] - enemyPos[3]
                                 local tmpDistance = rx * rx + rz * rz
                                 local targetCandidateCat = m.Blueprint.CategoriesHash
-                                if (targetCandidateCat.DIRECTFIRE and targetCandidateCat.STRUCTURE and targetCandidateCat.DEFENSE and tmpDistance < v.MaxWeaponRange * v.MaxWeaponRange) then
+                                if (targetCandidateCat.DIRECTFIRE and targetCandidateCat.STRUCTURE and targetCandidateCat.DEFENSE and tmpDistance < unitRange * unitRange) then
                                     target = m
                                     closestTarget = tmpDistance
                                     break
@@ -665,12 +673,12 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     end
                     if target then
                         local skipKite = false
-                        local unitRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
+                        local targetRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
                         targetPos = target:GetPosition()
                         local targetCats = target.Blueprint.CategoriesHash
-                        if v.Role == 'Artillery' or v.Role == 'Silo' or v.Role == 'Sniper' then
+                        if unitRole == 'Artillery' or unitRole == 'Silo' or unitRole == 'Sniper' then
                             if targetCats.DIRECTFIRE and targetCats.STRUCTURE and targetCats.DEFENSE then
-                                if v.MaxWeaponRange > unitRange then
+                                if unitRange > targetRange and closestTarget > unitRange * unitRange then
                                     skipKite = true
                                     if not v:IsUnitState("Attacking") then
                                         IssueClearCommands({v})
@@ -728,7 +736,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                         if targetRange < self.MaxPlatoonWeaponRange then
                             attackStructure = true
                             for _, v in platUnits do
-                                if v.Role == 'Artillery' or v.Role == 'Silo' and not v:IsUnitState("Attacking") then
+                                if v['rngdata'].Role == 'Artillery' or v['rngdata'].Role == 'Silo' and not v:IsUnitState("Attacking") then
                                     IssueClearCommands({v})
                                     IssueAttack({v},target)
                                 end
@@ -739,7 +747,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     if attackStructure then
                         --self:LogDebug(string.format('Non Artillery retreating'))
                         for _, v in platUnits do
-                            if v.Role ~= 'Artillery' and v.Role ~= 'Silo' then
+                            if v['rngdata'].Role ~= 'Artillery' and v['rngdata'].Role ~= 'Silo' then
                                 if zoneRetreat then
                                     IssueMove({v}, aiBrain.Zones.Land.zones[zoneRetreat].pos)
                                 else
@@ -974,27 +982,24 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                     continue
                                 end
                             end
-                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>v.MaxWeaponRange/3*v.MaxWeaponRange/3+platoonNum*platoonNum then
-                                --spread=spread+VDist3Sq(v:GetPosition(),self.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
-                                --snum=snum+1
-                                ---[[
+                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>v['rngdata'].MaxWeaponRange/3*v['rngdata'].MaxWeaponRange/3+platoonNum*platoonNum then
                                 if self.dest then
                                     IssueClearCommands({v})
                                     if v.Sniper then
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
+                                        IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v['rngdata'].MaxWeaponRange/7+math.sqrt(platoonNum)}))
                                     else
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
+                                        IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)}))
                                     end
-                                    spread=spread+VDist3Sq(unitPos,self.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
+                                    spread=spread+VDist3Sq(unitPos,self.Pos)/v['rngdata'].MaxWeaponRange/v['rngdata'].MaxWeaponRange
                                     snum=snum+1
                                 else
                                     IssueClearCommands({v})
                                     if v.Sniper or v.Support then
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/7+math.sqrt(platoonNum)}))
+                                        IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v['rngdata'].MaxWeaponRange/7+math.sqrt(platoonNum)}))
                                     else
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v.MaxWeaponRange/4+math.sqrt(platoonNum)}))
+                                        IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)}))
                                     end
-                                    spread=spread+VDist3Sq(unitPos,self.Pos)/v.MaxWeaponRange/v.MaxWeaponRange
+                                    spread=spread+VDist3Sq(unitPos,self.Pos)/v['rngdata'].MaxWeaponRange/v['rngdata'].MaxWeaponRange
                                     snum=snum+1
                                 end--]]
                             end
@@ -1011,11 +1016,11 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 local attack={}
                 for _,v in platoonUnits do
                     if v and not v.Dead then
-                        if v.Role=='Artillery' or v.Role=='Silo' or v.Role=='Sniper' or v.Role=='Shield' then
+                        if v['rngdata'].Role=='Artillery' or v['rngdata'].Role=='Silo' or v['rngdata'].Role=='Sniper' or v['rngdata'].Role=='Shield' then
                             RNGINSERT(supportsquad,v)
-                        elseif v.Role=='Scout' then
+                        elseif v['rngdata'].Role=='Scout' then
                             RNGINSERT(scouts,v)
-                        elseif v.Role=='AA' then
+                        elseif v['rngdata'].Role=='AA' then
                             RNGINSERT(aa,v)
                         else
                             RNGINSERT(attack,v)

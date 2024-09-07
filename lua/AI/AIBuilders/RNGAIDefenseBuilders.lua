@@ -71,6 +71,7 @@ BuilderGroup {
                 BaseTemplate = 'T1PDTemplate',
                 BuildClose = true,
                 OrderedTemplate = true,
+                EmergencyBuild = true,
                 NearDefensivePoints = true,
                 Type = 'Land',
                 Tier = 1,
@@ -110,6 +111,7 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 BuildClose = true,
+                EmergencyBuild = true,
                 BuildStructures = {
                     { Unit = 'T1AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH1 },
                 },
@@ -140,6 +142,7 @@ BuilderGroup {
                 BaseTemplate = 'DefenseTemplate',
                 OrderedTemplate = true,
                 NearDefensivePoints = true,
+                EmergencyBuild = true,
                 Type = 'Land',
                 Tier = 2,
                 maxUnits = 1,
@@ -173,6 +176,7 @@ BuilderGroup {
             Construction = {
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
+                EmergencyBuild = true,
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildClose = true,
@@ -205,6 +209,7 @@ BuilderGroup {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
                 BaseTemplate = 'DefenseTemplate',
                 DesiresAssist = true,
+                EmergencyBuild = true,
                 NumAssistees = 4,
                 NoPause = true,
                 BuildClose = false,
@@ -237,6 +242,7 @@ BuilderGroup {
             Construction = {
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
                 BaseTemplate = 'DefenseTemplate',
+                EmergencyBuild = true,
                 DesiresAssist = true,
                 NumAssistees = 4,
                 BuildClose = false,
@@ -301,6 +307,7 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
+                EmergencyBuild = true,
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildClose = true,
@@ -333,6 +340,7 @@ BuilderGroup {
                 NearDefensivePoints = true,
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
                 BaseTemplate = 'BaseTemplates',
+                EmergencyBuild = true,
                 BuildClose = true,
                 NoPause = true,
                 Type = 'TMD',
@@ -490,6 +498,7 @@ BuilderGroup {
                 BaseTemplate = 'T1PDTemplate',
                 BuildClose = false,
                 NearDefensivePoints = false,
+                EmergencyBuild = true,
                 OrderedTemplate = true,
                 BuildStructures = {
                     { Unit = 'T1GroundDefense', Categories = categories.STRUCTURE * categories.DIRECTFIRE * categories.DEFENSE * categories.TECH1 },
@@ -529,6 +538,7 @@ BuilderGroup {
             Construction = {
                 BuildClose = false,
                 NearDefensivePoints = false,
+                EmergencyBuild = true,
                 BuildStructures = {
                     { Unit = 'T1AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH1 },
                 },
@@ -560,6 +570,7 @@ BuilderGroup {
                 AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
                 BaseTemplate = 'BaseTemplates',
+                EmergencyBuild = true,
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildStructures = {
@@ -592,6 +603,7 @@ BuilderGroup {
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
                 BaseTemplate = 'BaseTemplates',
+                EmergencyBuild = true,
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildClose = false,
@@ -626,6 +638,7 @@ BuilderGroup {
                 AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
                 BaseTemplate = 'BaseTemplates',
+                EmergencyBuild = true,
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildClose = false,
@@ -687,6 +700,7 @@ BuilderGroup {
                 NearDefensivePoints = true,
                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
                 BaseTemplate = 'BaseTemplates',
+                EmergencyBuild = true,
                 BuildClose = true,
                 NoPause = true,
                 Type = 'TMD',
@@ -719,6 +733,7 @@ BuilderGroup {
                 BuildClose = false,
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
                 AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH2,
+                EmergencyBuild = true,
                 maxUnits = 1,
                 maxRadius = 35,
                 BuildStructures = {
@@ -756,6 +771,7 @@ BuilderGroup {
                 BuildClose = true,
                 AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY * categories.NAVAL},
                 AvoidCategory = categories.STRUCTURE * categories.ANTINAVY * categories.DEFENSE,
+                EmergencyBuild = true,
                 maxUnits = 1,
                 maxRadius = 3,
                 BuildStructures = {
@@ -787,6 +803,7 @@ BuilderGroup {
                 BuildClose = true,
                 AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY * categories.NAVAL},
                 AvoidCategory = categories.STRUCTURE * categories.ANTINAVY * categories.DEFENSE,
+                EmergencyBuild = true,
                 maxUnits = 1,
                 maxRadius = 3,
                 BuildStructures = {
@@ -818,6 +835,7 @@ BuilderGroup {
                 BuildClose = false,
                 AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY * categories.NAVAL},
                 AvoidCategory = categories.STRUCTURE * categories.NAVAL * categories.DEFENSE,
+                EmergencyBuild = true,
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildStructures = {

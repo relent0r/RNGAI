@@ -28,6 +28,7 @@ EngineerManager = Class(RNGEngineerManager) {
         self.ConsumptionUnits = {
             Engineers = { Category = categories.ENGINEER, Units = {}, UnitsList = {}, Count = 0, },
             Fabricators = { Category = categories.MASSFABRICATION * categories.STRUCTURE, Units = {}, UnitsList = {}, Count = 0, },
+            EnergyProduction = { Category = categories.ENERGYPRODUCTION * categories.STRUCTURE, Units = {}, UnitsList = {}, Count = 0, },
             Shields = { Category = categories.SHIELD * categories.STRUCTURE, Units = {}, UnitsList = {}, Count = 0, },
             MobileShields = { Category = categories.SHIELD * categories.MOBILE, Units = {}, UnitsList = {}, Count = 0, },
             Intel = { Category = categories.STRUCTURE * (categories.SONAR + categories.RADAR + categories.OMNI), Units = {}, UnitsList = {}, Count = 0, },
@@ -59,7 +60,11 @@ EngineerManager = Class(RNGEngineerManager) {
             return RNGEngineerManager.UnitConstructionFinished(self, unit, finishedUnit)
         end
         if finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() and finishedUnit:GetFractionComplete() == 1 then
+            if not finishedUnit['rngdata'] then
+                finishedUnit['rngdata'] = {}
+            end
             if EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit) then
+                RUtils.UpdateShieldsProtectingUnit(self.Brain, finishedUnit)
                 if finishedUnit.LocationType and finishedUnit.LocationType ~= self.LocationType then
                     return
                 end
@@ -68,7 +73,7 @@ EngineerManager = Class(RNGEngineerManager) {
             if EntityCategoryContains(categories.ANTIMISSILE * categories.STRUCTURE * categories.TECH2, finishedUnit) then
                 local deathFunction = function(unit)
                     if unit.UnitsDefended then
-                        for _, v in unit.UnitsDefended do
+                        for _, v in pairs(unit.UnitsDefended) do
                             if v and not v.Dead then
                                 if v.TMDInRange then
                                     if v.TMDInRange[unit.EntityId] then
@@ -80,7 +85,7 @@ EngineerManager = Class(RNGEngineerManager) {
                         end
                     end
                 end
-                import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, unit)
+                import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, finishedUnit)
                 finishedUnit.UnitsDefended = {}
                 --LOG('TMD Built, looking for units to defend')
                 local defenseRadius = finishedUnit.Blueprint.Weapon[1].MaxRadius - 2
@@ -98,6 +103,8 @@ EngineerManager = Class(RNGEngineerManager) {
                         --LOG('TMD Table '..repr(v.TMDInRange))
                     end
                 end
+            elseif EntityCategoryContains(categories.SHIELD * categories.STRUCTURE, finishedUnit) then
+                RUtils.UpdateUnitsProtectedByShield(self.Brain, finishedUnit)
             end
             self:AddUnitRNG(finishedUnit)
         end
