@@ -1328,15 +1328,15 @@ StructureManager = Class {
             local currentEnergyEfficiency = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
             -- Logging starts here
             local currentTime = GetGameTimeSeconds()
-            LOG('{ "GameTime" : '..tostring(currentTime)..', "Nickname": "'..tostring(aiBrain.Nickname)..'" }')
-            LOG('{ "GameTime" : '..tostring(currentTime)..', "CoreT3Extractors" : "'..tostring(aiBrain.EcoManager.CoreExtractorT3Count)..'" }')
-            LOG('{ "GameTime" : '..tostring(currentTime)..', "CoreExtractorsTotal" : "'..tostring(aiBrain.EcoManager.TotalCoreExtractors)..'" }')
-            LOG('{ "GameTime" : '..tostring(currentTime)..', "TotalExtractorSpend" : "'..tostring(totalSpend)..'" }')
-            LOG('{ "GameTime" : '..tostring(currentTime)..', "TotalAllowedExtractorSpend" : "'..tostring(upgradeSpend)..'" }')
-            LOG('{ "GameTime" : '..tostring(currentTime)..', "AvailableExtractorUpgradeSpend" : "'..tostring(upgradeSpend - totalSpend)..'" }')
-            LOG('{ "GameTime" : '..tostring(currentTime)..', "CurrentT3ExtractorUpgradeSpend" : "'..tostring(aiBrain.EcoManager.T3ExtractorSpend)..'" }')
-            LOG('{ "GameTime" : '..tostring(currentTime)..', "T1ExtractorUpgradeCount" : "'..tostring(extractorsDetail.TECH1Upgrading)..'" }')
-            LOG('{ "GameTime" : '..tostring(currentTime)..', "T2ExtractorUpgradeCount" : "'..tostring(extractorsDetail.TECH2Upgrading)..'" }')
+            --LOG('{ "GameTime" : '..tostring(currentTime)..', "Nickname": "'..tostring(aiBrain.Nickname)..'" }')
+            --LOG('{ "GameTime" : '..tostring(currentTime)..', "CoreT3Extractors" : "'..tostring(aiBrain.EcoManager.CoreExtractorT3Count)..'" }')
+            --LOG('{ "GameTime" : '..tostring(currentTime)..', "CoreExtractorsTotal" : "'..tostring(aiBrain.EcoManager.TotalCoreExtractors)..'" }')
+            --LOG('{ "GameTime" : '..tostring(currentTime)..', "TotalExtractorSpend" : "'..tostring(totalSpend)..'" }')
+            --LOG('{ "GameTime" : '..tostring(currentTime)..', "TotalAllowedExtractorSpend" : "'..tostring(upgradeSpend)..'" }')
+            --LOG('{ "GameTime" : '..tostring(currentTime)..', "AvailableExtractorUpgradeSpend" : "'..tostring(upgradeSpend - totalSpend)..'" }')
+            --LOG('{ "GameTime" : '..tostring(currentTime)..', "CurrentT3ExtractorUpgradeSpend" : "'..tostring(aiBrain.EcoManager.T3ExtractorSpend)..'" }')
+            --LOG('{ "GameTime" : '..tostring(currentTime)..', "T1ExtractorUpgradeCount" : "'..tostring(extractorsDetail.TECH1Upgrading)..'" }')
+            --LOG('{ "GameTime" : '..tostring(currentTime)..', "T2ExtractorUpgradeCount" : "'..tostring(extractorsDetail.TECH2Upgrading)..'" }')
 
             if aiBrain.EcoManager.CoreExtractorT3Count < 3 and aiBrain.EcoManager.TotalCoreExtractors > 2 and aiBrain.cmanager.income.r.m > (140 * multiplier) and (aiBrain.smanager.Current.Structure.fact.Land.T3 > 0 or aiBrain.smanager.Current.Structure.fact.Air.T3 > 0) and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 then
                 aiBrain.EcoManager.CoreMassPush = true
@@ -1385,36 +1385,25 @@ StructureManager = Class {
                 coroutine.yield(80)
                 continue
             end
-            LOG(' extractorsDetail.TECH1'..extractorsDetail.TECH1..'extractorsDetail.TECH2 '..extractorsDetail.TECH2)
-            if extractorsDetail.TECH1 > 0 and extractorsDetail.TECH2 > 0 then
-                LOG('T2 Mex Ratio is '..(extractorsDetail.TECH1 / extractorsDetail.TECH2))
-            end
             if extractorsDetail.TECH1Upgrading < 3 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and
                 (totalSpend < upgradeSpend or massStorage > 600) and energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.SpamPlayer then
-                    LOG('We Could upgrade an extractor now with over time phase 1')
-                    LOG('We Could upgrade an extractor now with instant energyefficiency and mass efficiency')
                     if totalSpend < upgradeSpend and (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.2) and upgradeSpend - totalSpend > aiBrain.EcoManager.T3ExtractorSpend then
-                        LOG('Extractor Ratio of T1 to T2 is >= 1.1 and and upgradeSpend - totalSpend > aiBrain.EcoManager.T3ExtractorSpend')
                         self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         coroutine.yield(30)
                     elseif extractorsDetail.TECH1 > 0 and ((extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7) or upgradeSpend < 15) then
-                        LOG('Extractor Ratio of T1 to T2 is >= 1.5 or upgrade spend under 15')
                         self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                         coroutine.yield(30)
                     elseif totalSpend < upgradeSpend then
-                        LOG('Else all tiers upgrade')
                         self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         coroutine.yield(30)
                     end
                     coroutine.yield(30)
             elseif extractorsDetail.TECH1 > 0 and extractorsDetail.TECH1Upgrading < 1 and extractorsDetail.TECH2Upgrading > 0 and upgradeTrigger and totalSpend < upgradeSpend 
                    and energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.SpamPlayer then
-                    LOG('We Could upgrade a non t2 extractor now with over time phase 2')
                     self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                     coroutine.yield(60)
             elseif extractorsDetail.TECH1 > 0 and extractorsDetail.TECH1Upgrading < 5 and upgradeTrigger and (totalSpend < upgradeSpend or massStorage > 450) 
                    and energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.SpamPlayer then
-                    LOG('We Could upgrade a non t2 extractor now with over time phase 3')
                     self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                     coroutine.yield(60)
             elseif massStorage > 500 and energyStorage > 3000 and extractorsDetail.TECH2Upgrading < 2 and coreExtractorT2Count + aiBrain.EcoManager.CoreExtractorT3Count >= aiBrain.EcoManager.TotalCoreExtractors 

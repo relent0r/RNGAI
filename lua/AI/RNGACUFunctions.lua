@@ -562,7 +562,7 @@ GetStartingReclaim = function(aiBrain)
         for k,v in startReclaim do
             if not IsProp(v) then continue end
             if v.MaxMassReclaim or v.MaxEnergyReclaim  then
-                if v.MaxMassReclaim > minRec or v.MaxEnergyReclaim > minRec then
+                if v.MaxMassReclaim >= minRec or v.MaxEnergyReclaim > minRec then
                     --RNGLOG('High Value Reclaim is worth '..v.MaxMassReclaim)
                     local rpos = v.CachePosition
                     if VDist2( rpos[1], rpos[3], posX, posZ ) < reclaimScanArea then
@@ -951,7 +951,7 @@ function PerformACUReclaim(aiBrain, cdr, minimumReclaim, nextWaypoint)
         local closeReclaim = {}
         for c, b in reclaimRect do
             if not IsProp(b) then continue end
-            if b.MaxMassReclaim and b.MaxMassReclaim > minimumReclaim then
+            if b.MaxMassReclaim and b.MaxMassReclaim >= minimumReclaim then
                 local dx = cdrPos[1] - b.CachePosition[1]
                 local dz = cdrPos[3] - b.CachePosition[3]
                 local reclaimDist = dx * dx + dz * dz

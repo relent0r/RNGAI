@@ -119,6 +119,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             else
                 enemyPos = aiBrain.MapCenterPoint
             end
+            local maxMarkerDistance = self.PlatoonData.Construction.MaxDistance or 256
+            maxMarkerDistance = maxMarkerDistance * maxMarkerDistance
 
             eng.EngineerBuildQueue = {}
             local enemyWeight = 1.5
@@ -163,13 +165,21 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 local zoneMarkers = {}
                 for _, v in aiBrain.Zones.Land.zones do
                     if v.resourcevalue > 0 then
-                        table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+                        local zx = platoonPos[1] - v.pos[1]
+                        local zz = platoonPos[3] - v.pos[3]
+                        if zx * zx + zz * zz < maxMarkerDistance then
+                            table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+                        end
                     end
                 end
                 for _, v in aiBrain.Zones.Naval.zones do
                     --LOG('Inserting zone data position '..repr(v.pos)..' resource markers '..repr(v.resourcemarkers)..' resourcevalue '..repr(v.resourcevalue)..' zone id '..repr(v.id))
                     if v.resourcevalue > 0 then
-                        table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+                        local zx = platoonPos[1] - v.pos[1]
+                        local zz = platoonPos[3] - v.pos[3]
+                        if zx * zx + zz * zz < maxMarkerDistance then
+                            table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+                        end
                     end
                 end
                 self.ZoneMarkers = zoneMarkers

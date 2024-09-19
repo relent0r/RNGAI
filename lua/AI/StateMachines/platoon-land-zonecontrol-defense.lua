@@ -161,11 +161,21 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 --self:LogDebug(string.format('DecideWhatToDo no target look at main base'))
                 local targetThreat
                 local basePosition
-                if aiBrain.BuilderManagers[self.LocationType].FactoryManager.LocationActive then
-                    basePosition = aiBrain.BuilderManagers[self.LocationType].Position
-                    targetThreat = GetThreatAtPosition(aiBrain, aiBrain.BuilderManagers[self.LocationType].Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Air')
+                local homeBase = aiBrain.BuilderManagers[self.LocationType]
+                if homeBase.FactoryManager.LocationActive then
+                    basePosition = homeBase.Position
+                    targetThreat = GetThreatAtPosition(aiBrain, homeBase.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Air')
                 end
-                if targetThreat > 10 and basePosition and NavUtils.CanPathTo(self.MovementLayer, self.Pos, basePosition) and VDist3Sq(self.Pos, basePosition) < 90000 then
+                local zoneSet
+                if self.MovementLayer == 'Land' or self.MovementLayer == 'Amphibious' then
+                    zoneSet = aiBrain.Zones.Land.zones
+                elseif self.MovementLayer == 'Air' then
+                    zoneSet = aiBrain.Zones.Air.zones
+                elseif self.MovementLayer == 'Water' then
+                    zoneSet = aiBrain.Zones.Naval.zones
+                end
+                local homeFriendlyAntiAir = zoneSet[homeBase.Zone].friendlylandantiairthreat
+                if targetThreat > 8 and homeFriendlyAntiAir < targetThreat and basePosition and NavUtils.CanPathTo(self.MovementLayer, self.Pos, basePosition) and VDist3Sq(self.Pos, basePosition) < 90000 then
                     local targetZone = MAP:GetZoneID(basePosition,self.Zones.Land.index)
                     self.BuilderData = {
                         TargetZone = targetZone,

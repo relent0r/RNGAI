@@ -678,7 +678,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 RNGINSERT(baseTmplList, baseTmpl)
             elseif cons.ZoneExpansion then
                 reference, refName, refZone = RUtils.AIFindZoneExpansionPointRNG(aiBrain, cons.LocationType, (cons.LocationRadius or 100))
-                if not reference or not refName or aiBrain.Zones.Land.zones[refZone].lastexpansionattempt + 30 > GetGameTimeSeconds() then
+                if not reference or not refName then
                     self:ExitStateMachine()
                     return
                 end
@@ -1009,7 +1009,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 if VDist3Sq(engPos, buildLocation) < 225 then
                     movementRequired = false
                 end
-                
                 if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation, false, transportWait, emergencyBuild ) then
                     if not eng or eng.Dead or not eng.PlatoonHandle or not aiBrain:PlatoonExists(eng.PlatoonHandle) then
                         if eng then eng.ProcessBuild = nil end
