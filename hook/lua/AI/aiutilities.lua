@@ -36,9 +36,7 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
     -- first try to find a path with markers. 
     local result, navReason
     local path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, destination)
-    if unit.PlatoonHandle.BuilderName then
-        --RNGLOG('EngineerGenerateSafePathToRNG for '..unit.PlatoonHandle.BuilderName..' reason '..reason)
-    end
+
     --RNGLOG('EngineerGenerateSafePathToRNG reason is'..reason)
     -- only use CanPathTo for distance closer then 200 and if we can't path with markers
     if reason ~= 'PathOK' then
@@ -58,11 +56,14 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
     end
     local bUsedTransports = false
     -- Increase check to 300 for transports
-    if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 250 * 250
+    if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 300 * 300
     and unit.PlatoonHandle and not EntityCategoryContains(categories.COMMAND, unit) then
 
         -- Skip the last move... we want to return and do a build
         unit.WaitingForTransport = true
+        if reason == 'Unpathable' then
+            transportWait = transportWait * 2
+        end
         bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, unit.PlatoonHandle, destination, transportWait, true)
         unit.WaitingForTransport = false
 

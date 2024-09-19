@@ -1015,7 +1015,6 @@ function SendPlatoonWithTransports(aiBrain, platoon, destination, attempts, bSki
 
 		-- make the requested number of attempts to get transports - 12 second delay between attempts
 		for counter = 1, attempts do
-			--LOG('Wait Cycle '..counter)
 			if PlatoonExists( aiBrain, platoon ) then
 				-- check if we can get enough transport and how many transports we are using
 				-- this call will return the # of units transported (true) or false, if true, the platoon holding the transports or false
@@ -2046,10 +2045,12 @@ function WatchTransportTravel( transport, destination, aiBrain, UnitPlatoon )
 				-- reassign destination and begin immediate drop --
 				-- this really needs to be sensitive to the platoons layer
 				-- and find an appropriate marker to drop at -- 
+				LOG('Transport has got distress call, set destination as current position and break')
                 if TransportDialog then
                     LOG("*AI DEBUG "..aiBrain.Nickname.." "..UnitPlatoon.BuilderName.." "..transport.PlatoonHandle.BuilderName.." Transport "..transport.EntityId.." DISTRESS ends travelwatch after "..watchcount)
                 end
 				destination = GetPosition(transport)
+				LOG('Destination is set as '..tostring(destination[1]..':'..tostring(destination[3])))
                 break
 			end
 			

@@ -133,13 +133,48 @@ AIBrain = Class(RNGAIBrainClass) {
 
             -- Flag enemy starting locations with threat?
             if ScenarioInfo.type == 'skirmish' then
-                self:AddInitialEnemyThreat(200, 0.005)
+                self:AddInitialEnemyThreatRNG(200, 0.005)
             end
         end
 
         self.UnitBuiltTriggerList = {}
         self.FactoryAssistList = {}
         self.DelayEqualBuildPlattons = {}
+    end,
+
+        ---## Scouting help...
+    --- Creates an influence map threat at enemy bases so the AI will start sending attacks before scouting gets up.
+    ---@param self BaseAIBrain
+    ---@param amount number amount of threat to add to each enemy start area
+    ---@param decay number rate that the threat should decay
+    ---@return nil
+    AddInitialEnemyThreatRNG = function(self, amount, decay)
+        local aiBrain = self
+        local myArmy = ScenarioInfo.ArmySetup[self.Name]
+        local threatTypes = {
+            'AntiAir',
+            'AntiSurface',
+            'StructuresNotMex'
+        }
+
+        if ScenarioInfo.Options.TeamSpawn == 'fixed' then
+            -- Spawn locations were fixed. We know exactly where our opponents are.
+            for i = 1, 16 do
+                local token = 'ARMY_' .. i
+                local army = ScenarioInfo.ArmySetup[token]
+
+                if army then
+                    if army.ArmyIndex ~= myArmy.ArmyIndex and (army.Team ~= myArmy.Team or army.Team == 1) then
+                        local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
+                        if startPos then
+                            for _, t in threatTypes do
+                                self:AssignThreatAtPosition(startPos, amount, decay, t)
+                            end
+                        end
+                    end
+                end
+            end
+        end
     end,
 
         --- Called after `SetupSession` but before `BeginSession` - no initial units, props or resources exist at this point
@@ -1907,10 +1942,18 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             if zone then
                 self.BuilderManagers[baseName].Zone = zone
-                if baseLayer == 'Water' then
-                    self.Zones.Naval.zones[zone].BuilderManager = self.BuilderManagers[baseName]
+                if zone > -1 then
+                    if baseLayer == 'Water' then
+                        if not self.Zones.Naval.zones[zone] then
+                        end
+                        self.Zones.Naval.zones[zone].BuilderManager = self.BuilderManagers[baseName]
+                    else
+                        if not self.Zones.Land.zones[zone] then
+                        end
+                        self.Zones.Land.zones[zone].BuilderManager = self.BuilderManagers[baseName]
+                    end
                 else
-                    self.Zones.Land.zones[zone].BuilderManager = self.BuilderManagers[baseName]
+                    WARN('No Zone found at provided position '..tostring(position[1])..':'..tostring(position[3]))
                 end
                 --RNGLOG('Zone is '..self.BuilderManagers[baseName].Zone)
                 zoneSet = true
@@ -6245,6 +6288,14 @@ AIBrain = Class(RNGAIBrainClass) {
                 and (not unit.EnemyNavalPresent) then
                     unit.EnemyNavalPresent = true
                 end
+            end
+        end
+        local function AntiAirTransport(unit, instigator)
+            --RNGLOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiAir))
+            if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.CategoriesHash.ANTIAIR
+            and unit.PlatoonHandle and (not unit.PlatoonHandle.DistressCall) then
+                --RNGLOG('Naval Callback AntiAir We want to retreat '..unit.UnitId)
+                unit.PlatoonHandle.DistressCall = true
             end
         end
         if unit.Blueprint.CategoriesHash.TECH1 and unit.Blueprint.CategoriesHash.FRIGATE then

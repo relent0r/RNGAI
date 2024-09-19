@@ -65,14 +65,17 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 return
             end
             local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
-            local EnemyIndex = brain:GetCurrentEnemy():GetArmyIndex()
-            local OwnIndex = brain:GetArmyIndex()
-            if brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
-                --LOG('We can path to the enemy')
-                --LOG('PlayableArea = '..tostring(repr(playableArea)))
-                if playableArea[3] and playableArea[3] <= 512 or playableArea[4] and playableArea[4] <= 512 then
-                    --LOG('10km or less land map, check if we can get more factories')
-                    self.CheckEarlyLandFactory = true
+            local currenEnemy = brain:GetCurrentEnemy()
+            if currenEnemy then
+                local EnemyIndex = currenEnemy:GetArmyIndex()
+                local OwnIndex = brain:GetArmyIndex()
+                if brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                    --LOG('We can path to the enemy')
+                    --LOG('PlayableArea = '..tostring(repr(playableArea)))
+                    if playableArea[3] and playableArea[3] <= 512 or playableArea[4] and playableArea[4] <= 512 then
+                        --LOG('10km or less land map, check if we can get more factories')
+                        self.CheckEarlyLandFactory = true
+                    end
                 end
             end
             self:ChangeState(self.DecideWhatToDo)
