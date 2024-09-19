@@ -142,7 +142,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
     self.BadReclaimables = self.BadReclaimables or {}
 
     while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
-        local needEnergy = aiBrain:GetEconomyStoredRatio('ENERGY') < 0.5
+        local needEnergy = aiBrain:GetEconomyStoredRatio('ENERGY') < 0.8
         if platoon.PlatoonData.CheckCivUnits then
             local captureUnit = CheckForCivilianUnitCapture(aiBrain, self, platoon.MovementLayer)
             if captureUnit then
@@ -178,6 +178,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                 local reclaimValue
                                 if needEnergy then
                                     reclaimValue = r.Reclaim.MaxEnergyReclaim
+                                    reclaimValue = reclaimValue + r.Reclaim.MaxMassReclaim
                                 else
                                     reclaimValue = r.Reclaim.MaxMassReclaim
                                 end
@@ -398,7 +399,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                                     end
                                                 end
                                                 if blacklisted then continue end
-                                                if b.MaxMassReclaim and b.MaxMassReclaim > 5 then
+                                                if b.MaxMassReclaim and b.MaxMassReclaim >= 5 then
                                                     engReclaiming = true
                                                     reclaimCount = reclaimCount + 1
                                                     IssueReclaim({self}, b)
@@ -470,7 +471,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 if blacklisted then continue end
                 -- End Blacklisted Props
                 if not needEnergy or v.MaxEnergyReclaim then
-                    if v.MaxMassReclaim and v.MaxMassReclaim > minRec then
+                    if v.MaxMassReclaim and v.MaxMassReclaim >= minRec then
                         if not self.BadReclaimables[v] then
                             local distance = VDist2(engPos[1], engPos[3], v.CachePosition[1], v.CachePosition[3])
                             if not closestDistance or distance < closestDistance then
@@ -742,7 +743,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos, pointRadius)
     local Reclaimables = GetReclaimablesInRect(Rect(pos[1], pos[3], pos[1], pos[3]))
     if Reclaimables and not table.empty( Reclaimables ) then
         for k,v in Reclaimables do
-            if v.MaxMassReclaim and v.MaxMassReclaim > 5 or v.MaxEnergyReclaim and v.MaxEnergyReclaim > 5 then
+            if v.MaxMassReclaim and v.MaxMassReclaim >= 5 or v.MaxEnergyReclaim and v.MaxEnergyReclaim > 5 then
                 IssueReclaim({eng}, v)
             end
         end
@@ -3547,6 +3548,7 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position)
     local im = IntelManagerRNG.GetIntelManager(aiBrain)
     local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location or position
     local zoneSet = aiBrain.Zones.Land.zones
+    local currentTime = GetGameTimeSeconds()
     local retPos, retName, refZone
     radius = radius * radius
 
@@ -3559,7 +3561,8 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position)
     if not table.empty(im.ZoneExpansions.Pathable) then
         for _, v in im.ZoneExpansions.Pathable do
             local skipPos = false
-            if v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive and (not zoneSet[v.ZoneID].engineerplatoonallocated or IsDestroyed(zoneSet[v.ZoneID].engineerplatoonallocated)) then
+            if v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive 
+            and (not zoneSet[v.ZoneID].engineerplatoonallocated or IsDestroyed(zoneSet[v.ZoneID].engineerplatoonallocated)) and (currentTime >= zoneSet[v.ZoneID].lastexpansionattempt + 30 or zoneSet[v.ZoneID].lastexpansionattempt == 0 ) then
                 retPos = zoneSet[v.ZoneID].pos
                 retName = 'ZONE_'..v.ZoneID
                 refZone = v.ZoneID
@@ -4123,6 +4126,8 @@ end
 
 function PerformEngReclaim(aiBrain, eng, minimumReclaim)
     local engPos = eng:GetPosition()
+    local maxReclaimDistance = eng.Blueprint.Economy.MaxBuildDistance or 10
+    maxReclaimDistance = maxReclaimDistance * maxReclaimDistance
     local rectDef = Rect(engPos[1] - 10, engPos[3] - 10, engPos[1] + 10, engPos[3] + 10)
     local reclaimRect = GetReclaimablesInRect(rectDef)
     local maxReclaimCount = 0
@@ -4131,8 +4136,8 @@ function PerformEngReclaim(aiBrain, eng, minimumReclaim)
         local closeReclaim = {}
         for c, b in reclaimRect do
             if not IsProp(b) then continue end
-            if b.MaxMassReclaim and b.MaxMassReclaim > minimumReclaim then
-                if VDist3Sq(engPos, b.CachePosition) <= 100 then
+            if b.MaxMassReclaim and b.MaxMassReclaim >= minimumReclaim then
+                if VDist3Sq(engPos, b.CachePosition) <= maxReclaimDistance then
                     RNGINSERT(closeReclaim, b)
                     maxReclaimCount = maxReclaimCount + 1
                 end
@@ -7184,7 +7189,10 @@ GetRallyPoint = function(aiBrain, layer, position, minRadius, maxRadius)
             local referencePosition
             local teamAveragePositions = aiBrain.IntelManager:GetTeamAveragePositions()
 
-            local teamAveragePosition = {teamAveragePositions['Enemy'].x,GetSurfaceHeight(teamAveragePositions['Enemy'].x, teamAveragePositions['Enemy'].z), teamAveragePositions['Enemy'].z}
+            local teamAveragePosition
+            if teamAveragePositions['Enemy'].x and teamAveragePositions['Enemy'].z then
+                teamAveragePosition = {teamAveragePositions['Enemy'].x,GetSurfaceHeight(teamAveragePositions['Enemy'].x, teamAveragePositions['Enemy'].z), teamAveragePositions['Enemy'].z}
+            end
             if teamAveragePosition[1] then
                 referencePosition = teamAveragePosition
             else

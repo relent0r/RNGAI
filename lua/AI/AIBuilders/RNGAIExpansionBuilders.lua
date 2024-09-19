@@ -12,6 +12,23 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 local NavalExpansionAdjust = function(self, aiBrain, builderManager)
+    local currentEnemy = aiBrain:GetCurrentEnemy()
+    if not currentEnemy then
+        return 0
+    end
+    local validAttackPriorityModifier = 0
+    if aiBrain.BrainIntel.NavalBaseLabels then
+        for _, v in aiBrain.BrainIntel.NavalBaseLabels do
+            if v == 'Confirmed' then
+                validAttackPriorityModifier = validAttackPriorityModifier + 100
+            end
+        end
+    end
+    if aiBrain.EnemyIntel.NavalValue then
+        if aiBrain.EnemyIntel.NavalValue > 400 then
+            validAttackPriorityModifier = validAttackPriorityModifier + 100
+        end
+    end
     if aiBrain.BrainIntel.AirPlayer then
         return 0
     elseif aiBrain.MapWaterRatio < 0.20 and not aiBrain.MassMarkersInWater then
@@ -19,39 +36,47 @@ local NavalExpansionAdjust = function(self, aiBrain, builderManager)
         return 0
     elseif aiBrain.MapWaterRatio < 0.30 then
         local priority = 200
-        local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
+        local EnemyIndex = currentEnemy:GetArmyIndex()
         local OwnIndex = aiBrain:GetArmyIndex()
         if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] ~= 'LAND' then
             priority = priority + 200
         end
+        priority = priority + validAttackPriorityModifier
         priority = math.min(priority,1000)
+        --LOG('NavalExpansionAdjust return '..tostring(priority)..' ,map water ratio is '..tostring(aiBrain.MapWaterRatio))
         return priority
     elseif aiBrain.MapWaterRatio < 0.40 then
         local priority = 400
-        local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
+        local EnemyIndex = currentEnemy:GetArmyIndex()
         local OwnIndex = aiBrain:GetArmyIndex()
         if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] ~= 'LAND' then
             priority = priority + 200
         end
+        priority = priority + validAttackPriorityModifier
         priority = math.min(priority,1000)
+        --LOG('NavalExpansionAdjust return '..tostring(priority))
         return priority
     elseif aiBrain.MapWaterRatio < 0.60 then
         local priority = 675
-        local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
+        local EnemyIndex = currentEnemy:GetArmyIndex()
         local OwnIndex = aiBrain:GetArmyIndex()
         if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] ~= 'LAND' then
             priority = priority + 200
         end
+        priority = priority + validAttackPriorityModifier
         priority = math.min(priority,1000)
+        --LOG('NavalExpansionAdjust return '..tostring(priority))
         return priority
     else
         local priority = 950
-        local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
+        local EnemyIndex = currentEnemy:GetArmyIndex()
         local OwnIndex = aiBrain:GetArmyIndex()
         if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] ~= 'LAND' then
             priority = priority + 200
         end
+        priority = priority + validAttackPriorityModifier
         priority = math.min(priority,1000)
+        --LOG('NavalExpansionAdjust return '..tostring(priority))
         return priority
     end
 end
@@ -84,7 +109,7 @@ BuilderGroup {
         BuilderData = {
             StateMachine = 'EngineerBuilder',
             JobType = 'Expansion',
-            TransportWait = 8,
+            TransportWait = 10,
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,
@@ -189,6 +214,7 @@ BuilderGroup {
         BuilderData = {
             StateMachine = 'EngineerBuilder',
             JobType = 'Expansion',
+            TransportWait = 5,
             Construction = {
                 BuildClose = false,
                 BaseTemplate = ExBaseTmpl,

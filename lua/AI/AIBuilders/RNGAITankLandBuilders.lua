@@ -312,7 +312,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Mobile AA Response',
         PlatoonTemplate = 'T1LandAA',
-        Priority = 850,
+        Priority = 855,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'ANTISURFACEAIR' }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.LAND * categories.ANTIAIR } },
@@ -420,33 +420,6 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
-    --[[
-    Builder {
-        BuilderName = 'RNGAI Factory Land Expansion',
-        PlatoonTemplate = 'RNGAIT1LandAttackQueueExp',
-        Priority = 700, -- After Second Engie Group
-        BuilderConditions = {
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }}, -- stop building after we decent reach tech2 capability
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.5, 'LAND'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Land Expansion',
-        PlatoonTemplate = 'RNGAIT2LandAttackQueueExp',
-        Priority = 700,
-        BuilderType = 'Land',
-        BuilderConditions = {
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.1, 'LAND'}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-    },]]
 }
 
 BuilderGroup {

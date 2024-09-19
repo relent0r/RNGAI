@@ -236,7 +236,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                 --RNGLOG('Destroy Factory')
 				return self:FactoryDestroyed(factory)
 			end
-        elseif self.Brain.TransportPool and EntityCategoryContains(categories.TRANSPORTFOCUS - categories.uea0203, finishedUnit ) then
+        elseif EntityCategoryContains(categories.TRANSPORTFOCUS - categories.uea0203, finishedUnit ) then
             self.Brain.TransportRequested = nil
             finishedUnit:ForkThread( import('/lua/ai/transportutilities.lua').AssignTransportToPool, finishedUnit:GetAIBrain() )
 		elseif finishedUnit.Blueprint.CategoriesHash.AIR then

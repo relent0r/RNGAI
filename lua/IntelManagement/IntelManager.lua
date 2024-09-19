@@ -473,7 +473,7 @@ IntelManager = Class {
                         if not closeEnemyStart and not closeAllyStart then
                             if mainBaseDistance > 10000 then
                                 if not edgeSkip then
-                                    if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) and (not v.engineerplatoonallocated or IsDestroyed(v.engineerplatoonallocated)) and (v.lastexpansionattempt == 0 or v.lastexpansionattempt + 30 < gameTime) then
+                                    if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) and (not v.engineerplatoonallocated or IsDestroyed(v.engineerplatoonallocated)) and (v.lastexpansionattempt == 0 or gameTime >= v.lastexpansionattempt + 30 ) then
                                         local normalizedDistanceValue = mainBaseDistance / maxDistance
                                         local normalizedTeamValue = v.teamvalue / maxTeamValue
                                         local normalizedResourceValue = v.resourcevalue / maxResourceValue
@@ -730,7 +730,12 @@ IntelManager = Class {
                             if not v.startpositionclose then
                                 if platoonPosition then
                                     local compare
-                                    local enemyDistanceModifier = VDist2(v.pos[1],v.pos[3],enemyX, enemyZ)
+                                    local enemyDistanceModifier 
+                                    if enemyX and enemyZ then
+                                        enemyDistanceModifier = VDist2(v.pos[1],v.pos[3],enemyX, enemyZ)
+                                    else
+                                        enemyDistanceModifier = 1
+                                    end
                                     local zoneDistanceModifier = VDist2(v.pos[1],v.pos[3],platoonPosition[1], platoonPosition[3])
                                     local enemyModifier = v.enemyantisurfacethreat
                                     local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
@@ -773,7 +778,12 @@ IntelManager = Class {
                         for k, v in startPosZones do
                             if platoonPosition then
                                 local compare
-                                local enemyDistance = math.ceil(VDist2(v.pos[1],v.pos[3],enemyX, enemyZ))
+                                local enemyDistance
+                                if enemyX and enemyZ then
+                                    enemyDistance = math.ceil(VDist2(v.pos[1],v.pos[3],enemyX, enemyZ))
+                                else
+                                    enemyDistance = 512
+                                end
                                 local enemyDistanceModifier = enemyDistance > 0 and enemyDistance or 1
                                 local zoneDistanceModifier = math.ceil(VDist2(v.pos[1],v.pos[3],platoonPosition[1], platoonPosition[3]))
                                 local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
@@ -2803,7 +2813,9 @@ function InitialNavalAttackCheck(aiBrain)
         local frigateMarkers = {}
         local markers = GetMarkersRNG()
         local maxRadius = 30
+        local maxValue = 0
         local maxNavalStartRange
+        local confirmedAttackLabel
         local unitTable = {
             Frigate = { Template = 'T1SeaFrigate', UnitID = 'ues0103',Range = 0 },
             Destroyer = { Template = 'T2SeaDestroyer', UnitID = 'ues0201',Range = 0 },
@@ -2819,6 +2831,7 @@ function InitialNavalAttackCheck(aiBrain)
             if not maxRadius or v.Range > maxRadius then
                 maxRadius = v.Range
             end
+            maxValue = maxValue + v.Range
         end
 
         if not table.empty(aiBrain.EnemyIntel.EnemyStartLocations) then
@@ -2947,12 +2960,20 @@ function InitialNavalAttackCheck(aiBrain)
             --LOG('Marker count that frigates can try and raid '..frigateRaidMarkers)
             --LOG('Marker count that can be hit by navy '..table.getn(navalMarkers))
             --LOG('Naval Value = '..totalMarkerValue)
+            --LOG('Max total marker value '..tostring(maxValue * markerCount))
             --LOG('Potential priority '..totalMarkerValue/markerCount*1000)
             if frigateRaidMarkers > 6 then
                 aiBrain.EnemyIntel.FrigateRaid = true
                 aiBrain.EnemyIntel.FrigateRaidMarkers = frigateRaidMarkers
             end
-            aiBrain.EnemyIntel.MaxNavalStartRange = math.sqrt(maxNavalStartRange)
+            if maxNavalStartRange then
+                aiBrain.EnemyIntel.MaxNavalStartRange = math.sqrt(maxNavalStartRange)
+            else
+                aiBrain.EnemyIntel.MaxNavalStartRange = 65536
+            end
+            if totalMarkerValue and totalMarkerValue > 0 then
+                aiBrain.EnemyIntel.NavalValue = totalMarkerValue
+            end
             --LOG('Lowest Enemy Start Position Range is '..tostring(aiBrain.EnemyIntel.MaxNavalStartRange))
         end
     end
