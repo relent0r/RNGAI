@@ -91,7 +91,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     OnCreateAI = function(self, planName)
-       --LOG('Oncreate AI from RNG')
+        LOG('Oncreate AI from RNG')
         StandardBrain.OnCreateAI(self, planName)
         local per = ScenarioInfo.ArmySetup[self.Name].AIPersonality
         if string.find(per, 'RNG') then
@@ -1361,7 +1361,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
-   LOGDataThreadRNG = function(self)
+    LogDataThreadRNG = function(self)
         coroutine.yield(50)
         
         coroutine.yield(300)
@@ -1451,10 +1451,10 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Tactical Snipe Missions ')
             for k, v in self.TacticalMonitor.TacticalMissions.ACUSnipe do
                 if table.getn(v.AIR) > 0 then
-                   --LOG(repr(v.AIR))
+                    LOG(repr(v.AIR))
                 end
                 if table.getn(v.LAND) > 0 then
-                   --LOG(repr(v.LAND))
+                    LOG(repr(v.LAND))
                 end
             end
             RNGLOG('Enemy Build Power Table '..repr(im.EnemyBuildStrength))
@@ -1505,7 +1505,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     BaseDMZArea = BaseDMZArea,
                     BaseEnemyArea = BaseEnemyArea,
                 }
-               --LOG('Operating Areas set '..repr(self.OperatingAreas))
+                LOG('Operating Areas set '..repr(self.OperatingAreas))
                 self.MapPlayableSize = math.max(playableArea[3], playableArea[4])
             end
             coroutine.yield(3)
@@ -2486,7 +2486,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('Start Locations are '..repr(startLocations))
                 self.EnemyIntel.EnemyStartLocations = enemyStarts
                 self.BrainIntel.AllyStartLocations = allyTempStarts
-                -- Create structure threat so inferred threat--LOGic will function at game start
+                -- Create structure threat so inferred threat logic will function at game start
                 for _, v in enemyStarts do
                     self:AssignThreatAtPosition(v.Position, 200, 0.005, 'StructuresNotMex')
                 end
@@ -2910,7 +2910,7 @@ AIBrain = Class(RNGAIBrainClass) {
         for k, v in strengthTable do
             -- It's an enemy, ignore
             if v.Enemy then
-                -- dont--LOG this until you want to get a dump of the brain.
+                -- dont log this until you want to get a dump of the brain.
                 --RNGLOG('EnemyStrength Tables :'..repr(v))
                 --LOG('Start pos '..repr(self.BrainIntel.StartPos))
                 if v.ACUPosition[1] then
