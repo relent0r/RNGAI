@@ -32,7 +32,6 @@ BaseBuilderTemplate {
         'RNGAI Engineering Support Builder',
         'RNGAI T1 Reclaim Builders',
         'RNGAI Assist Builders',
-        'RNGEXP Hard Assist Builders',
         'RNGAI Energy Production Reclaim',
         'RNGAI Assist Manager BuilderGroup',
 

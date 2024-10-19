@@ -201,6 +201,17 @@ function NegativeEcoPowerCheck(aiBrain, EnergyTrend)
     return false
 end
 
+function NegativeEcoPowerCheckInstant(aiBrain, EnergyTrend)
+    if aiBrain.EcoManager.EcoPowerPreemptive then
+        --LOG('PreEmptive Power Check is true')
+        return true
+    end
+    if GetEconomyTrend(aiBrain, 'ENERGY') < EnergyTrend then
+        return true
+    end
+    return false
+end
+
 
 function GreaterThanEnergyTrendOverTimeRNG(aiBrain, EnergyTrend)
 
@@ -471,7 +482,6 @@ function LessThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType,requireBui
 end
 
 function FactorySpendRatioRNG(aiBrain,uType,upgradeType, noStorageCheck)
-    --RNGLOG('Current Spend Ratio '..(aiBrain.cmanager.categoryspend.fact[uType] / aiBrain.cmanager.income.r.m))
     local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3) or 0
     local currentFactorySpend = aiBrain.cmanager.categoryspend.fact[uType] - aiBrain.cmanager.categoryspend.fact[upgradeType]
     if currentFactorySpend / ( aiBrain.cmanager.income.r.m - mexSpend ) < aiBrain.ProductionRatios[uType] then

@@ -62,7 +62,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
-            { EBC, 'NegativeEcoPowerCheck', { 14.0 } }, -- If our energy is trending into negatives
+            { EBC, 'NegativeEcoPowerCheckInstant', { 14.0 } }, -- If our energy is trending into negatives
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.HYDROCARBON) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON }}, -- Don't build after 1 T2 Pgens Exist
         },
@@ -97,7 +97,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Power Engineer Negative Trend',
         PlatoonTemplate = 'EngineerStateT23RNG',
-        Priority = 1005,
+        Priority = 1055,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'EnergyT2', 6},
         BuilderConditions = {
@@ -168,7 +168,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 Power Engineer Negative Trend',
         PlatoonTemplate = 'EngineerStateT3RNG',
-        Priority = 1010,
+        Priority = 1060,
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'EnergyT3', 6},
         BuilderConditions = {

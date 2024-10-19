@@ -440,6 +440,12 @@ end
 GetUnitMaxWeaponRange = function(unit, filterType)
     local maxRange
     if unit and not unit.Dead then
+        if not filterType then
+            if unit['rngdata'].MaxWeaponRange then
+                --LOG('Found precached weapon range for unit '..tostring(unit.UnitId)..' max weapon range is '..tostring(unit['rngdata'].MaxWeaponRange))
+                return unit['rngdata'].MaxWeaponRange
+            end
+        end
         for _, weapon in unit.Blueprint.Weapon or {} do
             -- unit can have MaxWeaponRange entry from the last platoon
             if filterType then
@@ -461,6 +467,10 @@ GetUnitMaxWeaponRange = function(unit, filterType)
         end
         if not maxRange and unit.Blueprint.CategoriesHash.ENGINEER then
             maxRange = unit.Blueprint.Economy.MaxBuildDistance
+        end
+        if not filterType and not unit['rngdata'] then
+            unit['rngdata'] = {}
+            unit['rngdata'].MaxWeaponRange = maxRange
         end
         return maxRange
     end

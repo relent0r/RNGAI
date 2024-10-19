@@ -4767,17 +4767,18 @@ AIBrain = Class(RNGAIBrainClass) {
                     unitCat = v.Blueprint.CategoriesHash
                     if unitCat.ENGINEER then
                         if v.UnitBeingBuilt then
-                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.NUKE and v:GetFractionComplete() < 0.8 then
+                            local beingBuiltUnitCats = ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash
+                            if beingBuiltUnitCats.NUKE and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Nuke Launcher being built')
                                 potentialPowerConsumption = potentialPowerConsumption + GetMissileConsumption(ALLBPS, v.UnitBeingBuilt.UnitId, multiplier)
                                 continue
                             end
-                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.TECH3 and ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.ANTIMISSILE and v:GetFractionComplete() < 0.8 then
+                            if beingBuiltUnitCats.TECH3 and beingBuiltUnitCats.ANTIMISSILE and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Anti Nuke Launcher being built')
                                 potentialPowerConsumption = potentialPowerConsumption + GetMissileConsumption(ALLBPS, v.UnitBeingBuilt.UnitId, multiplier)
                                 continue
                             end
-                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.TECH3 and ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.MASSFABRICATION and v:GetFractionComplete() < 0.8 then
+                            if beingBuiltUnitCats.TECH3 and beingBuiltUnitCats.MASSFABRICATION and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Mass Fabricator being built')
                                 if ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy then
                                     --RNGLOG('Fabricator being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
@@ -4785,7 +4786,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 end
                                 continue
                             end
-                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.STRUCTURE and ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.SHIELD and v:GetFractionComplete() < 0.8 then
+                            if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.SHIELD and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Shield being built')
                                 if ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy then
                                     --RNGLOG('Shield being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
@@ -4793,9 +4794,19 @@ AIBrain = Class(RNGAIBrainClass) {
                                 end
                                 continue
                             end
-                            if ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.STRUCTURE and ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.FACTORY and ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash.AIR and v:GetFractionComplete() < 0.8 then
+                            if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.FACTORY and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Shield being built')
-                                potentialPowerConsumption = potentialPowerConsumption + (150 * multiplier)
+                                potentialPowerConsumption = potentialPowerConsumption + (120 * multiplier)
+                                continue
+                            end
+                            if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.RADAR and v:GetFractionComplete() < 0.8 then
+                                --RNGLOG('EcoPowerPreemptive : Shield being built')
+                                potentialPowerConsumption = potentialPowerConsumption + (60 * multiplier)
+                                continue
+                            end
+                            if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.DEFENSE and beingBuiltUnitCats.DIRECTFIRE and v:GetFractionComplete() < 0.8 then
+                                --RNGLOG('EcoPowerPreemptive : Shield being built')
+                                potentialPowerConsumption = potentialPowerConsumption + (60 * multiplier)
                                 continue
                             end
                         end

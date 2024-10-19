@@ -241,7 +241,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                     end
-                    if threatTable.DefenseThreat.TotalThreat > 240 and not self.SuicideModeActive or experimentalHealthPercent < 0.40 and threatTable.DefenseThreat.TotalThreat > 80 and not self.SuicideModeActive then
+                    if threatTable.DefenseThreat.TotalThreat > 260 and not self.SuicideModeActive or experimentalHealthPercent < 0.40 and threatTable.DefenseThreat.TotalThreat > 80 and not self.SuicideModeActive then
                         local localFriendlyLandThreat = self:CalculatePlatoonThreatAroundPosition('Surface', (categories.LAND + categories.AMPHIBIOUS) * (categories.DIRECTFIRE + categories.INDIRECTFIRE), experimentalPosition, 35)
                         if localFriendlyLandThreat < self.DefaultSurfaceThreat + 30 then
                             for _, enemyUnit in threatTable.DefenseThreat.Units do
@@ -330,7 +330,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                     overRangedCount = overRangedCount + 1
                                     overRangedThreat = overRangedThreat + (enemyUnit.Blueprint.Defense.SurfaceThreatLevel or 35)
                                 end
-                                if overRangedThreat > 300 then
+                                if overRangedThreat > 450 then
                                     self.BuilderData = {
                                         Retreat = true,
                                         RetreatReason = 'ArtilleryThreat',
@@ -354,7 +354,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                         overRangedThreat = overRangedThreat + enemyUnit.Blueprint.Defense.SurfaceThreatLevel
                                     end
                                 end
-                                if overRangedCount > 3 and overRangedThreat > 85 and not self.SuicideModeActive then
+                                if overRangedCount > 6 and overRangedThreat > 160 and not self.SuicideModeActive then
                                     self.BuilderData = {
                                         Retreat = true,
                                         RetreatReason = 'ArtilleryThreat',
@@ -395,7 +395,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                 if unitRange > self.MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
                                 end
-                                if overRangedCount > 0 then
+                                if overRangedCount > 2 then
                                     self.BuilderData = {
                                         Retreat = true,
                                         RetreatReason = 'NavalThreat',

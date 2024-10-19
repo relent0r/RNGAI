@@ -754,7 +754,7 @@ StructureManager = Class {
             end
         end
         local t3AirPass = false
-        if totalAirT3HQCount < 1 and totalAirT2HQCount > 0 and self.Factories.AIR[2].UpgradingCount < 1 and self.Factories.AIR[2].Total > 0 then
+        if (not self.Brain.RNGEXP) and totalAirT3HQCount < 1 and totalAirT2HQCount > 0 and self.Factories.AIR[2].UpgradingCount < 1 and self.Factories.AIR[2].Total > 0 then
             --RNGLOG('Factory T2 Air Upgrade HQ Check passed')
             if self.Brain.EconomyOverTimeCurrent.MassIncome > (5.0 * multiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 150.0 then
                 --RNGLOG('Factory Upgrade Income Over time check passed')
@@ -778,7 +778,7 @@ StructureManager = Class {
                 end
             end
         end
-        if not t3AirPass and self.Brain.BrainIntel.AirPlayer and totalAirT3HQCount < 1 and totalAirT2HQCount > 0 and self.Factories.AIR[2].UpgradingCount < 1 and self.Factories.AIR[2].Total > 0 then
+        if not t3AirPass and (self.Brain.RNGEXP or self.Brain.BrainIntel.AirPlayer) and totalAirT3HQCount < 1 and totalAirT2HQCount > 0 and self.Factories.AIR[2].UpgradingCount < 1 and self.Factories.AIR[2].Total > 0 then
             if self.Brain.EconomyOverTimeCurrent.MassIncome > (2.5 * multiplier) and self.Brain.EconomyOverTimeCurrent.EnergyIncome > 100.0 then
                 --RNGLOG('Factory Upgrade Income Over time check passed')
                 if GetEconomyIncome(self.Brain,'MASS') >= (2.5 * multiplier) and GetEconomyIncome(self.Brain,'ENERGY') >= 100.0 then
