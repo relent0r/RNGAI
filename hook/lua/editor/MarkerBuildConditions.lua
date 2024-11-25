@@ -102,7 +102,7 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
                     continue 
                 end
                     if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
-                    table.insert(MassMarkerRNG, {Position = v.position, Distance = VDist3( v.position, position ) })
+                    table.insert(MassMarkerRNG, {Position = v.position, Distance = VDist3Sq( v.position, position ) })
                 end
             end
         end
@@ -116,9 +116,9 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
         end
         LastMassBOOLRNG = false
         for _, v in MassMarkerRNG do
-            if v.Distance < minDistance then
+            if v.Distance < minDistance * minDistance then
                 continue
-            elseif v.Distance > maxDistance then
+            elseif v.Distance > maxDistance * maxDistance then
                 break
             end
             --RNGLOG(_..'Checking marker with max maxDistance ['..maxDistance..'] minDistance ['..minDistance..'] . Actual marker has distance: ('..(v.Distance)..').')

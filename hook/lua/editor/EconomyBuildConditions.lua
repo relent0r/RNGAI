@@ -136,6 +136,14 @@ function GreaterThanEconEfficiencyCombinedRNG(aiBrain, MassEfficiency, EnergyEff
     return false
 end
 
+function GreaterThanEnergyEfficiencyOverTimeRNG(aiBrain, EnergyEfficiency)
+
+    if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= EnergyEfficiency then
+        return true
+    end
+    return false
+end
+
 function LessThanEnergyEfficiencyOverTimeRNG(aiBrain, EnergyEfficiency)
 
     if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime <= EnergyEfficiency then
@@ -320,7 +328,7 @@ function HighValueGateRNG(aiBrain)
 end
 
 
-function MassIncomeToFactoryRNG(aiBrain, compareType, factoryDrain, requireBuilt)
+function MassIncomeToFactoryRNG(aiBrain, compareType, factoryDrain, requireBuilt, baseName)
 
     local factoryList = aiBrain:GetListOfUnits(categories.STRUCTURE * categories.FACTORY)
     local t1LandFactories = 0
@@ -385,12 +393,156 @@ function MassIncomeToFactoryRNG(aiBrain, compareType, factoryDrain, requireBuilt
     massTotal = massTotal + (unitCount * 40)
 
     aiBrain.EcoManager.ApproxFactoryMassConsumption = massTotal
+    if CompareBody((aiBrain.EconomyOverTimeCurrent.MassIncome * 10), massTotal, compareType) then
+        LOG('')
+    end
     if not CompareBody((aiBrain.EconomyOverTimeCurrent.MassIncome * 10), massTotal, compareType) then
         --RNGLOG('Mass to factory ratio false, mass consumption is '..massTotal)
         return false
     end
-    --RNGLOG('Mass to factory ratio true, mass consumption is '..massTotal)
     return true
+end
+
+function ZoneBasedFactoryToMassSupported(aiBrain, locationType, layer, requireBuilt)
+    local manager = aiBrain.BuilderManagers[locationType]
+    if not manager.FactoryManager then
+        WARN('*AI WARNING: No Factory Manager at location - ' .. locationType)
+        return false
+    end
+    local ecoMultiplier = 1.0
+    if aiBrain.CheatEnabled then 
+        ecoMultiplier = aiBrain.EcoManager.EcoMultiplier
+    end
+    local baseLocation = manager.Position or aiBrain.BrainIntel.StartPos
+    local pathableZones = manager.PathableZones
+    local expansionSize = math.min((aiBrain.MapDimension / 2), 160)
+    local index = aiBrain:GetArmyIndex()
+    local resourceCount = 0
+    local massSpendTotal = 0
+    local zoneBasedIncome = 0
+    local locationZone = aiBrain.BuilderManagers[locationType].Zone
+    local highValue = 1
+    local landZones = aiBrain.Zones.Land.zones
+    if landZones[locationZone].teamvalue and landZones[locationZone].teamvalue < 1 then
+        highValue = 2 - landZones[locationZone].teamvalue
+    end
+    if pathableZones and not table.empty(pathableZones.Zones) then
+        for _, z in pathableZones.Zones do
+            if z.ZoneID then
+                local zone = aiBrain.Zones.Land.zones[z.ZoneID]
+                if zone.resourcevalue > 0 and not zone.BuilderManager.FactoryManager.LocationActive then
+                    local dx = baseLocation[1] - zone.pos[1]
+                    local dz = baseLocation[3] - zone.pos[3]
+                    local posDist = dx * dx + dz * dz
+                    if posDist < (expansionSize * expansionSize) and zone.bestarmy == index then
+                        if z.zoneincome then
+                            zoneBasedIncome = zoneBasedIncome + z.zoneincome
+                        end
+                        if zone.resourcevalue then
+                            resourceCount = resourceCount + zone.resourcevalue
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    if manager.FactoryManager.LocationActive then
+        local massToFactoryValues = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues
+        local factoryDrain = {}
+        if layer == 'Land' then
+            local t1LandFactories = 0
+            local t2LandFactories = 0
+            local t3LandFactories = 0
+            factoryDrain.t1LandDrain = (massToFactoryValues.T1LandValue or 8) * ecoMultiplier
+            factoryDrain.t2LandDrain = (massToFactoryValues.T2LandValue or 20) * ecoMultiplier
+            factoryDrain.t3LandDrain = (massToFactoryValues.T3LandValue or 30) * ecoMultiplier
+            for _, v in manager.FactoryManager.FactoryList do
+                if v.Blueprint.CategoriesHash.LAND then
+                    if requireBuilt and v:GetFractionComplete() ~= 1 then
+                        continue
+                    end
+                    if v.Blueprint.CategoriesHash.TECH1 then
+                        t1LandFactories = t1LandFactories + 1
+                    elseif v.Blueprint.CategoriesHash.TECH2 then
+                        t2LandFactories = t2LandFactories + 1
+                    elseif v.Blueprint.CategoriesHash.TECH3 then
+                        t3LandFactories = t3LandFactories + 1
+                    end
+                end
+            end
+            massSpendTotal = (t1LandFactories * factoryDrain.t1LandDrain) + (t2LandFactories * factoryDrain.t2LandDrain) + (t3LandFactories * factoryDrain.t3LandDrain)
+        elseif layer == 'Air' then
+            local t1AirFactories = 0
+            local t2AirFactories = 0
+            local t3AirFactories = 0
+            factoryDrain.t1AirDrain = (massToFactoryValues.T1AirValue or 8) * ecoMultiplier
+            factoryDrain.t2AirDrain = (massToFactoryValues.T2AirValue or 20) * ecoMultiplier
+            factoryDrain.t3AirDrain = (massToFactoryValues.T3AirValue or 30) * ecoMultiplier
+            for _, v in manager.FactoryManager.FactoryList do
+                if v.Blueprint.CategoriesHash.AIR then
+                    if requireBuilt and v:GetFractionComplete() ~= 1 then
+                        continue
+                    end
+                    if v.Blueprint.CategoriesHash.TECH1 then
+                        t1AirFactories = t1AirFactories + 1
+                    elseif v.Blueprint.CategoriesHash.TECH2 then
+                        t2AirFactories = t2AirFactories + 1
+                    elseif v.Blueprint.CategoriesHash.TECH3 then
+                        t3AirFactories = t3AirFactories + 1
+                    end
+                end
+            end
+            massSpendTotal = (t1AirFactories * factoryDrain.t1AirDrain) + (t2AirFactories * factoryDrain.t2AirDrain) + (t3AirFactories * factoryDrain.t3AirDrain)
+        elseif layer == 'Naval' then
+            local t1NavalFactories = 0
+            local t2NavalFactories = 0
+            local t3NavalFactories = 0
+            factoryDrain.t1NavalDrain = (massToFactoryValues.T1NavalValue or 8) * ecoMultiplier
+            factoryDrain.t2NavalDrain = (massToFactoryValues.T2NavalValue or 20) * ecoMultiplier
+            factoryDrain.t3NavalDrain = (massToFactoryValues.T3NavalValue or 30) * ecoMultiplier
+            for _, v in manager.FactoryManager.FactoryList do
+                if requireBuilt and v:GetFractionComplete() ~= 1 then
+                    continue
+                end
+                if v.Blueprint.CategoriesHash.NAVAL then
+                    if v.Blueprint.CategoriesHash.TECH1 then
+                        t1NavalFactories = t1NavalFactories + 1
+                    elseif v.Blueprint.CategoriesHash.TECH2 then
+                        t2NavalFactories = t2NavalFactories + 1
+                    elseif v.Blueprint.CategoriesHash.TECH3 then
+                        t3NavalFactories = t3NavalFactories + 1
+                    end
+                end
+            end
+            massSpendTotal = (t1NavalFactories * factoryDrain.t1NavalDrain) + (t2NavalFactories * factoryDrain.t2NavalDrain) + (t3NavalFactories * factoryDrain.t3NavalDrain)
+        end
+
+
+        local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3) or 0
+        local rawIncome
+        if locationType == 'MAIN' then
+            rawIncome = ( aiBrain.cmanager.income.r.m - mexSpend * 0.5) or 0
+        elseif manager.Layer == 'Water' then
+            rawIncome = ( aiBrain.cmanager.income.r.m - (mexSpend * 0.5)) or 0
+        else
+            rawIncome = zoneBasedIncome * highValue
+        end
+         
+        local availableResources = math.max(resourceCount * 2, rawIncome)
+        LOG('Zone based factory spend availability for location '..tostring(locationType))
+        LOG('massSpendTotal '..tostring(massSpendTotal))
+        LOG('mexSpend '..tostring(mexSpend))
+        LOG('rawIncome '..tostring(rawIncome))
+        LOG('resourceBased income potential '..tostring(resourceCount * 2))
+        LOG('availableResources '..tostring(availableResources))
+        LOG('Current ratio '..tostring(massSpendTotal / availableResources))
+        LOG('Expected ratio '..tostring(aiBrain.ProductionRatios[layer]))
+        if massSpendTotal / availableResources < aiBrain.ProductionRatios[layer] then
+            return true
+        end
+    end
+    return false
 end
 
 function GreaterThanEconIncomeOverTimeRNG(aiBrain, massIncome, energyIncome)
@@ -441,7 +593,7 @@ function GreaterThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType, requir
     end
     --RNGLOG('Total Factory Drain '..repr(factoryDrain))
 
-    return MassIncomeToFactoryRNG(aiBrain,'>', factoryDrain, requireBuilt)
+    return MassIncomeToFactoryRNG(aiBrain,'>', factoryDrain, requireBuilt, locationType)
 end
 
 function LessThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType,requireBuilt)
@@ -484,7 +636,7 @@ end
 function FactorySpendRatioRNG(aiBrain,uType,upgradeType, noStorageCheck)
     local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3) or 0
     local currentFactorySpend = aiBrain.cmanager.categoryspend.fact[uType] - aiBrain.cmanager.categoryspend.fact[upgradeType]
-    if currentFactorySpend / ( aiBrain.cmanager.income.r.m - mexSpend ) < aiBrain.ProductionRatios[uType] then
+    if currentFactorySpend / ( aiBrain.cmanager.income.r.m - (mexSpend * 0.5)) < aiBrain.ProductionRatios[uType] then
         if aiBrain.EnemyIntel.ChokeFlag and uType == 'Land' then 
             if (GetEconomyStoredRatio(aiBrain, 'MASS') >= 0.10 and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= 0.95) then
                 return true
@@ -505,6 +657,13 @@ function FactorySpendRatioRNG(aiBrain,uType,upgradeType, noStorageCheck)
             end
         end
     end
+    --[[
+    if uType == 'Land' then
+        LOG('Land factory spend is returning false so not enough funding')
+        LOG('Current spend ration is '..tostring(currentFactorySpend / ( aiBrain.cmanager.income.r.m - mexSpend ) < aiBrain.ProductionRatios[uType]))
+        LOG('Ratio without mex spend is  '..tostring(currentFactorySpend / ( aiBrain.cmanager.income.r.m ) < aiBrain.ProductionRatios[uType]))
+        LOG('Production ratio is '..tostring(aiBrain.ProductionRatios[uType]))
+    end]]
     return false
 end
 

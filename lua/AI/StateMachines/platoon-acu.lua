@@ -95,6 +95,29 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local cdr = self.cdr
             local gameTime = GetGameTimeSeconds()
             local maxBaseRange = cdr.MaxBaseRange * cdr.MaxBaseRange
+            if brain.BrainIntel.SuicideModeActive and brain.IntelManager then
+                local suicideTarget = brain.BrainIntel.SuicideModeTarget
+                if suicideTarget and not IsDestroyed(suicideTarget) then
+                    local teamAveragePositions = brain.IntelManager:GetTeamAveragePositions()
+                    local teamValue = brain.IntelManager:GetTeamDistanceValue(cdr.Position, teamAveragePositions)
+                    if teamValue and teamValue < 0.35 then
+                        local enemyAcuPos = suicideTarget:GetPosition()
+                        local enemyACUDistance = VDist2Sq(enemyAcuPos[1], enemyAcuPos[3], cdr.Position[1], cdr.Position[3])
+                        local currentWeaponRange = cdr.WeaponRange * cdr.WeaponRange
+                        if enemyACUDistance > currentWeaponRange then
+                            cdr.SuicideMode = false
+                            cdr.SnipeMode = false
+                            brain.BrainIntel.SuicideModeActive = false
+                            brain.BrainIntel.SuicideModeTarget = nil
+                        end
+                    end
+                else
+                    cdr.SuicideMode = false
+                    cdr.SnipeMode = false
+                    brain.BrainIntel.SuicideModeActive = false
+                    brain.BrainIntel.SuicideModeTarget = nil
+                end
+            end
             if cdr.Caution and cdr.EnemyNavalPresent and cdr:GetCurrentLayer() == 'Seabed' then
                 ----self:LogDebug(string.format('retreating due to seabed'))
                 self:ChangeState(self.Retreating)
@@ -413,7 +436,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-            local numUnits
             if brain.EnemyIntel.Phase > 2 then
                 if brain.GridPresence:GetInferredStatus(cdr.Position) == 'Hostile' then
                     --LOG('We are in hostile territory and should be retreating')
@@ -438,7 +460,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             if (not self.BuilderData.AttackTarget or self.BuilderData.AttackTarget.Dead) and cdr.CurrentEnemyInnerCircle < 10 then
                 ACUFunc.PerformACUReclaim(brain, cdr, 25, false)
             end
-            numUnits = GetNumUnitsAroundPoint(brain, categories.LAND + categories.MASSEXTRACTION + (categories.STRUCTURE * categories.DIRECTFIRE) - categories.SCOUT, targetSearchPosition, targetSearchRange, 'Enemy')
+            local numUnits = GetNumUnitsAroundPoint(brain, categories.LAND + categories.MASSEXTRACTION + (categories.STRUCTURE * categories.DIRECTFIRE) - categories.SCOUT, targetSearchPosition, targetSearchRange, 'Enemy')
             if numUnits > 0 then
                 self:LogDebug(string.format('numUnits > 1 '..tostring(numUnits)..'enemy threat is '..tostring(cdr.CurrentEnemyThreat)..' friendly threat is '..tostring(cdr.CurrentFriendlyThreat)))
                 self:LogDebug(string.format(' friendly inner circle '..tostring(cdr.CurrentFriendlyInnerCircle)..' enemy inner circle '..tostring(cdr.CurrentEnemyInnerCircle)))
@@ -512,6 +534,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     if not target or IsDestroyed(target) then
                         self:LogDebug(string.format('We are in suicide mode and have no target so will disable suicide mode'))
                         cdr.SuicideMode = false
+                        cdr.SnipeMode = false
+                        brain.BrainIntel.SuicideModeActive = false
+                        brain.BrainIntel.SuicideModeTarget = nil
                     end
                 end
                 if not cdr.SuicideMode and target and cdr.Phase == 3 and brain.GridPresence:GetInferredStatus(target:GetPosition()) == 'Hostile' then
@@ -554,23 +579,24 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 self:LogDebug(string.format('We found an acuTarget present'))
                                 local acuPos = target:GetPosition()
                                 acuDistance = VDist3Sq(cdr.Position,acuPos)
+                                self:LogDebug(string.format('Enemy ACU distance is '..tostring(acuDistance)..' difference in distance is '..tostring(defUnit.distance - acuDistance)))
                                 if defUnit.distance < acuDistance and acuDistance < 900 and defUnit.distance - acuDistance < 225 then
                                     if dUnit.GetHealth and dUnit:GetHealth() < 500 then
                                         target = dUnit
                                         --LOG('ACU Def Targets : Health low PD target is '..tostring(target.UnitId))
-                                        ----self:LogDebug(string.format('We are switching targets to a PD'))
+                                        self:LogDebug(string.format('We are switching targets to a PD'))
                                         break
                                     end
                                     if dUnit.Blueprint.Weapon[1].MaxRadius and cdr.WeaponRange > dUnit.Blueprint.Weapon[1].MaxRadius then
                                         target = dUnit
                                         --LOG('ACU Def Targets : Advantage range available on PD target is '..tostring(target.UnitId))
-                                        ----self:LogDebug(string.format('We are switching targets to a PD'))
+                                        self:LogDebug(string.format('We are switching targets to a PD'))
                                         break
                                     end
                                     if brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
                                         target = dUnit
                                         --LOG('ACU Def Targets : OverCharge Available on PD target is '..tostring(target.UnitId))
-                                        ----self:LogDebug(string.format('OverCharge Available on PD target'))
+                                        self:LogDebug(string.format('OverCharge Available on PD target'))
                                         break
                                     end
                                 end
@@ -603,6 +629,16 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             AttackTarget = target,
                             ACUTarget    = acuTarget,
                         }
+                    end
+                    if acuDistanceToBase < 6400 then
+                        local unitRange = StateUtils.GetUnitMaxWeaponRange(target, 'Direct Fire') or 0
+                        if acuDistanceToBase > 100 and highThreatCount and highThreatCount > 130 and unitRange > cdr.WeaponRange then
+                            self:LogDebug(string.format('High unit threat at target and it outranges the acu'))
+                            self:ChangeState(self.Retreating)
+                            return
+                        end
+                        
+
                     end
                     --LOG('CDR Health '..cdr.Health)
                     --LOG('Current Inner Enemy Threat '..cdr.CurrentEnemyInnerCircle)
@@ -944,10 +980,16 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if builder then
                     builderData = builder:GetBuilderData(self.LocationType)
                     if builderData.Assist then
+                        LOG('ACU is trying to run assist builder')
                         self.BuilderData = builderData
                         self:ChangeState(self.AssistEngineers)
                         return
                     elseif builderData.Construction then
+                        LOG('ACU is trying to run structure builder')
+                        LOG('Item '..tostring(builderData.Construction.BuildStructures[1]))
+                        if not builderData.Construction.BuildStructures[1] then
+                            LOG('This thing is what? '..tostring(builderData.Task))
+                        end
                         self.BuilderData = builderData
                         self:ChangeState(self.StructureBuild)
                         return
@@ -1106,11 +1148,60 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                     else
                         for _, v in buildStructures do
-                            local buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(brain, buildingTmpl, baseTmplFile[templateKey][factionIndex], v, eng, false, nil, nil, true)
-                            if buildLocation and whatToBuild then
-                                table.insert(eng.EngineerBuildQueue, {whatToBuild, buildLocation, borderWarning})
+                            if v == 'T1Resource' then
+                                local maxMarkerDistance = self.BuilderData.Construction.MaxDistance or 256
+                                maxMarkerDistance = maxMarkerDistance * maxMarkerDistance
+                                local zoneMarkers = {}
+                                for _, z in brain.Zones.Land.zones do
+                                    if z.resourcevalue > 0 then
+                                        local zx = engPos[1] - z.pos[1]
+                                        local zz = engPos[3] - z.pos[3]
+                                        if zx * zx + zz * zz < maxMarkerDistance then
+                                            table.insert(zoneMarkers, { Position = z.pos, ResourceMarkers = table.copy(z.resourcemarkers), ResourceValue = z.resourcevalue, ZoneID = z.id })
+                                        end
+                                    end
+                                end
+                                for _, z in brain.Zones.Naval.zones do
+                                    --LOG('Inserting zone data position '..repr(v.pos)..' resource markers '..repr(v.resourcemarkers)..' resourcevalue '..repr(v.resourcevalue)..' zone id '..repr(v.id))
+                                    if z.resourcevalue > 0 then
+                                        local zx = engPos[1] - z.pos[1]
+                                        local zz = engPos[3] - z.pos[3]
+                                        if zx * zx + zz * zz < maxMarkerDistance then
+                                            table.insert(zoneMarkers, { Position = z.pos, ResourceMarkers = table.copy(z.resourcemarkers), ResourceValue = z.resourcevalue, ZoneID = z.id })
+                                        end
+                                        table.insert(zoneMarkers, { Position = z.pos, ResourceMarkers = table.copy(z.resourcemarkers), ResourceValue = z.resourcevalue, ZoneID = z.id })
+                                    end
+                                end
+                                local zoneFound
+                                for _,z in zoneMarkers do
+                                    for _, m in z.ResourceMarkers do
+                                        if brain:CanBuildStructureAt('ueb1103', m.position) then
+                                            zoneFound = true
+                                            local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+                                            local buildLocation = {m.position[1], m.position[3], 0}
+                                            local blueprints = StateUtils.GetBuildableUnitId(brain, eng, categories.STRUCTURE * categories.MASSEXTRACTION)
+                                            local whatToBuild = blueprints[1]
+                                            local borderWarning
+                                            if buildLocation[1] - playableArea[1] <= 8 or buildLocation[1] >= playableArea[3] - 8 or buildLocation[2] - playableArea[2] <= 8 or buildLocation[2] >= playableArea[4] - 8 then
+                                                borderWarning = true
+                                            end
+                                            if buildLocation and whatToBuild then
+                                                table.insert(eng.EngineerBuildQueue, {whatToBuild, buildLocation, borderWarning})
+                                            end
+                                            break
+                                        end
+                                    end
+                                    if zoneFound then
+                                        break
+                                    end
+                                end
                             else
-                                --LOG('No buildLocation or whatToBuild for ACU State Machine')
+                                local buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(brain, buildingTmpl, baseTmplFile[templateKey][factionIndex], v, eng, false, nil, nil, true)
+                                if buildLocation and whatToBuild then
+                                    table.insert(eng.EngineerBuildQueue, {whatToBuild, buildLocation, borderWarning})
+                                else
+                                    --LOG('No buildLocation or whatToBuild for ACU State Machine')
+                                end
                             end
                         end
                     end
@@ -1123,7 +1214,19 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 brain:BuildStructure(eng, v[1], v[2], false)
                             end
                         end
+                        local pauseTimeOut = 0
                         while eng:IsUnitState('Building') or 0 < RNGGETN(eng:GetCommandQueue()) do
+                            --[[local massStateCaution = brain:EcoManagerMassStateCheck()
+                            local acuPauseState = eng:IsPaused()
+                            if massStateCaution and pauseTimeOut < 10 then
+                                pauseTimeOut = pauseTimeOut + 1
+                                if not acuPauseState then 
+                                    eng:SetPaused(true)
+                                    coroutine.yield(5)
+                                end
+                            elseif acuPauseState then
+                                eng:SetPaused(false)
+                            end]]
                             coroutine.yield(5)
                         end
                     end
@@ -1237,7 +1340,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             cdr.SnipeMode = false
                             cdr.SuicideMode = false
                             brain.BrainIntel.SuicideModeActive = false
-                            brain.BrainIntel.SuicideModeTarget = false
+                            brain.BrainIntel.SuicideModeTarget = nil
                         end
 
                         if enemyACUHealth < 7000 and cdr.Health - enemyACUHealth > 3250 and not RUtils.PositionInWater(targetPos) and defenseThreat < 45 then
@@ -1270,7 +1373,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             cdr.SnipeMode = false
                             cdr.SuicideMode = false
                             brain.BrainIntel.SuicideModeActive = false
-                            brain.BrainIntel.SuicideModeTarget = false
+                            brain.BrainIntel.SuicideModeTarget = nil
                         end
                     elseif targetCat.STRUCTURE and (targetCat.DIRECTFIRE or targetCat.INDIRECTFIRE) then
                         ----self:LogDebug(string.format('Setting snipe mode for PDs'))
@@ -1281,7 +1384,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         cdr.SnipeMode = false
                         cdr.SuicideMode = false
                         brain.BrainIntel.SuicideModeActive = false
-                        brain.BrainIntel.SuicideModeTarget = false
+                        brain.BrainIntel.SuicideModeTarget = nil
                     end
                     if target and not target.Dead and not target:BeenDestroyed() then
                         targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
@@ -1435,7 +1538,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             if cdr.SuicideMode then
                 cdr.SuicideMode = false
                 brain.BrainIntel.SuicideModeActive = false
-                brain.BrainIntel.SuicideModeTarget = false
+                brain.BrainIntel.SuicideModeTarget = nil
             end
             if cdr.EnemyAirPresent and not cdr.AtHoldPosition then
                 local retreatKey
@@ -1938,7 +2041,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             end
 
             if cdr:IsIdleState() or cdr.GunUpgradeRequired  or cdr.HighThreatUpgradeRequired then
-                if (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95) or cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired then
+                if (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95 and brain.EconomyOverTimeCurrent.EnergyTrendOverTime > 250) or cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired then
                     cdr.Combat = false
                     cdr.Upgrading = false
                     local foundEnhancement
@@ -2044,6 +2147,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         local lastProgress
                         if cdr.SuicideMode then
                             cdr.SuicideMode = false
+                            cdr.SnipeMode = false
+                            brain.BrainIntel.SuicideModeActive = false
+                            brain.BrainIntel.SuicideModeTarget = nil
                         end
                         while not cdr.Dead and not cdr:HasEnhancement(NextEnhancement) do
                             -- note eta will be in ticks not seconds

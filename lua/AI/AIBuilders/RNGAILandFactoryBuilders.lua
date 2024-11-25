@@ -35,7 +35,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Artillery',
         PlatoonTemplate = 'T1LandArtillery',
-        Priority = 744,
+        Priority = 745,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
@@ -129,7 +129,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Bot',
         PlatoonTemplate = 'RNGAIT2AttackBot',
-        Priority = 749,
+        Priority = 750,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
@@ -160,7 +160,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 AA',
         PlatoonTemplate = 'T2LandAA',
-        Priority = 747,
+        Priority = 750,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
@@ -190,7 +190,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Shield',
         PlatoonTemplate = 'T2MobileShields',
-        Priority = 748,
+        Priority = 750,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
@@ -325,7 +325,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 Mobile Shields',
         PlatoonTemplate = 'T3MobileShields',
-        Priority = 753,
+        Priority = 755,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
@@ -340,7 +340,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 Mobile Sniper',
         PlatoonTemplate = 'T3SniperBots',
-        Priority = 754,
+        Priority = 755,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},

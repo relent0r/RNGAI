@@ -186,9 +186,8 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Swift Wind Response',
         PlatoonTemplate = 'T2FighterBomber',
-        Priority = 885,
+        Priority = 905,
         BuilderConditions = { 
-            { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},

@@ -1021,7 +1021,7 @@ function MoveInDirection(tStart, iAngle, iDistance, bKeepInMapBounds, bTravelUnd
     local iTheta = ConvertAngleToRadians(iAngle)
     --if bDebugMessages == true then LOG(sFunctionRef..': iAngle='..(iAngle or 'nil')..'; iTheta='..(iTheta or 'nil')..'; iDistance='..(iDistance or 'nil')) end
     local iXAdj = math.sin(iTheta) * iDistance
-    local iZAdj = -(math.cos(iTheta) * iDistance)
+    local iZAdj = math.cos(iTheta) * iDistance
     --local iXAdj = math.cos(iTheta) * iDistance * iFactor[1]
     --local iZAdj = math.sin(iTheta) * iDistance * iFactor[2]
 
@@ -1351,6 +1351,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
     local mobileTargets = { }
     local mobileThreat = 0
     local structureTargets = { }
+    local oportunisticTargets = {}
     local structureThreat = 0
     local enemyACUTargets = {}
     local defenseTargets = {}
@@ -1404,11 +1405,15 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             table.sort(structureTargets, function(a,b) return a.distance < b.distance end)
             --RNGLOG('ACUTARGETTING : Mobile Targets are within range')
             for k, v in structureTargets do
+                local unitCat = v.unit.Blueprint.CategoriesHash
                 if v.distance < 14400 then
-                    local unitCat = v.unit.Blueprint.CategoriesHash
                     if unitCat.DEFENSE and (unitCat.DIRECTFIRE or unitCat.INDIRECTFIRE) then
                         table.insert(defenseTargets, v)
                     end
+                end
+                if unitCat.MASSEXTRACTION then
+                    oportunisticTargets[v.unit.EntityId] = v
+                    continue
                 end
                 if not v.unit:BeenDestroyed() then
                     local surfaceThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
@@ -1618,11 +1623,74 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             end
         end
     end
+    if not returnTarget then
+        if not RNGTableEmpty(oportunisticTargets) then
+            table.sort(oportunisticTargets, function(a,b) return a.distance < b.distance end)
+            --RNGLOG('ACUTARGETTING : Mobile Targets are within range')
+            for k, v in oportunisticTargets do
+                local unitCat = v.unit.Blueprint.CategoriesHash
+                if not v.unit:BeenDestroyed() then
+                    local surfaceThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+                    if v.distance < (closestDistance * 2) and surfaceThreat < math.max(55, cdrThreat) or acuDistanceToBase < 6400 then
+                        local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
+                        local targetLayer = v.unit:GetCurrentLayer()
+                        if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
+                        not (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
+                            if NavUtils.CanPathTo('Land', v.position, cdrPos) then
+                                --RNGLOG('ACUTARGETTING : returnTarget set in for loop for mobileTargets')
+                                returnTarget = v.unit
+                                break
+                            elseif NavUtils.CanPathTo('Amphibious', v.position, cdrPos) and v.distance < (operatingArea * operatingArea) then
+                                returnTarget = v.unit
+                                break
+                            end
+                        end
+                    elseif v.distance < (closestDistance * 2) and GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander') > 0 then
+                        local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.STRUCTURE * categories.DEFENSE - categories.WALL) + (categories.MOBILE * (categories.LAND + categories.AIR) - categories.SCOUT ), v.position, 50, 'Enemy')
+                        local enemyUnitThreat = 0
+                        for _,c in enemyUnits do
+                            if c and not c.Dead then
+                                if c.Blueprint.CategoriesHash.COMMAND then
+                                    enemyACUPresent = true
+                                    enemyUnitThreat = enemyUnitThreat + c:EnhancementThreatReturn()
+                                else
+                                    enemyUnitThreat = enemyUnitThreat + c.Blueprint.Defense.SurfaceThreatLevel
+                                end
+                            end
+                        end
+                        if enemyUnitThreat < math.max(55, cdrThreat) then
+                            local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
+                            local targetLayer = v.unit:GetCurrentLayer()
+                            if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
+                            not (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
+                                if NavUtils.CanPathTo('Land', v.position, cdrPos) then
+                                    --RNGLOG('ACUTARGETTING : returnTarget set in for loop for mobileTargets')
+                                    returnTarget = v.unit
+                                    break
+                                elseif NavUtils.CanPathTo('Amphibious', v.position, cdrPos) and v.distance < (operatingArea * operatingArea) then
+                                    returnTarget = v.unit
+                                    break
+                                end
+                            end
+                        end
+                    else
+                        highThreat = highThreat + surfaceThreat
+                        --RNGLOG('ACUTARGETTING : Mobile Threat too high at target location structure')
+                    end
+                end
+                
+            end
+        end
+    end
     if returnTarget then
+        local targetPos = returnTarget:GetPosition()
+        if highThreat < 1 then
+            highThreat = GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+        end
         if not aiBrain.ACUSupport.Supported then
             aiBrain.ACUSupport.Supported = true
             --RNGLOG('* AI-RNG: ACUSupport.Supported set to true')
-            aiBrain.ACUSupport.TargetPosition = returnTarget:GetPosition()
+            aiBrain.ACUSupport.TargetPosition = targetPos
         end
         --RNGLOG('ACUTARGETTING : Returning Target')
         return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition, defenseTargets
@@ -3945,26 +4013,6 @@ function GetBomberRange(oUnit)
     return iRange
 end
 
-function GetAngleToPositionold(Pos1, Pos2)
-    -- Returns an angle 0 = north, 90 = east, etc. based on direction of Pos2 from Pos1
-    -- This is Maudlins function
-    local deltaY = math.abs(Pos1[3] - Pos2[3])
-    local deltaX = math.abs(Pos1[1] - Pos2[1])
-    local iTheta = math.atan(deltaY / deltaX) * 180 / math.pi
-
-    if Pos2[1] > Pos1[1] then
-        if Pos2[3] > Pos1[3] then
-            return 90 + iTheta
-        else return 90 - iTheta
-        end
-    else
-        if Pos2[3] > Pos1[3] then
-            return 270 - iTheta
-        else return 270 + iTheta
-        end
-    end
-end
-
 function DrawAngleDistance(Pos1, Pos2, Pos3)
     local counter = 0
     while counter < 500 do
@@ -5923,6 +5971,66 @@ function GetCappingPosition(aiBrain, eng, pos, refunits, baseTemplate, buildingT
     end
 end
 
+function GetFabricatorPosition(aiBrain, eng, pos, refunits, baseTemplate, buildingTemplate)
+    local closestUnit
+    local bestValue
+    local unitIds = {}
+    local engIndex = GetEngineerFactionIndexRNG(eng)
+    local buildingTmplFile = import('/lua/BuildingTemplates.lua')
+    local buildingTmpl = buildingTmplFile[('BuildingTemplates')][engIndex]
+    for _, v in refunits do
+        if not IsDestroyed(v) then
+            local extratorPos = v:GetPosition()
+            local distance = VDist3(pos, extratorPos)
+            local unitValue = closestUnit.Blueprint.Economy.BuildCostEnergy.BuildCostMass or 50
+            local value = unitValue / distance
+            if (not bestValue or distance == 0) or value > bestValue then
+                local canBeCapped = false
+                local storageUnits  = AIUtils.GetOwnUnitsAroundPoint(aiBrain, categories.MASSSTORAGE * categories.STRUCTURE, extratorPos, 4)
+                for _, s in storageUnits do
+                    if not IsDestroyed(s) then
+                        local storagePos = s:GetPosition()
+                        for l,bType in baseTemplate do
+                            for m,bString in bType[1] do
+                                if aiBrain.CustomUnits and aiBrain.CustomUnits[bString] then
+                                    local faction = GetEngineerFactionRNG(eng)
+                                    buildingTemplate = GetTemplateReplacementRNG(aiBrain, bString, faction, buildingTemplate)
+                                end
+                                local whatToBuild = aiBrain:DecideWhatToBuild(eng, bString, buildingTemplate)
+                                if whatToBuild then
+                                    for n,position in bType do
+                                        if n > 1 then
+                                            local reference = {position[1] + storagePos[1], position[2] + storagePos[2], position[3] + storagePos[3]}
+                                            if aiBrain:CanBuildStructureAt(whatToBuild, reference) then
+                                                canBeCapped = true
+                                                closestUnit = s
+                                                bestValue = value
+                                            end
+                                        end
+                                        if canBeCapped then
+                                            break
+                                        end
+                                    end
+                                end
+                                if canBeCapped then
+                                    break
+                                end
+                            end
+                            if canBeCapped then
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    if closestUnit and not IsDestroyed(closestUnit) then
+        --LOG('Returning closestUnit Position '..repr(closestUnit:GetPosition()))
+        return closestUnit:GetPosition()
+    end
+end
+
 function GetUnitIDFromTemplate(aiBrain, buildingType)
     local factionIndex = aiBrain:GetFactionIndex()
     local buildingTmplFile = import('/lua/BuildingTemplates.lua')
@@ -7363,6 +7471,64 @@ UpdateUnitsProtectedByShield = function(aiBrain, finishedUnit)
             table.insert(finishedUnit['rngdata'].UnitsDefended, v)
         end
     end
+end
+
+function CalculateThreatWithDynamicDecay(aiBrain, baseName, layer, baseZoneId, maxDistance, minAmplifyDistance, maxAmplifyDistance, amplifyFactor, decayFactor)
+    local threatData = { landthreat = 0, land = {}, airthreat = 0, air = {}, navalthreat = 0, naval = {}}
+    local zones
+    local pathableZones = aiBrain.BuilderManagers[baseName].PathableZones.Zones
+
+    if layer == 'Water' then
+        zones = aiBrain.Zones.Naval.zones
+    else
+        zones = aiBrain.Zones.Land.zones
+    end
+
+    for _, pathableZone in ipairs(pathableZones) do
+        local zoneId = pathableZone.ZoneID
+        local pathDistance = pathableZone.PathDistance
+        local currentZone = zones[zoneId]
+        if pathDistance and currentZone and pathDistance <= maxDistance then
+            local multiplier
+            if pathDistance <= maxAmplifyDistance and pathDistance >= minAmplifyDistance then
+                multiplier = amplifyFactor
+            else
+                multiplier = 1 - math.min(((pathDistance - maxAmplifyDistance) / (maxDistance - maxAmplifyDistance)) * decayFactor, 1)
+            end
+            local landThreat = math.ceil(((currentZone.enemylandthreat or 0) * multiplier))
+            if landThreat > 0 then
+                table.insert(threatData.land, { ZoneID = zoneId, Position = currentZone.pos, Threat = landThreat})
+                if landThreat > threatData.landthreat then
+                    threatData.landthreat = landThreat
+                end
+            end
+            
+            local airThreat = math.ceil(((currentZone.enemyairthreat or 0) * multiplier))
+            if airThreat > 0 then
+                table.insert(threatData.air, { ZoneID = zoneId, Position = currentZone.pos, Threat = airThreat})
+                if airThreat > threatData.air then
+                    threatData.airthreat = airThreat
+                end
+            end
+            local navalThreat = math.ceil(((currentZone.enemylandthreat or 0) * multiplier))
+            if navalThreat > 0 then
+                table.insert(threatData.naval, { ZoneID = zoneId, Position = currentZone.pos, Threat = navalThreat})
+                if navalThreat > threatData.naval then
+                    threatData.navalthreat = navalThreat
+                end
+            end
+        end
+    end
+    --if threatData.land > 0 then
+    --    LOG('Total Land threat returned '..tostring(repr(threatData.landthreat)))
+    --end
+    --if threatData.air > 0 then
+    --    LOG('Total Land threat returned '..tostring(repr(threatData.airthreat)))
+    --end
+    --if threatData.naval > 0 then
+    --    LOG('Total Land threat returned '..tostring(repr(threatData.navalthreat)))
+    --end
+    return threatData
 end
 
 

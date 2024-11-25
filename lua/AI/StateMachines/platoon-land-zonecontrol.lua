@@ -66,6 +66,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             else
                 self.LocationType = 'MAIN'
             end
+            if self.PlatoonData.EarlyRaid then
+                self:LogDebug(string.format('This is an early raid platoon'))
+                self.Raid = true
+            end
+            self:LogDebug(string.format('This platoon has a control type of '..(self.ZoneType)))
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             self.ScoutSupported = true
             self.ScoutUnit = false
@@ -73,7 +78,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             self.CurrentPlatoonThreatAntiSurface = 0
             self.CurrentPlatoonThreatAntiNavy = 0
             self.CurrentPlatoonThreatAntiAir = 0
-            self.ZoneType = self.PlatoonData.ZoneType or 'control'
             StartZoneControlThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -95,6 +99,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local threatMultiplier = 1.0
             if self.ZoneType == 'raid' then
                 threatMultiplier = 0.9
+            end
+            if self.Raid then
+                threatMultiplier = 0.7
             end
             if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
                 local enemyAcuPosition = aiBrain.BrainIntel.SuicideModeTarget:GetPosition()
@@ -128,8 +135,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 local label = NavUtils.GetLabel('Water', self.Pos)
                 aiBrain:PlatoonReinforcementRequestRNG(self, 'AntiAir', closestBase, label)
             end
-            --self:LogDebug(string.format('DecideWhatToDo threat data enemy surface '..tostring(threat.enemySurface)))
-            --self:LogDebug(string.format('DecideWhatToDo threat data ally surface '..tostring(threat.allySurface)))
+            self:LogDebug(string.format('DecideWhatToDo threat data enemy surface '..tostring(threat.enemySurface)))
+            self:LogDebug(string.format('DecideWhatToDo threat data ally surface '..tostring(threat.allySurface)))
+            self:LogDebug(string.format('DecideWhatToDo threat data ally multiplier surface '..tostring(threat.allySurface*threatMultiplier)))
             if threat.allySurface and threat.enemySurface and threat.allySurface*threatMultiplier < threat.enemySurface then
                 if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*1.5 > (threat.enemySurface - threat.enemyStructure) then
                     rangedAttack = true
@@ -332,6 +340,10 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
+            local combatWait = 30
+            if self.Raid then
+                combatWait = 15
+            end
             local target
             local closestTarget
             local approxThreat
@@ -369,7 +381,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false)
                         end
                         if (unitRole ~= 'Sniper' or unitRole ~= 'Silo' or unitRole ~= 'Scout') and closestTarget>(unitRange+20)*(unitRange+20) then
-                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface then
+                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface and not self.Raid then
                                 IssueClearCommands({v}) 
                                 if unitRole == 'Shield' or unitRole == 'Stealth' and closestTarget then
                                     if v.GetNavigator then
@@ -398,7 +410,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if not skipKite then
-                            if approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface*1.5 and not targetCats.INDIRECTFIRE and targetCats.MOBILE and unitRange <= targetRange then
+                            if approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface*1.5 and not targetCats.INDIRECTFIRE and targetCats.MOBILE and unitRange <= targetRange and not self.Raid then
                                 IssueClearCommands({v})
                                 if unitRole == 'Shield' or unitRole == 'Stealth' and closestTarget then
                                     if v.GetNavigator then
@@ -423,6 +435,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                     IssueAggressiveMove({v},targetPos)
                                 end
                             else
+                                self:LogDebug(string.format('Unit is performing variable kite '))
                                 StateUtils.VariableKite(self,v,target)
                             end
                         else
@@ -463,7 +476,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            coroutine.yield(30)
+            coroutine.yield(combatWait)
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -564,6 +577,10 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 if targetRange then
                     minTargetRange = targetRange + 10
                 end
+                local controlRequired = true
+                if self.Raid then
+                    controlRequired = false
+                end
                 local avoidRange = math.max(minTargetRange or 60)
                 local targetPos = target:GetPosition()
                 avoidTargetPos = targetPos
@@ -571,7 +588,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 local rx = self.Pos[1] - targetPos[1]
                 local rz = self.Pos[3] - targetPos[3]
                 local targetDistance = rx * rx + rz * rz
-                local zoneRetreat = aiBrain.IntelManager:GetClosestZone(aiBrain, self, false, targetPos, true)
+                local zoneRetreat = aiBrain.IntelManager:GetClosestZone(aiBrain, self, false, targetPos, controlRequired)
                 local zonePos = aiBrain.Zones.Land.zones[zoneRetreat].pos
                 local platUnits = self:GetPlatoonUnits()
                 if targetDistance < targetRange * targetRange then

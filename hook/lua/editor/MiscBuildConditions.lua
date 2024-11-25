@@ -1,5 +1,6 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
+local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local RNGSORT = table.sort
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
@@ -328,6 +329,45 @@ function GatewayValidation(aiBrain)
     if (aiBrain.EcoManager.CoreExtractorT3Percentage >= 1.0 or aiBrain.cmanager.income.r.m > 300) and (aiBrain.cmanager.income.r.m > (gatewayLimit * multiplier) or aiBrain.RNGEXP) then
         --LOG('gatewayLimit went true at income of '..tostring(gatewayLimit))
         return true
+    end
+    return false
+end
+
+function ScoutsRequiredForBase(aiBrain, locationType, baseRatio, scoutCategories)
+    local scoutsRequired = 0
+    if not aiBrain.ZonesInitialized then
+        return false
+    end
+    if aiBrain.BuilderManagers[locationType].PathableZones then
+        local manager = aiBrain.BuilderManagers[locationType]
+        if not manager.Layer then
+            LOG('The builder manager has not layer right now')
+        end
+        local layer = manager.Layer or 'Land'
+        for _, v in manager.PathableZones.Zones do
+            if v.ZoneID then
+                local zone = aiBrain.Zones[layer].zones[v.ZoneID]
+                if zone.teamvalue then
+                    local teamValue = zone.teamvalue
+                    local adjustedRatio = baseRatio * (1 + (1 - teamValue))
+                    if zone.intelassignment.RadarCoverage then
+                        adjustedRatio = adjustedRatio * 0.5
+                    end
+                    if zone.enemylandthreat > 0 then
+                        adjustedRatio = adjustedRatio * 1.2
+                    end
+                    scoutsRequired = scoutsRequired + math.min(adjustedRatio, 1)
+                else
+                    LOG('zone has no team value')
+                end
+            else
+                LOG('Pathable zone table item has no zone id')
+            end
+        end
+        --LOG('Scouts required for base '..tostring(locationType)..' '..tostring(scoutsRequired)..' current count it '..tostring(GetCurrentUnits(aiBrain, scoutCategories)))
+        if math.floor(scoutsRequired) > GetCurrentUnits(aiBrain, scoutCategories) then
+            return true
+        end
     end
     return false
 end

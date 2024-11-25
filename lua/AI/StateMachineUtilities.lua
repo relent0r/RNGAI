@@ -240,10 +240,10 @@ VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride)--basic kit
         dest=KiteDist(pos,tpos,platoon.MaxPlatoonWeaponRange+3,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif (unit['rngdata'].Role=='Sniper' or unit['rngdata'].Role=='Artillery' or unit['rngdata'].Role=='Silo') and unit['rngdata'].MaxWeaponRange then
-        dest=KiteDist(pos,tpos,unit['rngdata'].MaxWeaponRange,healthmod)
+        dest=KiteDist(pos,tpos,unit['rngdata'].MaxWeaponRange,0)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif maxPlatoonRangeOverride and (unit['rngdata'].Role=='Shield' or unit['rngdata'].Role == 'Stealth') and platoon.MaxDirectFireRange > 0 then
-        dest=KiteDist(pos,tpos,platoon.MaxDirectFireRange-math.random(1,3)-mod,healthmod)
+        dest=KiteDist(pos,tpos,platoon.MaxDirectFireRange-math.random(1,3)-mod,0)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif (unit['rngdata'].Role=='Shield' or unit['rngdata'].Role == 'Stealth') and platoon.MaxDirectFireRange > 0 then
         dest=KiteDist(pos,tpos,platoon.MaxDirectFireRange-math.random(1,3)-mod,healthmod)
@@ -365,8 +365,18 @@ ExitConditions = function(self,aiBrain)
             for _,enemy in enemies do
                 enemyThreat = enemyThreat + enemy.Blueprint.Defense.SurfaceThreatLevel
                 if enemyThreat * 1.1 > self.CurrentPlatoonThreatAntiSurface and not self.retreat then
+                    local ignoreEnemy = false
+                    if self.ZoneType == 'raid' then
+                        local teamAveragePositions = aiBrain.IntelManager:GetTeamAveragePositions()
+                        local teamValue = aiBrain.IntelManager:GetTeamDistanceValue(self.Pos, teamAveragePositions)
+                        if teamValue <= 0.8 then
+                            ignoreEnemy = true
+                        end
+                    end
                     --RNGLOG('TruePlatoon enemy threat too high during navigating, exiting')
-                    return true
+                    if not ignoreEnemy then
+                        return true
+                    end
                 end
                 if enemy and not enemy.Dead and NavUtils.CanPathTo(self.MovementLayer, self.Pos, enemy:GetPosition()) then
                     local dist=VDist3Sq(enemy:GetPosition(),self.Pos)
@@ -437,36 +447,49 @@ GetWeightedHealthRatio = function(unit)--health % including shields
     end
 end
 
-GetUnitMaxWeaponRange = function(unit, filterType)
+GetUnitMaxWeaponRange = function(unit, filterType, enhancementReset)
     local maxRange
     if unit and not unit.Dead then
-        if not filterType then
+        if not filterType and not enhancementReset then
             if unit['rngdata'].MaxWeaponRange then
                 --LOG('Found precached weapon range for unit '..tostring(unit.UnitId)..' max weapon range is '..tostring(unit['rngdata'].MaxWeaponRange))
                 return unit['rngdata'].MaxWeaponRange
             end
         end
-        for _, weapon in unit.Blueprint.Weapon or {} do
+        local bp = unit.Blueprint
+        for k, weapon in bp.Weapon or {} do
             -- unit can have MaxWeaponRange entry from the last platoon
-            if filterType then
-                if weapon.WeaponCategory == filterType then
-                    if not weapon.EnabledByEnhancement or (weapon.EnabledByEnhancement and unit.HasEnhancement and unit:HasEnhancement(weapon.EnabledByEnhancement)) then
-                        if not maxRange or weapon.MaxRadius > maxRange then
-                            maxRange = weapon.MaxRadius
+            if weapon.MaxRadius and not weapon.DummyWeapon then
+                local weaponRange
+                if enhancementReset then
+                    weaponRange = unit:GetWeapon(k).MaxRadius
+                else
+                    weaponRange = weapon.MaxRadius
+                end
+                if filterType then
+                    if weapon.WeaponCategory == filterType then
+                        if not weapon.EnabledByEnhancement or (weapon.EnabledByEnhancement and unit.HasEnhancement and unit:HasEnhancement(weapon.EnabledByEnhancement)) then
+                            if not maxRange or weaponRange > maxRange then
+                                maxRange = weaponRange
+                            end
                         end
                     end
-                end
-            elseif not maxRange or weapon.MaxRadius > maxRange then
-                -- save the weaponrange 
-                if not weapon.EnabledByEnhancement or (weapon.EnabledByEnhancement and unit.HasEnhancement and unit:HasEnhancement(weapon.EnabledByEnhancement)) then
-                    if not maxRange or weapon.MaxRadius > maxRange then
-                        maxRange = weapon.MaxRadius
+                elseif not weapon.EnabledByEnhancement or (weapon.EnabledByEnhancement and unit.HasEnhancement and unit:HasEnhancement(weapon.EnabledByEnhancement)) then
+                    if not maxRange or weaponRange > maxRange then
+                        maxRange = weaponRange
                     end
                 end
             end
         end
         if not maxRange and unit.Blueprint.CategoriesHash.ENGINEER then
             maxRange = unit.Blueprint.Economy.MaxBuildDistance
+        end
+        if enhancementReset then
+            local brain = unit:GetAIBrain()
+            if brain.RNG then
+                unit.WeaponRange = maxRange
+                LOG('Enhancement reset to set Weapon range to '..maxRange)
+            end
         end
         if not filterType and not unit['rngdata'] then
             unit['rngdata'] = {}

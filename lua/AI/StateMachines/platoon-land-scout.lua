@@ -339,19 +339,19 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                 --local zonePos = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, true).pos
                 local scoutPos = scout:GetPosition()
                 self:LogDebug(string.format('Current distance to support post '..tostring(VDist3Sq(supportPos, scoutPos))))
-                if VDist3Sq(supportPos, scoutPos) > 36 then
+                if VDist3Sq(supportPos, scoutPos) > 16 then
                     if scout.GetNavigator then
                         local navigator = scout:GetNavigator()
                         if navigator then
                             self:LogDebug(string.format('Lerp to support position via navigator'))
-                            navigator:SetGoal(RUtils.AvoidLocation(supportPos, scoutPos, 4))
+                            navigator:SetGoal(RUtils.AvoidLocation(supportPos, scoutPos, 3))
                         end
                     else
                         self:LogDebug(string.format('Lerp to support position via IssueMove'))
-                        IssueMove({scout},RUtils.AvoidLocation(supportPos, scoutPos, 4))
+                        IssueMove({scout},RUtils.AvoidLocation(supportPos, scoutPos, 3))
                     end
                 end
-                coroutine.yield(20)
+                coroutine.yield(15)
             end
             coroutine.yield(20)
             self:ChangeState(self.DecideWhatToDo)
@@ -693,6 +693,32 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         else
                             IssueMove({scout},RUtils.AvoidLocation(enemyPos, platPos, idealRange))
                         end
+                        coroutine.yield(10)
+                        local allyScouts = aiBrain:GetNumUnitsAroundPoint( categories.SCOUT * categories.LAND, platPos, 10, 'Ally')
+                        if allyScouts > 2 then
+                            if builderData.OriginLocation then
+                                local originPos = builderData.OriginLocation
+                                self:LogDebug('Origin Location Found, angle is '..tostring(RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3])))
+                                if RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3]) > 0.35 then
+                                    local pointAngle = RUtils.GetAngleToPosition(platPos, originPos)
+                                    self:LogDebug('pointAngle is '..tostring(pointAngle))
+                                    local movePosition = RUtils.MoveInDirection(platPos, pointAngle, 20, true, false)
+                                    if scout.GetNavigator then
+                                        local navigator = scout:GetNavigator()
+                                        if navigator then
+                                            navigator:SetGoal(movePosition)
+                                        end
+                                    else
+                                        IssueMove({scout},movePosition)
+                                    end
+                                    coroutine.yield(30)
+                                end
+                            end
+                            self:LogDebug(string.format('We have multiple ally scouts here, reset'))
+                            self.BuilderData = {}
+                            self:ChangeState(self.DecideWhatToDo)
+                            return
+                        end
                     elseif enemyDistance > (avoidRange * avoidRange) * 1.3 then
                         if self.BuilderData.ScoutType == 'AssistPlatoon' and not IsDestroyed(self.BuilderData.SupportPlatoon) then
                             self:LogDebug(string.format('Enemy is further away, supportPlatoon'))
@@ -720,6 +746,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                             local pointAngle = RUtils.GetAngleToPosition(platPos, originPos)
                             self:LogDebug('pointAngle is '..tostring(pointAngle))
                             local movePosition = RUtils.MoveInDirection(platPos, pointAngle, 20, true, false)
+                            self:LogDebug('movePosition for support unit is '..tostring(movePosition[1])..':'..tostring(movePosition[3]))
                             if scout.GetNavigator then
                                 local navigator = scout:GetNavigator()
                                 if navigator then
@@ -733,13 +760,14 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     end
                     if builderData.SupportPlatoon and not IsDestroyed(builderData.SupportPlatoon) then
                         local originPos = builderData.SupportPlatoon:GetPlatoonPosition()
+                        self:LogDebug('platPos Location '..tostring(platPos[1])..':'..tostring(platPos[3]))
                         self:LogDebug('SupportPlatoon Location '..tostring(originPos[1])..':'..tostring(originPos[3]))
                         self:LogDebug('SupportPlatoon Location Found, angle is '..tostring(RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3])))
                         if RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3]) > 0.35 then
                             local pointAngle = RUtils.GetAngleToPosition(platPos, originPos)
                             self:LogDebug('pointAngle is '..tostring(pointAngle))
                             local movePosition = RUtils.MoveInDirection(platPos, pointAngle, 20, true, false)
-                            self:LogDebug('movePosition is '..tostring(movePosition[1])..':'..tostring(movePosition[3]))
+                            self:LogDebug('movePosition for support platoon is '..tostring(movePosition[1])..':'..tostring(movePosition[3]))
                             if scout.GetNavigator then
                                 local navigator = scout:GetNavigator()
                                 if navigator then
@@ -758,6 +786,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                             local pointAngle = RUtils.GetAngleToPosition(platPos, originPos)
                             self:LogDebug('pointAngle is '..tostring(pointAngle))
                             local movePosition = RUtils.MoveInDirection(platPos, pointAngle, 20, true, false)
+                            self:LogDebug('movePosition for origin location is '..tostring(movePosition[1])..':'..tostring(movePosition[3]))
                             if scout.GetNavigator then
                                 local navigator = scout:GetNavigator()
                                 if navigator then

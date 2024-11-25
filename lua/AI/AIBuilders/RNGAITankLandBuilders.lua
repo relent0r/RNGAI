@@ -136,7 +136,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Reaction Tanks',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI T1 Tank Enemy Nearby',
+        BuilderName = 'RNGAI T1 Tank Response',
         PlatoonTemplate = 'T1LandDFTank',
         Priority = 880,
         BuilderConditions = {
@@ -149,7 +149,7 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI T1 Artillery Enemy Nearby',
+        BuilderName = 'RNGAI T1 Artillery Response',
         PlatoonTemplate = 'T1LandArtillery',
         Priority = 881,
         BuilderConditions = {
@@ -165,7 +165,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI T2 Tank Enemy Nearby',
+        BuilderName = 'RNGAI T2 Tank Response',
         PlatoonTemplate = 'T2LandDFTank',
         Priority = 890,
         BuilderConditions = {
@@ -177,7 +177,7 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI T2 MML Enemy Nearby',
+        BuilderName = 'RNGAI T2 MML Response',
         PlatoonTemplate = 'T2LandArtillery',
         Priority = 891,
         BuilderConditions = {
@@ -192,7 +192,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI T3 Tank Enemy Nearby',
+        BuilderName = 'RNGAI T3 Tank Response',
         PlatoonTemplate = 'T3LandBot',
         Priority = 900,
         BuilderConditions = {
@@ -204,7 +204,20 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI T3 Arty Enemy Nearby',
+        BuilderName = 'RNGAI T3 Tank Enemy Armoured',
+        PlatoonTemplate = 'T3ArmoredAssault',
+        Priority = 910,
+        BuilderConditions = {
+            { UCBC, 'EnemyRangeGreaterThanAtRestricted', { 'LocationType', 30 }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 3, categories.LAND * categories.MOBILE * categories.DIRECTFIRE } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.7 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Arty Response',
         PlatoonTemplate = 'T3LandArtillery',
         Priority = 901,
         BuilderConditions = {
@@ -223,7 +236,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Reaction Tanks Expansion',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI T1 Tank Enemy Nearby Expansion',
+        BuilderName = 'RNGAI T1 Tank Response Expansion',
         PlatoonTemplate = 'T1LandDFTank',
         Priority = 880,
         BuilderConditions = {
@@ -236,7 +249,7 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI T1 Artillery Enemy Nearby Expansion',
+        BuilderName = 'RNGAI T1 Artillery Response Expansion',
         PlatoonTemplate = 'T1LandArtillery',
         Priority = 881,
         BuilderConditions = {
@@ -252,7 +265,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI T2 Tank Enemy Nearby Expansion',
+        BuilderName = 'RNGAI T2 Tank Response Expansion',
         PlatoonTemplate = 'T2LandDFTank',
         Priority = 890,
         BuilderConditions = {
@@ -264,7 +277,7 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI T2 MML Enemy Nearby Expansion',
+        BuilderName = 'RNGAI T2 MML Response Expansion',
         PlatoonTemplate = 'T2LandArtillery',
         Priority = 891,
         BuilderConditions = {
@@ -279,7 +292,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI T3 Tank Enemy Nearby Expansion',
+        BuilderName = 'RNGAI T3 Tank Response Expansion',
         PlatoonTemplate = 'T3LandBot',
         Priority = 900,
         BuilderConditions = {
@@ -291,7 +304,20 @@ BuilderGroup {
         BuilderType = 'Land',
     },
     Builder {
-        BuilderName = 'RNGAI T3 Arty Enemy Nearby Expansion',
+        BuilderName = 'RNGAI T3 Tank Enemy Armoured Expansion',
+        PlatoonTemplate = 'T3ArmoredAssault',
+        Priority = 910,
+        BuilderConditions = {
+            { UCBC, 'EnemyRangeGreaterThanAtRestricted', { 'LocationType', 30 }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 3, categories.LAND * categories.MOBILE * categories.DIRECTFIRE } },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Arty Response Expansion',
         PlatoonTemplate = 'T3LandArtillery',
         Priority = 901,
         BuilderConditions = {
@@ -747,7 +773,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Response BaseMilitary ANTIAIR Area',
         PlatoonTemplate = 'LandAntiAirStateMachineRNG',
         Priority = 1000,
-        InstanceCount = 12,
+        InstanceCount = 18,
         BuilderType = 'Any',
         BuilderConditions = {
               { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.ANTIAIR - categories.INDIRECTFIRE} },

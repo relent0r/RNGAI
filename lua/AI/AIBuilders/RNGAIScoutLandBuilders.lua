@@ -19,12 +19,10 @@ BuilderGroup {
         Priority = 895,
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', {'LocationType', 'MAIN' } },
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.LAND * categories.SCOUT }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
-            { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
             { UCBC, 'GreaterThanArmyThreat', { 'LandNow', 20}},
-            { UCBC, 'RatioToZones', { 'Land', categories.LAND * categories.SCOUT, 1.5}},
+            { MIBC, 'ScoutsRequiredForBase', {'LocationType', 1.5, categories.LAND * categories.SCOUT }},
         },
         BuilderType = 'Land',
     },
@@ -38,7 +36,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Former Scout',
         PlatoonTemplate = 'RNGAILandScoutStateMachine',
         Priority = 1001,
-        InstanceCount = 30,
+        InstanceCount = 60,
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 0, categories.LAND * categories.SCOUT } },

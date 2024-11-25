@@ -244,7 +244,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.30, 'FACTORY'}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
@@ -295,7 +295,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 300 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) }},
             { UCBC, 'IsEngineerNotBuilding', {categories.FACTORY * categories.AIR * categories.TECH1}},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },

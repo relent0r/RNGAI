@@ -275,6 +275,7 @@ IntelManager = Class {
         self:ForkThread(self.IntelGridThread, self.Brain)
         self:ForkThread(self.ZoneExpansionThreadRNG)
         self:ForkThread(self.TacticalIntelCheck)
+        self:ForkThread(self.DrawZoneArmyValue)
         if self.Debug then
             self:ForkThread(self.IntelDebugThread)
         end
@@ -740,7 +741,7 @@ IntelManager = Class {
                                     local enemyModifier = v.enemyantisurfacethreat
                                     local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
                                     if enemyModifier > 0 then
-                                        enemyModifier = enemyModifier * 10
+                                        enemyModifier = enemyModifier * 5
                                     end
                                     for _, e in  v.enemystartdata do
                                         if e.startdistance < 10000 then
@@ -1309,6 +1310,48 @@ IntelManager = Class {
         end
     end,
 
+    DrawZoneRadius = function(self, position, colour, time)
+        --RNGLOG('Draw Target Radius points')
+        local counter = 0
+        while counter < time do
+            DrawCircle(position, 5, colour)
+            counter = counter + 1
+            coroutine.yield( 2 )
+        end
+    end,
+
+    DrawZoneArmyValue = function(self)
+        local colours = { 'aaff7f0e', 'aa2ca02c', 'aad62728', 'aa9467bd', 'aa8c564b', 'aae377c2', 'aa7f7f7f', 'aabcbd22', 'aa17becf' }
+        self:WaitForZoneInitialization()
+        self:WaitForNavmeshGeneration()
+        while not self.MapIntelStats.ScoutLocationsBuilt do
+            LOG('*AI:RNG NavalAttackCheck is waiting for ScoutLocations to be built')
+            coroutine.yield(20)
+        end
+        coroutine.yield(50)
+    
+        local aiBrain = self.Brain
+        local colourIndex = 1
+        local colourAssignment = {}
+        LOG('starting zonedrawradius')
+    
+        for _, zone in aiBrain.Zones.Land.zones do
+            -- Assign a color to the bestarmy if not already assigned
+            LOG('Zone is '..tostring(zone.id))
+            if zone.bestarmy then
+                LOG('Zone has bestarmy '..tostring(zone.bestarmy))
+                if not colourAssignment[zone.bestarmy] then
+                    colourAssignment[zone.bestarmy] = colourIndex
+                    colourIndex = colourIndex + 1
+                end
+        
+                -- Get the correct color for this zone's bestarmy
+                local assignedColor = colourAssignment[zone.bestarmy]
+                self:ForkThread(self.DrawZoneRadius, zone.pos, colours[assignedColor], 600)
+            end
+        end
+    end,
+
     ZoneIntelAssignment = function(self)
         -- Will setup table for scout assignment to zones
         -- I did this because I didn't want to assign units directly to the zones since it makes it hard to troubleshoot
@@ -1337,7 +1380,7 @@ IntelManager = Class {
                 if v1.resourcevalue > maximumResourceValue then
                     maximumResourceValue = v1.resourcevalue
                 end
-                v1.teamvalue = self:ZoneSetDistanceValue(v1, teamAveragePositions)
+                v1.teamvalue = self:GetTeamDistanceValue(v1.pos, teamAveragePositions)
                 local enemyStartData, allyStartData = self:SetEnemyPositionAngleAssignment(v1)
                 v1.enemystartdata = {}
                 for k, v in enemyStartData do
@@ -1347,29 +1390,31 @@ IntelManager = Class {
                 for k, v in allyStartData do
                     v1.allystartdata[k] = { startangle = v.startangle, startdistance = v.startdistance}
                 end
-                v1.bestarmy = self:ZoneSetBestArmy(expansionSize, v1)
+                v1.bestarmy = self:ZoneSetBestArmy(v1)
             end
         end
+        LOG('Best Armies are set')
         self.MapMaximumValues.MaximumResourceValue = maximumResourceValue
     end,
 
-    ZoneSetBestArmy = function(self, maximumSearch, zone)
+    ZoneSetBestArmy = function(self, zone)
         local aiBrain = self.Brain
         local closestArmy
         local closestDistance
-        maximumSearch = maximumSearch * maximumSearch
         for k, v in aiBrain.BrainIntel.AllyStartLocations do
             local ax = v.Position[1] - zone.pos[1]
             local az = v.Position[3] - zone.pos[3]
             local armyDist = ax * ax + az * az
-            if armyDist < maximumSearch and (not closestDistance or armyDist < closestDistance) then
+            if zone.teamvalue >= 1.0 and (not closestDistance or armyDist < closestDistance) then
                 closestArmy = k
                 closestDistance = armyDist
             end
         end
         if closestArmy then
+            LOG('Best army besting returned for zone is '..tostring(closestArmy))
             return closestArmy
         end
+        LOG('No closestArmy is being returned')
         return false
     end,
 
@@ -1413,26 +1458,18 @@ IntelManager = Class {
 
     end,
 
-    ZoneSetDistanceValue = function(self, zone, teamAveragePositions)
+    GetTeamDistanceValue = function(self, pos, teamAveragePositions)
         -- This sets the team values for zones. Greater than 1 means that its closer to us than the enemy, less than 1 means its closer to the enemy than us.
         -- Positions are based on a team average. Could produce strange results if the team is spread in strange ways
-        local aiBrain = self.Brain
         local teamValue
         if teamAveragePositions['Ally'] and teamAveragePositions['Enemy'] then
-            local ax = teamAveragePositions['Ally'].x - zone.pos[1]
-            local az = teamAveragePositions['Ally'].z - zone.pos[3]
+            local ax = teamAveragePositions['Ally'].x - pos[1]
+            local az = teamAveragePositions['Ally'].z - pos[3]
             local allyPosDist = ax * ax + az * az
-            local ex = teamAveragePositions['Enemy'].x - zone.pos[1]
-            local ez = teamAveragePositions['Enemy'].z - zone.pos[3]
+            local ex = teamAveragePositions['Enemy'].x - pos[1]
+            local ez = teamAveragePositions['Enemy'].z - pos[3]
             local enemyPosDist = ex * ex + ez * ez
             teamValue = RUtils.CalculateRelativeDistanceValue(math.sqrt(enemyPosDist), math.sqrt(allyPosDist))
-            --[[
-            if enemyPosDist > allyPosDist then
-                aiBrain:ForkThread(DrawTargetRadius, zone.pos, 'aa44ff44')
-            end
-            if enemyPosDist < allyPosDist then
-                aiBrain:ForkThread(DrawTargetRadius, zone.pos, 'cc0000')
-            end]]
         else
             teamValue = 1
         end
@@ -2435,21 +2472,27 @@ IntelManager = Class {
                             end
                         end
                         local indirectFireCount = 0
+                        local threatRatio = 1
                         if totalEnemyStructureThreat > 0 then
+                            if totalEnemyLandThreat > 0 then
+                                if totalFriendlyDirectFireThreat > 0 then
+                                    threatRatio = totalFriendlyDirectFireThreat / totalEnemyLandThreat
+                                end
+                            end
                             if enemyDefenseThreat > 0 and totalEnemyStructureThreat > enemyDefenseThreat then
                                 totalEnemyStructureThreat = enemyDefenseThreat
                             elseif enemyDefenseThreat == 0 and totalEnemyStructureThreat > 100 then
                                 totalEnemyStructureThreat = 100
                             end
-                            indirectFireCount = math.max(3, totalEnemyStructureThreat / threatDillutionRatio)
+                            if threatRatio > 0.2 then
+                                indirectFireCount = math.max(3, totalEnemyStructureThreat / threatDillutionRatio)
+                            end
                             --LOG('Initial indirectFireCount '..tostring(indirectFireCount)..'enemy structure threat was '..tostring(totalEnemyStructureThreat)..' enemy defense threat was '..tostring(enemyDefenseThreat))
                             if indirectFireCount > 3 then
                                 if totalEnemyLandThreat > 0 then
                                     if totalFriendlyDirectFireThreat > 0 then
-                                        local threatRatio = totalFriendlyDirectFireThreat / totalEnemyLandThreat
                                         if threatRatio < 1 then
                                             indirectFireCount = math.max(3, math.ceil(indirectFireCount * threatRatio))
-                                            --LOG('indirectFireCount modified to'..tostring(indirectFireCount))
                                         end
                                     end
                                 end
@@ -2462,6 +2505,11 @@ IntelManager = Class {
                                 if v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH2) > 0 then
                                     --LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T2 mml for base '..tostring(k))
                                     aiBrain.amanager.Demand.Bases[k].Land.T2.mml = math.ceil(indirectFireCount * 1.3)
+                                    --LOG('We want to build MML at builder manager '..tostring(k))
+                                    --LOG('Total Enemy land threat '..totalEnemyLandThreat)
+                                    --LOG('Total Friendly Directfire threat '..totalFriendlyDirectFireThreat)
+                                    --LOG('Threat ratio here is '..tostring(totalFriendlyDirectFireThreat / totalEnemyLandThreat))
+                                    --LOG('The MML count is '..tostring(math.ceil(indirectFireCount * 1.3)))
                                 end
                                 if v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH3) > 0 then
                                     --LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T3 artillery for base '..tostring(k))
@@ -3776,7 +3824,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     local basePriority = math.ceil((angleOfEnemyUnits * 60) / (distanceToMain / 2))
                     --LOG('basePriority '..basePriority)
                     local normalizedDistance = distanceToMain / playableSize
-                    local distanceFactor = (1 - normalizedDistance) * 200
+                    local distanceFactor = (1 - normalizedDistance) * 250
                     --LOG('basePriority * '..(1 + distanceFactor * distanceExponent / maxPriority))
                     scaledPriority = basePriority * (1 + distanceFactor * distanceExponent / maxPriority)
                     local statusModifier = 1

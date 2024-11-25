@@ -120,7 +120,7 @@ function CDRBrainThread(cdr)
             if (not cdr.GunUpgradePresent) then
                 if not CDRGunCheck(cdr) then
                     --RNGLOG('Enemy is phase 2 and I dont have gun')
-                    if aiBrain.EconomyOverTimeCurrent.EnergyIncome > 65 or cdr.DistanceToHome > 6400 then
+                    if aiBrain.EconomyOverTimeCurrent.EnergyIncome > 65 or (cdr.DistanceToHome > 6400 and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 45) then
                         cdr.Phase = 2
                         cdr.GunUpgradeRequired = true
                     end

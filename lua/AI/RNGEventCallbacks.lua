@@ -1,4 +1,4 @@
-local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local IntelManager = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 
 function OnBombReleased(weapon, projectile)
@@ -35,11 +35,13 @@ function OnStopBeingCaptured(self, captor)
 end
 
 function UnitEnhancementCreate(unit, enh)
+    coroutine.yield(3)
     local unitCats = unit.Blueprint.CategoriesHash
 
     if unit.Blueprint.Enhancements then
         local enhancementBp = unit.Blueprint.Enhancements[enh]
         if unitCats.COMMAND then
+            StateUtils.GetUnitMaxWeaponRange(unit, false, true)
             local isCombatType = enhancementBp.NewRoF or enhancementBp.NewMaxRadius or enhancementBp.NewRateOfFire or enhancementBp.NewRadius 
             or enhancementBp.NewDamage or enhancementBp.DamageMod or enhancementBp.ZephyrDamageMod
             if isCombatType then
@@ -50,6 +52,7 @@ function UnitEnhancementCreate(unit, enh)
                 --LOG('GunUpgrade is set to true '..tostring(enh))
             end
         elseif unitCats.SUBCOMMANDER then
+            StateUtils.GetUnitMaxWeaponRange(unit, false, true)
             if enhancementBp.NewBuildRate then
                 if not unit['rngdata'] then
                     unit['rngdata'] = {}

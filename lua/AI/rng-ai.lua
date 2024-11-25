@@ -604,23 +604,23 @@ AIBrain = Class(RNGAIBrainClass) {
                             scout=10,
                             tank=75,
                             arty=10,
-                            aa=12,
+                            aa=5,
                             total=0
                         },
                         T2 = {
                             tank=55,
                             mml=0,
                             bot=25,
-                            aa=10,
-                            shield=10,
+                            aa=5,
+                            shield=15,
                             total=0
                         },
                         T3 = {
                             tank=40,
-                            armoured=50,
+                            armoured=55,
                             mml=0,
                             arty=0,
-                            aa=10,
+                            aa=5,
                             total=0
                         }
                     },
@@ -670,21 +670,21 @@ AIBrain = Class(RNGAIBrainClass) {
                             scout=10,
                             tank=75,
                             arty=10,
-                            aa=12,
+                            aa=5,
                             total=0
                         },
                         T2 = {
                             tank=75,
                             mml=0,
-                            aa=10,
+                            aa=5,
                             shield=15,
                             total=0
                         },
                         T3 = {
                             tank=50,
                             arty=0,
-                            aa=10,
-                            sniper=40,
+                            aa=5,
+                            sniper=45,
                             total=0
                         }
                     },
@@ -734,8 +734,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         T1 = {
                             scout=10,
                             tank=75,
-                            arty=10,
-                            aa=12,
+                            arty=15,
+                            aa=5,
                             total=0
                         },
                         T2 = {
@@ -800,22 +800,22 @@ AIBrain = Class(RNGAIBrainClass) {
                         T1 = {
                             scout=10,
                             tank=75,
-                            arty=10,
-                            aa=12,
+                            arty=15,
+                            aa=5,
                             total=0
                         },
                         T2 = {
-                            tank=80,
+                            tank=85,
                             mml=0,
-                            aa=15,
+                            aa=5,
                             total=0
                         },
                         T3 = {
                             tank=45,
                             arty=0,
-                            aa=10,
+                            aa=5,
                             sniper=40,
-                            shield=5,
+                            shield=10,
                             total=0
                         }
                     },
@@ -864,15 +864,15 @@ AIBrain = Class(RNGAIBrainClass) {
                             scout=10,
                             tank=75,
                             arty=10,
-                            aa=12,
+                            aa=5,
                             total=0
                         },
                         T2 = {
                             tank=55,
                             mml=0,
                             bot=25,
-                            aa=10,
-                            shield=10,
+                            aa=5,
+                            shield=15,
                             total=0
                         },
                         T3 = {
@@ -1625,14 +1625,41 @@ AIBrain = Class(RNGAIBrainClass) {
             Zones = {}
         }
         self:WaitForZoneInitialization()
+        local baseMilitaryAreaSq = math.min((self.OperatingAreas['BaseMilitaryArea'] * self.OperatingAreas['BaseMilitaryArea']), 65536)
         if self.Zones.Land.zones then
             for k, v in self.Zones.Land.zones do
                 if NavUtils.CanPathTo('Land', position, v.pos) then
                     zoneTable.PathableLandZoneCount = zoneTable.PathableLandZoneCount + 1
-                    RNGINSERT(zoneTable.Zones, {PathType = 'Land', ZoneID = v.id})
+                    local pathDistance
+                    local bx = position[1] - v.pos[1]
+                    local bz = position[3] - v.pos[3]
+                    local zoneDistance = bx * bx + bz * bz
+                    if zoneDistance < baseMilitaryAreaSq then
+                        local path, msg, distance = NavUtils.PathTo('Land', position, v.pos)
+                        if path and distance then
+                            pathDistance = distance
+                        end
+                    end
+                    if not pathDistance then
+                        pathDistance = math.sqrt(zoneDistance)
+                    end
+                    RNGINSERT(zoneTable.Zones, {PathType = 'Land', ZoneID = v.id, PathDistance = pathDistance})
                 elseif NavUtils.CanPathTo('Amphibious', position, v.pos) then
                     zoneTable.PathableAmphibZoneCount = zoneTable.PathableAmphibZoneCount + 1
-                    RNGINSERT(zoneTable.Zones, {PathType = 'Amphibious', ZoneID = v.id})
+                    local pathDistance
+                    local bx = position[1] - v.pos[1]
+                    local bz = position[3] - v.pos[3]
+                    local zoneDistance = bx * bx + bz * bz
+                    if zoneDistance < baseMilitaryAreaSq then
+                        local path, msg, distance = NavUtils.PathTo('Amphibious', position, v.pos)
+                        if path and distance then
+                            pathDistance = distance
+                        end
+                    end
+                    if not pathDistance then
+                        pathDistance = math.sqrt(zoneDistance)
+                    end
+                    RNGINSERT(zoneTable.Zones, {PathType = 'Amphibious', ZoneID = v.id, PathDistance = pathDistance})
                 end
             end
         else
@@ -2823,12 +2850,11 @@ AIBrain = Class(RNGAIBrainClass) {
             local expansionName
             local mainDist = VDist2Sq(self.BuilderManagers['MAIN'].Position[1], self.BuilderManagers['MAIN'].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
             --RNGLOG('Main base Position '..repr(self.BuilderManagers['MAIN'].Position))
-            --RNGLOG('Enemy base position '..repr(armyStrengthTable[enemyIndex].Position))
             for k, v in self.BuilderManagers do
                 --RNGLOG('build k is '..k)
                 if v.Layer ~= 'Water' then
                     if v.FactoryManager.LocationActive and v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) > 0 then
-                        if NavUtils.CanPathTo(self.MovementLayer, self.BuilderManagers[k].Position, armyStrengthTable[enemyIndex].Position) then
+                        if NavUtils.CanPathTo('Land', self.BuilderManagers[k].Position, armyStrengthTable[enemyIndex].Position) then
                             local exDistance = VDist2Sq(self.BuilderManagers[k].Position[1], self.BuilderManagers[k].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
                             --RNGLOG('Distance to Enemy for '..k..' is '..exDistance)
                             if not closest or (exDistance < closest) and (mainDist > exDistance) then
@@ -2840,9 +2866,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             if closest and expansionName then
-                RNGLOG('Closest Base to Enemy is '..expansionName..' at a distance of '..closest)
                 self.BrainIntel.ActiveExpansion = expansionName
-                RNGLOG('Active Expansion is '..self.BrainIntel.ActiveExpansion)
             end
             local waterNodePos, waterNodeName, waterNodeDist = AIUtils.AIGetClosestMarkerLocationRNG(self, 'Water Path Node', armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
             if waterNodePos then
@@ -3018,8 +3042,10 @@ AIBrain = Class(RNGAIBrainClass) {
             NavalUnits=0
             },
         ]]
+        self:WaitForZoneInitialization()
         coroutine.yield(Random(5,20))
         local baseRestrictedArea = self.OperatingAreas['BaseRestrictedArea']
+        local baseMilitaryArea = self.OperatingAreas['BaseMilitaryArea']
         local perimeterMonitorRadius
         self.BasePerimeterMonitor = {}
         if self.RNGDEBUG then
@@ -3045,7 +3071,10 @@ AIBrain = Class(RNGAIBrainClass) {
                 local enemyNavalAngle
                 local enemyMobileSilo = false
                 local enemyMobileSiloAngle
+                local zoneThreatTable
                 local unitCat
+                local unitWeaponMaxRange = 20
+                local unitBp
                 if k == 'MAIN' then
                     perimeterMonitorRadius = baseRestrictedArea * 1.3
                 else
@@ -3054,15 +3083,22 @@ AIBrain = Class(RNGAIBrainClass) {
                 if v.FactoryManager.LocationActive and self.BuilderManagers[k].FactoryManager and not RNGTableEmpty(self.BuilderManagers[k].FactoryManager.FactoryList) then
                     if not self.BasePerimeterMonitor[k] then
                         self.BasePerimeterMonitor[k] = {}
+                        self.BasePerimeterMonitor[k].HighestLandThreat = 0
                     end
                     local enemyUnits = self:GetUnitsAroundPoint(categories.ALLUNITS - categories.SCOUT - categories.INSIGNIFICANTUNIT, self.BuilderManagers[k].FactoryManager.Location, perimeterMonitorRadius , 'Enemy')
                     for _, unit in enemyUnits do
                         if unit and not unit.Dead then
-                            unitCat = unit.Blueprint.CategoriesHash
+                            unitBp = unit.Blueprint
+                            unitCat = unitBp.CategoriesHash
                             if unitCat.MOBILE then
                                 if unitCat.LAND or unitCat.AMPHIBIOUS or unitCat.COMMAND then
                                     landUnits = landUnits + 1
                                     landThreat = landThreat + unit.Blueprint.Defense.SurfaceThreatLevel
+                                    if unitBp.Weapon[1].WeaponCategory == 'Direct Fire' then
+                                        if not unitWeaponMaxRange or unitBp.Weapon[1].MaxRadius > unitWeaponMaxRange then
+                                            unitWeaponMaxRange = unitBp.Weapon[1].MaxRadius
+                                        end
+                                    end
                                     if unit.Blueprint.Defense.AirThreatLevel then
                                         airThreat = airThreat + unit.Blueprint.Defense.AirThreatLevel
                                     end
@@ -3125,7 +3161,14 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                         end
                     end
-                    
+                    if v.Zone then
+                        local zones
+                        if v.Layer == 'Water' then
+                            zoneThreatTable = RUtils.CalculateThreatWithDynamicDecay(self, k, 'Water', v.Zone, baseMilitaryArea, 0, baseRestrictedArea, 1.2, 1)
+                        else
+                            zoneThreatTable = RUtils.CalculateThreatWithDynamicDecay(self, k, 'Land', v.Zone, baseMilitaryArea, 0, baseRestrictedArea, 1.2, 1)
+                        end
+                    end
                     self.BasePerimeterMonitor[k].LandUnits = landUnits
                     if enemyLandAngle then
                         self.BasePerimeterMonitor[k].RecentLandAngle = enemyLandAngle
@@ -3157,6 +3200,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.BasePerimeterMonitor[k].LandThreat = landThreat
                     self.BasePerimeterMonitor[k].StructureThreat = structureThreat
                     self.BasePerimeterMonitor[k].StructureUnits = structureUnits
+                    if landThreat > self.BasePerimeterMonitor[k].HighestLandThreat then
+                        self.BasePerimeterMonitor[k].HighestLandThreat = landThreat
+                    end
+                    self.BasePerimeterMonitor[k].ZoneThreatTable = zoneThreatTable
+                    self.BasePerimeterMonitor[k].MaxEnemyWeaponRange = unitWeaponMaxRange
                 else
                     if self.BasePerimeterMonitor[k] then
                         self.BasePerimeterMonitor[k] = nil
@@ -3540,6 +3588,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 if not self.RNGEXP then
                     self.ProductionRatios.Land = 0.4
                 end
+            elseif self.BrainIntel.SpamPlayer then
+                self.ProductionRatios.Land = 0.75
             elseif not self.EnemyIntel.ChokeFlag then
                 --RNGLOG('Land Threat Lower, shift ratio to 0.6')
                 self.ProductionRatios.Land = self.DefaultLandRatio
@@ -3876,14 +3926,14 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('gameTime is '..gameTime..' Upgrade Mode is '..self.UpgradeMode)
         if self.BrainIntel.SelfThreat.AirNow < (self.EnemyIntel.EnemyThreatCurrent.Air / self.EnemyIntel.EnemyCount) then
             --RNGLOG('Less than enemy air threat, increase mobile aa numbers')
-            self.amanager.Ratios[factionIndex].Land.T1.aa = 30
-            self.amanager.Ratios[factionIndex].Land.T2.aa = 30
-            self.amanager.Ratios[factionIndex].Land.T2.aa = 30
+            self.amanager.Ratios[factionIndex].Land.T1.aa = 15
+            self.amanager.Ratios[factionIndex].Land.T2.aa = 15
+            self.amanager.Ratios[factionIndex].Land.T2.aa = 15
         else
             --RNGLOG('More than enemy air threat, decrease mobile aa numbers')
-            self.amanager.Ratios[factionIndex].Land.T1.aa = 10
-            self.amanager.Ratios[factionIndex].Land.T2.aa = 10
-            self.amanager.Ratios[factionIndex].Land.T2.aa = 10
+            self.amanager.Ratios[factionIndex].Land.T1.aa = 5
+            self.amanager.Ratios[factionIndex].Land.T2.aa = 5
+            self.amanager.Ratios[factionIndex].Land.T2.aa = 5
         end
 
         local selfIndex = self:GetArmyIndex()
@@ -4518,14 +4568,14 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     EcoManagerMassStateCheck = function(self)
-        if GetEconomyTrend(self, 'MASS') <= 0.0 and GetEconomyStored(self, 'MASS') <= 200 then
+        if GetEconomyTrend(self, 'MASS') <= 0.0 and GetEconomyStored(self, 'MASS') <= 150 then
             return true
         end
         return false
     end,
 
     EcoManagerPowerStateCheck = function(self)
-        if (GetEconomyTrend(self, 'ENERGY') <= 0.0 and GetEconomyStoredRatio(self, 'ENERGY') <= 0.2) or (self.CDRUnit.Caution and GetEconomyStored(self, 'ENERGY') <= 3500) then
+        if (GetEconomyTrend(self, 'ENERGY') <= 0.0 and GetEconomyStoredRatio(self, 'ENERGY') <= 0.2) or ((self.CDRUnit.Caution or self.BrainIntel.SuicideModeActive) and GetEconomyStored(self, 'ENERGY') <= 3500) then
             return true
         end
         return false
@@ -5510,8 +5560,14 @@ AIBrain = Class(RNGAIBrainClass) {
             local multiplier = self.EcoManager.EcoMultiplier
             local CoreMassNumberAchieved = false
             local minAssistPower = 0
+            local currentAssistRatio = 0.45
+            if self.BrainIntel.SpamPlayer then
+                currentAssistRatio = 0.25
+            elseif self.RNGEXP then
+                currentAssistRatio = 0.65
+            end
             if self.cmanager.income.r.m then
-                minAssistPower = math.ceil(math.max(self.cmanager.income.r.m * 0.45, 5))
+                minAssistPower = math.ceil(math.max(self.cmanager.income.r.m * currentAssistRatio, 5))
             end
             if (gameTime < 300 and self.EconomyOverTimeCurrent.MassIncome < 2.5) then
                 state = 'Energy'
@@ -5601,11 +5657,8 @@ AIBrain = Class(RNGAIBrainClass) {
             --LOG('Min Assist Power is '..tostring(minAssistPower))
             --RNGLOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
             --RNGLOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
-            if self.RNGEXP and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.9 and self.EngineerAssistManagerBuildPower <= 30 then
-                if self.EngineerAssistManagerBuildPowerRequired <= 26 then
-                    self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
-                end
-                --RNGLOG('EngineerAssistManager is Active')
+            if self.RNGEXP and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.9 and self.EngineerAssistManagerBuildPower < minAssistPower then
+                self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
                 self.EngineerAssistManagerActive = true
             elseif not CoreMassNumberAchieved and self.EcoManager.CoreMassPush and self.EngineerAssistManagerBuildPower <= 75 then
                 --RNGLOG('CoreMassPush is true')
@@ -5619,7 +5672,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 --RNGLOG('EngineerAssistManager is Active due to storage and builder power being less than minAssistPower')
                 self.EngineerAssistManagerActive = true
-            elseif self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.6 and self.EngineerAssistManagerBuildPower <= 0 and self.EngineerAssistManagerBuildPowerRequired < 6 then
+            elseif self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.8 and self.EngineerAssistManagerBuildPower <= 0 and self.EngineerAssistManagerBuildPowerRequired < 6 then
                 --RNGLOG('EngineerAssistManagerBuildPower being set to 5')
                 self.EngineerAssistManagerActive = true
                 self.EngineerAssistManagerBuildPowerRequired = 5
@@ -5715,6 +5768,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local mexspend = {T1=0,T2=0,T3=0}
         local engspend = {T1=0,T2=0,T3=0,com=0}
         local engbuildpower = {T1=0,T2=0,T3=0,com=0,sacu=0}
+        local zoneIncome = {}
         local rincome = {m=0,e=0}
         local tincome = {m=GetEconomyIncome(self, 'MASS')*10,e=GetEconomyIncome(self, 'ENERGY')*10}
         local storage = {max = {m=GetEconomyStored(self, 'MASS')/GetEconomyStoredRatio(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')/GetEconomyStoredRatio(self, 'ENERGY')},current={m=GetEconomyStored(self, 'MASS'),e=GetEconomyStored(self, 'ENERGY')}}
@@ -5766,8 +5820,15 @@ AIBrain = Class(RNGAIBrainClass) {
                                 unit.zoneid = 'water'
                             else
                                 unit.zoneid = MAP:GetZoneID(mexPos,self.Zones.Land.index)
+
                                 --LOG('Unit zone is '..unit.zoneid)
                             end
+                        end
+                        if unit.zoneid then
+                            if not zoneIncome[unit.zoneid] then
+                                zoneIncome[unit.zoneid] = 0
+                            end
+                            zoneIncome[unit.zoneid] = zoneIncome[unit.zoneid] + producem
                         end
                         if not extractors[unit.zoneid] then
                             --LOG('Trying to add unit to zone')
@@ -6158,6 +6219,11 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EcoManager.CoreExtractorT2Count = mainBaseExtractors.T2 or 0
             self.EcoManager.CoreExtractorT3Count = mainBaseExtractors.T3 or 0
             self.EcoManager.TotalCoreExtractors = totalCoreExtractors or 0
+        end
+        for k, v in self.Zones.Land.zones do
+            if zoneIncome[v.id] then
+                v.zoneincome = zoneIncome[v.id]
+            end
         end
     end,
 
@@ -6716,14 +6782,14 @@ AIBrain = Class(RNGAIBrainClass) {
                             scout=15,
                             tank=65,
                             arty=15,
-                            aa=12,
+                            aa=5,
                             total=0
                         },
                         T2 = {
                             tank=55,
                             mml=0,
                             bot=25,
-                            aa=10,
+                            aa=5,
                             shield=10,
                             total=0
                         },
@@ -6732,7 +6798,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             armoured=50,
                             mml=0,
                             arty=0,
-                            aa=10,
+                            aa=5,
                             total=0
                         }
                     },
@@ -6782,20 +6848,20 @@ AIBrain = Class(RNGAIBrainClass) {
                             scout=15,
                             tank=65,
                             arty=15,
-                            aa=12,
+                            aa=5,
                             total=0
                         },
                         T2 = {
                             tank=75,
                             mml=0,
-                            aa=10,
+                            aa=5,
                             shield=15,
                             total=0
                         },
                         T3 = {
                             tank=50,
                             arty=0,
-                            aa=10,
+                            aa=5,
                             sniper=40,
                             total=0
                         }
@@ -6847,14 +6913,14 @@ AIBrain = Class(RNGAIBrainClass) {
                             scout=15,
                             tank=65,
                             arty=15,
-                            aa=12,
+                            aa=5,
                             total=0
                         },
                         T2 = {
                             tank=55,
                             mml=0,
                             bot=30,
-                            aa=10,
+                            aa=5,
                             stealth=5,
                             mobilebomb=0,
                             total=0
@@ -6863,7 +6929,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             tank=40,
                             armoured=45,
                             arty=0,
-                            aa=10,
+                            aa=5,
                             total=0
                         }
                     },
@@ -6913,19 +6979,19 @@ AIBrain = Class(RNGAIBrainClass) {
                             scout=15,
                             tank=65,
                             arty=15,
-                            aa=12,
+                            aa=5,
                             total=0
                         },
                         T2 = {
                             tank=80,
                             mml=0,
-                            aa=15,
+                            aa=5,
                             total=0
                         },
                         T3 = {
                             tank=45,
                             arty=0,
-                            aa=10,
+                            aa=5,
                             sniper=40,
                             shield=5,
                             total=0
@@ -6976,14 +7042,14 @@ AIBrain = Class(RNGAIBrainClass) {
                             scout=15,
                             tank=65,
                             arty=15,
-                            aa=12,
+                            aa=5,
                             total=0
                         },
                         T2 = {
                             tank=55,
                             mml=0,
                             bot=25,
-                            aa=10,
+                            aa=5,
                             shield=10,
                             total=0
                         },
@@ -6992,7 +7058,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             armoured=45,
                             mml=0,
                             arty=0,
-                            aa=10,
+                            aa=5,
                             total=0
                         }
                     },

@@ -177,6 +177,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     hiPriTargetPos = hiPriTarget:GetPosition()
                     if VDist2Sq(hiPriTargetPos[1],hiPriTargetPos[3],self.Pos[1],self.Pos[3])>(self.MaxPlatoonWeaponRange+20)*(self.MaxPlatoonWeaponRange+20) then  
                         if not self.combat and not self.retreat then
+                            self.rdest=hiPriTargetPos
                             if self.path and VDist3Sq(self.path[RNGGETN(self.path)],hiPriTargetPos)>400 then
                                 self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
                                 --RNGLOG('self.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(self.path[RNGGETN(self.path)],point.Position))
@@ -185,11 +186,11 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                     CutOff = 400,
                                 }
                                 --LOG('Retreating to platoon')
+                                self:LogDebug(string.format('DecideWhatToDo moving to high priority target that is further than path end'))
                                 self.dest = self.BuilderData.Position
                                 self:ChangeState(self.Navigating)
                                 return
                             end
-                            self.rdest=hiPriTargetPos
                             self.raidunit=hiPriTarget
                             self.dest=hiPriTargetPos
                             self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
@@ -202,6 +203,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                 CutOff = 400,
                             }
                             --LOG('Retreating to platoon')
+                            self:LogDebug(string.format('DecideWhatToDo moving to high priority target'))
                             self:ChangeState(self.Navigating)
                             return
                         end
@@ -247,6 +249,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                     --SwitchState(platoon,'push')
                                     self.dest=point.Position
                                 elseif point.type=='raid' then
+                                    self.rdest=point.Position
                                     if self.raid then
                                         if self.path and VDist3Sq(self.path[RNGGETN(self.path)],point.Position)>400 then
                                             self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
@@ -257,11 +260,11 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                             }
                                             self.dest = self.BuilderData.Position
                                             --LOG('Retreating to platoon')
+                                            self:LogDebug(string.format('DecideWhatToDo moving to priority point that is greater than the path end'))
                                             self:ChangeState(self.Navigating)
                                             return
                                         end
                                     end
-                                    self.rdest=point.Position
                                     self.raidunit=point.unit
                                     self.dest=point.Position
                                     self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
@@ -272,6 +275,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                         CutOff = 400,
                                     }
                                     --LOG('Retreating to platoon')
+                                    self:LogDebug(string.format('DecideWhatToDo moving to priority point'))
                                     self:ChangeState(self.Navigating)
                                     return
                                 elseif point.type=='garrison' then
@@ -312,6 +316,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                         Position = self.dest,
                         CutOff = 400,
                     }
+                    self:LogDebug(string.format('DecideWhatToDo moving to mass point targets'))
                     self:ChangeState(self.Navigating)
                     return
                 end

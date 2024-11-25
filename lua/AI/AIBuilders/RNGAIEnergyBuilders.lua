@@ -10,6 +10,14 @@ local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
+local HydroPriorityModifier = function(self, aiBrain, builderManager)
+    local numUnits = aiBrain:GetCurrentUnits(categories.ENERGYPRODUCTION * categories.HYDROCARBON)
+    if numUnits < 1 and aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime < 15 then
+        return 997
+    end
+    return 950
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Energy Builder',
     BuildersType = 'EngineerBuilder',
@@ -22,7 +30,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 28.0 } }, -- If our energy is trending into negatives
-            { EBC, 'GreaterThanMassStorageOrEfficiency', { 150, 0.90 }},
+            { EBC, 'GreaterThanMassStorageOrEfficiency', { 225, 0.95 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.HYDROCARBON) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON }}, -- Don't build after 1 T2 Pgens Exist
         },
@@ -62,7 +70,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
-            { EBC, 'NegativeEcoPowerCheckInstant', { 14.0 } }, -- If our energy is trending into negatives
+            { EBC, 'NegativeEcoPowerCheckInstant', { 15.0 } }, -- If our energy is trending into negatives
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.HYDROCARBON) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON }}, -- Don't build after 1 T2 Pgens Exist
         },
@@ -101,7 +109,7 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'EnergyT2', 6},
         BuilderConditions = {
-            { EBC, 'NegativeEcoPowerCheck', { 35.0 } },
+            { EBC, 'NegativeEcoPowerCheck', { 45.0 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION *  categories.TECH3 - categories.HYDROCARBON }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.1 }},
@@ -140,7 +148,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'LessThanEnergyTrendCombinedRNG', { 120.0 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.5 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.10}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.10}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 3, categories.ENERGYPRODUCTION * categories.TECH2, 1, categories.ENERGYPRODUCTION * categories.TECH3 - categories.HYDROCARBON }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 - categories.HYDROCARBON }},
         },
@@ -210,7 +218,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'LessThanEnergyTrendCombinedRNG', { 500.0 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.5 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.08, 0.10}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.10}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3 - categories.HYDROCARBON }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.ENERGYPRODUCTION * categories.TECH3 - categories.HYDROCARBON }},
         },
@@ -328,6 +336,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1Engineer Hydro 120',
         PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 950,
+        PriorityFunction = HydroPriorityModifier,
         DelayEqualBuildPlattons = {'Energy', 3},
         InstanceCount = 1,
         BuilderConditions = { 
@@ -406,7 +415,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { UCBC, 'UnitCapCheckLess', { .7 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.ENERGYSTORAGE }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {

@@ -194,7 +194,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         Retreat = true,
                         RetreatReason = 'LowHealth'
                     }
-                    --self:LogDebug(string.format('Experimental retreating due to very low health '))
+                    --self:LogDebug(string.format('Experimental retreating due to very low health 0.20'))
                     self:ChangeState(self.Retreating)
                     return
                 end
@@ -210,6 +210,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                 Position = aiBrain.BuilderManagers[closestBase].Position,
                                 CutOff = 625,
                             }
+                            --self:LogDebug(string.format('Experimental retreating due to health below 0.35'))
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -218,7 +219,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         Retreat = true,
                         RetreatReason = 'LowHealth'
                     }
-                    --self:LogDebug(string.format('Experimental retreating due to very low health '))
+                    --self:LogDebug(string.format('Experimental retreating due to very low health 0.35'))
                     self:ChangeState(self.Retreating)
                     return
                 end
@@ -349,18 +350,25 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                             if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored then
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object) or 10
                                 if unitRange > self.MaxPlatoonWeaponRange then
+                                    local unitCats = enemyUnit.Blueprint.CategoriesHash
                                     overRangedCount = overRangedCount + 1
                                     if enemyUnit.Blueprint.Defense.SurfaceThreatLevel then
-                                        overRangedThreat = overRangedThreat + enemyUnit.Blueprint.Defense.SurfaceThreatLevel
+                                        if unitCats.ARTILLERY then
+                                            overRangedThreat = overRangedThreat + (enemyUnit.Blueprint.Defense.SurfaceThreatLevel * 0.7)
+                                        else
+                                            overRangedThreat = overRangedThreat + enemyUnit.Blueprint.Defense.SurfaceThreatLevel
+                                        end
+                                        
                                     end
                                 end
-                                if overRangedCount > 6 and overRangedThreat > 160 and not self.SuicideModeActive then
+                                if overRangedCount > 6 and overRangedThreat > 200 and not self.SuicideModeActive then
                                     self.BuilderData = {
                                         Retreat = true,
                                         RetreatReason = 'ArtilleryThreat',
                                         AttackTarget = enemyUnit.Object
                                     }
-                                    --self:LogDebug(string.format('Experimental has more than 3 units with more range than the Experimental, retreat'))
+                                    --LOG('Experimental has more than 3 units with more range than the Experimental count is'..tostring(overRangedCount)..', retreat threat is '..tostring(overRangedThreat))
+                                    --self:LogDebug(string.format('Experimental has more than 3 units with more range than the Experimental count is'..tostring(overRangedCount)..', retreat threat is '..tostring(overRangedThreat)))
                                     self:ChangeState(self.Retreating)
                                 end
                                 if not closestUnit or (enemyUnit.Distance < closestUnitDistance and closestUnitDistance > 25) then

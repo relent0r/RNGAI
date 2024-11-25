@@ -200,6 +200,39 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Mass Fab',
     BuildersType = 'EngineerBuilder',
     Builder {
+        BuilderName = 'RNG T2 Mass Fab Engineer Single',
+        PlatoonTemplate = 'EngineerStateT23RNG',
+        Priority = 550,
+        DelayEqualBuildPlattons = {'MassStorage', 5},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'CoreExtractorCountEqualsTotalExtractors', { }},
+            { MABC, 'MassMarkerLessThanDistanceRNG',  { 60 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.80, 1.0 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'AdjacencyFabricatorCheckRNG', { 'LocationType', categories.MASSEXTRACTION * categories.TECH3, 60 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIT1FabricatorTemplate.lua',
+                BaseTemplate = 'T1FabricatorTemplate',
+                BuildClose = false,
+                FabricatorTemplate = true,
+                Categories = categories.MASSEXTRACTION * categories.TECH3,
+                NearDefensivePoints = false,
+                NoPause = false,
+                Radius = 60,
+                BuildStructures = {
+                    { Unit = 'T1MassCreation', Categories = categories.MASSFABRICATION * categories.TECH2 * categories.STRUCTURE },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI Mass Fab',
         PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 500,

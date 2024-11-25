@@ -222,7 +222,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                                 if unitRange > self.MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
                                 end
-                                if overRangedCount > 1 and shieldPercent and shieldPercent < 0.50 then
+                                if overRangedCount > 1 and shieldPercent and shieldPercent < 0.50 and threatTable.ArtilleryThreat.TotalThreat > 80 then
                                     self.BuilderData = {
                                         Retreat = true,
                                         RetreatReason = 'ArtilleryThreat',
@@ -243,7 +243,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                                 if unitRange > self.MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
                                 end
-                                if overRangedCount > 3 and shieldPercent and shieldPercent < 0.50 then
+                                if overRangedCount > 3 and shieldPercent and shieldPercent < 0.50 and threatTable.ArtilleryThreat.TotalThreat > 80 then
                                     self.BuilderData = {
                                         Retreat = true,
                                         RetreatReason = 'ArtilleryThreat',

@@ -130,7 +130,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                     self.NovaxUnits[unit.EntityId] = {Unit = unit, CurrentTarget = nil, CurrentTargetHealth = nil }
                 end
             end
-            if unitCats.ARTILLERY and unitCats.STRUCTURE and unitCats.TECH3 then
+            if unitCats.ARTILLERY and ( unitCats.STRUCTURE and unitCats.TECH3 or unitCats.EXPERIMENTAL ) then
                 if unit.Blueprint.Weapon[1].MaxRadius > self.MaxPlatoonWeaponRange then
                     self.MaxPlatoonWeaponRange = unit.Blueprint.Weapon[1].MaxRadius
                 end

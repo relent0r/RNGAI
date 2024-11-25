@@ -8,7 +8,6 @@ local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local IsAnyEngineerBuilding = moho.aibrain_methods.IsAnyEngineerBuilding
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
-local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local RNGGETN = table.getn
 local RNGTableEmpty = table.empty
 local RNGINSERT = table.insert
@@ -565,16 +564,135 @@ function EnemyUnitsGreaterAtRestrictedRNG(aiBrain, locationType, number, type)
     return false
 end
 
-function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, pointTier, type)
+function BaseZoneThreatGreaterThanDefenses(aiBrain, locationType, pointTier, type)
+    local perimeterMonitor = aiBrain.BasePerimeterMonitor[locationType]
+    local builderManager = aiBrain.BuilderManagers[locationType]
+    if perimeterMonitor then
+        if type == 'LAND' then
+            if perimeterMonitor.ZoneThreatTable and  perimeterMonitor.ZoneThreatTable.landthreat > 0 then
+                local basePosition = builderManager.Position
+                local bestPoint
+                local bestKey
+                if perimeterMonitor.ZoneThreatTable.landthreat > 0 then
+                    local zoneAngle
+                    local highestThreatZone
+                    local highestThreatZonePos
+                    for _, v in perimeterMonitor.ZoneThreatTable.land do
+                        if not highestThreatZone or v.Threat > highestThreatZone then
+                            highestThreatZone = highestThreatZone
+                            highestThreatZonePos = v.Position
+                        end
+                    end
+                    if highestThreatZone and highestThreatZonePos then
+                        zoneAngle = RUtils.GetAngleToPosition(builderManager.Position, highestThreatZonePos)
+                    end
+                    if not RNGTableEmpty(builderManager.DefensivePoints[pointTier]) then
+                        if zoneAngle then
+                            local pointCheck = zoneAngle
+                            for k, v in builderManager.DefensivePoints[pointTier] do
+                                local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
+                                if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                                    bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                                    bestKey = k
+                                end
+                            end
+                        end
+                    end
+                    if bestPoint then
+                        if builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < perimeterMonitor.ZoneThreatTable.landthreat * 2.5 then
+                            LOG('Base Zone Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..tostring(perimeterMonitor.ZoneThreatTable.landthreat * 2.5))
+                            return true
+                        else
+                            LOG('Base Zone Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..tostring(perimeterMonitor.ZoneThreatTable.landthreat * 2.5))
+                        end
+                    end
+                    return true
+                end
+                return true
+            end
+        elseif type == 'AIR' then
+            if perimeterMonitor.ZoneThreatTable and  perimeterMonitor.ZoneThreatTable.airthreat > 0 then
+                --RNGLOG('Air units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'ANTIAIR' then
+            if perimeterMonitor.ZoneThreatTable and  perimeterMonitor.ZoneThreatTable.antiairthreat > 0 then
+                --RNGLOG('Air units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'ANTISURFACEAIR' then
+            if perimeterMonitor.ZoneThreatTable and  perimeterMonitor.ZoneThreatTable.airthreat > 0 then
+                --RNGLOG('AntiSurfaceAir units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'NAVAL' then
+            if perimeterMonitor.ZoneThreatTable and  perimeterMonitor.ZoneThreatTable.navalthreat > 0 then
+                --RNGLOG('Naval units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'LANDNAVAL' then
+            if perimeterMonitor.ZoneThreatTable 
+            and (perimeterMonitor.ZoneThreatTable.landthreat > 0 or perimeterMonitor.ZoneThreatTable.navalthreat > 0) then
+                --RNGLOG('LandNaval units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        end
+    end
+    return false
+end
+
+function PerimeterHistoricalThreatGreaterThan(aiBrain, locationType, number, type)
     if aiBrain.BasePerimeterMonitor[locationType] then
+        if type == 'LAND' then
+            if aiBrain.BasePerimeterMonitor[locationType].HighestLandThreat > number then
+                return true
+            end
+        elseif type == 'AIR' then
+            if aiBrain.BasePerimeterMonitor[locationType].HighestAirThreat > number then
+                --RNGLOG('Air units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'ANTIAIR' then
+            if aiBrain.BasePerimeterMonitor[locationType].HighestAntiAirThreat > number then
+                --RNGLOG('Air units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'NAVAL' then
+            if aiBrain.BasePerimeterMonitor[locationType].HighestNavalThreat > number then
+                --RNGLOG('Naval units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        elseif type == 'LANDNAVAL' then
+            if aiBrain.BasePerimeterMonitor[locationType].HighestNavalThreat > number or aiBrain.BasePerimeterMonitor[locationType].HighestLandThreat > number then
+                --RNGLOG('LandNaval units greater than '..number..' at base location '..locationType)
+                return true
+            end
+        end
+    end
+    return false
+end
+
+function EnemyRangeGreaterThanAtRestricted(aiBrain, locationType, range)
+    local perimeterMonitor = aiBrain.BasePerimeterMonitor[locationType]
+    local maxEnemyWeaponRange = perimeterMonitor.MaxEnemyWeaponRange
+    if maxEnemyWeaponRange > range then
+        return true
+    end
+    return false
+end
+
+function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, pointTier, type)
+    local perimeterMonitor = aiBrain.BasePerimeterMonitor[locationType]
+    local builderManager = aiBrain.BuilderManagers[locationType]
+    if perimeterMonitor then
         local basePosition = aiBrain.BuilderManagers[locationType].Position
         local bestPoint
         local bestKey
         if type == 'LAND' then
-            if not RNGTableEmpty(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier]) then
-                if aiBrain.BasePerimeterMonitor[locationType].RecentLandAngle then
-                    local pointCheck = aiBrain.BasePerimeterMonitor[locationType].RecentLandAngle
-                    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier] do
+            if not RNGTableEmpty(builderManager.DefensivePoints[pointTier]) then
+                if perimeterMonitor.RecentLandAngle then
+                    local pointCheck = perimeterMonitor.RecentLandAngle
+                    for k, v in builderManager.DefensivePoints[pointTier] do
                         local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
                         if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
                             bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
@@ -584,11 +702,51 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
                 end
             end
             if bestPoint then
-                if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5 then
-                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5))
+                if builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < perimeterMonitor.LandThreat * 2.5 then
+                    LOG('Base Perimeter Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..tostring(perimeterMonitor.LandThreat * 2.5))
                     return true
                 else
-                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5))
+                    LOG('Base Perimeter Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..tostring(perimeterMonitor.LandThreat * 2.5))
+                end
+            end
+            if perimeterMonitor.ZoneThreatTable and perimeterMonitor.ZoneThreatTable.landthreat > 0 then
+                local basePosition = builderManager.Position
+                local bestPoint
+                local bestKey
+                if perimeterMonitor.ZoneThreatTable.landthreat > 0 then
+                    local zoneAngle
+                    local highestThreatValue
+                    local highestThreatZonePos
+                    for _, v in perimeterMonitor.ZoneThreatTable.land do
+                        if not highestThreatValue or v.Threat > highestThreatValue then
+                            highestThreatValue = v.Threat
+                            highestThreatZonePos = v.Position
+                        end
+                    end
+                    if highestThreatValue and highestThreatZonePos then
+                        LOG('Perimeter monitor has a high threat zone for land at base '..tostring(locationType))
+                        zoneAngle = RUtils.GetAngleToPosition(builderManager.Position, highestThreatZonePos)
+                    end
+                    if not RNGTableEmpty(builderManager.DefensivePoints[pointTier]) then
+                        if zoneAngle then
+                            local pointCheck = zoneAngle
+                            for k, v in builderManager.DefensivePoints[pointTier] do
+                                local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
+                                if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                                    bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                                    bestKey = k
+                                end
+                            end
+                        end
+                    end
+                    if bestPoint then
+                        if builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < perimeterMonitor.ZoneThreatTable.landthreat * 2.5 then
+                            LOG('Base Zone Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..tostring(perimeterMonitor.ZoneThreatTable.landthreat * 2.5))
+                            return true
+                        else
+                            LOG('Base Zone Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..tostring(perimeterMonitor.ZoneThreatTable.landthreat * 2.5))
+                        end
+                    end
                 end
             end
         elseif type == 'AIR' then
@@ -673,6 +831,82 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
                     return true
                 else
                     --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..repr((aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5)..' or land of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5)))
+                end
+            end
+            if perimeterMonitor.ZoneThreatTable and perimeterMonitor.ZoneThreatTable.landthreat > 0 then
+                local basePosition = builderManager.Position
+                local bestPoint
+                local bestKey
+                local zoneAngle
+                local highestThreatValue
+                local highestThreatZonePos
+                for _, v in perimeterMonitor.ZoneThreatTable.land do
+                    if not highestThreatValue or v.Threat > highestThreatValue then
+                        highestThreatValue = v.Threat
+                        highestThreatZonePos = v.Position
+                    end
+                end
+                if highestThreatValue and highestThreatZonePos then
+                    LOG('Perimeter monitor has a high threat zone for land at base '..tostring(locationType))
+                    zoneAngle = RUtils.GetAngleToPosition(builderManager.Position, highestThreatZonePos)
+                end
+                if not RNGTableEmpty(builderManager.DefensivePoints[pointTier]) then
+                    if zoneAngle then
+                        local pointCheck = zoneAngle
+                        for k, v in builderManager.DefensivePoints[pointTier] do
+                            local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
+                            if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                                bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                                bestKey = k
+                            end
+                        end
+                    end
+                end
+                if bestPoint then
+                    if builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < perimeterMonitor.ZoneThreatTable.landthreat * 2.5 then
+                        LOG('Base Zone Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..tostring(perimeterMonitor.ZoneThreatTable.landthreat * 2.5))
+                        return true
+                    else
+                        LOG('Base Zone Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..tostring(perimeterMonitor.ZoneThreatTable.landthreat * 2.5))
+                    end
+                end
+            end
+            if perimeterMonitor.ZoneThreatTable and perimeterMonitor.ZoneThreatTable.navalthreat > 0 then
+                local basePosition = builderManager.Position
+                local bestPoint
+                local bestKey
+                local zoneAngle
+                local highestThreatValue
+                local highestThreatZonePos
+                for _, v in perimeterMonitor.ZoneThreatTable.naval do
+                    if not highestThreatValue or v.Threat > highestThreatValue then
+                        highestThreatValue = v.Threat
+                        highestThreatZonePos = v.Position
+                    end
+                end
+                if highestThreatValue and highestThreatZonePos then
+                    LOG('Perimeter monitor has a high threat zone for naval at base '..tostring(locationType))
+                    zoneAngle = RUtils.GetAngleToPosition(builderManager.Position, highestThreatZonePos)
+                end
+                if not RNGTableEmpty(builderManager.DefensivePoints[pointTier]) then
+                    if zoneAngle then
+                        local pointCheck = zoneAngle
+                        for k, v in builderManager.DefensivePoints[pointTier] do
+                            local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
+                            if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
+                                bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
+                                bestKey = k
+                            end
+                        end
+                    end
+                end
+                if bestPoint then
+                    if builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < perimeterMonitor.ZoneThreatTable.navalthreat * 2.5 then
+                        LOG('Base Zone Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..tostring(perimeterMonitor.ZoneThreatTable.navalthreat * 2.5))
+                        return true
+                    else
+                        LOG('Base Zone Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..tostring(perimeterMonitor.ZoneThreatTable.navalthreat * 2.5))
+                    end
                 end
             end
         end
@@ -1156,20 +1390,19 @@ function EngineerAssistManagerNeedsEngineers(aiBrain)
 end
 
 function ArmyManagerBuild(aiBrain, uType, tier, unit)
-
-    --RNGLOG('aiBrain.amanager.current[tier][unit] :'..aiBrain.amanager.Current[uType][tier][unit])
+    --LOG('aiBrain.amanager.current[tier][unit] :'..tostring(aiBrain.amanager.Current[uType][tier][unit])..' unit type is '..tostring(unit))
     local factionIndex = aiBrain:GetFactionIndex()
     if factionIndex > 4 then factionIndex = 5 end
     if not aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] or aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] == 0 then 
-        --RNGLOG('Cant find unit '..unit..' in faction index ratio table') 
+        --RNGLOG('Cant find unit '..tostring(unit)..' in faction index ratio table') 
         return false 
     end
     --RNGLOG('Ratio for faction should be '..aiBrain.amanager.Ratios[factionIndex][uType][tier][unit])
     if aiBrain.amanager.Current[uType][tier][unit] < 1 then
-        --RNGLOG('Less than 1 unit of type '..unit)
+        --LOG('Less than 1 unit of type '..unit)
         return true
     elseif (aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier]) < (aiBrain.amanager.Ratios[factionIndex][uType][tier][unit]/aiBrain.amanager.Ratios[factionIndex][uType][tier].total) then
-        --RNGLOG('Current Ratio for '..unit..' is '..(aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100)..'should be '..aiBrain.amanager.Ratios[uType][tier][unit])
+        --LOG('Current Ratio for '..unit..' is '..tostring((aiBrain.amanager.Current[uType][tier][unit] / aiBrain.amanager.Total[uType][tier] * 100))..'should be '..tostring(aiBrain.amanager.Ratios[factionIndex][uType][tier][unit]))
         return true
     end
     return false
@@ -1242,15 +1475,15 @@ function ValidateLateGameBuild(aiBrain, locationType)
   return true
 end
 
-function UnitsLessAtLocationRNG( aiBrain, locationType, unitCount, testCat )
+function UnitsLessAtLocationRNG( aiBrain, locationType, unitCount, testCat, radiusOverride)
 
 	if aiBrain.BuilderManagers[locationType].EngineerManager then
-		if GetNumUnitsAroundPoint( aiBrain, testCat, aiBrain.BuilderManagers[locationType].Position, aiBrain.BuilderManagers[locationType].EngineerManager.Radius, 'Ally') < unitCount then
+        local radius = radiusOverride or aiBrain.BuilderManagers[locationType].EngineerManager.Radius
+		if GetNumUnitsAroundPoint( aiBrain, testCat, aiBrain.BuilderManagers[locationType].Position, radius, 'Ally') < unitCount then
             --RNGLOG('Less than units is true')
             return true
         end
 	end
-    
 	return false
 end
 
@@ -1407,6 +1640,57 @@ function AdjacencyMassCheckRNG(aiBrain, locationType, category, radius)
     return false
 end
 
+function CoreExtractorCountEqualsTotalExtractors(aiBrain)
+    if aiBrain.EcoManager.CoreExtractorT3Count >= aiBrain.EcoManager.TotalCoreExtractors then
+        return true
+    end
+end
+
+function AdjacencyFabricatorCheckRNG(aiBrain, locationType, category, radius)
+    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+    if not factoryManager then
+        WARN('*AI WARNING: AdjacencyCheck - Invalid location - ' .. locationType)
+        return false
+    end
+    if type(radius) == 'string' then
+        radius = aiBrain.OperatingAreas[radius]
+    end
+    local refunits  = AIUtils.GetOwnUnitsAroundPoint(aiBrain, category, factoryManager:GetLocationCoords(), radius)
+    if not refunits or table.empty(refunits) then
+        return false
+    end
+    local factionIndex = aiBrain:GetFactionIndex()
+    local BaseTemplateFile = import('/mods/rngai/lua/AI/AIBaseTemplates/RNGAIT1FabricatorTemplate.lua')
+    local baseTemplate = BaseTemplateFile['T1FabricatorTemplate'][factionIndex]
+    local unitId = RUtils.GetUnitIDFromTemplate(aiBrain, 'T1MassCreation')
+    for _, v in refunits do
+        local extratorPos = v:GetPosition()
+        local storageUnits  = AIUtils.GetOwnUnitsAroundPoint(aiBrain, categories.MASSSTORAGE * categories.STRUCTURE, extratorPos, 4)
+        if not table.empty(storageUnits) then
+            for _, v in storageUnits do
+                if not IsDestroyed(v) then
+                    local storagePos = v:GetPosition()
+                    for l,bType in baseTemplate do
+                        for m,bString in bType[1] do
+                            if bString == 'T1MassCreation' then
+                                for n,position in bType do
+                                    if n > 1 then
+                                        local reference = {position[1] + storagePos[1], position[2] + storagePos[2], position[3] + storagePos[3]}
+                                        if aiBrain:CanBuildStructureAt(unitId, reference) then
+                                            return true
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return false
+end
+
 function CheckTargetInRangeRNG(aiBrain, locationType, unitType, category, factionIndex)
 
     local ALLBPS = __blueprints
@@ -1505,6 +1789,7 @@ function DefensivePointShieldRequired(aiBrain, locationType)
 end
 
 function UnitBuildDemand(aiBrain, locationType, type, tier, unit)
+    --LOG('Unit demand for unit '..tostring(unit)..' is '..tostring(aiBrain.amanager.Demand[type][tier][unit])..' current is '..tostring(aiBrain.amanager.Current[type][tier][unit]))
     if aiBrain.amanager.Demand[type][tier][unit] > aiBrain.amanager.Current[type][tier][unit] then
         return true
     end

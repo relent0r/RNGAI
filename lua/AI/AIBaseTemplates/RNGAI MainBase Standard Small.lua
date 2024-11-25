@@ -122,8 +122,8 @@ BaseBuilderTemplate {
         },
         MassToFactoryValues = {
             T1LandValue = 4,
-            T2LandValue = 12,
-            T3LandValue = 25,
+            T2LandValue = 10,
+            T3LandValue = 23,
             T1AirValue = 3.5,
             T2AirValue = 10,
             T3AirValue = 25,

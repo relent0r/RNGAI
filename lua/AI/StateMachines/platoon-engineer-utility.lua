@@ -624,6 +624,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local baseTmpl = baseTmplFile[(cons.BaseTemplate or 'BaseTemplates')][factionIndex]
             StateUtils.SetupStateBuildAICallbacksRNG(eng)
             if cons.NearDefensivePoints then
+                if cons.BuildStructures[1].Unit == 'T2GroundDefense' then
+                    LOG('Engineer is trying to build a T2 PD')
+                end
                 if cons.Type == 'TMD' then
                     if aiBrain.BasePerimeterMonitor[cons.LocationType].EnemyMobileSiloDetected then
                         --LOG('Trying to get Defensive point for TMD due to mobile silo')
@@ -641,7 +644,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 else
                     reference = RUtils.GetDefensivePointRNG(aiBrain, cons.LocationType or 'MAIN', cons.Tier or 2, cons.Type)
                     if cons.BuildStructures[1].Unit == 'T2Artillery' then
-                        --LOG('T2 Artillery Requested for Tier '..tostring(cons.Tier)..'location is '..tostring(reference[1])..':'..tostring(reference[3]))
+                        LOG('T2 Artillery Requested for Tier '..tostring(cons.Tier)..'location is '..tostring(reference[1])..':'..tostring(reference[3]))
                     end
                 end
                 if reference then
@@ -763,6 +766,33 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 local reference = RUtils.GetCappingPosition(aiBrain, eng, pos, refunits, baseTmpl, buildingTmpl)
                 --LOG('Capping template')
                 --LOG('reference is '..repr(reference))
+                if not reference then
+                    coroutine.yield(20)
+                    self:ExitStateMachine()
+                    return
+                end
+                buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
+                RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
+                --RNGLOG('baseTmpList is :'..repr(baseTmplList))
+            elseif cons.FabricatorTemplate then
+                LOG('Engineer h as triggered a fabricator build')
+                local relativeTo = RNGCOPY(eng:GetPosition())
+                --RNGLOG('relativeTo is'..repr(relativeTo))
+                local cappingRadius
+                if type(cons.Radius) == 'string' then
+                    cappingRadius = aiBrain.OperatingAreas[cons.Radius]
+                else
+                    cappingRadius = cons.Radius
+                end
+                relative = true
+                local pos = aiBrain.BuilderManagers[cons.LocationType].Position
+                if not pos then
+                    pos = relativeTo
+                end
+                local refunits=AIUtils.GetOwnUnitsAroundPoint(aiBrain, cons.Categories, pos, cappingRadius, cons.ThreatMin,cons.ThreatMax, cons.ThreatRings)
+                local reference = RUtils.GetFabricatorPosition(aiBrain, eng, pos, refunits, baseTmpl, buildingTmpl)
+                LOG('Fabricator template')
+                LOG('reference is '..tostring(repr(reference)))
                 if not reference then
                     coroutine.yield(20)
                     self:ExitStateMachine()

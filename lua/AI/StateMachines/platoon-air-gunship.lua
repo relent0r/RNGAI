@@ -99,15 +99,49 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            if aiBrain.BasePerimeterMonitor[self.LocationType].AirUnits > 0 and homeDist > 900 then
+            if aiBrain.BasePerimeterMonitor[self.LocationType].AirUnits > 0 and aiBrain.BasePerimeterMonitor[self.LocationType].AntiAirThreat > self.CurrentPlatoonThreatAntiAir and homeDist > 900 then
                 ----self:LogDebug(string.format('Gunship retreating due to perimeter monitor at '..tostring(self.LocationType)))
                 self:ChangeState(self.Retreating)
                 return
             end
             if self.CurrentEnemyAirThreat > 0 and self.CurrentEnemyAirThreat > self.CurrentPlatoonThreatAntiAir and homeDist > 900 and not aiBrain.BrainIntel.SuicideModeActive then
-                ----self:LogDebug(string.format('Gunship retreating due to air threat and distance from base'))
-                self:ChangeState(self.Retreating)
-                return
+                self:LogDebug(string.format('Gunship found air threat and is a certain distance from base'))
+                local platoonHealth = 0
+                for _, unit in self:GetPlatoonUnits() do
+                    if not unit.Dead then
+                        platoonHealth = platoonHealth + unit:GetHealth()
+                    end
+                end
+                local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.MOBILE + categories.STRUCTURE) * categories.ANTIAIR, platPos, 75, 'Enemy')
+                local totalEnemyAntiAirHealth = 0
+                local totalEnemyAntiAirThreat = 0
+                local newTarget
+                for _, e in enemyUnits do
+                    if e and not e.Dead then
+                        local bp = e.Blueprint
+                        totalEnemyAntiAirThreat = totalEnemyAntiAirThreat + bp.Defense.AirThreatLevel
+                        totalEnemyAntiAirHealth = totalEnemyAntiAirHealth + e:GetHealth()
+                        if not newTarget then
+                            newTarget = e
+                        end
+                    end
+                end
+                --LOG(string.format('Gunship Total platoon health decayed: '..tostring(platoonHealth / 45)))
+                --LOG(string.format('Gunship Total enemy health multiplier: '..tostring(totalEnemyAntiAirHealth * 1.3)))
+                --LOG(string.format('Gunship Total enemy threat: '..tostring(totalEnemyAntiAirThreat)))
+                if totalEnemyAntiAirHealth * 1.3 < platoonHealth and totalEnemyAntiAirThreat < (platoonHealth / 45) then
+                    if newTarget then
+                        self.BuilderData = {
+                            AttackTarget = newTarget,
+                            Position = newTarget:GetPosition()
+                        }
+                        self:ChangeState(self.AttackTarget)
+                        return
+                    end
+                else
+                    self:ChangeState(self.Retreating)
+                    return
+                end
             end
             if self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Tractored then 
                 if not self.BuilderData.AttackTarget.Dead then
@@ -261,9 +295,27 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                         local movementPositions = StateUtils.GenerateGridPositions(destination, 6, self.PlatoonCount)
                         for k, unit in platoonUnits do
                             if not unit.Dead and movementPositions[k] then
-                                IssueMove({platoonUnits[k]}, movementPositions[k])
+                                --IssueMove({platoonUnits[k]}, movementPositions[k])
+                                if unit.GetNavigator then
+                                    local navigator = unit:GetNavigator()
+                                    if navigator then
+                                        navigator:SetGoal(movementPositions[k])
+                                    end
+                                else
+                                    IssueClearCommands({unit})
+                                    IssueMove({unit},movementPositions[k])
+                                end
                             else
-                                IssueMove({platoonUnits[k]}, destination)
+                                if unit.GetNavigator then
+                                    local navigator = unit:GetNavigator()
+                                    if navigator then
+                                        navigator:SetGoal(destination)
+                                    end
+                                else
+                                    IssueClearCommands({unit})
+                                    IssueMove({unit},destination)
+                                end
+                                --IssueMove({platoonUnits[k]}, destination)
                             end
                         end
                         self:ChangeState(self.DecideWhatToDo)
@@ -386,9 +438,27 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 local movementPositions = StateUtils.GenerateGridPositions(targetPos, 6, self.PlatoonCount)
                 for k, unit in platoonUnits do
                     if not unit.Dead and movementPositions[k] then
-                        IssueMove({platoonUnits[k]}, movementPositions[k])
+                        --IssueMove({platoonUnits[k]}, movementPositions[k])
+                        if unit.GetNavigator then
+                            local navigator = unit:GetNavigator()
+                            if navigator then
+                                navigator:SetGoal(movementPositions[k])
+                            end
+                        else
+                            IssueClearCommands({unit})
+                            IssueMove({unit},movementPositions[k])
+                        end
                     else
-                        IssueMove({platoonUnits[k]}, targetPos)
+                        --IssueMove({platoonUnits[k]}, targetPos)
+                        if unit.GetNavigator then
+                            local navigator = unit:GetNavigator()
+                            if navigator then
+                                navigator:SetGoal(targetPos)
+                            end
+                        else
+                            IssueClearCommands({unit})
+                            IssueMove({unit},targetPos)
+                        end
                     end
                 end
                 coroutine.yield(35)

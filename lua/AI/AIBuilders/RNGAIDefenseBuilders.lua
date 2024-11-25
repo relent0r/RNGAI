@@ -443,9 +443,9 @@ BuilderGroup {
         Priority = 950,
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.DEFENSE * categories.DIRECTFIRE}},
             { UCBC, 'HighValueZone', {'LocationType' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.DEFENSE * categories.DIRECTFIRE, 45}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
@@ -575,6 +575,41 @@ BuilderGroup {
                 maxRadius = 5,
                 BuildStructures = {
                     { Unit = 'T1NavalDefense', Categories = categories.STRUCTURE * categories.ANTINAVY * categories.DEFENSE * categories.TECH1 },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Defence Engineer Single Historical',
+        PlatoonTemplate = 'EngineerStateT23RNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'HighValueZone', {'LocationType' }},
+            { UCBC, 'PerimeterHistoricalThreatGreaterThan', { 'LocationType', 35, 'LAND' }},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.DEFENSE * categories.TECH2 * categories.DIRECTFIRE}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY},
+                AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
+                BaseTemplate = 'BaseTemplates',
+                EmergencyBuild = true,
+                maxUnits = 1,
+                maxRadius = 5,
+                BuildClose = false,
+                NearDefensivePoints = false,
+                BuildStructures = {
+                    { Unit = 'T2GroundDefense', Categories = categories.STRUCTURE * categories.DIRECTFIRE * categories.DEFENSE * categories.TECH2 },
                 },
                 LocationType = 'LocationType',
             }

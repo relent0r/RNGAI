@@ -33,7 +33,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE}},
             { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { MIBC, 'GreaterThanGameTimeRNG', { 240 } },
+            { MIBC, 'GreaterThanGameTimeRNG', { 180 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -132,7 +132,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 850,
         BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE, 45}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { MIBC, 'GreaterThanGameTimeRNG', { 240 } },
         },
