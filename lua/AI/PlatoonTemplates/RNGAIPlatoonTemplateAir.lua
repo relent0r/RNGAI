@@ -97,3 +97,12 @@ PlatoonTemplate {
         },
     }
 }
+
+PlatoonTemplate {
+    Name = 'T2SwiftWindRNG',
+    FactionSquads = {
+        Aeon = {
+            { 'xaa0202', 1, 1, 'attack', 'none' },
+        },
+    }
+}

@@ -1272,12 +1272,17 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             --LOG('TotalBuildPower '..tostring(totalBuildRate))
             --LOG('T1 Build Power '..tostring(totalTech1BuilderRate))
+            --LOG('T1 EngineerCount '..tostring(table.getn(tech1Engineers)))
             --LOG('T2 Build Power '..tostring(totalTech2BuilderRate))
+            --LOG('T2 EngineerCount '..tostring(table.getn(tech2Engineers)))
             --LOG('T3 Build Power '..tostring(totalTech3BuilderRate))
+            --LOG('T3 EngineerCount '..tostring(table.getn(tech3Engineers)))
             aiBrain.EngineerAssistManagerBuildPower = totalBuildRate
             aiBrain.EngineerAssistManagerBuildPowerTech1 = totalTech1BuilderRate
             aiBrain.EngineerAssistManagerBuildPowerTech2 = totalTech2BuilderRate
             aiBrain.EngineerAssistManagerBuildPowerTech3 = totalTech3BuilderRate
+            --[[
+            local debugIdleEng = false
             for _, engineers in ipairs({tech1Engineers, tech2Engineers, tech3Engineers}) do
                 for _, eng in ipairs(engineers) do
                     if aiBrain.EngineerAssistManagerBuildPower > aiBrain.EngineerAssistManagerBuildPowerRequired then
@@ -1286,9 +1291,19 @@ Platoon = Class(RNGAIPlatoonClass) {
                         -- If the power requirement is met, break out of the loop
                         break
                     end
+                    if eng:IsIdleState() then
+                        debugIdleEng = true
+                    end
                     coroutine.yield(1)
                 end
             end
+            if debugIdleEng then
+                LOG('Current Priority types')
+                for k, assistData in aiBrain.EngineerAssistManagerPriorityTable do
+                    LOG(tostring(assistData.debug))
+                end
+            end
+            ]]
 
             aiBrain.EngineerAssistManagerEngineerCount = platoonCount
             if aiBrain.EngineerAssistManagerBuildPower <= 0 then
@@ -1495,7 +1510,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 eng.UnitBeingAssist = nil
                 break
             end
-            if unitToAssist.Blueprint.CategoriesHash.ENERGYPRODUCTION and aiBrain:GetEconomyTrend('ENERGY') > 50 and aiBrain:GetEconomyStored('MASS') == 0 then
+            if unitToAssist.Blueprint.CategoriesHash.ENERGYPRODUCTION and aiBrain:GetEconomyTrend('ENERGY') > 25 and aiBrain:GetEconomyStored('MASS') == 0 then
                 if not eng:IsPaused() then
                     eng:SetPaused( true )
                     coroutine.yield(30)

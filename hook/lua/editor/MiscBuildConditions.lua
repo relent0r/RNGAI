@@ -340,12 +340,9 @@ function ScoutsRequiredForBase(aiBrain, locationType, baseRatio, scoutCategories
     end
     if aiBrain.BuilderManagers[locationType].PathableZones then
         local manager = aiBrain.BuilderManagers[locationType]
-        if not manager.Layer then
-            LOG('The builder manager has not layer right now')
-        end
         local layer = manager.Layer or 'Land'
         for _, v in manager.PathableZones.Zones do
-            if v.ZoneID then
+            if v.ZoneID and v.PathType == layer then
                 local zone = aiBrain.Zones[layer].zones[v.ZoneID]
                 if zone.teamvalue then
                     local teamValue = zone.teamvalue
@@ -357,11 +354,7 @@ function ScoutsRequiredForBase(aiBrain, locationType, baseRatio, scoutCategories
                         adjustedRatio = adjustedRatio * 1.2
                     end
                     scoutsRequired = scoutsRequired + math.min(adjustedRatio, 1)
-                else
-                    LOG('zone has no team value')
                 end
-            else
-                LOG('Pathable zone table item has no zone id')
             end
         end
         --LOG('Scouts required for base '..tostring(locationType)..' '..tostring(scoutsRequired)..' current count it '..tostring(GetCurrentUnits(aiBrain, scoutCategories)))

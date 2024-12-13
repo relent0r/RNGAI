@@ -44,7 +44,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             self.MergeType = 'NavalMergeStateMachine'
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
-            if aiBrain.EnemyIntel.Phase > 2 then
+            if aiBrain.EnemyIntel.NavalPhase > 2 then
                 self.EnemyRadius = 75
                 self.EnemyRadiusSq = 75 * 75
             else
@@ -174,7 +174,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                             if m.Blueprint.CategoriesHash.STRUCTURE then
                                 tmpDistance = tmpDistance
                             else
-                                tmpDistance = tmpDistance*m.machineworth
+                                tmpDistance = tmpDistance*m['rngdata'].machineworth
                             end
                             if not closestTarget or tmpDistance < closestTarget then
                                 target = m
@@ -601,7 +601,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             local units=self:GetPlatoonUnits()
             if not aiBrain.BrainIntel.SuicideModeActive then
                 for k,unit in self.targetcandidates do
-                    if not unit or unit.Dead or not unit.machineworth then 
+                    if not unit or unit.Dead or not unit['rngdata'].machineworth then 
                         --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
                         table.remove(self.targetcandidates,k) 
                     end
@@ -625,7 +625,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                                 local rz = unitPos[3] - enemyPos[3]
                                 local tmpDistance = rx * rx + rz * rz
                                 if unitRole ~= 'Artillery' and unitRole ~= 'Silo' and unitRole ~= 'Sniper' then
-                                    tmpDistance = tmpDistance*m.machineworth
+                                    tmpDistance = tmpDistance*m['rngdata'].machineworth
                                 end
                                 if not closestTarget or tmpDistance < closestTarget then
                                     target = m

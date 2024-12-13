@@ -21,7 +21,7 @@ CrossP = function(vec1,vec2,n)--cross product
     return {x,y,z}
 end
 
-SimpleTarget = function(platoon, aiBrain)--find enemies in a range and attack them- lots of complicated stuff here
+SimpleTarget = function(platoon, aiBrain, specificPosition)--find enemies in a range and attack them- lots of complicated stuff here
     local function ViableTargetCheck(unit, unitPosition)
         if unit.Dead or not unit then return false end
         if platoon.MovementLayer=='Amphibious' then
@@ -41,11 +41,12 @@ SimpleTarget = function(platoon, aiBrain)--find enemies in a range and attack th
     local id=platoon.machinedata.id
     local position=platoon.Pos
     if not position then return false end
+    local searchPos = specificPosition or position
     if platoon.PlatoonData.Defensive and VDist2Sq(position[1], position[3], platoon.Home[1], platoon.Home[3]) < 14400 then
         --RNGLOG('Defensive Posture Targets')
         platoon.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE - categories.WALL - categories.INSIGNIFICANTUNIT, platoon.Home, 120, 'Enemy')
     else
-        platoon.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE - categories.WALL - categories.INSIGNIFICANTUNIT, position, platoon.EnemyRadius, 'Enemy')
+        platoon.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.LAND + categories.STRUCTURE - categories.WALL - categories.INSIGNIFICANTUNIT, searchPos, platoon.EnemyRadius, 'Enemy')
     end
     local candidates = platoon.targetcandidates
     platoon.targetcandidates={}
@@ -53,21 +54,28 @@ SimpleTarget = function(platoon, aiBrain)--find enemies in a range and attack th
     for _,unit in candidates do
         local unitPos = unit:GetPosition()
         if ViableTargetCheck(unit, unitPos) then
-            if not unit.machinepriority then unit.machinepriority={} unit.machinedistance={} end
-            if not unit.dangerupdate or not unit.machinedanger or gameTime-unit.dangerupdate>10 then
-                unit.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30,30, true, false, false).enemyTotal)
-                unit.dangerupdate=gameTime
+            if not unit['rngdata'] then
+                unit['rngdata'] = {}
+            end
+            if not unit['rngdata'] then
+                unit['rngdata'] = {}
+            end
+            local unitData = unit['rngdata']
+            if not unitData.machinepriority then unitData.machinepriority={} unitData.machinedistance={} end
+            if not unitData.dangerupdate or not unitData.machinedanger or gameTime-unitData.dangerupdate>10 then
+                unitData.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30,30, true, false, false).enemyTotal)
+                unitData.dangerupdate=gameTime
             end
             local unithealth = GetTrueHealth(unit, true)
-            if not unit.machinevalue then unit.machinevalue=unit.Blueprint.Economy.BuildCostMass/unithealth end
-            unit.machineworth=unit.machinevalue/unithealth
-            unit.machinedistance[id]=VDist3(position,unitPos)
-            unit.machinepriority[id]=unit.machineworth/math.max(30,unit.machinedistance[id])/unit.machinedanger
+            unitData.machinevalue = unit.Blueprint.Economy.BuildCostMass/unithealth
+            unitData.machineworth = unitData.machinevalue/unithealth
+            unitData.machinedistance[id] = VDist3(searchPos,unitPos)
+            unitData.machinepriority[id]=unitData.machineworth/math.max(30,unitData.machinedistance[id])/unitData.machinedanger
             table.insert(platoon.targetcandidates,unit)
         end
     end
     if not table.empty(platoon.targetcandidates) then
-        table.sort(platoon.targetcandidates, function(a,b) return a.machinepriority[id]>b.machinepriority[id] end)
+        table.sort(platoon.targetcandidates, function(a,b) return a['rngdata'].machinepriority[id]>b['rngdata'].machinepriority[id] end)
         return true
     end
     return false
@@ -106,21 +114,28 @@ SimpleNavalTarget = function(platoon, aiBrain)
     for _,unit in candidates do
         local unitPos = unit:GetPosition()
         if ViableTargetCheck(unit, unitPos, platoon.MaxPlatoonWeaponRange) then
-            if not unit.machinepriority then unit.machinepriority={} unit.machinedistance={} end
-            if not unit.dangerupdate or not unit.machinedanger or gameTime-unit.dangerupdate>10 then
-                unit.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30, 30, true, true, false).enemyTotal)
-                unit.dangerupdate=gameTime
+            if not unit['rngdata'] then
+                unit['rngdata'] = {}
+            end
+            if not unit['rngdata'] then
+                unit['rngdata'] = {}
+            end
+            local unitData = unit['rngdata']
+            if not unitData.machinepriority then unitData.machinepriority={} unitData.machinedistance={} end
+            if not unitData.dangerupdate or not unitData.machinedanger or gameTime-unitData.dangerupdate>10 then
+                unitData.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30, 30, true, true, false).enemyTotal)
+                unitData.dangerupdate=gameTime
             end
             local unithealth = GetTrueHealth(unit, true)
-            if not unit.machinevalue then unit.machinevalue=unit.Blueprint.Economy.BuildCostMass/unithealth end
-            unit.machineworth=unit.machinevalue/unithealth
-            unit.machinedistance[id]=VDist3(position,unitPos)
-            unit.machinepriority[id]=unit.machineworth/math.max(30,unit.machinedistance[id])/unit.machinedanger
+            if not unitData.machinevalue then unitData.machinevalue=unit.Blueprint.Economy.BuildCostMass/unithealth end
+            unitData.machineworth=unitData.machinevalue/unithealth
+            unitData.machinedistance[id]=VDist3(position,unitPos)
+            unitData.machinepriority[id]=unitData.machineworth/math.max(30,unitData.machinedistance[id])/unitData.machinedanger
             table.insert(platoon.targetcandidates,unit)
         end
     end
     if not table.empty(platoon.targetcandidates) then
-        table.sort(platoon.targetcandidates, function(a,b) return a.machinepriority[id]>b.machinepriority[id] end)
+        table.sort(platoon.targetcandidates, function(a,b) return a['rngdata'].machinepriority[id]>b['rngdata'].machinepriority[id] end)
         return true
     end
     return false
@@ -236,11 +251,15 @@ VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride)--basic kit
     if unit['rngdata'].Role=='Heavy' or unit['rngdata'].Role=='Bruiser' or unit['rngdata'].GlassCannon then
         strafemod=7
     end
+    local distanceCheck = 9
+    if (unit['rngdata'].Role=='Sniper' or unit['rngdata'].Role=='Artillery' or unit['rngdata'].Role=='Silo') and unit['rngdata'].MaxWeaponRange then
+        distanceCheck = 25
+    end
     if unit['rngdata'].Role=='AA'  then
         dest=KiteDist(pos,tpos,platoon.MaxPlatoonWeaponRange+3,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif (unit['rngdata'].Role=='Sniper' or unit['rngdata'].Role=='Artillery' or unit['rngdata'].Role=='Silo') and unit['rngdata'].MaxWeaponRange then
-        dest=KiteDist(pos,tpos,unit['rngdata'].MaxWeaponRange,0)
+        dest=KiteDist(pos,tpos,unit['rngdata'].MaxWeaponRange-1,0)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif maxPlatoonRangeOverride and (unit['rngdata'].Role=='Shield' or unit['rngdata'].Role == 'Stealth') and platoon.MaxDirectFireRange > 0 then
         dest=KiteDist(pos,tpos,platoon.MaxDirectFireRange-math.random(1,3)-mod,0)
@@ -261,7 +280,7 @@ VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride)--basic kit
         dest=KiteDist(pos,tpos,platoon.MaxPlatoonWeaponRange+5-math.random(1,3)-mod,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     end
-    if VDist3Sq(pos,dest)>9 then
+    if VDist3Sq(pos,dest)>distanceCheck then
         if unit.GetNavigator then
             local navigator = unit:GetNavigator()
             if navigator then
@@ -488,7 +507,7 @@ GetUnitMaxWeaponRange = function(unit, filterType, enhancementReset)
             local brain = unit:GetAIBrain()
             if brain.RNG then
                 unit.WeaponRange = maxRange
-                LOG('Enhancement reset to set Weapon range to '..maxRange)
+                --LOG('Enhancement reset to set Weapon range to '..maxRange)
             end
         end
         if not filterType and not unit['rngdata'] then
@@ -741,7 +760,7 @@ ZoneUpdate = function(aiBrain, platoon)
         if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
             SetZone(platPos, aiBrain.Zones.Land.index)
         elseif platoon.MovementLayer == 'Water' then
-            --SetZone(PlatoonPosition, aiBrain.Zones.Water.index)
+            --SetZone(PlatoonPosition, aiBrain.Zones.Naval.index)
         end
         platoon.Label = NavUtils.GetLabel(platoon.MovementLayer, platPos)
         WaitTicks(30)
@@ -957,7 +976,7 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                         for _, weapon in unit.Blueprint.Weapon do
                             if weapon.RangeCategory == 'UWRC_IndirectFire' or StringFind(weapon.WeaponCategory or 'nope', 'Artillery') then
                                 local unitDps = RUtils.CalculatedDPSRNG(weapon)
-                                unitThreat = unitDps * 0.3
+                                unitThreat = (unitDps * 0.3)
                             end
                         end
                     end
@@ -965,8 +984,8 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                     RNGINSERT(unitTable.ArtilleryThreat.Units, {Object = unit, Distance = distance})
                 elseif unitCats.TACTICALMISSILEPLATFORM then
-                    unitTable.DefenseThreat.TotalThreat = unitTable.DefenseThreat.TotalThreat + unitThreat * 0.1
-                    unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat + unitThreat * 0.1
+                    unitTable.DefenseThreat.TotalThreat = unitTable.DefenseThreat.TotalThreat + (unitThreat * 0.07)
+                    unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat + (unitThreat * 0.07)
                     RNGINSERT(unitTable.DefenseThreat.Units, {Object = unit, Distance = distance})
                 else
                     unitTable.DefenseThreat.TotalThreat = unitTable.DefenseThreat.TotalThreat + unitThreat
@@ -1269,35 +1288,42 @@ function GetClosestTargetByIMAP(aiBrain, platoon, position, threatType, searchFi
                 local antiThreat = aiBrain:GetThreatAtPosition(grid.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, avoidThreat)
                 for _, unit in targetUnits do
                     if not unit.Dead then
+                        if not unit['rngdata'] then
+                            unit['rngdata'] = {}
+                        end
+                        if not unit['rngdata'] then
+                            unit['rngdata'] = {}
+                        end
+                        local unitData = unit['rngdata']
                         --LOG('target found of type '..unit.UnitId)
                         local unitCats = unit.Blueprint.CategoriesHash
                         local unithealth = GetTrueHealth(unit, true)
                         if layer == 'Sub' and not unitCats.HOVER then
                             local unitPos = unit:GetPosition()
                             if ViableTargetCheck(unit, unitPos, layer) then
-                                if not unit.machinepriority then unit.machinepriority={} unit.machinedistance={} end
-                                if not unit.dangerupdate or not unit.machinedanger or gameTime-unit.dangerupdate>10 then
-                                    unit.machinedanger=math.max(10,antiThreat)
-                                    unit.dangerupdate=gameTime
+                                if not unitData.machinepriority then unitData.machinepriority={} unitData.machinedistance={} end
+                                if not unitData.dangerupdate or not unitData.machinedanger or gameTime-unitData.dangerupdate>10 then
+                                    unitData.machinedanger=math.max(10,antiThreat)
+                                    unitData.dangerupdate=gameTime
                                 end
-                                if not unit.machinevalue then unit.machinevalue=unit.Blueprint.Economy.BuildCostMass/unithealth end
-                                unit.machineworth=unit.machinevalue/unithealth
-                                unit.machinedistance[id]=VDist3(position,unitPos)
-                                unit.machinepriority[id]=unit.machineworth/math.max(30,unit.machinedistance[id])/unit.machinedanger
+                                if not unitData.machinevalue then unitData.machinevalue=unit.Blueprint.Economy.BuildCostMass/unithealth end
+                                unitData.machineworth=unitData.machinevalue/unithealth
+                                unitData.machinedistance[id]=VDist3(position,unitPos)
+                                unitData.machinepriority[id]=unitData.machineworth/math.max(30,unitData.machinedistance[id])/unitData.machinedanger
                                 table.insert(targetCandidates,unit)
                             end
                         else
                             local unitPos = unit:GetPosition()
                             if ViableTargetCheck(unit, unitPos, layer) then
-                                if not unit.machinepriority then unit.machinepriority={} unit.machinedistance={} end
-                                if not unit.dangerupdate or not unit.machinedanger or gameTime-unit.dangerupdate>10 then
-                                    unit.machinedanger=math.max(10,antiThreat)
-                                    unit.dangerupdate=gameTime
+                                if not unitData.machinepriority then unitData.machinepriority={} unitData.machinedistance={} end
+                                if not unitData.dangerupdate or not unitData.machinedanger or gameTime-unitData.dangerupdate>10 then
+                                    unitData.machinedanger=math.max(10,antiThreat)
+                                    unitData.dangerupdate=gameTime
                                 end
-                                if not unit.machinevalue then unit.machinevalue=unit.Blueprint.Economy.BuildCostMass/unithealth end
-                                unit.machineworth=unit.machinevalue/unithealth
-                                unit.machinedistance[id]=VDist3(position,unitPos)
-                                unit.machinepriority[id]=unit.machineworth/math.max(30,unit.machinedistance[id])/unit.machinedanger
+                                if not unitData.machinevalue then unitData.machinevalue=unit.Blueprint.Economy.BuildCostMass/unithealth end
+                                unitData.machineworth=unitData.machinevalue/unithealth
+                                unitData.machinedistance[id]=VDist3(position,unitPos)
+                                unitData.machinepriority[id]=unitData.machineworth/math.max(30,unitData.machinedistance[id])/unitData.machinedanger
                                 table.insert(targetCandidates,unit)
                             end
                         end
@@ -1371,6 +1397,7 @@ end
 BuildAIDoneRNG = function(unit, params)
     if unit.Active or unit.Dead then return end
     if not unit.AIPlatoonReference then return end
+    if unit.CustomReclaim then return end
     if unit.EngineerBuildQueue and not table.empty(unit.EngineerBuildQueue) then
         table.remove(unit.EngineerBuildQueue, 1)
     end
@@ -1388,6 +1415,7 @@ BuildAIFailedRNG = function(unit, params)
     if not unit.BuildFailedCount then
         unit.BuildFailedCount = 0
     end
+    if unit.CustomReclaim then return end
     unit.BuildFailedCount = unit.BuildFailedCount + 1
     --LOG('Current fail count is '..unit.FailedCount)
     if unit.BuildFailedCount > 2 and not table.empty(unit.EngineerBuildQueue) then
@@ -1655,7 +1683,7 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType, whatToBuild
                     baseLocation = builder.BuildManagerdata.EngineerManager.Location
                 end
                 --ForkThread(RNGrenderReference,template[1],unitSize.SkirtSizeX,unitSize.SkirtSizeZ)
-                local location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, template, false, builder, baseLocation[1], baseLocation[3])
+                local location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, template, true, builder, baseLocation[1], baseLocation[3])
                 if location then
                     if location[1] > 8 and location[1] < ScenarioInfo.size[1] - 8 and location[2] > 8 and location[2] < ScenarioInfo.size[2] - 8 then
                         --RNGLOG('Build '..repr(buildingType)..' at adjacency: '..repr(location) )

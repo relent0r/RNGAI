@@ -1112,28 +1112,33 @@ AIBrain = Class(RNGAIBrainClass) {
             EcoMultiplier = 1,
             T3ExtractorSpend = false,
             T2ExtractorSpend = false,
-            EcoMassUpgradeTimeout = 120,
+            EcoMassUpgradeTimeout = 90,
             EcoPowerPreemptive = false,
             MinimumPowerRequired = 0,
         }
         self.EcoManager.PowerPriorityTable = {
-            ENGINEER = 12,
-            STATIONPODS = 11,
-            TML = 10,
+            ENGINEER = 14,
+            STATIONPODS = 13,
+            TML = 12,
             SHIELD = 8,
-            AIR = 9,
-            NAVAL = 5,
+            AIR_TECH1 = 9,
+            AIR_TECH2 = 7,
+            AIR_TECH3 = 5,
+            NAVAL_TECH1 = 8,
+            NAVAL_TECH2 = 6,
+            NAVAL_TECH3 = 4,
             RADAR = 3,
-            MASSEXTRACTION = 4,
-            MASSFABRICATION = 7,
-            NUKE = 6,
-            LAND = 2,
+            MASSFABRICATION = 10,
+            NUKE = 11,
+            LAND_TECH1 = 1,
+            LAND_TECH2 = 2,
+            LAND_TECH3 = 3,
         }
         self.EcoManager.MassPriorityTable = {
-            TML = 12,
-            STATIONPODS = 10,
-            ENGINEER = 11,
-            NUKE = 9
+            TML = 18,
+            STATIONPODS = 16,
+            ENGINEER = 17,
+            NUKE = 15
         }
 
         self.DefensiveSupport = {}
@@ -1173,7 +1178,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.ACUEnemyClose = false
         self.EnemyIntel.HighPriorityTargetAvailable = false
         self.EnemyIntel.ACU = {}
-        self.EnemyIntel.Phase = 1
+        self.EnemyIntel.NavalPhase = 1
+        self.EnemyIntel.LandPhase = 1
+        self.EnemyIntel.AirPhase = 1
         self.EnemyIntel.TML = {}
         self.EnemyIntel.SMD = {}
         self.EnemyIntel.SML = {}
@@ -3742,15 +3749,40 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyDefenseSub = enemyDefenseSub + v.Blueprint.Defense.SubThreatLevel
                     end
                     coroutine.yield(1)
-                    if self.EnemyIntel.Phase < 2 then
-                        if GetCurrentUnits( enemy, categories.STRUCTURE * categories.FACTORY * categories.TECH2) > 0 then
-                            --RNGLOG('Enemy has moved to T2')
-                            self.EnemyIntel.Phase = 2
+                    if self.EnemyIntel.LandPhase < 2 then
+                        if GetCurrentUnits( enemy, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.LAND) > 0 then
+                            --LOG('Enemy has moved to T3')
+                            self.EnemyIntel.LandPhase = 2
                         end
-                    elseif self.EnemyIntel.Phase < 3 then
-                        if GetCurrentUnits( enemy, categories.STRUCTURE * categories.FACTORY * categories.TECH3) > 0 then
-                            --RNGLOG('Enemy has moved to T3')
-                            self.EnemyIntel.Phase = 3
+                    end
+                    if self.EnemyIntel.AirPhase < 2 then
+                        if GetCurrentUnits( enemy, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.AIR) > 0 then
+                            --LOG('Enemy has moved to T3')
+                            self.EnemyIntel.AirPhase = 2
+                        end
+                    end
+                    if self.EnemyIntel.NavalPhase < 2 then
+                        if GetCurrentUnits( enemy, categories.STRUCTURE * categories.FACTORY * categories.TECH2 * categories.NAVAL) > 0 then
+                            --LOG('Enemy has moved to T3')
+                            self.EnemyIntel.NavalPhase = 2
+                        end
+                    end
+                    if self.EnemyIntel.LandPhase < 3 then
+                        if GetCurrentUnits( enemy, categories.STRUCTURE * categories.FACTORY * categories.TECH3 * categories.LAND) > 0 then
+                            --LOG('Enemy has moved to T3')
+                            self.EnemyIntel.LandPhase = 3
+                        end
+                    end
+                    if self.EnemyIntel.AirPhase < 3 then
+                        if GetCurrentUnits( enemy, categories.STRUCTURE * categories.FACTORY * categories.TECH3 * categories.AIR) > 0 then
+                            --LOG('Enemy has moved to T3')
+                            self.EnemyIntel.AirPhase = 3
+                        end
+                    end
+                    if self.EnemyIntel.NavalPhase < 3 then
+                        if GetCurrentUnits( enemy, categories.STRUCTURE * categories.FACTORY * categories.TECH3 * categories.NAVAL) > 0 then
+                            --LOG('Enemy has moved to T3')
+                            self.EnemyIntel.NavalPhase = 3
                         end
                     end
                     local enemyACU = GetListOfUnits( enemy, categories.COMMAND, false, false )
@@ -4376,7 +4408,7 @@ AIBrain = Class(RNGAIBrainClass) {
         coroutine.yield(Random(1,7))
         while true do
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
-                if GetGameTimeSeconds() < 240 then
+                if GetGameTimeSeconds() < 210 then
                     coroutine.yield(50)
                     continue
                 end
@@ -4393,14 +4425,35 @@ AIBrain = Class(RNGAIBrainClass) {
                         local priorityUnit = false
                         --RNGLOG('Threat Stats Self + ally :'..self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat..'Enemy : '..self.EnemyIntel.EnemyThreatCurrent.Land)
                         massPriorityTable = self.EcoManager.MassPriorityTable
-                        if (self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat) > (self.EnemyIntel.EnemyThreatCurrent.Land * 1.3) and self.BasePerimeterMonitor['MAIN'].LandUnits < 1 then
-                            massPriorityTable.LAND = 6
+                        if (self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat) > (self.EnemyIntel.EnemyThreatCurrent.Land * 1.1) and self.BasePerimeterMonitor['MAIN'].LandUnits < 1 then
+                            massPriorityTable.LAND_TECH1 = 12
+                            massPriorityTable.LAND_TECH2 = 9
+                            massPriorityTable.LAND_TECH3 = 6
+                        else
+                            massPriorityTable.LAND_TECH1 = nil
+                            massPriorityTable.LAND_TECH2 = nil
+                            massPriorityTable.LAND_TECH3 = nil
                         end
-                        if (self.BrainIntel.SelfThreat.AirNow + self.BrainIntel.SelfThreat.AllyAirThreat) > (self.EnemyIntel.EnemyThreatCurrent.Air * 1.3) then
-                            massPriorityTable.AIR = 7
+                        if (self.BrainIntel.SelfThreat.AirNow + self.BrainIntel.SelfThreat.AllyAirThreat) > (self.EnemyIntel.EnemyThreatCurrent.Air * 1.1) then
+                            massPriorityTable.AIR_TECH1 = 13
+                            massPriorityTable.AIR_TECH2 = 10
+                            massPriorityTable.AIR_TECH3 = 7
+                        else
+                            massPriorityTable.AIR_TECH1 = nil
+                            massPriorityTable.AIR_TECH2 = nil
+                            massPriorityTable.AIR_TECH3 = nil
                         end
-                        if (self.BrainIntel.SelfThreat.NavalNow + self.BrainIntel.SelfThreat.AllyNavalThreat) > (self.EnemyIntel.EnemyThreatCurrent.Naval * 1.3) then
-                            massPriorityTable.NAVAL = 8
+                        if (self.BrainIntel.SelfThreat.NavalNow + self.BrainIntel.SelfThreat.AllyNavalThreat) > (self.EnemyIntel.EnemyThreatCurrent.Naval * 1.1) then
+                            --LOG('My naval threat is higher so well pause naval factories mine is :'..tostring(self.BrainIntel.SelfThreat.NavalNow))
+                            --LOG('Allies is '..tostring(self.BrainIntel.SelfThreat.AllyNavalThreat))
+                            --LOG('enemies is :'..tostring((self.EnemyIntel.EnemyThreatCurrent.Naval * 1.1)))
+                            massPriorityTable.NAVAL_TECH1 = 14
+                            massPriorityTable.NAVAL_TECH2 = 11
+                            massPriorityTable.NAVAL_TECH3 = 8
+                        else
+                            massPriorityTable.NAVAL_TECH1 = nil
+                            massPriorityTable.NAVAL_TECH2 = nil
+                            massPriorityTable.NAVAL_TECH3 = nil
                         end
                         massCycle = massCycle + 1
                         for k, v in massPriorityTable do
@@ -4414,7 +4467,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 --RNGLOG('priorityUnit already in unitTypePaused, skipping')
                                 continue
                             end
-                            if v > priorityNum then
+                            if v and v > priorityNum then
                                 priorityNum = v
                                 priorityUnit = k
                             end
@@ -4444,7 +4497,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                             local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, StationPods, 'pause', 'MASS')
-                        elseif priorityUnit == 'AIR' then
+                        elseif priorityUnit == 'AIR_TECH1' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
                                 if priorityUnit == v then
@@ -4454,9 +4507,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
-                            local AirFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.AIR) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
+                            local AirFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.AIR) * categories.TECH1, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'MASS')
-                        elseif priorityUnit == 'LAND' then
+                        elseif priorityUnit == 'AIR_TECH2' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
                                 if priorityUnit == v then
@@ -4466,9 +4519,33 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
-                            local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
+                            local AirFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.AIR) * categories.TECH2, false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'MASS')
+                        elseif priorityUnit == 'AIR_TECH3' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                RNGINSERT(unitTypePaused, priorityUnit)
+                            end
+                            local AirFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.AIR) * categories.TECH3, false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'MASS')
+                        elseif priorityUnit == 'LAND_TECH1' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                RNGINSERT(unitTypePaused, priorityUnit)
+                            end
+                            local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * categories.TECH1, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'MASS')
-                        elseif priorityUnit == 'NAVAL' then
+                        elseif priorityUnit == 'LAND_TECH2' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
                                 if priorityUnit == v then
@@ -4478,7 +4555,55 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
-                            local NavalFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.NAVAL) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
+                            local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * categories.TECH2, false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'MASS')
+                        elseif priorityUnit == 'LAND_TECH3' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                RNGINSERT(unitTypePaused, priorityUnit)
+                            end
+                            local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * categories.TECH3, false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'MASS')
+                        elseif priorityUnit == 'NAVAL_TECH1' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                RNGINSERT(unitTypePaused, priorityUnit)
+                            end
+                            local NavalFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.NAVAL) * categories.TECH1, false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'MASS')
+                        elseif priorityUnit == 'NAVAL_TECH2' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                RNGINSERT(unitTypePaused, priorityUnit)
+                            end
+                            local NavalFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.NAVAL) * categories.TECH2, false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'MASS')
+                        elseif priorityUnit == 'NAVAL_TECH3' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                RNGINSERT(unitTypePaused, priorityUnit)
+                            end
+                            local NavalFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.NAVAL) * categories.TECH3, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'MASSEXTRACTION' then
                             local unitAlreadySet = false
@@ -4540,14 +4665,32 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif v == 'STATIONPODS' then
                             local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
                             self:EcoSelectorManagerRNG(v, StationPods, 'unpause', 'MASS')
-                        elseif v == 'AIR' then
-                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
+                        elseif v == 'AIR_TECH1' then
+                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH1, false, false)
                             self:EcoSelectorManagerRNG(v, AirFactories, 'unpause', 'MASS')
-                        elseif v == 'LAND' then
-                            local LandFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.LAND, false, false)
+                        elseif v == 'AIR_TECH2' then
+                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH2, false, false)
+                            self:EcoSelectorManagerRNG(v, AirFactories, 'unpause', 'MASS')
+                        elseif v == 'AIR_TECH3' then
+                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3, false, false)
+                            self:EcoSelectorManagerRNG(v, AirFactories, 'unpause', 'MASS')
+                        elseif v == 'LAND_TECH1' then
+                            local LandFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1, false, false)
                             self:EcoSelectorManagerRNG(v, LandFactories, 'unpause', 'MASS')
-                        elseif v == 'NAVAL' then
+                        elseif v == 'LAND_TECH2' then
+                            local LandFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2, false, false)
+                            self:EcoSelectorManagerRNG(v, LandFactories, 'unpause', 'MASS')
+                        elseif v == 'LAND_TECH3' then
+                            local LandFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3, false, false)
+                            self:EcoSelectorManagerRNG(v, LandFactories, 'unpause', 'MASS')
+                        elseif v == 'NAVAL_TECH1' then
                             local NavalFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
+                            self:EcoSelectorManagerRNG(v, NavalFactories, 'unpause', 'MASS')
+                        elseif v == 'NAVAL_TECH2' then
+                            local NavalFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2, false, false)
+                            self:EcoSelectorManagerRNG(v, NavalFactories, 'unpause', 'MASS')
+                        elseif v == 'NAVAL_TECH3' then
+                            local NavalFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH3, false, false)
                             self:EcoSelectorManagerRNG(v, NavalFactories, 'unpause', 'MASS')
                         elseif v == 'MASSEXTRACTION' then
                             local Extractors = GetListOfUnits(self, categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL, false, false)
@@ -4585,7 +4728,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Watches for low power states
         while true do
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
-                if GetGameTimeSeconds() < 240 then
+                if GetGameTimeSeconds() < 210 then
                     coroutine.yield(50)
                     continue
                 end
@@ -4643,7 +4786,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                             local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, StationPods, 'pause', 'ENERGY')
-                        elseif priorityUnit == 'AIR' then
+                        elseif priorityUnit == 'AIR_TECH1' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
                                 if priorityUnit == v then
@@ -4653,9 +4796,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
-                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
+                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH1, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'ENERGY')
-                        elseif priorityUnit == 'LAND' then
+                        elseif priorityUnit == 'AIR_TECH2' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
                                 if priorityUnit == v then
@@ -4665,9 +4808,33 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
-                            local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * (categories.TECH1 + categories.SUPPORTFACTORY), false, false)
+                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH2, false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'ENERGY')
+                        elseif priorityUnit == 'AIR_TECH3' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                RNGINSERT(unitTypePaused, priorityUnit)
+                            end
+                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3, false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'ENERGY')
+                        elseif priorityUnit == 'LAND_TECH1' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                RNGINSERT(unitTypePaused, priorityUnit)
+                            end
+                            local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * categories.TECH1, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'ENERGY')
-                        elseif priorityUnit == 'NAVAL' then
+                        elseif priorityUnit == 'LAND_TECH2' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
                                 if priorityUnit == v then
@@ -4677,7 +4844,55 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not unitAlreadySet then
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
-                            local NavalFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
+                            local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * categories.TECH2, false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'ENERGY')
+                        elseif priorityUnit == 'LAND_TECH3' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                RNGINSERT(unitTypePaused, priorityUnit)
+                            end
+                            local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * categories.TECH3, false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'ENERGY')
+                        elseif priorityUnit == 'NAVAL_TECH1' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                RNGINSERT(unitTypePaused, priorityUnit)
+                            end
+                            local NavalFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.NAVAL) * categories.TECH1, false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'ENERGY')
+                        elseif priorityUnit == 'NAVAL_TECH2' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                RNGINSERT(unitTypePaused, priorityUnit)
+                            end
+                            local NavalFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.NAVAL) * categories.TECH2, false, false)
+                            self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'ENERGY')
+                        elseif priorityUnit == 'NAVAL_TECH3' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                RNGINSERT(unitTypePaused, priorityUnit)
+                            end
+                            local NavalFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.NAVAL) * categories.TECH3, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'ENERGY')
                         elseif priorityUnit == 'SHIELD' then
                             local unitAlreadySet = false
@@ -4762,14 +4977,32 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif v == 'STATIONPODS' then
                             local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
                             self:EcoSelectorManagerRNG(v, StationPods, 'unpause', 'ENERGY')
-                        elseif v == 'AIR' then
-                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR, false, false)
+                        elseif v == 'AIR_TECH1' then
+                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH1, false, false)
                             self:EcoSelectorManagerRNG(v, AirFactories, 'unpause', 'ENERGY')
-                        elseif v == 'LAND' then
-                            local LandFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.LAND, false, false)
+                        elseif v == 'AIR_TECH2' then
+                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH2, false, false)
+                            self:EcoSelectorManagerRNG(v, AirFactories, 'unpause', 'ENERGY')
+                        elseif v == 'AIR_TECH3' then
+                            local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3, false, false)
+                            self:EcoSelectorManagerRNG(v, AirFactories, 'unpause', 'ENERGY')
+                        elseif v == 'LAND_TECH1' then
+                            local LandFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH1, false, false)
                             self:EcoSelectorManagerRNG(v, LandFactories, 'unpause', 'ENERGY')
-                        elseif v == 'NAVAL' then
+                        elseif v == 'LAND_TECH2' then
+                            local LandFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH2, false, false)
+                            self:EcoSelectorManagerRNG(v, LandFactories, 'unpause', 'ENERGY')
+                        elseif v == 'LAND_TECH3' then
+                            local LandFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.LAND * categories.TECH3, false, false)
+                            self:EcoSelectorManagerRNG(v, LandFactories, 'unpause', 'ENERGY')
+                        elseif v == 'NAVAL_TECH1' then
                             local NavalFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.NAVAL, false, false)
+                            self:EcoSelectorManagerRNG(v, NavalFactories, 'unpause', 'ENERGY')
+                        elseif v == 'NAVAL_TECH2' then
+                            local NavalFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH2, false, false)
+                            self:EcoSelectorManagerRNG(v, NavalFactories, 'unpause', 'ENERGY')
+                        elseif v == 'NAVAL_TECH3' then
+                            local NavalFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH3, false, false)
                             self:EcoSelectorManagerRNG(v, NavalFactories, 'unpause', 'ENERGY')
                         elseif v == 'SHIELD' then
                             local Shields = GetListOfUnits(self, categories.STRUCTURE * categories.SHIELD - categories.EXPERIMENTAL, false, false)
@@ -4816,7 +5049,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 if not v.Dead and not v.BuildCompleted then
                     unitCat = v.Blueprint.CategoriesHash
                     if unitCat.ENGINEER then
-                        if v.UnitBeingBuilt then
+                        if v.UnitBeingBuilt and not v.UnitBeingBuilt.Dead then
                             local beingBuiltUnitCats = ALLBPS[v.UnitBeingBuilt.UnitId].CategoriesHash
                             if beingBuiltUnitCats.NUKE and v:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Nuke Launcher being built')
@@ -4828,7 +5061,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 potentialPowerConsumption = potentialPowerConsumption + GetMissileConsumption(ALLBPS, v.UnitBeingBuilt.UnitId, multiplier)
                                 continue
                             end
-                            if beingBuiltUnitCats.TECH3 and beingBuiltUnitCats.MASSFABRICATION and v:GetFractionComplete() < 0.8 then
+                            if beingBuiltUnitCats.TECH3 and beingBuiltUnitCats.MASSFABRICATION and v.UnitBeingBuilt:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Mass Fabricator being built')
                                 if ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy then
                                     --RNGLOG('Fabricator being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
@@ -4836,7 +5069,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 end
                                 continue
                             end
-                            if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.SHIELD and v:GetFractionComplete() < 0.8 then
+                            if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.SHIELD and v.UnitBeingBuilt:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Shield being built')
                                 if ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy then
                                     --RNGLOG('Shield being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
@@ -4844,17 +5077,17 @@ AIBrain = Class(RNGAIBrainClass) {
                                 end
                                 continue
                             end
-                            if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.FACTORY and v:GetFractionComplete() < 0.8 then
+                            if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.FACTORY and v.UnitBeingBuilt:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Shield being built')
                                 potentialPowerConsumption = potentialPowerConsumption + (120 * multiplier)
                                 continue
                             end
-                            if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.RADAR and v:GetFractionComplete() < 0.8 then
+                            if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.RADAR and v.UnitBeingBuilt:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Shield being built')
                                 potentialPowerConsumption = potentialPowerConsumption + (60 * multiplier)
                                 continue
                             end
-                            if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.DEFENSE and beingBuiltUnitCats.DIRECTFIRE and v:GetFractionComplete() < 0.8 then
+                            if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.DEFENSE and beingBuiltUnitCats.DIRECTFIRE and v.UnitBeingBuilt:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Shield being built')
                                 potentialPowerConsumption = potentialPowerConsumption + (60 * multiplier)
                                 continue
@@ -5336,7 +5569,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('pausing STATIONPODS')
                 v:SetPaused(true)
                 continue
-            elseif priorityUnit == 'AIR' then
+            elseif priorityUnit == 'AIR_TECH1' then
                 --RNGLOG('Priority Unit Is AIR')
                 if action == 'unpause' then
                     if not v:IsPaused() then continue end
@@ -5352,7 +5585,39 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('pausing AIR')
                 v:SetPaused(true)
                 continue
-            elseif priorityUnit == 'NAVAL' then
+            elseif priorityUnit == 'AIR_TECH2' then
+                --RNGLOG('Priority Unit Is AIR')
+                if action == 'unpause' then
+                    if not v:IsPaused() then continue end
+                    --RNGLOG('Unpausing Air Factory')
+                    v:SetPaused(false)
+                    continue
+                end
+                if not v.UnitBeingBuilt then continue end
+                if v.UnitBeingBuilt.Blueprint.CategoriesHash.ENGINEER then continue end
+                if v.UnitBeingBuilt.Blueprint.CategoriesHash.TRANSPORTFOCUS and self:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then continue end
+                --if RNGGETN(units) == 1 then continue end
+                if v:IsPaused() then continue end
+                --RNGLOG('pausing AIR')
+                v:SetPaused(true)
+                continue
+            elseif priorityUnit == 'AIR_TECH3' then
+                --RNGLOG('Priority Unit Is AIR')
+                if action == 'unpause' then
+                    if not v:IsPaused() then continue end
+                    --RNGLOG('Unpausing Air Factory')
+                    v:SetPaused(false)
+                    continue
+                end
+                if not v.UnitBeingBuilt then continue end
+                if v.UnitBeingBuilt.Blueprint.CategoriesHash.ENGINEER then continue end
+                if v.UnitBeingBuilt.Blueprint.CategoriesHash.TRANSPORTFOCUS and self:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then continue end
+                --if RNGGETN(units) == 1 then continue end
+                if v:IsPaused() then continue end
+                --RNGLOG('pausing AIR')
+                v:SetPaused(true)
+                continue
+            elseif priorityUnit == 'NAVAL_TECH1' then
                 --RNGLOG('Priority Unit Is NAVAL')
                 if action == 'unpause' then
                     if not v:IsPaused() then continue end
@@ -5367,7 +5632,67 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('pausing NAVAL')
                 v:SetPaused(true)
                 continue
-            elseif priorityUnit == 'LAND' then
+            elseif priorityUnit == 'NAVAL_TECH2' then
+                --RNGLOG('Priority Unit Is NAVAL')
+                if action == 'unpause' then
+                    if not v:IsPaused() then continue end
+                    --RNGLOG('Unpausing Naval Factory')
+                    v:SetPaused(false)
+                    continue
+                end
+                if not v.UnitBeingBuilt then continue end
+                if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
+                if RNGGETN(units) == 1 then continue end
+                if v:IsPaused() then continue end
+                --RNGLOG('pausing NAVAL')
+                v:SetPaused(true)
+                continue
+            elseif priorityUnit == 'NAVAL_TECH3' then
+                --RNGLOG('Priority Unit Is NAVAL')
+                if action == 'unpause' then
+                    if not v:IsPaused() then continue end
+                    --RNGLOG('Unpausing Naval Factory')
+                    v:SetPaused(false)
+                    continue
+                end
+                if not v.UnitBeingBuilt then continue end
+                if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
+                if RNGGETN(units) == 1 then continue end
+                if v:IsPaused() then continue end
+                --RNGLOG('pausing NAVAL')
+                v:SetPaused(true)
+                continue
+            elseif priorityUnit == 'LAND_TECH1' then
+                --RNGLOG('Priority Unit Is LAND')
+                if action == 'unpause' then
+                    if not v:IsPaused() then continue end
+                    --RNGLOG('Unpausing Land Factory')
+                    v:SetPaused(false)
+                    continue
+                end
+                if not v.UnitBeingBuilt then continue end
+                if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
+                if RNGGETN(units) <= 2 then continue end
+                if v:IsPaused() then continue end
+                --RNGLOG('pausing LAND')
+                v:SetPaused(true)
+                continue
+            elseif priorityUnit == 'LAND_TECH2' then
+                --RNGLOG('Priority Unit Is LAND')
+                if action == 'unpause' then
+                    if not v:IsPaused() then continue end
+                    --RNGLOG('Unpausing Land Factory')
+                    v:SetPaused(false)
+                    continue
+                end
+                if not v.UnitBeingBuilt then continue end
+                if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
+                if RNGGETN(units) <= 2 then continue end
+                if v:IsPaused() then continue end
+                --RNGLOG('pausing LAND')
+                v:SetPaused(true)
+                continue
+            elseif priorityUnit == 'LAND_TECH3' then
                 --RNGLOG('Priority Unit Is LAND')
                 if action == 'unpause' then
                     if not v:IsPaused() then continue end
@@ -5573,84 +5898,83 @@ AIBrain = Class(RNGAIBrainClass) {
                 state = 'Energy'
                 --RNGLOG('Assist Focus is Factory and Energy Completion')
                 self.EngineerAssistManagerPriorityTable = {
-                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
-                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
-                    {cat = categories.STRUCTURE * (categories.DEFENSE + categories.TECH2 * categories.ARTILLERY), type = 'Completion' }
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'lowincome structure * factory'},
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'lowincome structure * energyproduction'}, 
+                    {cat = categories.STRUCTURE * (categories.DEFENSE + categories.TECH2 * categories.ARTILLERY), type = 'Completion', debug = 'lowincome structure * defense or arty' }
                 }
             elseif self.EcoManager.EcoPowerPreemptive or self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 or self.EngineerAssistManagerFocusPower then
                 state = 'Energy'
                 --LOG('Assist Focus is Energy')
                 self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION
                 self.EngineerAssistManagerPriorityTable = {
-                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 , type = 'Completion'}, 
-                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2, type = 'Completion'}, 
-                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
-                    {cat = categories.FACTORY * ( categories.LAND + categories.AIR ) - categories.SUPPORTFACTORY, type = 'Upgrade'},
-                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 , type = 'Completion', debug = 'energy structure * energyproduction t3'}, 
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2, type = 'Completion', debug = 'energy structure * energyproduction t2'}, 
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'energy structure * energyproduction t1'}, 
+                    {cat = categories.FACTORY * ( categories.LAND + categories.AIR ) - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'energy factory * land air'},
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'energy factory'},
                 }
             elseif self.EngineerAssistManagerFocusSnipe then
                 state = 'Snipe'
                 --LOG('Assist Focus is Snipe')
                 self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.FACTORY
                 self.EngineerAssistManagerPriorityTable = {
-                    {cat = categories.daa0206, type = 'Completion'},
-                    {cat = categories.xrl0302, type = 'Completion'},
-                    {cat = categories.AIR * (categories.BOMBER + categories.GROUNDATTACK), type = 'Completion'},
-                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'},
-                    {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
-                    {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
-                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
-                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
+                    {cat = categories.daa0206, type = 'Completion', debug = 'snipe daa0206'},
+                    {cat = categories.xrl0302, type = 'Completion', debug = 'snipe xrl0302'},
+                    {cat = categories.AIR * (categories.BOMBER + categories.GROUNDATTACK), type = 'Completion', debug = 'snipe air bombergunship'},
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'snipe structure * energyproduction'},
+                    {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'snipe upgrade factory'}, 
+                    {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'snipe mass upgrade'}, 
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'snipe factory'},
+                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'snipe mass storage'}
                 }
             elseif self.EngineerAssistManagerFocusHighValue then
                 state = 'Experimental'
                 self.EngineerAssistManagerFocusCategory = categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC
                 self.EngineerAssistManagerPriorityTable = {
-                    {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion'},
-                    {cat = categories.MOBILE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC, type = 'Completion'},
-                    {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
-                    {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
-                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
-                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
-                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
+                    {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion', debug = 'HighValue smd'},
+                    {cat = categories.MOBILE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC, type = 'Completion', debug = 'HighValue experimental'},
+                    {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'HighValue hq factory upgrade'}, 
+                    {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'HighValue mass'}, 
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'HighValue structure * energyproduction'}, 
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'HighValue factory'},
+                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'HighValue mass storage'}
                 }
             elseif self.EngineerAssistManagerFocusAirUpgrade then
                 state = 'Air'
                 self.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY
                 self.EngineerAssistManagerPriorityTable = {
-                    {cat = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
-                    {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
-                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
-                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
-                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
-                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'} 
+                    {cat = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'AirUpgrade air hsq upgrade'}, 
+                    {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'AirUpgrade mass'}, 
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'AirUpgrade structure * energyproduction'}, 
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'AirUpgrade factory'},
+                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'AirUpgrade experimental'},
+                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'AirUpgrade mass storage'} 
                 }
             elseif self.EngineerAssistManagerFocusLandUpgrade then
                 state = 'Land'
                 self.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY
                 self.EngineerAssistManagerPriorityTable = {
-                    {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade'}, 
-                    {cat = categories.MASSEXTRACTION, type = 'Upgrade'}, 
-                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
-                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
-                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
-                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'}
+                    {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'LandUpgrade hq factory'}, 
+                    {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'LandUpgrade mass'}, 
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'LandUpgrade structure * energy'}, 
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'LandUpgrade factory'},
+                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'LandUpgrade experimental'},
+                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'LandUpgrade mass storage'}
                 }
             else
                 state = 'Mass'
                 self.EngineerAssistManagerPriorityTable = {
-                    {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion'},
-                    {cat = categories.MASSEXTRACTION, type = 'Upgrade'},
-                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion'},
-                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion'},
-                    {cat = categories.STRUCTURE * categories.EXPERIMENTAL, type = 'Completion'},
-                    {cat = categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC, type = 'Completion'},
-                    {cat = categories.STRUCTURE * categories.EXPERIMENTAL, type = 'Completion'},
-                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion'}, 
-                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade' }, 
-                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'}, 
-                    {cat = categories.STRUCTURE * categories.SHIELD, type = 'Completion'}, 
-                    {cat = categories.STRUCTURE * categories.SHIELD, type = 'Upgrade'},
+                    {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion', debug = 'Mass smd'},
+                    {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'Mass mass'},
+                    {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'Mass mass storage'},
+                    {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'Mass mobile experimental'},
+                    {cat = categories.STRUCTURE * categories.EXPERIMENTAL, type = 'Completion', debug = 'Mass structure experimental'},
+                    {cat = categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC, type = 'Completion', debug = 'Mass strategic'},
+                    {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'Mass energy'}, 
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade', debug = 'Mass factory upgrade'}, 
+                    {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'Mass factory complete'}, 
+                    {cat = categories.STRUCTURE * categories.SHIELD, type = 'Completion', debug = 'Mass shield complete'}, 
+                    {cat = categories.STRUCTURE * categories.SHIELD, type = 'Upgrade', debug = 'Mass shield upgrade'},
                 }
             end
             --LOG('Current EngineerAssistManager build power '..self.EngineerAssistManagerBuildPower..' build power required '..self.EngineerAssistManagerBuildPowerRequired)
@@ -7271,29 +7595,33 @@ AIBrain = Class(RNGAIBrainClass) {
             EcoMultiplier = 1,
             T3ExtractorSpend = false,
             T2ExtractorSpend = false,
-            EcoMassUpgradeTimeout = 120,
+            EcoMassUpgradeTimeout = 90,
             EcoPowerPreemptive = false,
             MinimumPowerRequired = 0,
         }
         self.EcoManager.PowerPriorityTable = {
-            ENGINEER = 12,
-            STATIONPODS = 11,
-            TML = 10,
+            ENGINEER = 14,
+            STATIONPODS = 13,
+            TML = 12,
             SHIELD = 8,
-            AIR = 9,
-            NAVAL = 5,
+            AIR_TECH1 = 9,
+            AIR_TECH2 = 7,
+            AIR_TECH3 = 5,
+            NAVAL_TECH1 = 8,
+            NAVAL_TECH2 = 6,
+            NAVAL_TECH3 = 4,
             RADAR = 3,
-            MASSEXTRACTION = 4,
-            MASSFABRICATION = 7,
-            NUKE = 6,
-            LAND = 2,
+            MASSFABRICATION = 10,
+            NUKE = 11,
+            LAND_TECH1 = 1,
+            LAND_TECH2 = 2,
+            LAND_TECH3 = 3,
         }
         self.EcoManager.MassPriorityTable = {
-            TML = 12,
-            STATIONPODS = 10,
-            ENGINEER = 11,
-            NAVAL = 8,
-            NUKE = 9,
+            TML = 18,
+            STATIONPODS = 16,
+            ENGINEER = 17,
+            NUKE = 15
         }
 
         self.DefensiveSupport = {}
@@ -7332,7 +7660,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.ACUEnemyClose = false
         self.EnemyIntel.HighPriorityTargetAvailable = false
         self.EnemyIntel.ACU = {}
-        self.EnemyIntel.Phase = 1
+        self.EnemyIntel.NavalPhase = 1
+        self.EnemyIntel.LandPhase = 1
+        self.EnemyIntel.AirPhase = 1
         self.EnemyIntel.TML = {}
         self.EnemyIntel.SMD = {}
         self.EnemyIntel.SML = {}

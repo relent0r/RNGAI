@@ -50,7 +50,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
             }
         }
@@ -111,7 +111,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua',
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIACUBaseTemplate.lua',
                 BaseTemplate = 'ACUBaseTemplate',
             }
         }

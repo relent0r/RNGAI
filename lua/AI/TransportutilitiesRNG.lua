@@ -60,6 +60,30 @@ function CreateTransportPool( aiBrain )
 
 end
 
+function FindEngineerToTransport(aiBrain)
+	local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
+	local startPos = aiBrain.BrainIntel.StartPos
+    local numUnits = poolPlatoon:GetNumCategoryUnits(categories.ENGINEER * categories.TECH1 - categories.COMMAND, startPos, 80)
+	if numUnits < 1 then
+		local AlliedPlatoons = aiBrain:GetPlatoonsList()
+		for _, v in AlliedPlatoons do
+			if v.PlatoonData.JobType == 'Reclaim' and not IsDestroyed(v) then
+				local platPos = v:GetPlatoonPosition()
+				if platPos[1] then
+					local dx = platPos[1] - startPos[1]
+					local dz = platPos[3] - startPos[3]
+					local posDist = dx * dx + dz * dz
+					if posDist < 14400 then
+						v:PlatoonDisband()
+						break
+					end
+				end
+			end
+		end
+	end
+	aiBrain.ZoneExpansionTransportRequested = nil
+end
+
 -- This utility should get called anytime a transport is built or created
 -- it will force the transport into the Transport pool & pass control over to the ReturnToPool function
 -- it not already done so, it will create the callback that fires when a transport unloads any unit
@@ -1890,11 +1914,11 @@ function WatchUnitLoading( transport, units, aiBrain, UnitPlatoon)
 	while (not unitsdead) and loading do
 		watchcount = watchcount + 1.3
 		if watchcount > 210 then
-            WARN("*AI DEBUG "..aiBrain.Nickname.." "..UnitPlatoon.BuilderName.." "..transport.PlatoonHandle.BuilderName.." Transport "..transport.EntityId.." ABORTING LOAD - watchcount "..watchcount)
+            WARN("*AI DEBUG "..aiBrain.Nickname.." "..tostring(UnitPlatoon.BuilderName).." "..tostring(transport.PlatoonHandle.BuilderName).." Transport "..transport.EntityId.." ABORTING LOAD - watchcount "..watchcount)
 			loading = false
             transport.Loading = nil
 			if TransportDialog then
-				LOG("*AI DEBUG "..aiBrain.Nickname.." "..UnitPlatoon.BuilderName.." "..transport.PlatoonHandle.BuilderName.." Transport "..transport.EntityId.." watchcount > 210 returning to pool")
+				LOG("*AI DEBUG "..aiBrain.Nickname.." "..tostring(UnitPlatoon.BuilderName).." "..tostring(transport.PlatoonHandle.BuilderName).." Transport "..transport.EntityId.." watchcount > 210 returning to pool")
 			end
             ForkTo ( ReturnTransportsToPool, aiBrain, {transport}, true )
 			break
@@ -2030,6 +2054,7 @@ function WatchTransportTravel( transport, destination, aiBrain, UnitPlatoon )
 	local GetPosition = GetPosition
     local VDist2 = VDist2
     local WaitTicks = WaitTicks
+	local aiBrain = transport:GetAIBrain()
 	
 	transport.StuckCount = 0
 	transport.LastPosition = TableCopy(GetPosition(transport))
@@ -2052,6 +2077,25 @@ function WatchTransportTravel( transport, destination, aiBrain, UnitPlatoon )
 				destination = GetPosition(transport)
 				LOG('Destination is set as '..tostring(destination[1]..':'..tostring(destination[3])))
                 break
+			end
+			if UnitPlatoon.ZoneExpansionSet and not UnitPlatoon.AlternativeZoneExpansionSet and aiBrain:GetThreatAtPosition(destination, 0, true, 'AntiSurface') > 5 then
+				transport.LastPosition = nil
+				UnitPlatoon.BuilderData.AvoidZonePos = destination
+				UnitPlatoon:ChangeState(UnitPlatoon.FindAlternateZoneExpansion)
+				local timeout = 0
+				while not UnitPlatoon.AlternativeZoneExpansionSet do
+					timeout = timeout + 1
+					coroutine.yield(10)
+					if UnitPlatoon.AlternativeZoneExpansionFailed or timeout > 5 then
+						break
+					end
+				end
+				if UnitPlatoon.AlternativeZoneExpansionSet and UnitPlatoon.BuilderData.Position then
+					destination = UnitPlatoon.BuilderData.Position
+					IssueClearCommands({transport})
+					IssueMove({transport}, destination )
+					UnitPlatoon.AlternativeZoneExpansionSet = false
+				end
 			end
 			
 			-- someone in transport platoon is close - begin the drop -
@@ -2084,10 +2128,10 @@ function WatchTransportTravel( transport, destination, aiBrain, UnitPlatoon )
 				ForkTo( ReturnTransportsToPool, aiBrain, {transport}, true )
                 return
 			end
-		
+		    local transportPos = GetPosition(transport)
 			-- is the transport still close to its last position bump the stuckcount
 			if transport.LastPosition then
-				if VDist2(transport.LastPosition[1], transport.LastPosition[3], GetPosition(transport)[1],GetPosition(transport)[3]) < 6 then
+				if VDist2Sq(transport.LastPosition[1], transport.LastPosition[3], transportPos[1],transportPos[3]) < 36 then
 					transport.StuckCount = transport.StuckCount + 0.5
 				else
 					transport.StuckCount = 0
@@ -2100,12 +2144,12 @@ function WatchTransportTravel( transport, destination, aiBrain, UnitPlatoon )
 					transport.StuckCount = 0
 				end
 
-				IssueClearCommands(transport)
-				IssueMove(transport, destination )
+				IssueClearCommands({transport})
+				IssueMove({transport}, destination )
 			end
 		
 			-- this needs some examination -- it should signal the entire transport platoon - not just itself --
-			if VDist2(GetPosition(transport)[1], GetPosition(transport)[3], destination[1],destination[3]) < 100 then
+			if VDist2Sq(transportPos[1], transportPos[3], destination[1],destination[3]) < 625 then
 				transport.PlatoonHandle.AtGoal = true
 			else
                 transport.LastPosition = TableCopy(transport:GetPosition())

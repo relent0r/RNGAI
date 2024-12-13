@@ -147,7 +147,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EnergyT2', 6},
         BuilderConditions = {
             { EBC, 'LessThanEnergyTrendCombinedRNG', { 120.0 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.5 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.8 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.10}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 3, categories.ENERGYPRODUCTION * categories.TECH2, 1, categories.ENERGYPRODUCTION * categories.TECH3 - categories.HYDROCARBON }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 - categories.HYDROCARBON }},
@@ -217,7 +217,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EnergyT3', 6},
         BuilderConditions = {
             { EBC, 'LessThanEnergyTrendCombinedRNG', { 500.0 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.5 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.8 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.10}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3 - categories.HYDROCARBON }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.ENERGYPRODUCTION * categories.TECH3 - categories.HYDROCARBON }},
@@ -257,7 +257,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Energy', 3},
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
-            { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
+            { EBC, 'LessThanEnergyTrendOverTimeRNG', { 28.0 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 0.1 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON }}, -- Don't build after 1 T2 Pgens Exist
         },
@@ -436,8 +436,8 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 960 } },
             { UCBC, 'UnitCapCheckLess', { .7 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.3 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.90}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.3 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.95}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENERGYSTORAGE }},
         },
         BuilderType = 'Any',

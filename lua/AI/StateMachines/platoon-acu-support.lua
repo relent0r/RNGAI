@@ -48,7 +48,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             self.MergeType = 'LandMergeStateMachine'
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
-            if aiBrain.EnemyIntel.Phase > 1 then
+            if aiBrain.EnemyIntel.LandPhase > 1 then
                 self.EnemyRadius = 70
                 self.EnemyRadiusSq = 70 * 70
             else
@@ -91,15 +91,16 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local acu = aiBrain.CDRUnit
             local rangedAttack 
             if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
-                local enemyAcuPosition = aiBrain.BrainIntel.SuicideModeTarget:GetPosition()
+                local suicideTarget = aiBrain.BrainIntel.SuicideModeTarget
+                local enemyAcuPosition = suicideTarget:GetPosition()
                 local rx = self.Pos[1] - enemyAcuPosition[1]
                 local rz = self.Pos[3] - enemyAcuPosition[3]
                 local enemyAcuDistance = rx * rx + rz * rz
                 if NavUtils.CanPathTo(self.MovementLayer, self.Pos, enemyAcuPosition) then
                     if enemyAcuDistance > 6400 then
                         self.BuilderData = {
-                            AttackTarget = aiBrain.BrainIntel.SuicideModeTarget,
-                            Position = aiBrain.BrainIntel.SuicideModeTarget:GetPosition(),
+                            AttackTarget = suicideTarget,
+                            Position = suicideTarget:GetPosition(),
                             CutOff = 400
                         }
                         if not self.BuilderData.Position then
@@ -109,6 +110,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.Navigating)
                         return
                     else
+                        self.targetcandidates = {suicideTarget}
                         self:ChangeState(self.CombatLoop)
                         return
                     end
@@ -164,6 +166,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 local az = self.Pos[3] - targetPos[3]
                 if ax * ax + az * az < self.EnemyRadiusSq then
                     --self:LogDebug(string.format('DecideWhatToDo previous target combatloop'))
+                    self.targetcandidates = {self.BuilderData.AttackTarget}
                     self:ChangeState(self.CombatLoop)
                     return
                 end
@@ -241,7 +244,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local units=GetPlatoonUnits(self)
             if not aiBrain.BrainIntel.SuicideModeActive then
                 for k,unit in self.targetcandidates do
-                    if not unit or unit.Dead or not unit.machineworth then 
+                    if not unit or unit.Dead or not unit['rngdata'].machineworth then 
                         --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
                         table.remove(self.targetcandidates,k) 
                     end
@@ -265,7 +268,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                 local rz = unitPos[3] - enemyPos[3]
                                 local tmpDistance = rx * rx + rz * rz
                                 if v['rngdata'].Role ~= 'Artillery' and v['rngdata'].Role ~= 'Silo' and v['rngdata'].Role ~= 'Sniper' then
-                                    tmpDistance = tmpDistance*m.machineworth
+                                    tmpDistance = tmpDistance*m['rngdata'].machineworth
                                 end
                                 if not closestTarget or tmpDistance < closestTarget then
                                     target = m
@@ -618,7 +621,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local units=GetPlatoonUnits(self)
             if not aiBrain.BrainIntel.SuicideModeActive then
                 for k,unit in self.targetcandidates do
-                    if not unit or unit.Dead or not unit.machineworth then 
+                    if not unit or unit.Dead or not unit['rngdata'].machineworth then 
                         --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
                         table.remove(self.targetcandidates,k) 
                     end

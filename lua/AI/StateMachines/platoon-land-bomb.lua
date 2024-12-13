@@ -54,7 +54,7 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
             end
             self.ScoutSupported = true
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
-            if aiBrain.EnemyIntel.Phase > 1 then
+            if aiBrain.EnemyIntel.LandPhase > 1 then
                 self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 70)
             else
                 self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 55)

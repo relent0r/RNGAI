@@ -158,4 +158,59 @@ function MassMarkerLessThanDistanceRNG(aiBrain, distance)
     return false
 end
 
-
+function CanBuildOnZoneDistanceRNG(aiBrain, locationType, minDistance, maxDistance, threatMin, threatMax, threatRings, threatType)
+    if not aiBrain.ZonesInitialized then
+        return false
+    end
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+    local locationPosition = engineerManager.Location
+    if not engineerManager then
+        --WARN('*AI WARNING: CanBuildOnMass: Invalid location - ' .. locationType)
+        return false
+    end
+    local zoneMarkers = {}
+    local threatCheck = false
+    if threatMin and threatMax and threatRings then
+        threatCheck = true
+    end
+    for _, v in aiBrain.Zones.Land.zones do
+        if v.resourcevalue > 0 then
+            local zx = locationPosition[1] - v.pos[1]
+            local zz = locationPosition[3] - v.pos[3]
+            local zoneDistance = zx * zx + zz * zz
+            if zoneDistance <= maxDistance and zoneDistance >= minDistance then
+                table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+            end
+        end
+    end
+    for _, v in aiBrain.Zones.Naval.zones do
+        --LOG('Inserting zone data position '..repr(v.pos)..' resource markers '..repr(v.resourcemarkers)..' resourcevalue '..repr(v.resourcevalue)..' zone id '..repr(v.id))
+        if v.resourcevalue > 0 then
+            local zx = locationPosition[1] - v.pos[1]
+            local zz = locationPosition[3] - v.pos[3]
+            local zoneDistance = zx * zx + zz * zz
+            if zoneDistance <= maxDistance and zoneDistance >= minDistance then
+                table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+            end
+            table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+        end
+    end
+    local zoneFound = false
+    for _,v in zoneMarkers do
+        if threatCheck then
+            local threat = aiBrain:GetThreatAtPosition(v.Position, threatRings, true, threatType or 'Overall')
+            if threat <= threatMin or threat >= threatMax then
+                continue
+            end
+        end
+        for _, m in v.ResourceMarkers do
+            if aiBrain:CanBuildStructureAt('ueb1103', m.position) then
+                zoneFound = true
+                break
+            end
+        end
+        if zoneFound then
+            break
+        end
+    end
+end

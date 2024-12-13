@@ -275,7 +275,7 @@ IntelManager = Class {
         self:ForkThread(self.IntelGridThread, self.Brain)
         self:ForkThread(self.ZoneExpansionThreadRNG)
         self:ForkThread(self.TacticalIntelCheck)
-        self:ForkThread(self.DrawZoneArmyValue)
+        --self:ForkThread(self.DrawZoneArmyValue)
         if self.Debug then
             self:ForkThread(self.IntelDebugThread)
         end
@@ -605,7 +605,7 @@ IntelManager = Class {
                 elseif platoon.MovementLayer == 'Air' then
                     zoneSet = aiBrain.Zones.Air.zones
                 elseif platoon.MovementLayer == 'Water' then
-                    zoneSet = aiBrain.Zones.Water.zones
+                    zoneSet = aiBrain.Zones.Naval.zones
                 end
             else
                 zoneSet = aiBrain.Zones.Land.zones
@@ -633,8 +633,13 @@ IntelManager = Class {
                 local dz = originPosition[3] - v.pos[3]
                 local zoneDist = dx * dx + dz * dz
                 if (not bestZoneDist or zoneDist < bestZoneDist) and NavUtils.CanPathTo(movementLayer, originPosition, v.pos) then
-                    if enemyPosition and RUtils.GetAngleRNG(originPosition[1], originPosition[3], v.pos[1], v.pos[3], enemyPosition[1], enemyPosition[3]) < 0.4 then
-                        continue
+                    if enemyPosition then 
+                        local ex = enemyPosition[1] - v.pos[1]
+                        local ez = enemyPosition[3] - v.pos[3]
+                        local enemyDistDist = ex * ex + ez * ez
+                        if enemyDistDist < zoneDist or RUtils.GetAngleRNG(originPosition[1], originPosition[3], v.pos[1], v.pos[3], enemyPosition[1], enemyPosition[3]) < 0.4 then
+                            continue
+                        end
                     end
                     if controlRequired then
                         if control == 'Allied' then
@@ -959,7 +964,7 @@ IntelManager = Class {
                     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
                     local enemyThreatRatio = 0
                     if zoneCount > 0 and enemyAirThreat > 0 and myAirThreat > 0 then
-                        enemyThreatRatio = (enemyAirThreat / myAirThreat * zoneCount)
+                        enemyThreatRatio = math.min((enemyAirThreat / myAirThreat * zoneCount), 25)
                     end
 
                     
@@ -969,13 +974,12 @@ IntelManager = Class {
                             if requireSameLabel and platoonLabel and v.label > 0 and platoonLabel ~= v.label then
                                 continue
                             end
-                            if v.friendlyantiairallocatedthreat > math.max(v.enemyairthreat * 2, enemyThreatRatio) then
+                            if v.friendlyantiairallocatedthreat > math.max(v.enemyairthreat, enemyThreatRatio) then
                                 --LOG('Already enough aa threat allocated')
                                 --LOG('Current antiair allocated '..tostring(v.friendlyantiairallocatedthreat))
                                 --LOG('Maximum Allowed '..tostring(math.max(v.enemyairthreat * 2, enemyThreatRatio)))
                                 continue
                             end
-                            local distanceModifier = VDist3Sq(originPos, v.pos)
                             local startPos = 1
                             local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
                             local controlValue = 1
@@ -1014,9 +1018,35 @@ IntelManager = Class {
                         end
                     end
                     if zoneSelection then
+                        --LOG('AntiAir Defense zone was selected threat ratio was '..tostring(enemyThreatRatio)..' air threat at position was '..tostring(zoneSet[zoneSelection].enemyairthreat))
                         return zoneSelection
                     else
-                        --RNGLOG('RNGAI: Zone Control Defense Selection Query did not select zone')
+                        --LOG('AntiAir Defense zone was selected threat ratio was')
+                        local randomZones = {}
+                        local randomZoneCount = 0
+                        for k, v in zoneSet do
+                            if v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
+                                if requireSameLabel and platoonLabel and v.label > 0 and platoonLabel ~= v.label then
+                                    continue
+                                end
+                                if v.teamvalue > 0.8 then
+                                    table.insert(randomZones, {zoneid = v.id})
+                                    randomZoneCount = randomZoneCount + 1
+                                end
+                            end
+                        end
+                        if randomZoneCount > 0 then
+                            zoneSelection = randomZones[Random(1,randomZoneCount)].zoneid
+                        end
+                    end
+                    if zoneSelection then
+                        --LOG('Returning random zone number '..tostring(zoneSelection))
+                        --LOG('Details on zone ')
+                        --LOG('Distance is '..tostring(VDist3(zoneSet[zoneSelection].pos, originPos)))
+                        --LOG('friend aa threat '..tostring(zoneSet[zoneSelection].friendlylandantiairthreat))
+                        return zoneSelection
+                    else
+                        --LOG('Still no zone selection, random zone count was '..tostring(randomZoneCount))
                     end
                 elseif type == 'naval' then
                 end
@@ -1333,13 +1363,13 @@ IntelManager = Class {
         local aiBrain = self.Brain
         local colourIndex = 1
         local colourAssignment = {}
-        LOG('starting zonedrawradius')
+        --LOG('starting zonedrawradius')
     
         for _, zone in aiBrain.Zones.Land.zones do
             -- Assign a color to the bestarmy if not already assigned
-            LOG('Zone is '..tostring(zone.id))
+            --LOG('Zone is '..tostring(zone.id))
             if zone.bestarmy then
-                LOG('Zone has bestarmy '..tostring(zone.bestarmy))
+                --LOG('Zone has bestarmy '..tostring(zone.bestarmy))
                 if not colourAssignment[zone.bestarmy] then
                     colourAssignment[zone.bestarmy] = colourIndex
                     colourIndex = colourIndex + 1
@@ -1393,7 +1423,7 @@ IntelManager = Class {
                 v1.bestarmy = self:ZoneSetBestArmy(v1)
             end
         end
-        LOG('Best Armies are set')
+        --LOG('Best Armies are set')
         self.MapMaximumValues.MaximumResourceValue = maximumResourceValue
     end,
 
@@ -1411,10 +1441,10 @@ IntelManager = Class {
             end
         end
         if closestArmy then
-            LOG('Best army besting returned for zone is '..tostring(closestArmy))
+            --LOG('Best army besting returned for zone is '..tostring(closestArmy))
             return closestArmy
         end
-        LOG('No closestArmy is being returned')
+        --LOG('No closestArmy is being returned')
         return false
     end,
 
@@ -2502,7 +2532,7 @@ IntelManager = Class {
                                     --LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T1 artillery for base '..tostring(k))
                                     aiBrain.amanager.Demand.Bases[k].Land.T1.arty= math.ceil(indirectFireCount * 1.5)
                                 end
-                                if v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH2) > 0 then
+                                if v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH2) > 0 and self.StrategyFlags.EarlyT2AmphibBuilt then
                                     --LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T2 mml for base '..tostring(k))
                                     aiBrain.amanager.Demand.Bases[k].Land.T2.mml = math.ceil(indirectFireCount * 1.3)
                                     --LOG('We want to build MML at builder manager '..tostring(k))
@@ -3845,13 +3875,13 @@ TruePlatoonPriorityDirector = function(aiBrain)
                                 elseif b.type=='mex' then
                                     priority=anglePriority + 40
                                 elseif b.type=='radar' then
-                                    priority=anglePriority + 100
+                                    priority=anglePriority + 60
                                 elseif b.type=='arty' then
                                     priority=anglePriority + 30
                                 elseif b.type=='tank' then
                                     priority=anglePriority + 30
                                 elseif b.type=='exp' then
-                                    priority=anglePriority + 100
+                                    priority=anglePriority + 150
                                 else
                                     priority=anglePriority + 20
                                 end

@@ -64,7 +64,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             self.ScoutSupported = true
             self.ScoutUnit = self:GetPlatoonUnits()[1]
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
-            if aiBrain.EnemyIntel.Phase > 1 then
+            if aiBrain.EnemyIntel.LandPhase > 1 then
                 self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 70)
             else
                 self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 55)
@@ -615,7 +615,8 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             local builderData = self.BuilderData
             if not builderData.Position then
                 self:LogWarning('No initial retreat position')
-                self:ChangeState(self.Error)
+                coroutine.yield(10)
+                self:ChangeState(self.DecideWhatToDo)
                 return
             end
             self:LogDebug('Retreating, scout type is '..tostring(builderData.ScoutType))
@@ -799,7 +800,6 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     coroutine.yield(20)
-
                 end
             end
             --LOG('Retreating to platoon')

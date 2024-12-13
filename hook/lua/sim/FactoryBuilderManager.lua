@@ -239,6 +239,9 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         elseif EntityCategoryContains(categories.TRANSPORTFOCUS - categories.uea0203, finishedUnit ) then
             self.Brain.TransportRequested = nil
             finishedUnit:ForkThread( import('/lua/ai/transportutilities.lua').AssignTransportToPool, finishedUnit:GetAIBrain() )
+            --if self.Brain.ZoneExpansionTransportRequested then
+            --    finishedUnit:ForkThread( import('/lua/ai/transportutilities.lua').FindEngineerToTransport, finishedUnit:GetAIBrain() )
+            --end
 		elseif finishedUnit.Blueprint.CategoriesHash.AIR then
             local unitStats = self.Brain.IntelManager.UnitStats
             local unitValue = finishedUnit.Blueprint.Economy.BuildCostMass or 0

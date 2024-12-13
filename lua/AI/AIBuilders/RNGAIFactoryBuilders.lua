@@ -503,7 +503,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { MIBC, 'MapGreaterThan', { 256, 256 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.1 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.15 }},
             { UCBC, 'PlayerRoleCheck', {'LocationType', 1, categories.FACTORY * categories.AIR, 'SPAM' }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.AIR }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
@@ -1265,10 +1265,9 @@ BuilderGroup {
         Priority = 1000,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND }},
          },
         BuilderType = 'Any',

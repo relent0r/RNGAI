@@ -42,11 +42,9 @@ end
 
 local StartingReclaimPresent = function(self, aiBrain, builderManager)
     if aiBrain.StartMassReclaimTotal > 500 then
-        --LOG('StartMassReclaim > 500')
         return 1002
     end
     if aiBrain.StartEnergyReclaimTotal > 5000 then
-        --LOG('StartMassReclaim > 1000')
         return 1002
     end
     return 950
@@ -142,7 +140,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
             { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.5, 0.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.0 }},
         },
         BuilderType = 'All',
     },
@@ -154,7 +152,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.5, 0.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.0 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 50, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'Air',
@@ -167,7 +165,7 @@ BuilderGroup {
             { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 2, categories.ENGINEER - categories.COMMAND }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.50}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.50}},
         },
         BuilderType = 'All',
     },
@@ -202,7 +200,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH2 * categories.AIR}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 3 of them.
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.0 }},
         },
         BuilderType = 'Air',
     },
@@ -225,7 +223,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER * categories.TECH3 } },
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.0 }},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH3 - categories.COMMAND }},
         },
         BuilderType = 'Air',
@@ -263,7 +261,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 2 of them.
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH2}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.0 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.0 }},
         },
         BuilderType = 'All',
     },
@@ -286,7 +284,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH2}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.50}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.50}},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 3, categories.ENGINEER * categories.TECH2 - categories.COMMAND }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.ENGINEER * categories.TECH2 - categories.COMMAND } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
@@ -324,7 +322,7 @@ BuilderGroup {
         Priority = 850, -- low factory priority
         BuilderConditions = {
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.50}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.50}},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 3, categories.ENGINEER * categories.TECH3 - categories.COMMAND }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.ENGINEER * categories.TECH3 - categories.COMMAND } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech3' } },
@@ -523,7 +521,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistUnfinished', 1},
         InstanceCount = 4,
         BuilderConditions = {
-                { UCBC, 'UnfinishedUnitsAtLocationRNG', { 'LocationType', categories.STRUCTURE * (categories.TECH2 * categories.ARTILLERY + categories.DEFENSE + categories.FACTORY + categories.ENERGYPRODUCTION) }},
+                { UCBC, 'UnfinishedUnitsAtLocationRNG', { 'LocationType', categories.STRUCTURE * (categories.TECH2 * categories.ARTILLERY + categories.DEFENSE + categories.FACTORY ) }},
                 { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             },
         BuilderData = {
@@ -533,7 +531,7 @@ BuilderGroup {
             Task = 'FinishUnit',
             Assist = {
                 AssistLocation = 'LocationType',
-                BeingBuiltCategories = categories.STRUCTURE * (categories.TECH2 * categories.ARTILLERY + categories.DEFENSE + categories.FACTORY + categories.ENERGYPRODUCTION),
+                BeingBuiltCategories = categories.STRUCTURE * (categories.TECH2 * categories.ARTILLERY + categories.DEFENSE + categories.FACTORY ),
             },
         },
         BuilderType = 'Any',
@@ -920,6 +918,7 @@ BuilderGroup {
         InstanceCount = 8,
         BuilderConditions = {
             { EBC, 'NavalAssistControlRNG', { 1.05, 1.05, 'LocationType', 'Naval' }},
+            { UCBC, 'LocationFactoriesBuildingGreater', { 'LocationType', 0, categories.NAVAL * categories.MOBILE } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -1000,6 +999,7 @@ BuilderGroup {
             },
         BuilderData = {
             JobType = 'Reclaim',
+            ReclaimTable = true,
             LocationType = 'LocationType',
             ReclaimTime = 80,
             MinimumReclaim = 15
@@ -1019,6 +1019,7 @@ BuilderGroup {
             },
         BuilderData = {
             JobType = 'Reclaim',
+            ReclaimTable = true,
             LocationType = 'LocationType',
             ReclaimTime = 80,
             MinimumReclaim = 15,
@@ -1096,7 +1097,7 @@ BuilderGroup {
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },
         BuilderData = {
-            JobType = 'Expansion',
+            JobType = 'Reclaim',
             ReclaimTable = true,
             LocationType = 'LocationType',
             ReclaimTime = 80,
@@ -1121,7 +1122,7 @@ BuilderGroup {
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },
         BuilderData = {
-            JobType = 'Expansion',
+            JobType = 'Reclaim',
             ReclaimTable = true,
             LocationType = 'LocationType',
             ReclaimTime = 80,

@@ -44,6 +44,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             if not self.MovementLayer then
                 self.MovementLayer = self:GetNavigationalLayer()
             end
+            self.EnemyRadius = 35
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             StartGunshipThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
@@ -76,13 +77,98 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.AttackTarget)
                 return
             end
+            if self.CurrentEnemyAirThreat > 0 and self.CurrentEnemyAirThreat > self.CurrentPlatoonThreatAntiAir and homeDist > 900 and not aiBrain.BrainIntel.SuicideModeActive then
+                self:LogDebug(string.format('Gunship found air threat and is a certain distance from base'))
+                local platoonHealth = 0
+                for _, unit in self:GetPlatoonUnits() do
+                    if not unit.Dead then
+                        platoonHealth = platoonHealth + unit:GetHealth()
+                    end
+                end
+                local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.MOBILE + categories.STRUCTURE) * categories.ANTIAIR, platPos, 75, 'Enemy')
+                local totalEnemyAntiAirHealth = 0
+                local totalEnemyAntiAirThreat = 0
+                local newTarget
+                for _, e in enemyUnits do
+                    if e and not e.Dead then
+                        local bp = e.Blueprint
+                        totalEnemyAntiAirThreat = totalEnemyAntiAirThreat + bp.Defense.AirThreatLevel
+                        totalEnemyAntiAirHealth = totalEnemyAntiAirHealth + e:GetHealth()
+                        if not newTarget and not e.Blueprint.CategoriesHash.AIR then
+                            newTarget = e
+                        end
+                    end
+                end
+                --LOG(string.format('Gunship Total platoon health decayed: '..tostring(platoonHealth / 45)))
+                --LOG(string.format('Gunship Total enemy health multiplier: '..tostring(totalEnemyAntiAirHealth * 1.3)))
+                --LOG(string.format('Gunship Total enemy threat: '..tostring(totalEnemyAntiAirThreat)))
+                if totalEnemyAntiAirHealth * 1.3 < platoonHealth and totalEnemyAntiAirThreat < (platoonHealth / 45) then
+                    if newTarget then
+                        self.BuilderData = {
+                            AttackTarget = newTarget,
+                            Position = table.copy(newTarget:GetPosition())
+                        }
+                        self:ChangeState(self.AttackTarget)
+                        return
+                    end
+                else
+                    self:ChangeState(self.Retreating)
+                    return
+                end
+            end
+            if self.BuilderData.RecheckPosition then
+                local checkPos = self.BuilderData.RecheckPosition
+                if StateUtils.SimpleTarget(self,aiBrain,checkPos) then
+                    for k,unit in self.targetcandidates do
+                        if not unit or unit.Dead or not unit['rngdata'].machineworth then 
+                            --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
+                            table.remove(self.targetcandidates,k) 
+                        end
+                    end
+                    local closestTarget
+                    for l, m in self.targetcandidates do
+                        if m and not m.Dead then
+                            local enemyPos = m:GetPosition()
+                            local rx = platPos[1] - enemyPos[1]
+                            local rz = platPos[3] - enemyPos[3]
+                            local tmpDistance = rx * rx + rz * rz
+                            tmpDistance = tmpDistance*m['rngdata'].machineworth
+                            if not closestTarget or tmpDistance < closestTarget then
+                                target = m
+                                closestTarget = tmpDistance
+                            end
+                        end
+                    end
+                    if target then
+                        self.targetcandidates = {}
+                        --LOG('Gunship high Priority Target Found '..target.UnitId)
+                        self.BuilderData = {
+                            AttackTarget = target,
+                            Position = table.copy(target:GetPosition())
+                        }
+                        local targetPosition = self.BuilderData.Position
+                        local tx = platPos[1] - targetPosition[1]
+                        local tz = platPos[3] - targetPosition[3]
+                        local targetDistance = tx * tx + tz * tz
+                        if targetDistance < 22500 then
+                            ----self:LogDebug(string.format('Gunship AttackTarget on high priority target'))
+                            self:ChangeState(self.AttackTarget)
+                            return
+                        else
+                            ----self:LogDebug(string.format('Gunship navigating to high priority experimental'))
+                            self:ChangeState(self.Navigating)
+                            return
+                        end
+                    end
+                end
+            end
             if not target then
                 local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, nil, nil, nil, true)
                 if target then
                     --LOG('Gunship high Priority Target Found '..target.UnitId)
                     self.BuilderData = {
                         AttackTarget = target,
-                        Position = target:GetPosition()
+                        Position = table.copy(target:GetPosition())
                     }
                     local targetPosition = self.BuilderData.Position
                     local tx = platPos[1] - targetPosition[1]
@@ -103,45 +189,6 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 ----self:LogDebug(string.format('Gunship retreating due to perimeter monitor at '..tostring(self.LocationType)))
                 self:ChangeState(self.Retreating)
                 return
-            end
-            if self.CurrentEnemyAirThreat > 0 and self.CurrentEnemyAirThreat > self.CurrentPlatoonThreatAntiAir and homeDist > 900 and not aiBrain.BrainIntel.SuicideModeActive then
-                self:LogDebug(string.format('Gunship found air threat and is a certain distance from base'))
-                local platoonHealth = 0
-                for _, unit in self:GetPlatoonUnits() do
-                    if not unit.Dead then
-                        platoonHealth = platoonHealth + unit:GetHealth()
-                    end
-                end
-                local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.MOBILE + categories.STRUCTURE) * categories.ANTIAIR, platPos, 75, 'Enemy')
-                local totalEnemyAntiAirHealth = 0
-                local totalEnemyAntiAirThreat = 0
-                local newTarget
-                for _, e in enemyUnits do
-                    if e and not e.Dead then
-                        local bp = e.Blueprint
-                        totalEnemyAntiAirThreat = totalEnemyAntiAirThreat + bp.Defense.AirThreatLevel
-                        totalEnemyAntiAirHealth = totalEnemyAntiAirHealth + e:GetHealth()
-                        if not newTarget then
-                            newTarget = e
-                        end
-                    end
-                end
-                --LOG(string.format('Gunship Total platoon health decayed: '..tostring(platoonHealth / 45)))
-                --LOG(string.format('Gunship Total enemy health multiplier: '..tostring(totalEnemyAntiAirHealth * 1.3)))
-                --LOG(string.format('Gunship Total enemy threat: '..tostring(totalEnemyAntiAirThreat)))
-                if totalEnemyAntiAirHealth * 1.3 < platoonHealth and totalEnemyAntiAirThreat < (platoonHealth / 45) then
-                    if newTarget then
-                        self.BuilderData = {
-                            AttackTarget = newTarget,
-                            Position = newTarget:GetPosition()
-                        }
-                        self:ChangeState(self.AttackTarget)
-                        return
-                    end
-                else
-                    self:ChangeState(self.Retreating)
-                    return
-                end
             end
             if self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Tractored then 
                 if not self.BuilderData.AttackTarget.Dead then
@@ -176,7 +223,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 if target and self.MaxPlatoonDPS > 250 then
                     self.BuilderData = {
                         AttackTarget = target,
-                        Position = target:GetPosition()
+                        Position = table.copy(target:GetPosition())
                     }
                     ----self:LogDebug(string.format('Gunship navigating to snipe ACU'))
                     self:ChangeState(self.Navigating)
@@ -189,7 +236,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                     --LOG('Gunship high Priority Target Found '..target.UnitId)
                     self.BuilderData = {
                         AttackTarget = target,
-                        Position = target:GetPosition()
+                        Position = table.copy(target:GetPosition())
                     }
 
                     ----self:LogDebug(string.format('Gunship navigating to high priority target'))
@@ -267,6 +314,11 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             local platoonUnits = self:GetPlatoonUnits()
             local builderData = self.BuilderData
             local destination = builderData.Position
+            local targetNavigation
+            local attackTarget = self.BuilderData.AttackTarget
+            if attackTarget then
+                targetNavigation = true
+            end
             local navigateDistanceCutOff = builderData.CutOff or 3600
             local destCutOff = math.sqrt(navigateDistanceCutOff) + 10
             if not destination then
@@ -358,6 +410,13 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                     end
                     -- check for threats
                     WaitTicks(10)
+                end
+                if targetNavigation and attackTarget.Dead then
+                    if self.BuilderData then
+                        self.BuilderData.RecheckPosition = destination
+                    end
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
                 end
                 WaitTicks(1)
             end
@@ -486,6 +545,9 @@ AssignToUnitsMachine = function(data, platoon, units)
         local maxPlatoonDPS = 0
         if platoonUnits then
             for _, v in platoonUnits do
+                if not platoon.machinedata then
+                    platoon.machinedata = {name = 'GunShip',id=v.EntityId}
+                end
                 IssueClearCommands({v})
                 v.PlatoonHandle = platoon
                 for i = 1, v:GetWeaponCount() do

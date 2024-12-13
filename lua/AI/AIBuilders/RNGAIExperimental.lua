@@ -113,7 +113,7 @@ BuilderGroup {
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 4, categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * categories.TECH3}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.3 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.95 } },
         },
         BuilderType = 'Any',

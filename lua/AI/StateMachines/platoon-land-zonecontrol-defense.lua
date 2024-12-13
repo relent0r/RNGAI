@@ -51,7 +51,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             end
             local aiBrain = self:GetBrain()
             self.ZoneType = self.PlatoonData.ZoneType or 'aadefense'
-            if aiBrain.EnemyIntel.Phase > 1 then
+            if aiBrain.EnemyIntel.LandPhase > 1 then
                 self.EnemyRadius = 75
                 self.EnemyRadiusSq = 75 * 75
             else
@@ -140,6 +140,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 local az = platPos[3] - targetPos[3]
                 if ax * ax + az * az < self.EnemyRadiusSq then
                     --self:LogDebug(string.format('DecideWhatToDo previous target combatloop'))
+                    self.targetcandidates = {self.BuilderData.AttackTarget}
                     self:ChangeState(self.CombatLoop)
                     return
                 end
@@ -153,6 +154,28 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     --self:LogDebug(string.format('DecideWhatToDo found simple target'))
                     self:ChangeState(self.CombatLoop)
                     return
+                end
+            end
+            if self.BuilderData.RecheckPosition and self.BuilderData.TargetZone then
+                local currentZone = self.BuilderData.TargetZone
+                local zoneSet
+                if self.MovementLayer == 'Land' or self.MovementLayer == 'Amphibious' then
+                    zoneSet = aiBrain.Zones.Land.zones
+                elseif self.MovementLayer == 'Air' then
+                    zoneSet = aiBrain.Zones.Air.zones
+                elseif self.MovementLayer == 'Water' then
+                    zoneSet = aiBrain.Zones.Naval.zones
+                end
+                local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
+                local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
+                local enemyThreatRatio = enemyAirThreat / myAirThreat
+                if enemyAirThreat > 0 then
+                    local minAirThreat = math.min(5 * aiBrain.EnemyIntel.LandPhase, 5 * enemyThreatRatio)
+                    local zoneFriendlyAntiAir = zoneSet[currentZone].friendlylandantiairthreat
+                    if zoneFriendlyAntiAir < minAirThreat then
+                        self:ChangeState(self.Loiter)
+                        return
+                    end
                 end
             end
             local targetZone
@@ -175,17 +198,16 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     zoneSet = aiBrain.Zones.Naval.zones
                 end
                 local homeFriendlyAntiAir = zoneSet[homeBase.Zone].friendlylandantiairthreat
-                if targetThreat > 8 and homeFriendlyAntiAir < targetThreat and basePosition and NavUtils.CanPathTo(self.MovementLayer, self.Pos, basePosition) and VDist3Sq(self.Pos, basePosition) < 90000 then
+                local homeFriendlyAntiAirAllocated = zoneSet[homeBase.Zone].friendlyantiairallocatedthreat
+                if targetThreat > 8 and homeFriendlyAntiAir < targetThreat and homeFriendlyAntiAirAllocated < targetThreat and basePosition and NavUtils.CanPathTo(self.MovementLayer, self.Pos, basePosition) and VDist3Sq(self.Pos, basePosition) < 90000 then
                     local targetZone = MAP:GetZoneID(basePosition,self.Zones.Land.index)
                     self.BuilderData = {
                         TargetZone = targetZone,
                         Position = basePosition,
                         CutOff = 400
                     }
-                    --self:LogDebug(string.format('TargetZone is MAIN'..tostring(self.BuilderData)))
-                    if not self.BuilderData.Position then
-                        --self:LogDebug(string.format('No self.BuilderData.Position in DecideWhatToDo targetzone'))
-                    end
+                    self.ZoneAllocated = targetZone
+                    zoneSet[homeBase.Zone].friendlyantiairallocatedthreat = zoneSet[homeBase.Zone].friendlyantiairallocatedthreat + (self.CurrentPlatoonThreatAntiAir or 0)
                     --self:LogDebug(string.format('DecideWhatToDo target zone navigate'))
                     self:ChangeState(self.Navigating)
                     return
@@ -216,7 +238,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
-                    --self:LogDebug(string.format('DecideWhatToDo target zone navigate'))
+                    self:LogDebug(string.format('DecideWhatToDo target zone navigate to '..tostring(self.BuilderData.Position[1])..':'..tostring(self.BuilderData.Position[3])))
                     self:ChangeState(self.Navigating)
                     return
                 else
@@ -224,6 +246,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if not targetZone and self.Home and self.LocationType then
+                self:LogDebug(string.format('No Target zone returning home'))
                 local hx = self.Pos[1] - self.Home[1]
                 local hz = self.Pos[3] - self.Home[3]
                 local homeDistance = hx * hx + hz * hz
@@ -248,19 +271,45 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
+    Loiter = State {
+
+        StateName = 'Loiter',
+
+        --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
+        ---@param self AIPlatoonZoneControlDefenseBehavior
+        Main = function(self)
+            --LOG('ACUSupport trying to use transport')
+            local brain = self:GetBrain()
+            local builderData = self.BuilderData
+            if not builderData.Position then
+                WARN('No position passed to ZoneControlDefense')
+                self:ChangeState(self.DecideWhatToDo)
+                return false
+            end
+            local counter = 0
+            while counter < 10 do
+                counter = counter + 1
+                coroutine.yield(20)
+            end
+            self.BuilderData = {}
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
     CombatLoop = State {
 
         StateName = 'CombatLoop',
         StateColor = 'ff0000',
 
         --- The platoon searches for a target
-        ---@param self AIPlatoonLandCombatBehavior
+        ---@param self AIPlatoonZoneControlDefenseBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
             local units=GetPlatoonUnits(self)
             if not aiBrain.BrainIntel.SuicideModeActive then
                 for k,unit in self.targetcandidates do
-                    if not unit or unit.Dead or not unit.machineworth then 
+                    if not unit or unit.Dead or not unit['rngdata'].machineworth then 
                         --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
                         table.remove(self.targetcandidates,k) 
                     end
@@ -440,7 +489,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         StateColor = 'ffffff',
 
         --- The platoon retreats from a threat
-        ---@param self AIPlatoonLandCombatBehavior
+        ---@param self AIPlatoonZoneControlDefenseBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
             local platoonUnits = GetPlatoonUnits(self)

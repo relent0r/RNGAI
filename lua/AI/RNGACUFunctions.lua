@@ -115,7 +115,7 @@ function CDRBrainThread(cdr)
                 cdr.GunUpgradeRequired = false
             end
         end
-        if aiBrain.EnemyIntel.Phase == 2 then
+        if aiBrain.EnemyIntel.LandPhase == 2 then
             cdr.Phase = 2
             if (not cdr.GunUpgradePresent) then
                 if not CDRGunCheck(cdr) then
@@ -129,7 +129,7 @@ function CDRBrainThread(cdr)
                 end
             end
         end
-        if cdr.Phase < 3 and (aiBrain.EnemyIntel.Phase == 3 or aiBrain.BrainIntel.LandPhase == 3 or aiBrain.BrainIntel.AirPhase == 3) then
+        if cdr.Phase < 3 and (aiBrain.EnemyIntel.LandPhase == 3 or aiBrain.EnemyIntel.AirPhase == 3 or aiBrain.BrainIntel.LandPhase == 3 or aiBrain.BrainIntel.AirPhase == 3) then
             --RNGLOG('Enemy is phase 3')
             cdr.Phase = 3
         end
@@ -463,7 +463,7 @@ function CDRThreatAssessmentRNG(cdr)
                 -- Calculate confidence
                 cdr.Confidence = friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier
 
-                if aiBrain.EnemyIntel.Phase > 2 then
+                if aiBrain.EnemyIntel.LandPhase > 2 then
                     cdr.Confidence = cdr.Confidence * weights.phasePenalty
                 end
             end
@@ -492,7 +492,7 @@ function CDRThreatAssessmentRNG(cdr)
                 if ScenarioInfo.Options.AICDRCombat == 'cdrcombatOff' then
                     --RNGLOG('cdrcombat is off setting max radius to 60')
                     cdr.MaxBaseRange = 80
-                elseif cdr.Phase < 3 and aiBrain.EnemyIntel.Phase < 3 then
+                elseif cdr.Phase < 3 and aiBrain.EnemyIntel.LandPhase < 3 then
                     local safetyCutOff
                     if aiBrain.EnemyIntel.ClosestEnemyBase > 0 then
                         safetyCutOff = math.sqrt(aiBrain.EnemyIntel.ClosestEnemyBase) / 2
@@ -561,7 +561,7 @@ GetStartingReclaim = function(aiBrain)
     if startReclaim and not table.empty(startReclaim) then
         for k,v in startReclaim do
             if not IsProp(v) then continue end
-            if v.MaxMassReclaim or v.MaxEnergyReclaim  then
+            if v.MaxMassReclaim and v.MaxMassReclaim >= 1 or v.MaxEnergyReclaim and v.MaxEnergyReclaim > 5 then
                 if v.MaxMassReclaim >= minRec or v.MaxEnergyReclaim > minRec then
                     --RNGLOG('High Value Reclaim is worth '..v.MaxMassReclaim)
                     local rpos = v.CachePosition
@@ -910,26 +910,40 @@ CanBuildOnCloseMass = function(aiBrain, engPos, distance)
     end
 end
 
-GetClosestBase = function(aiBrain, cdr)
+GetClosestBase = function(aiBrain, cdr, noFactoryManager)
     local closestBase
     local closestBaseDistance
     local distanceToHome = VDist3Sq(cdr.CDRHome, cdr.Position)
     if aiBrain.BuilderManagers then
         for baseName, base in aiBrain.BuilderManagers do
-        --RNGLOG('Base Name '..baseName)
-        --RNGLOG('Base Position '..repr(base.Position))
-        --RNGLOG('Base Distance '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
-            if not table.empty(base.FactoryManager.FactoryList) then
-                --RNGLOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
-                local baseDistance = VDist3Sq(cdr.Position, base.Position)
-                local homeDistance = VDist3Sq(cdr.CDRHome, base.Position)
-                if homeDistance < distanceToHome and baseDistance > 1225 or (cdr.GunUpgradeRequired and not cdr.Caution) or (cdr.HighThreatUpgradeRequired and not cdr.Caution) or baseName == 'MAIN' then
-                    if not closestBaseDistance then
-                        closestBaseDistance = baseDistance
+            if baseName ~= 'FLOATING' then
+                --RNGLOG('Base Name '..baseName)
+                --RNGLOG('Base Position '..repr(base.Position))
+                --RNGLOG('Base Distance '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
+                if not noFactoryManager and not table.empty(base.FactoryManager.FactoryList) then
+                    --RNGLOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
+                    local baseDistance = VDist3Sq(cdr.Position, base.Position)
+                    local homeDistance = VDist3Sq(cdr.CDRHome, base.Position)
+                    if homeDistance < distanceToHome and baseDistance > 1225 or (cdr.GunUpgradeRequired and not cdr.Caution) or (cdr.HighThreatUpgradeRequired and not cdr.Caution) or baseName == 'MAIN' then
+                        if not closestBaseDistance then
+                            closestBaseDistance = baseDistance
+                        end
+                        if baseDistance <= closestBaseDistance then
+                            closestBase = baseName
+                            closestBaseDistance = baseDistance
+                        end
                     end
-                    if baseDistance <= closestBaseDistance then
-                        closestBase = baseName
-                        closestBaseDistance = baseDistance
+                elseif noFactoryManager then
+                    local baseDistance = VDist3Sq(cdr.Position, base.Position)
+                    local homeDistance = VDist3Sq(cdr.CDRHome, base.Position)
+                    if homeDistance < distanceToHome and not cdr.Caution or baseName == 'MAIN' then
+                        if not closestBaseDistance then
+                            closestBaseDistance = baseDistance
+                        end
+                        if baseDistance <= closestBaseDistance then
+                            closestBase = baseName
+                            closestBaseDistance = baseDistance
+                        end
                     end
                 end
             end

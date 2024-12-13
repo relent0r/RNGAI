@@ -1417,7 +1417,8 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
                 end
                 if not v.unit:BeenDestroyed() then
                     local surfaceThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
-                    if v.distance < (closestDistance * 2) and surfaceThreat < math.max(55, cdrThreat) or acuDistanceToBase < 6400 then
+                    if v.distance < math.min(closestDistance * 2,closestDistance + 30) and surfaceThreat < math.max(55, cdrThreat) 
+                    or (acuDistanceToBase < 6400 and unitCat.DEFENSE and (unitCat.DIRECTFIRE or unitCat.INDIRECTFIRE)) then
                         local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
                         local targetLayer = v.unit:GetCurrentLayer()
                         if not (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) and
@@ -3612,7 +3613,7 @@ function MexUpgradeManagerRNG(aiBrain)
     end
 end
 
-AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position)
+AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, avoidZones)
     local im = IntelManagerRNG.GetIntelManager(aiBrain)
     local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location or position
     local zoneSet = aiBrain.Zones.Land.zones
@@ -3629,7 +3630,10 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position)
     if not table.empty(im.ZoneExpansions.Pathable) then
         for _, v in im.ZoneExpansions.Pathable do
             local skipPos = false
-            if v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive 
+            if avoidZones and avoidZones[v.ZoneID] then
+                skipPos = true
+            end
+            if not skipPos and v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive
             and (not zoneSet[v.ZoneID].engineerplatoonallocated or IsDestroyed(zoneSet[v.ZoneID].engineerplatoonallocated)) and (currentTime >= zoneSet[v.ZoneID].lastexpansionattempt + 30 or zoneSet[v.ZoneID].lastexpansionattempt == 0 ) then
                 retPos = zoneSet[v.ZoneID].pos
                 retName = 'ZONE_'..v.ZoneID
@@ -3735,6 +3739,9 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
         local faction = GetEngineerFactionRNG(eng)
         buildingTemplate = GetTemplateReplacementRNG(aiBrain, buildUnit, faction, buildingTemplate)
     end
+    if not relative then
+        relative = true
+    end
     local whatToBuild = aiBrain:DecideWhatToBuild(eng, buildUnit, buildingTemplate)
     local engPos = eng:GetPosition()
     local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
@@ -3814,8 +3821,9 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
         end
     else
         local location = aiBrain:FindPlaceToBuild(buildUnit, whatToBuild, baseTemplate, relative, eng, nil, engPos[1], engPos[3])
+        --LOG('Relative location is '..tostring(location[1])..':'..tostring(location[2]))
         if location and relative then
-            local relativeLoc = {location[1] + engPos[1], location[3] + engPos[3], 0}
+            local relativeLoc = {location[1] + engPos[1], location[2] + engPos[3], 0}
             if relativeLoc[1] - playableArea[1] <= 8 or relativeLoc[1] >= playableArea[3] - 8 or relativeLoc[2] - playableArea[2] <= 8 or relativeLoc[2] >= playableArea[4] - 8 then
                 borderWarning = true
             end
@@ -6407,7 +6415,7 @@ ConfigurePlatoon = function(platoon)
            --RNGLOG('Zone Index is '..aiBrain.Zones.Land.index)
             SetZone(table.copy(GetPlatoonPosition(platoon)), aiBrain.Zones.Land.index)
         elseif platoon.MovementLayer == 'Water' then
-            --SetZone(PlatoonPosition, aiBrain.Zones.Water.index)
+            --SetZone(PlatoonPosition, aiBrain.Zones.Naval.index)
         end
     end
 end

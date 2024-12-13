@@ -393,9 +393,6 @@ function MassIncomeToFactoryRNG(aiBrain, compareType, factoryDrain, requireBuilt
     massTotal = massTotal + (unitCount * 40)
 
     aiBrain.EcoManager.ApproxFactoryMassConsumption = massTotal
-    if CompareBody((aiBrain.EconomyOverTimeCurrent.MassIncome * 10), massTotal, compareType) then
-        LOG('')
-    end
     if not CompareBody((aiBrain.EconomyOverTimeCurrent.MassIncome * 10), massTotal, compareType) then
         --RNGLOG('Mass to factory ratio false, mass consumption is '..massTotal)
         return false
@@ -530,14 +527,14 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, layer, requireBu
         end
          
         local availableResources = math.max(resourceCount * 2, rawIncome)
-        LOG('Zone based factory spend availability for location '..tostring(locationType))
-        LOG('massSpendTotal '..tostring(massSpendTotal))
-        LOG('mexSpend '..tostring(mexSpend))
-        LOG('rawIncome '..tostring(rawIncome))
-        LOG('resourceBased income potential '..tostring(resourceCount * 2))
-        LOG('availableResources '..tostring(availableResources))
-        LOG('Current ratio '..tostring(massSpendTotal / availableResources))
-        LOG('Expected ratio '..tostring(aiBrain.ProductionRatios[layer]))
+        --LOG('Zone based factory spend availability for location '..tostring(locationType))
+        --LOG('massSpendTotal '..tostring(massSpendTotal))
+        --LOG('mexSpend '..tostring(mexSpend))
+        --LOG('rawIncome '..tostring(rawIncome))
+        --LOG('resourceBased income potential '..tostring(resourceCount * 2))
+        --LOG('availableResources '..tostring(availableResources))
+        --LOG('Current ratio '..tostring(massSpendTotal / availableResources))
+        --LOG('Expected ratio '..tostring(aiBrain.ProductionRatios[layer]))
         if massSpendTotal / availableResources < aiBrain.ProductionRatios[layer] then
             return true
         end
@@ -652,7 +649,7 @@ function FactorySpendRatioRNG(aiBrain,uType,upgradeType, noStorageCheck)
                 return true
             end
         else
-            if GetEconomyStored(aiBrain, 'MASS') >= 5 and GetEconomyStored(aiBrain, 'ENERGY') >= 200 then
+            if GetEconomyStored(aiBrain, 'MASS') >= 5 and GetEconomyStored(aiBrain, 'ENERGY') >= 500 then
                 return true
             end
         end

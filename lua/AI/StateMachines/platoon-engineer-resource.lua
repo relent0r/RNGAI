@@ -160,6 +160,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             if not zoneFound then
                 if self.StartCycle > 3 then
                     --self:LogDebug(string.format('Start Cycle is greater than 3, disband platoon, eng id is '..tostring(eng.EntityId)))
+                    coroutine.yield(20)
                     self:ExitStateMachine()
                 end
                 local zoneMarkers = {}

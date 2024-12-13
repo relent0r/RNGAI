@@ -59,7 +59,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             end
             self.ScoutSupported = true
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
-            if aiBrain.EnemyIntel.Phase > 1 then
+            if aiBrain.EnemyIntel.LandPhase > 1 then
                 self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 75)
             else
                 self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 60)
@@ -83,21 +83,23 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local rangedAttack = false
             if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
-                local enemyAcuPosition = aiBrain.BrainIntel.SuicideModeTarget:GetPosition()
+                local suicideTarget = aiBrain.BrainIntel.SuicideModeTarget
+                local enemyAcuPosition = suicideTarget:GetPosition()
                 local rx = self.Pos[1] - enemyAcuPosition[1]
                 local rz = self.Pos[3] - enemyAcuPosition[3]
                 local acuDistance = rx * rx + rz * rz
                 if NavUtils.CanPathTo(self.MovementLayer, self.Pos, enemyAcuPosition) then
                     if acuDistance > 6400 then
                         self.BuilderData = {
-                            AttackTarget = aiBrain.BrainIntel.SuicideModeTarget,
-                            Position = aiBrain.BrainIntel.SuicideModeTarget:GetPosition(),
+                            AttackTarget = suicideTarget,
+                            Position = suicideTarget:GetPosition(),
                             CutOff = 400
                         }
                         self.dest = self.BuilderData.Position
                         self:ChangeState(self.Navigating)
                         return
                     else
+                        self.targetcandidates = {suicideTarget}
                         self:ChangeState(self.CombatLoop)
                         return
                     end
@@ -340,7 +342,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             local units=GetPlatoonUnits(self)
             if not aiBrain.BrainIntel.SuicideModeActive then
                 for k,unit in self.targetcandidates do
-                    if not unit or unit.Dead or not unit.machineworth then 
+                    if not unit or unit.Dead or not unit['rngdata'].machineworth then 
                         --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
                         table.remove(self.targetcandidates,k) 
                     end
@@ -365,7 +367,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                 local rz = unitPos[3] - enemyPos[3]
                                 local tmpDistance = rx * rx + rz * rz
                                 if unitRole ~= 'Artillery' and unitRole ~= 'Silo' and unitRole ~= 'Sniper' then
-                                    tmpDistance = tmpDistance*m.machineworth
+                                    tmpDistance = tmpDistance*m['rngdata'].machineworth
                                 end
                                 if not closestTarget or tmpDistance < closestTarget then
                                     target = m
@@ -382,7 +384,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                         if not approxThreat then
                             approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false)
                         end
-                        if (unitRole ~= 'Sniper' or unitRole ~= 'Silo' or unitRole ~= 'Scout') and closestTarget>(unitRange+20)*(unitRange+20) then
+                        if (unitRole ~= 'Sniper' and unitRole ~= 'Silo' and unitRole ~= 'Scout' and unitRole ~= 'Artillery') and closestTarget>(unitRange+20)*(unitRange+20) then
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface then
                                 IssueClearCommands({v}) 
                                 if unitRole == 'Shield' or unitRole == 'Stealth' and closestTarget then
@@ -494,7 +496,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             local units=GetPlatoonUnits(self)
             if not aiBrain.BrainIntel.SuicideModeActive then
                 for k,unit in self.targetcandidates do
-                    if not unit or unit.Dead or not unit.machineworth then 
+                    if not unit or unit.Dead or not unit['rngdata'].machineworth then 
                         --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
                         table.remove(self.targetcandidates,k) 
                     end

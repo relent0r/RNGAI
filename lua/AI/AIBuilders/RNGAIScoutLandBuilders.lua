@@ -20,7 +20,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', {'LocationType', 'MAIN' } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.LAND * categories.SCOUT }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
             { UCBC, 'GreaterThanArmyThreat', { 'LandNow', 20}},
             { MIBC, 'ScoutsRequiredForBase', {'LocationType', 1.5, categories.LAND * categories.SCOUT }},
         },

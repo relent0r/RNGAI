@@ -152,7 +152,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         local baseTmplFile
                         if factionIndex < 5 then
                             templateKey = 'ACUBaseTemplate'
-                            baseTmplFile = import('/mods/rngai/lua/AI/AIBuilders/ACUBaseTemplate.lua' or '/lua/BaseTemplates.lua')
+                            baseTmplFile = import('/mods/rngai/lua/AI/AIBaseTemplates/RNGAIACUBaseTemplate.lua' or '/lua/BaseTemplates.lua')
                         else
                             templateKey = 'BaseTemplates'
                             baseTmplFile = import('/lua/BaseTemplates.lua')
@@ -213,6 +213,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                                     break
                                                 end
                                             end
+                                        end
+                                        if cdr:IsPaused() then
+                                            cdr:SetPaused( false )
                                         end
                                         cdr.EngineerBuildQueue[k] = nil
                                         break
@@ -331,7 +334,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             else
                 multiplier = 1
             end
-            if ScenarioInfo.Options.AICDRCombat ~= 'cdrcombatOff' and brain.EnemyIntel.Phase < 3 and gameTime < 1500 then
+            if ScenarioInfo.Options.AICDRCombat ~= 'cdrcombatOff' and brain.EnemyIntel.LandPhase < 3 and gameTime < 1500 then
                 if (brain.EconomyOverTimeCurrent.MassIncome > (0.8 * multiplier) and brain.EconomyOverTimeCurrent.EnergyIncome * 10 > brain.EcoManager.MinimumPowerRequired)
                     or (brain.EconomyOverTimeCurrent.EnergyTrendOverTime > 6.0 and brain.EconomyOverTimeCurrent.EnergyIncome > 18) then
                     local enemyAcuClose = false
@@ -436,7 +439,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-            if brain.EnemyIntel.Phase > 2 then
+            if brain.EnemyIntel.LandPhase > 2 then
                 if brain.GridPresence:GetInferredStatus(cdr.Position) == 'Hostile' then
                     --LOG('We are in hostile territory and should be retreating')
                     if cdr.CurrentEnemyThreat > 10 and cdr.CurrentEnemyThreat * 1.2 > cdr.CurrentFriendlyThreat then
@@ -727,6 +730,55 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
+            --[[ Need to think on this one more
+            if not cdr.Caution and cdr.CurrentEnemyThreat < 25 then
+                self:LogDebug(string.format('We are somewhere with nothing to do, find the closest base'))
+                local closestBase = ACUFunc.GetClosestBase(brain, cdr, true)
+                if closestBase then
+                    local basePos = brain.BuilderManagers[closestBase].Position
+                    local rx = cdr.Position[1] - basePos[1]
+                    local rz = cdr.Position[3] - basePos[3]
+                    local acuDistance = rx * rx + rz * rz
+                    if NavUtils.CanPathTo(self.MovementLayer, cdr.Position, basePos) then
+                        if acuDistance > 6400 then
+                            self.BuilderData = {
+                                Position = basePos,
+                                CutOff = 625,
+                            }
+                            self:ChangeState(self.Navigating)
+                            return
+                        else
+                            local base = brain.BuilderManagers[closestBase]
+                            if table.empty(base.FactoryManager.FactoryList) then
+                                if GetNumUnitsAroundPoint(brain, (categories.STRUCTURE + categories.DEFENSE ) - categories.WALL, self.BuilderData.Position, 35, 'Ally') > 0 then
+                                    local initiateFactoryCompletion = false
+                                    self:LogDebug(string.format('There is an factory here and it might be ours'))
+                                    local allyUnits = GetUnitsAroundPoint(brain, (categories.STRUCTURE + categories.DEFENSE ) - categories.WALL, self.BuilderData.Position, 35, 'Ally')
+                                    for _, v in allyUnits do
+                                        if v and not v.Dead and v:GetFractionComplete() < 1 then
+                                            self:LogDebug(string.format('There is an factory here that isnt finished, lets finish it'))
+                                            initiateFactoryCompletion = true
+                                            break
+                                        end
+                                    end
+                                    if initiateFactoryCompletion then
+                                        self.BuilderData = {
+                                            CompleteStructure = true,
+                                            Position = basePos,
+                                            StructureCategories = {categories.FACTORY, categories.DEFENSE * categories.DIRECTFIRE, categories.STRUCTURE}
+                                        }
+                                        self:ChangeState(self.CompleteStructureBuild)
+                                        return
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    self:LogDebug(string.format('Distance to base is '..tostring(VDist3(cdr.Position, self.BuilderData.Position))))
+                    --self:ChangeState(self.Navigating)
+                    --return
+                end
+            end]]
             coroutine.yield(5)
             self:LogDebug(string.format('End of loop and no state change, loop again'))
             self:ChangeState(self.DecideWhatToDo)
@@ -980,16 +1032,16 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if builder then
                     builderData = builder:GetBuilderData(self.LocationType)
                     if builderData.Assist then
-                        LOG('ACU is trying to run assist builder')
+                        --LOG('ACU is trying to run assist builder')
                         self.BuilderData = builderData
                         self:ChangeState(self.AssistEngineers)
                         return
                     elseif builderData.Construction then
-                        LOG('ACU is trying to run structure builder')
-                        LOG('Item '..tostring(builderData.Construction.BuildStructures[1]))
-                        if not builderData.Construction.BuildStructures[1] then
-                            LOG('This thing is what? '..tostring(builderData.Task))
-                        end
+                        --LOG('ACU is trying to run structure builder')
+                        --LOG('Item '..tostring(builderData.Construction.BuildStructures[1]))
+                        --if not builderData.Construction.BuildStructures[1] then
+                        --    LOG('This thing is what? '..tostring(builderData.Task))
+                        --end
                         self.BuilderData = builderData
                         self:ChangeState(self.StructureBuild)
                         return
@@ -1071,6 +1123,79 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
+    CompleteStructureBuild = State {
+
+        StateName = 'CompleteStructureBuild',
+
+        --- The platoon raids the target
+        ---@param self AIPlatoonACUBehavior
+        Main = function(self)
+            local brain = self:GetBrain()
+            local builderData = self.BuilderData
+            local eng = self.cdr
+            ----self:LogDebug(string.format('ACU is assisting'))
+            if builderData.CompleteStructure then
+                local unitShortList = {}
+                for _, cat in builderData.StructureCategories do
+                    local allyUnits = GetUnitsAroundPoint(brain, cat, builderData.Position, 35, 'Ally')
+                    if not RNGTableEmpty(allyUnits) then
+                        for _, unit in allyUnits do
+                            if unit and not unit.Dead and unit:GetFractionComplete() < 1 then
+                                table.insert(unitShortList, unit)
+                            end
+                        end
+                        break
+                    end
+                end
+                if not RNGTableEmpty(unitShortList) then
+                    local engPos = eng:GetPosition()
+                    -- only have one unit in the list; assist it
+                    local low = false
+                    local bestUnit = false
+                    for _,v in unitShortList do
+                        --DUNCAN - check unit is inside assist range 
+                        local unitPos = v:GetPosition()
+                        local UnitAssist = v.UnitBeingBuilt or v.UnitBeingAssist or v
+                        local NumAssist = RNGGETN(UnitAssist:GetGuards())
+                        local dist = VDist2Sq(engPos[1], engPos[3], unitPos[1], unitPos[3])
+                        -- Find the closest unit to assist
+                        if (not low or dist < low) and NumAssist < 20 and dist < 1600 then
+                            low = dist
+                            bestUnit = v
+                        end
+                    end
+                    local unitToComplete = bestUnit
+                    if unitToComplete then
+                        IssueClearCommands({eng})
+                        eng.UnitBeingAssist = unitToComplete
+                        --RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
+                        IssueGuard({eng}, eng.UnitBeingAssist)
+                        coroutine.yield(30)
+                        while eng and not eng.Dead and not eng:IsIdleState() do
+                            if eng.CurrentEnemyThreat > 30 then
+                                coroutine.yield(2)
+                                break
+                            end
+                            if eng.Caution or not eng.UnitBeingAssist or eng.UnitBeingAssist:BeenDestroyed() then
+                                break
+                            end
+                            if eng.UnitBeingAssist:GetFractionComplete() == 1 then
+                                IssueClearCommands({eng})
+                                break
+                            end
+                            coroutine.yield(30)
+                        end
+                    end
+                end
+            end
+            --LOG('Wipe BuilderData at end of Assist')
+            self.BuilderData = {}
+            coroutine.yield(10)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
     StructureBuild = State {
 
         StateName = 'StructureBuild',
@@ -1088,7 +1213,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     local factionIndex = ACUFunc.GetEngineerFactionIndexRNG(eng)
                     local templateKey
                     local baseTmplFile
-                    local relative = true
                     if factionIndex < 5 then
                         if self.BuilderData.Construction.BaseTemplateFile and self.BuilderData.Construction.BaseTemplate then
                             templateKey = self.BuilderData.Construction.BaseTemplate
@@ -1106,7 +1230,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     local baseTmpl = baseTmplFile[(self.BuilderData.Construction.BaseTemplate or 'BaseTemplates')][factionIndex]
                     local buildStructures = self.BuilderData.Construction.BuildStructures
                     if self.BuilderData.Construction.OrderedTemplate then
-                        local location = brain:FindPlaceToBuild('T2EnergyProduction', 'uab1201', baseTmplFile[templateKey][factionIndex], relative, eng, nil, engPos[1], engPos[3])
+                        local location = brain:FindPlaceToBuild('T2EnergyProduction', 'uab1201', baseTmplFile[templateKey][factionIndex], true, eng, nil, engPos[1], engPos[3])
                         local reference
                         if location then
                             local relativeLoc = {location[1], 0, location[2]}
@@ -1559,7 +1683,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Navigating)
                 return
             end
-            if distanceToHome > (cdr.MaxBaseRange * cdr.MaxBaseRange) or cdr.Phase > 2 or brain.EnemyIntel.Phase > 2 then
+            if distanceToHome > (cdr.MaxBaseRange * cdr.MaxBaseRange) or cdr.Phase > 2 or brain.EnemyIntel.LandPhase > 2 then
                 baseRetreat = true
             end
             local supportPlatoon = brain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
@@ -1633,7 +1757,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             --RNGLOG('No platoon found, trying for base')
             local closestBase
             local closestBaseDistance
-            if cdr.Phase > 2 or brain.EnemyIntel.Phase > 2 then
+            if cdr.Phase > 2 or brain.EnemyIntel.LandPhase > 2 then
                 closestBase = 'MAIN'
             end
             if not closestBase and brain.BuilderManagers then

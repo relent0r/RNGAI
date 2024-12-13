@@ -51,7 +51,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             self.MergeType = 'LandMergeStateMachine'
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
-            if aiBrain.EnemyIntel.Phase > 1 then
+            if aiBrain.EnemyIntel.LandPhase > 1 then
                 self.EnemyRadius = 75
                 self.EnemyRadiusSq = 75 * 75
             else

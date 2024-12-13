@@ -185,7 +185,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Factory Swift Wind Response',
-        PlatoonTemplate = 'T2FighterBomber',
+        PlatoonTemplate = 'T2SwiftWindRNG',
         Priority = 905,
         BuilderConditions = { 
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},

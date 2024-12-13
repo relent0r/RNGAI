@@ -1,6 +1,7 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
+local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local WeakValueTable = { __mode = 'v' }
 
 RNGEngineerManager = EngineerManager
@@ -59,16 +60,18 @@ EngineerManager = Class(RNGEngineerManager) {
         if not self.Brain.RNG then
             return RNGEngineerManager.UnitConstructionFinished(self, unit, finishedUnit)
         end
-        if finishedUnit:GetAIBrain():GetArmyIndex() == self.Brain:GetArmyIndex() and finishedUnit:GetFractionComplete() == 1 then
+        local aiBrain = self.Brain
+        local armyIndex = aiBrain:GetArmyIndex()
+        if finishedUnit:GetAIBrain():GetArmyIndex() == armyIndex and finishedUnit:GetFractionComplete() == 1 then
             if not finishedUnit['rngdata'] then
                 finishedUnit['rngdata'] = {}
             end
             if EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit) then
-                RUtils.UpdateShieldsProtectingUnit(self.Brain, finishedUnit)
+                RUtils.UpdateShieldsProtectingUnit(aiBrain, finishedUnit)
                 if finishedUnit.LocationType and finishedUnit.LocationType ~= self.LocationType then
                     return
                 end
-                self.Brain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
+                aiBrain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
             end
             if EntityCategoryContains(categories.ANTIMISSILE * categories.STRUCTURE * categories.TECH2, finishedUnit) then
                 local deathFunction = function(unit)
@@ -89,7 +92,7 @@ EngineerManager = Class(RNGEngineerManager) {
                 finishedUnit.UnitsDefended = {}
                 --LOG('TMD Built, looking for units to defend')
                 local defenseRadius = finishedUnit.Blueprint.Weapon[1].MaxRadius - 2
-                local units = self.Brain:GetUnitsAroundPoint(categories.STRUCTURE, finishedUnit:GetPosition(), defenseRadius, 'Ally')
+                local units = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, finishedUnit:GetPosition(), defenseRadius, 'Ally')
                 --LOG('Number of units around TMD '..table.getn(units))
                 if not table.empty(units) then
                     for _, v in units do
@@ -104,7 +107,30 @@ EngineerManager = Class(RNGEngineerManager) {
                     end
                 end
             elseif EntityCategoryContains(categories.SHIELD * categories.STRUCTURE, finishedUnit) then
-                RUtils.UpdateUnitsProtectedByShield(self.Brain, finishedUnit)
+                RUtils.UpdateUnitsProtectedByShield(aiBrain, finishedUnit)
+            elseif EntityCategoryContains(categories.MASSEXTRACTION * categories.STRUCTURE, finishedUnit) then
+                local unitZone
+                if not unitZone and aiBrain.ZonesInitialized then
+                    local mexPos = finishedUnit:GetPosition()
+                    if RUtils.PositionOnWater(mexPos[1], mexPos[3]) then
+                        unitZone = 'water'
+                    else
+                        unitZone = MAP:GetZoneID(mexPos,aiBrain.Zones.Land.index)
+                    end
+                end
+                if unitZone ~= 'water' then
+                    local zone = aiBrain.Zones.Land.zones[unitZone]
+                    if zone and zone.bestarmy and zone.bestarmy ~= armyIndex then
+                        local playerIndex = zone.bestarmy
+                        local bestArmyBrain = ArmyBrains[playerIndex]
+                        if bestArmyBrain and bestArmyBrain.Status ~= "Defeat" and IsAlly(playerIndex, armyIndex) then
+                            local TransferUnitsOwnership = import("/lua/simutils.lua").TransferUnitsOwnership
+                            local AISendChat = import('/lua/AI/sorianutilities.lua').AISendChat
+                            AISendChat('allies', aiBrain.Nickname, 'AI '..aiBrain.Nickname..' I believe this extractor is yours, handing over ownership '..aiBrain.Nickname, bestArmyBrain.Nickname)
+                            TransferUnitsOwnership({finishedUnit}, playerIndex)
+                        end
+                    end
+                end
             end
             self:AddUnitRNG(finishedUnit)
         end

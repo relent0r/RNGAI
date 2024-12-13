@@ -208,7 +208,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'CoreExtractorCountEqualsTotalExtractors', { }},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 60 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.80, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .8 } },
             { UCBC, 'AdjacencyFabricatorCheckRNG', { 'LocationType', categories.MASSEXTRACTION * categories.TECH3, 60 } },
         },
