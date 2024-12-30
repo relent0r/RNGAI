@@ -70,7 +70,7 @@ function SetCDRDefaults(aiBrain, cdr)
         categories.ALLUNITS - categories.WALL - categories.SCOUT - categories.AIR
     }
     aiBrain.CDRUnit = cdr
-
+    local mainWeaponSet = false
     for k, v in cdr.Blueprint.Weapon do
         if v.Label == 'OverCharge' then
             cdr.OverCharge = v
@@ -78,9 +78,10 @@ function SetCDRDefaults(aiBrain, cdr)
             continue
         end
         if v.Label == 'RightDisruptor' or v.Label == 'RightZephyr' or v.Label == 'RightRipper' or v.Label == 'ChronotronCannon' then
-            cdr.WeaponRange = v.MaxRadius - 2
+            cdr.WeaponRange = v.MaxRadius
+            mainWeaponSet = true
             --RNGLOG('* AI-RNG: ACU Weapon Range is :'..cdr.WeaponRange)
-        else
+        elseif not mainWeaponSet then
             cdr.WeaponRange = 20
         end
     end
@@ -1097,6 +1098,96 @@ function IdentifyACUEnhancement(aiBrain, unit, enhancementTable, gameTime)
     end
     --LOG('Enhancement being returned is '..tostring(bestEnhancement))
     return bestEnhancement
+end
+
+-- Enemy position is what?
+GetACUSafeZone = function(aiBrain, cdr, baseOnly)
+    local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+    local movementLayer = 'Amphibious'
+    local distSqAway = 2209
+    local teamAveragePositions = aiBrain.IntelManager:GetTeamAveragePositions()
+    local currentTeamValue = aiBrain.IntelManager:GetTeamDistanceValue(cdr.Position, teamAveragePositions)
+    local cutoff = 225
+    --LOG('Searching for ACU safe zone')
+
+    if aiBrain.ZonesInitialized then
+        local waterZoneSet
+        local landZoneSet = aiBrain.Zones.Land.zones
+        local originPosition = cdr.Position
+        local bestZoneDist
+        local bestZone
+        local bestZonePos
+        if RUtils.PositionInWater(cdr.Position) then
+            --LOG('ACU is currently under water, check for a naval base')
+            waterZoneSet = aiBrain.Zones.Naval.zones
+            for _, v in waterZoneSet do
+                local dx = originPosition[1] - v.pos[1]
+                local dz = originPosition[3] - v.pos[3]
+                local zoneDist = dx * dx + dz * dz
+                if (not bestZoneDist or zoneDist < bestZoneDist) and NavUtils.CanPathTo(movementLayer, originPosition, v.pos) and v.BuilderManager.FactoryManager.LocationActive then
+                    if currentTeamValue and v.teamvalue < currentTeamValue then
+                        --LOG('Water Zones team value is lower than our current position which indicates its closer to the enemy')
+                        continue
+                    end
+                    if VDist2Sq(cdr.Position[1], cdr.Position[3], v.pos[1], v.pos[3]) < distSqAway and (cdr.CurrentEnemyThreat > 25 and cdr.CurrentFriendlyInnerCircle < 25 or cdr.CurrentEnemyInnerCircle > 40) 
+                    and v.BuilderManager.Location ~= 'MAIN' then
+                        if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, v.pos, 15, 'Ally') < 1 then
+                            --LOG('Water Local threat too high for retreating to zone to move to')
+                            continue
+                        end
+                    end
+                    bestZoneDist = zoneDist
+                    bestZone = v.id
+                    bestZonePos = v.pos
+                end
+            end
+            if bestZone then
+                --LOG('ACU Found a water base to upgrade at')
+                if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, bestZonePos, 15, 'Ally') > 0 then
+                    cutoff = 155
+                    bestZonePos = RUtils.lerpy(aiBrain.BrainIntel.StartPos, bestZonePos, {math.sqrt(bestZoneDist), math.sqrt(bestZoneDist) - 10})
+                end
+                return bestZonePos, bestZone, bestZoneDist, cutoff
+            end
+        end
+        --LOG('ACU is not in water or did not find a water location')
+        for _, v in landZoneSet do
+            local dx = originPosition[1] - v.pos[1]
+            local dz = originPosition[3] - v.pos[3]
+            local zoneDist = dx * dx + dz * dz
+            if (not bestZoneDist or zoneDist < bestZoneDist) and NavUtils.CanPathTo(movementLayer, originPosition, v.pos) and (v.enemyantisurfacethreat < 10 or v.BuilderManager.FactoryManager.LocationActive) then
+                if currentTeamValue and v.teamvalue < currentTeamValue and not v.BuilderManager.FactoryManager.LocationActive then
+                    --LOG('Zones team value is lower than our current position which indicates its closer to the enemy')
+                    continue
+                end
+                if VDist2Sq(cdr.Position[1], cdr.Position[3], v.pos[1], v.pos[3]) < distSqAway and (cdr.CurrentEnemyThreat > 25 and cdr.CurrentFriendlyInnerCircle < 25 or cdr.CurrentEnemyInnerCircle > 40) 
+                and v.BuilderManager.Location ~= 'MAIN' then
+                    --LOG('Too dangerous at zone position even though it is close, the zone had this many point defense '..tostring(aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, v.pos, 15, 'Ally')))
+                    if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, v.pos, 15, 'Ally') < 1 then
+                        --LOG('Local threat too high for retreating to zone to move to')
+                        continue
+                    end
+                end
+                bestZoneDist = zoneDist
+                bestZone = v.id
+                bestZonePos = v.pos
+            end
+        end
+        if bestZone then
+            if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, bestZonePos, 15, 'Ally') > 0 then
+                cutoff = 155
+                local distSqrt = math.sqrt(bestZoneDist)
+                bestZonePos = RUtils.lerpy(aiBrain.BrainIntel.StartPos, bestZonePos, {distSqrt, distSqrt - 10})
+                --LOG('Modified Best zone pos is '..tostring(bestZonePos[1])..':'..tostring(bestZonePos[3]))
+            end
+            --LOG('ACU Found a land base to upgrade at')
+            --LOG('Distance to land base is '..tostring(math.sqrt(bestZoneDist)))
+            --LOG('Best zone pos is '..tostring(bestZonePos[1])..':'..tostring(bestZonePos[3]))
+            return bestZonePos, bestZone, bestZoneDist, cutoff
+        end
+    else
+        WARN('Mapping Zones are not initialized, unable to query zone information')
+    end
 end
 
 function FindRadarPosition(aiBrain, cdr)

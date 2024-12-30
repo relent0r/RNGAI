@@ -47,6 +47,9 @@ local StartingReclaimPresent = function(self, aiBrain, builderManager)
     if aiBrain.StartEnergyReclaimTotal > 5000 then
         return 1002
     end
+    if aiBrain.StartMassReclaimTotal < 50 and aiBrain.StartEnergyReclaimTotal < 100 then
+        return 0
+    end
     return 950
 end
 
@@ -406,6 +409,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 2 of them.
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
+            { UCBC, 'LocationDefenseCheck', { 'LocationType', 2, categories.ANTIAIR, 'AntiSurfaceAirUnits' } },
         },
         BuilderType = 'All',
     },
@@ -416,6 +420,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.4, 0.6} },
             { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
+            { UCBC, 'LocationDefenseCheck', { 'LocationType', 2, categories.ANTIAIR, 'AntiSurfaceAirUnits' } },
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 60, nil, -1000, 0, 'AntiSurface', 1 }},
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },

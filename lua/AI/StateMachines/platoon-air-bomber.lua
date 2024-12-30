@@ -485,7 +485,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 end
             else
                 IssueClearCommands(platoonUnits)
-                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, destination, 10 , 10000)
+                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, destination, 15, 80)
                 
                 if path then
                     local pathLength = RNGGETN(path)

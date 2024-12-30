@@ -20,12 +20,11 @@ local RNGCEIL = math.ceil
 local RNGPI = math.pi
 local RNGCAT = table.cat
 
-function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, optThreatWeight, optMaxMarkerDist)
+function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, maxThreatLimit, minPathDistance)
 
     local NavUtils = import("/lua/sim/navutils.lua")
     --Get the closest path node at the platoon's position
-    optMaxMarkerDist = optMaxMarkerDist or 250
-    optThreatWeight = optThreatWeight or 1
+    maxThreatLimit = maxThreatLimit or 1
 
     --Generate the safest path between the start and destination
     local path, msg, distance, threats = NavUtils.PathToWithThreatThreshold(platoonLayer, startPos, endPos, aiBrain, NavUtils.ThreatFunctions.AntiSurface, 1000, aiBrain.BrainIntel.IMAPConfig.Rings)
@@ -40,11 +39,11 @@ function EngineerGenerateSafePathToRNG(aiBrain, platoonLayer, startPos, endPos, 
     return path, 'PathOK', distance
 end
 
-function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination, optThreatWeight, optMaxMarkerDist, minPathDistance, acuPath)
+function PlatoonGenerateSafePathToRNG(aiBrain, platoonLayer, start, destination, maxThreatLimit, minPathDistance)
     -- if we don't have markers for the platoonLayer, then we can't build a path.
     local NavUtils = import("/lua/sim/navutils.lua")
-    optMaxMarkerDist = optMaxMarkerDist or 250
-    optThreatWeight = optThreatWeight or 1
+    maxThreatLimit = maxThreatLimit or 1000
+
     local threatType = NavUtils.ThreatFunctions.AntiSurface
     if minPathDistance then
         minPathDistance = minPathDistance * minPathDistance
@@ -226,8 +225,8 @@ function DrawTargetRadius(aiBrain, position)
 end
 
 function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
+    local GetNavalPlatoonMaxRangeRNG = import('/mods/RNGAI/lua/AI/RNGUtilities.lua').GetNavalPlatoonMaxRangeRNG
 
-    
     local PrimaryTargetThreatType = 'Naval'
     local SecondaryTargetThreatType = 'Structures'
     --RNGLOG('GetBestNavalTargetRNG Running')
@@ -382,8 +381,9 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     local maxRange = false
     local turretPitch = nil
     if platoon.MovementLayer == 'Water' then
-        maxRange, selectedWeaponArc = GetNavalPlatoonMaxRange(aiBrain, platoon)
+        maxRange, selectedWeaponArc = GetNavalPlatoonMaxRangeRNG(aiBrain, platoon)
     end
+    local finalTargetSelectionTable = {}
     --RNGLOG('GetBestNavalTarget final threat table was '..repr(threatTable))
 
     for tIndex,threat in threatTable do
@@ -487,6 +487,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
                 curMaxIndex = tIndex
             end
             foundPathableThreat = true
+            table.insert(finalTargetSelectionTable, threat)
        end --ignoreThreat
     end --threatTable loop
 
@@ -494,11 +495,11 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     if not foundPathableThreat or curMaxThreat == 0 then
         return false
     end
-    table.sort(threatTable, function(a,b) return a[3] > b[3] end)
+    table.sort(finalTargetSelectionTable, function(a,b) return a[3] > b[3] end)
     --LOG('Returning threat table with '..tostring(table.getn(threatTable))..' entries')
     --local pathablePos = CheckNavalPathingRNG(aiBrain, platoon, {x, y, z}, maxRange, selectedWeaponArc)
     
-    return threatTable
+    return finalTargetSelectionTable
 end
 
 function CheckNavalPathingRNG(aiBrain, platoon, location, maxRange, selectedWeaponArc)

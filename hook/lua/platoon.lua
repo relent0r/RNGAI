@@ -979,9 +979,9 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
                 if not usedTransports then
                     if unitPathing then
-                        path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonUnits(self)[1]:GetPosition(), movePosition, 10)
+                        path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonUnits(self)[1]:GetPosition(), movePosition, 500, 30)
                     else
-                        path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), movePosition, 10)
+                        path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, GetPlatoonPosition(self), movePosition, 500, 30)
                     end
                     IssueClearCommands(self)
                     if path then
@@ -1513,9 +1513,11 @@ Platoon = Class(RNGAIPlatoonClass) {
             if unitToAssist.Blueprint.CategoriesHash.ENERGYPRODUCTION and aiBrain:GetEconomyTrend('ENERGY') > 25 and aiBrain:GetEconomyStored('MASS') == 0 then
                 if not eng:IsPaused() then
                     eng:SetPaused( true )
-                    coroutine.yield(30)
-                    eng:SetPaused( false )
                 end
+                while aiBrain:GetEconomyTrend('ENERGY') > 25 and aiBrain:GetEconomyStored('MASS') < 20 do
+                    coroutine.yield(15)
+                end
+                eng:SetPaused( false )
             end
             coroutine.yield(30)
         end

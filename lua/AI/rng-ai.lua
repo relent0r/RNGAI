@@ -608,16 +608,16 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T2 = {
-                            tank=55,
+                            tank=50,
                             mml=0,
-                            bot=25,
+                            bot=35,
                             aa=5,
-                            shield=15,
+                            shield=10,
                             total=0
                         },
                         T3 = {
                             tank=40,
-                            armoured=55,
+                            armoured=60,
                             mml=0,
                             arty=0,
                             aa=5,
@@ -739,19 +739,19 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T2 = {
-                            tank=55,
+                            tank=50,
                             mml=0,
-                            bot=30,
-                            aa=10,
+                            bot=35,
+                            aa=5,
                             stealth=5,
                             mobilebomb=0,
                             total=0
                         },
                         T3 = {
                             tank=40,
-                            armoured=45,
+                            armoured=60,
                             arty=0,
-                            aa=10,
+                            aa=5,
                             total=0
                         }
                     },
@@ -811,10 +811,10 @@ AIBrain = Class(RNGAIBrainClass) {
                             total=0
                         },
                         T3 = {
-                            tank=45,
+                            tank=40,
                             arty=0,
                             aa=5,
-                            sniper=40,
+                            sniper=45,
                             shield=10,
                             total=0
                         }
@@ -1135,10 +1135,11 @@ AIBrain = Class(RNGAIBrainClass) {
             LAND_TECH3 = 3,
         }
         self.EcoManager.MassPriorityTable = {
-            TML = 18,
-            STATIONPODS = 16,
-            ENGINEER = 17,
-            NUKE = 15
+            TML = 19,
+            STATIONPODS = 17,
+            ENGINEER = 18,
+            NUKE = 16,
+            INTEL = 15,
         }
 
         self.DefensiveSupport = {}
@@ -2272,6 +2273,10 @@ AIBrain = Class(RNGAIBrainClass) {
                 else 
                     v.ReclaimData.ReclaimAvailable = false
                     v.ReclaimData.EngineersRequired = maxEngineersRequired
+                end
+                if k == 'MAIN' then
+                    self.StartMassReclaimTotal = totalMassRequired
+                    self.StartEnergyReclaimTotal = totalEnergyRequired
                 end
             end
         end
@@ -4718,7 +4723,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     EcoManagerPowerStateCheck = function(self)
-        if (GetEconomyTrend(self, 'ENERGY') <= 0.0 and GetEconomyStoredRatio(self, 'ENERGY') <= 0.2) or ((self.CDRUnit.Caution or self.BrainIntel.SuicideModeActive) and GetEconomyStored(self, 'ENERGY') <= 3500) then
+        if (GetEconomyTrend(self, 'ENERGY') <= 0.0 and GetEconomyStoredRatio(self, 'ENERGY') <= 0.2) or ((self.CDRUnit.Caution or self.BrainIntel.SuicideModeActive) and (GetEconomyStored(self, 'ENERGY') <= 3500 or GetCurrentUnits(self, categories.STRUCTURE * categories.ENERGYSTORAGE) > 0 and GetEconomyStored(self, 'ENERGY') <= 7000)) then
             return true
         end
         return false
@@ -5523,9 +5528,9 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('Eco selector manager for '..priorityUnit..' is '..action..' Type is '..type)
         local engineerCats
         if self.BrainIntel.MapOwnership > 50 then
-            engineerCats = categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE)
+            engineerCats = categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE + categories.OPTICS)
         else
-            engineerCats = categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE)
+            engineerCats = categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE + categories.OPTICS)
         end
         
         for k, v in units do
@@ -5806,58 +5811,79 @@ AIBrain = Class(RNGAIBrainClass) {
                         CurrentPathThreat = 0,
                         NoPath = false,
                         StartPosition = {posX, 0, posZ},
+                        ClosestThreatPos = {},
+                        ClosestThreat = 0
                     }
                 end
             end
         end
 
         while true do
+            --LOG('Performing chokepoint loop')
             if self.EnemyIntel.EnemyCount > 0 then
+                --LOG('Enemy count is '..tostring(self.EnemyIntel.EnemyCount))
                 for k, v in self.EnemyIntel.ChokePoints do
-                    if not v.NoPath then
-                        local path, reason, totalThreat = PlatoonGenerateSafePathToRNG(self, 'Land', selfStartPos, v.StartPosition, 1, nil, nil, true)
-                        if path then
-                           --RNGLOG('Choke point test Total Threat for path is '..totalThreat)
-                           -- Fix total threat later.
-                           totalThreat = 100000
-                            self.EnemyIntel.ChokePoints[k].CurrentPathThreat = (totalThreat / RNGGETN(path))
-                           --RNGLOG('We have a path to the enemy start position with an average of '..(totalThreat / RNGGETN(path)..' threat'))
-
-                            if self.EnemyIntel.EnemyCount > 0 then
-                                --RNGLOG('Land Now Should be Greater than EnemyThreatcurrent divided by enemies')
-                                --RNGLOG('LandNow '..self.BrainIntel.SelfThreat.LandNow)
-                               --RNGLOG('EnemyThreatCurrent for Land is '..self.EnemyIntel.EnemyThreatCurrent.Land)
-                               --RNGLOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
-                               --RNGLOG('EnemyThreatcurrent divided by enemies '..(self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount))
-                               --RNGLOG('EnemyDenseThreatSurface '..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface..' should be greater than LandNow'..self.BrainIntel.SelfThreat.LandNow)
-                               --RNGLOG('Total Threat '..totalThreat..' Should be greater than LandNow '..self.BrainIntel.SelfThreat.LandNow)
-                                if self.EnemyIntel.EnemyFireBaseDetected then
-                                   --RNGLOG('Firebase flag is true')
-                                else
-                                   --RNGLOG('Firebase flag is false')
-                                end
-                                if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount) 
-                                and (self.EnemyIntel.EnemyThreatCurrent.DefenseSurface + self.EnemyIntel.EnemyThreatCurrent.DefenseAir) > self.BrainIntel.SelfThreat.LandNow
-                                and totalThreat > self.BrainIntel.SelfThreat.LandNow 
-                                and self.EnemyIntel.EnemyFireBaseDetected then
-                                    self.EnemyIntel.ChokeFlag = true
-                                    self.ProductionRatios.Land = 0.2
-                                    self.ProductionRatios.Air = 0.2
-                                    self.ProductionRatios.Naval = 0.2
-                                   --RNGLOG('ChokeFlag is true')
-                                elseif self.EnemyIntel.ChokeFlag then
-                                   --RNGLOG('ChokeFlag is false')
-                                    self.EnemyIntel.ChokeFlag = false
-                                    self.ProductionRatios.Land = self.DefaultLandRatio
-                                end
-                            end
-                        elseif (not path and reason) then
-                            --RNGLOG('We dont have a path to the enemy start position, setting NoPath to true')
-                            --RNGLOG('Reason is '..reason)
+                    --LOG('Checkpoint check '..tostring(k)..' detail is '..tostring(repr(v)))
+                    local path, reason, distance, threats = PlatoonGenerateSafePathToRNG(self, 'Land', selfStartPos, v.StartPosition, 1500, 20 )
+                    if not v.NoPath and not path and reason == 'TooMuchThreat' then
+                        --LOG('Path to enemy base has too much threat')
+                        local closestThreatDistance
+                        local closestThreatPosition
+                        local cloestThreat
+                        local totalThreat = 0
+                        if self.EnemyIntel.EnemyCount > 0 then
                             self.EnemyIntel.ChokePoints[k].NoPath = true
-                        else
-                            WARN('AI-RNG : Chokepoint test has unexpected return')
+                            --LOG('No path due to chokepoint is now true')
+                            for _, v in threats do
+                                local dx = v[1] - selfStartPos[1]
+                                local dz = v[2] - selfStartPos[2]
+                                local threatDist = dx * dx + dz * dz
+                                if not closestThreatDistance or threatDist < closestThreatDistance then
+                                    closestThreatDistance = threatDist
+                                    closestThreatPosition = {v[1], 0, v[2]}
+                                    cloestThreat = v[3]
+                                end
+                                totalThreat = totalThreat + v[3]
+                            end
+                            --LOG('Land Now Should be Greater than EnemyThreatcurrent divided by enemies')
+                            --LOG('LandNow '..self.BrainIntel.SelfThreat.LandNow)
+                            --LOG('EnemyThreatCurrent for Land is '..self.EnemyIntel.EnemyThreatCurrent.Land)
+                            --LOG('Enemy Count is '..self.EnemyIntel.EnemyCount)
+                            --LOG('EnemyThreatcurrent divided by enemies '..(self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount))
+                            --LOG('EnemyDenseThreatSurface '..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface..' should be greater than LandNow'..self.BrainIntel.SelfThreat.LandNow)
+                            --LOG('Total Threat '..totalThreat..' Should be greater than LandNow '..self.BrainIntel.SelfThreat.LandNow)
+                            if self.EnemyIntel.EnemyFireBaseDetected then
+                                --RNGLOG('Firebase flag is true')
+                            else
+                                --RNGLOG('Firebase flag is false')
+                            end
+                            if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount) 
+                            and (self.EnemyIntel.EnemyThreatCurrent.DefenseSurface + self.EnemyIntel.EnemyThreatCurrent.DefenseAir) > self.BrainIntel.SelfThreat.LandNow
+                            and totalThreat > self.BrainIntel.SelfThreat.LandNow 
+                            and self.EnemyIntel.EnemyFireBaseDetected then
+                                self.EnemyIntel.ChokeFlag = true
+                                self.ProductionRatios.Land = 0.2
+                                self.ProductionRatios.Air = 0.2
+                                self.ProductionRatios.Naval = 0.2
+                                --LOG('ChokeFlag is true')
+                            elseif self.EnemyIntel.ChokeFlag then
+                                --LOG('ChokeFlag is false')
+                                self.EnemyIntel.ChokeFlag = false
+                                self.ProductionRatios.Land = self.DefaultLandRatio
+                            end
                         end
+
+                        if closestThreatPosition then
+                            self.EnemyIntel.ChokePoints[k].ClosestThreatPos = closestThreatPosition
+                            --LOG('ClosestThreatPos is '..tostring(closestThreatPosition[1])..':'..tostring(closestThreatPosition[3]))
+                            self.EnemyIntel.ChokePoints[k].CurrentPathThreat = totalThreat
+                            --LOG('Total Path threat is '..tostring(totalThreat))
+                            self.EnemyIntel.ChokePoints[k].ClosestThreat = cloestThreat
+                        end
+                    elseif v.NoPath and path then
+                        self.EnemyIntel.ChokePoints[k].NoPath = false
+                        self.EnemyIntel.ChokeFlag = false
+                        self.ProductionRatios.Land = self.DefaultLandRatio
                     end
                     --RNGLOG('Current enemy chokepoint data for index '..k)
                     --RNGLOG(repr(self.EnemyIntel.ChokePoints[k]))

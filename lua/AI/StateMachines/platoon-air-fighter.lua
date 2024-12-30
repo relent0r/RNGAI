@@ -116,7 +116,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 for _, v in aiBrain.EnemyIntel.Experimental do
                     if v.object and not v.object.Dead and v.object.Blueprint.CategoriesHash.AIR then
                         local expPos = v.object:GetPosition()
-                        if expPos and GetThreatAtPosition(aiBrain, expPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') < self.CurrentPlatoonThreat
+                        if expPos and GetThreatAtPosition(aiBrain, expPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') < self.CurrentPlatoonThreatAntiAir
                         or VDist2(expPos[1], expPos[3], self.Home[1], self.Home[3]) < math.min(self.BaseMilitaryArea, 200) then
                             target = v.object
                             break
@@ -126,13 +126,16 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 if not target or target.Dead then
                     --RNGLOG('FighterBehavior DecideWhatToDo Check targets at max radius')
                 -- Params aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted
-                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, platPos, self, 'Attack', self.MaxRadius, self.AttackPriorities, true, self.CurrentPlatoonThreat, false, false, true)
+                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, platPos, self, 'Attack', self.MaxRadius, self.AttackPriorities, true, self.CurrentPlatoonThreatAntiAir, false, false, true)
                 end
                 if target then
                     self.BuilderData = {
                         AttackTarget = target,
                         Position = target:GetPosition()
                     }
+                    --LOG('Air units are going to attack a target')
+                    --LOG('The platoons threat is '..tostring(self.CurrentPlatoonThreatAntiAir))
+                    --LOG('Threat at target is '..tostring(aiBrain:GetThreatAtPosition(self.BuilderData.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')))
                     --LOG('FighterBehavior found normal target AttackTarget')
                     self:ChangeState(self.AttackTarget)
                     return

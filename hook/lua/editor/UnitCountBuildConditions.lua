@@ -502,11 +502,21 @@ function EnemyUnitsGreaterAtLocationRadiusRNG(aiBrain, radius, locationType, uni
 end
 
 function EnemyStructuresGreaterThanMobileAtPerimeter(aiBrain, locationType)
-    local enemyStructureThreat = aiBrain.BasePerimeterMonitor[locationType].StructureThreat
-    local enemyStructureCount = aiBrain.BasePerimeterMonitor[locationType].StructureUnits
-    local enemyLandThreat = aiBrain.BasePerimeterMonitor[locationType].LandThreat
-    if enemyStructureCount > 0 then
-        if enemyStructureThreat > enemyLandThreat then
+    local perimeterMonitor = aiBrain.BasePerimeterMonitor[locationType]
+    if perimeterMonitor.StructureUnits > 0 then
+        if perimeterMonitor.StructureThreat > perimeterMonitor.LandThreat then
+            return true
+        end
+    end
+    if perimeterMonitor.ClosestDefenseClusterThreat and perimeterMonitor.ClosestZoneIntelLandThreat and perimeterMonitor.ClosestDefenseClusterDistance and perimeterMonitor.ClosestZoneIntelLandThreatDistance then
+        --LOG('LocationType '..tostring(locationType))
+        --LOG('Cluster threat is '..tostring(perimeterMonitor.ClosestDefenseClusterThreat))
+        --LOG('ZoneLand threat is '..tostring(perimeterMonitor.ClosestZoneIntelLandThreat))
+        --LOG('Perimeter threat is '..tostring(perimeterMonitor.LandThreat))
+        if (perimeterMonitor.ClosestDefenseClusterThreat > perimeterMonitor.ClosestZoneIntelLandThreat or perimeterMonitor.ClosestDefenseClusterDistance < perimeterMonitor.ClosestZoneIntelLandThreatDistance) and perimeterMonitor.ClosestDefenseClusterThreat > perimeterMonitor.LandThreat then
+            --LOG('Base detected that defense cluster threat is greater than land threat')
+            --LOG('Cluster distance is '..tostring(perimeterMonitor.ClosestDefenseClusterDistance))
+            --LOG('ZoneAntiSurface distance is '..tostring(perimeterMonitor.ClosestZoneIntelLandThreatDistance))
             return true
         end
     end
@@ -1415,6 +1425,19 @@ function IsEngineerNotBuilding(aiBrain, category)
     return true 
 end
 
+function ValidateHydroIncome(aiBrain, category)
+    local multiplier
+    if aiBrain.CheatEnabled then
+        multiplier = aiBrain.EcoManager.EcoMultiplier
+    else
+        multiplier = 1
+    end
+    if IsAnyEngineerBuilding(aiBrain, category) and aiBrain:GetEconomyIncome('ENERGY') < 15 * multiplier then
+        return false
+    end
+    return true 
+end
+
 function ValidateLateGameBuild(aiBrain, locationType)
     -- Returns true if no engineer is building anything in the category and if the economy is good. 
     -- Used to avoid building multiple late game things when the AI can't support them but other conditions are right.
@@ -1612,7 +1635,7 @@ function AdjacencyMassCheckRNG(aiBrain, locationType, category, radius)
                     if bString == 'MassStorage' then
                         for n,position in bType do
                             if n > 1 then
-                                local reference = {position[1] + extratorPos[1], position[2] + extratorPos[2], position[3] + extratorPos[3]}
+                                local reference = {position[1] + extratorPos[1], GetSurfaceHeight(position[1], position[2]) + extratorPos[2], position[2] + extratorPos[3]}
                                 if aiBrain:CanBuildStructureAt(unitId, reference) then
                                     return true
                                 end
@@ -1661,7 +1684,7 @@ function AdjacencyFabricatorCheckRNG(aiBrain, locationType, category, radius)
                             if bString == 'T1MassCreation' then
                                 for n,position in bType do
                                     if n > 1 then
-                                        local reference = {position[1] + storagePos[1], position[2] + storagePos[2], position[3] + storagePos[3]}
+                                        local reference = {position[1] + storagePos[1], GetSurfaceHeight(position[1], position[2]) + storagePos[2], position[2] + storagePos[3]}
                                         if aiBrain:CanBuildStructureAt(unitId, reference) then
                                             return true
                                         end
@@ -2048,6 +2071,17 @@ function CheckBaseShieldsRequired(aiBrain, locationType)
         end
     end
     return false
+end
+
+function LocationDefenseCheck(aiBrain, locationType, count, defensiveCategory, perimeterType)
+
+    if aiBrain.BasePerimeterMonitor[locationType][perimeterType] and aiBrain.BasePerimeterMonitor[locationType][perimeterType] > 0 then
+        local numUnits = aiBrain:GetNumUnitsAroundPoint( defensiveCategory, aiBrain.BuilderManagers[locationType].Position, 60, 'Ally' )
+        if numUnits < count then
+            return false
+        end
+    end
+    return true
 end
 
 --[[

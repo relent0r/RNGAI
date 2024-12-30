@@ -189,7 +189,7 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                                                 --RNGLOG('Only 1 missile required')
                                                 if tml.TargetBlackList then
                                                     if tml.TargetBlackList[targetPosition[1]][targetPosition[3]] then
-                                                        --RNGLOG('TargetPos found in blacklist, skip')
+                                                        --LOG('TargetPos found in blacklist, skip')
                                                         continue
                                                     end
                                                 end
@@ -198,7 +198,7 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                                             else
                                                 if tml.TargetBlackList then
                                                     if tml.TargetBlackList[targetPosition[1]][targetPosition[3]] then
-                                                        --RNGLOG('TargetPos found in blacklist, skip')
+                                                        --LOG('TargetPos found in blacklist, skip')
                                                         continue
                                                     end
                                                 end
@@ -249,17 +249,16 @@ AITMLBehavior = Class(AIPlatoonRNG) {
 
         ---@param self AITMLBehavior
         Main = function(self)
-            local aiBrain = self:GetBrain()
             local builderData = self.BuilderData
             local target = builderData.AttackTarget
             local firePos = target:GetPosition()
             if EntityCategoryContains(categories.MOBILE, target) then
                 if firePos then
                     for k, v in builderData.Launchers do
-                        local firePos = RUtils.LeadTargetRNG(v:GetPosition(), target, 15, 256)
-                        if firePos then
-                            if not v.TargetBlackList[target.EntityId].Terrain then
-                                IssueTactical({v}, firePos)
+                        local newFirePos = RUtils.LeadTargetRNG(v:GetPosition(), target, 15, 256)
+                        if newFirePos then
+                            if not v.TargetBlackList[newFirePos[1]][newFirePos[3]] then
+                                IssueTactical({v}, newFirePos)
                             end
                         end
                     end
@@ -267,7 +266,7 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                     --RNGLOG('LeadTarget Returned False')
                 end
             else
-                IssueTactical(builderData.Launchers, target)
+                IssueTactical(builderData.Launchers, firePos)
             end
             self.BuilderData = {}
             self:ChangeState(self.DecideWhatToDo)

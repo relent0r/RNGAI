@@ -284,7 +284,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local eng = self.eng
             local builderData = self.BuilderData
             local pos = eng:GetPosition()
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, pos, builderData.Position, 10 , 10000)
+            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, pos, builderData.Position, 15 , 30)
             --self:LogDebug(string.format('Navigating to position, path reason is '..tostring(reason)))
             local result, navReason
             local whatToBuildM = self.ExtractorBuildID

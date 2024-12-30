@@ -63,7 +63,6 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             self.CurrentPlatoonThreat = false
             self.PlatoonLimit = self.PlatoonData.PlatoonLimit or 18
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
-            RUtils.ConfigurePlatoon(self)
             StartZoneControlThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -90,7 +89,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             else
                 threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius * 0.7,self.EnemyRadius, false, true, false)
             end
-            --LOG('Current threat table '..repr(threat))
+            --LOG('Naval zone control decide what to do, max platoon weapon rnge is '..tostring(self.MaxPlatoonWeaponRange))
             if threat.allySub and threat.enemySub and threat.enemyrange > 0 
             and (threat.allySub*1.1 < threat.enemySub and threat.enemyrange >= self.MaxPlatoonWeaponRange or threat.allySub*1.3 < threat.enemySub) and currentStatus ~= 'Allied'
             or threat.allySub and threat.enemySub and threat.allySurface and threat.enemySurface and threat.enemyrange > 0 and (threat.allySurface*1.1 < threat.enemySurface 
@@ -116,18 +115,20 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             local target
             if not target then
                 --self:LogDebug(string.format('Checking for simple target'))
+                --LOG('Checking SimpleNavalTarget with search radius of '..tostring(math.max(self.MaxPlatoonWeaponRange,self.EnemyRadius)))
                 if StateUtils.SimpleNavalTarget(self,aiBrain) then
                     --self:LogDebug(string.format('DecideWhatToDo found simple target'))
                     self:ChangeState(self.CombatLoop)
                     return
                 end
-                --self:LogDebug(string.format('No Simple target found'))
+                self:LogDebug(string.format('No Simple target found'))
             end
             local attackTable = AIAttackUtils.GetBestNavalTargetRNG(aiBrain, self)
             if not table.empty(attackTable) then
                 for k, v in attackTable do
                     local attackPosition = {v[1], GetSurfaceHeight(v[1], v[2]), v[2]}
                     --self:LogDebug(string.format('Attack Position is '..tostring(attackPosition[1])..':'..tostring(attackPosition[3])))
+                    --self:LogDebug(string.format('Threat amount is '..tostring(v[3])))
                     if NavUtils.CanPathTo(self.MovementLayer, self.Pos, attackPosition) then
                         local rx = self.Pos[1] - attackPosition[1]
                         local rz = self.Pos[3] - attackPosition[3]
@@ -138,16 +139,20 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                                 CutOff = 400
                             }
                             self.dest = self.BuilderData.Position
-                            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', self.Pos, attackPosition, 10 , 1000)
+                            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', self.Pos, attackPosition, 1000, 160)
                             if path and RNGGETN(path) > 0 then
+                                --LOG('We are going to navigate to attack position '..tostring(attackPosition[1])..':'..tostring(attackPosition[3]))
+                                --LOG('Naval Threat at position is '..aiBrain:GetThreatAtPosition({attackPosition[1], 0, attackPosition[3]}, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Naval'))
+                                --LOG('Air Threat at position is '..aiBrain:GetThreatAtPosition({attackPosition[1], 0, attackPosition[3]}, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Air'))
+                                --LOG('Threat table amount was '..tostring(v[3]))
                                 self.path = path
-                                --self:LogDebug(string.format('Navigating to attack position'..tostring(attackPosition)))
+                                self:LogDebug(string.format('Navigating to attack position'..tostring(attackPosition[1])..':'..tostring(attackPosition[3])))
                                 self:ChangeState(self.Navigating)
                                 return
                             end
                         else
                             if StateUtils.SimpleNavalTarget(self,aiBrain) then
-                                --self:LogDebug(string.format('DecideWhatToDo found simple target'))
+                                self:LogDebug(string.format('DecideWhatToDo found simple target'))
                                 self:ChangeState(self.CombatLoop)
                                 return
                             end
@@ -158,10 +163,10 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             if not target then
                 local targetCandidates
                 local searchFilter = (categories.NAVAL + categories.AMPHIBIOUS + categories.HOVER + categories.STRUCTURE) - categories.INSIGNIFICANTUNIT
-                --self:LogDebug(string.format('Looking for target via IMAP'))
+                self:LogDebug(string.format('Looking for target via IMAP'))
                 targetCandidates = StateUtils.GetClosestTargetByIMAP(aiBrain, self, self.Home, 'Naval', searchFilter, 'AntiSub', 'Water')
                 if targetCandidates then
-                    --self:LogDebug(string.format('targetCandidates return, looking for closest target'))
+                    self:LogDebug(string.format('targetCandidates return, looking for closest target'))
                     local closestTarget
                     local closestTargetPos
                     for l, m in targetCandidates do
@@ -188,20 +193,20 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                         local rz = self.Pos[3] - closestTargetPos[3]
                         local posDistance = rx * rx + rz * rz
                         if posDistance > 6400 then
-                            --self:LogDebug(string.format('Moving to target'))
+                            self:LogDebug(string.format('Moving to target'))
                             self.BuilderData = {
                                 AttackTarget = target,
                                 Position = closestTargetPos,
                                 CutOff = 400
                             }
                             self.dest = self.BuilderData.Position
-                            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', self.Pos, self.BuilderData.Position, 10 , 1000)
+                            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', self.Pos, self.BuilderData.Position, 1000, 160)
                             if path and RNGGETN(path) > 0 then
                                 self.path = path
                                 self:ChangeState(self.Navigating)
                                 return
                             else
-                                --self:LogDebug(string.format('No path or no entries in path returned'..tostring(self.Pos)))
+                                self:LogDebug(string.format('No path or no entries in path returned'..tostring(self.Pos)))
                             end
                         else
                             --self:LogDebug(string.format('target is close, combat loop'))
@@ -210,12 +215,13 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                     else
-                        --self:LogDebug(string.format('Have attack position but cant path to it, position is '..tostring(closestTargetPos[1])..':'..tostring(closestTargetPos[3])))
+                        self:LogDebug(string.format('Have attack position but cant path to it, position is '..tostring(closestTargetPos[1])..':'..tostring(closestTargetPos[3])))
                     end
                 else
-                    --self:LogDebug(string.format('No targetCandidate table'))
+                    self:LogDebug(string.format('No targetCandidate table'))
                 end
             end
+            --LOG('Naval Platoon found no target positions so they are retreating, our max platoon range was '..tostring(self.MaxPlatoonWeaponRange))
             local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos, true)
             local basePos
             if not closestBase then
@@ -228,12 +234,12 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if basePos then
-                --self:LogDebug(string.format('No positions or targets found, retreating back to base'))
+                self:LogDebug(string.format('No positions or targets found, retreating back to base'))
                 coroutine.yield(25)
                 self:ChangeState(self.Retreating)
                 return
             end
-            --self:LogDebug(string.format('DecideWhatToDo nohing to do, loop again'))
+            self:LogDebug(string.format('DecideWhatToDo nohing to do, loop again'))
             coroutine.yield(15)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -608,13 +614,18 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                 end
             end
             local target
-            local closestTarget
+            local maxEnemyDirectIndirectRange
+            local maxEnemyDirectIndirectRangeDistance
             local approxThreat
             for _,v in units do
                 if v and not v.Dead then
                     local unitPos = v:GetPosition()
                     local unitRange = v['rngdata'].MaxWeaponRange
                     local unitRole = v['rngdata'].Role
+                    local closestTarget
+                    local closestRoleTarget
+                    local closestTargetRange
+                    --LOG('Unit role for naval unit is '..tostring(unitRole))
                     if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
                         target = aiBrain.BrainIntel.SuicideModeTarget
                     else
@@ -624,10 +635,62 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                                 local rx = unitPos[1] - enemyPos[1]
                                 local rz = unitPos[3] - enemyPos[3]
                                 local tmpDistance = rx * rx + rz * rz
+                                local candidateWeaponRange = m['rngdata'].MaxWeaponRange or 0
+                                candidateWeaponRange = candidateWeaponRange * candidateWeaponRange
+                                if not closestTargetRange then
+                                    closestTargetRange = candidateWeaponRange
+                                end
+                                if tmpDistance < candidateWeaponRange then
+                                    if not maxEnemyDirectIndirectRange or candidateWeaponRange > maxEnemyDirectIndirectRange then
+                                        maxEnemyDirectIndirectRange = candidateWeaponRange
+                                        maxEnemyDirectIndirectRangeDistance = tmpDistance
+                                    elseif candidateWeaponRange == maxEnemyDirectIndirectRange and tmpDistance < maxEnemyDirectIndirectRangeDistance then
+                                        maxEnemyDirectIndirectRangeDistance = tmpDistance
+                                    end
+                                end
+                                local immediateThreat = tmpDistance < candidateWeaponRange
                                 if unitRole ~= 'Artillery' and unitRole ~= 'Silo' and unitRole ~= 'Sniper' then
                                     tmpDistance = tmpDistance*m['rngdata'].machineworth
                                 end
+                                if unitRole == 'MissileShip' then
+                                    if m['rngdata'].TargetType then
+                                        local targetType = m['rngdata'].TargetType
+                                        if targetType == 'Shield' then
+                                            if not closestRoleTarget or (tmpDistance < closestRoleTarget and tmpDistance > maxEnemyDirectIndirectRangeDistance) then
+                                                --LOG('We are targeting a shield')
+                                                target = m
+                                                closestRoleTarget = tmpDistance
+                                            end
+                                        elseif targetType == 'EconomyStructure' or targetType == 'Defense' then
+                                            -- Secondary targets: economy or defensive structures
+                                            if not closestRoleTarget or (tmpDistance < closestRoleTarget and tmpDistance > maxEnemyDirectIndirectRangeDistance) then
+                                                --LOG('We want to attack this target as its the closest role target')
+                                                target = m
+                                                closestRoleTarget = tmpDistance
+                                            end
+                                        else
+                                            if not target and not closestRoleTarget or (tmpDistance < closestRoleTarget and tmpDistance > maxEnemyDirectIndirectRangeDistance) then
+                                                target = m
+                                                closestRoleTarget = tmpDistance
+                                            end
+                                        end
+                                    elseif not target and (not closestTarget or tmpDistance < closestTarget) then
+                                        -- General fallback for non-MissileShip roles
+                                        target = m
+                                        closestTarget = tmpDistance
+                                    end
+                                end
+
+                                if immediateThreat and (not closestTarget or tmpDistance < closestTarget) then
+                                    --LOG('Immediate threat detected within enemy weapon range!')
+                                    --LOG('Distance '..tostring(tmpDistance))
+                                    --LOG('Candidate weapon range '..tostring(candidateWeaponRange))
+                                    target = m
+                                    closestTarget = tmpDistance
+                                end
+                                
                                 if not closestTarget or tmpDistance < closestTarget then
+                                    -- General fallback for non-MissileShip roles
                                     target = m
                                     closestTarget = tmpDistance
                                 end
@@ -635,7 +698,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if target then
-                        if not (unitRole == 'Sniper' or unitRole == 'Silo') and closestTarget>(unitRange+20)*(unitRange+20) then
+                        if (unitRole ~= 'Sniper' or unitRole ~= 'MissileShip') and closestTarget>(unitRange*unitRange+400)*(unitRange*unitRange+400) then
                             if not approxThreat then
                                 approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, true, false)
                             end
@@ -654,33 +717,6 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             return
         end,
     },
-
-        ---@param self AIPlatoon
-        OnUnitsAddedToPlatoon = function(self)
-            local units = self:GetPlatoonUnits()
-            self.Units = units
-            for k, unit in units do
-                if not unit.Dead then
-                    if not unit['rngdata'] then
-                        unit['rngdata'] = {}
-                    end
-                    unit.AIPlatoonReference = self
-                    local cats = unit.Blueprint.CategoriesHash
-                    if self.Debug then
-                        unit:SetCustomName(self.PlatoonName)
-                    end
-                    if unit:TestToggleCaps('RULEUTC_StealthToggle') then
-                        unit:SetScriptBit('RULEUTC_StealthToggle', false)
-                    end
-                    if unit:TestToggleCaps('RULEUTC_CloakToggle') then
-                        unit:SetScriptBit('RULEUTC_CloakToggle', false)
-                    end
-                    if cats.CRUISER and cats.INDIRECTFIRE then
-                        unit['rngdata'].Role = 'Silo'
-                    end
-                end
-            end
-        end,
 
 }
 

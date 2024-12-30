@@ -175,6 +175,8 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomACUBaseTemplates.lua',
+                BaseTemplate = 'ACUCustomBaseTemplates',
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
@@ -199,6 +201,8 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomACUBaseTemplates.lua',
+                BaseTemplate = 'ACUCustomBaseTemplates',
                 BuildClose = true,
                 BuildStructures = {
                     'T1LandFactory',
@@ -229,6 +233,8 @@ BuilderGroup {
             JobType = 'BuildStructure',
             DesiresAssist = true,
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomACUBaseTemplates.lua',
+                BaseTemplate = 'ACUCustomBaseTemplates',
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
@@ -253,6 +259,8 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomACUBaseTemplates.lua',
+                BaseTemplate = 'ACUCustomBaseTemplates',
                 BuildClose = true,
                 BuildStructures = {
                     'T1LandFactory',
@@ -276,6 +284,8 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomACUBaseTemplates.lua',
+                BaseTemplate = 'ACUCustomBaseTemplates',
                 BuildClose = true,
                 AdjacencyPriority = {
                     categories.HYDROCARBON,
@@ -304,6 +314,8 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomACUBaseTemplates.lua',
+                BaseTemplate = 'ACUCustomBaseTemplates',
                 BuildClose = true,
                 BuildStructures = {
                     'T1AirFactory',
@@ -353,6 +365,8 @@ BuilderGroup {
         BuilderData = {
             DesiresAssist = false,
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomACUBaseTemplates.lua',
+                BaseTemplate = 'ACUCustomBaseTemplates',
                 AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
                 BuildStructures = {
                     'T1EnergyProduction',
@@ -375,6 +389,8 @@ BuilderGroup {
         BuilderData = {
             DesiresAssist = false,
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomACUBaseTemplates.lua',
+                BaseTemplate = 'ACUCustomBaseTemplates',
                 AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
                 AvoidCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH1,
                 maxUnits = 1,
@@ -404,6 +420,8 @@ BuilderGroup {
             DesiresAssist = true,
             NumAssistees = 10,
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomACUBaseTemplates.lua',
+                BaseTemplate = 'ACUCustomBaseTemplates',
                 AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
                 AvoidCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2,
                 maxUnits = 1,
@@ -431,6 +449,8 @@ BuilderGroup {
             DesiresAssist = true,
             NumAssistees = 10,
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomACUBaseTemplates.lua',
+                BaseTemplate = 'ACUCustomBaseTemplates',
                 AdjacencyCategory = (categories.STRUCTURE * categories.SHIELD) + (categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)),
                 AvoidCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3,
                 maxUnits = 1,
@@ -490,6 +510,8 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderData = {
             Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomACUBaseTemplates.lua',
+                BaseTemplate = 'ACUCustomBaseTemplates',
                 BuildClose = true,
                 BuildStructures = {
                     'T1AADefense',
