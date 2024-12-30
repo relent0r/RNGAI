@@ -766,11 +766,8 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 BuildClose = false,
-                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
-                AvoidCategory = categories.STRUCTURE * categories.ARTILLERY * categories.TECH2,
                 EmergencyBuild = true,
-                maxUnits = 1,
-                maxRadius = 35,
+                CounterDefense = true,
                 BuildStructures = {
                     { Unit = 'T2Artillery', Categories = categories.STRUCTURE * categories.ARTILLERY * categories.STRATEGIC * categories.TECH2 },
                 },
@@ -875,6 +872,37 @@ BuilderGroup {
                 maxRadius = 5,
                 BuildStructures = {
                     { Unit = 'T2MissileDefense', Categories = categories.DEFENSE * categories.TECH2 * categories.ANTIMISSILE }
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Defence Restricted Breach Air Naval',
+        PlatoonTemplate = 'EngineerStateT1RNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.ANTIAIR}},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 1, 'AIR'}},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
+            BaseTemplate = 'BaseTemplates',
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                BuildClose = false,
+                NearDefensivePoints = false,
+                EmergencyBuild = true,
+                BuildStructures = {
+                    { Unit = 'T1AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH1 },
                 },
                 LocationType = 'LocationType',
             }

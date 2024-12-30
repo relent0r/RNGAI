@@ -76,7 +76,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             self.CurrentPlatoonThreatAntiAir = 0
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
             self.ExcludeFromMerge = true
-            RUtils.ConfigurePlatoon(self)
             StartZoneControlDefenseThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -499,7 +498,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local lastfinaldist=0
             self.navigating = true
             if not self.path and self.BuilderData.Position and self.BuilderData.CutOff then
-                local path, reason, distance, threats = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.BuilderData.Position, 1, 150,80)
+                local path, reason, distance, threats = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.BuilderData.Position, 200, 120)
                 if not path then
                     if reason ~= "TooMuchThreat" then
                         --self:LogDebug(string.format('platoon is going to use transport'))
@@ -557,7 +556,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 end
                 if self.path[nodenum-1] and VDist3Sq(self.path[nodenum],self.path[nodenum-1])>lastfinaldist*3 then
                     if NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.path[nodenum]) then
-                        self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.path[nodenum], 1, 150,80)
+                        self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.path[nodenum], 5000, 120)
                         coroutine.yield(10)
                         --self:LogDebug(string.format('platoon is doing the lastfinaldist thing'))
                         continue

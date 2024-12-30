@@ -895,7 +895,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local lastfinaldist=0
             self.navigating = true
             if not self.path and self.BuilderData.Position and self.BuilderData.CutOff then
-                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.BuilderData.Position, 1, 150,80)
+                local path, reason = AIAttackUtils.PlatoonGeneratePathToRNG(self.MovementLayer, self.Pos, self.BuilderData.Position, 1000, 80)
                 self.path = path
             end
             if not self.path then
@@ -932,7 +932,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 end
                 if self.path[nodenum-1] and VDist3Sq(self.path[nodenum],self.path[nodenum-1])>lastfinaldist*3 then
                     if NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.path[nodenum]) then
-                        self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.path[nodenum], 1, 150,80)
+                        self.path=AIAttackUtils.PlatoonGeneratePathToRNG(self.MovementLayer, self.Pos, self.path[nodenum], 1000, 80)
                         coroutine.yield(10)
                         continue
                     end

@@ -156,7 +156,11 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                     unit['rngdata'].Role='Artillery'
                 elseif unitCats.EXPERIMENTAL then
                     unit['rngdata'].Role='Experimental'
-                elseif unitCats.SILO or unitCats.INDIRECTFIRE and unitCats.NAVAL and unitCats.BATTLESHIP and not unitCats.SERAPHIM then
+                elseif unitCats.NAVAL then
+                    if unitCats.TECH2 and unitCats.INDIRECTFIRE and unitCats.CRUISER or unitCats.INDIRECTFIRE and unitCats.NAVAL and unitCats.BATTLESHIP and not unitCats.SERAPHIM then
+                        unit['rngdata'].Role='MissileShip'
+                    end
+                elseif unitCats.SILO then
                     unit['rngdata'].Role='Silo'
                 elseif unitCats.xsl0202 or unitCats.xel0305 or unitCats.xrl0305 then
                     unit['rngdata'].Role='Heavy'
@@ -181,6 +185,9 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                     unit['rngdata'].Role='Bruiser'
                 elseif unitCats.SHIELD then
                     unit['rngdata'].Role='Shield'
+                end
+                if not unit['rngdata'].smartPos then
+                    unit['rngdata'].smartPos = {0,0,0}
                 end
                 if not unitCats.ENGINEER then
                     unit:RemoveCommandCap('RULEUCC_Reclaim')

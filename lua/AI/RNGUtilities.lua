@@ -208,7 +208,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                         reclaimCount = reclaimCount + 1
                         --RNGLOG('Reclaim Function - Issuing reclaim')
                         IssueReclaim({self}, closestReclaim)
-                        coroutine.yield(20)
+                        coroutine.yield(15)
                         local reclaimTimeout = 0
                         local massOverflow = false
                         while aiBrain:PlatoonExists(platoon) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 40) do
@@ -219,17 +219,17 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             if self:IsUnitState('Reclaiming') and reclaimTimeout > 0 then
                                 reclaimTimeout = reclaimTimeout - 1
                             end
-                            brokenPathMovement = PerformEngReclaim(aiBrain, self, 5)
+                            brokenPathMovement = PerformEngReclaim(aiBrain, self, 2.5)
                             if brokenPathMovement and closestReclaim and (not IsDestroyed(closestReclaim)) then
                                 IssueReclaim({self}, closestReclaim)
                             end
-                            coroutine.yield(20)
+                            coroutine.yield(15)
                         end
                         --RNGLOG('Set key to nil '..closestReclaimKey)
                         aiBrain.StartReclaimTable[closestReclaimKey] = nil
                     end
                     reclaimCount = reclaimCount + 1
-                    if reclaimCount > 10 then
+                    if reclaimCount > 15 then
                         break
                     end
                     coroutine.yield(2)
@@ -777,7 +777,6 @@ function EngineerTryRepair(aiBrain, eng, whatToBuild, pos)
     if not pos then
         return false
     end
-
     local structureCat = ParseEntityCategory(whatToBuild)
     local checkUnits = GetUnitsAroundPoint(aiBrain, structureCat, pos, 1, 'Ally')
     if checkUnits and not table.empty(checkUnits) then
@@ -2352,8 +2351,9 @@ function GetNavalPlatoonMaxRangeRNG(aiBrain, platoon)
         if unit.Dead then
             continue
         end
+        local unitBp = unit.Blueprint
 
-        for _,weapon in unit.UnitId.Weapon do
+        for _,weapon in unitBp.Weapon do
             if not weapon.FireTargetLayerCapsTable or not weapon.FireTargetLayerCapsTable.Water then
                 continue
             end
@@ -5847,6 +5847,39 @@ DefensiveClusterCheck = function(aiBrain, position)
     end
 end
 
+GetArtilleryCounterPosition = function(aiBrain, baseTemplate, unit, basePosition)
+    
+    local unitId = GetUnitIDFromTemplate(aiBrain, unit)
+    if not unitId then
+        return false
+    end
+    local rangeCheck = ALLBPS[unitId].Weapon[1].MaxRadius
+
+    if aiBrain.EnemyIntel.DirectorData.DefenseCluster then
+        for _, v in aiBrain.EnemyIntel.DirectorData.DefenseCluster do
+            if v.DefensiveCount > 0 and VDist2Sq(basePosition[1],basePosition[3],v.aggx, v.aggz) < 19600 then
+                local distance = math.sqrt(VDist2Sq(basePosition[1],basePosition[3],v.aggx, v.aggz))
+                local location = lerpy(basePosition, {v.aggx,GetSurfaceHeight(v.aggx, v.aggz),v.aggz}, {distance, distance - rangeCheck })
+                for l,bType in baseTemplate do
+                    for m,bString in bType[1] do
+                        if bString == unit then
+                            for n,position in bType do
+                                if n > 1 then
+                                    local reference = {position[1] + location[1], GetSurfaceHeight(position[1], position[2]) + location[2], position[2] + location[3]}
+                                    if aiBrain:CanBuildStructureAt(unitId, reference) then
+                                        return reference
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return false
+end
+
 CheckHighValueUnitsBuilding = function(aiBrain, locationType)
     --LOG('CheckHighValueUnitsBuilding at '..repr(locationType))
     if not locationType then
@@ -5950,7 +5983,7 @@ function GetCappingPosition(aiBrain, eng, pos, refunits, baseTemplate, buildingT
                         if whatToBuild then
                             for n,position in bType do
                                 if n > 1 then
-                                    local reference = {position[1] + extratorPos[1], position[2] + extratorPos[2], position[3] + extratorPos[3]}
+                                    local reference = {position[1] + extratorPos[1], GetSurfaceHeight(position[1], position[2]) + extratorPos[2], position[2] + extratorPos[3]}
                                     if aiBrain:CanBuildStructureAt(whatToBuild, reference) then
                                         canBeCapped = true
                                         closestUnit = v
@@ -6008,7 +6041,7 @@ function GetFabricatorPosition(aiBrain, eng, pos, refunits, baseTemplate, buildi
                                 if whatToBuild then
                                     for n,position in bType do
                                         if n > 1 then
-                                            local reference = {position[1] + storagePos[1], position[2] + storagePos[2], position[3] + storagePos[3]}
+                                            local reference = {position[1] + storagePos[1], GetSurfaceHeight(position[1], position[2]) + storagePos[2], position[2] + storagePos[3]}
                                             if aiBrain:CanBuildStructureAt(whatToBuild, reference) then
                                                 canBeCapped = true
                                                 closestUnit = s

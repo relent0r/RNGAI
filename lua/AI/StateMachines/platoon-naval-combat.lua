@@ -62,7 +62,6 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             self.CurrentPlatoonThreat = false
             self.PlatoonLimit = self.PlatoonData.PlatoonLimit or 18
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
-            RUtils.ConfigurePlatoon(self)
             StartZoneControlThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -633,13 +632,18 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                 end
             end
             local target
-            local closestTarget
+
+            local maxEnemyDirectIndirectRange
+            local maxEnemyDirectIndirectRangeDistance
             local approxThreat
             for _,v in units do
                 if v and not v.Dead then
                     local unitPos = v:GetPosition()
                     local unitRange = v['rngdata'].MaxWeaponRange
                     local unitRole = v['rngdata'].Role
+                    local closestTarget
+                    local closestRoleTarget
+                    local closestTargetRange
                     if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
                         target = aiBrain.BrainIntel.SuicideModeTarget
                     else
@@ -649,9 +653,60 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                                 local rx = unitPos[1] - enemyPos[1]
                                 local rz = unitPos[3] - enemyPos[3]
                                 local tmpDistance = rx * rx + rz * rz
-                                if unitRole ~= 'Artillery' and unitRole ~= 'Silo' and unitRole ~= 'Sniper' then
+                                local candidateWeaponRange = m['rngdata'].MaxWeaponRange or 0
+                                candidateWeaponRange = candidateWeaponRange * candidateWeaponRange
+                                if not closestTargetRange then
+                                    closestTargetRange = candidateWeaponRange
+                                end
+                                if tmpDistance < candidateWeaponRange then
+                                    if not maxEnemyDirectIndirectRange or candidateWeaponRange > maxEnemyDirectIndirectRange then
+                                        maxEnemyDirectIndirectRange = candidateWeaponRange
+                                        maxEnemyDirectIndirectRangeDistance = tmpDistance
+                                    elseif candidateWeaponRange == maxEnemyDirectIndirectRange and tmpDistance < maxEnemyDirectIndirectRangeDistance then
+                                        maxEnemyDirectIndirectRangeDistance = tmpDistance
+                                    end
+                                end
+                                local immediateThreat = tmpDistance < candidateWeaponRange
+                                if unitRole == 'Bruiser' or unitRole == 'Heavy' then
                                     tmpDistance = tmpDistance*m['rngdata'].machineworth
                                 end
+                                if unitRole == 'MissileShip' then
+                                    if m['rngdata'].TargetType then
+                                        local targetType = m['rngdata'].TargetType
+                                        if targetType == 'Shield' or targetType == 'Defense' then
+                                            -- Prioritize shields as the closest role target
+                                            if not closestRoleTarget or (tmpDistance < closestRoleTarget and tmpDistance > maxEnemyDirectIndirectRangeDistance) then
+                                                --LOG('We have selected a shield or defense structure to strike')
+                                                target = m
+                                                closestRoleTarget = tmpDistance
+                                            end
+                                        elseif targetType == 'EconomyStructure' then
+                                            if not closestRoleTarget or (tmpDistance < closestRoleTarget and tmpDistance > maxEnemyDirectIndirectRangeDistance) then
+                                                --LOG('We have selected an economy structure to strike')
+                                                target = m
+                                                closestRoleTarget = tmpDistance
+                                            end
+                                        else
+                                            if not closestRoleTarget or (tmpDistance < closestRoleTarget and tmpDistance > maxEnemyDirectIndirectRangeDistance) then
+                                                --LOG('We have selected another structure to strike')
+                                                target = m
+                                                closestRoleTarget = tmpDistance
+                                            end
+                                        end
+                                    elseif not closestRoleTarget and (not closestTarget or tmpDistance < closestTarget) or tmpDistance < candidateWeaponRange then
+                                        target = m
+                                        closestTarget = tmpDistance
+                                    end
+                                end
+
+                                if immediateThreat and (not closestTarget or tmpDistance < closestTarget) then
+                                    --LOG('Immediate threat detected within enemy weapon range!')
+                                    --LOG('Distance '..tostring(tmpDistance))
+                                    --LOG('Candidate weapon range '..tostring(candidateWeaponRange))
+                                    target = m
+                                    closestTarget = tmpDistance
+                                end
+
                                 if not closestTarget or tmpDistance < closestTarget then
                                     target = m
                                     closestTarget = tmpDistance
@@ -660,7 +715,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if target then
-                        if not (unitRole == 'Sniper' or unitRole == 'Silo') and closestTarget>(unitRange+20)*(unitRange+20) then
+                        if not (unitRole == 'Sniper' or unitRole == 'Silo') and closestTarget>(unitRange*unitRange+400)*(unitRange*unitRange+400) then
                             if not approxThreat then
                                 approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, true, false)
                             end
@@ -679,33 +734,6 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             return
         end,
     },
-
-        ---@param self AIPlatoon
-        OnUnitsAddedToPlatoon = function(self)
-            local units = self:GetPlatoonUnits()
-            self.Units = units
-            for k, unit in units do
-                if not unit.Dead then
-                    if not unit['rngdata'] then
-                        unit['rngdata'] = {}
-                    end
-                    unit.AIPlatoonReference = self
-                    local cats = unit.Blueprint.CategoriesHash
-                    if self.Debug then
-                        unit:SetCustomName(self.PlatoonName)
-                    end
-                    if unit:TestToggleCaps('RULEUTC_StealthToggle') then
-                        unit:SetScriptBit('RULEUTC_StealthToggle', false)
-                    end
-                    if unit:TestToggleCaps('RULEUTC_CloakToggle') then
-                        unit:SetScriptBit('RULEUTC_CloakToggle', false)
-                    end
-                    if cats.CRUISER and cats.INDIRECTFIRE then
-                        unit['rngdata'].Role = 'Silo'
-                    end
-                end
-            end
-        end,
 
 }
 

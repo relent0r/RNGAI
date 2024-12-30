@@ -105,6 +105,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         local enemyACUDistance = VDist2Sq(enemyAcuPos[1], enemyAcuPos[3], cdr.Position[1], cdr.Position[3])
                         local currentWeaponRange = cdr.WeaponRange * cdr.WeaponRange
                         if enemyACUDistance > currentWeaponRange then
+                            self:LogDebug(string.format('ACU is in suicide mode but we are not in range of enemy acu and we are far into enemy territory'))
+                            cdr.SuicideMode = false
+                            cdr.SnipeMode = false
+                            brain.BrainIntel.SuicideModeActive = false
+                            brain.BrainIntel.SuicideModeTarget = nil
+                        end
+                    elseif teamValue and teamValue < 0.45 then
+                        if cdr.CurrentEnemyThreat > (math.max(cdr.CurrentFriendlyThreat, cdr.ThreatLimit) * 1.3) and cdr.HealthPercent < 0.40 then
+                            self:LogDebug(string.format('ACU is in suicide mode but we are in enemy territory and health is low and enemy theat is high '))
                             cdr.SuicideMode = false
                             cdr.SnipeMode = false
                             brain.BrainIntel.SuicideModeActive = false
@@ -283,31 +292,22 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             or gameTime > 1500 and GetEconomyIncome(brain, 'ENERGY') > 40 and GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95 then
                 local inRange = false
                 local highThreat = false
-                if self.BuilderData.ExtractorRetreat and VDist3Sq(cdr.Position, self.BuilderData.Position) <= self.BuilderData.CutOff and cdr.CurrentEnemyThreat < 15 then
+                local enhancementLocation, locationDistance, enhancementZone
+                local movementCutOff = 625
+                if self.BuilderData.ZoneRetreat and VDist3Sq(cdr.Position, self.BuilderData.Position) <= self.BuilderData.CutOff and cdr.CurrentEnemyThreat < 15 then
                     self:LogDebug(string.format('ACU close to position for enhancement and threat is '..cdr.CurrentEnemyThreat))
                     self:ChangeState(self.EnhancementBuild)
                     return
                 end
-                if brain.BuilderManagers then
-                    local distSqAway = 2209
-                    for baseName, base in brain.BuilderManagers do
-                        if not table.empty(base.FactoryManager.FactoryList) then
-                            if VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]) < distSqAway then
-                                --LOG('Current distance from base is '..VDist2Sq(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3]))
-                                --LOG('Current base key is '..baseName)
-                                inRange = true
-                                if baseName ~= 'MAIN' and (cdr.CurrentEnemyThreat > 20 and cdr.CurrentFriendlyInnerCircle < 20 or cdr.CurrentEnemyInnerCircle > 35) then
-                                    self:LogDebug(string.format('Threat is too high at expansion for enhancement upgrade abort'))
-                                    ----self:LogDebug(string.format('Enemythreat is '..cdr.CurrentEnemyThreat))
-                                    ----self:LogDebug(string.format('FriendlyInnerthreat is '..cdr.CurrentFriendlyInnerCircle))
-                                    highThreat = true
-                                elseif baseName == 'MAIN' and cdr.CurrentEnemyInnerCircle > 35 then
-                                    self:LogDebug(string.format('Threat is too high at expansion for enhancement upgrade abort, enemythreat is '..cdr.CurrentEnemyInnerCircle))
-                                    highThreat = true
-                                end
-                                break
-                            end
-                        end
+                if (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) then
+                    enhancementLocation, enhancementZone, locationDistance, movementCutOff = ACUFunc.GetACUSafeZone(brain, cdr, false)
+                    if locationDistance < 2209 then
+                        inRange = true
+                    end
+                else
+                    enhancementLocation, enhancementZone, locationDistance, movementCutOff = ACUFunc.GetACUSafeZone(brain, cdr, true)
+                    if locationDistance < 2209 then
+                        inRange = true
                     end
                 end
                 if inRange and not highThreat and ((cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)) then
@@ -315,13 +315,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.EnhancementBuild)
                     return
                 elseif not highThreat and ((cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)) then
-                    local closestBase = ACUFunc.GetClosestBase(brain, cdr)
-                    if closestBase then
+                    if enhancementLocation then
                         self.BuilderData = {
-                            Position = brain.BuilderManagers[closestBase].Position,
-                            CutOff = 625,
-                            EnhancementBuild = true
+                            Position = enhancementLocation,
+                            CutOff = movementCutOff,
+                            EnhancementBuild = true,
+                            ZoneRetreat = true,
+                            ZoneID = enhancementZone
                         }
+                        --LOG('Enhancement cutoff set to '..tostring(movementCutOff))
                         self:LogDebug(string.format('We are not in range for enhancement and will navigate to the position '..tostring(self.BuilderData.Position)))
                         self:ChangeState(self.Navigating)
                         return
@@ -348,6 +350,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if not enemyAcuClose and brain.BrainIntel.LandPhase < 2 then
+                        local im = IntelManagerRNG.GetIntelManager(brain)
+                        self:LogDebug(string.format('We want to try and expand '))
                         local expansionCount = 0
                         for k, manager in brain.BuilderManagers do
                         --RNGLOG('Checking through expansion '..k)
@@ -358,33 +362,47 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                         end
-                        if expansionCount < 2 then
-                            local stageExpansion
-                            local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
-                            local maxRange
-                            if gameTime < 480 then
-                                --LOG('ACU Looking wide for expansion as its early')
-                                maxRange = math.min(BaseDMZArea * 1.5, 385)
-                                stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, maxRange, 'Land', 10, 'acu')
-                                ----self:LogDebug(string.format('Distance to Expansion is '..tostring(VDist3(stageExpansion.Expansion.Position,cdr.Position))))
-                            else
-                                local enemyBaseRange = math.sqrt(brain.EnemyIntel.ClosestEnemyBase) / 2
-                                maxRange = math.min(enemyBaseRange, 256)
-                                stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, maxRange, 'Land', 10, 'acu')
+                        local expansionsAvailable = 0
+                        for _, v in im.ZoneExpansions.Pathable do
+                            if v.TeamValue >= 1.0 then
+                                expansionsAvailable = expansionsAvailable + 1
                             end
+                        end
+                        self:LogDebug(string.format('Current expansion count is '..tostring(expansionCount)))
+                        if expansionCount < 2 and expansionsAvailable > 0 then
+                            if not table.empty(im.ZoneExpansions.Pathable) then
+                                local stageExpansion
+                                local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
+                                local maxRange
+                                if gameTime < 480 then
+                                    --LOG('ACU Looking wide for expansion as its early')
+                                    self:LogDebug(string.format('Its early so we should go for something further'))
+                                    maxRange = math.min(BaseDMZArea * 1.5, 385)
+                                    stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, maxRange, 'Land', 10, 'acu')
+                                    ----self:LogDebug(string.format('Distance to Expansion is '..tostring(VDist3(stageExpansion.Expansion.Position,cdr.Position))))
+                                else
+                                    self:LogDebug(string.format('Its later so we should go for something closer'))
+                                    local enemyBaseRange = math.sqrt(brain.EnemyIntel.ClosestEnemyBase) / 2
+                                    maxRange = math.min(enemyBaseRange, 256)
+                                    stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, maxRange, 'Land', 10, 'acu')
+                                end
 
-                            if stageExpansion then
-                                self.BuilderData = {
-                                    Expansion = true,
-                                    Position = stageExpansion.Expansion.Position,
-                                    ExpansionData = stageExpansion.Key,
-                                    CutOff = 225
-                                }
-                                brain.Zones.Land.zones[stageExpansion.Key].engineerplatoonallocated = self
-                                brain.Zones.Land.zones[stageExpansion.Key].lastexpansionattempt = GetGameTimeSeconds()
-                                self:LogDebug(string.format('We have found a position to expand to, navigating, team value is '..tostring(brain.Zones.Land.zones[stageExpansion.Key].teamvalue)))
-                                self:ChangeState(self.Navigating)
-                                return
+                                if stageExpansion then
+                                    self.BuilderData = {
+                                        Expansion = true,
+                                        Position = stageExpansion.Expansion.Position,
+                                        ExpansionData = stageExpansion.Key,
+                                        CutOff = 225
+                                    }
+                                    brain.Zones.Land.zones[stageExpansion.Key].engineerplatoonallocated = self
+                                    brain.Zones.Land.zones[stageExpansion.Key].lastexpansionattempt = GetGameTimeSeconds()
+                                    self:LogDebug(string.format('We have found a position to expand to, navigating, team value is '..tostring(brain.Zones.Land.zones[stageExpansion.Key].teamvalue)))
+                                    self:LogDebug(string.format('The destination position is '..tostring(self.BuilderData.Position[1])..':'..tostring(self.BuilderData.Position[3])))
+                                    self:ChangeState(self.Navigating)
+                                    return
+                                else
+                                    self:LogDebug(string.format('We couldnt find an expansion'))
+                                end
                             end
                         end
                     end
@@ -582,26 +600,34 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 self:LogDebug(string.format('We found an acuTarget present'))
                                 local acuPos = target:GetPosition()
                                 acuDistance = VDist3Sq(cdr.Position,acuPos)
-                                self:LogDebug(string.format('Enemy ACU distance is '..tostring(acuDistance)..' difference in distance is '..tostring(defUnit.distance - acuDistance)))
-                                if defUnit.distance < acuDistance and acuDistance < 900 and defUnit.distance - acuDistance < 225 then
-                                    if dUnit.GetHealth and dUnit:GetHealth() < 500 then
-                                        target = dUnit
-                                        --LOG('ACU Def Targets : Health low PD target is '..tostring(target.UnitId))
-                                        self:LogDebug(string.format('We are switching targets to a PD'))
-                                        break
+                                local threat = RUtils.GrabPosDangerRNG(brain,acuPos,45,45, true, false, false, true)
+                                --LOG('threat an enemy acu position is, enemy structure '..tostring(threat.enemyStructure))
+                                --LOG('enemy surface '..tostring(threat.enemyStructure + threat.enemySurface))
+                                --LOG('Ally surface '..tostring(threat.allySurface + cdr.ThreatLimit * 1.3))
+                                if (threat.enemyStructure + threat.enemySurface) < (threat.allySurface + cdr.ThreatLimit) * 1.3 then
+                                    self:LogDebug(string.format('Enemy ACU distance is '..tostring(acuDistance)..' difference in distance is '..tostring(defUnit.distance - acuDistance)))
+                                    if defUnit.distance < acuDistance and acuDistance < 900 and defUnit.distance - acuDistance < 225 then
+                                        if dUnit.GetHealth and dUnit:GetHealth() < 500 then
+                                            target = dUnit
+                                            --LOG('ACU Def Targets : Health low PD target is '..tostring(target.UnitId))
+                                            self:LogDebug(string.format('We are switching targets to a PD'))
+                                            break
+                                        end
+                                        if dUnit.Blueprint.Weapon[1].MaxRadius and cdr.WeaponRange > dUnit.Blueprint.Weapon[1].MaxRadius then
+                                            target = dUnit
+                                            --LOG('ACU Def Targets : Advantage range available on PD target is '..tostring(target.UnitId))
+                                            self:LogDebug(string.format('We are switching targets to a PD'))
+                                            break
+                                        end
+                                        if brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
+                                            target = dUnit
+                                            --LOG('ACU Def Targets : OverCharge Available on PD target is '..tostring(target.UnitId))
+                                            self:LogDebug(string.format('OverCharge Available on PD target'))
+                                            break
+                                        end
                                     end
-                                    if dUnit.Blueprint.Weapon[1].MaxRadius and cdr.WeaponRange > dUnit.Blueprint.Weapon[1].MaxRadius then
-                                        target = dUnit
-                                        --LOG('ACU Def Targets : Advantage range available on PD target is '..tostring(target.UnitId))
-                                        self:LogDebug(string.format('We are switching targets to a PD'))
-                                        break
-                                    end
-                                    if brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
-                                        target = dUnit
-                                        --LOG('ACU Def Targets : OverCharge Available on PD target is '..tostring(target.UnitId))
-                                        self:LogDebug(string.format('OverCharge Available on PD target'))
-                                        break
-                                    end
+                                else
+                                    --LOG('We are not going to try and attack this position')
                                 end
                             else
                                 local unitRange = dUnit.Blueprint.Weapon[1].MaxRadius * 0.7
@@ -609,10 +635,12 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 local realThreat = RUtils.GrabPosDangerRNG(brain,dUnit:GetPosition(),30, unitRange, true, false, false, true)
                                 --self:LogDebug(string.format('Defense unit surrounding threat is '..tostring(realThreat.enemyStructure)))
                                 if realThreat.enemyStructure and realThreat.enemyStructure > 0 
-                                and (realThreat.enemyStructure > cdr.CurrentFriendlyThreat or realThreat.enemyStructure > cdr.ThreatLimit * 3) then
+                                and (realThreat.enemyStructure > cdr.CurrentFriendlyThreat or realThreat.enemyStructure > cdr.ThreatLimit * 2.5) then
                                     --self:LogDebug(string.format('Threat too high, cancel target'))
                                     target = false
                                     highDefThreat = true
+                                else
+                                    --LOG('We are going to try attack the unit '..tostring(target.UnitId)..' structure threat at location is '..tostring(realThreat.enemyStructure)..' threat limit is '..tostring(cdr.ThreatLimit * 2.5)..' current friendly threat is '..tostring(cdr.CurrentFriendlyThreat))
                                 end
                             end
                         end
@@ -634,14 +662,26 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         }
                     end
                     if acuDistanceToBase < 6400 then
+                        local targetPos = target:GetPosition()
+                        local zx = cdr.Position[1] - targetPos[1]
+                        local zz = cdr.Position[3] - targetPos[3]
+                        local targetDistance = zx * zx + zz * zz
                         local unitRange = StateUtils.GetUnitMaxWeaponRange(target, 'Direct Fire') or 0
-                        if acuDistanceToBase > 100 and highThreatCount and highThreatCount > 130 and unitRange > cdr.WeaponRange then
-                            self:LogDebug(string.format('High unit threat at target and it outranges the acu'))
+                        local riskRange = unitRange * unitRange + 400
+                        if acuDistanceToBase > 225 and highThreatCount and highThreatCount > 130 and unitRange > cdr.WeaponRange then
+                            --LOG('ACU is more than 15 from base, we are going to retreat from a high range unit')
+                            self:LogDebug(string.format('High unit threat at target and it outranges the acu, target was '..tostring(target.UnitId)))
+                            self:LogDebug(string.format('Its range is '..tostring(unitRange)..' our range is '..tostring(cdr.WeaponRange)))
                             self:ChangeState(self.Retreating)
                             return
+                        elseif targetDistance < riskRange and acuDistanceToBase < 225 and highThreatCount and highThreatCount > 130 and unitRange > cdr.WeaponRange and target:GetHealth() > 6000 then
+                            --LOG('Unit is less than its risk range, acu is going to try and lerp away from it')
+                            local movePos = RUtils.lerpy(cdr.Position, target:GetPosition(), {riskRange, riskRange + 15})
+                            --LOG('Move pos is '..tostring(movePos[1])..':'..tostring(movePos[3]))
+                            IssueClearCommands({cdr})
+                            IssueMove({cdr},movePos)
+                            coroutine.yield(25)
                         end
-                        
-
                     end
                     --LOG('CDR Health '..cdr.Health)
                     --LOG('Current Inner Enemy Threat '..cdr.CurrentEnemyInnerCircle)
@@ -824,6 +864,29 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 -- pick random unit for a position on the grid
                 local origin = cdr:GetPosition()
                 local waypoint, length
+                if builderData.Expansion then
+                    if brain.BrainIntel.LandPhase > 1 then
+                        self.BuilderData = {}
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
+                    local expansionCount = 0
+                    for k, manager in brain.BuilderManagers do
+                    --RNGLOG('Checking through expansion '..k)
+                        if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and not RNGTableEmpty(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
+                            expansionCount = expansionCount + 1
+                            if expansionCount > 1 then
+                                break
+                            end
+                        end
+                    end
+                    self:LogDebug(string.format('Current expansion count during navigation is '..tostring(expansionCount)))
+                    if expansionCount > 1 then
+                        self.BuilderData = {}
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
+                end
                 
                 if builderData.SupportPlatoon and not IsDestroyed(builderData.SupportPlatoon) then
                     destination = builderData.SupportPlatoon:GetPlatoonPosition()
@@ -831,10 +894,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 else
                     waypoint, length = NavUtils.DirectionTo('Amphibious', origin, destination, 50)
                 end
-                if builderData.Retreat then
+                if builderData.Retreat and brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
                     cdr:SetAutoOvercharge(true)
                 end
-                ----self:LogDebug(string.format('Length is '..tostring(length)))
 
                 -- something odd happened: no direction found
                 if not waypoint then
@@ -1099,10 +1161,12 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         coroutine.yield(30)
                         while eng and not eng.Dead and not eng:IsIdleState() do
                             if eng.CurrentEnemyThreat > 30 then
+                                IssueClearCommands({eng})
                                 coroutine.yield(2)
                                 break
                             end
                             if eng.Caution or not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
+                                IssueClearCommands({eng})
                                 break
                             end
                             -- stop if our target is finished
@@ -1597,7 +1661,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    if brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
+                    if brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired and cdr.CurrentEnemyInnerCircle > 8 then
                         local overChargeFired = false
                         local innerCircleEnemies = GetNumUnitsAroundPoint(brain, categories.MOBILE * categories.LAND + categories.STRUCTURE, cdr.Position, cdr.WeaponRange - 3, 'Enemy')
                         if innerCircleEnemies > 0 then
@@ -2332,6 +2396,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
+            self.BuilderData = {}
             self:ChangeState(self.DecideWhatToDo)
             return
         end,

@@ -61,6 +61,20 @@ SimpleTarget = function(platoon, aiBrain, specificPosition)--find enemies in a r
                 unit['rngdata'] = {}
             end
             local unitData = unit['rngdata']
+            if not unitData.TargetType then
+                local unitCats = unit.Blueprint.CategoriesHash
+                if unitCats.STRUCTURE then
+                    if unitCats.SHIELD then
+                        unitData.TargetType = 'Shield'
+                    elseif unitCats.DIRECTFIRE or unitCats.INDIRECTFIRE then
+                        unitData.TargetType = 'Defense'
+                    elseif unitCats.ENERGYPRODUCTION or unitCats.MASSPRODUCTION then
+                        unitData.TargetType = 'EconomyStructure'
+                    else
+                        unitData.TargetType = 'Structure'
+                    end
+                end
+            end
             if not unitData.machinepriority then unitData.machinepriority={} unitData.machinedistance={} end
             if not unitData.dangerupdate or not unitData.machinedanger or gameTime-unitData.dangerupdate>10 then
                 unitData.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30,30, true, false, false).enemyTotal)
@@ -117,10 +131,27 @@ SimpleNavalTarget = function(platoon, aiBrain)
             if not unit['rngdata'] then
                 unit['rngdata'] = {}
             end
-            if not unit['rngdata'] then
-                unit['rngdata'] = {}
-            end
             local unitData = unit['rngdata']
+            if not unitData.TargetType then
+                local unitCats = unit.Blueprint.CategoriesHash
+                if unitCats.STRUCTURE then
+                    if unitCats.SHIELD then
+                        unitData.TargetType = 'Shield'
+                    elseif unitCats.DIRECTFIRE or unitCats.INDIRECTFIRE then
+                        unitData.TargetType = 'Defense'
+                    elseif unitCats.ENERGYPRODUCTION or unitCats.MASSPRODUCTION then
+                        unitData.TargetType = 'EconomyStructure'
+                    else
+                        unitData.TargetType = 'Structure'
+                    end
+                end
+            end
+            if not unitData.MaxWeaponRange then
+                local unitRange = GetUnitMaxWeaponRange(unit)
+                if not unitData.MaxWeaponRange then
+                    unitData.MaxWeaponRange = unitRange
+                end
+            end
             if not unitData.machinepriority then unitData.machinepriority={} unitData.machinedistance={} end
             if not unitData.dangerupdate or not unitData.machinedanger or gameTime-unitData.dangerupdate>10 then
                 unitData.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30, 30, true, true, false).enemyTotal)
@@ -139,74 +170,6 @@ SimpleNavalTarget = function(platoon, aiBrain)
         return true
     end
     return false
-end
-
-SimplePriority = function(self,aiBrain)--use the aibrain priority table to do things
-    local VDist2Sq = VDist2Sq
-    local RNGMAX = math.max
-    local acuSnipeUnit = RUtils.CheckACUSnipe(aiBrain, 'Land')
-    if acuSnipeUnit then
-        if not acuSnipeUnit.Dead then
-            local acuTargetPosition = acuSnipeUnit:GetPosition()
-            self.rdest=acuTargetPosition
-            self.raidunit=acuSnipeUnit
-            self.dest=acuTargetPosition
-            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
-            self.navigating=true
-            self.raid=true
-            return true
-        end
-    end
-    if (not aiBrain.prioritypoints) or table.empty(aiBrain.prioritypoints) then
-        return false
-    end
-    local pointHighest = 0
-    local point = false
-    for _, v in aiBrain.prioritypoints do
-        local tempPoint = v.priority/(RNGMAX(VDist2Sq(self.Pos[1],self.Pos[3],v.Position[1],v.Position[3]),30*30)+(v.danger or 0))
-        if tempPoint > pointHighest then
-            pointHighest = tempPoint
-            point = v
-        end
-    end
-    if not point then
-        --RNGLOG('No priority found')
-        return false
-    end
-    if VDist2Sq(point.Position[1],point.Position[3],self.Pos[1],self.Pos[3])<(self.MaxPlatoonWeaponRange+20)*(self.MaxPlatoonWeaponRange+20) then return false end
-    if not self.combat and not self.retreat then
-        if point.type then
-            --RNGLOG('switching to state '..point.type)
-        end
-        if point.type=='push' then
-            --SwitchState(platoon,'push')
-            self.dest=point.Position
-        elseif point.type=='raid' then
-            if self.raid then
-                if self.path and VDist3Sq(self.path[RNGGETN(self.path)],point.Position)>400 then
-                    self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
-                    --RNGLOG('platoon.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(self.path[RNGGETN(self.path)],point.Position))
-                    return true
-                end
-            end
-            self.rdest=point.Position
-            self.raidunit=point.unit
-            self.dest=point.Position
-            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
-            self.navigating=true
-            self.raid=true
-            return true
-        elseif point.type=='garrison' then
-            --SwitchState(platoon,'garrison')
-            self.dest=point.Position
-        elseif point.type=='guard' then
-            --SwitchState(platoon,'guard')
-            self.guard=point.unit
-        elseif point.type=='acuhelp' then
-            --SwitchState(platoon,'acuhelp')
-            self.guard=point.unit
-        end
-    end
 end
 
 VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride)--basic kiting function.. complicated as heck
@@ -252,13 +215,13 @@ VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride)--basic kit
         strafemod=7
     end
     local distanceCheck = 9
-    if (unit['rngdata'].Role=='Sniper' or unit['rngdata'].Role=='Artillery' or unit['rngdata'].Role=='Silo') and unit['rngdata'].MaxWeaponRange then
+    if (unit['rngdata'].Role=='Sniper' or unit['rngdata'].Role=='Artillery' or unit['rngdata'].Role=='Silo' or unit['rngdata'].Role=='MissileShip') and unit['rngdata'].MaxWeaponRange then
         distanceCheck = 25
     end
     if unit['rngdata'].Role=='AA'  then
         dest=KiteDist(pos,tpos,platoon.MaxPlatoonWeaponRange+3,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
-    elseif (unit['rngdata'].Role=='Sniper' or unit['rngdata'].Role=='Artillery' or unit['rngdata'].Role=='Silo') and unit['rngdata'].MaxWeaponRange then
+    elseif (unit['rngdata'].Role=='Sniper' or unit['rngdata'].Role=='Artillery' or unit['rngdata'].Role=='Silo' or unit['rngdata'].Role=='MissileShip') and unit['rngdata'].MaxWeaponRange then
         dest=KiteDist(pos,tpos,unit['rngdata'].MaxWeaponRange-1,0)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif maxPlatoonRangeOverride and (unit['rngdata'].Role=='Shield' or unit['rngdata'].Role == 'Stealth') and platoon.MaxDirectFireRange > 0 then
@@ -417,31 +380,6 @@ ExitConditions = function(self,aiBrain)
     end
 end
 
-MainBaseCheck = function(self, aiBrain)
-    local hiPriTargetPos
-    local hiPriTarget = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
-    if hiPriTarget and not IsDestroyed(hiPriTarget) then
-        hiPriTargetPos = hiPriTarget:GetPosition()
-    else
-        return false
-    end
-    if VDist2Sq(hiPriTargetPos[1],hiPriTargetPos[3],self.Pos[1],self.Pos[3])<(self.MaxPlatoonWeaponRange+20)*(self.MaxPlatoonWeaponRange+20) then return false end
-    if not self.combat and not self.retreat then
-        if self.path and VDist3Sq(self.path[RNGGETN(self.path)],hiPriTargetPos)>400 then
-            self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
-            --RNGLOG('platoon.path distance(should be greater than 400) between last path node and point.position is return true'..VDist3Sq(self.path[RNGGETN(self.path)],point.Position))
-            return true
-        end
-        self.rdest=hiPriTargetPos
-        self.raidunit=hiPriTarget
-        self.dest=hiPriTargetPos
-        self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.rdest, 1, 150,80)
-        self.navigating=true
-        self.raid=true
-        return true
-    end
-end
-
 GetTrueHealth = function(unit,total)--health+shieldhealth
     if total then
         if unit.MyShield then
@@ -486,7 +424,25 @@ GetUnitMaxWeaponRange = function(unit, filterType, enhancementReset)
                     weaponRange = weapon.MaxRadius
                 end
                 if filterType then
-                    if weapon.WeaponCategory == filterType then
+                    if filterType == 'Direct Fire' and (weapon.WeaponCategory == 'Direct Fire' or weapon.WeaponCategory == 'Direct Fire Experimental') then
+                        if not weapon.EnabledByEnhancement or (weapon.EnabledByEnhancement and unit.HasEnhancement and unit:HasEnhancement(weapon.EnabledByEnhancement)) then
+                            if not maxRange or weaponRange > maxRange then
+                                maxRange = weaponRange
+                            end
+                        end
+                    elseif filterType == 'Anti Air' and weapon.WeaponCategory == 'Anti Air' then
+                        if not weapon.EnabledByEnhancement or (weapon.EnabledByEnhancement and unit.HasEnhancement and unit:HasEnhancement(weapon.EnabledByEnhancement)) then
+                            if not maxRange or weaponRange > maxRange then
+                                maxRange = weaponRange
+                            end
+                        end
+                    elseif filterType == 'Anti Navy' and weapon.WeaponCategory == 'Anti Navy' then
+                        if not weapon.EnabledByEnhancement or (weapon.EnabledByEnhancement and unit.HasEnhancement and unit:HasEnhancement(weapon.EnabledByEnhancement)) then
+                            if not maxRange or weaponRange > maxRange then
+                                maxRange = weaponRange
+                            end
+                        end
+                    elseif filterType == 'Indirect Fire' and (weapon.WeaponCategory == 'Indirect Fire' or weapon.WeaponCategory == 'Artillery') then
                         if not weapon.EnabledByEnhancement or (weapon.EnabledByEnhancement and unit.HasEnhancement and unit:HasEnhancement(weapon.EnabledByEnhancement)) then
                             if not maxRange or weaponRange > maxRange then
                                 maxRange = weaponRange
@@ -510,9 +466,13 @@ GetUnitMaxWeaponRange = function(unit, filterType, enhancementReset)
                 --LOG('Enhancement reset to set Weapon range to '..maxRange)
             end
         end
-        if not filterType and not unit['rngdata'] then
-            unit['rngdata'] = {}
-            unit['rngdata'].MaxWeaponRange = maxRange
+        if not filterType then
+            if not unit['rngdata'] then
+                unit['rngdata'] = {}
+            end
+            if not unit['rngdata'].MaxWeaponRange then
+                unit['rngdata'].MaxWeaponRange = maxRange
+            end
         end
         return maxRange
     end
@@ -2090,5 +2050,28 @@ function GetClosestEnemyACU(aiBrain, position)
             end
         end
         return closestACU
+    end
+end
+
+function CheckDefenseClusters(aiBrain, position, platoonMaxWeaponRange, movementLayer, platoonThreat)
+    if aiBrain.EnemyIntel.EnemyFireBaseDetected then
+        --LOG('Firebase Detected ACU check range')
+        for _, v in aiBrain.EnemyIntel.DirectorData.DefenseCluster do
+            if v.MaxLandRange and v.MaxLandRange > 0 and v.aggx and v.aggz then
+                local threat = 0
+                if movementLayer == 'Air' and v.AntiAirThreat then
+                    threat = v.AntiAirThreat
+                else
+                    threat = v.AntiSurfaceThreat
+                end
+                local ax = position[1] - v.aggx
+                local az = position[3] - v.aggz
+                if (ax * ax + az * az) - 400 < v.MaxLandRange * v.MaxLandRange and v.MaxLandRange > platoonMaxWeaponRange and threat > platoonThreat then
+                    --LOG('ACU is within firebase range')
+                    return true
+                end
+            end
+        end
+        return false
     end
 end

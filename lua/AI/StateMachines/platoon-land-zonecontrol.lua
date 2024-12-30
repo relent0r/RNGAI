@@ -137,9 +137,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 local label = NavUtils.GetLabel('Water', self.Pos)
                 aiBrain:PlatoonReinforcementRequestRNG(self, 'AntiAir', closestBase, label)
             end
-            self:LogDebug(string.format('DecideWhatToDo threat data enemy surface '..tostring(threat.enemySurface)))
-            self:LogDebug(string.format('DecideWhatToDo threat data ally surface '..tostring(threat.allySurface)))
-            self:LogDebug(string.format('DecideWhatToDo threat data ally multiplier surface '..tostring(threat.allySurface*threatMultiplier)))
+            --self:LogDebug(string.format('DecideWhatToDo threat data enemy surface '..tostring(threat.enemySurface)))
+            --self:LogDebug(string.format('DecideWhatToDo threat data ally surface '..tostring(threat.allySurface)))
+            --self:LogDebug(string.format('DecideWhatToDo threat data ally multiplier surface '..tostring(threat.allySurface*threatMultiplier)))
             if threat.allySurface and threat.enemySurface and threat.allySurface*threatMultiplier < threat.enemySurface then
                 if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*1.5 > (threat.enemySurface - threat.enemyStructure) then
                     rangedAttack = true
@@ -209,6 +209,10 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
+            --local defenseCheck = StateUtils.CheckDefenseClusters(aiBrain, self.Pos, self.MaxPlatoonWeaponRange, self.MovementLayer, self.CurrentPlatoonThreatAntiSurface)
+            --if defenseCheck then
+            --    LOG('Platoon is almost within range of defense cluster')
+            --end
             if not target then
                 target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
                 if target and RUtils.HaveUnitVisual(aiBrain, target, true) then
@@ -327,6 +331,32 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
+    Loiter = State {
+
+        StateName = 'Loiter',
+
+        --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
+        ---@param self AIPlatoonLandCombatBehavior
+        Main = function(self)
+            --LOG('ACUSupport trying to use transport')
+            local brain = self:GetBrain()
+            local builderData = self.BuilderData
+            if not builderData.Position then
+                WARN('No position passed to ZoneControlDefense')
+                self:ChangeState(self.DecideWhatToDo)
+                return false
+            end
+            local counter = 0
+            while counter < 10 do
+                counter = counter + 1
+                coroutine.yield(20)
+            end
+            self.BuilderData = {}
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
     CombatLoop = State {
 
         StateName = 'CombatLoop',
@@ -349,14 +379,18 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 combatWait = 15
             end
             local target
-            local closestTarget
             local approxThreat
             local targetPos
+            local maxEnemyDirectIndirectRange
+            local maxEnemyDirectIndirectRangeDistance
             for _,v in units do
                 if v and not v.Dead then
                     local unitPos = v:GetPosition()
                     local unitRange = v['rngdata'].MaxWeaponRange
                     local unitRole = v['rngdata'].Role
+                    local closestTargetRange
+                    local closestTarget
+                    local closestRoleTarget
                     if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
                         target = aiBrain.BrainIntel.SuicideModeTarget
                     else
@@ -366,9 +400,58 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                 local rx = unitPos[1] - enemyPos[1]
                                 local rz = unitPos[3] - enemyPos[3]
                                 local tmpDistance = rx * rx + rz * rz
-                                if unitRole ~= 'Artillery' and unitRole ~= 'Silo' and unitRole ~= 'Sniper' then
+                                local candidateWeaponRange = m['rngdata'].MaxWeaponRange or 0
+                                candidateWeaponRange = candidateWeaponRange * candidateWeaponRange
+                                if not closestTargetRange then
+                                    closestTargetRange = candidateWeaponRange
+                                end
+                                if tmpDistance < candidateWeaponRange then
+                                    if not maxEnemyDirectIndirectRange or candidateWeaponRange > maxEnemyDirectIndirectRange then
+                                        maxEnemyDirectIndirectRange = candidateWeaponRange
+                                        maxEnemyDirectIndirectRangeDistance = tmpDistance
+                                    elseif candidateWeaponRange == maxEnemyDirectIndirectRange and tmpDistance < maxEnemyDirectIndirectRangeDistance then
+                                        maxEnemyDirectIndirectRangeDistance = tmpDistance
+                                    end
+                                end
+                                local immediateThreat = tmpDistance < candidateWeaponRange
+                                if unitRole == 'Bruiser' or unitRole == 'Heavy' then
                                     tmpDistance = tmpDistance*m['rngdata'].machineworth
                                 end
+                                if unitRole == 'Silo' or unitRole == 'Artillery' or unitRole == 'Sniper' then
+                                    if m['rngdata'].TargetType then
+                                        local targetType = m['rngdata'].TargetType
+                                        if targetType == 'Shield' or targetType == 'Defense' then
+                                            if not closestRoleTarget or (tmpDistance < closestRoleTarget and tmpDistance > maxEnemyDirectIndirectRangeDistance) then
+                                                --LOG('We have selected a shield or defense structure to strike')
+                                                target = m
+                                                closestRoleTarget = tmpDistance
+                                            end
+                                        elseif targetType == 'EconomyStructure' then
+                                            if not closestRoleTarget or (tmpDistance < closestRoleTarget and tmpDistance > maxEnemyDirectIndirectRangeDistance) then
+                                                --LOG('We have selected an economy structure to strike')
+                                                target = m
+                                                closestRoleTarget = tmpDistance
+                                            end
+                                        else
+                                            if not closestRoleTarget or (tmpDistance < closestRoleTarget and tmpDistance > maxEnemyDirectIndirectRangeDistance) then
+                                                --LOG('We have selected another structure to strike')
+                                                target = m
+                                                closestRoleTarget = tmpDistance
+                                            end
+                                        end
+                                    elseif not closestRoleTarget and (not closestTarget or tmpDistance < closestTarget) or tmpDistance < candidateWeaponRange then
+                                        target = m
+                                        closestTarget = tmpDistance
+                                    end
+                                end
+                                if immediateThreat and (not closestTarget or tmpDistance < closestTarget) then
+                                    --LOG('Immediate threat detected within enemy weapon range!')
+                                    --LOG('Distance '..tostring(tmpDistance))
+                                    --LOG('Candidate weapon range '..tostring(candidateWeaponRange))
+                                    target = m
+                                    closestTarget = tmpDistance
+                                end
+
                                 if not closestTarget or tmpDistance < closestTarget then
                                     target = m
                                     closestTarget = tmpDistance
@@ -384,7 +467,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         if not approxThreat then
                             approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false)
                         end
-                        if (unitRole ~= 'Sniper' and unitRole ~= 'Silo' and unitRole ~= 'Scout' and unitRole ~= 'Artillery') and closestTarget>(unitRange+20)*(unitRange+20) then
+                        if (unitRole ~= 'Sniper' and unitRole ~= 'Silo' and unitRole ~= 'Scout' and unitRole ~= 'Artillery') and closestTarget>(unitRange*unitRange+400)*(unitRange*unitRange+400) then
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface and not self.Raid then
                                 IssueClearCommands({v}) 
                                 if unitRole == 'Shield' or unitRole == 'Stealth' and closestTarget then
@@ -414,9 +497,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if not skipKite then
-                            if approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface*1.5 and not targetCats.INDIRECTFIRE and targetCats.MOBILE and unitRange <= targetRange and not self.Raid then
+                            if approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface*1.5 and not targetCats.INDIRECTFIRE and targetCats.MOBILE and unitRange <= targetRange then
                                 IssueClearCommands({v})
-                                if unitRole == 'Shield' or unitRole == 'Stealth' and closestTarget then
+                                if unitRole == 'Shield' and closestTarget then
                                     if v.GetNavigator then
                                         local navigator = v:GetNavigator()
                                         if navigator then
@@ -435,15 +518,23 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                     else
                                         IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self.IntelRange or self.MaxPlatoonWeaponRange) }))
                                     end
+                                elseif unitRole == 'Stealth' and closestTarget then
+                                    if v.GetNavigator then
+                                        local navigator = v:GetNavigator()
+                                        if navigator then
+                                            navigator:SetGoal(RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxPlatoonWeaponRange}))
+                                        end
+                                    else
+                                        IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxPlatoonWeaponRange}))
+                                    end
                                 else
                                     IssueAggressiveMove({v},targetPos)
                                 end
                             else
-                                self:LogDebug(string.format('Unit is performing variable kite '))
                                 StateUtils.VariableKite(self,v,target)
                             end
                         else
-                            if unitRole == 'Shield' or unitRole == 'Stealth' and closestTarget then
+                            if unitRole == 'Shield' and closestTarget then
                                 if v.GetNavigator then
                                     local navigator = v:GetNavigator()
                                     if navigator then
@@ -451,6 +542,15 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                     end
                                 else
                                     IssueMove({v},RUtils.lerpy(RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4})))
+                                end
+                            elseif unitRole == 'Stealth' and closestTarget then
+                                if v.GetNavigator then
+                                    local navigator = v:GetNavigator()
+                                    if navigator then
+                                        navigator:SetGoal(RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxPlatoonWeaponRange}))
+                                    end
+                                else
+                                    IssueMove({v},RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxPlatoonWeaponRange}))
                                 end
                             elseif unitRole == 'Scout' and closestTarget then
                                 if v.GetNavigator then
@@ -468,7 +568,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             end
             if target and not target.Dead and targetPos and aiBrain:CheckBlockingTerrain(self.Pos, targetPos, 'none') then
                 for _, v in units do
-                    if not v.Dead then
+                    if not v.Dead and v['rngdata'].Role ~= 'Artillery' or v['rngdata'].Role ~= 'Silo' then
                         if v.GetNavigator then
                             local navigator = v:GetNavigator()
                             if navigator then
@@ -695,7 +795,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             end
             local zoneRetreat
             if aiBrain.GridPresence:GetInferredStatus(self.Pos) == 'Hostile' then
-                zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, avoidTargetPos, true)
+                if self.Raid then
+                    zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, avoidTargetPos, false)
+                else
+                    zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, avoidTargetPos, true)
+                end
             else
                 zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, false, true)
             end
@@ -712,9 +816,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 Position = location,
                 CutOff = 400,
             }
-            if not self.BuilderData.Position then
-                --LOG('No self.BuilderData.Position in retreat')
-            end
             self.dest = self.BuilderData.Position
             self:ChangeState(self.Navigating)
             return
@@ -792,7 +893,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             self.navigating = true
             if not self.path and self.BuilderData.Position and self.BuilderData.CutOff then
                 self:LogDebug(string.format('No path yet'))
-                local path, reason, distance, threats = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.BuilderData.Position, 1, 150,80)
+                local path, reason, distance, threats = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.BuilderData.Position, 5000, 120)
                 if not path then
                     self:LogDebug(string.format('We dont have a path after rechecking'))
                     if reason ~= "TooMuchThreat" then
@@ -872,7 +973,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 end
                 if self.path[nodenum-1] and VDist3Sq(self.path[nodenum],self.path[nodenum-1])>lastfinaldist*3 then
                     if NavUtils.CanPathTo(self.MovementLayer, self.Pos,self.path[nodenum]) then
-                        self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.path[nodenum], 1, 150,80)
+                        self.path=AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, self.path[nodenum], 5000, 120)
                         coroutine.yield(10)
                         continue
                     end

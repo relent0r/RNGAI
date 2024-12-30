@@ -2070,12 +2070,12 @@ function WatchTransportTravel( transport, destination, aiBrain, UnitPlatoon )
 				-- reassign destination and begin immediate drop --
 				-- this really needs to be sensitive to the platoons layer
 				-- and find an appropriate marker to drop at -- 
-				LOG('Transport has got distress call, set destination as current position and break')
+				--LOG('Transport has got distress call, set destination as current position and break')
                 if TransportDialog then
                     LOG("*AI DEBUG "..aiBrain.Nickname.." "..UnitPlatoon.BuilderName.." "..transport.PlatoonHandle.BuilderName.." Transport "..transport.EntityId.." DISTRESS ends travelwatch after "..watchcount)
                 end
 				destination = GetPosition(transport)
-				LOG('Destination is set as '..tostring(destination[1]..':'..tostring(destination[3])))
+				--LOG('Destination is set as '..tostring(destination[1]..':'..tostring(destination[3])))
                 break
 			end
 			if UnitPlatoon.ZoneExpansionSet and not UnitPlatoon.AlternativeZoneExpansionSet and aiBrain:GetThreatAtPosition(destination, 0, true, 'AntiSurface') > 5 then

@@ -953,10 +953,10 @@ StructureManager = Class {
         if totalNavalT2HQCount < 1 and totalNavalT3HQCount < 1 and self.Factories.NAVAL[1].UpgradingCount < 1 and self.Factories.NAVAL[1].Total > 0 then
             if aiBrain:GetCurrentUnits(categories.ENGINEER * categories.TECH1) > 2 then
                 if (actualMexIncome > (30 * multiplier) or aiBrain.EnemyIntel.NavalPhase > 1 and actualMexIncome > (23 * multiplier)) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 50.0 then
-                    if massEfficiencyOverTime >= 1.025 and energyEfficiencyOverTime >= 1.0 or aiBrain.EnemyIntel.NavalPhase > 1 and massEfficiencyOverTime >= 0.9 and energyEfficiencyOverTime >= 1.0 then
+                    if massEfficiencyOverTime >= 1.015 and energyEfficiencyOverTime >= 1.0 or aiBrain.EnemyIntel.NavalPhase > 1 and massEfficiencyOverTime >= 0.8 and energyEfficiencyOverTime >= 1.0 then
                         local EnergyEfficiency = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
                         local MassEfficiency = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
-                        if MassEfficiency >= 1.025 and EnergyEfficiency >= 1.0 or aiBrain.EnemyIntel.NavalPhase > 1 and MassEfficiency >= 0.9 and EnergyEfficiency >= 1.0 then
+                        if MassEfficiency >= 1.015 and EnergyEfficiency >= 1.0 or aiBrain.EnemyIntel.NavalPhase > 1 and MassEfficiency >= 0.8 and EnergyEfficiency >= 1.0 then
                             local factoryToUpgrade = self:GetClosestFactory('NAVAL', 'NAVAL', 'TECH1')
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'NAVAL')

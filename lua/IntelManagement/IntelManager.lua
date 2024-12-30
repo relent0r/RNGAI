@@ -428,6 +428,7 @@ IntelManager = Class {
         local OwnIndex = aiBrain:GetArmyIndex()
 
         while true do
+            --LOG('Running zone expansion check for '..tostring(aiBrain.Nickname))
             local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
             local maxDistance = math.max(playableArea[2],playableArea[4])
             maxDistance = maxDistance * maxDistance
@@ -436,8 +437,12 @@ IntelManager = Class {
             local gameTime = GetGameTimeSeconds()
             local labelBaseValues = {}
             local labelResourceValue = {}
+            local potentialAcuExpansionCount
 
             for k, v in zoneSet do
+                if v.BuilderManager.BaseType and v.BuilderManager.BaseType == 'MAIN' and v.BuilderManager.FactoryManager.LocationActive then
+                    continue
+                end
                 if v.label and v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
                     local graphLabel = aiBrain.GraphZones[v.label]
                     local markersInGraph = graphLabel.MassMarkersInGraph or 1
@@ -467,6 +472,7 @@ IntelManager = Class {
                         for _, a in  v.allystartdata do
                             if a.startdistance < 10000 then
                                 closeAllyStart = true
+                                --LOG('Start Position too close for position '..tostring(v.pos[1])..':'..tostring(v.pos[3])..' distance is '..tostring(a.startdistance))
                                 break
                             end
                         end
@@ -503,10 +509,10 @@ IntelManager = Class {
                 coroutine.yield(1)
             end
             local filteredList = {}
+            --LOG('Number of zoneprioritylist zones we can expand to '..table.getn(zonePriorityList))
             for _, zone in ipairs(zonePriorityList) do
                 if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zone.Position, 30, 'Enemy') < 1 then
                     if zone.BestArmy and zone.BestArmy ~= armyIndex and ArmyBrains[zone.BestArmy].Status ~= 'Defeat' then
-                        --LOG('Best Army is someone else, skip it')
                         continue
                     end
                     if zone.ResourceValue < 3 then
@@ -516,7 +522,7 @@ IntelManager = Class {
                         local higherValueExists = false
                         if zone.Label ~= mainBaseLabel then
                             for _, resValue in ipairs(labelResourceValue[zone.Label] or {}) do
-                                if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive then
+                                if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive and zoneSet[resValue.ZoneID].BuilderManager.Location ~= 'MAIN' then
                                     --LOG('Already have an active factory manager there on label '..tostring(zone.Label))
                                     --LOG('Location is '..tostring(zoneSet[resValue.ZoneID].pos[1])..' : '..tostring(zoneSet[resValue.ZoneID].pos[3]))
                                     higherValueExists = true
@@ -525,7 +531,7 @@ IntelManager = Class {
                                 if not resValue.StartPositionClose then
                                     if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zoneSet[resValue.ZoneID].pos, 30, 'Ally') < 1 
                                     and aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zoneSet[resValue.ZoneID].pos, 30, 'Enemy') < 1 then
-                                        if resValue.DistanceToBase < zone.DistanceToBase then
+                                        if resValue.DistanceToBase < zone.DistanceToBase and resValue.ResourceValue >= zone.ResourceValue then
                                             --LOG('Low value, skip it pos '..tostring(zoneSet[resValue.ZoneID].pos[1]).. ':'..tostring(zoneSet[resValue.ZoneID].pos[3]))
                                             higherValueExists = true
                                             break
@@ -543,7 +549,7 @@ IntelManager = Class {
                                 if not resValue.StartPositionClose then
                                     if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zoneSet[resValue.ZoneID].pos, 30, 'Ally') < 1 
                                     and aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zoneSet[resValue.ZoneID].pos, 30, 'Enemy') < 1 then
-                                        if resValue.DistanceToBase < zone.DistanceToBase then
+                                        if resValue.DistanceToBase < zone.DistanceToBase and resValue.ResourceValue >= zone.ResourceValue then
                                             --LOG('Low value, skip it pos '..tostring(zoneSet[resValue.ZoneID].pos[1]).. ':'..tostring(zoneSet[resValue.ZoneID].pos[3]))
                                             higherValueExists = true
                                             break
@@ -722,8 +728,8 @@ IntelManager = Class {
                                             platoon:LogDebug(string.format('We are too close to this zone and there is no enemy land threat'))
                                             continue
                                         end
-                                    elseif v.BuilderManager.LocationType and platoon.CurrentPlatoonThreatAntiAir > 0 then
-                                        local locationType = v.BuilderManager.LocationType
+                                    elseif v.BuilderManager.BaseType and platoon.CurrentPlatoonThreatAntiAir > 0 then
+                                        local locationType = v.BuilderManager.BaseType
                                         if locationType then
                                             if aiBrain.BasePerimeterMonitor[locationType].AirUnits < 1 then
                                                 platoon:LogDebug(string.format('We air threat only and are too close to this zone and there is no enemy air threat'))
@@ -2478,12 +2484,31 @@ IntelManager = Class {
                     local totalEnemyLandThreat = 0
                     local totalFriendlyDirectFireThreat = 0
                     local totalFriendlyIndirectFireThreat = 0
+                    
                     if v.FactoryManager and v.FactoryManager.LocationActive then
                         local baseZone = aiBrain.Zones.Land.zones[v.Zone]
+                        local closestDefenseClusterDistance
+                        local closestDefenseClusterThreat = 0
+                        local closestZoneLandDistance
+                        local closestZoneLandThreat = 0
                         if v.PathableZones and v.PathableZones.PathableLandZoneCount > 0 and not table.empty(v.PathableZones.Zones) then
                             totalEnemyLandThreat = baseZone.enemylandthreat or 0
                             totalFriendlyDirectFireThreat = baseZone.friendlydirectfireantisurfacethreat or 0
                             totalFriendlyIndirectFireThreat = baseZone.friendlyindirectfireantisurfacethreat or 0
+
+                            for _, cluster in aiBrain.EnemyIntel.DirectorData.DefenseCluster do
+                                local dx = cluster.aggx - v.Position[1]
+                                local dz = cluster.aggz - v.Position[3]
+                                local clusterDist = dx * dx + dz * dz
+                                --LOG('LocationType is  '..tostring(k))
+                                --LOG('Location pos is '..tostring(v.Position[1])..':'..tostring(v.Position[3]))
+                                --LOG('Defense cluster found with '..tostring(cluster.AntiSurfaceThreat)..' threat at '..tostring(clusterDist)..' distance')
+                                if not closestDefenseClusterDistance or clusterDist < closestDefenseClusterDistance then
+                                    closestDefenseClusterDistance = clusterDist
+                                    closestDefenseClusterThreat = cluster.AntiSurfaceThreat
+                                end
+                            end
+
                             for _, z in v.PathableZones.Zones do
                                 if z.PathType == 'Land' and z.ZoneID then
                                     local zone = aiBrain.Zones.Land.zones[z.ZoneID]
@@ -2491,16 +2516,41 @@ IntelManager = Class {
                                         local dx = v.Position[1] - zone.pos[1]
                                         local dz = v.Position[3] - zone.pos[3]
                                         local posDist = dx * dx + dz * dz
-                                        if posDist < 102400 and NavUtils.CanPathTo('Land', v.Position, zone.pos) then
+                                        if posDist < 102400 then
                                             totalEnemyLandThreat = zone.enemylandthreat and totalEnemyLandThreat + zone.enemylandthreat
-                                            totalEnemyStructureThreat = zone.enemystructurethreat and totalEnemyStructureThreat + zone.enemystructurethreat
+                                            if zone.enemyantisurfacethreat > 0 then
+                                                totalEnemyStructureThreat = zone.enemystructurethreat and totalEnemyStructureThreat + zone.enemystructurethreat
+                                            else
+                                                totalEnemyStructureThreat = zone.enemystructurethreat and totalEnemyStructureThreat + (zone.enemystructurethreat * 0.7)
+                                            end
                                             totalFriendlyDirectFireThreat = zone.friendlydirectfireantisurfacethreat and totalFriendlyDirectFireThreat + zone.friendlydirectfireantisurfacethreat
                                             totalFriendlyIndirectFireThreat = baseZone.friendlyindirectantisurfacethreat and totalFriendlyIndirectFireThreat + baseZone.friendlyindirectantisurfacethreat
+                                            if not closestZoneLandDistance or posDist < closestZoneLandDistance then
+                                                closestZoneLandThreat = zone.enemylandthreat
+                                                closestZoneLandDistance = posDist
+                                            end
                                         end
                                     end
                                 end
                             end
                         end
+                        if aiBrain.BasePerimeterMonitor[k] then
+                            if closestDefenseClusterDistance then
+                                aiBrain.BasePerimeterMonitor[k].ClosestDefenseClusterDistance = closestDefenseClusterDistance
+                                aiBrain.BasePerimeterMonitor[k].ClosestDefenseClusterThreat = closestDefenseClusterThreat
+                            else
+                                aiBrain.BasePerimeterMonitor[k].ClosestDefenseClusterDistance = nil
+                                aiBrain.BasePerimeterMonitor[k].ClosestDefenseClusterThreat = 0
+                            end
+                            if closestZoneLandDistance then
+                                aiBrain.BasePerimeterMonitor[k].ClosestZoneIntelLandThreatDistance = closestZoneLandDistance
+                                aiBrain.BasePerimeterMonitor[k].ClosestZoneIntelLandThreat = closestZoneLandThreat
+                            else
+                                aiBrain.BasePerimeterMonitor[k].ClosestZoneIntelLandThreatDistance = nil
+                                aiBrain.BasePerimeterMonitor[k].ClosestZoneIntelLandThreat = 0
+                            end
+                        end
+
                         local indirectFireCount = 0
                         local threatRatio = 1
                         if totalEnemyStructureThreat > 0 then
@@ -2516,8 +2566,12 @@ IntelManager = Class {
                             end
                             if threatRatio > 0.2 then
                                 indirectFireCount = math.max(3, totalEnemyStructureThreat / threatDillutionRatio)
+                            elseif closestDefenseClusterThreat > 0 then
+                                --LOG('Cluster Threat is valid and greater than zero')
+                                indirectFireCount = math.max(3, closestDefenseClusterThreat / threatDillutionRatio)
                             end
                             --LOG('Initial indirectFireCount '..tostring(indirectFireCount)..'enemy structure threat was '..tostring(totalEnemyStructureThreat)..' enemy defense threat was '..tostring(enemyDefenseThreat))
+                            --LOG('Current threat ratio is '..tostring(threatRatio))
                             if indirectFireCount > 3 then
                                 if totalEnemyLandThreat > 0 then
                                     if totalFriendlyDirectFireThreat > 0 then
@@ -2535,7 +2589,7 @@ IntelManager = Class {
                                 if v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH2) > 0 and self.StrategyFlags.EarlyT2AmphibBuilt then
                                     --LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T2 mml for base '..tostring(k))
                                     aiBrain.amanager.Demand.Bases[k].Land.T2.mml = math.ceil(indirectFireCount * 1.3)
-                                    --LOG('We want to build MML at builder manager '..tostring(k))
+                                    --LOG('We want to build MML at builder manager '..tostring(k)..' at position '..tostring(v.Position[1])..':'..tostring(v.Position[3]))
                                     --LOG('Total Enemy land threat '..totalEnemyLandThreat)
                                     --LOG('Total Friendly Directfire threat '..totalFriendlyDirectFireThreat)
                                     --LOG('Threat ratio here is '..tostring(totalFriendlyDirectFireThreat / totalEnemyLandThreat))
@@ -3061,9 +3115,6 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
     -- Should be a multipurpose Expansion query that can provide units, acus a place to go
 
     local MainPos = aiBrain.BuilderManagers.MAIN.Position
-    if VDist2Sq(location[1], location[3], MainPos[1], MainPos[3]) > 3600 then
-        return false
-    end
     local label, reason = NavUtils.GetLabel('Land', location)
     if not label then
         WARN('No water label returned reason '..reason)
@@ -3074,12 +3125,10 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
     local mainBaseToCenter = VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3])
     local bestExpansions = {}
     local options = {}
-    local currentGameTime = GetGameTimeSeconds()
     -- Note, the expansions zones are land only. Need to fix this to include amphib zone.
     if label then
         if not table.empty(im.ZoneExpansions.Pathable) then
             for _, expansion in im.ZoneExpansions.Pathable do
-                local skipPos = false
                 local expLabel, reason = NavUtils.GetLabel('Land', expansion.Position)
                 --LOG('Pre Distance check expansion has '..tostring(aiBrain.Zones.Land.zones[expansion.ZoneID].resourcevalue)..' mass points')
                 if expLabel == label then
@@ -3106,10 +3155,10 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                                 RNGINSERT(options, {Expansion = expansion, Value = extractorCount * extractorCount, Key = zone.id, Distance = expansionDistance})
                             end
                         else
-                            --RNGLOG('Expansion is beyond the center point')
-                            --RNGLOG('Distance from main base to expansion '..VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]))
-                            --RNGLOG('Should be less than ')
-                            --RNGLOG('Distance from main base to center point '..VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]))
+                            --LOG('Expansion is beyond the center point')
+                            --LOG('Distance from main base to expansion '..VDist2Sq(MainPos[1], MainPos[3], expansion.Position[1], expansion.Position[3]))
+                            --LOG('Should be less than ')
+                            --LOG('Distance from main base to center point '..VDist2Sq(MainPos[1], MainPos[3], centerPoint[1], centerPoint[3]))
                         end
                     end
                 end
@@ -3119,16 +3168,14 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
         
         for k, withinRadius in options do
             if mainBaseToCenter > VDist2Sq(withinRadius.Expansion.Position[1], withinRadius.Expansion.Position[3], centerPoint[1], centerPoint[3]) then
-                --LOG('Expansion has high mass value at location '..withinRadius.Expansion.Name..' at position '..repr(withinRadius.Expansion.Position))
+                --LOG('Expansion has high mass value at location '..tostring(withinRadius.Expansion.Key)..' at position '..tostring(repr(withinRadius.Expansion.Position)))
                 RNGINSERT(bestExpansions, withinRadius)
-            else
-                --LOG('Expansion is behind the main base , position '..repr(withinRadius.Expansion.Position))
             end
         end
     else
         WARN('No GraphArea in path node, either its not created yet or the marker analysis hasnt happened')
     end
-    --RNGLOG('We have '..RNGGETN(bestExpansions)..' expansions to pick from')
+    --LOG('We have '..RNGGETN(bestExpansions)..' expansions to pick from')
     if not table.empty(bestExpansions) then
         if type == 'acu' then
             local bestOption = false
@@ -3145,7 +3192,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                         end
                     end
                     if alreadySecure then
-                       --RNGLOG('Position already secured, ignore and move to next expansion')
+                       --LOG('Position already secured, ignore and move to next expansion')
                         continue
                     end
                     local expansionValue = v.Distance * v.Distance / v.Value
@@ -3161,8 +3208,7 @@ function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, t
                 --LOG('ACU is having a random expansion returned')
                 return acuOptions[Random(1,2)]
             end
-           --RNGLOG('ACU is having the best expansion returned')
-
+            --LOG('ACU is having the best expansion returned')
             return bestOption
         else
             return bestExpansions[Random(1,RNGGETN(bestExpansions))] 
@@ -3450,16 +3496,16 @@ TacticalThreatAnalysisRNG = function(aiBrain)
         for _, x in eThreatLocations do
             for _, z in x do
                 if z.LandDefStructureCount > 0 or z.AirDefStructureCount > 0 then
-                    local tableEntry = { Position = z.Position, Land = { Count = 0 }, Air = { Count = 0 }, aggX = 0, aggZ = 0, weight = 0, maxRangeLand = 0, validated = false}
+                    local tableEntry = { Position = z.Position, Land = { Count = 0, Threat = 0 }, Air = { Count = 0, Threat = 0 }, aggX = 0, aggZ = 0, weight = 0, maxRangeLand = 0, validated = false}
                     if z.LandDefStructureCount > 0 then
                         --LOG('Enemy Threat Location with ID '..q..' has '..threat.LandDefStructureCount..' at imap position '..repr(threat.Position))
                         tableEntry.maxRangeLand = z.LandDefStructureMaxRange
                         --LOG('Firebase max range set to '..tableEntry.maxRangeLand)
-                        tableEntry.Land = { Count = z.LandDefStructureCount }
+                        tableEntry.Land = { Count = z.LandDefStructureCount, Threat = z.LandDefStructureThreat }
                     end
                     if z.AirDefStructureCount > 0 then
                         --LOG('Enemy Threat Location with ID '..q..' has '..threat.AirDefStructureCount..' at imap position '..repr(threat.Position))
-                        tableEntry.Air = { Count = z.AirDefStructureCount }
+                        tableEntry.Air = { Count = z.AirDefStructureCount, Threat = z.AirDefStructureThreat }
                     end
                     RNGINSERT(firebaseTable, tableEntry)
                 end
@@ -3494,7 +3540,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                     best = v
                 end
             end
-            local defenseGroup = {Land = best.Land.Count, Air = best.Air.Count, MaxLandRange = best.maxRangeLand or 0}
+            local defenseGroup = {Land = best.Land.Count, Air = best.Air.Count, MaxLandRange = best.maxRangeLand or 0, LandThreat = best.Land.Threat, AirThreat = best.Air.Threat}
             best.validated = true
             local x = best.aggX/best.weight
             local z = best.aggZ/best.weight
@@ -3508,7 +3554,7 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                 end
             end
             firebaseaggregation = firebaseaggregation + 1
-            RNGINSERT(firebaseaggregationTable, {aggx = x, aggz = z, DefensiveCount = defenseGroup.Land + defenseGroup.Air, MaxLandRange = defenseGroup.MaxLandRange})
+            RNGINSERT(firebaseaggregationTable, {aggx = x, aggz = z, DefensiveCount = defenseGroup.Land + defenseGroup.Air, MaxLandRange = defenseGroup.MaxLandRange, AntiSurfaceThreat = defenseGroup.LandThreat, AntiAirThreat = defenseGroup.AirThreat})
         end
 
         --LOG('firebaseTable '..repr(firebaseTable))

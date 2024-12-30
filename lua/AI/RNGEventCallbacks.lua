@@ -72,8 +72,16 @@ function MissileCallbackRNG(unit, targetPos, impactPos)
         if not unit.TargetBlackList then
             unit.TargetBlackList = {}
         end
-        unit.TargetBlackList[targetPos[1]] = {}
-        unit.TargetBlackList[targetPos[1]][targetPos[3]] = true
+        local mult = math.pow(10, 1)
+        local impactX = math.floor(impactPos[1] * mult + 0.5) / mult
+        local impactZ = math.floor(impactPos[3] * mult + 0.5) / mult
+        local targetPosX = math.floor(targetPos[1] * mult + 0.5) / mult
+        local targetPosZ = math.floor(targetPos[3] * mult + 0.5) / mult
+        if impactX == targetPosX and impactZ == targetPosZ then
+            return false, "We hit the same terrain pos as the target, likely it died after the missile fired"
+        end
+        unit.TargetBlackList[targetPosX] = {}
+        unit.TargetBlackList[targetPosX][targetPosZ] = true
         return true, "target position added to tml blacklist"
     end
     return false, "something something error?"

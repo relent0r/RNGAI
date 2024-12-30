@@ -500,7 +500,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     end
                     local unitPos = experimental:GetPosition()
                     if StateUtils.PositionInWater(unitPos) and experimental.Blueprint.CategoriesHash.ANTINAVY then
-                        maxPlatoonRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Anti Navy')
+                        maxPlatoonRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, {'Anti Navy'})
                     elseif maxPlatoonRange < self.MaxPlatoonWeaponRange then
                         maxPlatoonRange = self.MaxPlatoonWeaponRange
                     end

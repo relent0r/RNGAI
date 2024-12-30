@@ -14,6 +14,16 @@ local AirMode = function(self, aiBrain, builderManager, builderData)
     return 0
 end
 
+local T3BomberRushActivated = function(self, aiBrain, builderManager)
+    --RNGLOG('LocationType is '..builderManager.LocationType)
+    if aiBrain.IntelManager.StrategyFlags.T3BomberRushActivated then
+        --LOG('Shield response has been triggered')
+        return 890
+    else
+        return 896
+    end
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T1 Ratio',
     BuildersType = 'FactoryBuilder',
@@ -162,6 +172,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T3 Bomber',
         PlatoonTemplate = 'T3AirBomber',
         Priority = 896,
+        PriorityFunction = T3BomberRushActivated,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T3', 'bomber'} },
             { EBC, 'FactorySpendRatioRNG', {'Air', 'AirUpgrading'}},
