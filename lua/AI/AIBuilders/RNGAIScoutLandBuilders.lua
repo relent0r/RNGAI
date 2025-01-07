@@ -8,7 +8,6 @@
 local UCBC = '/lua/editor/UnitCountBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MIBC = '/lua/editor/MiscBuildConditions.lua'
-local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 BuilderGroup {
     BuilderGroupName = 'RNGAI ScoutLandBuilder',
@@ -18,9 +17,8 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandScout',
         Priority = 895,
         BuilderConditions = {
-            { UCBC, 'BuildOnlyOnLocationRNG', {'LocationType', 'MAIN' } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.LAND * categories.SCOUT }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.0 }},
             { UCBC, 'GreaterThanArmyThreat', { 'LandNow', 20}},
             { MIBC, 'ScoutsRequiredForBase', {'LocationType', 1.5, categories.LAND * categories.SCOUT }},
         },

@@ -25,15 +25,14 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'RNGAI Factory AirScout T1 Burst',
+        BuilderName = 'RNGAI Factory AirScout T1',
         PlatoonTemplate = 'T1AirScout',
         Priority = 895,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T1', 'scout'} },
             { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'ANTIAIR' }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 1.0 }},
-            { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
             { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 20}},
         },
         BuilderType = 'Air',
@@ -51,13 +50,12 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'RNGAI Factory AirScout T3 Burst',
+        BuilderName = 'RNGAI Factory AirScout T3',
         PlatoonTemplate = 'T3AirScout',
         Priority = 897,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T3', 'scout'} },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 1.0 }},
-            { UCBC, 'CheckPerimeterPointsExpired', {'Restricted'}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
             { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 120}},
         },
         BuilderType = 'Air',

@@ -65,6 +65,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             else
                 self.LocationType = 'MAIN'
             end
+            self.PlatoonLimit = self.PlatoonData.PlatoonLimit or 18
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             self.ScoutSupported = true
             self.ScoutUnit = false

@@ -181,15 +181,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     break
                                 end
                                 while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
-                                    if cdr.GetNavigator then
-                                        local navigator = cdr:GetNavigator()
-                                        if navigator then
-                                            navigator:SetGoal({v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]})
-                                        end
-                                    else
-                                        IssueClearCommands({cdr})
-                                        IssueMove({cdr},{v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]})
-                                    end
+                                    StateUtils.IssueNavigationMove(cdr, {v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]})
                                     if VDist3Sq(cdr:GetPosition(),{v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]}) < 144 then
                                         IssueClearCommands({cdr})
                                         RUtils.EngineerTryReclaimCaptureArea(brain, cdr, v.Position, 5)
@@ -291,9 +283,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             if (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) and GetEconomyIncome(brain, 'ENERGY') > 40 
             or gameTime > 1500 and GetEconomyIncome(brain, 'ENERGY') > 40 and GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95 then
                 local inRange = false
-                local highThreat = false
+                local highThreat = cdr.CurrentEnemyThreat > 30 and cdr.CurrentFriendlyThreat < 15
                 local enhancementLocation, locationDistance, enhancementZone
-                local movementCutOff = 625
+                local movementCutOff = 225
                 if self.BuilderData.ZoneRetreat and VDist3Sq(cdr.Position, self.BuilderData.Position) <= self.BuilderData.CutOff and cdr.CurrentEnemyThreat < 15 then
                     self:LogDebug(string.format('ACU close to position for enhancement and threat is '..cdr.CurrentEnemyThreat))
                     self:ChangeState(self.EnhancementBuild)
@@ -349,7 +341,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    if not enemyAcuClose and brain.BrainIntel.LandPhase < 2 then
+                    if not enemyAcuClose and brain.BrainIntel.LandPhase < 2 and cdr.CurrentEnemyInnerCircle < 20 then
                         local im = IntelManagerRNG.GetIntelManager(brain)
                         self:LogDebug(string.format('We want to try and expand '))
                         local expansionCount = 0
@@ -922,15 +914,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         if cdr.EnemyNavalPresent then
                             cdr.EnemyNavalPresent = nil
                         end
-                        if cdr.GetNavigator then
-                            local navigator = cdr:GetNavigator()
-                            if navigator then
-                                navigator:SetGoal(destination)
-                            end
-                        else
-                            IssueClearCommands({cdr})
-                            IssueMove({cdr},destination)
-                        end
+                        StateUtils.IssueNavigationMove(cdr, destination)
                         --LOG('ACU at position '..repr(destination))
                         --LOG('Cutoff distance was '..navigateDistanceCutOff)
                         self:ChangeState(self.DecideWhatToDo)
@@ -941,14 +925,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
 
 
                 -- navigate towards waypoint 
-                if cdr.GetNavigator then
-                    local navigator = cdr:GetNavigator()
-                    if navigator then
-                        navigator:SetGoal(waypoint)
-                    end
-                else
-                    IssueMove({cdr},waypoint)
-                end
+                StateUtils.IssueNavigationMove(cdr, waypoint)
 
                 -- check for opportunities
                 local wx = waypoint[1]
@@ -966,14 +943,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         --LOG('distance is '..(dx * dx + dz * dz))
                         --LOG('CutOff is '..navigateDistanceCutOff)
                         if distance < 9 then
-                            if cdr.GetNavigator then
-                                local navigator = cdr:GetNavigator()
-                                if navigator then
-                                    navigator:SetGoal(destination)
-                                end
-                            else
-                                IssueMove({cdr},destination)
-                            end
+                            StateUtils.IssueNavigationMove(cdr, destination)
                             WaitTicks(100)
                         end
                         if not endPoint then
@@ -1494,14 +1464,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     cdr.Caution = true
                                     cdr.CautionReason = 'acuOverChargeTargetCheck'
                                     if RUtils.GetAngleRNG(cdrPos[1], cdrPos[3], cdr.CDRHome[1], cdr.CDRHome[3], targetPos[1], targetPos[3]) > 0.40 then
-                                        if cdr.GetNavigator then
-                                            local navigator = cdr:GetNavigator()
-                                            if navigator then
-                                                navigator:SetGoal(cdr.CDRHome)
-                                            end
-                                        else
-                                            IssueMove({cdr},cdr.CDRHome)
-                                        end
+                                        StateUtils.IssueNavigationMove(cdr, cdr.CDRHome)
                                         coroutine.yield(40)
                                     end
                                     ----self:LogDebug(string.format('cdr retreating due to enemy threat within attacktarget enemy '..realThreat.enemySurface..' ally '..realThreat.allySurface..' friendly inner '..cdr.CurrentFriendlyInnerCircle))
@@ -1604,38 +1567,14 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                             if alternateFirePos then
-                                if cdr.GetNavigator then
-                                    local navigator = cdr:GetNavigator()
-                                    if navigator then
-                                        navigator:SetGoal(movePos)
-                                    end
-                                else
-                                    IssueClearCommands({cdr})
-                                    IssueMove({cdr},cdr.CDRHome)
-                                end
+                                StateUtils.IssueNavigationMove(cdr, movePos)
                             else
-                                if cdr.GetNavigator then
-                                    local navigator = cdr:GetNavigator()
-                                    if navigator then
-                                        navigator:SetGoal(cdr.CDRHome)
-                                    end
-                                else
-                                    IssueClearCommands({cdr})
-                                    IssueMove({cdr},cdr.CDRHome)
-                                end
+                                StateUtils.IssueNavigationMove(cdr, cdr.CDRHome)
                             end
                             coroutine.yield(30)
                             IssueClearCommands({cdr})
                         end
-                        if cdr.GetNavigator then
-                            local navigator = cdr:GetNavigator()
-                            if navigator then
-                                navigator:SetGoal(movePos)
-                            end
-                        else
-                            IssueClearCommands({cdr})
-                            IssueMove({cdr},cdr.CDRHome)
-                        end
+                        StateUtils.IssueNavigationMove(cdr, movePos)
                         coroutine.yield(30)
                         if not snipeAttempt then
                             if not IsDestroyed(target) and not ACUFunc.CheckRetreat(cdrPos,targetPos,target) then
@@ -1649,14 +1588,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                         cdrNewPos = RUtils.GetLateralMovePos(cdrNewPos, targetPos, 6, 1)
                                     end
                                 end
-                                if cdr.GetNavigator then
-                                    local navigator = cdr:GetNavigator()
-                                    if navigator then
-                                        navigator:SetGoal(cdrNewPos)
-                                    end
-                                else
-                                    IssueMove({cdr},cdrNewPos)
-                                end
+                                StateUtils.IssueNavigationMove(cdr, cdrNewPos)
                                 coroutine.yield(30)
                             end
                         end
@@ -1954,15 +1886,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     for k,v in cdr.EngineerBuildQueue do
                         --LOG('Attempt to build queue item of '..repr(v))
                         while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
-                            if cdr.GetNavigator then
-                                local navigator = cdr:GetNavigator()
-                                if navigator then
-                                    navigator:SetGoal(v.Position)
-                                end
-                            else
-                                IssueClearCommands({cdr})
-                                IssueMove({cdr},v.Position)
-                            end
+                            StateUtils.IssueNavigationMove(cdr, v.Position)
                             if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then
                                 IssueClearCommands({cdr})
                                 RUtils.EngineerTryReclaimCaptureArea(brain, cdr, v.Position, 5)
@@ -2072,15 +1996,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                             break
                                         end
                                         while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
-                                            if cdr.GetNavigator then
-                                                local navigator = cdr:GetNavigator()
-                                                if navigator then
-                                                    navigator:SetGoal(v.Position)
-                                                end
-                                            else
-                                                IssueClearCommands({cdr})
-                                                IssueMove({cdr},v.Position)
-                                            end
+                                            StateUtils.IssueNavigationMove(cdr, v.Position)
                                             if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then
                                                 IssueClearCommands({cdr})
                                                 RUtils.EngineerTryReclaimCaptureArea(brain, cdr, v.Position, 5)
@@ -2148,15 +2064,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                             break
                                         end
                                         while not cdr.Dead and not table.empty(cdr.EngineerBuildQueue) do
-                                            if cdr.GetNavigator then
-                                                local navigator = cdr:GetNavigator()
-                                                if navigator then
-                                                    navigator:SetGoal(v.Position)
-                                                end
-                                            else
-                                                IssueClearCommands({cdr})
-                                                IssueMove({cdr},v.Position)
-                                            end
+                                            StateUtils.IssueNavigationMove(cdr, v.Position)
                                             if VDist3Sq(cdr:GetPosition(),v.Position) < 144 then
                                                 IssueClearCommands({cdr})
                                                 RUtils.EngineerTryReclaimCaptureArea(brain, cdr, v.Position, 5)
@@ -2355,7 +2263,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             if cdr.Upgrading then
                                 --RNGLOG('cdr.Upgrading is set to true')
                             end
-                            if (cdr.HealthPercent < 0.40 and eta > 30 and cdr.CurrentEnemyThreat > 10) or (cdr.CurrentEnemyThreat > 30 and eta > 450 and cdr.CurrentFriendlyThreat < 15) then
+                            if (cdr.HealthPercent < 0.40 and eta > 30 and cdr.CurrentEnemyThreat > 10 and cdr.DistanceToHome > 225) or (cdr.CurrentEnemyThreat > 30 and eta > 450 and cdr.CurrentFriendlyThreat < 15) then
                                 IssueStop({cdr})
                                 IssueClearCommands({cdr})
                                 cdr.Upgrading = false

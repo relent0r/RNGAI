@@ -42,6 +42,7 @@ BuilderGroup {
             DesiresAssist = true,
             Construction = {
                 BuildClose = true,
+                EcoSelector = 'ENERGY',
                 AdjacencyPriority = {
                     categories.FACTORY * categories.AIR,
                     categories.RADAR * categories.STRUCTURE,
@@ -72,7 +73,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
             { EBC, 'NegativeEcoPowerCheckInstant', { 15.0 } }, -- If our energy is trending into negatives
             { UCBC, 'ValidateHydroIncome', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.HYDROCARBON) } },
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON }}, -- Don't build after 1 T2 Pgens Exist
+            { UCBC, 'PowerBuildCapabilityExist', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON, categories.ENGINEER * (categories.TECH2 + categories.TECH3) }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -82,6 +83,7 @@ BuilderGroup {
             DesiresAssist = true,
             Construction = {
                 BuildClose = true,
+                EcoSelector = 'ENERGY',
                 AdjacencyPriority = {
                     categories.FACTORY * categories.AIR,
                     categories.RADAR * categories.STRUCTURE,
@@ -110,9 +112,9 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EnergyT2', 6},
         BuilderConditions = {
             { EBC, 'NegativeEcoPowerCheck', { 45.0 } },
-            { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON }},
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION *  categories.TECH3 - categories.HYDROCARBON }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.1 }},
+            { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON }},
+            { UCBC, 'PowerBuildCapabilityExist', { categories.STRUCTURE * categories.ENERGYPRODUCTION *  categories.TECH3 - categories.HYDROCARBON, categories.ENGINEER * categories.TECH3 }},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -131,6 +133,7 @@ BuilderGroup {
                     categories.FACTORY * categories.STRUCTURE,
                 },
                 AvoidCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2,
+                EcoSelector = 'ENERGY',
                 maxUnits = 1,
                 maxRadius = 5,
                 BuildStructures = {
@@ -157,6 +160,7 @@ BuilderGroup {
             StateMachine = 'EngineerBuilder',
             JobType = 'BuildPower',
             DesiresAssist = true,
+            EcoSelector = 'ENERGY',
             NumAssistees = 12,
             Construction = {
                 AdjacencyPriority = {
@@ -201,6 +205,7 @@ BuilderGroup {
                     categories.ENERGYPRODUCTION * categories.TECH2,
                     categories.FACTORY * categories.STRUCTURE,
                 },
+                EcoSelector = 'ENERGY',
                 maxUnits = 1,
                 maxRadius = 15,
                 BuildStructures = {
@@ -236,6 +241,7 @@ BuilderGroup {
                     categories.ENERGYPRODUCTION * categories.TECH2,
                     categories.FACTORY * categories.STRUCTURE,
                 },
+                EcoSelector = 'ENERGY',
                 maxUnits = 1,
                 maxRadius = 15,
                 BuildStructures = {
@@ -270,6 +276,7 @@ BuilderGroup {
             Construction = {
                 AdjacencyPriority = {categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND)},
                 AdjacencyDistance = 50,
+                EcoSelector = 'ENERGY',
                 BuildStructures = {
                     { Unit = 'T1EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE - categories.HYDROCARBON },
                 },
@@ -296,6 +303,7 @@ BuilderGroup {
             Construction = {
                 AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD, categories.FACTORY * (categories.TECH3 + categories.TECH2 + categories.TECH1)},
                 AvoidCategory = categories.ENERGYPRODUCTION * categories.TECH2,
+                EcoSelector = 'ENERGY',
                 maxUnits = 1,
                 maxRadius = 10,
                 BuildStructures = {
@@ -325,6 +333,7 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = true,
             Construction = {
+                EcoSelector = 'ENERGY',
                 BuildStructures = {
                     { Unit = 'T1HydroCarbon', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE * categories.HYDROCARBON },
                 },
@@ -349,6 +358,7 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = true,
             Construction = {
+                EcoSelector = 'ENERGY',
                 BuildStructures = {
                     { Unit = 'T1HydroCarbon', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE * categories.HYDROCARBON },
                 },
@@ -372,6 +382,7 @@ BuilderGroup {
             NeedGuard = false,
             DesiresAssist = false,
             Construction = {
+                EcoSelector = 'ENERGY',
                 BuildStructures = {
                     { Unit = 'T1HydroCarbon', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE * categories.HYDROCARBON },
                 },

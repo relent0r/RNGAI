@@ -1080,11 +1080,11 @@ StructureManager = Class {
                                 --RNGLOG('DefensiveClusterCheck detected close to expansion')
                                 t2Rush = true
                             end
-                            if massEfficiencyOverTime >= 1.0 and energyEfficiencyOverTime >= 1.0 or t2Rush then
+                            if massEfficiencyOverTime >= 0.95 and energyEfficiencyOverTime >= 1.0 or t2Rush then
                                 --RNGLOG('Factory Upgrade efficiency over time check passed')
                                 local EnergyEfficiency = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
                                 local MassEfficiency = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
-                                if MassEfficiency >= 1.0 and EnergyEfficiency >= 1.0 or t2Rush then
+                                if MassEfficiency >= 0.95 and EnergyEfficiency >= 1.0 or t2Rush then
                                     --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
                                     local factoryToUpgrade = self:GetClosestFactory(activeExpansion, 'LAND', 'TECH1')
                                     if factoryToUpgrade and not factoryToUpgrade.Dead then

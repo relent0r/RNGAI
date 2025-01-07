@@ -196,6 +196,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
                         self.Brain.Zones.Land.zones[zone].engineerplatoonallocated = nil
                     end
                 end
+                unit.LocationType = self.LocationType
             end
         end
     end,
@@ -757,7 +758,7 @@ FactoryBuilderManager = Class(RNGFactoryBuilderManager) {
         local template
         if templateName == 'InitialBuildQueueRNG' then
             template = self:GenerateInitialBuildQueue(templateName, factory)
-
+            self.Brain.InitialBuildQueueComplete = true
         else
             local templateData = PlatoonTemplates[templateName]
             if not templateData then

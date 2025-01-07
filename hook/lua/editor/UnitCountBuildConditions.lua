@@ -2,7 +2,6 @@ local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 
 local NavUtils = import('/lua/sim/NavUtils.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
-local BASEPOSTITIONS = {}
 local mapSizeX, mapSizeZ = GetMapSize()
 local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local IsAnyEngineerBuilding = moho.aibrain_methods.IsAnyEngineerBuilding
@@ -107,15 +106,6 @@ function HaveUnitRatioRNG(aiBrain, ratio, categoryOne, compareType, categoryTwo)
     local numTwo = aiBrain:GetCurrentUnits(categoryTwo)
     --RNGLOG(aiBrain:GetArmyIndex()..' CompareBody {World} ( '..numOne..' '..compareType..' '..numTwo..' ) -- ['..ratio..'] -- '..categoryOne..' '..compareType..' '..categoryTwo..' ('..(numOne / numTwo)..' '..compareType..' '..ratio..' ?) return '..repr(CompareBody(numOne / numTwo, ratio, compareType)))
     return CompareBody(numOne / numTwo, ratio, compareType)
-end
-
-local FactionIndexToCategory = {[1] = categories.UEF, [2] = categories.AEON, [3] = categories.CYBRAN, [4] = categories.SERAPHIM, [5] = categories.NOMADS, [6] = categories.ARM, [7] = categories.CORE }
-function CanBuildCategoryRNG(aiBrain,category)
-    -- convert text categories like 'MOBILE AIR' to 'categories.MOBILE * categories.AIR'
-    local FactionCat = FactionIndexToCategory[aiBrain:GetFactionIndex()] or categories.ALLUNITS
-    local numBuildableUnits = RNGGETN(EntityCategoryGetUnitList(category * FactionCat)) or -1
-    --RNGLOG('* CanBuildCategory: FactionIndex: ('..repr(aiBrain:GetFactionIndex())..') numBuildableUnits:'..numBuildableUnits..' - '..repr( EntityCategoryGetUnitList(category * FactionCat) ))
-    return numBuildableUnits > 0
 end
 
 -- ##############################################################################################################
@@ -261,17 +251,8 @@ function GreaterThanT3CoreExtractorPercentage(aiBrain, percentage)
 end
 
 function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, builderCategory)
-    local AIName = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
-    local baseposition, radius
-    if BASEPOSTITIONS[AIName][locType] then
-        baseposition = BASEPOSTITIONS[AIName][locType].Pos
-        radius = BASEPOSTITIONS[AIName][locType].Rad
-    elseif aiBrain.BuilderManagers[locType] then
-        baseposition = aiBrain.BuilderManagers[locType].FactoryManager.Location
-        radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
-        BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
-        BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
-    end
+    local baseposition = aiBrain.BuilderManagers[locType].Location
+    local radius = aiBrain.BuilderManagers[locType].Radius or 120
     if not baseposition then
         --RNGLOG('No Base Position for GetUnitsBeingBuildlocation')
         return false
@@ -279,19 +260,12 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
     local filterUnits = RUtils.GetOwnUnitsAroundLocationRNG(aiBrain, builderCategory, baseposition, radius)
     local unitCount = 0
     for k,v in filterUnits do
-        -- Only assist if allowed
         if v.DesiresAssist == false then
             continue
         end
-        -- Engineer doesn't want any more assistance
-        --[[
-        if v.NumAssistees then
-            --RNGLOG('NumAssistees '..v.NumAssistees..' Current Guards are '..table.getn(v:GetGuards()))
-        end]]
         if v.NumAssistees and RNGGETN(v:GetGuards()) >= v.NumAssistees then
             continue
         end
-        -- skip the unit, if it's not building or upgrading.
         if not v:IsUnitState('Building') and not v:IsUnitState('Upgrading') then
             continue
         end
@@ -301,22 +275,12 @@ function GetUnitsBeingBuiltLocationRNG(aiBrain, locType, buildingCategory, build
         end
         unitCount = unitCount + 1
     end
-    --RNGLOG('Engineer Assist has '..unitCount)
     return unitCount
 end
 
 function GetUnitsBeingBuiltLocationRadiusRNG(aiBrain, locType, radiusOverride, buildingCategory, builderCategory)
-    local AIName = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
-    local baseposition, radius
-    if BASEPOSTITIONS[AIName][locType] then
-        baseposition = BASEPOSTITIONS[AIName][locType].Pos
-        radius = BASEPOSTITIONS[AIName][locType].Rad
-    elseif aiBrain.BuilderManagers[locType] then
-        baseposition = aiBrain.BuilderManagers[locType].FactoryManager.Location
-        radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
-        BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
-        BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
-    end
+    local baseposition = aiBrain.BuilderManagers[locType].Location
+    local radius = aiBrain.BuilderManagers[locType].Radius or 120
     if not baseposition then
         return false
     end
@@ -969,17 +933,8 @@ function GreaterThanGameTimeSecondsRNG(aiBrain, num)
 end
 
 function HaveUnitRatioAtLocationRNG(aiBrain, locType, ratio, categoryNeed, compareType, categoryHave)
-    local AIName = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
-    local baseposition, radius
-    if BASEPOSTITIONS[AIName][locType] then
-        baseposition = BASEPOSTITIONS[AIName][locType].Pos
-        radius = BASEPOSTITIONS[AIName][locType].Rad
-    elseif aiBrain.BuilderManagers[locType] then
-        baseposition = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationCoords()
-        radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
-        BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
-        BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
-    end
+    local baseposition = aiBrain.BuilderManagers[locType].Location
+    local radius = aiBrain.BuilderManagers[locType].Radius or 120
     if not baseposition then
         return false
     end
@@ -1069,17 +1024,8 @@ function HaveThreatRatioVersusEnemyRNG(aiBrain, ratio, compareType)
 end
 
 function HaveUnitRatioVersusEnemyRNG(aiBrain, ratio, locType, radius, categoryOwn, compareType, categoryEnemy)
-    local AIName = ArmyBrains[aiBrain:GetArmyIndex()].Nickname
-    local baseposition, radius
-    if BASEPOSTITIONS[AIName][locType] then
-        baseposition = BASEPOSTITIONS[AIName][locType].Pos
-        radius = BASEPOSTITIONS[AIName][locType].Rad
-    elseif aiBrain.BuilderManagers[locType] then
-        baseposition = aiBrain.BuilderManagers[locType].FactoryManager.Location
-        radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
-        BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
-        BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
-    end
+    local baseposition = aiBrain.BuilderManagers[locType].Location
+    local radius = aiBrain.BuilderManagers[locType].Radius or 120
     if not baseposition then
         return false
     end
@@ -1089,17 +1035,8 @@ function HaveUnitRatioVersusEnemyRNG(aiBrain, ratio, locType, radius, categoryOw
 end
 
 function HaveSMDRatioVersusEnemySMLRNG(aiBrain, ratio, locType)
-    local AIName = aiBrain.Nickname
-    local baseposition, radius
-    if BASEPOSTITIONS[AIName][locType] then
-        baseposition = BASEPOSTITIONS[AIName][locType].Pos
-        radius = BASEPOSTITIONS[AIName][locType].Rad
-    elseif aiBrain.BuilderManagers[locType] then
-        baseposition = aiBrain.BuilderManagers[locType].FactoryManager.Location
-        radius = aiBrain.BuilderManagers[locType].FactoryManager:GetLocationRadius()
-        BASEPOSTITIONS[AIName] = BASEPOSTITIONS[AIName] or {} 
-        BASEPOSTITIONS[AIName][locType] = {Pos=baseposition, Rad=radius}
-    end
+    local baseposition = aiBrain.BuilderManagers[locType].Location
+    local radius = aiBrain.BuilderManagers[locType].Radius or 120
     if not baseposition then
         return false
     end
@@ -1108,8 +1045,6 @@ function HaveSMDRatioVersusEnemySMLRNG(aiBrain, ratio, locType)
     numEnemyUnits = numEnemyUnits + (aiBrain.emanager.Nuke.T4 * 3)
     return CompareBody(numNeedUnits / numEnemyUnits, ratio, '<=')
 end
-
-
 
 function GetEnemyUnitsRNG(aiBrain, unitCount, categoryEnemy, compareType)
     local numEnemyUnits = aiBrain:GetNumUnitsAroundPoint(categoryEnemy, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ , 'Enemy')
@@ -1377,10 +1312,34 @@ function HaveGreaterThanArmyPoolWithCategoryRNG(aiBrain, unitCount, unitCategory
     return HavePoolUnitInArmyRNG(aiBrain, unitCount, unitCategory, '>')
 end
 
-function EngineerAssistManagerNeedsEngineers(aiBrain)
-
+function EngineerAssistManagerNeedsEngineers(aiBrain, locationType, tier, minPool, minHigherTier)
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+    if not engineerManager then
+        return false
+    end
     if aiBrain.EconomyOverTimeCurrent.MassIncome > 1.0 and aiBrain.EngineerAssistManagerActive and aiBrain.EngineerAssistManagerBuildPowerRequired > aiBrain.EngineerAssistManagerBuildPower then
-        return true
+        if tier == 1 then
+            local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
+            local numUnits = poolPlatoon:GetNumCategoryUnits(categories.ENGINEER * categories.MOBILE * (categories.TECH2 + categories.TECH3), engineerManager.Location, engineerManager.Radius)
+            if numUnits > minHigherTier then
+                return false
+            end
+            return true
+        elseif tier == 2 then
+            local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
+            local numUnits = poolPlatoon:GetNumCategoryUnits(categories.ENGINEER * categories.MOBILE * categories.TECH2, engineerManager.Location, engineerManager.Radius)
+            if numUnits < minPool then
+                return false
+            end
+            return true
+        elseif tier == 3 then
+            local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
+            local numUnits = poolPlatoon:GetNumCategoryUnits(categories.ENGINEER * categories.MOBILE * categories.TECH3, engineerManager.Location, engineerManager.Radius)
+            if numUnits < minPool then
+                return false
+            end
+            return true
+        end
     end
     return false
 end
@@ -1389,6 +1348,9 @@ function ArmyManagerBuild(aiBrain, uType, tier, unit)
     --LOG('aiBrain.amanager.current[tier][unit] :'..tostring(aiBrain.amanager.Current[uType][tier][unit])..' unit type is '..tostring(unit))
     local factionIndex = aiBrain:GetFactionIndex()
     if factionIndex > 4 then factionIndex = 5 end
+    if not aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] then
+        return false
+    end
     if not aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] or aiBrain.amanager.Ratios[factionIndex][uType][tier][unit] == 0 then 
         --RNGLOG('Cant find unit '..tostring(unit)..' in faction index ratio table') 
         return false 
@@ -1588,15 +1550,6 @@ function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
     return false
 end
 
-function CheckPerimeterPointsExpired(aiBrain, pointTable)
-    -- Checks if the perimeter points have been scouted recently
-    local im = IntelManagerRNG.GetIntelManager(aiBrain)
-    if im.MapIntelStats.PerimeterExpired then
-        return true
-    end
-    return false
-end
-
 function RatioToZones(aiBrain, zoneType, unitCat, ratio)
     if zoneType == 'Land' then
         if aiBrain.ZoneCount.Land * ratio > GetCurrentUnits(aiBrain, unitCat) then
@@ -1700,10 +1653,10 @@ function AdjacencyFabricatorCheckRNG(aiBrain, locationType, category, radius)
     return false
 end
 
-function CheckTargetInRangeRNG(aiBrain, locationType, unitType, category, factionIndex)
+function CheckTMLRequiredRNG(aiBrain, locationType, unitType, category, minCount, maxCount)
 
     local ALLBPS = __blueprints
-    local template = import('/lua/BuildingTemplates.lua').BuildingTemplates[factionIndex or aiBrain:GetFactionIndex()]
+    local template = import('/lua/BuildingTemplates.lua').BuildingTemplates[aiBrain:GetFactionIndex()]
     local buildingId = false
     for k,v in template do
         if v[1] == unitType then
@@ -1739,17 +1692,36 @@ function CheckTargetInRangeRNG(aiBrain, locationType, unitType, category, factio
     local targetUnits = aiBrain:GetUnitsAroundPoint(category, basePosition, range, 'Enemy')
     local retUnit = false
     local distance = false
-    for num, unit in targetUnits do
+    local requireMultiple = false
+    for _, unit in targetUnits do
         if not unit.Dead then
+            local unitCats = unit.Blueprint.CategoriesHash
             local unitPos = unit:GetPosition()
+            if unitCats.STRUCTURE and (unitCats.ANTIMISSILE and unitCats.TECH2 or unitCats.SHIELD) or unitCats.COMMAND then
+                requireMultiple = true
+            end
             if not retUnit or VDist3Sq(basePosition, unitPos) < distance then
                 retUnit = unit
                 distance = VDist3Sq(basePosition, unitPos)
             end
         end
     end
-
-    if retUnit then
+    local currentTMLCount = 0
+    local tmlPlatoonName = 'TMLStateMachine_'..locationType
+    local tmlPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed(tmlPlatoonName)
+    if tmlPlatoonAvailable then
+        local platUnits = tmlPlatoonAvailable:GetPlatoonUnits()
+        for _, v in platUnits do
+            if v and not v.Dead then
+                currentTMLCount = currentTMLCount + 1
+            end
+        end
+        if requireMultiple and currentTMLCount < maxCount then
+            return true
+        elseif currentTMLCount < minCount then
+            return true
+        end
+    elseif retUnit then
         return true
     end
     return false
@@ -2082,6 +2054,13 @@ function LocationDefenseCheck(aiBrain, locationType, count, defensiveCategory, p
         end
     end
     return true
+end
+
+function PowerBuildCapabilityExist(aiBrain, powerCategory, engineerCategory)
+
+    local numPowerUnits = aiBrain:GetCurrentUnits(powerCategory)
+    local numEngUnits = aiBrain:GetCurrentUnits(engineerCategory)
+    return numPowerUnits < 1 or numEngUnits < 1
 end
 
 --[[

@@ -28,6 +28,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             self:LogDebug(string.format('Welcome to the TorpedoBehavior StateMachine'))
             local aiBrain = self:GetBrain()
+            self.MergeType = 'AirTorpMergeStateMachine'
             if self.PlatoonData.LocationType then
                 self.LocationType = self.PlatoonData.LocationType
             else

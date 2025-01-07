@@ -495,11 +495,13 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                             local movementPositions = StateUtils.GenerateGridPositions(path[i], 6, self.PlatoonCount)
                             for k, unit in platoonUnits do
                                 if not unit.Dead and movementPositions[k] then
-                                    IssueMove({platoonUnits[k]}, movementPositions[k])
+                                    StateUtils.IssueNavigationMove(unit, movementPositions[k])
                                 else
-                                    IssueMove({platoonUnits[k]}, path[i])
+                                    StateUtils.IssueNavigationMove(unit, path[i])
                                 end
                             end
+                            local movementTimeout = 0
+                            local distanceTimeout
                             while not IsDestroyed(self) do
                                 coroutine.yield(1)
                                 local platoonPosition = self:GetPlatoonPosition()
@@ -524,8 +526,6 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                 local pz = path[i][3] - platoonPosition[3]
                                 local pathDistance = px * px + pz * pz
                                 if pathDistance < 3600 then
-                                    -- If we don't stop the movement here, then we have heavy traffic on this Map marker with blocking units
-                                    IssueClearCommands(platoonUnits)
                                     break
                                 end
                                 if builderData.AttackTarget and not builderData.AttackTarget.Dead then
@@ -544,6 +544,13 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                 end
                                 --RNGLOG('Waiting to reach target loop')
                                 coroutine.yield(10)
+                                if not distanceTimeout or distanceTimeout == pathDistance then
+                                    movementTimeout = movementTimeout + 1
+                                    if movementTimeout > 5 then
+                                        break
+                                    end
+                                end
+                                distanceTimeout = pathDistance
                             end
                         end
                     else

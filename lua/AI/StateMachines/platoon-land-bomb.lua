@@ -255,14 +255,7 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
                 local Stuck = 0
                 for _, unit in GetPlatoonUnits(self) do
                     if not unit.Dead then
-                        if unit.GetNavigator then
-                            local navigator = unit:GetNavigator()
-                            if navigator then
-                                navigator:SetGoal(path[i])
-                            end
-                        else
-                            IssueMove({unit},path[i])
-                        end
+                        StateUtils.IssueNavigationMove(unit, path[i])
                     end
                 end
                 while PlatoonExists(aiBrain, self) do

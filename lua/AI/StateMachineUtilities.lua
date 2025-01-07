@@ -727,7 +727,7 @@ ZoneUpdate = function(aiBrain, platoon)
     end
 end
 
-MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNumber, ignoreBase)
+MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNumber, ignoreBase, mergeInto)
     -- check to see we're not near an ally base
     -- ignoreBase is not worded well, if false then ignore if too close to base
     if IsDestroyed(self) then
@@ -771,6 +771,7 @@ MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNu
             end
         end
     end
+    --LOG("Attempting Merge, current platoon count is "..tostring(platCount))
 
     local AlliedPlatoons = aiBrain:GetPlatoonsList()
     local bMergedPlatoons = false
@@ -790,7 +791,6 @@ MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNu
         end
 
         if aPlat.PlatoonFull then
-            --RNGLOG('Remote platoon is full, skip')
             continue
         end
 
@@ -812,19 +812,37 @@ MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNu
         end
 
         if  VDist2Sq(platPos[1], platPos[3], allyPlatPos[1], allyPlatPos[3]) <= radiusSq then
-            local units = GetPlatoonUnits(aPlat)
-            local validUnits = {}
-            local bValidUnits = false
-            for _,u in units do
-                if not u.Dead and not u:IsUnitState('Attached') then
-                    RNGINSERT(validUnits, u)
-                    bValidUnits = true
+            if mergeInto then
+                local validUnits = {}
+                local bValidUnits = false
+                for _,u in platUnits do
+                    if not u.Dead and not u:IsUnitState('Attached') then
+                        RNGINSERT(validUnits, u)
+                        bValidUnits = true
+                    end
                 end
-            end
-            if bValidUnits then
-                --LOG("*AI DEBUG: Merging platoons " .. self.PlatoonName .. ": (" .. platPos[1] .. ", " .. platPos[3] .. ") and " .. aPlat.PlatoonName .. ": (" .. allyPlatPos[1] .. ", " .. allyPlatPos[3] .. ")")
-                aiBrain:AssignUnitsToPlatoon(self, validUnits, 'Attack', 'GrowthFormation')
-                bMergedPlatoons = true
+                if bValidUnits then
+                    --LOG("*AI DEBUG: Merging platoons " .. self.PlatoonName .. ": (" .. platPos[1] .. ", " .. platPos[3] .. ") and " .. aPlat.PlatoonName .. ": (" .. allyPlatPos[1] .. ", " .. allyPlatPos[3] .. ")")
+                    aiBrain:AssignUnitsToPlatoon(aPlat, validUnits, 'Attack', 'GrowthFormation')
+                    bMergedPlatoons = true
+                    break
+                end
+            else
+                local units = GetPlatoonUnits(aPlat)
+                local validUnits = {}
+                local bValidUnits = false
+                for _,u in units do
+                    if not u.Dead and not u:IsUnitState('Attached') then
+                        RNGINSERT(validUnits, u)
+                        bValidUnits = true
+                    end
+                end
+                if bValidUnits then
+                    --LOG("*AI DEBUG: Merging platoons " .. self.PlatoonName .. ": (" .. platPos[1] .. ", " .. platPos[3] .. ") and " .. aPlat.PlatoonName .. ": (" .. allyPlatPos[1] .. ", " .. allyPlatPos[3] .. ")")
+                    aiBrain:AssignUnitsToPlatoon(self, validUnits, 'Attack', 'GrowthFormation')
+                    bMergedPlatoons = true
+                    break
+                end
             end
         end
     end
@@ -934,7 +952,7 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                 if unitCats.ARTILLERY and unitCats.TECH2 then
                     if unitThreat == 0 and unit.Blueprint.Weapon then
                         for _, weapon in unit.Blueprint.Weapon do
-                            if weapon.RangeCategory == 'UWRC_IndirectFire' or StringFind(weapon.WeaponCategory or 'nope', 'Artillery') then
+                            if weapon.RangeCategory == 'UWRC_IndirectFire' or string.find(weapon.WeaponCategory or 'nope', 'Artillery') then
                                 local unitDps = RUtils.CalculatedDPSRNG(weapon)
                                 unitThreat = (unitDps * 0.3)
                             end
@@ -2073,5 +2091,117 @@ function CheckDefenseClusters(aiBrain, position, platoonMaxWeaponRange, movement
             end
         end
         return false
+    end
+end
+
+function GetBestPlatoonShieldPos(platoonUnits, shieldUnit, shieldPos, target)
+    local bestPosition = nil
+    local maxCoveredUnits = 0
+    local shieldRadius = (shieldUnit.Blueprint.Defense.Shield.ShieldSize - 1 or 0) / 2
+    local shieldRadiusSq = shieldRadius * shieldRadius
+
+    local shieldOffline = shieldUnit.MyShield.DepletedByEnergy or shieldUnit.MyShield.DepletedByDamage
+
+    if shieldOffline then
+        -- Logic for when the shield is offline
+        local furthestDistanceSq = 0
+        local targetPos = target:GetPosition()
+        local targetWeaponRange = target['rngdata'].MaxWeaponRange or 0
+
+        -- Iterate over platoon units to find the furthest ally unit from the enemy position
+        for _, unit in ipairs(platoonUnits) do
+            if not unit.Dead and unit ~= shieldUnit then
+                local unitPos = unit:GetPosition()
+                local rx = unitPos[1] - targetPos[1]
+                local rz = unitPos[3] - targetPos[3]
+                local distanceSq = rx * rx + rz * rz
+                if distanceSq > furthestDistanceSq then
+                    furthestDistanceSq = distanceSq
+                    bestPosition = unitPos
+                end
+            end
+        end
+
+        -- If no valid furthest ally, fallback to moving directly away from the enemy position
+        if not bestPosition then
+            local rx = shieldPos[1] - targetPos[1]
+            local rz = shieldPos[3] - targetPos[3]
+            local norm = math.sqrt(rx * rx + rz * rz)
+            local fallbackPos = Vector(
+                shieldPos[1] + (rx / norm) * targetWeaponRange + 5,
+                shieldPos[2],
+                shieldPos[3] + (rz / norm) * targetWeaponRange + 5
+            )
+            --LOG('Shield is offline but cant find furtherest unit so returning a position outside the enemies weapon range')
+            bestPosition = fallbackPos
+        end
+        --LOG('Shield is offline so returning furtherest unit')
+        return bestPosition
+    end
+
+    local potentialOffsets = {
+        {dx = -shieldRadius, dz = -shieldRadius},
+        {dx = -shieldRadius, dz = shieldRadius},
+        {dx = shieldRadius, dz = -shieldRadius},
+        {dx = shieldRadius, dz = shieldRadius},
+        {dx = 0, dz = 0}, -- Center position for flexibility
+    }
+
+    for _, offset in ipairs(potentialOffsets) do
+        local potentialPos = Vector(
+            shieldPos[1] + offset.dx,
+            shieldPos[2],
+            shieldPos[3] + offset.dz
+        )
+
+        -- Evaluate coverage for this position
+        local coveredUnits = 0
+        local otherUnitTypes = false
+        for _, unit in ipairs(platoonUnits) do
+            local unitCats = unit.Blueprint.CategoriesHash
+            if not unit.Dead and not unitCats.SHIELD and not unitCats.SCOUT then
+                otherUnitTypes = true
+                local unitPos = unit:GetPosition()
+                local rx = unitPos[1] - potentialPos[1]
+                local rz = unitPos[3] - potentialPos[3]
+                local distanceSq = rx * rx + rz * rz
+                if distanceSq <= shieldRadiusSq then
+                    coveredUnits = coveredUnits + 1
+                end
+            end
+        end
+        if not otherUnitTypes then
+            --LOG('The loop for the shield found no other unit types so it will return nil')
+        end
+
+        -- Update the best position if coverage is higher
+        if coveredUnits > maxCoveredUnits then
+            maxCoveredUnits = coveredUnits
+            bestPosition = potentialPos
+        end
+    end
+
+    
+    if not bestPosition[1] then
+        --LOG('Shield position being returned is nil')
+        return nil
+    else
+        --LOG('Shield position being returned is '..tostring(bestPosition[1])..':'..tostring(bestPosition[2]))
+        return bestPosition
+    end
+end
+
+function IssueNavigationMove(unit, position)
+    if unit.Dead then
+        return
+    end
+    if unit.GetNavigator then
+        local navigator = unit:GetNavigator()
+        if navigator then
+            navigator:SetGoal(position)
+        end
+    else
+        IssueClearCommands({unit})
+        IssueMove({unit},position)
     end
 end

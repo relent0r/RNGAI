@@ -40,15 +40,22 @@ local NoSmallFrys = function (self, aiBrain)
     end
 end
 
+local InitialBuildQueueComplete = function(self, aiBrain, builderManager)
+    if aiBrain.InitialBuildQueueComplete then
+        return 0
+    end
+    return 820
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Small',
     BuildersType = 'FactoryBuilder',
     Builder {
         BuilderName = 'RNGAI Initial Queue Small',
         PlatoonTemplate = 'InitialBuildQueueRNG',
-        Priority = 820, -- After Second Engie Group
+        Priority = 820,
+        PriorityFunction = InitialBuildQueueComplete, -- This will be updated by the factory manager
         BuilderConditions = {
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 120 } }, -- don't build after 6 minutes
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -66,21 +73,6 @@ BuilderGroup {
         },
         BuilderType = 'Land',
     },
-    --[[
-    Builder {
-        BuilderName = 'RNGAI Factory T3 Amphib Attack Small',
-        PlatoonTemplate = 'RNGAIT3AmphibAttackQueue',
-        Priority = 550, -- After Second Engie Group
-        BuilderConditions = {
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
-            { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
-            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-    },]]
 }
 
 BuilderGroup {
@@ -89,9 +81,9 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Initial Queue Large',
         PlatoonTemplate = 'InitialBuildQueueRNG',
-        Priority = 820, -- After Second Engie Group
+        Priority = 820, 
+        PriorityFunction = InitialBuildQueueComplete, -- This will be updated by the factory manager
         BuilderConditions = {
-            { UCBC, 'LessThanGameTimeSecondsRNG', { 120 } }, -- don't build after 6 minutes
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Land',
@@ -112,24 +104,6 @@ BuilderGroup {
             TechLevel = 2
         },
     },
-    --[[
-    Builder {
-        BuilderName = 'RNGAI Factory T3 Amphib Attack Large',
-        PlatoonTemplate = 'RNGAIT3AmphibAttackQueue',
-        Priority = 555,
-        BuilderConditions = {
-            { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.50}},
-            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Land',
-        BuilderData = {
-            TechLevel = 3
-        },
-    },]]
 }
 
 BuilderGroup {
@@ -632,7 +606,7 @@ BuilderGroup {
             UseFormation = 'None',
             AggressiveMove = true,
             ThreatSupport = 0,
-            PlatoonLimit = 18,
+            PlatoonLimit = 25,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL,
                 categories.DEFENSE,
@@ -692,7 +666,7 @@ BuilderGroup {
             UseFormation = 'None',
             AggressiveMove = true,
             ThreatSupport = 0,
-            PlatoonLimit = 18,
+            PlatoonLimit = 25,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL,
                 categories.STRUCTURE * categories.ENERGYPRODUCTION,
@@ -918,7 +892,7 @@ BuilderGroup {
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
-            PlatoonLimit = 18,
+            PlatoonLimit = 25,
             AggressiveMove = true,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL * categories.LAND,
@@ -960,7 +934,7 @@ BuilderGroup {
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             UseFormation = 'None',
-            PlatoonLimit = 18,
+            PlatoonLimit = 25,
             AggressiveMove = true,
             TargetSearchPriorities = {
                 categories.STRUCTURE * categories.ENERGYPRODUCTION,
@@ -1089,7 +1063,7 @@ BuilderGroup {
             UseFormation = 'None',
             AggressiveMove = true,
             ThreatSupport = 0,
-            PlatoonLimit = 18,
+            PlatoonLimit = 25,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL * categories.LAND,
                 categories.STRUCTURE * categories.ENERGYPRODUCTION,
@@ -1130,7 +1104,7 @@ BuilderGroup {
             LocationType = 'LocationType',
             UseFormation = 'None',
             AggressiveMove = true,
-            PlatoonLimit = 18,
+            PlatoonLimit = 25,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL * categories.LAND,
                 categories.STRUCTURE * categories.ENERGYPRODUCTION,

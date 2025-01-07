@@ -1866,7 +1866,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                     end
                 end
             end
-            if retUnit and targetShields > 0 then
+            if retUnit and targetShields > 0 and platoon.CurrentPlatoonThreatAntiSurface > 0 then
                 local platoonUnits = platoon:GetPlatoonUnits()
                 for _, w in platoonUnits do
                     if not w.Dead then
@@ -3304,24 +3304,24 @@ GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface
                     brainThreats.enemySurface = brainThreats.enemySurface + commanderThreat
                     brainThreats.enemyTotal = brainThreats.enemyTotal + commanderThreat
                 else
-                    if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil then
+                    if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil and not bp.CategoriesHash.STRUCTURE then
                         brainThreats.enemySurface = brainThreats.enemySurface + bp.Defense.SurfaceThreatLevel*mult
                         brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.SurfaceThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > enemyMaxRadius then
                             enemyMaxRadius = bp.Weapon[1].MaxRadius
                         end
-                        if includeStructure and bp.CategoriesHash.STRUCTURE then
-                            if bp.CategoriesHash.TACTICALMISSILEPLATFORM then
-                                mult=0.1
-                            else
-                                mult=1.5
+                    end
+                    if includeStructure and bp.Defense.SurfaceThreatLevel ~= nil and bp.CategoriesHash.STRUCTURE then
+                        if bp.CategoriesHash.TACTICALMISSILEPLATFORM then
+                            mult=0.1
+                        else
+                            mult=1.5
+                        end
+                        if v.GetFractionComplete and v:GetFractionComplete() > 0.7 then
+                            if bp.CategoriesHash.DIRECTFIRE then
+                                RNGINSERT(brainThreats.enemyStructureUnits, v)
                             end
-                            if v.GetFractionComplete and v:GetFractionComplete() > 0.7 then
-                                if bp.CategoriesHash.DIRECTFIRE then
-                                    RNGINSERT(brainThreats.enemyStructureUnits, v)
-                                end
-                                brainThreats.enemyStructure = brainThreats.enemyStructure + bp.Defense.SurfaceThreatLevel
-                            end
+                            brainThreats.enemyStructure = brainThreats.enemyStructure + bp.Defense.SurfaceThreatLevel
                         end
                     end
                     if includeSub and bp.Defense.SubThreatLevel ~= nil then
@@ -3365,15 +3365,15 @@ GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface
                     brainThreats.allyTotal = brainThreats.allyTotal + commanderThreat
                     RNGINSERT(brainThreats.allyACUUnits, v)
                 else
-                    if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil then
+                    if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil and not bp.CategoriesHash.STRUCTURE then
                         brainThreats.allySurface = brainThreats.allySurface + bp.Defense.SurfaceThreatLevel*mult
                         brainThreats.allyTotal = brainThreats.allyTotal + bp.Defense.SurfaceThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > allyMaxRadius then
                             allyMaxRadius = bp.Weapon[1].MaxRadius
                         end
-                        if includeStructure and bp.CategoriesHash.STRUCTURE then
-                            brainThreats.allyStructure = brainThreats.allyStructure + bp.Defense.SurfaceThreatLevel
-                        end
+                    end
+                    if includeStructure and bp.CategoriesHash.STRUCTURE and bp.Defense.SurfaceThreatLevel ~= nil then
+                        brainThreats.allyStructure = brainThreats.allyStructure + bp.Defense.SurfaceThreatLevel
                     end
                     if includeSub and bp.Defense.SubThreatLevel ~= nil then
                         brainThreats.allySub = brainThreats.allySub + bp.Defense.SubThreatLevel*mult
@@ -5611,6 +5611,11 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
     local operatingArea = aiBrain.OperatingAreas['BaseDMZArea']
     local baseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea'] * 1.5
     local homeLocation = platoon.Home or aiBrain.BrainIntel.StartPos
+    local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
+    local zoneType
+    if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
+        zoneType = 'Land'
+    end
     if aiBrain.EnemyIntel.HighPriorityTargetAvailable then
         if platoon then
             platPos = platoon.Pos or platoon:GetPlatoonPosition()
@@ -5620,6 +5625,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
         if avoid then
             rangeCheck = 9
         end
+
         if platPos then
             local platDistance = VDist3Sq(platPos, aiBrain.BrainIntel.StartPos)
             if platDistance < (aiBrain.EnemyIntel.ClosestEnemyBase / rangeCheck) then
@@ -5630,7 +5636,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                         local unitPos = v.object:GetPosition()
                         local unitDist = VDist3Sq(unitPos,homeLocation)
                         if naval then
-                            if not unitCats.HOVER and not unitCats.AIR and PositionInWater(v.position) then
+                            if (not unitCats.HOVER or unitCats.HOVER and platoon.CurrentPlatoonThreatAntiSurface > 0) and (not unitCats.AIR or unitCats.AIR and platoon.CurrentPlatoonThreatAntiAir > 0) and PositionInWater(unitPos) then
                                 closestTarget = v.object
                             end
                         elseif platoon.MovementLayer == 'Air' then
@@ -5674,7 +5680,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                                 end
                             end
                             if naval then
-                                if not unitCats.HOVER and PositionInWater(v.Position) then
+                                if (not unitCats.HOVER or unitCats.HOVER and platoon.CurrentPlatoonThreatAntiSurface > 0) and (not unitCats.AIR or unitCats.AIR and platoon.CurrentPlatoonThreatAntiAir > 0) and PositionInWater(v.Position) then
                                     local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
                                     local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
                                     if tempPoint > highestPriority then
@@ -5686,12 +5692,30 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                                 end
                             else
                                 if not unitCats.SCOUT then
+                                    local priorityModifier = 1
                                     local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
-                                    local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
-                                    if tempPoint > highestPriority then
-                                        if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
-                                            highestPriority = tempPoint
-                                            closestTarget = v.unit
+                                    local tempPoint
+                                    if zoneType == 'Land' then
+                                        local enemyThreat = 0
+                                        local zoneId = MAP:GetZoneID(v.Position,aiBrain.Zones.Land.index)
+                                        local landZone = aiBrain.Zones.Land.zones[zoneId]
+                                        if landZone then
+                                            enemyThreat = enemyThreat + landZone.enemylandthreat
+                                            for _, v in landZone.edges do
+                                                enemyThreat = enemyThreat + v.zone.enemylandthreat
+                                            end
+                                            if landZone.friendlydirectfireantisurfacethreat > enemyThreat * 1.5 then
+                                                priorityModifier = 0.5
+                                            end
+                                        end
+                                    end
+                                    if v.priority * priorityModifier >= 250 then
+                                        tempPoint = (v.priority * priorityModifier + (v.danger or 0))/RNGMAX(targetDistance,30*30)
+                                        if tempPoint > highestPriority and highestPriority >= 250 then
+                                            if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
+                                                highestPriority = tempPoint
+                                                closestTarget = v.unit
+                                            end
                                         end
                                     end
                                 end

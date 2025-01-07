@@ -47,6 +47,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 return
             end
             local aiBrain = self:GetBrain()
+            self.MergeType = 'AirFighterMergeStateMachine'
             self.BaseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
             self.BaseMilitaryArea = aiBrain.OperatingAreas['BaseMilitaryArea']
             self.BaseEnemyArea = aiBrain.OperatingAreas['BaseEnemyArea']
@@ -394,7 +395,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                         local aPlatDistance = VDist2Sq(platPos[1],platPos[3],aPlatPos[1],aPlatPos[3])
                         local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],self.Home[1],self.Home[3])
                         if aPlatToHomeDistance < distanceToHome then
-                            local platoonValue = aPlatDistance * aPlatDistance / aPlatAirThreat
+                            local platoonValue = aPlatDistance / aPlatAirThreat
                             --RNGLOG('Platoon Distance '..aPlatDistance)
                             --RNGLOG('Weighting is '..platoonValue)
                             if not closestPlatoonValue or platoonValue <= closestPlatoonValue then
@@ -563,7 +564,7 @@ FighterThreatThreads = function(aiBrain, platoon)
             --LOG('CurrentEnemyThreatAntiAir '..platoon.CurrentEnemyThreatAntiAir)
             platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
             --LOG('CurrentPlatoonThreat '..platoon.CurrentPlatoonThreatAntiAir)
-            if not platoon.BuilderData.Retreat and platoon.CurrentEnemyThreatAntiAir > platoon.CurrentPlatoonThreatAntiAir * 1.3 and not platoon.BuilderData.ProtectACU and not platoon.BuilderData.AttackTarget.Blueprint.CategoriesHash.EXPERIMENTAL then
+            if not platoon.BuilderData.Retreat and platoon.CurrentEnemyThreatAntiAir > platoon.CurrentPlatoonThreatAntiAir * 1.2 and not platoon.BuilderData.ProtectACU and not platoon.BuilderData.AttackTarget.Blueprint.CategoriesHash.EXPERIMENTAL then
                 if VDist3Sq(platPos, platoon.Home) > 6400 then
                     platoon.BuilderData = {}
                     platoon:ChangeState(platoon.DecideWhatToDo)

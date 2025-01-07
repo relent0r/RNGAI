@@ -1130,7 +1130,7 @@ GetACUSafeZone = function(aiBrain, cdr, baseOnly)
                         continue
                     end
                     if VDist2Sq(cdr.Position[1], cdr.Position[3], v.pos[1], v.pos[3]) < distSqAway and (cdr.CurrentEnemyThreat > 25 and cdr.CurrentFriendlyInnerCircle < 25 or cdr.CurrentEnemyInnerCircle > 40) 
-                    and v.BuilderManager.Location ~= 'MAIN' then
+                    and v.BuilderManager.BaseType ~= 'MAIN' then
                         if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, v.pos, 15, 'Ally') < 1 then
                             --LOG('Water Local threat too high for retreating to zone to move to')
                             continue
@@ -1161,7 +1161,7 @@ GetACUSafeZone = function(aiBrain, cdr, baseOnly)
                     continue
                 end
                 if VDist2Sq(cdr.Position[1], cdr.Position[3], v.pos[1], v.pos[3]) < distSqAway and (cdr.CurrentEnemyThreat > 25 and cdr.CurrentFriendlyInnerCircle < 25 or cdr.CurrentEnemyInnerCircle > 40) 
-                and v.BuilderManager.Location ~= 'MAIN' then
+                and v.BuilderManager.BaseType ~= 'MAIN' then
                     --LOG('Too dangerous at zone position even though it is close, the zone had this many point defense '..tostring(aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, v.pos, 15, 'Ally')))
                     if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, v.pos, 15, 'Ally') < 1 then
                         --LOG('Local threat too high for retreating to zone to move to')

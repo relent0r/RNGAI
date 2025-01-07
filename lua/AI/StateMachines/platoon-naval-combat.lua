@@ -401,7 +401,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                                 if dist < 225 then
                                     self:Stop()
                                     if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
-                                        local merged = StateUtils.MergeWithNearbyPlatoonsRNG(self, 'NavalCombatBehavior', 60, 25, false)
+                                        local merged = StateUtils.MergeWithNearbyPlatoonsRNG(self, 'NavalCombatBehavior', 65, 25, false)
                                         if not merged then
                                             --self:LogDebug(string.format('We didnt merge for some reason'))
                                         end
@@ -578,7 +578,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                     if dist < 225 then
                         self:Stop()
                         if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
-                            StateUtils.MergeWithNearbyPlatoonsRNG(self, 'NavalCombatBehavior', 60, 25, true)
+                            StateUtils.MergeWithNearbyPlatoonsRNG(self, 'NavalCombatBehavior', 65, 25, true)
                         end
                         self:ChangeState(self.DecideWhatToDo)
                         return

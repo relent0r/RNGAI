@@ -301,7 +301,7 @@ BuilderGroup {
             UseFormation = 'None',
             AggressiveMove = false,
             ThreatSupport = 5,
-            PlatoonLimit = 18,
+            PlatoonLimit = 20,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL,
                 categories.STRUCTURE * categories.ENERGYPRODUCTION,
@@ -341,7 +341,7 @@ BuilderGroup {
             UseFormation = 'None',
             AggressiveMove = false,
             ThreatSupport = 5,
-            PlatoonLimit = 18,
+            PlatoonLimit = 20,
             TargetSearchPriorities = {
                 categories.EXPERIMENTAL,
                 categories.STRUCTURE * categories.ENERGYPRODUCTION,
@@ -377,7 +377,7 @@ BuilderGroup {
         BuilderData = {
             SearchRadius = 'BaseEnemyArea',
             UseFormation = 'None',
-            PlatoonLimit = 18,
+            PlatoonLimit = 20,
             AggressiveMove = false,
             ThreatSupport = 5,
             TargetSearchPriorities = {

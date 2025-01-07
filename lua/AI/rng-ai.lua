@@ -1179,6 +1179,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.ACUEnemyClose = false
         self.EnemyIntel.HighPriorityTargetAvailable = false
         self.EnemyIntel.ACU = {}
+        self.EnemyIntel.HighestPhase = 1
         self.EnemyIntel.NavalPhase = 1
         self.EnemyIntel.LandPhase = 1
         self.EnemyIntel.AirPhase = 1
@@ -3643,28 +3644,46 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.BrainIntel.AirPhase < 2 then
                 if self.smanager.Current.Structure.fact.Air.T2 > 0 then
                     self.BrainIntel.AirPhase = 2
+                    if self.EnemyIntel.HighestPhase < self.BrainIntel.AirPhase then
+                        self.EnemyIntel.HighestPhase = self.BrainIntel.AirPhase
+                    end
                 end
             elseif self.BrainIntel.AirPhase < 3 then
                 if self.smanager.Current.Structure.fact.Air.T3 > 0 then
                     self.BrainIntel.AirPhase = 3
+                    if self.EnemyIntel.HighestPhase < self.BrainIntel.AirPhase then
+                        self.EnemyIntel.HighestPhase = self.BrainIntel.AirPhase
+                    end
                 end
             end
             if self.BrainIntel.LandPhase < 2 then
                 if self.smanager.Current.Structure.fact.Land.T2 > 0 then
                     self.BrainIntel.LandPhase = 2
+                    if self.EnemyIntel.HighestPhase < self.BrainIntel.LandPhase then
+                        self.EnemyIntel.HighestPhase = self.BrainIntel.LandPhase
+                    end
                 end
             elseif self.BrainIntel.LandPhase < 3 then
                 if self.smanager.Current.Structure.fact.Land.T3 > 0 then
                     self.BrainIntel.LandPhase = 3
+                    if self.EnemyIntel.HighestPhase < self.BrainIntel.LandPhase then
+                        self.EnemyIntel.HighestPhase = self.BrainIntel.LandPhase
+                    end
                 end
             end
             if self.BrainIntel.NavalPhase < 2 then
                 if self.smanager.Current.Structure.fact.Naval.T2 > 0 then
                     self.BrainIntel.NavalPhase = 2
+                    if self.EnemyIntel.HighestPhase < self.BrainIntel.NavalPhase then
+                        self.EnemyIntel.HighestPhase = self.BrainIntel.NavalPhase
+                    end
                 end
             elseif self.BrainIntel.NavalPhase < 3 then
                 if self.smanager.Current.Structure.fact.Naval.T3 > 0 then
                     self.BrainIntel.NavalPhase = 3
+                    if self.EnemyIntel.HighestPhase < self.BrainIntel.NavalPhase then
+                        self.EnemyIntel.HighestPhase = self.BrainIntel.NavalPhase
+                    end
                 end
             end
             
@@ -5582,6 +5601,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     v:SetPaused(false)
                     continue
                 end
+                if v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].AirThreat > 0 then
+                    continue
+                end
                 if not v.UnitBeingBuilt then continue end
                 if v.UnitBeingBuilt.Blueprint.CategoriesHash.ENGINEER then continue end
                 if v.UnitBeingBuilt.Blueprint.CategoriesHash.TRANSPORTFOCUS and self:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then continue end
@@ -5599,6 +5621,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     continue
                 end
                 if not v.UnitBeingBuilt then continue end
+                if v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].AirThreat > 0 then
+                    continue
+                end
                 if v.UnitBeingBuilt.Blueprint.CategoriesHash.ENGINEER then continue end
                 if v.UnitBeingBuilt.Blueprint.CategoriesHash.TRANSPORTFOCUS and self:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then continue end
                 --if RNGGETN(units) == 1 then continue end
@@ -5615,6 +5640,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     continue
                 end
                 if not v.UnitBeingBuilt then continue end
+                if v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].AirThreat > 0 then
+                    continue
+                end
                 if v.UnitBeingBuilt.Blueprint.CategoriesHash.ENGINEER then continue end
                 if v.UnitBeingBuilt.Blueprint.CategoriesHash.TRANSPORTFOCUS and self:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then continue end
                 --if RNGGETN(units) == 1 then continue end
@@ -5631,6 +5659,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     continue
                 end
                 if not v.UnitBeingBuilt then continue end
+                if v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].NavalThreat > 0 then
+                    continue
+                end
                 if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
                 if RNGGETN(units) == 1 then continue end
                 if v:IsPaused() then continue end
@@ -5646,6 +5677,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     continue
                 end
                 if not v.UnitBeingBuilt then continue end
+                if v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].NavalThreat > 0 then
+                    continue
+                end
                 if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
                 if RNGGETN(units) == 1 then continue end
                 if v:IsPaused() then continue end
@@ -5661,6 +5695,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     continue
                 end
                 if not v.UnitBeingBuilt then continue end
+                if v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].NavalThreat > 0 then
+                    continue
+                end
                 if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
                 if RNGGETN(units) == 1 then continue end
                 if v:IsPaused() then continue end
@@ -5676,6 +5713,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     continue
                 end
                 if not v.UnitBeingBuilt then continue end
+                if v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].LandThreat > 0 then
+                    continue
+                end
                 if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
                 if RNGGETN(units) <= 2 then continue end
                 if v:IsPaused() then continue end
@@ -5691,6 +5731,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     continue
                 end
                 if not v.UnitBeingBuilt then continue end
+                if v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].LandThreat > 0 then
+                    continue
+                end
                 if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
                 if RNGGETN(units) <= 2 then continue end
                 if v:IsPaused() then continue end
@@ -5706,6 +5749,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     continue
                 end
                 if not v.UnitBeingBuilt then continue end
+                if v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].LandThreat > 0 then
+                    continue
+                end
                 if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
                 if RNGGETN(units) <= 2 then continue end
                 if v:IsPaused() then continue end

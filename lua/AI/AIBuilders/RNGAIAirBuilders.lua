@@ -290,7 +290,7 @@ BuilderGroup {
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             NeverGuardEngineers = true,
-            PlatoonLimit = 25,
+            PlatoonLimit = 35,
             PrioritizedCategories = {
                 categories.EXPERIMENTAL * categories.AIR - categories.UNTARGETABLE,
                 categories.GROUNDATTACK * categories.AIR,

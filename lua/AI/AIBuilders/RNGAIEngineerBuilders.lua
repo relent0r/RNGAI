@@ -772,7 +772,6 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.AIR * categories.FACTORY }},
-                --{ UCBC, 'HaveGreaterThanUnitsInCategoryBeingUpgradedRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND }},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.AIR}},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.AIR * categories.FACTORY - categories.SUPPORTFACTORY }},
                 { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
@@ -795,7 +794,6 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH2 * categories.AIR * categories.FACTORY * categories.SUPPORTFACTORY }},
-                --{ UCBC, 'HaveGreaterThanUnitsInCategoryBeingUpgradedRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.LAND }},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH3 * categories.SUPPORTFACTORY * categories.AIR }},
                 { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.AIR * categories.FACTORY - categories.SUPPORTFACTORY }},
                 { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
@@ -1043,7 +1041,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'EngineerAssistManagerNeedsEngineers', { } },
+            { UCBC, 'EngineerAssistManagerNeedsEngineers', { 'LocationType', 1, 0, 2 } },
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 180 } },
         },
         BuilderData = {
@@ -1060,8 +1058,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'EngineerAssistManagerNeedsEngineers', { } },
-            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH2 }},
+            { UCBC, 'EngineerAssistManagerNeedsEngineers', { 'LocationType', 2, 2, 0 } },
         },
         BuilderData = {
             JobType = 'Assist',
@@ -1077,8 +1074,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
         InstanceCount = 1,
         BuilderConditions = {
-            { UCBC, 'EngineerAssistManagerNeedsEngineers', { } },
-            { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER * categories.TECH3 }},
+            { UCBC, 'EngineerAssistManagerNeedsEngineers', { 'LocationType', 3, 2, 0 } },
         },
         BuilderData = {
             JobType = 'Assist',

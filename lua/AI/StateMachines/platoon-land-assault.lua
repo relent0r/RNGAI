@@ -75,6 +75,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             self.BaseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
             self.BaseMilitaryArea = aiBrain.OperatingAreas['BaseMilitaryArea']
             self.BaseEnemyArea = aiBrain.OperatingAreas['BaseEnemyArea']
+            self.PlatoonLimit = self.PlatoonData.PlatoonLimit or 18
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             self.ScoutUnit = false
             self.atkPri = {}
@@ -121,7 +122,6 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local rangedAttack = self.PlatoonData.RangedAttack and aiBrain.EnemyIntel.EnemyFireBaseDetected
             local enemyACU, enemyACUDistance = StateUtils.GetClosestEnemyACU(aiBrain, self.Pos)
-
             local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius * 0.7, self.EnemyRadius, true, false, true, true)
             if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
                 --self:LogDebug(string.format('DecideWhatToDo we have no antiair threat and there are air units around'))
@@ -854,9 +854,18 @@ ThreatThread = function(aiBrain, platoon)
             return
         end
         local currentPlatoonCount = 0
+        local combatUnits = 0
         local platoonUnits = platoon:GetPlatoonUnits()
         for _, unit in platoonUnits do
+            local unitCats = unit.Blueprint.CategoriesHash
             currentPlatoonCount = currentPlatoonCount + 1
+            if (unitCats.DIRECTFIRE or unitCats.INDIRECTFIRE) and not unitCats.SCOUT then
+                combatUnits = combatUnits + 1
+            end
+        end
+        if combatUnits < 1 then
+            --LOG('The platoon has no combat units')
+            --LOG('Total platoon count is '..tostring(currentPlatoonCount))
         end
         if currentPlatoonCount > platoon.PlatoonLimit then
             platoon.PlatoonFull = true

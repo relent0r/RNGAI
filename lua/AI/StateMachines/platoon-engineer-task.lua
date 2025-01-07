@@ -311,6 +311,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         if eng:IsUnitState("Moving") then
                             if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.MOBILE, pos, 45, 'Enemy') > 0 then
                                 local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.MOBILE, pos, 45, 'Enemy')
+                                local reclaimUnit
                                 for _, eunit in enemyUnits do
                                     local enemyUnitPos = eunit:GetPosition()
                                     if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, eunit) then
@@ -321,6 +322,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                                     IssueClearCommands({eng})
                                                     IssueReclaim({eng}, eunit)
                                                     brokenPathMovement = true
+                                                    reclaimUnit = eunit
+                                                    coroutine.yield(25)
                                                     break
                                                 end
                                             end
@@ -334,13 +337,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                                     IssueClearCommands({eng})
                                                     IssueReclaim({eng}, eunit)
                                                     brokenPathMovement = true
-                                                    coroutine.yield(20)
-                                                    if not IsDestroyed(eunit) and VDist3Sq(eng:GetPosition(), eunit:GetPosition()) < 100 then
-                                                        IssueClearCommands({eng})
-                                                        IssueReclaim({eng}, eunit)
-                                                        coroutine.yield(30)
-                                                    end
-                                                    coroutine.yield(40)
+                                                    reclaimUnit = eunit
+                                                    coroutine.yield(25)
                                                     break
                                                 end
                                             end
@@ -348,8 +346,13 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                             IssueClearCommands({eng})
                                             IssueMove({eng}, RUtils.AvoidLocation(enemyUnitPos, pos, 50))
                                             brokenPathMovement = true
-                                            coroutine.yield(60)
+                                            coroutine.yield(45)
                                         end
+                                    end
+                                end
+                                if brokenPathMovement and reclaimUnit and eng:IsUnitState('Reclaiming') then
+                                    while not IsDestroyed(reclaimUnit) and not IsDestroyed(eng) do
+                                        coroutine.yield(20)
                                     end
                                 end
                             end

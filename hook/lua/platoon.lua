@@ -1510,11 +1510,11 @@ Platoon = Class(RNGAIPlatoonClass) {
                 eng.UnitBeingAssist = nil
                 break
             end
-            if unitToAssist.Blueprint.CategoriesHash.ENERGYPRODUCTION and aiBrain:GetEconomyTrend('ENERGY') > 25 and aiBrain:GetEconomyStored('MASS') == 0 then
+            if unitToAssist.Blueprint.CategoriesHash.ENERGYPRODUCTION and aiBrain:GetEconomyTrend('ENERGY') > ( 10 * aiBrain.EnemyIntel.HighestPhase ) and aiBrain:GetEconomyStored('MASS') == 0 then
                 if not eng:IsPaused() then
                     eng:SetPaused( true )
                 end
-                while aiBrain:GetEconomyTrend('ENERGY') > 25 and aiBrain:GetEconomyStored('MASS') < 20 do
+                while aiBrain:GetEconomyTrend('ENERGY') > ( 10 * aiBrain.EnemyIntel.HighestPhase ) and aiBrain:GetEconomyStored('MASS') < 20 do
                     coroutine.yield(15)
                 end
                 eng:SetPaused( false )

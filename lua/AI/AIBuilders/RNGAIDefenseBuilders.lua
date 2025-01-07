@@ -358,8 +358,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
-            { UCBC, 'CheckTargetInRangeRNG', { 'LocationType', 'T2StrategicMissile', categories.COMMAND + categories.STRUCTURE * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'CheckTMLRequiredRNG', { 'LocationType', 'T2StrategicMissile', categories.COMMAND + categories.STRUCTURE * (categories.TECH2 + categories.TECH3), 1, 3 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1}},
             --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 400, 4000 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.9}},
@@ -696,9 +695,8 @@ BuilderGroup {
         PriorityFunction = ActiveExpansion,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 720 } },
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.TACTICALMISSILEPLATFORM}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.05}},
-            { UCBC, 'CheckTargetInRangeRNG', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'CheckTMLRequiredRNG', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE * (categories.TECH2 + categories.TECH3), 1, 3 } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',

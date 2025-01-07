@@ -50,6 +50,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 self.MovementLayer = self:GetNavigationalLayer()
             end
             local aiBrain = self:GetBrain()
+            self.MergeType = 'LandAAStateMachine'
             self.ZoneType = self.PlatoonData.ZoneType or 'aadefense'
             if aiBrain.EnemyIntel.LandPhase > 1 then
                 self.EnemyRadius = 75
@@ -124,7 +125,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            local threat=RUtils.GrabPosDangerRNG(aiBrain,platPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false)
+            local threat=RUtils.GrabPosDangerRNG(aiBrain,platPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false, true)
             if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then
                 --self:LogDebug(string.format('DecideWhatToDo high threat retreating'))
                 self.retreat=true
@@ -338,7 +339,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         self.target = target
                         if not (unitRole == 'Sniper' or unitRole == 'Silo') and VDist3Sq(unitPos,target:GetPosition())>(unitRange+20)*(unitRange+20) then
                             if not approxThreat then
-                                approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false)
+                                approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false, true)
                             end
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface then
                                 IssueClearCommands({v}) 
@@ -596,27 +597,13 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             end
                             if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>v['rngdata'].MaxWeaponRange/3*v['rngdata'].MaxWeaponRange/3+platoonNum*platoonNum then
                                 if self.dest then
-                                    if v.GetNavigator then
-                                        local navigator = v:GetNavigator()
-                                        if navigator then
-                                            navigator:SetGoal(RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)}))
-                                        end
-                                    else
-                                        IssueClearCommands({v})
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)}))
-                                    end
+                                    local movePos = RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)})
+                                    StateUtils.IssueNavigationMove(v, movePos)
                                     spread=spread+VDist3Sq(unitPos,self.Pos)/v['rngdata'].MaxWeaponRange/v['rngdata'].MaxWeaponRange
                                     snum=snum+1
                                 else
-                                    if v.GetNavigator then
-                                        local navigator = v:GetNavigator()
-                                        if navigator then
-                                            navigator:SetGoal(RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)}))
-                                        end
-                                    else
-                                        IssueClearCommands({v})
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)}))
-                                    end
+                                    local movePos = RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)})
+                                    StateUtils.IssueNavigationMove(v, movePos)
                                     spread=spread+VDist3Sq(unitPos,self.Pos)/v['rngdata'].MaxWeaponRange/v['rngdata'].MaxWeaponRange
                                     snum=snum+1
                                 end

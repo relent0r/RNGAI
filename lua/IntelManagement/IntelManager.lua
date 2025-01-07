@@ -62,7 +62,6 @@ IntelManager = Class {
             ScoutLocationsBuilt = false,
             IntelCoverage = 0,
             MustScoutArea = false,
-            PerimeterExpired = false
         }
         self.MapMaximumValues = {
             MaximumResourceValue = 0,
@@ -522,7 +521,7 @@ IntelManager = Class {
                         local higherValueExists = false
                         if zone.Label ~= mainBaseLabel then
                             for _, resValue in ipairs(labelResourceValue[zone.Label] or {}) do
-                                if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive and zoneSet[resValue.ZoneID].BuilderManager.Location ~= 'MAIN' then
+                                if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive and zoneSet[resValue.ZoneID].BuilderManager.BaseType ~= 'MAIN' then
                                     --LOG('Already have an active factory manager there on label '..tostring(zone.Label))
                                     --LOG('Location is '..tostring(zoneSet[resValue.ZoneID].pos[1])..' : '..tostring(zoneSet[resValue.ZoneID].pos[3]))
                                     higherValueExists = true
@@ -1619,7 +1618,6 @@ IntelManager = Class {
             local intelCoverage = 0
             local mapOwnership = 0
             local mustScoutPresent = false
-            local perimeterExpired = false
             for i=self.MapIntelGridXMin, self.MapIntelGridXMax do
                 local time = GetGameTimeSeconds()
                 for k=self.MapIntelGridZMin, self.MapIntelGridZMax do
@@ -1634,17 +1632,21 @@ IntelManager = Class {
                             intelCoverage = intelCoverage + 1
                         end
                     end
-                    if self.MapIntelGrid[i][k].Perimeter == 'Restricted' and self.MapIntelGrid[i][k].TimeScouted > 180 and self.MapIntelGrid[i][k].Graphs['MAIN'].Land then
-                        perimeterExpired = true
-                    end
+                    local unitsToRemove = {}
                     if not table.empty(self.MapIntelGrid[i][k].EnemyUnits) then
                         for c,b in self.MapIntelGrid[i][k].EnemyUnits do
                             if (b.object and b.object.Dead) then
-                                self.MapIntelGrid[i][k].EnemyUnits[c]=nil
+                                table.insert(unitsToRemove, c)
                             elseif time-b.time>120 or (time-b.time>15 and GetNumUnitsAroundPoint(aiBrain,categories.MOBILE,b.Position,20,'Ally')>3) then
                                 self.MapIntelGrid[i][k].EnemyUnits[c].recent=false
+                                if time-b.time>300 then
+                                    table.insert(unitsToRemove, c)
+                                end
                             end
                         end
+                    end
+                    for _, c in unitsToRemove do
+                        self.MapIntelGrid[i][k].EnemyUnits[c]=nil
                     end
                     local cellStatus = aiBrain.GridPresence:GetInferredStatus(self.MapIntelGrid[i][k].Position)
                     if cellStatus == 'Allied' then
@@ -1655,18 +1657,12 @@ IntelManager = Class {
             end
             self.MapIntelStats.IntelCoverage = intelCoverage / (self.MapIntelGridXRes * self.MapIntelGridZRes) * 100
             self.MapIntelStats.MustScoutArea = mustScoutPresent
-            self.MapIntelStats.PerimeterExpired = perimeterExpired
             aiBrain.BrainIntel.MapOwnership = mapOwnership / aiBrain.IntelManager.CellCount * 100
             if aiBrain.RNGDEBUG then
                 if mustScoutPresent then
                     RNGLOG('mustScoutPresent is true after loop')
                 else
                     RNGLOG('mustScoutPresent is false after loop')
-                end
-                if perimeterExpired then
-                    RNGLOG('perimeterExpired is true after loop')
-                else
-                    RNGLOG('perimeterExpired is false after loop')
                 end
             end
             --LOG('Current Map ownership '..aiBrain.BrainIntel.MapOwnership)
@@ -3939,7 +3935,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                                 if b.type == 'arty' or b.type == 'exp' or b.type == 'pointdefense' then
                                     priority = priority + 100
                                 end
-                                aiBrain.prioritypointshighvalue[c..i..k]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object,time=b.time}
+                                aiBrain.prioritypointshighvalue[c..i..k]={type='raid',Position=b.Position,priority=math.max(priority,250),danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object,time=b.time}
                             end
                         end
                     end
