@@ -274,6 +274,7 @@ IntelManager = Class {
         self:ForkThread(self.IntelGridThread, self.Brain)
         self:ForkThread(self.ZoneExpansionThreadRNG)
         self:ForkThread(self.TacticalIntelCheck)
+        self.Brain:ForkThread(self.Brain.BuildScoutLocationsRNG)
         --self:ForkThread(self.DrawZoneArmyValue)
         if self.Debug then
             self:ForkThread(self.IntelDebugThread)
@@ -3110,7 +3111,7 @@ end
 function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, type)
     -- Should be a multipurpose Expansion query that can provide units, acus a place to go
 
-    local MainPos = aiBrain.BuilderManagers.MAIN.Position
+    local MainPos = aiBrain.BaseManagers.MAIN.Position
     local label, reason = NavUtils.GetLabel('Land', location)
     if not label then
         WARN('No water label returned reason '..reason)

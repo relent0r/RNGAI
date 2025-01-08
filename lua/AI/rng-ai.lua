@@ -1,6 +1,7 @@
 
 local AIDefaultPlansList = import("/lua/aibrainplans.lua").AIPlansList
 local AIUtils = import("/lua/ai/aiutilities.lua")
+local RNGAIGLOBALS = import("/mods/RNGAI/lua/AI/RNGAIGlobals.lua")
 
 local Utilities = import("/lua/utilities.lua")
 local ScenarioUtils = import("/lua/sim/scenarioutilities.lua")
@@ -58,9 +59,13 @@ local RNGGETN = table.getn
 local RNGTableEmpty = table.empty
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local StandardBrain = import("/lua/aibrain.lua").AIBrain
+local StandardBrainOnUnitStopBuild = StandardBrain.OnUnitStopBuild
 local CampaignMapFlag = false
 
 local RNGAIBrainClass = import("/lua/aibrains/base-ai.lua").AIBrain
+local BaseManager = import("/mods/RNGAI/lua/AI/management-framework/managers/base-manager.lua")
+local SimpleEnergyTasks = import("/lua/aibrains/tasks/brain/simple-energy.lua")
+
 AIBrain = Class(RNGAIBrainClass) {
 
     --- Called after `BeginSession`, at this point all props, resources and initial units exist in the map
@@ -97,6 +102,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if string.find(per, 'RNG') then
             self.RNG = true
             self.RNGDEBUG = false
+            RNGAIGLOBALS.RNGAIPresent = true
             ForkThread(RUtils.AIWarningChecks, self)
         end
         if string.find(per, 'RNGStandardExperimental') then
@@ -120,8 +126,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 ScenarioInfo.ArmySetup[self.Name].AIPersonality = string.sub(per, 1, cheatPos - 1)
             end
 
-            self.CurrentPlan = self.AIPlansList[self:GetFactionIndex()][1]
-            self:ForkThread(self.InitialAIThread)
+            --self.CurrentPlan = self.AIPlansList[self:GetFactionIndex()][1]
+            --self:ForkThread(self.InitialAIThread)
 
             self.PlatoonNameCounter = {}
             self.PlatoonNameCounter['AttackForce'] = 0
@@ -1324,7 +1330,9 @@ AIBrain = Class(RNGAIBrainClass) {
 
         self.BuilderManagers = {}
         SUtils.AddCustomUnitSupport(self)
-        self:AddBuilderManagers(self:GetStartVector3f(), 100, 'MAIN', false)
+        --self:AddBuilderManagers(self:GetStartVector3f(), 100, 'MAIN', false)
+        self:SetupBase(self.BrainIntel.StartPos, 'MAIN')
+
         -- Generates the zones and updates the resource marker table with Zone IDs
         --IntelManagerRNG.GenerateMapZonesRNG(self)
 
@@ -1368,6 +1376,29 @@ AIBrain = Class(RNGAIBrainClass) {
         if self.RNGDEBUG then
             self:ForkThread(self.LogDataThreadRNG)
         end
+    end,
+
+    SetupBase = function(self, position, baseName)
+        local baseLayer = 'Land'
+        if RUtils.PositionInWater(position) then
+			baseLayer = 'Water'
+        end
+        LOG('Creating Base Manager')
+        if not self.BaseManagers then
+            self.BaseManagers = {}
+        end
+        self.BaseManagers[baseName] = BaseManager.CreateBaseManager(self, position)
+        LOG('Created Base Manager')
+        local SimpleEnergyTasks = import("/mods/rngai/lua/ai/management-framework/tasks/brain/simple-energy.lua")
+        local SimpleFactoryEngineerTasks = import("/mods/rngai/lua/ai/management-framework/tasks/brain/simple-mobile-engineer.lua")
+        self.BaseManagers[baseName]:AddEngineerBrainTask(SimpleEnergyTasks.EnergyTech1)
+        self.BaseManagers[baseName]:AddFactoryBrainTask(SimpleFactoryEngineerTasks.MobileEngineerTech1)
+        self:ForkThread(self.GetBaseManagerZone, position, baseName, baseLayer)
+        self:ForkThread(self.SetPathableZonesForBase, position, baseName)
+        self:ForkThread(RUtils.SetCoreResources, position, baseName)
+        self:ForkThread(self.GetGraphArea, position, baseName, baseLayer)
+        self:ForkThread(self.GetBaseZone, position, baseName, baseLayer)
+        self:ForkThread(self.GetDefensivePointTable, baseName, 'BaseRestrictedArea', position)
     end,
 
     LogDataThreadRNG = function(self)
@@ -1551,27 +1582,6 @@ AIBrain = Class(RNGAIBrainClass) {
         while true do
             DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea, '0000FF')
             DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea/2, 'FF0000')
-            --[[
-            for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
-                for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
-                    if im.MapIntelGrid[i][k].ScoutPriority > 0 then
-                        DrawCircle(im.MapIntelGrid[i][k].Position, 10, 'FFA500')
-                    end
-                end
-            end]]
-            --[[
-            if self.BuilderManagers['MAIN'].DefensivePoints[1] then
-                for _, v in self.BuilderManagers['MAIN'].DefensivePoints[1] do
-                    DrawCircle(v.Position, 10, 'FFA500')
-                end
-            end
-            if self.BuilderManagers['MAIN'].DefensivePoints[2] then
-                for _, v in self.BuilderManagers['MAIN'].DefensivePoints[2] do
-                    DrawCircle(v.Position, 10, 'FFA500')
-                end
-            end]]
-                    
-
             WaitTicks(2)
         end
     end,
@@ -1615,8 +1625,8 @@ AIBrain = Class(RNGAIBrainClass) {
         else
             multiplier = 1
         end
-        if self.BuilderManagers['MAIN'].Zone then
-            local homeZone = self.BuilderManagers['MAIN'].Zone
+        if self.BaseManagers['MAIN'].Zone then
+            local homeZone = self.BaseManagers['MAIN'].Zone
             if self.Zones.Land.zones[homeZone].resourcevalue > 0 then
                 local homeExtractors = self.Zones.Land.zones[homeZone].resourcevalue
                 local extractorPowerRequired = homeExtractors * (20 * multiplier) + (60 * multiplier)
@@ -1725,7 +1735,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             }
         end
-        self.BuilderManagers[baseName].PathableZones = zoneTable
+        self.BaseManagers[baseName].PathableZones = zoneTable
         --LOG('Pathable zone table for base name '..baseName..' '..repr(self.BuilderManagers[baseName].PathableZones))
     end,
 
@@ -1935,8 +1945,8 @@ AIBrain = Class(RNGAIBrainClass) {
             if graphArea then
                 --LOG('Graph Area for buildermanager is '..graphArea)
                 graphAreaSet = true
-                self.BuilderManagers[baseName].GraphArea = graphArea
-                self.BuilderManagers[baseName].AmphibGraphArea = amphibGraphArea
+                self.BaseManagers[baseName].GraphArea = graphArea
+                self.BaseManagers[baseName].AmphibGraphArea = amphibGraphArea
             end
             if not graphAreaSet then
                 --LOG('Graph Area not set yet')
@@ -1952,15 +1962,15 @@ AIBrain = Class(RNGAIBrainClass) {
             if self.OperatingAreas[area] then
                 local range = self.OperatingAreas[area]
                 local DefensivePoints = RUtils.GenerateDefensivePointTable(self, baseName, range, position)
-                self.BuilderManagers[baseName].DefensivePoints = DefensivePoints
-                --LOG('Defensive Points set for base '..repr(self.BuilderManagers[baseName].DefensivePoints))
+                self.BaseManagers[baseName].DefensivePoints = DefensivePoints
+                --LOG('Defensive Points set for base '..repr(self.BaseManagers[baseName].DefensivePoints))
                 defensivePointTableSet = true
             end
             coroutine.yield(3)
         end
     end,
 
-    GetBaseZone = function(self, position, baseName, baseLayer)
+    GetBaseManagerZone = function(self, position, baseName, baseLayer)
         -- This will set the zone of the factory manager so we don't need to look it up every time
         -- Needs to wait a while for the GraphArea properties to be populated
         local zone
@@ -1977,21 +1987,21 @@ AIBrain = Class(RNGAIBrainClass) {
                 WARN('Missing zone for builder manager land node or no path markers')
             end
             if zone then
-                self.BuilderManagers[baseName].Zone = zone
+                self.BaseManagers[baseName].Zone = zone
                 if zone > -1 then
                     if baseLayer == 'Water' then
                         if not self.Zones.Naval.zones[zone] then
                         end
-                        self.Zones.Naval.zones[zone].BuilderManager = self.BuilderManagers[baseName]
+                        self.Zones.Naval.zones[zone].BaseManagers = self.BaseManagers[baseName]
                     else
                         if not self.Zones.Land.zones[zone] then
                         end
-                        self.Zones.Land.zones[zone].BuilderManager = self.BuilderManagers[baseName]
+                        self.Zones.Land.zones[zone].BaseManagers = self.BaseManagers[baseName]
                     end
                 else
                     WARN('No Zone found at provided position '..tostring(position[1])..':'..tostring(position[3]))
                 end
-                --RNGLOG('Zone is '..self.BuilderManagers[baseName].Zone)
+                LOG('Zone is '..self.BaseManagers[baseName].Zone)
                 zoneSet = true
             else
                 --RNGLOG('No zone for builder manager')
@@ -2202,13 +2212,14 @@ AIBrain = Class(RNGAIBrainClass) {
         local alertThreat = self.BaseMonitor.AlertLevel
         if self.BasePerimeterMonitor then
             for k, v in self.BasePerimeterMonitor do
+                local basePosition = self.BuilderManagers[k].FactoryManager.Location
                 if self.BasePerimeterMonitor[k].LandUnits > 0 then
                     if self.BasePerimeterMonitor[k].LandThreat > alertThreat then
                         if not self.BaseMonitor.AlertsTable[k] then
                             self.BaseMonitor.AlertsTable[k] = {}
                         end
                         if not self.BaseMonitor.AlertsTable[k]['Land'] then
-                            self.BaseMonitor.AlertsTable[k]['Land'] = { Location = k, Position = self.BuilderManagers[k].FactoryManager.Location, Threat = self.BasePerimeterMonitor[k].LandThreat, Type = 'Land' }
+                            self.BaseMonitor.AlertsTable[k]['Land'] = { Location = k, Position = basePosition, Threat = self.BasePerimeterMonitor[k].LandThreat, Type = 'Land' }
                             self.BaseMonitor.AlertSounded = true
                             self:ForkThread(self.BaseMonitorAlertTimeoutRNG, self.BuilderManagers[k].FactoryManager.Location, k, 'Land')
                             self.BaseMonitor.ActiveAlerts = self.BaseMonitor.ActiveAlerts + 1
@@ -2221,9 +2232,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             self.BaseMonitor.AlertsTable[k] = {}
                         end
                         if not self.BaseMonitor.AlertsTable[k]['Air'] then
-                            self.BaseMonitor.AlertsTable[k]['Air'] = { Location = k, Position = self.BuilderManagers[k].FactoryManager.Location, Threat = self.BasePerimeterMonitor[k].AirThreat, Type = 'Air' }
+                            self.BaseMonitor.AlertsTable[k]['Air'] = { Location = k, Position = basePosition, Threat = self.BasePerimeterMonitor[k].AirThreat, Type = 'Air' }
                             self.BaseMonitor.AlertSounded = true
-                            self:ForkThread(self.BaseMonitorAlertTimeoutRNG, self.BuilderManagers[k].FactoryManager.Location, k, 'Air')
+                            self:ForkThread(self.BaseMonitorAlertTimeoutRNG, basePosition, k, 'Air')
                             self.BaseMonitor.ActiveAlerts = self.BaseMonitor.ActiveAlerts + 1
                         end
                     end
@@ -2234,9 +2245,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             self.BaseMonitor.AlertsTable[k] = {}
                         end
                         if not self.BaseMonitor.AlertsTable[k]['Naval'] then
-                            self.BaseMonitor.AlertsTable[k]['Naval'] = { Location = k, Position = self.BuilderManagers[k].FactoryManager.Location, Threat = self.BasePerimeterMonitor[k].NavalThreat, Type = 'Naval' }
+                            self.BaseMonitor.AlertsTable[k]['Naval'] = { Location = k, Position = basePosition, Threat = self.BasePerimeterMonitor[k].NavalThreat, Type = 'Naval' }
                             self.BaseMonitor.AlertSounded = true
-                            self:ForkThread(self.BaseMonitorAlertTimeoutRNG, self.BuilderManagers[k].FactoryManager.Location, k, 'Naval')
+                            self:ForkThread(self.BaseMonitorAlertTimeoutRNG, basePosition, k, 'Naval')
                             self.BaseMonitor.ActiveAlerts = self.BaseMonitor.ActiveAlerts + 1
                         end
                     end
@@ -2646,7 +2657,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local enemyBrains = {}
         local allyCount = 0
         local enemyCount = 0
-        local MainPos = self.BuilderManagers.MAIN.Position
+        local MainPos = self.BaseManagers.MAIN.Position
         local teams = {}
         local teamKey = 1
         for _, v in ArmyBrains do
@@ -2861,9 +2872,9 @@ AIBrain = Class(RNGAIBrainClass) {
             local enemyIndex = selfEnemy:GetArmyIndex()
             local closest
             local expansionName
-            local mainDist = VDist2Sq(self.BuilderManagers['MAIN'].Position[1], self.BuilderManagers['MAIN'].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
+            local mainDist = VDist2Sq(self.BaseManagers['MAIN'].Position[1], self.BaseManagers['MAIN'].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
             --RNGLOG('Main base Position '..repr(self.BuilderManagers['MAIN'].Position))
-            for k, v in self.BuilderManagers do
+            for k, v in self.BaseManagers do
                 --RNGLOG('build k is '..k)
                 if v.Layer ~= 'Water' then
                     if v.FactoryManager.LocationActive and v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) > 0 then
@@ -2907,7 +2918,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 --RNGLOG('Average should be '..((CenterPointAngle + EnemyAngle) / 2))
                 self.BrainIntel.CurrentIntelAngle = (CenterPointAngle + EnemyAngle) / 2
             end
-            local structures = GetThreatsAroundPosition(self, self.BuilderManagers.MAIN.Position, 16, true, 'StructuresNotMex')
+            local structures = GetThreatsAroundPosition(self, self.BaseManagers.MAIN.Position, 16, true, 'StructuresNotMex')
             local gameTime = GetGameTimeSeconds()
             for _, struct in structures do
                 local newPos = {struct[1], 0, struct[2]}
@@ -4017,7 +4028,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local eThreatLocations = self.EnemyIntel.EnemyThreatLocations
 
         for _, t in threatTypes do
-            local rawThreats = GetThreatsAroundPosition(self, self.BuilderManagers.MAIN.Position, 16, true, t)
+            local rawThreats = GetThreatsAroundPosition(self, self.BaseManagers.MAIN.Position, 16, true, t)
             for _, raw in rawThreats do
                 local position = {raw[1], GetSurfaceHeight(raw[1], raw[2]),raw[2]}
                 if not eThreatLocations[raw[1]] then
@@ -5845,7 +5856,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     EnemyChokePointTestRNG = function(self)
         local selfIndex = self:GetArmyIndex()
-        local selfStartPos = self.BuilderManagers['MAIN'].Position
+        local selfStartPos = self.BrainIntel.StartPos
         local enemyTestTable = {}
 
         coroutine.yield(Random(80,100))
@@ -6819,11 +6830,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     CDRDataThreads = function(self, unit)
         local ACUFunc = import('/mods/RNGAI/lua/AI/RNGACUFunctions.lua')
-        local im = IntelManagerRNG.GetIntelManager(self)
         local acuUnits = GetListOfUnits(self, categories.COMMAND, false)
-        if not im.MapIntelStats.ScoutLocationsBuilt then
-            self:BuildScoutLocationsRNG()
-        end
         for _, v in acuUnits do
             if not IsDestroyed(v) then
                 self:GetCallBackCheck(v)
@@ -7948,7 +7955,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local hasRun = false
         while not hasRun do
             coroutine.yield(30)
-            local mainManagers = self.BuilderManagers.MAIN
+            local mainManagers = self.BaseManagers.MAIN
             local pool = self:GetPlatoonUniquelyNamed('ArmyPool')
             --LOG('ArmyPool current has '..table.getn(pool:GetPlatoonUnits())..' in it')
             for k,v in pool:GetPlatoonUnits() do
@@ -7962,6 +7969,22 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         --LOG('ACU Should be present now')
+    end,
+
+    ---@param self EasyAIBrain
+    ---@param unit Unit
+    ---@param target Unit
+    ---@param order string
+    OnUnitStopBuild = function(self, unit, target, order)
+        StandardBrainOnUnitStopBuild(self, unit, target, order)
+
+        local aiPlatoon = unit.AIPlatoonReference
+        if aiPlatoon then
+            aiPlatoon.Base:OnUnitStopBuild(unit, target)
+            --aiPlatoon.Base:OnStopBuild(unit, target)
+        end
+
+        LOG("OnUnitStopBuild")
     end,
 
 }

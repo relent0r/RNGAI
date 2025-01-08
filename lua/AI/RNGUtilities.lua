@@ -2281,13 +2281,13 @@ end
 function GetAssisteesRNG(aiBrain, locationType, assisteeType, buildingCategory, assisteeCategory)
     if assisteeType == categories.FACTORY then
         -- Sift through the factories in the location
-        local manager = aiBrain.BuilderManagers[locationType].FactoryManager
+        local manager = aiBrain.BaseManagers[locationType].FactoryManager
         return manager:GetFactoriesWantingAssistance(buildingCategory, assisteeCategory)
     elseif assisteeType == categories.ENGINEER then
-        local manager = aiBrain.BuilderManagers[locationType].EngineerManager
+        local manager = aiBrain.BaseManagers[locationType].EngineerManager
         return manager:GetEngineersWantingAssistance(buildingCategory, assisteeCategory)
     elseif assisteeType == categories.STRUCTURE then
-        local manager = aiBrain.BuilderManagers[locationType].PlatoonFormManager
+        local manager = aiBrain.BaseManagers[locationType].PlatoonFormManager
         return manager:GetUnitsBeingBuilt(buildingCategory, assisteeCategory)
     else
         error('*AI ERROR: Invalid assisteeType - ' .. ToString(assisteeType))
@@ -4909,7 +4909,7 @@ end
 SortScoutingAreasRNG = function(aiBrain, list)
     table.sort(list, function(a, b)
         if a.LastScouted == b.LastScouted then
-            local MainPos = aiBrain.BuilderManagers.MAIN.Position
+            local MainPos = aiBrain.BaseManagers.MAIN.Position
             local distA = VDist2Sq(MainPos[1], MainPos[3], a.Position[1], a.Position[3])
             local distB = VDist2Sq(MainPos[1], MainPos[3], b.Position[1], b.Position[3])
 
@@ -6612,8 +6612,8 @@ function SetCoreResources(aiBrain, position, baseName)
     end
     local resourceTable = table.copy(aiBrain.Zones.Land.zones[targetZone].resourcemarkers)
     if resourceTable then
-        if aiBrain.BuilderManagers[baseName] then
-            aiBrain.BuilderManagers[baseName].CoreResources = resourceTable
+        if aiBrain.BaseManagers[baseName] then
+            aiBrain.BaseManagers[baseName].CoreResources = resourceTable
         end
     elseif string.find(baseName, 'Naval Area') then
         return {}

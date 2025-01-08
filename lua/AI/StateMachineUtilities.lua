@@ -610,6 +610,28 @@ GetClosestBaseRNG = function(aiBrain, platoon, platoonPosition, naval)
     end
 end
 
+GetClosestBaseManager = function(aiBrain, position, naval)
+    local closestBase
+    local closestBaseDistance
+    if aiBrain.BaseManagers and position[1] then
+        for baseName, base in aiBrain.BaseManagers do
+            if (naval and base.Layer == 'Water' or not naval) then
+                local location = base.Position
+                local dx = position[1] - location[1]
+                local dz = position[3] - location[3]
+                local baseDistance = dx * dx + dz * dz
+                if not closestBaseDistance or baseDistance < closestBaseDistance then
+                    closestBase = baseName
+                    closestBaseDistance = baseDistance
+                end
+            end
+        end
+        if closestBase then
+            return closestBase, closestBaseDistance
+        end
+    end
+end
+
 
 GetClosestPlatoonRNG = function(platoon, platoonName, mergeType, distanceLimit, angleTargetPos)
     local aiBrain = platoon:GetBrain()

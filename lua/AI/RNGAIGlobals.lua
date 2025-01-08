@@ -1,0 +1,2 @@
+RNGAIPresent = false
+ZoneGenerationComplete = false

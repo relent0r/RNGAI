@@ -1,9 +1,80 @@
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local IntelManager = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
+local RNGAIGLOBALS = import("/mods/RNGAI/lua/AI/RNGAIGlobals.lua")
 
 function OnBombReleased(weapon, projectile)
     -- Placeholder
 
+end
+
+function OnCreate(unit)
+    if RNGAIGLOBALS.RNGAIPresent then
+        if not RNGAIGLOBALS.ZoneGenerationComplete then
+            while not RNGAIGLOBALS.ZoneGenerationComplete do
+                --M28Profiler.FunctionProfiler(sFunctionRef, M28Profiler.refProfilerEnd)
+                coroutine.yield(1)
+                --M28Profiler.FunctionProfiler(sFunctionRef, M28Profiler.refProfilerStart)
+            end
+            LOG('Zone Generation is now complete and we will rerun OnCreate for this unit '..unit.UnitId)
+            if unit and unit.UnitId and not unit.Dead and unit.GetAIBrain then
+                OnCreate(unit)
+            end
+        else
+            if unit and unit.UnitId and not unit.Dead and unit.GetAIBrain then
+                if EntityCategoryContains(categories.ENGINEER, unit) then
+                    local aiBrain = unit:GetAIBrain()
+                    if aiBrain.RNG then
+                        LOG('Engineer belongs to an RNG brain')
+                        local base = StateUtils.GetClosestBaseManager(aiBrain, unit:GetPosition())
+                        if not aiBrain.BaseManagers[base].EngineerManager then
+                            WaitForManagers(unit, aiBrain.BaseManagers[base].EngineerManager)
+                        elseif aiBrain.BaseManagers[base].EngineerManager then
+                            local em = aiBrain.BaseManagers[base].EngineerManager
+                            em:AddEngineer(unit)
+                            LOG('Engineer has been added to engineer manager')
+                        end
+                    end
+                elseif EntityCategoryContains(categories.STRUCTURE * categories.FACTORY, unit) then
+                    local aiBrain = unit:GetAIBrain()
+                    if aiBrain.RNG then
+                        LOG('Factory belongs to an RNG brain')
+                        local base = StateUtils.GetClosestBaseManager(aiBrain, unit:GetPosition())
+                        if not aiBrain.BaseManagers[base].FactoryManager then
+                            WaitForManagers(unit, aiBrain.BaseManagers[base].FactoryManager)
+                        elseif aiBrain.BaseManagers[base].FactoryManager then
+                            local fm = aiBrain.BaseManagers[base].FactoryManager
+                            fm:AddFactory(unit)
+                            LOG('Engineer has been added to engineer manager')
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+function WaitForManagers(unit, manager)
+    local aiBrain = unit:GetAIBrain()
+    if not manager then
+        LOG('No Engineer Manager on brain yet')
+        local timeout = 0
+        while not manager do
+            --M28Profiler.FunctionProfiler(sFunctionRef, M28Profiler.refProfilerEnd)
+            coroutine.yield(20)
+            LOG('Waiting for manager to be present')
+            timeout = timeout + 1
+            if timeout > 10 then
+                return
+            end
+            --M28Profiler.FunctionProfiler(sFunctionRef, M28Profiler.refProfilerStart)
+        end
+        local m = manager
+        if EntityCategoryContains(categories.ENGINEER, unit) then
+            m:AddEngineer(unit)
+        elseif EntityCategoryContains(categories.STRUCTURE * categories.FACTORY, unit) then
+            m:AddFactory(unit)
+        end
+    end
 end
 
 function OnKilled(self, instigator, type, overkillRatio)

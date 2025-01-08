@@ -2,6 +2,12 @@ local RNGEventCallbacks = import('/mods/RNGAI/lua/AI/RNGEventCallbacks.lua')
 
 local RNGUnitClass = Unit
 Unit = Class(RNGUnitClass) {
+
+    OnCreate = function(self)
+        RNGUnitClass.OnCreate(self)
+        if RNGUnitClass.OnCreate then ForkThread(RNGEventCallbacks.OnCreate, self) end
+    end,
+
     OnStopBeingCaptured = function(self, captor)
         RNGUnitClass.OnStopBeingCaptured(self, captor)
         RNGEventCallbacks.OnStopBeingCaptured(self, captor)

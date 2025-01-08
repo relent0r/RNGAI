@@ -1523,8 +1523,8 @@ StructureManager = Class {
         local DistanceToBase
         local LowestDistanceToBase
         local lowestUnit = false
-        local base = aiBrain.BuilderManagers['MAIN']
-        local BasePosition = aiBrain.BuilderManagers['MAIN'].Position
+        local base = aiBrain.BaseManagers['MAIN']
+        local BasePosition = aiBrain.BaseManagers['MAIN'].Position
         if extractorTable then
             --LOG('extractorTable present in upgrade validation')                
             if not allTiers then
@@ -1696,7 +1696,7 @@ StructureManager = Class {
                 end
             end
             if upgradedExtractor and not upgradedExtractor.Dead then
-                if VDist3Sq(upgradedExtractor:GetPosition(), aiBrain.BuilderManagers['MAIN'].Position) < 6400 then
+                if VDist3Sq(upgradedExtractor:GetPosition(), aiBrain.BrainIntel.StartPos) < 6400 then
                     upgradedExtractor.MAINBASE = true
                 end
                 if not table.empty(aiBrain.EnemyIntel.TML) then

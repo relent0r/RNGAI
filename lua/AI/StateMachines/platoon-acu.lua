@@ -48,7 +48,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             end
             local brain = self:GetBrain()
             self.cdr = self:GetPlatoonUnits()[1]
-            self.cdr.Active = true
             self.CheckEarlyLandFactory = false
             if self.PlatoonData.LocationType then
                 self.LocationType = self.PlatoonData.LocationType
@@ -56,14 +55,14 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 self.LocationType = 'MAIN'
             end
             --StartDrawThreads(brain, self)
-            if brain:GetCurrentUnits(categories.FACTORY) < 1 then
-                --LOG('ACU Has no factory so is requesting a new builder')
-                if brain.BuilderManagers[self.LocationType].FactoryManager and not brain.BuilderManagers[self.LocationType].FactoryManager.LocationActive then
-                    brain.BuilderManagers[self.LocationType].FactoryManager.LocationActive = true
-                end
-                self:ChangeState(self.EngineerTask)
-                return
-            end
+            --if brain:GetCurrentUnits(categories.FACTORY) < 1 then
+            --    --LOG('ACU Has no factory so is requesting a new builder')
+            --    if brain.BuilderManagers[self.LocationType].FactoryManager and not brain.BuilderManagers[self.LocationType].FactoryManager.LocationActive then
+            --        brain.BuilderManagers[self.LocationType].FactoryManager.LocationActive = true
+            --    end
+            --    self:ChangeState(self.EngineerTask)
+            --    return
+            --end
             local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
             local currenEnemy = brain:GetCurrentEnemy()
             if currenEnemy then
@@ -78,8 +77,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            self:ChangeState(self.DecideWhatToDo)
-            return
+            LOG('ACU has started')
+            local factories = brain:GetCurrentUnits(categories.FACTORY)
+            if factories < 1 then
+                self:ChangeState(self.EstablishBase)
+                return
+            else
+                self:ChangeState(self.DecideWhatToDo)
+                return
+            end
         end,
     },
 
@@ -245,8 +251,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
-                    cdr.BuilderManagerData.EngineerManager:RemoveUnitRNG(cdr)
-                    brain.BuilderManagers['MAIN'].EngineerManager:AddUnitRNG(cdr, true)
+                    self.Base.EngineerManager:RemoveEngineer(cdr)
+                    brain.BaseManagers['MAIN'].EngineerManager:AddEngineer(cdr, true)
                 end
                 local expansionCount = 0
                 for k, manager in brain.BuilderManagers do
@@ -1059,9 +1065,10 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local brain = self:GetBrain()
             if self.LocationType then
                 local builderData
-                local engManager = brain.BuilderManagers[self.LocationType].EngineerManager
-                local builder = engManager:GetHighestBuilder('Any', {self.cdr})
+                local engManager = self.Base
+                local builder = engManager:FindEngineerTask(self)
                 if builder then
+                    LOG('Builder Task '..tostring(repr(builder)))
                     builderData = builder:GetBuilderData(self.LocationType)
                     if builderData.Assist then
                         --LOG('ACU is trying to run assist builder')
@@ -1893,7 +1900,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 RUtils.EngineerTryRepair(brain, cdr, v[1], v.Position)
                                 --LOG('ACU attempting to build in while loop')
                                 brain:BuildStructure(cdr, v[1],v[2],v[3])
-                                while (cdr.Active and not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr.Active and cdr:IsUnitState('Building')) or (cdr.Active and cdr:IsUnitState("Moving")) do
+                                while (not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or cdr:IsUnitState('Building') or cdr:IsUnitState("Moving") do
                                     coroutine.yield(10)
                                     if cdr.Caution then
                                         break
@@ -1921,8 +1928,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 cdr.EngineerBuildQueue={}
                 if expansionMarkerCount > 1 then
                     local expansionCount = 0
-                    for k, manager in brain.BuilderManagers do
-                        if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and not RNGTableEmpty(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
+                    for k, manager in brain.BaseManagers do
+                        if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and manager.FactoryManager:GetTotalFactoryCount() > 0 and k ~= 'MAIN' then
                             expansionCount = expansionCount + 1
                             if expansionCount > 1 then
                                 break
@@ -1930,8 +1937,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if expansionCount < 2 then
-                        if not brain.BuilderManagers['ZONE_'..object.id] then
-                            brain:AddBuilderManagers(object.pos, 60, 'ZONE_'..object.id, true)
+                        if not brain.BaseManagers['ZONE_'..object.id] then
+                            brain:SetupBase(object.pos, 'ZONE_'..object.id)
+                            --brain:AddBuilderManagers(object.pos, 60, 'ZONE_'..object.id, true)
                             local baseValues = {}
                             local highPri = false
                             local markerType
@@ -1955,11 +1963,11 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                             --SPEW('*AI DEBUG: AINewExpansionBase(): validNames for Expansions ' .. repr(validNames))
                             local pick = validNames[ Random(1, RNGGETN(validNames)) ]
-                            cdr.BuilderManagerData.EngineerManager:RemoveUnitRNG(cdr)
+                            self.Base.EngineerManager:RemoveEngineer(cdr)
                             --RNGLOG('Adding CDR to expansion manager')
-                            brain.BuilderManagers['ZONE_'..object.id].EngineerManager:AddUnitRNG(cdr, true)
+                            brain.BaseManagers['ZONE_'..object.id].EngineerManager:AddEngineer(cdr, true)
                             --SPEW('*AI DEBUG: AINewExpansionBase(): ARMY ' .. brain:GetArmyIndex() .. ': Expanding using - ' .. pick .. ' at location ' .. baseName)
-                            import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(brain, 'ZONE_'..object.id, pick)
+                            --import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(brain, 'ZONE_'..object.id, pick)
 
                             -- The actual factory building part
                             local baseTmplDefault = import('/lua/BaseTemplates.lua')
@@ -1969,12 +1977,14 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             elseif expansionMarkerCount > 1 then
                                 factoryCount = 1
                             end
+                            LOG('Factory count to build at expansion is '..tostring(factoryCount))
                             for i=1, factoryCount do
                                 if i == 2 and brain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 0.85 then
                                     break
                                 end
                                 
                                 local whatToBuild = brain:DecideWhatToBuild(cdr, 'T1LandFactory', buildingTmpl)
+                                LOG('We want to build '..tostring(whatToBuild))
                                 if CanBuildStructureAt(brain, whatToBuild, object.pos) then
                                     local newEntry = {whatToBuild, {object.pos[1], object.pos[3], 0}, false, Position=object.pos}
                                     RNGINSERT(cdr.EngineerBuildQueue, newEntry)
@@ -1988,7 +1998,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     local newEntry = {whatToBuild, {relativeLoc[1], relativeLoc[3], 0}, false, Position=relativeLoc}
                                     RNGINSERT(cdr.EngineerBuildQueue, newEntry)
                                 end
-                                --LOG('ACU Build Queue is '..repr(cdr.EngineerBuildQueue))
+                                LOG('ACU Build Queue is '..tostring(repr(cdr.EngineerBuildQueue)))
                                 if not table.empty(cdr.EngineerBuildQueue) then
                                     for k,v in cdr.EngineerBuildQueue do
                                         if abortBuild then
@@ -2002,11 +2012,11 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                                 RUtils.EngineerTryReclaimCaptureArea(brain, cdr, v.Position, 5)
                                                 RUtils.EngineerTryRepair(brain, cdr, v[1], v.Position)
                                                 brain:BuildStructure(cdr, v[1],v[2],v[3])
-                                                while (cdr.Active and not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr.Active and cdr:IsUnitState('Building')) or (cdr.Active and cdr:IsUnitState("Moving")) do
+                                                while (not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or cdr:IsUnitState('Building') or cdr:IsUnitState("Moving") do
                                                     coroutine.yield(10)
                                                     if cdr.Caution then
-                                                        cdr.BuilderManagerData.EngineerManager:RemoveUnitRNG(cdr)
-                                                        brain.BuilderManagers['MAIN'].EngineerManager:AddUnitRNG(cdr, true)
+                                                        self.Base.EngineerManager:RemoveEngineer(cdr)
+                                                        brain.BaseManagers['MAIN'].EngineerManager:AddEngineer(cdr, true)
                                                         ----self:LogDebug(string.format('cdr.Caution while building expansion'))
                                                         self:ChangeState(self.DecideWhatToDo)
                                                         return
@@ -2070,11 +2080,11 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                                 RUtils.EngineerTryReclaimCaptureArea(brain, cdr, v.Position, 5)
                                                 RUtils.EngineerTryRepair(brain, cdr, v[1], v.Position)
                                                 brain:BuildStructure(cdr, v[1],v[2],v[3])
-                                                while (cdr.Active and not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr.Active and cdr:IsUnitState('Building')) or (cdr.Active and cdr:IsUnitState("Moving")) do
+                                                while (not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or cdr:IsUnitState('Building') or cdr:IsUnitState("Moving") do
                                                     coroutine.yield(10)
                                                     if cdr.Caution then
-                                                        cdr.BuilderManagerData.EngineerManager:RemoveUnitRNG(cdr)
-                                                        brain.BuilderManagers['MAIN'].EngineerManager:AddUnitRNG(cdr, true)
+                                                        self.Base.EngineerManager:RemoveEngineer(cdr)
+                                                        brain.BaseManagers['MAIN'].EngineerManager:AddEngineer(cdr, true)
                                                         ----self:LogDebug(string.format('cdr.Caution while building expansion'))
                                                         self:ChangeState(self.DecideWhatToDo)
                                                         return
@@ -2305,6 +2315,750 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
             end
             self.BuilderData = {}
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
+    EstablishBase = State {
+
+        StateName = 'EstablishBase',
+
+        --- The platoon will establish the first base
+        ---@param self AIPlatoonACUBehavior
+        Main = function(self)
+        local aiBrain = self:GetBrain()
+        local ecoMultiplier = aiBrain.EcoManager.EcoMultiplier
+        local buildingTmpl, buildingTmplFile, baseTmpl, baseTmplFile, baseTmplDefault, templateKey
+        local whatToBuild, location, relativeLoc
+        local hydroPresent = false
+        local airFactoryBuilt = false
+        local buildLocation = false
+        local buildMassPoints = {}
+        local buildMassDistantPoints = {}
+        local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+        local NavUtils = import("/lua/sim/navutils.lua")
+        local borderWarning = false
+        local factionIndex = aiBrain:GetFactionIndex()
+        local platoonUnits = self:GetPlatoonUnits()
+        local eng
+        LOG('CommanderInitialize')
+        if not aiBrain.ACUData[eng.EntityId].CDRBrainThread then
+            aiBrain:CDRDataThreads(eng)
+        end
+        for k, v in platoonUnits do
+            if not v.Dead and EntityCategoryContains(categories.ENGINEER, v) then
+                IssueClearCommands({v})
+                if not eng then
+                    eng = v
+                end
+            end
+        end
+        eng.Initializing = true
+        if factionIndex < 5 then
+            templateKey = 'ACUBaseTemplate'
+            baseTmplFile = import('/mods/rngai/lua/AI/AIBaseTemplates/RNGAIACUBaseTemplate.lua' or '/lua/BaseTemplates.lua')
+        else
+            templateKey = 'BaseTemplates'
+            baseTmplFile = import('/lua/BaseTemplates.lua')
+        end
+        baseTmplDefault = import('/lua/BaseTemplates.lua')
+        buildingTmplFile = import('/lua/BuildingTemplates.lua')
+        buildingTmpl = buildingTmplFile[('BuildingTemplates')][factionIndex]
+        local engPos = eng:GetPosition()
+        local massMarkers = RUtils.AIGetMassMarkerLocations(aiBrain, false, false)
+        local closeMarkers = 0
+        local distantMarkers = 0
+        local closestMarker = false
+        for k, marker in massMarkers do
+            local dx = engPos[1] - marker.Position[1]
+            local dz = engPos[3] - marker.Position[3]
+            local markerDist = dx * dx + dz * dz
+            if markerDist < 165 and NavUtils.CanPathTo('Amphibious', engPos, marker.Position) then
+                closeMarkers = closeMarkers + 1
+                RNGINSERT(buildMassPoints, marker)
+                if closeMarkers > 3 then
+                    break
+                end
+            elseif markerDist < 484 and NavUtils.CanPathTo('Amphibious', engPos, marker.Position) then
+                distantMarkers = distantMarkers + 1
+                --RNGLOG('CommanderInitializeAIRNG : Inserting Distance Mass Point into table')
+                RNGINSERT(buildMassDistantPoints, marker)
+                if distantMarkers > 3 then
+                    break
+                end
+            end
+            if not closestMarker or closestMarker > markerDist then
+                closestMarker = markerDist
+            end
+        end
+        if aiBrain.RNGDEBUG then
+            RNGLOG('Number of close mass points '..table.getn(buildMassPoints))
+            RNGLOG('Number of distant mass points '..table.getn(buildMassDistantPoints))
+        end
+        --RNGLOG('CommanderInitializeAIRNG : Closest Marker Distance is '..closestMarker)
+        local closestHydro = RUtils.ClosestResourceMarkersWithinRadius(aiBrain, engPos, 'Hydrocarbon', 65, false, false, false)
+        --RNGLOG('CommanderInitializeAIRNG : HydroTable '..repr(closestHydro))
+        if closestHydro and NavUtils.CanPathTo('Amphibious', engPos, closestHydro.Position) then
+            --RNGLOG('CommanderInitializeAIRNG : Hydro Within 65 units of spawn')
+            hydroPresent = true
+        end
+        local inWater = RUtils.PositionInWater(engPos)
+        if inWater then
+            buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile[templateKey][factionIndex], 'T1SeaFactory', eng, false, nil, nil, true)
+        else
+            if aiBrain.RNGEXP then
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile[templateKey][factionIndex], 'T1AirFactory', eng, false, nil, nil, true)
+                airFactoryBuilt = true
+            else
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplFile[templateKey][factionIndex], 'T1LandFactory', eng, false, nil, nil, true)
+            end
+        end
+        if aiBrain.RNGDEBUG then
+            RNGLOG('RNG ACU wants to build '..whatToBuild)
+        end
+        --LOG('BuildLocation '..repr(buildLocation))
+        if borderWarning and buildLocation and whatToBuild then
+            IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+            borderWarning = false
+        elseif buildLocation and whatToBuild then
+            aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+        else
+            WARN('No buildLocation or whatToBuild during ACU initialization')
+        end
+        --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, false})
+        --RNGLOG('CommanderInitializeAIRNG : Attempt structure build')
+        --RNGLOG('CommanderInitializeAIRNG : Number of close mass markers '..closeMarkers)
+        --RNGLOG('CommanderInitializeAIRNG : Number of distant mass markers '..distantMarkers)
+        --RNGLOG('CommanderInitializeAIRNG : Close Mass Point table has '..RNGGETN(buildMassPoints)..' items in it')
+        --RNGLOG('CommanderInitializeAIRNG : Distant Mass Point table has '..RNGGETN(buildMassDistantPoints)..' items in it')
+        --RNGLOG('CommanderInitializeAIRNG : Mex build stage 1')
+        if not RNGTableEmpty(buildMassPoints) then
+            whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
+            for k, v in buildMassPoints do
+                --RNGLOG('CommanderInitializeAIRNG : MassPoint '..repr(v))
+                if v.Position[1] - playableArea[1] <= 8 or v.Position[1] >= playableArea[3] - 8 or v.Position[3] - playableArea[2] <= 8 or v.Position[3] >= playableArea[4] - 8 then
+                    borderWarning = true
+                end
+                if borderWarning and v.Position and whatToBuild then
+                    IssueBuildMobile({eng}, v.Position, whatToBuild, {})
+                    borderWarning = false
+                elseif buildLocation and whatToBuild then
+                    aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                else
+                    WARN('No buildLocation or whatToBuild during ACU initialization')
+                end
+                --aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
+                buildMassPoints[k] = nil
+                break
+            end
+            buildMassPoints = aiBrain:RebuildTable(buildMassPoints)
+        elseif not RNGTableEmpty(buildMassDistantPoints) then
+            --RNGLOG('CommanderInitializeAIRNG : Try build distant mass point marker')
+            whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
+            for k, v in buildMassDistantPoints do
+                --RNGLOG('CommanderInitializeAIRNG : MassPoint '..repr(v))
+                IssueMove({eng}, v.Position )
+                while VDist2Sq(engPos[1],engPos[3],v.Position[1],v.Position[3]) > 165 do
+                    coroutine.yield(5)
+                    engPos = eng:GetPosition()
+                    local dx = engPos[1] - v.Position[1]
+                    local dz = engPos[3] - v.Position[3]
+                    local engDist = dx * dx + dz * dz
+                    if eng:IsIdleState() and engDist > 165 then
+                        break
+                    end
+                end
+                IssueClearCommands({eng})
+                if v.Position[1] - playableArea[1] <= 8 or v.Position[1] >= playableArea[3] - 8 or v.Position[3] - playableArea[2] <= 8 or v.Position[3] >= playableArea[4] - 8 then
+                    borderWarning = true
+                end
+                if borderWarning and v.Position and whatToBuild then
+                    IssueBuildMobile({eng}, v.Position, whatToBuild, {})
+                    borderWarning = false
+                elseif buildLocation and whatToBuild then
+                    aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                else
+                    WARN('No buildLocation or whatToBuild during ACU initialization')
+                end
+                --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
+                buildMassDistantPoints[k] = nil
+                break
+            end
+            buildMassDistantPoints = aiBrain:RebuildTable(buildMassDistantPoints)
+        end
+        coroutine.yield(5)
+        while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+            coroutine.yield(5)
+        end
+        --RNGLOG('CommanderInitializeAIRNG : Close Mass Point table has '..RNGGETN(buildMassPoints)..' after initial build')
+        --RNGLOG('CommanderInitializeAIRNG : Distant Mass Point table has '..RNGGETN(buildMassDistantPoints)..' after initial build')
+        if hydroPresent then
+            buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true, 4)
+            if borderWarning and buildLocation and whatToBuild then
+                IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                borderWarning = false
+            elseif buildLocation and whatToBuild then
+                aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+            else
+                WARN('No buildLocation or whatToBuild during ACU initialization')
+            end
+        else
+            for i=1, 2 do
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true, 4)
+                if borderWarning and buildLocation and whatToBuild then
+                    IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                    borderWarning = false
+                elseif buildLocation and whatToBuild then
+                    aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                else
+                    WARN('No buildLocation or whatToBuild during ACU initialization')
+                end
+            end
+        end
+        --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, false})
+        if not RNGTableEmpty(buildMassPoints) then
+            whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
+            if RNGGETN(buildMassPoints) < 3 then
+                --RNGLOG('CommanderInitializeAIRNG : Less than 4 total mass points close')
+                for k, v in buildMassPoints do
+                    --RNGLOG('CommanderInitializeAIRNG : MassPoint '..repr(v))
+                    if v.Position[1] - playableArea[1] <= 8 or v.Position[1] >= playableArea[3] - 8 or v.Position[3] - playableArea[2] <= 8 or v.Position[3] >= playableArea[4] - 8 then
+                        borderWarning = true
+                    end
+                    if borderWarning and v.Position and whatToBuild then
+                        IssueBuildMobile({eng}, v.Position, whatToBuild, {})
+                        borderWarning = false
+                    elseif buildLocation and whatToBuild then
+                        aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                    else
+                        WARN('No buildLocation or whatToBuild during ACU initialization')
+                    end
+                    --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
+                    buildMassPoints[k] = nil
+                end
+                buildMassPoints = aiBrain:RebuildTable(buildMassPoints)
+            else
+                --RNGLOG('CommanderInitializeAIRNG : Greater than 3 total mass points close')
+                for i=1, 2 do
+                    --RNGLOG('CommanderInitializeAIRNG : MassPoint '..repr(buildMassPoints[i]))
+                    if buildMassPoints[i].Position[1] - playableArea[1] <= 8 or buildMassPoints[i].Position[1] >= playableArea[3] - 8 or buildMassPoints[i].Position[3] - playableArea[2] <= 8 or buildMassPoints[i].Position[3] >= playableArea[4] - 8 then
+                        borderWarning = true
+                    end
+                    if borderWarning and buildMassPoints[i].Position and whatToBuild then
+                        IssueBuildMobile({eng}, buildMassPoints[i].Position, whatToBuild, {})
+                        borderWarning = false
+                    elseif buildMassPoints[i].Position and whatToBuild then
+                        aiBrain:BuildStructure(eng, whatToBuild, {buildMassPoints[i].Position[1], buildMassPoints[i].Position[3], 0}, false)
+                    else
+                        WARN('No buildLocation or whatToBuild during ACU initialization')
+                    end
+                    --aiBrain:BuildStructure(eng, whatToBuild, {buildMassPoints[i].Position[1], buildMassPoints[i].Position[3], 0}, false)
+                    --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {buildMassPoints[i].Position[1], buildMassPoints[i].Position[3], 0}, false})
+                    buildMassPoints[i] = nil
+                end
+                buildMassPoints = aiBrain:RebuildTable(buildMassPoints)
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true, 4)
+                --RNGLOG('CommanderInitializeAIRNG : Insert Second energy production '..whatToBuild.. ' at '..repr(buildLocation))
+                if borderWarning and buildLocation and whatToBuild then
+                    IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                    borderWarning = false
+                elseif buildLocation and whatToBuild then
+                    aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                else
+                    WARN('No buildLocation or whatToBuild during ACU initialization')
+                end
+                --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, false})
+                if RNGGETN(buildMassPoints) < 2 then
+                    whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
+                    for k, v in buildMassPoints do
+                        if v.Position[1] - playableArea[1] <= 8 or v.Position[1] >= playableArea[3] - 8 or v.Position[3] - playableArea[2] <= 8 or v.Position[3] >= playableArea[4] - 8 then
+                            borderWarning = true
+                        end
+                        if borderWarning and v.Position and whatToBuild then
+                            IssueBuildMobile({eng}, v.Position, whatToBuild, {})
+                            borderWarning = false
+                        elseif v.Position and whatToBuild then
+                            aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                        else
+                            WARN('No buildLocation or whatToBuild during ACU initialization')
+                        end
+                        buildMassPoints[k] = nil
+                    end
+                    buildMassPoints = aiBrain:RebuildTable(buildMassPoints)
+                end
+            end
+        elseif not table.empty(buildMassDistantPoints) then
+            --RNGLOG('CommanderInitializeAIRNG : Distancemasspoints has '..RNGGETN(buildMassDistantPoints))
+            whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
+            if RNGGETN(buildMassDistantPoints) < 3 then
+                for k, v in buildMassDistantPoints do
+                    --RNGLOG('CommanderInitializeAIRNG : MassPoint '..repr(v))
+                    if CanBuildStructureAt(aiBrain, 'ueb1103', v.Position) then
+                        IssueMove({eng}, v.Position )
+                        while VDist2Sq(engPos[1],engPos[3],v.Position[1],v.Position[3]) > 165 do
+                            coroutine.yield(5)
+                            engPos = eng:GetPosition()
+                            if eng:IsIdleState() and VDist2Sq(engPos[1],engPos[3],v.Position[1],v.Position[3]) > 165 then
+                                break
+                            end
+                        end
+                        IssueClearCommands({eng})
+                        if v.Position[1] - playableArea[1] <= 8 or v.Position[1] >= playableArea[3] - 8 or v.Position[3] - playableArea[2] <= 8 or v.Position[3] >= playableArea[4] - 8 then
+                            borderWarning = true
+                        end
+                        if borderWarning and v.Position and whatToBuild then
+                            IssueBuildMobile({eng}, v.Position, whatToBuild, {})
+                            borderWarning = false
+                        elseif v.Position and whatToBuild then
+                            aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                        else
+                            WARN('No buildLocation or whatToBuild during ACU initialization')
+                        end
+                        --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
+                        coroutine.yield(5)
+                        while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                            coroutine.yield(5)
+                        end
+                    end
+                    buildMassDistantPoints[k] = nil
+                end
+                buildMassDistantPoints = aiBrain:RebuildTable(buildMassDistantPoints)
+            end
+        end
+        coroutine.yield(5)
+        while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+            coroutine.yield(5)
+        end
+        if not RNGTableEmpty(buildMassPoints) then
+            whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
+            for k, v in buildMassPoints do
+                if v.Position[1] - playableArea[1] <= 8 or v.Position[1] >= playableArea[3] - 8 or v.Position[3] - playableArea[2] <= 8 or v.Position[3] >= playableArea[4] - 8 then
+                    borderWarning = true
+                end
+                if borderWarning and v.Position and whatToBuild then
+                    IssueBuildMobile({eng}, v.Position, whatToBuild, {})
+                    borderWarning = false
+                elseif v.Position and whatToBuild then
+                    aiBrain:BuildStructure(eng, whatToBuild, {v.Position[1], v.Position[3], 0}, false)
+                else
+                    WARN('No buildLocation or whatToBuild during ACU initialization')
+                end
+                --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, {v.Position[1], v.Position[3], 0}, false})
+                buildMassPoints[k] = nil
+            end
+            coroutine.yield(5)
+            while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                coroutine.yield(5)
+            end
+        end
+        local energyCount = 3
+        --RNGLOG('CommanderInitializeAIRNG : Energy Production stage 2')
+        if not hydroPresent and (closeMarkers > 0 or distantMarkers > 0) then
+            IssueClearCommands({eng})
+            --RNGLOG('CommanderInitializeAIRNG : No hydro present, we should be building a little more power')
+            if closeMarkers < 4 then
+                if closeMarkers < 4 and distantMarkers > 1 then
+                    energyCount = 2
+                else
+                    energyCount = 1
+                end
+            else
+                energyCount = 2
+            end
+            for i=1, energyCount do
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true, 4)
+                if buildLocation and whatToBuild then
+                    --RNGLOG('CommanderInitializeAIRNG : Execute Build Structure with the following data')
+                    --RNGLOG('CommanderInitializeAIRNG : whatToBuild '..whatToBuild)
+                    --RNGLOG('CommanderInitializeAIRNG : Build Location '..repr(buildLocation))
+                    if borderWarning and buildLocation and whatToBuild then
+                        IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                        borderWarning = false
+                    elseif buildLocation and whatToBuild then
+                        aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                    else
+                        WARN('No buildLocation or whatToBuild during ACU initialization')
+                    end
+                else
+                    -- This is a backup to avoid a power stall
+                    buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, false, categories.STRUCTURE * categories.FACTORY, 12, true, 4)
+                    if borderWarning and buildLocation and whatToBuild then
+                        IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                        borderWarning = false
+                    elseif buildLocation and whatToBuild then
+                        aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                    else
+                        WARN('No buildLocation or whatToBuild during ACU initialization')
+                    end
+                    --aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                end
+            end
+        else
+           --RNGLOG('Hydro is present we shouldnt need any more pgens during initialization')
+        end
+        if not hydroPresent and closeMarkers > 3 then
+            --RNGLOG('CommanderInitializeAIRNG : not hydro and close markers greater than 3, Try to build land factory')
+            buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1LandFactory', eng, true, categories.MASSEXTRACTION, 15, true)
+            if borderWarning and buildLocation and whatToBuild then
+                IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                borderWarning = false
+            elseif buildLocation and whatToBuild then
+                aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+            else
+                WARN('No buildLocation or whatToBuild during ACU initialization')
+            end
+            --aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+        end
+        if not hydroPresent then
+            local failureCount = 0
+            while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                if failureCount < 10 and GetEconomyStored(aiBrain, 'MASS') == 0 and GetEconomyTrend(aiBrain, 'MASS') == 0 then
+                    if not eng:IsPaused() then
+                        failureCount = failureCount + 1
+                        eng:SetPaused( true )
+                        coroutine.yield(7)
+                    end
+                elseif eng:IsPaused() then
+                    eng:SetPaused( false )
+                end
+                coroutine.yield(5)
+            end
+        end
+        if not hydroPresent then
+            IssueClearCommands({eng})
+            --RNGLOG('CommanderInitializeAIRNG : No hydro present, we should be building a little more power')
+            if closeMarkers > 0 then
+                if closeMarkers < 4 then
+                    if closeMarkers < 4 and distantMarkers > 1 then
+                        energyCount = 2
+                    else
+                        energyCount = 1
+                    end
+                else
+                    energyCount = 2
+                end
+            end
+            for i=1, energyCount do
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true, 4)
+                if buildLocation and whatToBuild then
+                    --RNGLOG('CommanderInitializeAIRNG : Execute Build Structure with the following data')
+                    --RNGLOG('CommanderInitializeAIRNG : whatToBuild '..whatToBuild)
+                    --RNGLOG('CommanderInitializeAIRNG : Build Location '..repr(buildLocation))
+                    if borderWarning and buildLocation and whatToBuild then
+                        IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                        borderWarning = false
+                    elseif buildLocation and whatToBuild then
+                        aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                    else
+                        WARN('No buildLocation or whatToBuild during ACU initialization')
+                    end
+                else
+                    -- This is a backup to avoid a power stall
+                    buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, false, categories.STRUCTURE * categories.FACTORY, 12, true, 4)
+                    if borderWarning and buildLocation and whatToBuild then
+                        IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                        borderWarning = false
+                    elseif buildLocation and whatToBuild then
+                        aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                    else
+                        WARN('No buildLocation or whatToBuild during ACU initialization')
+                    end
+                    --aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                end
+            end
+        end
+        if not hydroPresent then
+            local failureCount = 0
+            while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                if failureCount < 10 and GetEconomyStored(aiBrain, 'MASS') == 0 and GetEconomyTrend(aiBrain, 'MASS') == 0 then
+                    if not eng:IsPaused() then
+                        failureCount = failureCount + 1
+                        eng:SetPaused( true )
+                        coroutine.yield(7)
+                    end
+                elseif eng:IsPaused() then
+                    eng:SetPaused( false )
+                end
+                coroutine.yield(5)
+            end
+        end
+        --RNGLOG('CommanderInitializeAIRNG : CDR Initialize almost done, should have just finished final t1 land')
+        if hydroPresent and (closeMarkers > 0 or distantMarkers > 0) then
+            engPos = eng:GetPosition()
+            --RNGLOG('CommanderInitializeAIRNG : Hydro Distance is '..VDist3Sq(engPos,closestHydro.Position))
+            if VDist3Sq(engPos,closestHydro.Position) > 144 then
+                IssueMove({eng}, closestHydro.Position )
+                while VDist3Sq(engPos,closestHydro.Position) > 100 do
+                    coroutine.yield(5)
+                    engPos = eng:GetPosition()
+                    if eng:IsIdleState() and VDist3Sq(engPos,closestHydro.Position) > 100 then
+                        break
+                    end
+                    --RNGLOG('CommanderInitializeAIRNG : Still inside movement loop')
+                    --RNGLOG('Distance is '..VDist3Sq(engPos,closestHydro.Position))
+                end
+                --RNGLOG('CommanderInitializeAIRNG : We should be close to the hydro now')
+            end
+            IssueClearCommands({eng})
+            local assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
+            local assistee = false
+            --RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
+            local assistListCount = 0
+            while not not RNGTableEmpty(assistList) do
+                coroutine.yield( 15 )
+                assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
+                assistListCount = assistListCount + 1
+                --LOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
+                if assistListCount > 10 then
+                    --RNGLOG('assistListCount is still empty after 7.5 seconds')
+                    break
+                end
+            end
+            if not RNGTableEmpty(assistList) then
+                -- only have one unit in the list; assist it
+                local low = false
+                local bestUnit = false
+                for k,v in assistList do
+                    --DUNCAN - check unit is inside assist range 
+                    local unitPos = v:GetPosition()
+                    local UnitAssist = v.UnitBeingBuilt or v.UnitBeingAssist or v
+                    local NumAssist = RNGGETN(UnitAssist:GetGuards())
+                    local dist = VDist2Sq(engPos[1], engPos[3], unitPos[1], unitPos[3])
+                    --RNGLOG('CommanderInitializeAIRNG : Assist distance for commander assist is '..dist)
+                    -- Find the closest unit to assist
+                    if (not low or dist < low) and NumAssist < 20 and dist < 225 then
+                        low = dist
+                        bestUnit = v
+                    end
+                end
+                assistee = bestUnit
+            end
+            if assistee  then
+                IssueClearCommands({eng})
+                eng.UnitBeingAssist = assistee.UnitBeingBuilt or assistee.UnitBeingAssist or assistee
+                --RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
+                IssueGuard({eng}, eng.UnitBeingAssist)
+                coroutine.yield(30)
+                while eng and not eng.Dead and not eng:IsIdleState() do
+                    if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
+                        break
+                    end
+                    -- stop if our target is finished
+                    if eng.UnitBeingAssist:GetFractionComplete() == 1 and not eng.UnitBeingAssist:IsUnitState('Upgrading') then
+                        IssueClearCommands({eng})
+                        break
+                    end
+                    coroutine.yield(30)
+                end
+                if ((closeMarkers + distantMarkers > 2) or (closeMarkers + distantMarkers > 1 and GetEconomyStored(aiBrain, 'MASS') > 120)) and eng.UnitBeingAssist:GetFractionComplete() == 1 then
+                    if aiBrain.MapSize >=20 or aiBrain.BrainIntel.AirPlayer then
+                        buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 15, true)
+                        if borderWarning and buildLocation and whatToBuild then
+                            airFactoryBuilt = true
+                            IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                            borderWarning = false
+                        elseif buildLocation and whatToBuild then
+                            airFactoryBuilt = true
+                            aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                        else
+                            WARN('No buildLocation or whatToBuild during ACU initialization')
+                        end
+                        --aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                    else
+                        buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1LandFactory', eng, true, categories.HYDROCARBON, 15, true)
+                        if borderWarning and buildLocation and whatToBuild then
+                            IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                            borderWarning = false
+                        elseif buildLocation and whatToBuild then
+                            aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                        else
+                            WARN('No buildLocation or whatToBuild during ACU initialization')
+                        end
+                        local failureCount = 0
+                        while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                            if failureCount < 10 and GetEconomyStored(aiBrain, 'MASS') == 0 and GetEconomyTrend(aiBrain, 'MASS') == 0 then
+                                if not eng:IsPaused() then
+                                    failureCount = failureCount + 1
+                                    eng:SetPaused( true )
+                                    coroutine.yield(7)
+                                end
+                            elseif eng:IsPaused() then
+                                eng:SetPaused( false )
+                            end
+                            coroutine.yield(5)
+                        end
+                        if not aiBrain:IsAnyEngineerBuilding(categories.FACTORY * categories.AIR) then
+                            if aiBrain.MapSize > 5 then
+                                --RNGLOG("Attempt to build air factory")
+                                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 25, true)
+                                if borderWarning and buildLocation and whatToBuild then
+                                    airFactoryBuilt = true
+                                    IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                                    borderWarning = false
+                                elseif buildLocation and whatToBuild then
+                                    airFactoryBuilt = true
+                                    aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                                else
+                                    WARN('No buildLocation or whatToBuild during ACU initialization')
+                                end
+                                --aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                            end
+                        else
+                            local assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.FACTORY * categories.AIR, categories.ALLUNITS)
+                            local assistee = false
+                            if not RNGTableEmpty(assistList) then
+                                -- only have one unit in the list; assist it
+                                local low = false
+                                local bestUnit = false
+                                for k,v in assistList do
+                                    --DUNCAN - check unit is inside assist range 
+                                    local unitPos = v:GetPosition()
+                                    local UnitAssist = v.UnitBeingBuilt or v.UnitBeingAssist or v
+                                    local NumAssist = RNGGETN(UnitAssist:GetGuards())
+                                    local dist = VDist2Sq(engPos[1], engPos[3], unitPos[1], unitPos[3])
+                                    --RNGLOG('CommanderInitializeAIRNG : Assist distance for commander assist is '..dist)
+                                    -- Find the closest unit to assist
+                                    if (not low or dist < low) and NumAssist < 20 and dist < 225 then
+                                        low = dist
+                                        bestUnit = v
+                                    end
+                                end
+                                assistee = bestUnit
+                            end
+                            if assistee  then
+                                IssueClearCommands({eng})
+                                eng.UnitBeingAssist = assistee.UnitBeingBuilt or assistee.UnitBeingAssist or assistee
+                                --RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
+                                IssueGuard({eng}, eng.UnitBeingAssist)
+                                airFactoryBuilt = true
+                                coroutine.yield(30)
+                                while eng and not eng.Dead and not eng:IsIdleState() do
+                                    if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
+                                        break
+                                    end
+                                    -- stop if our target is finished
+                                    if eng.UnitBeingAssist:GetFractionComplete() == 1 and not eng.UnitBeingAssist:IsUnitState('Upgrading') then
+                                        IssueClearCommands({eng})
+                                        break
+                                    end
+                                    coroutine.yield(30)
+                                end
+                            end
+                        end
+                    end
+                    local failureCount = 0
+                    while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                        if failureCount < 10 and GetEconomyStored(aiBrain, 'MASS') == 0 and GetEconomyTrend(aiBrain, 'MASS') == 0 then
+                            if not eng:IsPaused() then
+                                failureCount = failureCount + 1
+                                eng:SetPaused( true )
+                                coroutine.yield(7)
+                            end
+                        elseif eng:IsPaused() then
+                            eng:SetPaused( false )
+                        end
+                        coroutine.yield(5)
+                    end
+                else
+                    --RNGLOG('CommanderInitializeAIRNG : closeMarkers 2 or less or UnitBeingAssist is not complete')
+                    --RNGLOG('CommanderInitializeAIRNG : closeMarkers '..closeMarkers)
+                    --RNGLOG('CommanderInitializeAIRNG : Fraction complete is '..eng.UnitBeingAssist:GetFractionComplete())
+                end
+            end
+            if airFactoryBuilt and aiBrain.EconomyOverTimeCurrent.EnergyIncome < 24 then
+                if aiBrain:IsAnyEngineerBuilding(categories.STRUCTURE * categories.HYDROCARBON) then
+                    local assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
+                    local assistee = false
+                    --RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
+                    local assistListCount = 0
+                    while not not RNGTableEmpty(assistList) do
+                        coroutine.yield( 15 )
+                        assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
+                        assistListCount = assistListCount + 1
+                        --RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
+                        if assistListCount > 10 then
+                            --RNGLOG('assistListCount is still empty after 7.5 seconds')
+                            break
+                        end
+                    end
+                    if not RNGTableEmpty(assistList) then
+                        -- only have one unit in the list; assist it
+                        local low = false
+                        local bestUnit = false
+                        for k,v in assistList do
+                            --DUNCAN - check unit is inside assist range 
+                            local unitPos = v:GetPosition()
+                            local UnitAssist = v.UnitBeingBuilt or v.UnitBeingAssist or v
+                            local NumAssist = RNGGETN(UnitAssist:GetGuards())
+                            local dist = VDist2Sq(engPos[1], engPos[3], unitPos[1], unitPos[3])
+                            --RNGLOG('CommanderInitializeAIRNG : Assist distance for commander assist is '..dist)
+                            -- Find the closest unit to assist
+                            if (not low or dist < low) and NumAssist < 20 and dist < 225 then
+                                low = dist
+                                bestUnit = v
+                            end
+                        end
+                        assistee = bestUnit
+                    end
+                    if assistee  then
+                        IssueClearCommands({eng})
+                        eng.UnitBeingAssist = assistee.UnitBeingBuilt or assistee.UnitBeingAssist or assistee
+                        --RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
+                        IssueGuard({eng}, eng.UnitBeingAssist)
+                        coroutine.yield(30)
+                        while eng and not eng.Dead and not eng:IsIdleState() do
+                            if not eng.UnitBeingAssist or eng.UnitBeingAssist.Dead or eng.UnitBeingAssist:BeenDestroyed() then
+                                break
+                            end
+                            -- stop if our target is finished
+                            if eng.UnitBeingAssist:GetFractionComplete() == 1 and not eng.UnitBeingAssist:IsUnitState('Upgrading') then
+                                IssueClearCommands({eng})
+                                break
+                            end
+                            coroutine.yield(30)
+                        end
+                    end
+                else
+                    --LOG('Current energy income '..aiBrain.EconomyOverTimeCurrent.EnergyIncome)
+                    local energyCount = math.ceil((240 - aiBrain.EconomyOverTimeCurrent.EnergyIncome * 10) / (20 * ecoMultiplier))
+                    --LOG('Current energy income is less than 240')
+                    --LOG('Energy count required '..energyCount)
+                    for i=1, energyCount do
+                        buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1EnergyProduction', eng, true, categories.STRUCTURE * categories.FACTORY, 12, true, 4)
+                        if borderWarning and buildLocation and whatToBuild then
+                            IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
+                            borderWarning = false
+                        elseif buildLocation and whatToBuild then
+                            aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
+                        else
+                            WARN('No buildLocation or whatToBuild during ACU initialization')
+                        end
+                    end
+                    local failureCount = 0
+                    while eng:IsUnitState('Building') or 0<RNGGETN(eng:GetCommandQueue()) do
+                        if GetEconomyStored(aiBrain, 'MASS') == 0 then
+                            if not eng:IsPaused() then
+                                failureCount = failureCount + 1
+                                eng:SetPaused( true )
+                                coroutine.yield(7)
+                            end
+                        elseif eng:IsPaused() then
+                            eng:SetPaused( false )
+                        end
+                        if failureCount > 8 then
+                            IssueClearCommands({eng})
+                            break
+                        end
+                        coroutine.yield(5)
+                    end
+                end
+            end
+        end
+        --RNGLOG('CommanderInitializeAIRNG : CDR Initialize done, setting flags')
+        eng.Initializing = false
+            coroutine.yield(10)
             self:ChangeState(self.DecideWhatToDo)
             return
         end,

@@ -128,7 +128,7 @@ end
 
 function NumCloseMassMarkers(aiBrain, number)
     local massMarkers = RUtils.AIGetMassMarkerLocations(aiBrain, false, false)
-    local engPos = aiBrain.BuilderManagers.MAIN.Position
+    local engPos = aiBrain.BaseManagers.MAIN.Position
     local closeMarkers = 0
     for k, marker in massMarkers do
         if VDist2Sq(marker.Position[1], marker.Position[3],engPos[1], engPos[3]) < 121 then
@@ -147,7 +147,7 @@ function NumCloseMassMarkers(aiBrain, number)
 end
 
 function TMLEnemyStartRangeCheck(aiBrain)
-    local mainPos = aiBrain.BuilderManagers.MAIN.Position
+    local mainPos = aiBrain.BaseManagers.MAIN.Position
     if aiBrain.EnemyIntel.EnemyStartLocations then
         if not table.empty(aiBrain.EnemyIntel.EnemyStartLocations) then
             for e, pos in aiBrain.EnemyIntel.EnemyStartLocations do

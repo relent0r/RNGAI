@@ -10,6 +10,7 @@
   ]]
 local NavUtils = import('/lua/sim/NavUtils.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local RNGAIGLOBALS = import("/mods/RNGAI/lua/AI/RNGAIGlobals.lua")
 local CreatePriorityQueue = import('/mods/RNGAI/lua/FlowAI/framework/utils/PriorityQueue.lua').CreatePriorityQueue
 local DEFAULT_BORDER = 4
 local PLAYABLE_AREA = nil
@@ -851,9 +852,10 @@ function BeginSession()
             map:AddZoneSet(ZoneSetClass)
         end
         END = GetSystemTimeSecondsOnlyForProfileUse()
-       --RNGLOG(string.format('FlowAI framework: Custom zone generation finished (%d found), runtime: %.2f seconds.', table.getn(customZoneSets), END - START ))
+        LOG(string.format('FlowAI framework: Custom zone generation finished (%d found), runtime: %.2f seconds.', table.getn(customZoneSets), END - START ))
+        RNGAIGLOBALS.ZoneGenerationComplete = true
     else
-       --RNGLOG("FlowAI framework: No custom zoning classes found.")
+       LOG("FlowAI framework: No custom zoning classes found.")
     end
 end
 
@@ -880,21 +882,15 @@ function GetMarkersRNG()
 end
 
 function SetMarkerInformation(aiBrain)
-    local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
-    --RNGLOG('Display Marker Adjacency Running '..aiBrain.Nickname)
     while not aiBrain.ZonesInitialized do
-        RNGLOG('Waiting for Zones to Initialize '..aiBrain.Nickname)
+        LOG('Waiting for Zones to Initialize '..aiBrain.Nickname)
         coroutine.yield(20)
     end
     while not NavUtils.IsGenerated() do
-        RNGLOG('Waiting for NavMesh to Initialize '..aiBrain.Nickname)
+        LOG('Waiting for NavMesh to Initialize '..aiBrain.Nickname)
         coroutine.yield(20)
     end
     local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
-    local VDist3Sq = VDist3Sq
-    --aiBrain.armyspots={}
-    --aiBrain.expandspots={}
-    --RNGLOG('Infecting expansions '..aiBrain.Nickname)
     for k,marker in expansionMarkers do
         local expand=false
         local mass=false
@@ -915,25 +911,21 @@ function SetMarkerInformation(aiBrain)
         end
         if expand then
             InfectMarkersRNG(aiBrain,marker, k)
-            --table.insert(aiBrain.expandspots,{marker,k})
         end
         if not expand and not mass then
             for _,v in STR_GetTokens(k,'_') do
                 if v=='ARMY' then
                     InfectMarkersRNG(aiBrain,marker, k)
-                    --table.insert(aiBrain.armyspots,{marker,k})
-                    --table.insert(aiBrain.expandspots,{marker,k})
                 end
             end
         end
     end
-   --RNGLOG('renderthreadtracker for expansions')
     while aiBrain.renderthreadtracker do
         coroutine.yield(2)
     end
     local massPointCount = 0
-   --RNGLOG('Running mass spot checks for GraphArea')
-   --RNGLOG('Infecting mass points '..aiBrain.Nickname)
+    --LOG('Running mass spot checks for GraphArea')
+    --LOG('Infecting mass points '..aiBrain.Nickname)
     for _, mass in AdaptiveResourceMarkerTableRNG do
         if mass.type == 'Mass' then
             massPointCount = massPointCount + 1
@@ -944,13 +936,16 @@ function SetMarkerInformation(aiBrain)
     while aiBrain.renderthreadtracker do
         coroutine.yield(2)
     end
-    --RNGLOG('Setting GraphZones and MarkersInfectedRNG '..aiBrain.Nickname)
+    --LOG('Setting GraphZones and MarkersInfectedRNG '..aiBrain.Nickname)
     if aiBrain.GraphZones.FirstRun then
         aiBrain.GraphZones.FirstRun = false
     end
-    --RNGLOG('Dump MarkerChain '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers))
-    --RNGLOG('Dump Resource MarkerChain '..repr(AdaptiveResourceMarkerTableRNG))
+    --LOG('Dump MarkerChain '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers))
+    --LOG('Dump Resource MarkerChain '..repr(AdaptiveResourceMarkerTableRNG))
     aiBrain.MarkersInfectedRNG = true
+    if aiBrain.MarkersInfectedRNG then
+        LOG('aiBrain is now set markers infected as true')
+    end
 end
 
 function InfectMarkersRNG(aiBrain,marker,nodekey)
