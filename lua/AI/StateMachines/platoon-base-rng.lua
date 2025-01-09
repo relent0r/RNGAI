@@ -260,7 +260,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                     end
                     if not unit.Dead and unit.BuilderManagerData then
                         if unit.BuilderManagerData.EngineerManager then
-                            unit.BuilderManagerData.EngineerManager:TaskFinishedRNG(unit)
+                            unit.BuilderManagerData.EngineerManager:TaskFinished(unit)
                             if unit.PlatoonHandle.Home and unit.PlatoonHandle.LocationType and unit.PlatoonHandle.LocationType ~= 'FLOATING' then
                                 local hx = unit.PlatoonHandle.Pos[1] - unit.PlatoonHandle.Home[1]
                                 local hz = unit.PlatoonHandle.Pos[3] - unit.PlatoonHandle.Home[3]

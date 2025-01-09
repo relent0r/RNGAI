@@ -7,10 +7,10 @@ local ScenarioUtils = import("/lua/sim/scenarioutilities.lua")
 local Behaviors = import("/lua/ai/aibehaviors.lua")
 local AIBuildUnits = import("/lua/ai/aibuildunits.lua")
 
-local FactoryManager = import("/lua/sim/factorybuildermanager.lua")
-local PlatoonFormManager = import("/lua/sim/platoonformmanager.lua")
+local FactoryManager = import("/mods/RNGAI/lua/ai/BuilderFramework/factorybuildermanager.lua")
+local PlatoonFormManager = import("/mods/RNGAI/lua/AI/BuilderFramework/platoonformmanager.lua")
 local BrainConditionsMonitor = import("/lua/sim/brainconditionsmonitor.lua")
-local EngineerManager = import("/lua/sim/engineermanager.lua")
+local EngineerManager = import("/mods/RNGAI/lua/AI/BuilderFramework/engineermanager.lua")
 
 local SUtils = import("/lua/ai/sorianutilities.lua")
 local TransferUnitsOwnership = import("/lua/simutils.lua").TransferUnitsOwnership
@@ -1883,7 +1883,6 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Creating Floating base setup at pos '..repr(position))
         end
         coroutine.yield(80)
-        --local EngineerManager = import('/mods/RNGAI/hook/lua/sim/EngineerManager.lua')
         local baseLayer = 'Land'
         position[2] = GetTerrainHeight( position[1], position[3] )
         if GetSurfaceHeight( position[1], position[3] ) > position[2] then
@@ -2861,8 +2860,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local enemyIndex = selfEnemy:GetArmyIndex()
             local closest
             local expansionName
-            local mainDist = VDist2Sq(self.BuilderManagers['MAIN'].Position[1], self.BuilderManagers['MAIN'].Position[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
-            --RNGLOG('Main base Position '..repr(self.BuilderManagers['MAIN'].Position))
+            local mainDist = VDist2Sq(self.BrainIntel.StartPos[1], self.BrainIntel.StartPos[3], armyStrengthTable[enemyIndex].Position[1], armyStrengthTable[enemyIndex].Position[3])
             for k, v in self.BuilderManagers do
                 --RNGLOG('build k is '..k)
                 if v.Layer ~= 'Water' then

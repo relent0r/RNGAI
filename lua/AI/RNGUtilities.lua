@@ -740,7 +740,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos, pointRadius)
         Reclaiming = true
     end
     -- reclaim rocks etc or we can't build mexes or hydros
-    local Reclaimables = GetReclaimablesInRect(Rect(pos[1], pos[3], pos[1], pos[3]))
+    local Reclaimables = GetReclaimablesInRect(Rect(pos[1]-pointRadius, pos[3]-pointRadius, pos[1]+pointRadius, pos[3]+pointRadius))
     if Reclaimables and not table.empty( Reclaimables ) then
         for k,v in Reclaimables do
             if v.MaxMassReclaim and v.MaxMassReclaim >= 5 or v.MaxEnergyReclaim and v.MaxEnergyReclaim > 5 then

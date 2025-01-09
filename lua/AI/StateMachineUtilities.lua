@@ -1379,6 +1379,9 @@ BuildAIDoneRNG = function(unit, params)
     if unit.EngineerBuildQueue and not table.empty(unit.EngineerBuildQueue) then
         table.remove(unit.EngineerBuildQueue, 1)
     end
+    if unit.UnitBeingBuilt then
+        LOG('Unit being built was Done'..tostring(unit.UnitBeingBuilt.UnitId))
+    end
     if table.empty(unit.EngineerBuildQueue) then
         unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
     end
@@ -1394,6 +1397,9 @@ BuildAIFailedRNG = function(unit, params)
         unit.BuildFailedCount = 0
     end
     if unit.CustomReclaim then return end
+    if unit.UnitBeingBuilt then
+        LOG('Unit being built was failed'..tostring(unit.UnitBeingBuilt.UnitId))
+    end
     unit.BuildFailedCount = unit.BuildFailedCount + 1
     --LOG('Current fail count is '..unit.FailedCount)
     if unit.BuildFailedCount > 2 and not table.empty(unit.EngineerBuildQueue) then
@@ -1413,6 +1419,9 @@ StartBuildRNG = function(eng, unit)
     if not eng.AIPlatoonReference then return end
     --LOG("*AI DEBUG: Build done " .. unit.EntityId)
     if eng and not eng.Dead and unit and not unit.Dead then
+        if eng.UnitBeingBuilt then
+            LOG('Unit being built was Start '..tostring(unit.UnitBeingBuilt.UnitId))
+        end
         local locationType = eng.PlatoonHandle.PlatoonData.Construction.LocationType
         local highValue = eng.PlatoonHandle.PlatoonData.Construction.HighValue
         if locationType and highValue then

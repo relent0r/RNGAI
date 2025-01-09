@@ -1112,7 +1112,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                     end
                     v.BuilderManagerData.EngineerManager:DelayAssign(v)
                 elseif v.BuilderManagerData.EngineerManager then
-                    v.BuilderManagerData.EngineerManager:TaskFinishedRNG(v)
+                    v.BuilderManagerData.EngineerManager:TaskFinished(v)
                 end
             end
             if not v.Dead then
@@ -1187,9 +1187,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             
             if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, aiBrain.BuilderManagers[moveToLocation].Position) then
                 --RNGLOG('* AI-RNG: * TransferAIRNG: '..repr(self.BuilderName))
-                eng.BuilderManagerData.EngineerManager:RemoveUnitRNG(eng)
+                eng.BuilderManagerData.EngineerManager:RemoveUnit(eng)
                 --RNGLOG('* AI-RNG: * TransferAIRNG: AddUnit units to - BuilderManagers: '..moveToLocation..' - ' .. aiBrain.BuilderManagers[moveToLocation].EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) )
-                aiBrain.BuilderManagers[moveToLocation].EngineerManager:AddUnitRNG(eng, true)
+                aiBrain.BuilderManagers[moveToLocation].EngineerManager:AddUnit(eng, true)
                 -- Move the unit to the desired base after transfering BuilderManagers to the new LocationType
             end
         end
@@ -1553,7 +1553,7 @@ Platoon = Class(RNGAIPlatoonClass) {
             IssueClearCommands({eng})
             if eng.BuilderManagerData.EngineerManager then
                 --eng:SetCustomName('Running TaskFinished')
-                eng.BuilderManagerData.EngineerManager:TaskFinishedRNG(eng)
+                eng.BuilderManagerData.EngineerManager:TaskFinished(eng)
             end
             aiBrain:AssignUnitsToPlatoon('ArmyPool', {eng}, 'Unassigned', 'NoFormation')
             coroutine.yield(3)

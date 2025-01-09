@@ -79,6 +79,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             end
             local aiBrain = self:GetBrain()
             local data = self.PlatoonData
+            --LOG('Engineer State Machine started, platoon data is '..tostring(repr(data)))
             self.LastActive = GetGameTimeSeconds()
             -- how should we handle multipleself.engineers?
             local unit = self:GetPlatoonUnits()[1]
@@ -1127,7 +1128,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     if movementRequired then
                         IssueClearCommands({eng})
                     -- check to see if we need to reclaim or capture...
-                        RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation, 10)
+                        local unitSize = aiBrain:GetUnitBlueprint(whatToBuild).Physics
+                        local reclaimRadius = (unitSize.SkirtSizeX and unitSize.SkirtSizeX / 2) or 5
+                        RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation, reclaimRadius)
                             -- check to see if we can repair
                         RUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation)
                                 -- otherwise, go ahead and build the next structure there

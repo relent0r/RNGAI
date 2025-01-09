@@ -565,16 +565,16 @@ function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructio
     -- PBM Style expansion bases here
     if not aiBrain.BuilderManagers or aiBrain.BuilderManagers[baseName] or not builder.BuilderManagerData then
         --LOG('*AI DEBUG: ARMY ' .. aiBrain:GetArmyIndex() .. ': New Engineer for expansion base - ' .. baseName)
-        builder.BuilderManagerData.EngineerManager:RemoveUnitRNG(builder)
-        aiBrain.BuilderManagers[baseName].EngineerManager:AddUnitRNG(builder, true)
+        builder.BuilderManagerData.EngineerManager:RemoveUnit(builder)
+        aiBrain.BuilderManagers[baseName].EngineerManager:AddUnit(builder, true)
         return
     end
 
     aiBrain:AddBuilderManagers(position, radius, baseName, true)
 
     -- Move the engineer to the new base managers
-    builder.BuilderManagerData.EngineerManager:RemoveUnitRNG(builder)
-    aiBrain.BuilderManagers[baseName].EngineerManager:AddUnitRNG(builder, true)
+    builder.BuilderManagerData.EngineerManager:RemoveUnit(builder)
+    aiBrain.BuilderManagers[baseName].EngineerManager:AddUnit(builder, true)
 
     -- Iterate through bases finding the value of each expansion
     local baseValues = {}

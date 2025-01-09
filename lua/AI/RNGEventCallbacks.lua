@@ -166,7 +166,7 @@ function OnTransfered(transferedUnits, toArmy, captured, originBrain)
                         end
                     end
                     if closestBase then
-                        brain.BuilderManagers[closestBase].EngineerManager:AddUnitRNG(v)
+                        brain.BuilderManagers[closestBase].EngineerManager:AddUnit(v)
                     end
                 elseif v.Blueprint.CategoriesHash.STRUCTURE and v.Blueprint.CategoriesHash.FACTORY then
                     local distanceToBase

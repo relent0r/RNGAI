@@ -812,92 +812,139 @@ LandScoutThreatThread = function(aiBrain, platoon)
         local supportPlatoon
         local scoutType
         if GetNumUnitsAroundPoint(aiBrain, unitCatCheck, platPos, checkRadius, 'Enemy') > 0 then
+            local closestUnitDistance
+            local attackUnitDistance
             local enemyUnits = GetUnitsAroundPoint(aiBrain, unitCatCheck, platPos, checkRadius, 'Enemy')
             for _, v in enemyUnits do
-                if platoon.StateName ~= 'AttackTarget' and scout.UnitId == 'xsl0101' and not v.Dead and EntityCategoryContains((categories.ENGINEER - categories.COMMAND) + categories.SCOUT + categories.MASSEXTRACTION , v) then
-                    --LOG('Seraphim scout vsself.engineer')
-                    unitToAttack = v
-                elseif platoon.StateName ~= 'Retreating' and not v.Dead and ( platoon.StateName ~= 'SupportUnit' and platoon.StateName ~= 'Navigating' and not platoon.BuilderData.Retreat )then
-                    if not v['rngdata'].MaxWeaponRange then
-                        StateUtils.GetUnitMaxWeaponRange(v)
-                    end
-                    local enemyUnitRange = v['rngdata'].MaxWeaponRange
-                    unitToRetreat = v
-                    if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
-                        supportUnit = platoon.BuilderData.SupportUnit
-                    end
-                    if platoon.BuilderData.SupportPlatoon and not IsDestroyed(platoon.BuilderData.SupportPlatoon) then
-                        supportPlatoon = platoon.BuilderData.SupportPlatoon
-                    end
-                    if platoon.BuilderData.ScoutType then
-                        scoutType = platoon.BuilderData.ScoutType
-                    end
-                    if unitToRetreat then
-                        enemyUnitRange = StateUtils.GetUnitMaxWeaponRange(unitToRetreat)
-                    end
-                    platoon.BuilderData = {
-                        Position = unitToRetreat:GetPosition(),
-                        ScoutType = scoutType or nil,
-                        RetreatFrom = unitToRetreat,
-                        RetreatFromWeaponRange = enemyUnitRange,
-                        SupportUnit = supportUnit or nil,
-                        SupportPlatoon = supportPlatoon or nil
-                    }
-                    --LOG('Scout is trying to retreat, what is my current state '..tostring(platoon.StateName))
-                    platoon:ChangeState(platoon.Retreating)
-                    coroutine.yield(10)
-                    break
-                elseif platoon.StateName == 'Retreating' and not v.Dead then
+                if not v.Dead then
                     local unitPos = v:GetPosition()
                     local rx = platPos[1] - unitPos[1]
                     local rz = platPos[3] - unitPos[3]
                     local enemyDistance = rx * rx + rz * rz
-                    local oldEnemy = platoon.BuilderData.RetreatFrom
-                    if oldEnemy and not IsDestroyed(oldEnemy) then
-                        local oldEnemyPos = oldEnemy:GetPosition()
-                        local cx = platPos[1] - oldEnemyPos[1]
-                        local cz = platPos[3] - oldEnemyPos[3]
-                        local oldEnemyDistance = cx * cx + cz * cz
-                        if enemyDistance < oldEnemyDistance then
-                            if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
-                                supportUnit = platoon.BuilderData.SupportUnit
-                            end
-                            if platoon.BuilderData.SupportPlatoon and not IsDestroyed(platoon.BuilderData.SupportPlatoon) then
-                                supportPlatoon = platoon.BuilderData.SupportPlatoon
-                            end
-                            if platoon.BuilderData.ScoutType then
-                                scoutType = platoon.BuilderData.ScoutType
-                            end
-                            platoon.retreatTarget = v
-                            platoon.BuilderData = {
-                                Position = unitPos,
-                                ScoutType = scoutType or nil,
-                                RetreatFrom = v,
-                                SupportUnit = supportUnit or nil,
-                                SupportPlatoon = supportPlatoon or nil
-                            }
-                            coroutine.yield(2)
-                            break
+                    if not closestUnitDistance or enemyDistance < closestUnitDistance then
+                        closestUnitDistance = enemyDistance
+                    end
+                    if platoon.StateName == 'CombatLoop' and platoon.BuilderData.AttackTarget and not platoon.BuilderData.AttackTarget.Dead then
+                        local attackunitPos = platoon.BuilderData.AttackTarget:GetPosition()
+                        local rx = platPos[1] - attackunitPos[1]
+                        local rz = platPos[3] - attackunitPos[3]
+                        local unitDistance = rx * rx + rz * rz
+                        attackUnitDistance = unitDistance
+                    end
+                    if platoon.StateName ~= 'CombatLoop' and scout.UnitId == 'xsl0101' and not v.Dead and EntityCategoryContains((categories.ENGINEER - categories.COMMAND) + categories.SCOUT + categories.MASSEXTRACTION , v) then
+                        --LOG('Seraphim scout vsself.engineer')
+                        unitToAttack = v
+                        attackUnitDistance = enemyDistance
+                    elseif (not attackUnitDistance or enemyDistance < attackUnitDistance) and platoon.StateName ~= 'Retreating' and not v.Dead and ( platoon.StateName ~= 'SupportUnit' and platoon.StateName ~= 'Navigating' and not platoon.BuilderData.Retreat ) then
+                        if not v['rngdata'].MaxWeaponRange then
+                            StateUtils.GetUnitMaxWeaponRange(v)
                         end
-                    end
-                    coroutine.yield(1)
-                elseif platoon.StateName == 'Navigating' or platoon.StateName == 'SupportUnit' then
-                    if not v['rngdata'].MaxWeaponRange then
-                        StateUtils.GetUnitMaxWeaponRange(v)
-                    end
-                    local ignoreUnit = false
-                    local unitPos = v:GetPosition()
-                    local rx = platPos[1] - unitPos[1]
-                    local rz = platPos[3] - unitPos[3]
-                    local enemyDistance = rx * rx + rz * rz
-                    local enemyUnitRange = v['rngdata'].MaxWeaponRange
-                    local oldEnemy = platoon.BuilderData.RetreatFrom
-                    if oldEnemy and not IsDestroyed(oldEnemy) then
-                        local oldEnemyPos = oldEnemy:GetPosition()
-                        local cx = platPos[1] - oldEnemyPos[1]
-                        local cz = platPos[3] - oldEnemyPos[3]
-                        local oldEnemyDistance = cx * cx + cz * cz
-                        if enemyDistance < oldEnemyDistance then
+                        local enemyUnitRange = v['rngdata'].MaxWeaponRange
+                        unitToRetreat = v
+                        if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
+                            supportUnit = platoon.BuilderData.SupportUnit
+                        end
+                        if platoon.BuilderData.SupportPlatoon and not IsDestroyed(platoon.BuilderData.SupportPlatoon) then
+                            supportPlatoon = platoon.BuilderData.SupportPlatoon
+                        end
+                        if platoon.BuilderData.ScoutType then
+                            scoutType = platoon.BuilderData.ScoutType
+                        end
+                        if unitToRetreat then
+                            enemyUnitRange = StateUtils.GetUnitMaxWeaponRange(unitToRetreat)
+                        end
+                        platoon.BuilderData = {
+                            Position = unitToRetreat:GetPosition(),
+                            ScoutType = scoutType or nil,
+                            RetreatFrom = unitToRetreat,
+                            RetreatFromWeaponRange = enemyUnitRange,
+                            SupportUnit = supportUnit or nil,
+                            SupportPlatoon = supportPlatoon or nil
+                        }
+                        --LOG('Scout is trying to retreat, what is my current state '..tostring(platoon.StateName))
+                        platoon:ChangeState(platoon.Retreating)
+                        coroutine.yield(10)
+                        break
+                    elseif platoon.StateName == 'Retreating' and not v.Dead then
+                        local oldEnemy = platoon.BuilderData.RetreatFrom
+                        if oldEnemy and not IsDestroyed(oldEnemy) then
+                            local oldEnemyPos = oldEnemy:GetPosition()
+                            local cx = platPos[1] - oldEnemyPos[1]
+                            local cz = platPos[3] - oldEnemyPos[3]
+                            local oldEnemyDistance = cx * cx + cz * cz
+                            if enemyDistance < oldEnemyDistance then
+                                if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
+                                    supportUnit = platoon.BuilderData.SupportUnit
+                                end
+                                if platoon.BuilderData.SupportPlatoon and not IsDestroyed(platoon.BuilderData.SupportPlatoon) then
+                                    supportPlatoon = platoon.BuilderData.SupportPlatoon
+                                end
+                                if platoon.BuilderData.ScoutType then
+                                    scoutType = platoon.BuilderData.ScoutType
+                                end
+                                platoon.retreatTarget = v
+                                platoon.BuilderData = {
+                                    Position = unitPos,
+                                    ScoutType = scoutType or nil,
+                                    RetreatFrom = v,
+                                    SupportUnit = supportUnit or nil,
+                                    SupportPlatoon = supportPlatoon or nil
+                                }
+                                coroutine.yield(2)
+                                break
+                            end
+                        end
+                        coroutine.yield(1)
+                    elseif platoon.StateName == 'Navigating' or platoon.StateName == 'SupportUnit' then
+                        if not v['rngdata'].MaxWeaponRange then
+                            StateUtils.GetUnitMaxWeaponRange(v)
+                        end
+                        local ignoreUnit = false
+
+                        local enemyUnitRange = v['rngdata'].MaxWeaponRange
+                        local oldEnemy = platoon.BuilderData.RetreatFrom
+                        if oldEnemy and not IsDestroyed(oldEnemy) then
+                            local oldEnemyPos = oldEnemy:GetPosition()
+                            local cx = platPos[1] - oldEnemyPos[1]
+                            local cz = platPos[3] - oldEnemyPos[3]
+                            local oldEnemyDistance = cx * cx + cz * cz
+                            if enemyDistance < oldEnemyDistance then
+                                local originLocation
+                                if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
+                                    supportUnit = platoon.BuilderData.SupportUnit
+                                    if enemyDistance > enemyUnitRange * enemyUnitRange + 25 then
+                                        ignoreUnit = true
+                                    end
+                                end
+                                if platoon.BuilderData.SupportPlatoon and not IsDestroyed(platoon.BuilderData.SupportPlatoon) then
+                                    supportPlatoon = platoon.BuilderData.SupportPlatoon
+                                    if enemyDistance > enemyUnitRange * enemyUnitRange + 25 then
+                                        ignoreUnit = true
+                                    end
+                                end
+                                if platoon.BuilderData.ScoutType and (platoon.BuilderData.ScoutType == 'ZoneLocation' or platoon.BuilderData.ScoutType == 'Location') then
+                                    originLocation = platoon.BuilderData.ZonePosition
+                                end
+                                if platoon.BuilderData.ScoutType then
+                                    scoutType = platoon.BuilderData.ScoutType
+                                end
+                                if not ignoreUnit then
+                                    platoon.BuilderData = {
+                                        Position = unitPos,
+                                        OriginLocation = originLocation or nil,
+                                        ScoutType = scoutType or nil,
+                                        RetreatFrom = v,
+                                        RetreatFromWeaponRange = enemyUnitRange,
+                                        SupportUnit = supportUnit or nil,
+                                        SupportPlatoon = supportPlatoon or nil
+                                    }
+                                    coroutine.yield(2)
+                                    platoon:ChangeState(platoon.Retreating)
+                                    coroutine.yield(10)
+                                    break
+                                end
+                            end
+                        elseif enemyDistance < checkRadius * checkRadius then
                             local originLocation
                             if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
                                 supportUnit = platoon.BuilderData.SupportUnit
@@ -933,53 +980,28 @@ LandScoutThreatThread = function(aiBrain, platoon)
                                 break
                             end
                         end
-                    elseif enemyDistance < checkRadius * checkRadius then
-                        local originLocation
-                        if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
-                            supportUnit = platoon.BuilderData.SupportUnit
-                            if enemyDistance > enemyUnitRange * enemyUnitRange + 25 then
-                                ignoreUnit = true
-                            end
-                        end
-                        if platoon.BuilderData.SupportPlatoon and not IsDestroyed(platoon.BuilderData.SupportPlatoon) then
-                            supportPlatoon = platoon.BuilderData.SupportPlatoon
-                            if enemyDistance > enemyUnitRange * enemyUnitRange + 25 then
-                                ignoreUnit = true
-                            end
-                        end
-                        if platoon.BuilderData.ScoutType and (platoon.BuilderData.ScoutType == 'ZoneLocation' or platoon.BuilderData.ScoutType == 'Location') then
-                            originLocation = platoon.BuilderData.ZonePosition
-                        end
-                        if platoon.BuilderData.ScoutType then
-                            scoutType = platoon.BuilderData.ScoutType
-                        end
-                        if not ignoreUnit then
-                            platoon.BuilderData = {
-                                Position = unitPos,
-                                OriginLocation = originLocation or nil,
-                                ScoutType = scoutType or nil,
-                                RetreatFrom = v,
-                                RetreatFromWeaponRange = enemyUnitRange,
-                                SupportUnit = supportUnit or nil,
-                                SupportPlatoon = supportPlatoon or nil
-                            }
-                            coroutine.yield(2)
-                            platoon:ChangeState(platoon.Retreating)
-                            coroutine.yield(10)
-                            break
-                        end
+                        coroutine.yield(1)
                     end
-                    coroutine.yield(1)
                 end
             end
-            if unitToAttack and not IsDestroyed(unitToAttack) then
+            if unitToAttack and not IsDestroyed(unitToAttack) and attackUnitDistance <= closestUnitDistance then
+                local supportPlatoon
+                local supportUnit
                 if platoon.BuilderData.ScoutType then
                     scoutType = platoon.BuilderData.ScoutType
+                    if scoutType == 'AssistPlatoon' and platoon.BuilderData.SupportPlatoon then
+                        supportPlatoon = platoon.BuilderData.SupportPlatoon
+                    end
+                    if scoutType == 'AssistUnit' and platoon.BuilderData.SupportUnit then
+                        supportUnit = platoon.BuilderData.SupportUnit
+                    end
                 end
                 platoon.BuilderData = {
                     Position = unitToAttack:GetPosition(),
                     ScoutType = scoutType or nil,
-                    AttackTarget = unitToAttack
+                    AttackTarget = unitToAttack,
+                    SupportUnit = supportUnit,
+                    SupportPlatoon = supportPlatoon
                 }
                 platoon:ChangeState(platoon.CombatLoop)
                 coroutine.yield(10)

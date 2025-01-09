@@ -184,7 +184,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     StateUtils.IssueNavigationMove(cdr, {v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]})
                                     if VDist3Sq(cdr:GetPosition(),{v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]}) < 144 then
                                         IssueClearCommands({cdr})
-                                        RUtils.EngineerTryReclaimCaptureArea(brain, cdr, v.Position, 5)
+                                        local unitSize = aiBrain:GetUnitBlueprint(whatToBuild).Physics
+                                        local reclaimRadius = (unitSize.SkirtSizeX and unitSize.SkirtSizeX / 2) or 5
+                                        RUtils.EngineerTryReclaimCaptureArea(brain, cdr, v.Position, reclaimRadius)
                                         if borderWarning then
                                             IssueBuildMobile({cdr}, {v.Position[1],GetTerrainHeight(v.Position[1], v.Position[2]),v.Position[2]}, whatToBuild, {})
                                         else
@@ -245,8 +247,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
-                    cdr.BuilderManagerData.EngineerManager:RemoveUnitRNG(cdr)
-                    brain.BuilderManagers['MAIN'].EngineerManager:AddUnitRNG(cdr, true)
+                    cdr.BuilderManagerData.EngineerManager:RemoveUnit(cdr)
+                    brain.BuilderManagers['MAIN'].EngineerManager:AddUnit(cdr, true)
                 end
                 local expansionCount = 0
                 for k, manager in brain.BuilderManagers do
@@ -1955,9 +1957,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                             --SPEW('*AI DEBUG: AINewExpansionBase(): validNames for Expansions ' .. repr(validNames))
                             local pick = validNames[ Random(1, RNGGETN(validNames)) ]
-                            cdr.BuilderManagerData.EngineerManager:RemoveUnitRNG(cdr)
+                            cdr.BuilderManagerData.EngineerManager:RemoveUnit(cdr)
                             --RNGLOG('Adding CDR to expansion manager')
-                            brain.BuilderManagers['ZONE_'..object.id].EngineerManager:AddUnitRNG(cdr, true)
+                            brain.BuilderManagers['ZONE_'..object.id].EngineerManager:AddUnit(cdr, true)
                             --SPEW('*AI DEBUG: AINewExpansionBase(): ARMY ' .. brain:GetArmyIndex() .. ': Expanding using - ' .. pick .. ' at location ' .. baseName)
                             import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(brain, 'ZONE_'..object.id, pick)
 
@@ -2005,8 +2007,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                                 while (cdr.Active and not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr.Active and cdr:IsUnitState('Building')) or (cdr.Active and cdr:IsUnitState("Moving")) do
                                                     coroutine.yield(10)
                                                     if cdr.Caution then
-                                                        cdr.BuilderManagerData.EngineerManager:RemoveUnitRNG(cdr)
-                                                        brain.BuilderManagers['MAIN'].EngineerManager:AddUnitRNG(cdr, true)
+                                                        cdr.BuilderManagerData.EngineerManager:RemoveUnit(cdr)
+                                                        brain.BuilderManagers['MAIN'].EngineerManager:AddUnit(cdr, true)
                                                         ----self:LogDebug(string.format('cdr.Caution while building expansion'))
                                                         self:ChangeState(self.DecideWhatToDo)
                                                         return
@@ -2032,7 +2034,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             object.engineerplatoonallocated = false
                         elseif brain.BuilderManagers['ZONE_'..object.id].FactoryManager:GetNumFactories() == 0 then
                             local abortBuild = false
-                            brain.BuilderManagers['ZONE_'..object.id].EngineerManager:AddUnitRNG(cdr, true)
+                            brain.BuilderManagers['ZONE_'..object.id].EngineerManager:AddUnit(cdr, true)
                             local baseTmplDefault = import('/lua/BaseTemplates.lua')
                             local factoryCount = 0
                             if object.resourcevalue > 2 then
@@ -2073,8 +2075,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                                 while (cdr.Active and not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr.Active and cdr:IsUnitState('Building')) or (cdr.Active and cdr:IsUnitState("Moving")) do
                                                     coroutine.yield(10)
                                                     if cdr.Caution then
-                                                        cdr.BuilderManagerData.EngineerManager:RemoveUnitRNG(cdr)
-                                                        brain.BuilderManagers['MAIN'].EngineerManager:AddUnitRNG(cdr, true)
+                                                        cdr.BuilderManagerData.EngineerManager:RemoveUnit(cdr)
+                                                        brain.BuilderManagers['MAIN'].EngineerManager:AddUnit(cdr, true)
                                                         ----self:LogDebug(string.format('cdr.Caution while building expansion'))
                                                         self:ChangeState(self.DecideWhatToDo)
                                                         return
