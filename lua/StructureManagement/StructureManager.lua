@@ -242,6 +242,15 @@ StructureManager = Class {
                     ['urb0303'] = 0,
                     ['xsb0303'] = 0
                 },
+                T1LANDApproxConsumption = 0,
+                T2LANDApproxConsumption = 0,
+                T3LANDApproxConsumption = 0,
+                T1AIRApproxConsumption = 0,
+                T2AIRApproxConsumption = 0,
+                T3AIRApproxConsumption = 0,
+                T1NAVALApproxConsumption = 0,
+                T2NAVALApproxConsumption = 0,
+                T3NAVALApproxConsumption = 0,
                 T1LANDUpgrading = 0,
                 T2LANDUpgrading = 0,
                 T1AIRUpgrading = 0,
@@ -269,6 +278,7 @@ StructureManager = Class {
             }
             for baseName, manager in self.Brain.BuilderManagers do
                 if manager.FactoryManager.FactoryList and not table.empty(manager.FactoryManager.FactoryList) then
+                    local massToFactoryValues = manager.BaseSettings.MassToFactoryValues
                     for c, unit in manager.FactoryManager.FactoryList do
                         local unitCat = unit.Blueprint.CategoriesHash
                         if not IsDestroyed(unit) then
@@ -279,6 +289,7 @@ StructureManager = Class {
                                         FactoryData.T1LANDUpgrading = FactoryData.T1LANDUpgrading + 1
                                     end
                                     FactoryData.TotalT1LAND = FactoryData.TotalT1LAND + 1
+                                    FactoryData.T1LANDApproxConsumption = FactoryData.T1LANDApproxConsumption + massToFactoryValues.T1LandValue
                                 elseif unitCat.TECH2 then
                                     RNGINSERT(FactoryData.T2LAND, unit)
                                     if not unitCat.SUPPORTFACTORY then
@@ -291,6 +302,7 @@ StructureManager = Class {
                                         FactoryData.T2LANDUpgrading = FactoryData.T2LANDUpgrading + 1
                                     end
                                     FactoryData.TotalT2LAND = FactoryData.TotalT2LAND + 1
+                                    FactoryData.T2LANDApproxConsumption = FactoryData.T2LANDApproxConsumption + massToFactoryValues.T2LandValue
                                 elseif unitCat.TECH3 then
                                     RNGINSERT(FactoryData.T3LAND, unit)
                                     if not unitCat.SUPPORTFACTORY then
@@ -300,6 +312,7 @@ StructureManager = Class {
                                         FactoryData.T3LANDHQCount[unit.UnitId] = FactoryData.T3LANDHQCount[unit.UnitId] + 1
                                     end
                                     FactoryData.TotalT3LAND = FactoryData.TotalT3LAND + 1
+                                    FactoryData.T3LANDApproxConsumption = FactoryData.T3LANDApproxConsumption + massToFactoryValues.T3LandValue
                                 end
                             elseif unitCat.AIR then
                                 if unitCat.TECH1 then
@@ -308,6 +321,7 @@ StructureManager = Class {
                                         FactoryData.T1AIRUpgrading = FactoryData.T1AIRUpgrading + 1
                                     end
                                     FactoryData.TotalT1AIR = FactoryData.TotalT1AIR + 1
+                                    FactoryData.T1AIRApproxConsumption = FactoryData.T1AIRApproxConsumption + massToFactoryValues.T1AirValue
                                 elseif unitCat.TECH2 then
                                     RNGINSERT(FactoryData.T2AIR, unit)
                                     if not unitCat.SUPPORTFACTORY then
@@ -320,6 +334,7 @@ StructureManager = Class {
                                         FactoryData.T2AIRUpgrading = FactoryData.T2AIRUpgrading + 1
                                     end
                                     FactoryData.TotalT2AIR = FactoryData.TotalT2AIR + 1
+                                    FactoryData.T2AIRApproxConsumption = FactoryData.T2AIRApproxConsumption + massToFactoryValues.T2AirValue
                                 elseif unitCat.TECH3 then
                                     RNGINSERT(FactoryData.T3AIR, unit)
                                     if not unitCat.SUPPORTFACTORY then
@@ -329,8 +344,8 @@ StructureManager = Class {
                                         FactoryData.T3AIRHQCount[unit.UnitId] = FactoryData.T3AIRHQCount[unit.UnitId] + 1
                                     end
                                     FactoryData.TotalT3AIR = FactoryData.TotalT3AIR + 1
+                                    FactoryData.T3AIRApproxConsumption = FactoryData.T3AIRApproxConsumption + massToFactoryValues.T3AirValue
                                 end
-
                             elseif unitCat.NAVAL then
                                 if unitCat.TECH1 then
                                     RNGINSERT(FactoryData.T1NAVAL, 1, unit)
@@ -338,6 +353,7 @@ StructureManager = Class {
                                         FactoryData.T1NAVALUpgrading = FactoryData.T1NAVALUpgrading + 1
                                     end
                                     FactoryData.TotalT1NAVAL = FactoryData.TotalT1NAVAL + 1
+                                    FactoryData.T1NAVALApproxConsumption = FactoryData.T1NAVALApproxConsumption + massToFactoryValues.T1NavalValue
                                 elseif unitCat.TECH2 then
                                     RNGINSERT(FactoryData.T2NAVAL, unit)
                                     if not unitCat.SUPPORTFACTORY then
@@ -350,6 +366,7 @@ StructureManager = Class {
                                         FactoryData.T2NAVALUpgrading = FactoryData.T2NAVALUpgrading + 1
                                     end
                                     FactoryData.TotalT2NAVAL = FactoryData.TotalT2NAVAL + 1
+                                    FactoryData.T2NAVALApproxConsumption = FactoryData.T2NAVALApproxConsumption + massToFactoryValues.T2NavalValue
                                 elseif unitCat.TECH3 then
                                     RNGINSERT(FactoryData.T3NAVAL, unit)
                                     if not unitCat.SUPPORTFACTORY then
@@ -359,6 +376,7 @@ StructureManager = Class {
                                         FactoryData.T3NAVALHQCount[unit.UnitId] = FactoryData.T3NAVALHQCount[unit.UnitId] + 1
                                     end
                                     FactoryData.TotalT3NAVAL = FactoryData.TotalT3NAVAL + 1
+                                    FactoryData.T3NAVALApproxConsumption = FactoryData.T3NAVALApproxConsumption + massToFactoryValues.T3NavalValue
                                 end
                             end
                         end
@@ -431,7 +449,7 @@ StructureManager = Class {
             self.Factories.AIR[2].Total = FactoryData.TotalT2AIR
             self.Factories.AIR[2].HQCount = FactoryData.T2AIRHQCount
             self.Factories.AIR[3].HQCount = FactoryData.T3AIRHQCount
-            self.Factories.AIR[2].Total = FactoryData.TotalT2AIR
+            self.Factories.AIR[3].Total = FactoryData.TotalT3AIR
             self.Factories.NAVAL[1].UpgradingCount = FactoryData.T1NAVALUpgrading
             self.Factories.NAVAL[1].Total = FactoryData.TotalT1NAVAL
             self.Factories.NAVAL[2].UpgradingCount = FactoryData.T2NAVALUpgrading
@@ -439,6 +457,13 @@ StructureManager = Class {
             self.Factories.NAVAL[2].HQCount = FactoryData.T2NAVALHQCount
             self.Factories.NAVAL[3].HQCount = FactoryData.T3NAVALHQCount
             self.Factories.NAVAL[3].Total = FactoryData.TotalT3NAVAL
+            local totalLandApproxConsumption = FactoryData.T1LANDApproxConsumption + FactoryData.T2LANDApproxConsumption + FactoryData.T3LANDApproxConsumption
+            local totalAirApproxConsumption = FactoryData.T1AIRApproxConsumption + FactoryData.T2AIRApproxConsumption + FactoryData.T3AIRApproxConsumption
+            local totalNavalApproxConsumption = FactoryData.T1NAVALApproxConsumption + FactoryData.T2NAVALApproxConsumption + FactoryData.T3NAVALApproxConsumption
+            self.Brain.EcoManager.ApproxLandFactoryMassConsumption = totalLandApproxConsumption
+            self.Brain.EcoManager.ApproxAirFactoryMassConsumption = totalAirApproxConsumption
+            self.Brain.EcoManager.ApproxNavalFactoryMassConsumption = totalNavalApproxConsumption
+            self.Brain.EcoManager.ApproxFactoryMassConsumption = totalLandApproxConsumption + totalAirApproxConsumption + totalNavalApproxConsumption
             --LOG('Structure Manager')
             --LOG('Number of upgrading T1 Land '..self.Factories.LAND[1].UpgradingCount)
             --LOG('Number of upgrading T2 Land '..self.Factories.LAND[2].UpgradingCount)
@@ -594,7 +619,6 @@ StructureManager = Class {
         local totalAirT3HQCount = 0
         local totalNavalT2HQCount = 0
         local totalNavalT3HQCount = 0
-        local factoryToUpgrade
         local factionIndex = self.Brain:GetFactionIndex()
         local multiplier = self.Brain.EcoManager.EcoMultiplier
         local activeExpansion = false
@@ -642,7 +666,7 @@ StructureManager = Class {
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'LAND')
                                 t2LandPass = true
-                                coroutine.yield(30)
+                                coroutine.yield(20)
                             end
                         end
                     end
@@ -658,7 +682,7 @@ StructureManager = Class {
                         --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
                         self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'LAND')
                         t2LandPass = true
-                        coroutine.yield(30)
+                        coroutine.yield(20)
                     end
                 end
             end
@@ -678,27 +702,24 @@ StructureManager = Class {
                             --RNGLOG('Structure Manager Triggering T2 Air HQ Upgrade')
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'AIR')
                             t2AirPass = true
-                            coroutine.yield(30)
+                            coroutine.yield(20)
                         end
                     end
                 end
             end
         end
-        if (aiBrain.amanager.Demand.Air.T2.torpedo > 0 or aiBrain.RNGEXP or aiBrain.BrainIntel.AirPlayer or (factionIndex == 2 and actualMexIncome > (25 * multiplier))) and totalAirT2HQCount < 1 and totalAirT3HQCount < 1 and self.Factories.AIR[1].UpgradingCount < 1 then
+        local airRush = (aiBrain.amanager.Demand.Air.T2.torpedo > 0 or aiBrain.RNGEXP or aiBrain.BrainIntel.AirPlayer or (factionIndex == 2 and actualMexIncome > (25 * multiplier)))
+        if airRush and totalAirT2HQCount < 1 and totalAirT3HQCount < 1 and self.Factories.AIR[1].UpgradingCount < 1 then
             if aiBrain:GetCurrentUnits(categories.ENGINEER * categories.TECH1) > 2 then
-                --RNGLOG('Factory T1 Air RNGEXP Upgrade HQ Check passed')
-                if aiBrain.EconomyOverTimeCurrent.EnergyIncome > 32.0 and massEfficiencyOverTime >= 0.9 and (aiBrain.RNGEXP and energyEfficiencyOverTime >= 0.9 or energyEfficiencyOverTime >= 1.05) then
-                    --RNGLOG('RNGEXP Factory Upgrade efficiency over time check passed')
+                if aiBrain.EconomyOverTimeCurrent.EnergyIncome > 32.0 and massEfficiencyOverTime >= 0.9 and (airRush and energyEfficiencyOverTime >= 0.85 or energyEfficiencyOverTime >= 1.05) then
                     local EnergyEfficiency = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
                     local MassEfficiency = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
-                    if MassEfficiency >= 0.9 and (aiBrain.RNGEXP and EnergyEfficiency >= 0.9 or EnergyEfficiency >= 1.05)  then
-                        --RNGLOG('RNGEXP Factory Upgrade efficiency check passed, get closest factory')
+                    if MassEfficiency >= 0.85 and (airRush and EnergyEfficiency >= 0.9 or EnergyEfficiency >= 1.05)  then
                         local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH1')
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
-                            --RNGLOG('RNGEXP Structure Manager Triggering T2 Air HQ Upgrade')
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'AIR')
                             t2AirPass = true
-                            coroutine.yield(30)
+                            coroutine.yield(20)
                         end
                     end
                 end
@@ -723,7 +744,7 @@ StructureManager = Class {
                                 --RNGLOG('Structure Manager Triggering T2 Land Support Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                 t2LandPass = true
-                                coroutine.yield(30)
+                                coroutine.yield(20)
                             end
                         end
                     end
@@ -737,7 +758,7 @@ StructureManager = Class {
                         --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
                         self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                         t2LandPass = true
-                        coroutine.yield(30)
+                        coroutine.yield(20)
                     end
                 end
             end
@@ -761,7 +782,7 @@ StructureManager = Class {
                                 --RNGLOG('Structure Manager Triggering T2 Air Support Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                 t2AirPass = true
-                                coroutine.yield(30)
+                                coroutine.yield(20)
                             end
                         end
                     end
@@ -784,7 +805,7 @@ StructureManager = Class {
                                 --RNGLOG('Structure Manager Triggering T3 Land HQ Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'LAND')
                                 t3LandPass = true
-                                coroutine.yield(30)
+                                coroutine.yield(20)
                             end
                         end
                     end
@@ -800,7 +821,7 @@ StructureManager = Class {
                         --RNGLOG('Structure Manager Triggering T3 Land HQ Upgrade')
                         self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'LAND')
                         t3LandPass = true
-                        coroutine.yield(30)
+                        coroutine.yield(20)
                     end
                 end
             end
@@ -823,7 +844,7 @@ StructureManager = Class {
                                 --RNGLOG('Structure Manager Triggering T3 Air HQ Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'AIR')
                                 t3AirPass = true
-                                coroutine.yield(30)
+                                coroutine.yield(20)
                             end
                         end
                     end
@@ -846,7 +867,7 @@ StructureManager = Class {
                                 --RNGLOG('Structure Manager Triggering T3 Air HQ Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'AIR')
                                 t3AirPass = true
-                                coroutine.yield(30)
+                                coroutine.yield(20)
                             end
                         end
                     end
@@ -863,7 +884,7 @@ StructureManager = Class {
                         --RNGLOG('Structure Manager Triggering T3 Air HQ Upgrade')
                         self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'AIR')
                         t3AirPass = true
-                        coroutine.yield(30)
+                        coroutine.yield(20)
                     end
                 end
             end
@@ -887,7 +908,7 @@ StructureManager = Class {
                                 --RNGLOG('Structure Manager Triggering T3 Land Support Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                 t3LandPass = true
-                                coroutine.yield(30)
+                                coroutine.yield(20)
                             end
                         end
                     end
@@ -902,7 +923,7 @@ StructureManager = Class {
                             --RNGLOG('Structure Manager Triggering T3 Land Support Upgrade')
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                             t3LandPass = true
-                            coroutine.yield(30)
+                            coroutine.yield(20)
                         end
                     end
                 end
@@ -928,7 +949,7 @@ StructureManager = Class {
                                 --RNGLOG('Structure Manager Triggering T3 Air Support Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                 t3LandPass = true
-                                coroutine.yield(30)
+                                coroutine.yield(20)
                             end
                         end
                     end
@@ -943,7 +964,7 @@ StructureManager = Class {
                             --RNGLOG('Structure Manager Triggering T3 Air Support Upgrade')
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                             t3AirPass = true
-                            coroutine.yield(30)
+                            coroutine.yield(20)
                         end
                     end
                 end
@@ -961,7 +982,7 @@ StructureManager = Class {
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'NAVAL')
                                 t2NavalPass = true
-                                coroutine.yield(30)
+                                coroutine.yield(20)
                             end
                         end
                     end
@@ -984,7 +1005,7 @@ StructureManager = Class {
                                 --RNGLOG('Structure Manager Triggering T2 Land Support Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                 t2NavalPass = true
-                                coroutine.yield(30)
+                                coroutine.yield(20)
                             end
                         end
                     end
@@ -998,7 +1019,7 @@ StructureManager = Class {
                         --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
                         self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                         t2LandPass = true
-                        coroutine.yield(30)
+                        coroutine.yield(20)
                     end
                 end
             end
@@ -1016,7 +1037,7 @@ StructureManager = Class {
                                 if factoryToUpgrade and not factoryToUpgrade.Dead then
                                     self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'NAVAL')
                                     t3NavalPass = true
-                                    coroutine.yield(30)
+                                    coroutine.yield(20)
                                 end
                             end
                         end
@@ -1040,7 +1061,7 @@ StructureManager = Class {
                                 --RNGLOG('Structure Manager Triggering T3 Air Support Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                 t3NavalPass = true
-                                coroutine.yield(30)
+                                coroutine.yield(20)
                             end
                         end
                     end
@@ -1055,7 +1076,7 @@ StructureManager = Class {
                             --RNGLOG('Structure Manager Triggering T3 Air Support Upgrade')
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                             t3NavalPass = true
-                            coroutine.yield(30)
+                            coroutine.yield(20)
                         end
                     end
                 end
@@ -1091,7 +1112,7 @@ StructureManager = Class {
                                         --RNGLOG('Structure Manager Triggering T2 Land Support Upgrade')
                                         self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                         activeExpansionPass = true
-                                        coroutine.yield(30)
+                                        coroutine.yield(20)
                                     end
                                 end
                             end
@@ -1104,7 +1125,7 @@ StructureManager = Class {
                                     --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
                                     self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                     activeExpansionPass = true
-                                    coroutine.yield(30)
+                                    coroutine.yield(20)
                                 end
                             end
                         end
@@ -1125,7 +1146,7 @@ StructureManager = Class {
                                         --RNGLOG('Structure Manager Triggering T2 Land Support Upgrade')
                                         self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                         activeExpansionPass = true
-                                        coroutine.yield(30)
+                                        coroutine.yield(20)
                                     end
                                 end
                             end
@@ -1138,7 +1159,7 @@ StructureManager = Class {
                                     --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
                                     self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                     activeExpansionPass = true
-                                    coroutine.yield(30)
+                                    coroutine.yield(20)
                                 end
                             end
                         end
@@ -1171,7 +1192,7 @@ StructureManager = Class {
                                             --RNGLOG('Structure Manager Triggering T2 Land Support Upgrade')
                                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                             expansionPass = true
-                                            coroutine.yield(30)
+                                            coroutine.yield(20)
                                         end
                                     end
                                 end
@@ -1184,7 +1205,7 @@ StructureManager = Class {
                                         --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
                                         self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                         expansionPass = true
-                                        coroutine.yield(30)
+                                        coroutine.yield(20)
                                     end
                                 end
                             end
@@ -1205,7 +1226,7 @@ StructureManager = Class {
                                             --RNGLOG('Structure Manager Triggering T2 Land Support Upgrade')
                                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                             expansionPass = true
-                                            coroutine.yield(30)
+                                            coroutine.yield(20)
                                         end
                                     end
                                 end
@@ -1218,7 +1239,7 @@ StructureManager = Class {
                                         --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
                                         self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade)
                                         expansionPass = true
-                                        coroutine.yield(30)
+                                        coroutine.yield(20)
                                     end
                                 end
                             end
@@ -1363,16 +1384,43 @@ StructureManager = Class {
     -- Keep track of how many extractors are currently upgrading
     -- Right now this is less about making the best decision to upgrade and more about managing the economy while that upgrade is happening.
         coroutine.yield(Random(5,20))
+        local ALLBPS = __blueprints
+        local extractorTable = {
+            TECH1 = 'ueb1103',
+            TECH2 = 'ueb1202',
+            TECH3 = 'ueb1302'
+        }
+        local buildMultiplier = aiBrain.EcoManager.BuildMultiplier
+        local tech1Consumption
+        local tech2Consumption
+        if ALLBPS[extractorTable.TECH1] and ALLBPS[extractorTable.TECH2] and ALLBPS[extractorTable.TECH3] then
+            local t1Extractor = ALLBPS[extractorTable.TECH1].Economy
+            local t2Extractor = ALLBPS[extractorTable.TECH2].Economy
+            local t3Extractor = ALLBPS[extractorTable.TECH3].Economy
+            if t2Extractor.BuildCostMass and t2Extractor.BuildTime and t1Extractor.BuildRate then
+                tech1Consumption = t2Extractor.BuildCostMass / t2Extractor.BuildTime * (t1Extractor.BuildRate * buildMultiplier)
+            end
+            if t3Extractor.BuildCostMass and t3Extractor.BuildTime and t2Extractor.BuildRate then
+                tech2Consumption = t3Extractor.BuildCostMass / t3Extractor.BuildTime * (t2Extractor.BuildRate * buildMultiplier)
+            end
+        end
+        aiBrain.EcoManager.ExtractorValues.TECH1.ConsumptionValue = tech1Consumption or 10
+        aiBrain.EcoManager.ExtractorValues.TECH2.ConsumptionValue = tech2Consumption or 24
+        
         while true do
             local multiplier = aiBrain.EcoManager.EcoMultiplier
             local upgradeTrigger = false
             local upgradeSpend = aiBrain.cmanager.income.r.m*aiBrain.EconomyUpgradeSpend
-            if upgradeSpend > 4 or GetGameTimeSeconds() > (420 / multiplier) or aiBrain.BrainIntel.AirPlayer then
+            if upgradeSpend > 4 or GetGameTimeSeconds() > (420 / multiplier) or aiBrain.BrainIntel.AirPlayer or self.BrainIntel.HighestPhase > 1 then
                 upgradeTrigger = true
             end
             local extractorsDetail, extractorTable, totalSpend = self.ExtractorsBeingUpgraded(self, aiBrain)
+            aiBrain.EcoManager.TotalExtractors.TECH1 = extractorsDetail.TECH1
+            aiBrain.EcoManager.TotalExtractors.TECH2 = extractorsDetail.TECH2
             aiBrain.EcoManager.ExtractorsUpgrading.TECH1 = extractorsDetail.TECH1Upgrading
             aiBrain.EcoManager.ExtractorsUpgrading.TECH2 = extractorsDetail.TECH2Upgrading
+            aiBrain.EcoManager.ExtractorValues.TECH1.TeamValue = extractorsDetail.TECH1Value
+            aiBrain.EcoManager.ExtractorValues.TECH2.TeamValue = extractorsDetail.TECH2Value
             local currentEnergyEfficiency = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
             -- Logging starts here
             --LOG('{ "GameTime" : '..tostring(currentTime)..', "Nickname": "'..tostring(aiBrain.Nickname)..'" }')
@@ -1381,7 +1429,7 @@ StructureManager = Class {
             --LOG('{ "GameTime" : '..tostring(currentTime)..', "TotalExtractorSpend" : "'..tostring(totalSpend)..'" }')
             --LOG('{ "GameTime" : '..tostring(currentTime)..', "TotalAllowedExtractorSpend" : "'..tostring(upgradeSpend)..'" }')
             --LOG('{ "GameTime" : '..tostring(currentTime)..', "AvailableExtractorUpgradeSpend" : "'..tostring(upgradeSpend - totalSpend)..'" }')
-            --LOG('{ "GameTime" : '..tostring(currentTime)..', "CurrentT3ExtractorUpgradeSpend" : "'..tostring(aiBrain.EcoManager.T3ExtractorSpend)..'" }')
+            --LOG('{ "GameTime" : '..tostring(currentTime)..', "CurrentT3ExtractorUpgradeSpend" : "'..tostring(tech2Consumption)..'" }')
             --LOG('{ "GameTime" : '..tostring(currentTime)..', "T1ExtractorUpgradeCount" : "'..tostring(extractorsDetail.TECH1Upgrading)..'" }')
             --LOG('{ "GameTime" : '..tostring(currentTime)..', "T2ExtractorUpgradeCount" : "'..tostring(extractorsDetail.TECH2Upgrading)..'" }')
 
@@ -1418,7 +1466,8 @@ StructureManager = Class {
                 self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                 coroutine.yield(80)
                 continue
-            elseif (coreExtractorT2Count + aiBrain.EcoManager.CoreExtractorT3Count >= aiBrain.EcoManager.TotalCoreExtractors or coreExtractorT2Count + aiBrain.EcoManager.CoreExtractorT3Count >= 4) 
+            elseif (coreExtractorT2Count + aiBrain.EcoManager.CoreExtractorT3Count >= aiBrain.EcoManager.TotalCoreExtractors and (upgradeSpend > tech2Consumption * 2.2) or 
+            coreExtractorT2Count + aiBrain.EcoManager.CoreExtractorT3Count >= 4 and (upgradeSpend > tech2Consumption * 2.2)) 
             and extractorsDetail.TECH2Upgrading < 1 and aiBrain.BrainIntel.SelfThreat.ExtractorCount > aiBrain.BrainIntel.MassSharePerPlayer  
             and coreExtractorT2Count > 0
             and energyStorage > 8000 and energyEfficiencyOverTime > 1.1 and currentEnergyEfficiency >= 1.1 then
@@ -1432,25 +1481,30 @@ StructureManager = Class {
                 coroutine.yield(80)
                 continue
             end
-            if extractorsDetail.TECH1Upgrading < 3 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and
-                (totalSpend < upgradeSpend or massStorage > 600) and energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.SpamPlayer then
-                    if totalSpend < upgradeSpend and (extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.2) and upgradeSpend - totalSpend > aiBrain.EcoManager.T3ExtractorSpend then
+            if extractorsDetail.TECH1Upgrading < 3 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and (totalSpend < upgradeSpend or massStorage > 600) and 
+                    energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.SpamPlayer and totalSpend < upgradeSpend and extractorsDetail.TECH2 > 0 and 
+                    (extractorsDetail.TECH1 > 0 and (extractorsDetail.TECH2 / extractorsDetail.TECH1 >= 1.2) or extractorsDetail.TECH1 == 0) and upgradeSpend - totalSpend > (tech2Consumption / 2) then
+                        --LOG('We Could upgrade an extractor now with over time')
                         self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         coroutine.yield(30)
-                    elseif extractorsDetail.TECH1 > 0 and ((extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7) or upgradeSpend < 15) then
+            elseif extractorsDetail.TECH1Upgrading < 3 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and (totalSpend < upgradeSpend or massStorage > 600) and 
+                   energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.SpamPlayer and extractorsDetail.TECH1 > 0 and extractorsDetail.TECH2 > 0 and 
+                   ((extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7) or upgradeSpend < 15) and (upgradeSpend < tech2Consumption) then
+                        --LOG('We Could upgrade an extractor now with over time')
                         self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                         coroutine.yield(30)
-                    elseif totalSpend < upgradeSpend then
+            elseif extractorsDetail.TECH1Upgrading < 3 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and (totalSpend < upgradeSpend or massStorage > 600) and 
+                   energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.SpamPlayer and extractorsDetail.TECH2 > 0 and totalSpend < upgradeSpend and 
+                   (upgradeSpend > (tech2Consumption / 2) or extractorsDetail.TECH1 == 0) then
+                        --LOG('We Could upgrade an extractor now with over time')
                         self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         coroutine.yield(30)
-                    end
-                    coroutine.yield(30)
             elseif extractorsDetail.TECH1 > 0 and extractorsDetail.TECH1Upgrading < 1 and extractorsDetail.TECH2Upgrading > 0 and upgradeTrigger and totalSpend < upgradeSpend 
                    and energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.SpamPlayer then
                     self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                     coroutine.yield(60)
             elseif extractorsDetail.TECH1 > 0 and extractorsDetail.TECH1Upgrading < 5 and upgradeTrigger and (totalSpend < upgradeSpend or massStorage > 450) 
-                   and energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.SpamPlayer then
+                   and energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.SpamPlayer and massStorage < 2500 then
                     self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                     coroutine.yield(60)
             elseif massStorage > 500 and energyStorage > 3000 and extractorsDetail.TECH2Upgrading < 2 and coreExtractorT2Count + aiBrain.EcoManager.CoreExtractorT3Count >= aiBrain.EcoManager.TotalCoreExtractors 
@@ -1490,7 +1544,6 @@ StructureManager = Class {
     StructureTMLCheck = function(self, structure)
         local defended = true
         if structure.TMLInRange and not table.empty(structure.TMLInRange) then
-            --LOG('TMLInRange is greater than 0')
             for k, v in pairs(structure.TMLInRange) do
                 if not self.Brain.EnemyIntel.TML[k] or self.Brain.EnemyIntel.TML[k].object.Dead then
                     structure.TMLInRange[k] = nil
@@ -1647,12 +1700,12 @@ StructureManager = Class {
                 end
                 if not bypassEcoManager and fractionComplete < 0.65 then
                     if (GetEconomyTrend(aiBrain, 'MASS') <= 0.0 and GetEconomyStored(aiBrain, 'MASS') <= 150) or GetEconomyStored( aiBrain, 'ENERGY') < 200 then
-                        if not extractorUnit:IsPaused() then
+                        if not extractorUnit.Dead and not extractorUnit:IsPaused() then
                             extractorUnit:SetPaused(true)
                             coroutine.yield(10)
                         end
                     else
-                        if extractorUnit:IsPaused() then
+                        if not extractorUnit.Dead and extractorUnit:IsPaused() then
                             if aiBrain.EcoManager.ExtractorsUpgrading.TECH1 > 1 or aiBrain.EcoManager.ExtractorsUpgrading.TECH2 > 0 then
                                 if aiBrain.CentralBrainExtractorUnitUpgradeClosest and not aiBrain.CentralBrainExtractorUnitUpgradeClosest.Dead 
                                 and aiBrain.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase == distanceToBase then
@@ -1668,7 +1721,7 @@ StructureManager = Class {
                                     extractorUnit:SetPaused(false)
                                     coroutine.yield(30)
                                 end
-                            else
+                            elseif not extractorUnit.Dead then
                                 extractorUnit:SetPaused(false)
                                 coroutine.yield(20)
                             end
@@ -1682,7 +1735,7 @@ StructureManager = Class {
                 if not extractorUpgradeTimeoutReached then
                     if GetGameTimeSeconds() - upgradeTimeStamp > aiBrain.EcoManager.EcoMassUpgradeTimeout and GetEconomyStored( aiBrain, 'ENERGY') > 500 then
                         extractorUpgradeTimeoutReached = true
-                        if extractorUnit:IsPaused() then
+                        if not extractorUnit.Dead and extractorUnit:IsPaused() then
                             extractorUnit:SetPaused(false)
                         end
                     end
@@ -1690,7 +1743,7 @@ StructureManager = Class {
                 if fractionComplete < 1 and extractorUpgradeTimeoutReached 
                 and (aiBrain.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase == distanceToBase or aiBrain.CentralBrainExtractorUnitUpgradeClosest2nd.DistanceToBase == distanceToBase or extractorUnit.MAINBASE) then
                     bypassEcoManager = true
-                    if extractorUnit:IsPaused() then
+                    if not extractorUnit.Dead and extractorUnit:IsPaused() then
                         extractorUnit:SetPaused(false)
                     end
                 end
@@ -1758,20 +1811,23 @@ StructureManager = Class {
         local extractors = aiBrain:GetListOfUnits(categories.MASSEXTRACTION, true)
         local tech1ExtNumBuilding = 0
         local tech2ExtNumBuilding = 0
+        local tech1ExtValue = 0
+        local tech2ExtValue = 0
         local tech1Total = 0
         local tech2Total = 0
         local tech3Total = 0
         local totalSpend = 0
         local extractorTable = {
             TECH1 = {},
-            TECH2 = {}
+            TECH2 = {},
         }
         local multiplier
         if aiBrain.CheatEnabled then
-            multiplier = aiBrain.EcoManager.EcoMultiplier
+            multiplier = aiBrain.EcoManager.BuildMultiplier
         else
             multiplier = 1
         end
+
         -- own armyIndex
         local armyIndex = aiBrain:GetArmyIndex()
         -- loop over all units and search for upgrading units
@@ -1782,10 +1838,6 @@ StructureManager = Class {
                 end
                 if extractor.Blueprint.CategoriesHash.TECH1 then
                     tech1Total = tech1Total + 1
-                    if not aiBrain.EcoManager.T2ExtractorSpend then
-                        local upgradeId = extractor.Blueprint.General.UpgradesTo
-                        aiBrain.EcoManager.T2ExtractorSpend = (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (extractor.Blueprint.Economy.BuildRate * multiplier))
-                    end
                     if extractor:IsUnitState('Upgrading') then
                         local upgradeId = extractor.Blueprint.General.UpgradesTo
                         totalSpend = totalSpend +  (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (extractor.Blueprint.Economy.BuildRate * multiplier))
@@ -1793,14 +1845,12 @@ StructureManager = Class {
                         tech1ExtNumBuilding = tech1ExtNumBuilding + 1
                     else
                         extractor.Upgrading = false
+                        local extractorValue = extractor.teamvalue or 1
+                        tech1ExtValue = tech1ExtValue + math.min(1, extractorValue)
                         RNGINSERT(extractorTable.TECH1, extractor)
                     end
                 elseif extractor.Blueprint.CategoriesHash.TECH2 then
                     tech2Total = tech2Total + 1
-                    if not aiBrain.EcoManager.T3ExtractorSpend then
-                        local upgradeId = extractor.Blueprint.General.UpgradesTo
-                        aiBrain.EcoManager.T3ExtractorSpend = (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (extractor.Blueprint.Economy.BuildRate * multiplier))
-                    end
                     if extractor:IsUnitState('Upgrading') then
                         local upgradeId = extractor.Blueprint.General.UpgradesTo
                         totalSpend = totalSpend + (ALLBPS[upgradeId].Economy.BuildCostMass / ALLBPS[upgradeId].Economy.BuildTime * (extractor.Blueprint.Economy.BuildRate * multiplier))
@@ -1808,6 +1858,8 @@ StructureManager = Class {
                         tech2ExtNumBuilding = tech2ExtNumBuilding + 1
                     else
                         extractor.Upgrading = false
+                        local extractorValue = extractor.teamvalue or 1
+                        tech2ExtValue = tech2ExtValue + math.min(1, extractorValue)
                         RNGINSERT(extractorTable.TECH2, extractor)
                     end
                 elseif extractor.Blueprint.CategoriesHash.TECH3 then
@@ -1816,7 +1868,7 @@ StructureManager = Class {
             end
         end
         aiBrain.EcoManager.TotalMexSpend = totalSpend
-        return {TECH1 = tech1Total, TECH1Upgrading = tech1ExtNumBuilding, TECH2 = tech2Total, TECH2Upgrading = tech2ExtNumBuilding, TECH3 = tech3Total }, extractorTable, totalSpend
+        return {TECH1 = tech1Total, TECH1Upgrading = tech1ExtNumBuilding, TECH1Value = tech1ExtValue, TECH2 = tech2Total, TECH2Upgrading = tech2ExtNumBuilding, TECH2Value = tech2ExtValue, TECH3 = tech3Total }, extractorTable, totalSpend
     end,
 
     CheckDefensiveCoverage = function(self)

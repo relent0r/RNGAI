@@ -67,9 +67,9 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             self.ScoutUnit = self:GetPlatoonUnits()[1]
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             if aiBrain.EnemyIntel.LandPhase > 1 then
-                self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 70)
+                self.EnemyRadius = math.max(self['rngdata'].MaxPlatoonWeaponRange+35, 70)
             else
-                self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 55)
+                self.EnemyRadius = math.max(self['rngdata'].MaxPlatoonWeaponRange+35, 55)
             end
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -121,7 +121,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             end
             if (self.BuilderData.SupportUnit and not self.BuilderData.SupportUnit.Dead) or (self.BuilderData.SupportPlatoon and not IsDestroyed(self.BuilderData.SupportPlatoon)) then
                 --self:LogDebug(string.format('We are going to support a unit'))
-                local checkRadius = self.IntelRange + 5
+                local checkRadius = self['rngdata'].IntelRange + 5
                 local supportPos
                 if self.BuilderData.SupportUnit then
                     supportPos = self.BuilderData.SupportUnit:GetPosition()
@@ -599,7 +599,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             --LOG('Scout retreating')
             local scout = self.ScoutUnit
             local platPos = scout:GetPosition()
-            local movePos = RUtils.AvoidLocation(builderData.Position, platPos, self.IntelRange - 2)
+            local movePos = RUtils.AvoidLocation(builderData.Position, platPos, self['rngdata'].IntelRange - 2)
             StateUtils.IssueNavigationMove(scout, movePos)
             coroutine.yield(20)
             if builderData.RetreatFrom and not builderData.RetreatFrom.Dead then
@@ -607,7 +607,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     return
                 end
                 local enemyUnitRange = builderData.RetreatFrom and StateUtils.GetUnitMaxWeaponRange(builderData.RetreatFrom, 'Direct Fire') or 0
-                local avoidRange = math.max(enemyUnitRange + 2, self.IntelRange - 2)
+                local avoidRange = math.max(enemyUnitRange + 3, self['rngdata'].IntelRange - 2)
                 if builderData.RetreatFrom then
                     self.retreatTarget = builderData.RetreatFrom
                 end
@@ -655,7 +655,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         end
                         local movePos = RUtils.AvoidLocation(enemyPos, platPos, idealRange)
                         StateUtils.IssueNavigationMove(scout, movePos)
-                        coroutine.yield(10)
+                        coroutine.yield(15)
                         local allyScouts = aiBrain:GetNumUnitsAroundPoint( categories.SCOUT * categories.LAND, platPos, 10, 'Ally')
                         if allyScouts > 2 then
                             if builderData.OriginLocation then
@@ -775,9 +775,6 @@ AssignToUnitsMachine = function(data, platoon, units)
                     platoon.machinedata = {name = 'TruePlatoon',id=v.EntityId}
                 end
                 IssueClearCommands({v})
-                if not platoon.IntelRange or v.Blueprint.Intel.RadarRadius > platoon.IntelRange then
-                    platoon.IntelRange = v.Blueprint.Intel.RadarRadius
-                end
             end
         end
         platoon:OnUnitsAddedToPlatoon()
@@ -796,7 +793,7 @@ end
 ---@param aiBrain AIBrain
 ---@param platoon AIPlatoon
 LandScoutThreatThread = function(aiBrain, platoon)
-    local checkRadius = platoon.IntelRange + 5
+    local checkRadius = platoon['rngdata'].IntelRange + 5
     local unitCatCheck
     local scout = platoon.ScoutUnit
     if scout.UnitId == 'xsl0101' then
@@ -804,6 +801,7 @@ LandScoutThreatThread = function(aiBrain, platoon)
     else
         unitCatCheck = categories.STRUCTURE * categories.DIRECTFIRE + categories.MOBILE * categories.LAND
     end
+    local attackCategories = (categories.ENGINEER - categories.COMMAND) + categories.SCOUT + categories.MASSEXTRACTION
     while aiBrain:PlatoonExists(platoon) do
         local platPos = GetPlatoonPosition(platoon)
         local unitToAttack
@@ -831,11 +829,12 @@ LandScoutThreatThread = function(aiBrain, platoon)
                         local unitDistance = rx * rx + rz * rz
                         attackUnitDistance = unitDistance
                     end
-                    if platoon.StateName ~= 'CombatLoop' and scout.UnitId == 'xsl0101' and not v.Dead and EntityCategoryContains((categories.ENGINEER - categories.COMMAND) + categories.SCOUT + categories.MASSEXTRACTION , v) then
+                    local attackCategory = EntityCategoryContains(attackCategories , v)
+                    if platoon.StateName ~= 'CombatLoop' and scout.UnitId == 'xsl0101' and not v.Dead and attackCategory then
                         --LOG('Seraphim scout vsself.engineer')
                         unitToAttack = v
                         attackUnitDistance = enemyDistance
-                    elseif (not attackUnitDistance or enemyDistance < attackUnitDistance) and platoon.StateName ~= 'Retreating' and not v.Dead and ( platoon.StateName ~= 'SupportUnit' and platoon.StateName ~= 'Navigating' and not platoon.BuilderData.Retreat ) then
+                    elseif (not attackUnitDistance or (enemyDistance < attackUnitDistance and not attackCategory)) and platoon.StateName ~= 'Retreating' and not v.Dead and ( platoon.StateName ~= 'SupportUnit' and platoon.StateName ~= 'Navigating' and not platoon.BuilderData.Retreat ) then
                         if not v['rngdata'].MaxWeaponRange then
                             StateUtils.GetUnitMaxWeaponRange(v)
                         end

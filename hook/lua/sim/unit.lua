@@ -6,6 +6,12 @@ Unit = Class(RNGUnitClass) {
         RNGUnitClass.OnStopBeingCaptured(self, captor)
         RNGEventCallbacks.OnStopBeingCaptured(self, captor)
     end,
+    --[[
+    OnCreate = function(self)
+        RNGUnitClass.OnCreate(self)
+        if RNGUnitClass.OnCreate then ForkThread(RNGEventCallbacks.OnCreate, self) end
+    end,
+    ]]
 
     OnKilled = function(self, instigator, type, overkillRatio)
         RNGEventCallbacks.OnKilled(self, instigator, type, overkillRatio)

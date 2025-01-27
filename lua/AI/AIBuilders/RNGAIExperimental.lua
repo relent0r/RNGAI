@@ -72,6 +72,37 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI Experimental1 2nd',
+        PlatoonTemplate = 'EngineerStateT3SACURNG',
+        Priority = 700,
+        DelayEqualBuildPlattons = {'HighValue', 20},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
+            { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.LAND}},
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T4', 'experimentalland'} },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
+            { EBC, 'GreaterThanEconIncomeCombinedRNG', { 15.0, 450.0 }},
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            NumAssistees = 30,
+            Construction = {
+                DesiresAssist = true,
+                BuildClose = true,
+                HighValue = true,
+                AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
+                BuildStructures = {
+                    { Unit = 'T4LandExperimental1', Categories = categories.EXPERIMENTAL * categories.MOBILE * categories.LAND - categories.CYBRAN * categories.ARTILLERY - categories.UNSELECTABLE - categories.UNTARGETABLE },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI Experimental1 MultiBuild',
         PlatoonTemplate = 'EngineerStateT3SACURNG',
         Priority = 500,
@@ -82,7 +113,8 @@ BuilderGroup {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.2 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.25, 0.95 } },
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.35, 0.95 } },
+            { EBC, 'GreaterThanEconIncomeCombinedRNG', { 35.0, 450.0 }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.EXPERIMENTAL * categories.MOBILE }},
         },
         BuilderType = 'Any',
@@ -302,12 +334,12 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T4 Exp Mobile Artillery',
-        PlatoonTemplate = 'T4ExperimentalLandRNG',
+        PlatoonTemplate = 'T4ExperimentalMobileArtilleryRNG',
         Priority = 1000,
         FormRadius = 160,
         InstanceCount = 50,
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL * categories.ARTILLERY } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.EXPERIMENTAL * categories.ARTILLERY * categories.CYBRAN } },
         },
         BuilderType = 'Any',
         BuilderData = {

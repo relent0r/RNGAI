@@ -591,6 +591,41 @@ BuilderGroup {
         },
     },
     Builder {
+        BuilderName = 'RNGAI Zone Control Expansion',                              -- Random Builder Name.
+        PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
+        Priority = 600,                                                          -- Priority. 1000 is normal.
+        InstanceCount = 3,                                                      -- Number of platoons that will be formed.
+        BuilderType = 'Any',
+        BuilderConditions = {
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL - categories.SCOUT } },
+        },
+        BuilderData = {
+            StateMachine = 'ZoneControl',
+            ZoneType     = 'control',
+            UseFormation = 'None',
+            LocationType = 'LocationType',
+            TargetSearchPriorities = {
+                categories.EXPERIMENTAL * categories.LAND,
+                categories.MASSEXTRACTION,
+                categories.STRUCTURE * categories.ENERGYPRODUCTION,
+                categories.ENERGYSTORAGE,
+                categories.MASSFABRICATION,
+                categories.STRUCTURE,
+                categories.ALLUNITS,
+            },
+            PrioritizedCategories = {
+                categories.COMMAND,
+                categories.EXPERIMENTAL,
+                categories.ENGINEER,
+                categories.MASSEXTRACTION,
+                categories.STRUCTURE * categories.DEFENSE,
+                categories.MOBILE * categories.LAND * categories.ANTIAIR,
+                categories.MOBILE * categories.LAND,
+                categories.ALLUNITS,
+            },
+            },
+    },
+    Builder {
         BuilderName = 'RNGAI Spam Common Expansion Small',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 600,                                                          -- Priority. 1000 is normal.
@@ -794,7 +829,7 @@ BuilderGroup {
         Priority = 1000,
         InstanceCount = 3,
         BuilderConditions = {  
-                { MIBC, 'LessThanGameTime', { 300 } },
+                { MIBC, 'LessThanGameTime', { 210 } },
                 { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.SCOUT } },
             },
         BuilderType = 'Any',
@@ -828,7 +863,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Zone Control',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 800,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 5,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 8,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },

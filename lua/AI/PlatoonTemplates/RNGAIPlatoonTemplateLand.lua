@@ -162,7 +162,15 @@ PlatoonTemplate {
     Name = 'T4ExperimentalLandRNG',
     Plan = 'StateMachineAIRNG',
     GlobalSquads = {
-        { categories.EXPERIMENTAL * categories.LAND * categories.MOBILE - categories.INSIGNIFICANTUNIT, 1, 1, 'attack', 'none' }
+        { categories.EXPERIMENTAL * categories.LAND * categories.MOBILE - categories.INSIGNIFICANTUNIT - categories.url0401, 1, 1, 'attack', 'none' }
+    },
+}
+
+PlatoonTemplate {
+    Name = 'T4ExperimentalMobileArtilleryRNG',
+    Plan = 'StateMachineAIRNG',
+    GlobalSquads = {
+        {categories.MOBILE * categories.LAND * categories.EXPERIMENTAL * categories.ARTILLERY * categories.CYBRAN, 1, 1, 'attack', 'none' }
     },
 }
 

@@ -945,7 +945,7 @@ function HaveUnitRatioAtLocationRNG(aiBrain, locType, ratio, categoryNeed, compa
 end
 
 function BuildOnlyOnLocationRNG(aiBrain, LocationType, AllowedLocationType)
-    --RNGLOG('* BuildOnlyOnLocationRNG: we are on location '..LocationType..', Allowed locations are: '..AllowedLocationType..'')
+    --LOG('* BuildOnlyOnLocationRNG: we are on location '..LocationType..', Allowed locations are: '..AllowedLocationType..'')
     if string.find(LocationType, AllowedLocationType) then
         return true
     end
@@ -1871,7 +1871,6 @@ function RequireTMDCheckRNG(aiBrain, locationType)
     local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
     local smInstance = StructureManagerRNG.GetStructureManager(aiBrain)
     if smInstance.TMDRequired then
-        --LOG('TMD is required for a MEX')
         return true
     end
     if locationType ~= 'FLOATING' and aiBrain.BasePerimeterMonitor[locationType].EnemyMobileSiloDetected then
@@ -1939,7 +1938,7 @@ function HighValueZone(aiBrain, locationType)
             local dx = basePos[1] - startPos[1]
             local dz = basePos[3] - startPos[3]
             local distanceToMain = dx * dx + dz * dz
-            if distanceToMain > 22500 then
+            if distanceToMain > 12100 then
                 return true
             end
         end

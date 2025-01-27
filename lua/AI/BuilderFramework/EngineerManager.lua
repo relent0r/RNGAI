@@ -4,6 +4,7 @@
 --**  Copyright © 2005 Gas Powered Games, Inc.  All rights reserved.
 --****************************************************************************
 
+local RNGAIGLOBALS = import("/mods/RNGAI/lua/AI/RNGAIGlobals.lua")
 local BuilderManager = import("/mods/RNGAI/lua/AI/BuilderFramework/buildermanager.lua").BuilderManager
 local Builder = import("/mods/RNGAI/lua/AI/BuilderFramework/builder.lua")
 local SUtils = import("/lua/ai/sorianutilities.lua")
@@ -441,7 +442,7 @@ EngineerManager = Class(BuilderManager) {
         local customFactions = self.Brain.CustomFactions
         for k,v in customFactions do
             if EntityCategoryContains(v.customCat, engineer) then
-                LOG('*AI DEBUG: UnitFromCustomFaction: '..k)
+                --LOG('*AI DEBUG: UnitFromCustomFaction: '..k)
                 return k
             end
         end
@@ -456,7 +457,7 @@ EngineerManager = Class(BuilderManager) {
         if faction > 4 then
             if self:UnitFromCustomFaction(engineer) then
                 faction = self:UnitFromCustomFaction(engineer)
-                LOG('*AI DEBUG: GetBuildingId faction: '..faction)
+                --LOG('*AI DEBUG: GetBuildingId faction: '..faction)
                 return self.Brain:DecideWhatToBuild(engineer, buildingType, self.Brain.CustomFactions[faction])
             end
         else
@@ -628,7 +629,7 @@ EngineerManager = Class(BuilderManager) {
                         unitZone = MAP:GetZoneID(mexPos,aiBrain.Zones.Land.index)
                     end
                 end
-                if unitZone ~= 'water' then
+                if unitZone ~= 'water' and not RNGAIGLOBALS.CampaignMapFlag then
                     local zone = aiBrain.Zones.Land.zones[unitZone]
                     if zone and zone.bestarmy and zone.bestarmy ~= armyIndex then
                         local playerIndex = zone.bestarmy
@@ -640,6 +641,14 @@ EngineerManager = Class(BuilderManager) {
                             TransferUnitsOwnership({finishedUnit}, playerIndex)
                         end
                     end
+                end
+            end
+            local unitStats = self.Brain.IntelManager.UnitStats
+            local unitValue = finishedUnit.Blueprint.Economy.BuildCostMass or 0
+            if unitStats then
+                local finishedUnitCats = finishedUnit.Blueprint.CategoriesHash
+                if finishedUnitCats.MOBILE and finishedUnitCats.LAND and finishedUnitCats.EXPERIMENTAL and not finishedUnitCats.ARTILLERY then
+                    unitStats['ExperimentalLand'].Built.Mass = unitStats['ExperimentalLand'].Built.Mass + unitValue
                 end
             end
             self:AddUnit(finishedUnit)
@@ -760,7 +769,6 @@ EngineerManager = Class(BuilderManager) {
     ---@param dontAssign boolean
     AddUnit = function(self, unit, dontAssign)
         --LOG('+ AddUnit')
-        local unitCat = unit.Blueprint.CategoriesHash
         if EntityCategoryContains(categories.STRUCTURE * categories.DEFENSE - categories.WALL, unit) then
             if not unit.BuilderManagerData then
                 unit.BuilderManagerData = {}

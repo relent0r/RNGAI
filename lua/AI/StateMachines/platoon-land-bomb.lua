@@ -55,9 +55,9 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
             self.ScoutSupported = true
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             if aiBrain.EnemyIntel.LandPhase > 1 then
-                self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 70)
+                self.EnemyRadius = math.max(self['rngdata'].MaxPlatoonWeaponRange+35, 70)
             else
-                self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 55)
+                self.EnemyRadius = math.max(self['rngdata'].MaxPlatoonWeaponRange+35, 55)
             end
             self.WeaponDamage = 1
             self:ChangeState(self.DecideWhatToDo)
@@ -324,7 +324,7 @@ AIPlatoonLandBombCombatBehavior = Class(AIPlatoonRNG) {
                     local attackStructure = false
                     local platUnits = self:GetPlatoonUnits()
                     if targetCats.STRUCTURE and targetCats.DEFENSE then
-                        if targetRange < self.MaxPlatoonWeaponRange then
+                        if targetRange < self['rngdata'].MaxPlatoonWeaponRange then
                             attackStructure = true
                             for _, v in platUnits do
                                 ----self:LogDebug('Role is '..repr(v['rngdata'].Role))

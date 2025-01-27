@@ -4,6 +4,7 @@ local LastCheckMassMarkerRNG = {}
 local MassMarkerRNG = {}
 local NavUtils = import('/lua/sim/NavUtils.lua')
 local LastMassBOOLRNG = false
+local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
@@ -136,6 +137,67 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
         end
     end
     return LastMassBOOLRNG
+end
+
+function CanBuildMassInZoneEdgeRNG(aiBrain, locationType, falseBool)
+
+    -- Determine the zone of the given position
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+    if not engineerManager then
+        --WARN('*AI WARNING: CanBuildOnMass: Invalid location - ' .. locationType)
+        return false
+    end
+    local zoneMaxDistance = math.min(80, math.max(50, math.max(ScenarioInfo.size[1] - 40, ScenarioInfo.size[2] - 40) / 4))
+    local position = engineerManager.Location
+    local zoneId = MAP:GetZoneID(position, aiBrain.Zones.Land.index)
+    local currentZone = aiBrain.Zones.Land.zones[zoneId]
+
+    if not currentZone or not currentZone.resourcemarkers then
+        WARN('AI-RNG : No zone found for engineer manager position or no resource markers')
+        return false-- No zone found for this position
+    end
+
+    -- Function to evaluate a zone
+    local function evaluateZone(zone, basePosition)
+        local dx = basePosition[1] - zone.pos[1]
+        local dz = basePosition[3] - zone.pos[3]
+        local distance = dx * dx + dz * dz -- Squared distance for efficiency
+    
+        -- Check if this zone is better based on the criteria
+        if distance < zoneMaxDistance * zoneMaxDistance then
+            for _, res in zone.resourcemarkers do
+                if aiBrain:CanBuildStructureAt('ueb1103', res.position) then
+                    return true
+                end
+            end
+        end
+    end
+
+    -- Evaluate the current zone
+    local canBuildOnMass = evaluateZone(currentZone, position)
+    if falseBool and canBuildOnMass then
+        return false
+    elseif canBuildOnMass then
+        return true
+    end
+
+    -- Evaluate neighboring zones through edges
+    for _, edge in ipairs(currentZone.edges or {}) do
+        local neighborZone = edge.zone
+        if neighborZone then
+            local canBuildOnMassEdge = evaluateZone(neighborZone, position)
+            if falseBool and canBuildOnMassEdge then
+                return false
+            elseif canBuildOnMassEdge then
+                return true
+            end
+        end
+    end
+    if falseBool then
+        return true
+    else
+        return false
+    end
 end
 
 function MassMarkerLessThanDistanceRNG(aiBrain, distance)

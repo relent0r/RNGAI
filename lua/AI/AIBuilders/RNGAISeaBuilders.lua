@@ -171,6 +171,20 @@ BuilderGroup {
         },
     },
     Builder {
+        BuilderName = 'RNGAI T2 Cruiser Demand',
+        PlatoonTemplate = 'T2SeaCruiser',
+        Priority = 789,
+        BuilderConditions = {
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Naval', 'T2', 'cruiser'} },
+            { EBC, 'FactorySpendRatioRNG', {'Naval','NavalUpgrading',  true}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Sea',
+        BuilderData = {
+            TechLevel = 2
+        },
+    },
+    Builder {
         BuilderName = 'RNGAI T2 Subhunter',
         PlatoonTemplate = 'T2SubKiller',
         Priority = 748,
@@ -257,7 +271,7 @@ BuilderGroup {
         Priority = 792,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Naval', 'T3', 'missileship'} },
-            { EBC, 'FactorySpendRatioRNG', {'Naval', 'NavalUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'Naval', 'NavalUpgrading', nil, true}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Sea',
@@ -271,7 +285,7 @@ BuilderGroup {
         Priority = 791,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Naval', 'T3', 'nukesub'} },
-            { EBC, 'FactorySpendRatioRNG', {'Naval', 'NavalUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'Naval', 'NavalUpgrading', nil, true}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Sea',
@@ -360,44 +374,6 @@ BuilderGroup {
                 categories.MOBILE * categories.LAND,
                 categories.ENGINEER,
                 categories.ALLUNITS,
-            },
-        },
-        BuilderType = 'Any',
-    },
-    Builder {
-        BuilderName = 'RNGAI Ranged Sea Attack T23',
-        PlatoonTemplate = 'RNGAI Sea Attack Ranged T123',
-        --PlatoonAddBehaviors = { 'TacticalResponse' },
-        Priority = 310,
-        InstanceCount = 8,
-        BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.NAVAL * ( categories.TECH2 + categories.TECH3 ) * ( categories.CRUISER + categories.xas0306 + categories.NUKE ) - categories.EXPERIMENTAL } },
-            --{ SeaAttackCondition, { 'LocationType', 14 } },
-        },
-        BuilderData = {
-            SearchRadius = 'BaseEnemyArea',
-            UseFormation = 'None',
-            PlatoonLimit = 20,
-            AggressiveMove = false,
-            ThreatSupport = 5,
-            TargetSearchPriorities = {
-                categories.STRUCTURE * categories.NAVAL * categories.FACTORY,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH3 + categories.TECH2),
-                categories.MASSEXTRACTION,
-                categories.ENERGYSTORAGE,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                categories.STRUCTURE * categories.MASSFABRICATION,
-                categories.STRUCTURE,
-            },
-            PrioritizedCategories = {
-                categories.EXPERIMENTAL,
-                categories.STRUCTURE * categories.DEFENSE,
-                categories.STRUCTURE * categories.ENERGYPRODUCTION,
-                categories.ENERGYSTORAGE,
-                categories.MASSEXTRACTION,
-                categories.MASSFABRICATION,
-                categories.COMMAND,
-                categories.STRUCTURE,
             },
         },
         BuilderType = 'Any',

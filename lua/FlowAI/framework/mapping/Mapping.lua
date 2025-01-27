@@ -10,6 +10,7 @@
   ]]
 local NavUtils = import('/lua/sim/NavUtils.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local RNGAIGLOBALS = import("/mods/RNGAI/lua/AI/RNGAIGlobals.lua")
 local CreatePriorityQueue = import('/mods/RNGAI/lua/FlowAI/framework/utils/PriorityQueue.lua').CreatePriorityQueue
 local DEFAULT_BORDER = 4
 local PLAYABLE_AREA = nil
@@ -851,7 +852,8 @@ function BeginSession()
             map:AddZoneSet(ZoneSetClass)
         end
         END = GetSystemTimeSecondsOnlyForProfileUse()
-       --RNGLOG(string.format('FlowAI framework: Custom zone generation finished (%d found), runtime: %.2f seconds.', table.getn(customZoneSets), END - START ))
+        LOG(string.format('FlowAI framework: Custom zone generation finished (%d found), runtime: %.2f seconds.', table.getn(customZoneSets), END - START ))
+        RNGAIGLOBALS.ZoneGenerationComplete = true
     else
        --RNGLOG("FlowAI framework: No custom zoning classes found.")
     end
@@ -880,7 +882,6 @@ function GetMarkersRNG()
 end
 
 function SetMarkerInformation(aiBrain)
-    local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
     --RNGLOG('Display Marker Adjacency Running '..aiBrain.Nickname)
     while not aiBrain.ZonesInitialized do
         RNGLOG('Waiting for Zones to Initialize '..aiBrain.Nickname)
@@ -891,9 +892,6 @@ function SetMarkerInformation(aiBrain)
         coroutine.yield(20)
     end
     local expansionMarkers = Scenario.MasterChain._MASTERCHAIN_.Markers
-    local VDist3Sq = VDist3Sq
-    --aiBrain.armyspots={}
-    --aiBrain.expandspots={}
     --RNGLOG('Infecting expansions '..aiBrain.Nickname)
     for k,marker in expansionMarkers do
         local expand=false
@@ -915,14 +913,11 @@ function SetMarkerInformation(aiBrain)
         end
         if expand then
             InfectMarkersRNG(aiBrain,marker, k)
-            --table.insert(aiBrain.expandspots,{marker,k})
         end
         if not expand and not mass then
             for _,v in STR_GetTokens(k,'_') do
                 if v=='ARMY' then
                     InfectMarkersRNG(aiBrain,marker, k)
-                    --table.insert(aiBrain.armyspots,{marker,k})
-                    --table.insert(aiBrain.expandspots,{marker,k})
                 end
             end
         end

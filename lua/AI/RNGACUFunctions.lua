@@ -48,6 +48,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.AirScout = false
     cdr.Scout = false
     cdr.CurrentEnemyThreat = 0
+    cdr.CurrentEnemyDefenseThreat = 0
     cdr.CurrentEnemyAirThreat = 0
     cdr.CurrentFriendlyThreat = 0
     cdr.CurrentFriendlyAntiAirThreat = 0
@@ -138,7 +139,7 @@ function CDRBrainThread(cdr)
         local dz = cdr.Position[3] - cdr.CDRHome[3]
         cdr.DistanceToHome = dx * dx + dz * dz
         if cdr.Health < 5500 and cdr.DistanceToHome > 900 then
-            --RNGLOG('cdr caution is true due to health < 5000 and distance to home greater than 900')
+            --LOG('cdr caution is true due to health < 5000 and distance to home greater than 900')
             cdr.Caution = true
             cdr.CautionReason = 'lowhealth'
             if (not cdr.GunUpgradePresent) then
@@ -148,7 +149,7 @@ function CDRBrainThread(cdr)
                 cdr.HighThreatUpgradeRequired = true
             end
         elseif cdr.Health < 6500 and cdr.PositionStatus == 'Hostile' then
-            --RNGLOG('cdr caution is true due to health < 6500 and in hostile territory')
+            --LOG('cdr caution is true due to health < 6500 and in hostile territory')
             cdr.Caution = true
             cdr.CautionReason = 'lowhealth and hostile'
             if (not cdr.GunUpgradePresent) then
@@ -264,6 +265,7 @@ function CDRThreatAssessmentRNG(cdr)
             local enemyUnitThreat = 0
             local enemyUnitThreatInner = 0
             local enemyAirThreat = 0
+            local enemyDefenseThreat = 0
             local friendAntiAirThreat = 0
             local friendlyUnitThreat = 0
             local friendlyUnitThreatInner = 0
@@ -335,6 +337,9 @@ function CDRThreatAssessmentRNG(cdr)
                         if EntityCategoryContains(CategoryT2Defense, v) then
                             if v.Blueprint.Defense.SurfaceThreatLevel then
                                 enemyUnitThreatInner = enemyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel * 1.5
+                                if unitDist < 3025 then
+                                    enemyDefenseThreat = enemyDefenseThreat + v.Blueprint.Defense.SurfaceThreatLevel
+                                end
                             end
                         end
                         if v.Blueprint.CategoriesHash.COMMAND then
@@ -365,6 +370,7 @@ function CDRThreatAssessmentRNG(cdr)
             --RNGLOG('Continue Fighting is set to true')
             --RNGLOG('ACU Cutoff Threat '..cdr.ThreatLimit)
             cdr.CurrentEnemyThreat = enemyUnitThreat
+            cdr.CurrentEnemyDefenseThreat = enemyDefenseThreat
             cdr.CurrentFriendlyThreat = friendlyUnitThreat
             cdr.CurrentEnemyInnerCircle = enemyUnitThreatInner
             cdr.CurrentFriendlyInnerCircle = friendlyUnitThreatInner
@@ -404,6 +410,9 @@ function CDRThreatAssessmentRNG(cdr)
                 --RNGLOG('ACU threat low and health up past 6000')
                 cdr.Caution = false
                 cdr.CautionReason = 'none'
+            elseif cdr.CurrentEnemyDefenseThreat > 55 and cdr.Health < 6000 then
+                cdr.Caution = true
+                cdr.CautionReason = 'enemyDefenseThreat'
             end
             if aiBrain.EnemyIntel.EnemyFireBaseDetected then
                 local inFirebaseRange = false

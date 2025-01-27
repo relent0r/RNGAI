@@ -98,14 +98,9 @@ RNGLandResourceSet = Class(ZoneSet){
                 -- assimilate it into the spawn location
                 if nearestStartLocationDistance and math.sqrt(nearestStartLocationDistance) < threshold then
                     local extractors = nearestStartLocation.resourcemarkers
-                    for k, resource in zone.resourcemarkers do
+                    for _, resource in zone.resourcemarkers do
                         table.insert(extractors, resource)
                     end
-        
-                    --local hydrocarbonPlants = nearestStartLocation.HydrocarbonPlants
-                    --for k, resource in expansion.HydrocarbonPlants do
-                    --    table.insert(hydrocarbonPlants, resource)
-                    --end
                 else
                     zoneList[head] = zone
                     head = head + 1

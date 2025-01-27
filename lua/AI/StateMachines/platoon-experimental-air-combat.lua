@@ -73,9 +73,9 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             self.ExperimentalUnit = self:GetSquadUnits('Attack')[1]
             if self.ExperimentalUnit and not self.ExperimentalUnit.Dead then
                 -- Set the platoon max weapon range for the platoon and modify the categories on the Gauss Cannon
-                self.MaxPlatoonWeaponRange = self.ExperimentalUnit.Blueprint.Weapon[1].MaxRadius
-                if not self.MaxPlatoonWeaponRange then
-                    self.MaxPlatoonWeaponRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Direct Fire')
+                self['rngdata'].MaxPlatoonWeaponRange = self.ExperimentalUnit.Blueprint.Weapon[1].MaxRadius
+                if not self['rngdata'].MaxPlatoonWeaponRange then
+                    self['rngdata'].MaxPlatoonWeaponRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Direct Fire')
                 end
                 for i = 1, self.ExperimentalUnit:GetWeaponCount() do
                     local wep = self.ExperimentalUnit:GetWeapon(i)
@@ -332,7 +332,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                 local distance = dx * dx + dz * dz
                 --self:LogDebug(string.format('Target is '..repr(target.UnitId)))
                 --self:LogDebug(string.format('Target distance is '..distance))
-                if distance > self.MaxPlatoonWeaponRange * self.MaxPlatoonWeaponRange then
+                if distance > self['rngdata'].MaxPlatoonWeaponRange * self['rngdata'].MaxPlatoonWeaponRange then
                     self.BuilderData = {
                         Position = targetPos,
                         AttackTarget = target
@@ -475,7 +475,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local experimental = self.ExperimentalUnit
             local target = self.BuilderData.AttackTarget
-            local maxPlatoonRange = self.MaxPlatoonWeaponRange
+            local maxPlatoonRange = self['rngdata'].MaxPlatoonWeaponRange
             local threatTable = self.EnemyThreatTable
             while experimental and not IsDestroyed(experimental) do
                 if experimental.ShieldCaution and not experimental.HoldPosition then
@@ -498,8 +498,8 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     local unitPos = experimental:GetPosition()
                     if StateUtils.PositionInWater(unitPos) and experimental.Blueprint.CategoriesHash.ANTINAVY then
                         maxPlatoonRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Anti Navy')
-                    elseif maxPlatoonRange < self.MaxPlatoonWeaponRange then
-                        maxPlatoonRange = self.MaxPlatoonWeaponRange
+                    elseif maxPlatoonRange < self['rngdata'].MaxPlatoonWeaponRange then
+                        maxPlatoonRange = self['rngdata'].MaxPlatoonWeaponRange
                     end
                     --self:LogDebug(string.format('Experimental of unit '..self.ExperimentalUnit.UnitId..' has a max platoon range of '..repr(maxPlatoonRange)))
                     local targetDistance = VDist3Sq(unitPos, targetPosition)
@@ -605,7 +605,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local experimental = self.ExperimentalUnit
             local target = self.BuilderData.AttackTarget
-            local maxPlatoonRange = self.MaxPlatoonWeaponRange
+            local maxPlatoonRange = self['rngdata'].MaxPlatoonWeaponRange
             local threatTable = self.EnemyThreatTable
             if not self.BuilderData then
                 WARN('Land HoldPosition is missing builder data')

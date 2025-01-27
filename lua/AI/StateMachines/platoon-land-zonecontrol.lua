@@ -141,11 +141,14 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             --self:LogDebug(string.format('DecideWhatToDo threat data enemy surface '..tostring(threat.enemySurface)))
             --self:LogDebug(string.format('DecideWhatToDo threat data ally surface '..tostring(threat.allySurface)))
             --self:LogDebug(string.format('DecideWhatToDo threat data ally multiplier surface '..tostring(threat.allySurface*threatMultiplier)))
+            --self:LogDebug(string.format('DecideWhatToDo enemy range '..tostring(threat.enemyrange)))
+            --self:LogDebug(string.format('DecideWhatToDo friendly range '..tostring(threat.allyrange)))
             if threat.allySurface and threat.enemySurface and threat.allySurface*threatMultiplier < threat.enemySurface or self.Raid and threat.allyrange < threat.enemyrange then
-                if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*1.5 > (threat.enemySurface - threat.enemyStructure) then
+                if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*1.5 > (threat.enemySurface - threat.enemyStructure) or 
+                threat.allyrange > threat.enemyrange and threat.allySurface*1.5 > threat.enemySurface then
                     rangedAttack = true
                 else
-                    --self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
+                    self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
                     self.retreat=true
                     self:ChangeState(self.Retreating)
                     return
@@ -210,7 +213,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-            --local defenseCheck = StateUtils.CheckDefenseClusters(aiBrain, self.Pos, self.MaxPlatoonWeaponRange, self.MovementLayer, self.CurrentPlatoonThreatAntiSurface)
+            --local defenseCheck = StateUtils.CheckDefenseClusters(aiBrain, self.Pos, self['rngdata'].MaxPlatoonWeaponRange, self.MovementLayer, self.CurrentPlatoonThreatAntiSurface)
             --if defenseCheck then
             --    LOG('Platoon is almost within range of defense cluster')
             --end
@@ -287,13 +290,25 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     table.remove(self.ZoneMarkerTable, 1)
                 else
                     local currentLabel = false
-                    if aiBrain:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then
+                    if self.MovementLayer == 'Land' and aiBrain:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then
                         currentLabel = true
                     end
                     targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType, currentLabel)
                     self:LogDebug(string.format('Looked for zone at the current label'))
                 end
                 if targetZone then
+                    if self.LocationType and aiBrain.BuilderManagers[self.LocationType].Zone then
+                        if targetZone == aiBrain.BuilderManagers[self.LocationType].Zone then
+                            self:LogDebug(string.format('Zone detected was our starting base, go to loiter mode'))
+                            self.BuilderData = {
+                                TargetZone = targetZone,
+                                Position = aiBrain.Zones.Land.zones[targetZone].pos,
+                                CutOff = 400
+                            }
+                            self:ChangeState(self.Loiter)
+                            return
+                        end
+                    end
                     self.BuilderData = {
                         TargetZone = targetZone,
                         Position = aiBrain.Zones.Land.zones[targetZone].pos,
@@ -339,8 +354,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
-            --LOG('ACUSupport trying to use transport')
-            local brain = self:GetBrain()
+            --LOG('Zone Control moving to loiter')
+            local aiBrain = self:GetBrain()
             local builderData = self.BuilderData
             if not builderData.Position then
                 WARN('No position passed to ZoneControlDefense')
@@ -348,7 +363,49 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 return false
             end
             local counter = 0
-            while counter < 10 do
+            local target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self.Pos, self, 'Attack', 120, {categories.MOBILE * categories.LAND}, false)
+            if target and not target.Dead then
+                --LOG('Zone Control found target around loiter position')
+                self.targetcandidates = {}
+                StateUtils.SetTargetData(aiBrain, self, target)
+                table.insert(self.targetcandidates, target)
+                self:ChangeState(self.CombatLoop)
+                return
+            end
+            local potentialTargetZone = StateUtils.SearchHighestThreatFromZone(aiBrain, self.Pos, 'land', 'antisurface')
+            if potentialTargetZone and potentialTargetZone ~= self.Zone then
+                --LOG('Zone Control found edge zone with potential target')
+                local zonePos = potentialTargetZone.pos
+                --LOG('target zone is '..tostring(potentialTargetZone.id))
+                --LOG('Zone pos is '..tostring(zonePos[1])..':'..tostring(zonePos[3]))
+                --LOG('self Pos is '..tostring(self.Pos[1])..':'..tostring(self.Pos[3]))
+                local rx = self.Pos[1] - zonePos[1]
+                local rz = self.Pos[3] - zonePos[3]
+                local distanceToZone = math.sqrt(rx * rx + rz * rz)
+                local lerpPosition = RUtils.lerpy(zonePos, self.Pos, {distanceToZone, distanceToZone - 30})
+                self.BuilderData = {
+                    Position = lerpPosition,
+                    CutOff = 225,
+                }
+                self.dest = self.BuilderData.Position
+                self:ChangeState(self.Navigating)
+                return
+            end
+            if aiBrain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint then
+                --LOG('Zone Control is moving to factory manager rally point')
+                local platUnits = self:GetPlatoonUnits()
+                for _, v in platUnits do
+                    StateUtils.IssueNavigationMove(v, aiBrain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint)
+                end
+                coroutine.yield(25)
+            end
+            while counter < 10 and not IsDestroyed(self) do
+                --LOG('Zone Control is loitering at rally pont')
+                if aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.LAND, self.Pos, 45, 'Enemy') > 0 then
+                    self.BuilderData = {}
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
                 counter = counter + 1
                 coroutine.yield(20)
             end
@@ -473,11 +530,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                 IssueClearCommands({v}) 
                                 if unitRole == 'Shield' and closestTarget then
                                     --LOG('UnitRole is Shield')
-                                    local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, v, unitPos, target) or RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4})
+                                    local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, v, unitPos, target) or RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self['rngdata'].MaxDirectFireRange or self['rngdata'].MaxPlatoonWeaponRange) + 4})
                                     StateUtils.IssueNavigationMove(v, shieldPos)
                                     --aiBrain:ForkThread(RUtils.DrawCircleAtPosition, shieldPos)
                                 elseif unitRole == 'Stealth' and closestTarget then
-                                    local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxPlatoonWeaponRange})
+                                    local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self['rngdata'].MaxPlatoonWeaponRange})
                                     StateUtils.IssueNavigationMove(v, movePos)
                                 else
                                     IssueAggressiveMove({v},targetPos)
@@ -501,22 +558,22 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                 IssueClearCommands({v})
                                 if unitRole == 'Shield' and closestTarget then
                                     --LOG('UnitRole is Shield')
-                                    local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, v, unitPos, target) or RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4})
+                                    local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, v, unitPos, target) or RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self['rngdata'].MaxDirectFireRange or self['rngdata'].MaxPlatoonWeaponRange) + 4})
                                     StateUtils.IssueNavigationMove(v, shieldPos)
                                     --aiBrain:ForkThread(RUtils.DrawCircleAtPosition, shieldPos)
                                 elseif unitRole == 'Scout' and closestTarget then
                                     --LOG("land combat scout trying to get into intelrange")
-                                    local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self.IntelRange or self.MaxPlatoonWeaponRange) })
+                                    local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self['rngdata'].IntelRange or self['rngdata'].MaxPlatoonWeaponRange) })
                                     StateUtils.IssueNavigationMove(v, movePos)
                                 elseif unitRole == 'Stealth' and closestTarget then
-                                    local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxPlatoonWeaponRange})
+                                    local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self['rngdata'].MaxPlatoonWeaponRange})
                                     StateUtils.IssueNavigationMove(v, movePos)
                                 else
                                     IssueAggressiveMove({v},targetPos)
                                 end
                             elseif unitRole == 'Shield' and closestTarget then
                                 --LOG('UnitRole is Shield')
-                                local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, v, unitPos, target) or RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4})
+                                local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, v, unitPos, target) or RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self['rngdata'].MaxDirectFireRange or self['rngdata'].MaxPlatoonWeaponRange) + 4})
                                 StateUtils.IssueNavigationMove(v, shieldPos)
                             else
                                 StateUtils.VariableKite(self,v,target)
@@ -524,14 +581,14 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         else
                             if unitRole == 'Shield' and closestTarget then
                                 --LOG('UnitRole is Shield')
-                                local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, v, unitPos, target) or RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4})
+                                local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, v, unitPos, target) or RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self['rngdata'].MaxDirectFireRange or self['rngdata'].MaxPlatoonWeaponRange) + 4})
                                 StateUtils.IssueNavigationMove(v, shieldPos)
                                 --aiBrain:ForkThread(RUtils.DrawCircleAtPosition, shieldPos)
                             elseif unitRole == 'Stealth' and closestTarget then
-                                local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxPlatoonWeaponRange})
+                                local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self['rngdata'].MaxPlatoonWeaponRange})
                                 StateUtils.IssueNavigationMove(v, movePos)
                             elseif unitRole == 'Scout' and closestTarget then
-                                local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self.IntelRange or self.MaxPlatoonWeaponRange) })
+                                local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self['rngdata'].IntelRange or self['rngdata'].MaxPlatoonWeaponRange) })
                                 StateUtils.IssueNavigationMove(v, movePos)
                             end
                         end
@@ -620,10 +677,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            if target and not target.Dead and targetPos and aiBrain:CheckBlockingTerrain(self.Pos, targetPos, 'none') then
-                IssueMove(units, targetPos)
-            end
-            coroutine.yield(30)
+            coroutine.yield(25)
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -677,7 +731,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     local targetCats = target.Blueprint.CategoriesHash
                     local attackStructure = false
                     if targetCats.STRUCTURE and targetCats.DEFENSE then
-                        if targetRange < self.MaxPlatoonWeaponRange then
+                        if targetRange < self['rngdata'].MaxPlatoonWeaponRange then
                             attackStructure = true
                             for _, v in platUnits do
                                 if v['rngdata'].Role == 'Artillery' or v['rngdata'].Role == 'Silo' and not v:IsUnitState("Attacking") then
@@ -694,7 +748,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                     StateUtils.IssueNavigationMove(v, zonePos)
                                 else
                                     local unitPos = v:GetPosition()
-                                    local movePos = RUtils.lerpy(unitPos, targetPos, {targetDistance, targetDistance - self.MaxPlatoonWeaponRange })
+                                    local movePos = RUtils.lerpy(unitPos, targetPos, {targetDistance, targetDistance - self['rngdata'].MaxPlatoonWeaponRange })
                                     StateUtils.IssueNavigationMove(v, movePos)
                                 end
                             end
@@ -917,7 +971,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     for _,v in platoonUnits do
                         if v and not v.Dead then
                             local unitPos = v:GetPosition()
-                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>self.MaxPlatoonWeaponRange*self.MaxPlatoonWeaponRange+900 then
+                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>self['rngdata'].MaxPlatoonWeaponRange*self['rngdata'].MaxPlatoonWeaponRange+900 then
                                 local vec={}
                                 vec[1],vec[2],vec[3]=v:GetVelocity()
                                 if VDist3Sq({0,0,0},vec)<1 then
@@ -1111,6 +1165,9 @@ ThreatThread = function(aiBrain, platoon)
         if combatUnits < 1 then
             --LOG('The platoon has no combat units')
             --LOG('Total platoon count is '..tostring(currentPlatoonCount))
+        end
+        if currentPlatoonCount < 5 then
+            platoon.PlatoonStrengthLow = true
         end
         if currentPlatoonCount > platoon.PlatoonLimit then
             platoon.PlatoonFull = true

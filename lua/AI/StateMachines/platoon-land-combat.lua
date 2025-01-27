@@ -61,9 +61,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             self.PlatoonLimit = self.PlatoonData.PlatoonLimit or 18
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             if aiBrain.EnemyIntel.LandPhase > 1 then
-                self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 75)
+                self.EnemyRadius = math.max(self['rngdata'].MaxPlatoonWeaponRange+35, 75)
             else
-                self.EnemyRadius = math.max(self.MaxPlatoonWeaponRange+35, 60)
+                self.EnemyRadius = math.max(self['rngdata'].MaxPlatoonWeaponRange+35, 60)
             end
             self.CurrentPlatoonThreatAntiSurface = 0
             self.CurrentPlatoonThreatAntiNavy = 0
@@ -173,7 +173,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-            --local defenseCheck = StateUtils.CheckDefenseClusters(aiBrain, self.Pos, self.MaxPlatoonWeaponRange, self.MovementLayer, self.CurrentPlatoonThreatAntiSurface)
+            --local defenseCheck = StateUtils.CheckDefenseClusters(aiBrain, self.Pos, self['rngdata'].MaxPlatoonWeaponRange, self.MovementLayer, self.CurrentPlatoonThreatAntiSurface)
             --if defenseCheck then
             --    LOG('Platoon is almost within range of defense cluster')
             --end
@@ -182,7 +182,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 local hiPriTarget = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
                 if hiPriTarget and not IsDestroyed(hiPriTarget) then
                     hiPriTargetPos = hiPriTarget:GetPosition()
-                    if VDist2Sq(hiPriTargetPos[1],hiPriTargetPos[3],self.Pos[1],self.Pos[3])>(self.MaxPlatoonWeaponRange+20)*(self.MaxPlatoonWeaponRange+20) then  
+                    if VDist2Sq(hiPriTargetPos[1],hiPriTargetPos[3],self.Pos[1],self.Pos[3])>(self['rngdata'].MaxPlatoonWeaponRange+20)*(self['rngdata'].MaxPlatoonWeaponRange+20) then  
                         if not self.combat and not self.retreat then
                             self.rdest=hiPriTargetPos
                             if self.path and VDist3Sq(self.path[RNGGETN(self.path)],hiPriTargetPos)>400 then
@@ -250,7 +250,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     end
                     if point then
                     --RNGLOG('point pos '..repr(point.Position)..' with a priority of '..point.priority)
-                        if VDist2Sq(point.Position[1],point.Position[3],self.Pos[1],self.Pos[3])>(self.MaxPlatoonWeaponRange+20)*(self.MaxPlatoonWeaponRange+20) then
+                        if VDist2Sq(point.Position[1],point.Position[3],self.Pos[1],self.Pos[3])>(self['rngdata'].MaxPlatoonWeaponRange+20)*(self['rngdata'].MaxPlatoonWeaponRange+20) then
                             if not self.combat and not self.retreat then
                                 if point.type=='push' then
                                     --SwitchState(platoon,'push')
@@ -449,11 +449,11 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                 IssueClearCommands({v}) 
                                 if unitRole == 'Shield' and closestTarget then
                                     --LOG('UnitRole is Shield')
-                                    local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, v, unitPos, target) or RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4})
+                                    local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, v, unitPos, target) or RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self['rngdata'].MaxDirectFireRange or self['rngdata'].MaxPlatoonWeaponRange) + 4})
                                     StateUtils.IssueNavigationMove(v, shieldPos)
                                     --aiBrain:ForkThread(RUtils.DrawCircleAtPosition, shieldPos)
                                 elseif unitRole == 'Stealth' and closestTarget then
-                                    local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxPlatoonWeaponRange})
+                                    local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self['rngdata'].MaxPlatoonWeaponRange})
                                     StateUtils.IssueNavigationMove(v, movePos)
                                 else
                                     IssueAggressiveMove({v},targetPos)
@@ -477,22 +477,22 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                 IssueClearCommands({v})
                                 if unitRole == 'Shield' and closestTarget then
                                     --LOG('UnitRole is Shield')
-                                    local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, v, unitPos, target) or RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4})
+                                    local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, v, unitPos, target) or RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self['rngdata'].MaxDirectFireRange or self['rngdata'].MaxPlatoonWeaponRange) + 4})
                                     StateUtils.IssueNavigationMove(v, shieldPos)
                                     --aiBrain:ForkThread(RUtils.DrawCircleAtPosition, shieldPos)
                                 elseif unitRole == 'Scout' and closestTarget then
                                     --LOG("land combat scout trying to get into intelrange")
-                                    local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self.IntelRange or self.MaxPlatoonWeaponRange) })
+                                    local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self['rngdata'].IntelRange or self['rngdata'].MaxPlatoonWeaponRange) })
                                     StateUtils.IssueNavigationMove(v, movePos)
                                 elseif unitRole == 'Stealth' and closestTarget then
-                                    local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxPlatoonWeaponRange})
+                                    local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self['rngdata'].MaxPlatoonWeaponRange})
                                     StateUtils.IssueNavigationMove(v, movePos)
                                 else
                                     IssueAggressiveMove({v},targetPos)
                                 end
                             elseif unitRole == 'Shield' and closestTarget then
                                 --LOG('UnitRole is Shield')
-                                local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, v, unitPos, target) or RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4})
+                                local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, v, unitPos, target) or RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self['rngdata'].MaxDirectFireRange or self['rngdata'].MaxPlatoonWeaponRange) + 4})
                                 StateUtils.IssueNavigationMove(v, shieldPos)
                             else
                                 StateUtils.VariableKite(self,v,target)
@@ -500,14 +500,14 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                         else
                             if unitRole == 'Shield' and closestTarget then
                                 --LOG('UnitRole is Shield')
-                                local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, v, unitPos, target) or RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxDirectFireRange + 4})
+                                local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, v, unitPos, target) or RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self['rngdata'].MaxDirectFireRange or self['rngdata'].MaxPlatoonWeaponRange) + 4})
                                 StateUtils.IssueNavigationMove(v, shieldPos)
                                 --aiBrain:ForkThread(RUtils.DrawCircleAtPosition, shieldPos)
                             elseif unitRole == 'Stealth' and closestTarget then
-                                local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self.MaxPlatoonWeaponRange})
+                                local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self['rngdata'].MaxPlatoonWeaponRange})
                                 StateUtils.IssueNavigationMove(v, movePos)
                             elseif unitRole == 'Scout' and closestTarget then
-                                local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self.IntelRange or self.MaxPlatoonWeaponRange) })
+                                local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - (self['rngdata'].IntelRange or self['rngdata'].MaxPlatoonWeaponRange) })
                                 StateUtils.IssueNavigationMove(v, movePos)
                             end
                         end
@@ -754,7 +754,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     for _,v in platoonUnits do
                         if v and not v.Dead then
                             local unitPos = v:GetPosition()
-                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>self.MaxPlatoonWeaponRange*self.MaxPlatoonWeaponRange+900 then
+                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>self['rngdata'].MaxPlatoonWeaponRange*self['rngdata'].MaxPlatoonWeaponRange+900 then
                                 local vec={}
                                 vec[1],vec[2],vec[3]=v:GetVelocity()
                                 if VDist3Sq({0,0,0},vec)<1 then
@@ -894,7 +894,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     local targetCats = target.Blueprint.CategoriesHash
                     local attackStructure = false
                     if targetCats.STRUCTURE and targetCats.DEFENSE then
-                        if targetRange < self.MaxPlatoonWeaponRange then
+                        if targetRange < self['rngdata'].MaxPlatoonWeaponRange then
                             attackStructure = true
                             for _, v in platUnits do
                                 ----self:LogDebug('Role is '..repr(v['rngdata'].Role))
@@ -914,7 +914,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                                     StateUtils.IssueNavigationMove(v, movePos)
                                 else
                                     local unitPos = v:GetPosition()
-                                    local movePos = RUtils.lerpy(unitPos, targetPos, {targetDistance, targetDistance - self.MaxPlatoonWeaponRange })
+                                    local movePos = RUtils.lerpy(unitPos, targetPos, {targetDistance, targetDistance - self['rngdata'].MaxPlatoonWeaponRange })
                                     StateUtils.IssueNavigationMove(v, movePos)
                                 end
                             end

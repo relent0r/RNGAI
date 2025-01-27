@@ -148,10 +148,6 @@ BuilderManager = ClassSimple {
             return
         end
 
-        -- register the builder
-        if newBuilder.UnitCategory then
-            LOG('Builder name found with UnitCategory '..newBuilder.BuilderName)
-        end
         TableInsert(self.BuilderData[builderType].Builders, newBuilder)
         self.BuilderData[builderType].NeedSort = true
 

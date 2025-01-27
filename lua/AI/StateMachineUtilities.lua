@@ -21,6 +21,28 @@ CrossP = function(vec1,vec2,n)--cross product
     return {x,y,z}
 end
 
+GetClosestBaseManager = function(aiBrain, position, naval)
+    local closestBase
+    local closestBaseDistance
+    if aiBrain.BuilderManagers and position[1] then
+        for baseName, base in aiBrain.BuilderManagers do
+            if (naval and base.Layer == 'Water' or not naval) then
+                local location = base.Position
+                local dx = position[1] - location[1]
+                local dz = position[3] - location[3]
+                local baseDistance = dx * dx + dz * dz
+                if not closestBaseDistance or baseDistance < closestBaseDistance then
+                    closestBase = baseName
+                    closestBaseDistance = baseDistance
+                end
+            end
+        end
+        if closestBase then
+            return closestBase, closestBaseDistance
+        end
+    end
+end
+
 SimpleTarget = function(platoon, aiBrain, specificPosition)--find enemies in a range and attack them- lots of complicated stuff here
     local function ViableTargetCheck(unit, unitPosition)
         if unit.Dead or not unit then return false end
@@ -95,6 +117,45 @@ SimpleTarget = function(platoon, aiBrain, specificPosition)--find enemies in a r
     return false
 end
 
+SetTargetData = function(aiBrain, platoon, target)
+    local platPos = platoon.Pos or platoon:GetPlatoonPosition()
+    local unitPos = target:GetPosition()
+    local gameTime = GetGameTimeSeconds()
+    local id = target.EntityId
+    if not target['rngdata'] then
+        target['rngdata'] = {}
+    end
+    if not target['rngdata'] then
+        target['rngdata'] = {}
+    end
+    local unitData = target['rngdata']
+    if not unitData.TargetType then
+        local unitCats = target.Blueprint.CategoriesHash
+        if unitCats.STRUCTURE then
+            if unitCats.SHIELD then
+                unitData.TargetType = 'Shield'
+            elseif unitCats.DIRECTFIRE or unitCats.INDIRECTFIRE then
+                unitData.TargetType = 'Defense'
+            elseif unitCats.ENERGYPRODUCTION or unitCats.MASSPRODUCTION then
+                unitData.TargetType = 'EconomyStructure'
+            else
+                unitData.TargetType = 'Structure'
+            end
+        end
+    end
+    if not unitData.machinepriority then unitData.machinepriority={} unitData.machinedistance={} end
+    if not unitData.dangerupdate or not unitData.machinedanger or gameTime-unitData.dangerupdate>10 then
+        unitData.machinedanger=math.max(10,RUtils.GrabPosDangerRNG(aiBrain,unitPos,30,30, true, false, false).enemyTotal)
+        unitData.dangerupdate=gameTime
+    end
+    local unithealth = GetTrueHealth(target, true)
+    unitData.machinevalue = target.Blueprint.Economy.BuildCostMass/unithealth
+    unitData.machineworth = unitData.machinevalue/unithealth
+    unitData.machinedistance[id] = VDist3(platPos,unitPos)
+    unitData.machinepriority[id]=unitData.machineworth/math.max(30,unitData.machinedistance[id])/unitData.machinedanger
+    return true
+end
+
 SimpleNavalTarget = function(platoon, aiBrain)
     local function ViableTargetCheck(unit, unitPosition, platoonRange)
         if unit.Dead or not unit then return false end
@@ -119,7 +180,7 @@ SimpleNavalTarget = function(platoon, aiBrain)
     end
     local id=platoon.machinedata.id
     local position=platoon.Pos
-    local searchRadius = math.max(platoon.EnemyRadius, platoon.MaxPlatoonWeaponRange)
+    local searchRadius = math.max(platoon.EnemyRadius, platoon['rngdata'].MaxPlatoonWeaponRange)
     if not position then return false end
     platoon.targetcandidates=aiBrain:GetUnitsAroundPoint((categories.HOVER + categories.AMPHIBIOUS + categories.LAND + categories.NAVAL + categories.STRUCTURE) - categories.WALL - categories.INSIGNIFICANTUNIT, position, searchRadius, 'Enemy')
     local candidates = platoon.targetcandidates
@@ -127,7 +188,7 @@ SimpleNavalTarget = function(platoon, aiBrain)
     local gameTime = GetGameTimeSeconds()
     for _,unit in candidates do
         local unitPos = unit:GetPosition()
-        if ViableTargetCheck(unit, unitPos, platoon.MaxPlatoonWeaponRange) then
+        if ViableTargetCheck(unit, unitPos, platoon['rngdata'].MaxPlatoonWeaponRange) then
             if not unit['rngdata'] then
                 unit['rngdata'] = {}
             end
@@ -172,7 +233,7 @@ SimpleNavalTarget = function(platoon, aiBrain)
     return false
 end
 
-VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride)--basic kiting function.. complicated as heck
+VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride, checkLayer)--basic kiting function.. complicated as heck
     local function KiteDist(pos1,pos2,distance,healthmod)
         local vec={}
         local dist=VDist3(pos1,pos2)
@@ -206,6 +267,7 @@ VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride)--basic kit
     local tpos=target:GetPosition()
     local dest
     local mod=0
+    local layer
     local healthmod=GetRoleMod(unit)
     local strafemod=3
     if CheckRetreat(pos,tpos,target) then
@@ -214,33 +276,44 @@ VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride)--basic kit
     if unit['rngdata'].Role=='Heavy' or unit['rngdata'].Role=='Bruiser' or unit['rngdata'].GlassCannon then
         strafemod=7
     end
+    if checkLayer then
+        layer = target:GetCurrentLayer()
+    end
     local distanceCheck = 9
     if (unit['rngdata'].Role=='Sniper' or unit['rngdata'].Role=='Artillery' or unit['rngdata'].Role=='Silo' or unit['rngdata'].Role=='MissileShip') and unit['rngdata'].MaxWeaponRange then
         distanceCheck = 25
     end
     if unit['rngdata'].Role=='AA'  then
-        dest=KiteDist(pos,tpos,platoon.MaxPlatoonWeaponRange+3,healthmod)
+        dest=KiteDist(pos,tpos,platoon['rngdata'].MaxPlatoonWeaponRange+3,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif (unit['rngdata'].Role=='Sniper' or unit['rngdata'].Role=='Artillery' or unit['rngdata'].Role=='Silo' or unit['rngdata'].Role=='MissileShip') and unit['rngdata'].MaxWeaponRange then
         dest=KiteDist(pos,tpos,unit['rngdata'].MaxWeaponRange-1,0)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
-    elseif maxPlatoonRangeOverride and (unit['rngdata'].Role=='Shield' or unit['rngdata'].Role == 'Stealth') and platoon.MaxDirectFireRange > 0 then
-        dest=KiteDist(pos,tpos,platoon.MaxDirectFireRange-math.random(1,3)-mod,0)
+    elseif maxPlatoonRangeOverride and (unit['rngdata'].Role=='Shield' or unit['rngdata'].Role == 'Stealth') and platoon['rngdata'].MaxDirectFireRange > 0 then
+        dest=KiteDist(pos,tpos,platoon['rngdata'].MaxDirectFireRange-math.random(1,3)-mod,0)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
-    elseif (unit['rngdata'].Role=='Shield' or unit['rngdata'].Role == 'Stealth') and platoon.MaxDirectFireRange > 0 then
-        dest=KiteDist(pos,tpos,platoon.MaxDirectFireRange-math.random(1,3)-mod,healthmod)
+    elseif (unit['rngdata'].Role=='Shield' or unit['rngdata'].Role == 'Stealth') and platoon['rngdata'].MaxDirectFireRange > 0 then
+        dest=KiteDist(pos,tpos,platoon['rngdata'].MaxDirectFireRange-math.random(1,3)-mod,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif unit['rngdata'].Role=='Scout' then
-        dest=KiteDist(pos,tpos,(platoon.IntelRange or platoon.MaxPlatoonWeaponRange),healthmod)
+        dest=KiteDist(pos,tpos,(platoon['rngdata'].IntelRange or platoon['rngdata'].MaxPlatoonWeaponRange),healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif maxPlatoonRangeOverride then
-        dest=KiteDist(pos,tpos,platoon.MaxPlatoonWeaponRange,healthmod)
+        dest=KiteDist(pos,tpos,platoon['rngdata'].MaxPlatoonWeaponRange,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
+    elseif checkLayer then
+        if unit['rngdata'].CategoryAntiNavyRange and (layer == 'Seabed' or layer == 'Sub')then
+            dest=KiteDist(pos,tpos,unit['rngdata'].CategoryAntiNavyRange,healthmod)
+            dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
+        else
+            dest=KiteDist(pos,tpos,platoon['rngdata'].MaxPlatoonWeaponRange+5-math.random(1,3)-mod,healthmod)
+            dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
+        end
     elseif unit['rngdata'].MaxWeaponRange then
         dest=KiteDist(pos,tpos,unit['rngdata'].MaxWeaponRange-math.random(1,3)-mod,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     else
-        dest=KiteDist(pos,tpos,platoon.MaxPlatoonWeaponRange+5-math.random(1,3)-mod,healthmod)
+        dest=KiteDist(pos,tpos,platoon['rngdata'].MaxPlatoonWeaponRange+5-math.random(1,3)-mod,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     end
     if VDist3Sq(pos,dest)>distanceCheck then
@@ -341,37 +414,43 @@ ExitConditions = function(self,aiBrain)
         return true
     end
     if self.navigating then
-        local enemies=GetUnitsAroundPoint(aiBrain, categories.LAND + categories.STRUCTURE, self.Pos, self.EnemyRadius, 'Enemy')
-        if enemies and not RNGTableEmpty(enemies) then
-            local enemyThreat = 0
-            for _,enemy in enemies do
-                enemyThreat = enemyThreat + enemy.Blueprint.Defense.SurfaceThreatLevel
-                if enemyThreat * 1.1 > self.CurrentPlatoonThreatAntiSurface and not self.retreat then
-                    local ignoreEnemy = false
-                    if self.ZoneType == 'raid' then
-                        local teamAveragePositions = aiBrain.IntelManager:GetTeamAveragePositions()
-                        local teamValue = aiBrain.IntelManager:GetTeamDistanceValue(self.Pos, teamAveragePositions)
-                        if teamValue <= 0.8 then
-                            ignoreEnemy = true
-                        end
-                    end
-                    --RNGLOG('TruePlatoon enemy threat too high during navigating, exiting')
-                    if not ignoreEnemy then
+        if aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.STRUCTURE, self.Pos, self.EnemyRadius, 'Enemy') > 0 then
+            local enemies=GetUnitsAroundPoint(aiBrain, categories.LAND + categories.STRUCTURE, self.Pos, self.EnemyRadius, 'Enemy')
+            if enemies and not RNGTableEmpty(enemies) then
+                local enemyThreat = 0
+                for _,enemy in enemies do
+                    local unitBp = enemy.Blueprint
+                    enemyThreat = enemyThreat + unitBp.Defense.SurfaceThreatLevel
+                    if self.ZoneType == 'raid' and not self.retreat and unitBp.CategoriesHash.ENGINEER and not unitBp.CategoriesHash.COMMAND then
                         return true
                     end
-                end
-                if enemy and not enemy.Dead and NavUtils.CanPathTo(self.MovementLayer, self.Pos, enemy:GetPosition()) then
-                    local dist=VDist3Sq(enemy:GetPosition(),self.Pos)
-                    if self.raid or self.guard then
-                        if dist<2025 then
-                            --RNGLOG('Exit Path Navigation for raid')
-                            --self:LogDebug(string.format('Enemy detected during navigation and less than 45'))
+                    if enemyThreat * 1.1 > self.CurrentPlatoonThreatAntiSurface and not self.retreat then
+                        local ignoreEnemy = false
+                        if self.ZoneType == 'raid' then
+                            local teamAveragePositions = aiBrain.IntelManager:GetTeamAveragePositions()
+                            local teamValue = aiBrain.IntelManager:GetTeamDistanceValue(self.Pos, teamAveragePositions)
+                            if teamValue <= 0.8 then
+                                ignoreEnemy = true
+                            end
+                        end
+                        --RNGLOG('TruePlatoon enemy threat too high during navigating, exiting')
+                        if not ignoreEnemy then
                             return true
                         end
-                    else
-                        if dist<math.max(self.MaxPlatoonWeaponRange*self.MaxPlatoonWeaponRange*3,625) then
-                            --RNGLOG('Exit Path Navigation')
-                            return true
+                    end
+                    if enemy and not enemy.Dead and NavUtils.CanPathTo(self.MovementLayer, self.Pos, enemy:GetPosition()) then
+                        local dist=VDist3Sq(enemy:GetPosition(),self.Pos)
+                        if self.raid or self.guard then
+                            if dist<2025 then
+                                --RNGLOG('Exit Path Navigation for raid')
+                                --self:LogDebug(string.format('Enemy detected during navigation and less than 45'))
+                                return true
+                            end
+                        else
+                            if dist<math.max(self['rngdata'].MaxPlatoonWeaponRange*self['rngdata'].MaxPlatoonWeaponRange*3,625) then
+                                --RNGLOG('Exit Path Navigation')
+                                return true
+                            end
                         end
                     end
                 end
@@ -475,6 +554,66 @@ GetUnitMaxWeaponRange = function(unit, filterType, enhancementReset)
             end
         end
         return maxRange
+    end
+end
+
+SetUnitCategoryRanges = function(unit)
+    if unit and not unit.Dead then
+        if not unit['rngdata'] then
+            unit['rngdata'] = {}
+        end
+        local unitData = unit['rngdata']
+        if not unitData.WeaponCategoryRangesSet then
+            local bp = unit.Blueprint
+            if not unit['rngdata'].MaxWeaponRange and bp.Weapon[1].MaxRadius and not bp.Weapon[1].ManualFire then
+                unit['rngdata'].MaxWeaponRange = bp.Weapon[1].MaxRadius
+                if bp.Weapon[1].BallisticArc == 'RULEUBA_LowArc' then
+                    unit['rngdata'].WeaponArc = 'low'
+                elseif bp.Weapon[1].BallisticArc == 'RULEUBA_HighArc' then
+                    unit['rngdata'].WeaponArc = 'high'
+                else
+                    unit['rngdata'].WeaponArc = 'none'
+                end
+            end
+            for _, weapon in bp.Weapon or {} do
+                -- unit can have MaxWeaponRange entry from the last platoon
+                if weapon.MaxRadius and not weapon.DummyWeapon then
+                    local weaponRange = weapon.MaxRadius
+                    if weapon.WeaponCategory == 'Direct Fire' or weapon.WeaponCategory == 'Direct Fire Experimental' then
+                        if not weapon.EnabledByEnhancement or (weapon.EnabledByEnhancement and unit.HasEnhancement and unit:HasEnhancement(weapon.EnabledByEnhancement)) then
+                            if not unitData.CategoryDirectFireRange or weaponRange > unitData.CategoryDirectFireRange then
+                                unitData.CategoryDirectFireRange = weaponRange
+                            end
+                        end
+                    elseif weapon.WeaponCategory == 'Anti Air' then
+                        if not weapon.EnabledByEnhancement or (weapon.EnabledByEnhancement and unit.HasEnhancement and unit:HasEnhancement(weapon.EnabledByEnhancement)) then
+                            if not unitData.CategoryAntiAirRange or weaponRange > unitData.CategoryAntiAirRange then
+                                unitData.CategoryAntiAirRange = weaponRange
+                            end
+                        end
+                    elseif weapon.WeaponCategory == 'Anti Navy' then
+                        if not weapon.EnabledByEnhancement or (weapon.EnabledByEnhancement and unit.HasEnhancement and unit:HasEnhancement(weapon.EnabledByEnhancement)) then
+                            if not unitData.CategoryAntiNavyRange or weaponRange > unitData.CategoryAntiNavyRange then
+                                unitData.CategoryAntiNavyRange = weaponRange
+                            end
+                        end
+                    elseif weapon.WeaponCategory == 'Indirect Fire' or weapon.WeaponCategory == 'Artillery' then
+                        if not weapon.EnabledByEnhancement or (weapon.EnabledByEnhancement and unit.HasEnhancement and unit:HasEnhancement(weapon.EnabledByEnhancement)) then
+                            if not unitData.CategoryIndirectFireRange or weaponRange > unitData.CategoryIndirectFireRange then
+                                unitData.CategoryIndirectFireRange = weaponRange
+                            end
+                        end
+                    end
+                end
+            end
+            unit['rngdata'].WeaponCategoryRangesSet = true
+        end
+        --LOG('Unit category ranges are set for unit '..tostring(unit.UnitId))
+        --LOG('CategoryDirectFireRange : '..tostring(unit['rngdata'].CategoryDirectFireRange))
+        --LOG('CategoryAntiAirRange : '..tostring(unit['rngdata'].CategoryAntiAirRange))
+        --LOG('CategoryAntiNavyRange : '..tostring(unit['rngdata'].CategoryAntiNavyRange))
+        --LOG('CategoryIndirectFireRange : '..tostring(unit['rngdata'].CategoryIndirectFireRange))
+        return true
     end
 end
 
@@ -1115,7 +1254,7 @@ FindExperimentalTargetRNG = function(aiBrain, platoon, layer, experimentalPositi
     -- First we look for an acu snipe mission.
     -- Needs more logic for ACU's that are in bases or firebases.
     for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
-        if v.LAND.GameTime and v.LAND.GameTime + 650 > GetGameTimeSeconds() then
+        if v.LAND.GameTime and v.LAND.GameTime + 300 > GetGameTimeSeconds() then
             if RUtils.HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
                 if not RUtils.PositionInWater(aiBrain.EnemyIntel.ACU[k].Position) then
                     bestUnit = aiBrain.EnemyIntel.ACU[k].Unit
@@ -1233,7 +1372,7 @@ function GetClosestTargetByIMAP(aiBrain, platoon, position, threatType, searchFi
     local id=platoon.machinedata.id
     local threatcandidates = {}
     local enemyThreat = aiBrain:GetThreatsAroundPosition(position, 16, true, threatType)
-    local platoonWeaponRange = platoon.MaxPlatoonWeaponRange
+    local platoonWeaponRange = platoon['rngdata'].MaxPlatoonWeaponRange
     for _, threat in enemyThreat do
         local tx = position[1] - threat[1]
         local tz = position[3] - threat[2]
@@ -1309,16 +1448,13 @@ function GetClosestTargetByIMAP(aiBrain, platoon, position, threatType, searchFi
                 end
                 if not table.empty(targetCandidates) then
                     return targetCandidates
-                else
-                    return false
                 end
-            else
-                return false
             end
         end
     else
         return false
     end
+    return false
 end
 
 function GetBuildableUnitId(aiBrain, unit, category)
@@ -1380,7 +1516,22 @@ BuildAIDoneRNG = function(unit, params)
         table.remove(unit.EngineerBuildQueue, 1)
     end
     if unit.UnitBeingBuilt then
-        LOG('Unit being built was Done'..tostring(unit.UnitBeingBuilt.UnitId))
+        --LOG('Unit being built was Done'..tostring(unit.UnitBeingBuilt.UnitId))
+    end
+    if unit.UnitBeingBuilt then
+        local locationType = unit.PlatoonHandle.PlatoonData.Construction.LocationType
+        local highValue = unit.PlatoonHandle.PlatoonData.Construction.HighValue
+        if locationType and highValue then
+            local aiBrain = unit.Brain
+            if aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt then
+                --LOG('StructuresBeingBuilt exist on engineer manager '..repr(aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt))
+                local structuresBeingBuilt = aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt
+                local unitBp = unit.Blueprint
+                if structuresBeingBuilt[unitBp.TechCategory][unit.EntityId] then
+                    structuresBeingBuilt[unitBp.TechCategory][unit.EntityId] = nil
+                end
+            end
+        end
     end
     if table.empty(unit.EngineerBuildQueue) then
         unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
@@ -1397,9 +1548,6 @@ BuildAIFailedRNG = function(unit, params)
         unit.BuildFailedCount = 0
     end
     if unit.CustomReclaim then return end
-    if unit.UnitBeingBuilt then
-        LOG('Unit being built was failed'..tostring(unit.UnitBeingBuilt.UnitId))
-    end
     unit.BuildFailedCount = unit.BuildFailedCount + 1
     --LOG('Current fail count is '..unit.FailedCount)
     if unit.BuildFailedCount > 2 and not table.empty(unit.EngineerBuildQueue) then
@@ -1419,9 +1567,6 @@ StartBuildRNG = function(eng, unit)
     if not eng.AIPlatoonReference then return end
     --LOG("*AI DEBUG: Build done " .. unit.EntityId)
     if eng and not eng.Dead and unit and not unit.Dead then
-        if eng.UnitBeingBuilt then
-            LOG('Unit being built was Start '..tostring(unit.UnitBeingBuilt.UnitId))
-        end
         local locationType = eng.PlatoonHandle.PlatoonData.Construction.LocationType
         local highValue = eng.PlatoonHandle.PlatoonData.Construction.HighValue
         if locationType and highValue then
@@ -1483,11 +1628,11 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType, whatToBuild
             end
         elseif AdjacencyBias=='BackClose' then
             for _,v in reference do
-                table.sort(v,function(a,b) return VDist3Sq(a:GetPosition(),enemyReferencePos)/VDist3Sq(a:GetPosition(),builder:GetPosition())>VDist3Sq(b:GetPosition(),aiBrain.emanager.enemy.Position)/VDist3Sq(b:GetPosition(),builder:GetPosition()) end)
+                table.sort(v,function(a,b) return VDist3Sq(a:GetPosition(),enemyReferencePos)/VDist3Sq(a:GetPosition(),builder:GetPosition())>VDist3Sq(b:GetPosition(),enemyReferencePos)/VDist3Sq(b:GetPosition(),builder:GetPosition()) end)
             end
         elseif AdjacencyBias=='ForwardClose' then
             for _,v in reference do
-                table.sort(v,function(a,b) return VDist3Sq(a:GetPosition(),enemyReferencePos)*VDist3Sq(a:GetPosition(),builder:GetPosition())<VDist3Sq(b:GetPosition(),aiBrain.emanager.enemy.Position)*VDist3Sq(b:GetPosition(),builder:GetPosition()) end)
+                table.sort(v,function(a,b) return VDist3Sq(a:GetPosition(),enemyReferencePos)*VDist3Sq(a:GetPosition(),builder:GetPosition())<VDist3Sq(b:GetPosition(),enemyReferencePos)*VDist3Sq(b:GetPosition(),builder:GetPosition()) end)
             end
         end
     end
@@ -2212,5 +2357,131 @@ function IssueNavigationMove(unit, position)
     else
         IssueClearCommands({unit})
         IssueMove({unit},position)
+    end
+end
+
+function SearchTargetFromZone(aiBrain, position, threatType, antiThreatType)
+    local zoneThreatKey = threatType and ("enemy" .. string.lower(threatType) .. "threat") or nil
+    local zoneAntiThreatKey = antiThreatType and ("enemy" .. string.lower(antiThreatType) .. "threat") or nil
+
+    if not zoneThreatKey or not zoneAntiThreatKey then
+        error("Invalid threatType or antiThreatType provided.")
+        return nil
+    end
+
+    -- Determine the zone of the given position
+    local zoneId = MAP:GetZoneID(position, aiBrain.Zones.Land.index)
+    local currentZone = aiBrain.Zones.Land.zones[zoneId]
+
+    if not currentZone then
+        return nil -- No zone found for this position
+    end
+
+    -- Initialize the best zone metrics
+    local bestZone = nil
+    local bestThreatScore = nil
+    local bestAntiThreatScore = nil
+    local bestDistance = nil
+
+    -- Function to evaluate a zone
+    local function evaluateZone(zone, basePosition)
+        local threatScore = zone[zoneThreatKey] or 0
+        local antiThreatScore = zone[zoneAntiThreatKey] or 0
+        local dx = basePosition[1] - zone.pos[1]
+        local dz = basePosition[3] - zone.pos[3]
+        local distance = dx * dx + dz * dz -- Squared distance for efficiency
+    
+        -- Check if this zone is better based on the criteria
+        if not bestThreatScore or
+            threatScore > bestThreatScore or
+            (threatScore == bestThreatScore and (not bestAntiThreatScore or antiThreatScore < bestAntiThreatScore)) or
+            (threatScore == bestThreatScore and antiThreatScore == bestAntiThreatScore and (not bestDistance or distance < bestDistance)) then
+            
+            bestZone = zone
+            bestThreatScore = threatScore
+            bestAntiThreatScore = antiThreatScore
+            bestDistance = distance
+        end
+    end
+
+    -- Evaluate the current zone
+    evaluateZone(currentZone, position)
+
+    -- Evaluate neighboring zones through edges
+    for _, edge in ipairs(currentZone.edges or {}) do
+        local neighborZone = edge.zone
+        if neighborZone then
+            evaluateZone(neighborZone, position)
+        end
+    end
+
+    return bestZone -- Return the best zone found, or nil if none meet the criteria
+end
+
+function SearchHighestThreatFromZone(aiBrain, position, threatType)
+    local zoneThreatKey = threatType and ("enemy" .. string.lower(threatType) .. "threat") or nil
+
+    if not zoneThreatKey then
+        error("Invalid threatType or antiThreatType provided.")
+        return nil
+    end
+
+    -- Determine the zone of the given position
+    local zoneId = MAP:GetZoneID(position, aiBrain.Zones.Land.index)
+    local currentZone = aiBrain.Zones.Land.zones[zoneId]
+
+    if not currentZone then
+        return nil -- No zone found for this position
+    end
+
+    -- Initialize the best zone metrics
+    local bestZone = nil
+    local bestThreatScore = nil
+    local bestDistance = nil
+
+    -- Function to evaluate a zone
+    local function evaluateZone(zone, basePosition)
+        local threatScore = zone[zoneThreatKey] or 0
+        local dx = basePosition[1] - zone.pos[1]
+        local dz = basePosition[3] - zone.pos[3]
+        local distance = dx * dx + dz * dz -- Squared distance for efficiency
+    
+        -- Check if this zone is better based on the criteria
+        if not bestThreatScore or
+            threatScore > bestThreatScore or threatScore == bestThreatScore or 
+            (threatScore == bestThreatScore and (not bestDistance or distance < bestDistance)) then
+            
+            bestZone = zone
+            bestThreatScore = threatScore
+            bestDistance = distance
+        end
+    end
+
+    -- Evaluate the current zone
+    evaluateZone(currentZone, position)
+
+    -- Evaluate neighboring zones through edges
+    for _, edge in ipairs(currentZone.edges or {}) do
+        local neighborZone = edge.zone
+        if neighborZone then
+            evaluateZone(neighborZone, position)
+        end
+    end
+
+    return bestZone -- Return the best zone found, or nil if none meet the criteria
+end
+
+function DrawPosition(pos, colour, radius)
+    local posCol
+    if colour == 'blue' then
+        posCol = '0000FF'
+    elseif colour == 'red' then
+        posCol = 'FF0000'
+    end
+    local counter = 0
+    while counter < 180 do
+        DrawCircle(pos, radius, posCol)
+        counter = counter + 1
+        WaitTicks(2)
     end
 end

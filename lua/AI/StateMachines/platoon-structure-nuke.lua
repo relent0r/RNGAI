@@ -42,7 +42,7 @@ AINukeBehavior = Class(AIPlatoonRNG) {
             self:LogDebug(string.format('Starting Nuke Machine'))
             self.MachineStarted = true
             local platoonUnits = GetPlatoonUnits(self)
-            self.PlatoonStrikeDamage = 0
+            self['rngdata'].PlatoonStrikeDamage = 0
             self.PlatoonDamageRadius = 0
             for _, sml in platoonUnits do
                 local smlWeapon = sml.Blueprint.Weapon
@@ -51,8 +51,8 @@ AINukeBehavior = Class(AIPlatoonRNG) {
                         if weapon.NukeInnerRingRadius > self.PlatoonDamageRadius then
                             self.PlatoonDamageRadius = weapon.NukeInnerRingRadius
                         end
-                        if weapon.NukeInnerRingDamage > self.PlatoonStrikeDamage then
-                            self.PlatoonStrikeDamage = weapon.NukeInnerRingDamage
+                        if weapon.NukeInnerRingDamage > self['rngdata'].PlatoonStrikeDamage then
+                            self['rngdata'].PlatoonStrikeDamage = weapon.NukeInnerRingDamage
                         end
                         break
                     end
@@ -193,7 +193,7 @@ ThreatThread = function(aiBrain, platoon)
     end
 
     while aiBrain:PlatoonExists(platoon) do
-        platoon.MaxPlatoonDPS = GetPlatoonDPS(platoon)
+        platoon['rngdata'].MaxPlatoonDPS = GetPlatoonDPS(platoon)
         coroutine.yield(35)
     end
 end

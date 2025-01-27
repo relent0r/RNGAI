@@ -36,6 +36,7 @@ end
 BuilderGroup {
     BuilderGroupName = 'RNGAI Initial ACU Builder Small',
     BuildersType = 'EngineerBuilder',
+    --[[
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Small',
         PlatoonTemplate = 'CommanderInitializeRNG',
@@ -54,7 +55,7 @@ BuilderGroup {
                 BaseTemplate = 'ACUBaseTemplate',
             }
         }
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Small',
         PlatoonTemplate = 'CommanderStateMachineRNG',
@@ -97,6 +98,7 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI Initial ACU Builder Large',
     BuildersType = 'EngineerBuilder',
+    --[[
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Large',
         PlatoonTemplate = 'CommanderInitializeRNG',
@@ -115,7 +117,7 @@ BuilderGroup {
                 BaseTemplate = 'ACUBaseTemplate',
             }
         }
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Large',
         PlatoonTemplate = 'CommanderStateMachineRNG',

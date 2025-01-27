@@ -221,7 +221,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             end
             if not target then
                 local target = RUtils.CheckACUSnipe(aiBrain, 'Land')
-                if target and self.MaxPlatoonDPS > 250 then
+                if target and self['rngdata'].MaxPlatoonDPS > 250 then
                     self.BuilderData = {
                         AttackTarget = target,
                         Position = table.copy(target:GetPosition())
@@ -591,7 +591,7 @@ GunshipThreatThreads = function(aiBrain, platoon)
                 end
             end
             platoon.PlatoonCount = unitCount
-            platoon.MaxPlatoonDPS = maxPlatoonDPS
+            platoon['rngdata'].MaxPlatoonDPS = maxPlatoonDPS
             platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
             platoon.CurrentPlatoonThreatAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
         end

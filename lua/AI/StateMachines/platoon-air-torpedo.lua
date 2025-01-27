@@ -73,20 +73,20 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
             end
             self.PlatoonCount = unitCount
             if maxPlatoonStrikeDamage > 0 then
-                self.PlatoonStrikeDamage = maxPlatoonStrikeDamage
+                self['rngdata'].PlatoonStrikeDamage = maxPlatoonStrikeDamage
             end
             if maxPlatoonStrikeRadius > 0 then
-                self.PlatoonStrikeRadius = maxPlatoonStrikeRadius
+                self['rngdata'].PlatoonStrikeRadius = maxPlatoonStrikeRadius
             end
             if maxPlatoonStrikeRadiusDistance > 0 then
-                self.PlatoonStrikeRadiusDistance = maxPlatoonStrikeRadiusDistance
+                self['rngdata'].PlatoonStrikeRadiusDistance = maxPlatoonStrikeRadiusDistance
             end
             self.CurrentPlatoonThreatAntiNavy = self:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             --LOG('Starting torpedo bomber')
-            --LOG('Strike Damage is '..repr(self.PlatoonStrikeDamage))
-            --LOG('Strike Radius is '..repr(self.PlatoonStrikeRadius))
-            --LOG('Strike Radius Distance is '..repr(self.PlatoonStrikeRadiusDistance))
+            --LOG('Strike Damage is '..repr(self['rngdata'].PlatoonStrikeDamage))
+            --LOG('Strike Radius is '..repr(self['rngdata'].PlatoonStrikeRadius))
+            --LOG('Strike Radius Distance is '..repr(self['rngdata'].PlatoonStrikeRadiusDistance))
             StartTorpedoThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -138,7 +138,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                 local target, _, acuIndex = RUtils.CheckACUSnipe(aiBrain, 'AirAntiNavy')
                 if target then
                     local enemyAcuHealth = aiBrain.EnemyIntel.ACU[acuIndex].HP
-                    if self.PlatoonStrikeDamage > enemyAcuHealth * 0.80 or enemyAcuHealth < 2500 then
+                    if self['rngdata'].PlatoonStrikeDamage > enemyAcuHealth * 0.80 or enemyAcuHealth < 2500 then
                         self.BuilderData = {
                             AttackTarget = target,
                             Position = target:GetPosition()
@@ -676,13 +676,13 @@ TorpedoThreatThreads = function(aiBrain, platoon)
             platoon.CurrentPlatoonThreatAntiNavy = platoon:CalculatePlatoonThreat('Sub', categories.ALLUNITS)
             platoon.PlatoonCount = unitCount
             if maxPlatoonStrikeDamage > 0 then
-                platoon.PlatoonStrikeDamage = maxPlatoonStrikeDamage
+                platoon['rngdata'].PlatoonStrikeDamage = maxPlatoonStrikeDamage
             end
             if maxPlatoonStrikeRadius > 0 then
-                platoon.PlatoonStrikeRadius = maxPlatoonStrikeRadius
+                platoon['rngdata'].PlatoonStrikeRadius = maxPlatoonStrikeRadius
             end
             if maxPlatoonStrikeRadiusDistance > 0 then
-                platoon.PlatoonStrikeRadiusDistance = maxPlatoonStrikeRadiusDistance
+                platoon['rngdata'].PlatoonStrikeRadiusDistance = maxPlatoonStrikeRadiusDistance
             end
         end
         coroutine.yield(20)

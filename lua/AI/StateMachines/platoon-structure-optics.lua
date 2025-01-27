@@ -32,11 +32,11 @@ AIOpticsBehavior = Class(AIPlatoonRNG) {
             self.LocationType = self.PlatoonData.LocationType or 'MAIN'
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             local platoonUnits = self:GetPlatoonUnits()
-            self.MaxPlatoonWeaponRange = 0
+            self['rngdata'].MaxPlatoonWeaponRange = 0
             self.AdjacentShields = {}
             self.AdjacentPower = {}
             self.OpticsUnit = platoonUnits[1]
-            --self:LogDebug(string.format('Strategic Optics Max Weapon Range is '..tostring(self.MaxPlatoonWeaponRange)))
+            --self:LogDebug(string.format('Strategic Optics Max Weapon Range is '..tostring(self['rngdata'].MaxPlatoonWeaponRange)))
             self:ChangeState(self.DecideWhatToDo)
             return
         end,

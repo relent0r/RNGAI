@@ -81,11 +81,6 @@ AIPlatoonAirScoutBehavior = Class(AIPlatoonRNG) {
             --LOG('DecideWhatToDo current Max Radius is '..self.MaxRadius)
             local aiBrain = self:GetBrain()
             local platPos = self:GetPlatoonPosition()
-            local startPos = aiBrain.BrainIntel.StartPos
-            local estartX = nil
-            local estartZ = nil
-            local targetData = {}
-            local currentGameTime = GetGameTimeSeconds()
             local scout = self.Scout
             local cdr = aiBrain.CDRUnit
             if cdr.AirScout and not cdr.AirScout.Dead then

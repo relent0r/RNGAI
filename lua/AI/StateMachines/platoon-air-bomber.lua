@@ -59,13 +59,13 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             end
             self.PlatoonCount = unitCount
             if maxPlatoonStrikeDamage > 0 then
-                self.PlatoonStrikeDamage = maxPlatoonStrikeDamage
+                self['rngdata'].PlatoonStrikeDamage = maxPlatoonStrikeDamage
             end
             if maxPlatoonStrikeRadius > 0 then
-                self.PlatoonStrikeRadius = maxPlatoonStrikeRadius
+                self['rngdata'].PlatoonStrikeRadius = maxPlatoonStrikeRadius
             end
             if maxPlatoonStrikeRadiusDistance > 0 then
-                self.PlatoonStrikeRadiusDistance = maxPlatoonStrikeRadiusDistance
+                self['rngdata'].PlatoonStrikeRadiusDistance = maxPlatoonStrikeRadiusDistance
             end
             self.CurrentPlatoonThreatAntiSurface = self:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
@@ -137,7 +137,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 if target then
                     --LOG('ACU Snipe found for bombers, strike damage required is '..tostring(strikeDamage))
                     local enemyAcuHealth = aiBrain.EnemyIntel.ACU[acuIndex].HP
-                    if self.PlatoonStrikeDamage > enemyAcuHealth * 0.80 or enemyAcuHealth < 2500 then
+                    if self['rngdata'].PlatoonStrikeDamage > enemyAcuHealth * 0.80 or enemyAcuHealth < 2500 then
                         self.BuilderData = {
                             AttackTarget = target,
                             Position = target:GetPosition()
@@ -198,7 +198,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             end
             if not self.PlatoonData.Defensive then
                 ----self:LogDebug(string.format('Checking for director target'))
-                target = aiBrain:CheckDirectorTargetAvailable('AntiAir', self.CurrentPlatoonThreatAntiSurface, 'BOMBER', self.PlatoonStrikeDamage)
+                target = aiBrain:CheckDirectorTargetAvailable('AntiAir', self.CurrentPlatoonThreatAntiSurface, 'BOMBER', self['rngdata'].PlatoonStrikeDamage)
                 if target then
                     self.BuilderData = {
                         AttackTarget = target,
@@ -309,6 +309,37 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         import("/mods/rngai/lua/ai/statemachines/platoon-air-bomber.lua").AssignToUnitsMachine({ }, plat, platUnits)
                         ----self:LogDebug(string.format('Merged'))
                     end
+                end
+            end
+            if not target and self.PlatoonData.Defensive and not not self.retreat then
+                --LOG('Defensive bomber looking for enemy units in adjacent zones')
+                local potentialTargetZone = StateUtils.SearchTargetFromZone(aiBrain, platPos, 'land', 'antiair')
+                if potentialTargetZone then
+                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, potentialTargetZone.pos, self, 'Attack', 120, {categories.MOBILE * (categories.LAND + categories.AMPHIBIOUS)}, false, self.CurrentPlatoonThreatAntiSurface)
+                    --LOG('Defensive bomber found target in adjacent zone to current '..tostring(repr(potentialTargetZone)))
+                    if target and not target.Dead then
+                        self.BuilderData = {
+                            AttackTarget = target,
+                            Position = target:GetPosition()
+                        }
+                        --LOG('Bomber navigating to target')
+                        --LOG('Retreating to platoon')
+                        local targetPosition = self.BuilderData.Position
+                        local tx = platPos[1] - targetPosition[1]
+                        local tz = platPos[3] - targetPosition[3]
+                        local targetDistance = tx * tx + tz * tz
+                        if targetDistance < 22500 then
+                            ----self:LogDebug(string.format('Bomber AttackTarget on high priority points'))
+                            self:ChangeState(self.AttackTarget)
+                            return
+                        else
+                            ----self:LogDebug(string.format('Bomber navigating on high priority points'))
+                            self:ChangeState(self.Navigating)
+                            return
+                        end
+                    end
+                else
+                    --LOG('No zone found with potential target')
                 end
             end
             coroutine.yield(25)
@@ -640,7 +671,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 local tx = platPos[1] - targetPosition[1]
                 local tz = platPos[3] - targetPosition[3]
                 local targetDistance = tx * tx + tz * tz
-                if self.PlatoonStrikeRadius > 0 and self.PlatoonStrikeDamage > 0 and EntityCategoryContains(categories.STRUCTURE, target) then
+                if self['rngdata'].PlatoonStrikeRadius > 0 and self['rngdata'].PlatoonStrikeDamage > 0 and EntityCategoryContains(categories.STRUCTURE, target) then
                     local setPointPos, stagePosition = RUtils.GetBomberGroundAttackPosition(aiBrain, self, target, platPos, targetPosition, targetDistance)
                     if setPointPos then
                         IssueAttack(platoonUnits, setPointPos)
@@ -754,13 +785,13 @@ BomberThreatThreads = function(aiBrain, platoon)
             platoon.CurrentPlatoonThreatAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.AIR)
             platoon.PlatoonCount = unitCount
             if maxPlatoonStrikeDamage > 0 then
-                platoon.PlatoonStrikeDamage = maxPlatoonStrikeDamage
+                platoon['rngdata'].PlatoonStrikeDamage = maxPlatoonStrikeDamage
             end
             if maxPlatoonStrikeRadius > 0 then
-                platoon.PlatoonStrikeRadius = maxPlatoonStrikeRadius
+                platoon['rngdata'].PlatoonStrikeRadius = maxPlatoonStrikeRadius
             end
             if maxPlatoonStrikeRadiusDistance > 0 then
-                platoon.PlatoonStrikeRadiusDistance = maxPlatoonStrikeRadiusDistance
+                platoon['rngdata'].PlatoonStrikeRadiusDistance = maxPlatoonStrikeRadiusDistance
             end
         end
         coroutine.yield(20)

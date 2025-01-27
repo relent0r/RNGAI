@@ -327,22 +327,23 @@ function AIBuildAdjacencyPriorityRNG(aiBrain, builder, buildingType , closeToBui
     local VDist3Sq = VDist3Sq
     local Centered=cons.Centered
     local AdjacencyBias=cons.AdjacencyBias
+    local enemyReferencePos = aiBrain.emanager.enemy.Position or aiBrain.MapCenterPoint
     if AdjacencyBias then
         if AdjacencyBias=='Forward' then
             for _,v in reference do
-                table.sort(v,function(a,b) return VDist3Sq(a:GetPosition(),aiBrain.emanager.enemy.Position)<VDist3Sq(b:GetPosition(),aiBrain.emanager.enemy.Position) end)
+                table.sort(v,function(a,b) return VDist3Sq(a:GetPosition(),enemyReferencePos)<VDist3Sq(b:GetPosition(),enemyReferencePos) end)
             end
         elseif AdjacencyBias=='Back' then
             for _,v in reference do
-                table.sort(v,function(a,b) return VDist3Sq(a:GetPosition(),aiBrain.emanager.enemy.Position)>VDist3Sq(b:GetPosition(),aiBrain.emanager.enemy.Position) end)
+                table.sort(v,function(a,b) return VDist3Sq(a:GetPosition(),enemyReferencePos)>VDist3Sq(b:GetPosition(),enemyReferencePos) end)
             end
         elseif AdjacencyBias=='BackClose' then
             for _,v in reference do
-                table.sort(v,function(a,b) return VDist3Sq(a:GetPosition(),aiBrain.emanager.enemy.Position)/VDist3Sq(a:GetPosition(),builder:GetPosition())>VDist3Sq(b:GetPosition(),aiBrain.emanager.enemy.Position)/VDist3Sq(b:GetPosition(),builder:GetPosition()) end)
+                table.sort(v,function(a,b) return VDist3Sq(a:GetPosition(),enemyReferencePos)/VDist3Sq(a:GetPosition(),builder:GetPosition())>VDist3Sq(b:GetPosition(),enemyReferencePos)/VDist3Sq(b:GetPosition(),builder:GetPosition()) end)
             end
         elseif AdjacencyBias=='ForwardClose' then
             for _,v in reference do
-                table.sort(v,function(a,b) return VDist3Sq(a:GetPosition(),aiBrain.emanager.enemy.Position)*VDist3Sq(a:GetPosition(),builder:GetPosition())<VDist3Sq(b:GetPosition(),aiBrain.emanager.enemy.Position)*VDist3Sq(b:GetPosition(),builder:GetPosition()) end)
+                table.sort(v,function(a,b) return VDist3Sq(a:GetPosition(),enemyReferencePos)*VDist3Sq(a:GetPosition(),builder:GetPosition())<VDist3Sq(b:GetPosition(),enemyReferencePos)*VDist3Sq(b:GetPosition(),builder:GetPosition()) end)
             end
         end
     end
