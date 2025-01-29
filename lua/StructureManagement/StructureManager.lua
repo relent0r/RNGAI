@@ -652,7 +652,7 @@ StructureManager = Class {
         local t2LandPass = false
         if totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 then
             if aiBrain:GetCurrentUnits(categories.ENGINEER * categories.TECH1) > 2 then
-                local distanceByPass = (aiBrain.EnemyIntel.ClosestEnemyBase and aiBrain.EnemyIntel.ClosestEnemyBase > 422500 or aiBrain.BrainIntel.AirPlayer) and actualMexIncome >= (15 * multiplier) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 26.0
+                local distanceByPass = (aiBrain.EnemyIntel.ClosestEnemyBase and aiBrain.EnemyIntel.ClosestEnemyBase > 422500 or aiBrain.BrainIntel.PlayerRole.AirPlayer) and actualMexIncome >= (15 * multiplier) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 26.0
                 if (not aiBrain.RNGEXP and (actualMexIncome > (23 * multiplier) or aiBrain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier)))
                 or aiBrain.RNGEXP and (actualMexIncome > (18 * multiplier) or aiBrain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier)) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 26.0 
                 or aiBrain.EnemyIntel.LandPhase > 1 and actualMexIncome > (12 * multiplier) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 26.0 
@@ -708,7 +708,7 @@ StructureManager = Class {
                 end
             end
         end
-        local airRush = (aiBrain.amanager.Demand.Air.T2.torpedo > 0 or aiBrain.RNGEXP or aiBrain.BrainIntel.AirPlayer or (factionIndex == 2 and actualMexIncome > (25 * multiplier)))
+        local airRush = (aiBrain.amanager.Demand.Air.T2.torpedo > 0 or aiBrain.RNGEXP or aiBrain.BrainIntel.PlayerRole.AirPlayer or (factionIndex == 2 and actualMexIncome > (25 * multiplier)))
         if airRush and totalAirT2HQCount < 1 and totalAirT3HQCount < 1 and self.Factories.AIR[1].UpgradingCount < 1 then
             if aiBrain:GetCurrentUnits(categories.ENGINEER * categories.TECH1) > 2 then
                 if aiBrain.EconomyOverTimeCurrent.EnergyIncome > 32.0 and massEfficiencyOverTime >= 0.9 and (airRush and energyEfficiencyOverTime >= 0.85 or energyEfficiencyOverTime >= 1.05) then
@@ -851,7 +851,7 @@ StructureManager = Class {
                 end
             end
         end
-        if not t3AirPass and (aiBrain.RNGEXP or aiBrain.BrainIntel.AirPlayer) and totalAirT3HQCount < 1 and totalAirT2HQCount > 0 and self.Factories.AIR[2].UpgradingCount < 1 and self.Factories.AIR[2].Total > 0 then
+        if not t3AirPass and (aiBrain.RNGEXP or aiBrain.BrainIntel.PlayerRole.AirPlayer) and totalAirT3HQCount < 1 and totalAirT2HQCount > 0 and self.Factories.AIR[2].UpgradingCount < 1 and self.Factories.AIR[2].Total > 0 then
             if aiBrain.EconomyOverTimeCurrent.MassIncome > (2.5 * multiplier) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 100.0 then
                 --RNGLOG('Factory Upgrade Income Over time check passed')
                 if GetEconomyIncome(aiBrain,'MASS') >= (2.5 * multiplier) and GetEconomyIncome(aiBrain,'ENERGY') >= 100.0 then
@@ -1411,7 +1411,7 @@ StructureManager = Class {
             local multiplier = aiBrain.EcoManager.EcoMultiplier
             local upgradeTrigger = false
             local upgradeSpend = aiBrain.cmanager.income.r.m*aiBrain.EconomyUpgradeSpend
-            if upgradeSpend > 4 or GetGameTimeSeconds() > (420 / multiplier) or aiBrain.BrainIntel.AirPlayer or self.BrainIntel.HighestPhase > 1 then
+            if upgradeSpend > 4 or GetGameTimeSeconds() > (420 / multiplier) or aiBrain.BrainIntel.PlayerRole.AirPlayer or aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer or self.BrainIntel.HighestPhase > 1 then
                 upgradeTrigger = true
             end
             local extractorsDetail, extractorTable, totalSpend = self.ExtractorsBeingUpgraded(self, aiBrain)
@@ -1482,29 +1482,29 @@ StructureManager = Class {
                 continue
             end
             if extractorsDetail.TECH1Upgrading < 3 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and (totalSpend < upgradeSpend or massStorage > 600) and 
-                    energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.SpamPlayer and totalSpend < upgradeSpend and extractorsDetail.TECH2 > 0 and 
+                    energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and totalSpend < upgradeSpend and extractorsDetail.TECH2 > 0 and 
                     (extractorsDetail.TECH1 > 0 and (extractorsDetail.TECH2 / extractorsDetail.TECH1 >= 1.2) or extractorsDetail.TECH1 == 0) and upgradeSpend - totalSpend > (tech2Consumption / 2) then
                         --LOG('We Could upgrade an extractor now with over time')
                         self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         coroutine.yield(30)
             elseif extractorsDetail.TECH1Upgrading < 3 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and (totalSpend < upgradeSpend or massStorage > 600) and 
-                   energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.SpamPlayer and extractorsDetail.TECH1 > 0 and extractorsDetail.TECH2 > 0 and 
+                   energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and extractorsDetail.TECH1 > 0 and extractorsDetail.TECH2 > 0 and 
                    ((extractorsDetail.TECH1 / extractorsDetail.TECH2 >= 1.7) or upgradeSpend < 15) and (upgradeSpend < tech2Consumption) then
                         --LOG('We Could upgrade an extractor now with over time')
                         self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                         coroutine.yield(30)
             elseif extractorsDetail.TECH1Upgrading < 3 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and (totalSpend < upgradeSpend or massStorage > 600) and 
-                   energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.SpamPlayer and extractorsDetail.TECH2 > 0 and totalSpend < upgradeSpend and 
+                   energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and extractorsDetail.TECH2 > 0 and totalSpend < upgradeSpend and 
                    (upgradeSpend > (tech2Consumption / 2) or extractorsDetail.TECH1 == 0) then
                         --LOG('We Could upgrade an extractor now with over time')
                         self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         coroutine.yield(30)
             elseif extractorsDetail.TECH1 > 0 and extractorsDetail.TECH1Upgrading < 1 and extractorsDetail.TECH2Upgrading > 0 and upgradeTrigger and totalSpend < upgradeSpend 
-                   and energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.SpamPlayer then
+                   and energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.PlayerRole.SpamPlayer then
                     self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                     coroutine.yield(60)
             elseif extractorsDetail.TECH1 > 0 and extractorsDetail.TECH1Upgrading < 5 and upgradeTrigger and (totalSpend < upgradeSpend or massStorage > 450) 
-                   and energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.SpamPlayer and massStorage < 2500 then
+                   and energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and massStorage < 2500 then
                     self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                     coroutine.yield(60)
             elseif massStorage > 500 and energyStorage > 3000 and extractorsDetail.TECH2Upgrading < 2 and coreExtractorT2Count + aiBrain.EcoManager.CoreExtractorT3Count >= aiBrain.EcoManager.TotalCoreExtractors 

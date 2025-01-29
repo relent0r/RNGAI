@@ -210,6 +210,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                     local closestUnit
                     local closestUnitDistance
                     local overRangedCount = 0
+                    local highPriorityTarget
                     if threatTable.RangedUnitThreat.TotalThreat > 0 or threatTable.ArtilleryThreat.TotalThreat > 0 then
                         --self:LogDebug(string.format('We have Artillery or Ranged unit threat around us'))
                         --self:LogDebug(string.format('Artillery Threat '..threatTable.ArtilleryThreat.TotalThreat))
@@ -300,7 +301,66 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    if closestUnit and not IsDestroyed(closestUnit) then
+                    if threatTable.AntiSurfaceThreat.TotalThreat > 0 then
+                        for _, enemyUnit in threatTable.AntiSurfaceThreat.Units do
+                            if not IsDestroyed(enemyUnit.Object) then
+                                local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object)
+                                if unitRange > self['rngdata'].MaxPlatoonWeaponRange then
+                                    overRangedCount = overRangedCount + 1
+                                end
+                                if overRangedCount > 0 then
+                                    self.BuilderData = {
+                                        Retreat = true,
+                                        RetreatReason = 'AntiSurfaceThreat',
+                                        AttackTarget = enemyUnit.Object
+                                    }
+                                    --self:LogDebug(string.format('Fatboy has naval threat that outranges it, retreat'))
+                                    self:ChangeState(self.Retreating)
+                                end
+                                if not closestUnit or enemyUnit.Distance < closestUnitDistance then
+                                    closestUnit = enemyUnit.Object
+                                    closestUnitDistance = enemyUnit.Distance
+                                end
+                            end
+                        end
+                    end
+                    if threatTable.ExperimentalThreat.TotalThreat > 0 then
+                        for _, enemyUnit in threatTable.ExperimentalThreat.Units do
+                            if not IsDestroyed(enemyUnit.Object) then
+                                local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object)
+                                if unitRange > self['rngdata'].MaxPlatoonWeaponRange then
+                                    overRangedCount = overRangedCount + 1
+                                end
+                                if overRangedCount > 1 then
+                                    self.BuilderData = {
+                                        Retreat = true,
+                                        RetreatReason = 'ExperimentalThreat',
+                                        AttackTarget = enemyUnit.Object
+                                    }
+                                    --self:LogDebug(string.format('Fatboy has naval threat that outranges it, retreat'))
+                                    self:ChangeState(self.Retreating)
+                                end
+                                if (not highPriorityTarget or not closestUnit) or enemyUnit.Distance < closestUnitDistance then
+                                    closestUnit = enemyUnit.Object
+                                    highPriorityTarget = enemyUnit.Object
+                                    closestUnitDistance = enemyUnit.Distance
+                                end
+                            end
+                        end
+                    end
+                    if threatTable.CommandThreat.TotalThreat > 0 then
+                        for _, enemyUnit in threatTable.CommandThreat.Units do
+                            if not IsDestroyed(enemyUnit.Object) then
+                                if not closestUnit or enemyUnit.Distance < closestUnitDistance then
+                                    closestUnit = enemyUnit.Object
+                                    closestUnitDistance = enemyUnit.Distance
+                                end
+                            end
+                        end
+                    end
+                    if highPriorityTarget then
+                        target = highPriorityTarget
+                    elseif not target and closestUnit and not IsDestroyed(closestUnit) then
                         target = closestUnit
                         --LOG('We have a target from threattable')
                     end

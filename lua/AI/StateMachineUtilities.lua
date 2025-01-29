@@ -1101,8 +1101,9 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                     RNGINSERT(unitTable.ArtilleryThreat.Units, {Object = unit, Distance = distance})
                 elseif unitCats.TACTICALMISSILEPLATFORM then
-                    unitTable.DefenseThreat.TotalThreat = unitTable.DefenseThreat.TotalThreat + (unitThreat * 0.07)
-                    unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat + (unitThreat * 0.07)
+                    -- This shouldnt be a static number but the threat calculations are causing tmls to have over inflated values. Will try fix the faf blueprint-ai.lua calculation soon.
+                    unitTable.DefenseThreat.TotalThreat = unitTable.DefenseThreat.TotalThreat + 120
+                    unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + 120
                     RNGINSERT(unitTable.DefenseThreat.Units, {Object = unit, Distance = distance})
                 else
                     unitTable.DefenseThreat.TotalThreat = unitTable.DefenseThreat.TotalThreat + unitThreat

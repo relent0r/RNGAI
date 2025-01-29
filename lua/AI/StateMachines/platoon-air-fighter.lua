@@ -50,6 +50,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             self.MergeType = 'AirFighterMergeStateMachine'
             self.BaseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
             self.BaseMilitaryArea = aiBrain.OperatingAreas['BaseMilitaryArea']
+            self.BaseDMZArea = aiBrain.OperatingAreas['BaseDMZArea']
             self.BaseEnemyArea = aiBrain.OperatingAreas['BaseEnemyArea']
             if self.PlatoonData.LocationType then
                 self.LocationType = self.PlatoonData.LocationType
@@ -571,10 +572,12 @@ FighterThreatThreads = function(aiBrain, platoon)
                 end
             end
         end
-        if platoon.CurrentPlatoonThreatAntiAir < 15 and aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
+        if platoon.CurrentPlatoonThreatAntiAir < 15 and (aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat) < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
             platoon.MaxRadius = platoon.BaseRestrictedArea * 1.5
-        elseif aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
+        elseif (aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat) * 1.3 < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
             platoon.MaxRadius = platoon.BaseMilitaryArea
+        elseif (aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat) < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
+            platoon.MaxRadius = platoon.BaseDMZArea
         else
             platoon.MaxRadius = platoon.BaseEnemyArea
         end

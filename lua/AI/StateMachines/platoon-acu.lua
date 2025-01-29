@@ -186,7 +186,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             end
             if self.CheckEarlyLandFactory then
                 self.CheckEarlyLandFactory = false
-                if brain.BrainIntel.SpamPlayer and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < 6400 and not cdr.Caution and cdr.CurrentEnemyThreat < 25 then
+                if brain.BrainIntel.PlayerRole.SpamPlayer and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < 6400 and not cdr.Caution and cdr.CurrentEnemyThreat < 25 then
                     local numUnits = brain:GetCurrentUnits(categories.FACTORY * categories.LAND)
                     if numUnits < 4 and brain:GetEconomyStored('MASS') > 240 and brain:GetEconomyStored('ENERGY') > 1000 then
                         local factionIndex = ACUFunc.GetEngineerFactionIndexRNG(cdr)
@@ -397,7 +397,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         self:LogDebug(string.format('Current expansion count is '..tostring(expansionCount)))
-                        if expansionCount < 2 and expansionsAvailable > 1 then
+                        if not brain.RNGEXP and expansionCount < 2 and expansionsAvailable > 1 then
                             if not table.empty(im.ZoneExpansions.Pathable) then
                                 local stageExpansion
                                 local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
@@ -2901,7 +2901,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         coroutine.yield(10)
                     end
                     if ((closeMarkers + distantMarkers > 2) or (closeMarkers + distantMarkers > 1 and GetEconomyStored(aiBrain, 'MASS') > 120)) and eng.UnitBeingAssist:GetFractionComplete() == 1 then
-                        if aiBrain.MapSize >=20 or aiBrain.BrainIntel.AirPlayer then
+                        if aiBrain.MapSize >=20 or aiBrain.BrainIntel.PlayerRole.AirPlayer then
                             buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 15, true)
                             if borderWarning and buildLocation and whatToBuild then
                                 airFactoryBuilt = true

@@ -282,7 +282,7 @@ end
 
 function AirPlayerCheck(aiBrain, locationType, unitCount, unitCategory)
 
-    if aiBrain.BrainIntel.AirPlayer then
+    if aiBrain.BrainIntel.PlayerRole.AirPlayer then
         local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
         if not factoryManager then
             WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)

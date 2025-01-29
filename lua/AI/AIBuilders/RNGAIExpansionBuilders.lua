@@ -29,7 +29,7 @@ local NavalExpansionAdjust = function(self, aiBrain, builderManager)
             validAttackPriorityModifier = validAttackPriorityModifier + 100
         end
     end
-    if aiBrain.BrainIntel.AirPlayer then
+    if aiBrain.BrainIntel.PlayerRole.AirPlayer then
         return 0
     elseif aiBrain.MapWaterRatio < 0.20 and not aiBrain.MassMarkersInWater then
         --RNGLOG('NavalExpansionAdjust return 0')
@@ -83,7 +83,7 @@ end
 
 local FrigateRaid = function(self, aiBrain, builderManager)
     -- Will return the rush naval build if it can raid mexes
-    if aiBrain.EnemyIntel.FrigateRaid and not aiBrain.BrainIntel.AirPlayer then
+    if aiBrain.EnemyIntel.FrigateRaid and not aiBrain.BrainIntel.PlayerRole.AirPlayer then
         --RNGLOG('Frigate Raid priority function is 995')
         --LOG('Returning Naval Frigate Raid Expansion Priority of 1000')
         return 1000

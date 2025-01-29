@@ -248,36 +248,48 @@ AIBrain = Class(RNGAIBrainClass) {
         self.PreBuilt = true
     end,
 
-    ConfigureDefaultBrainData = function(self)
-        self.NoRush = {
-            Active = false,
-            Radius = 0
-            }
-        self.MapWaterRatio = self:GetMapWaterRatio()
+    EvaluateDefaultProductionRatios = function(self)
+        local scenarioMapSizeX, scenarioMapSizeZ = GetMapSize()
+        local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+        local mapSizeX, mapSizeZ
 
-        self.MapSize = 10
-        local mapSizeX, mapSizeZ = GetMapSize()
-        self.MapDimension = math.max(mapSizeX, mapSizeZ)
-        self.DefaultProductionRatios = {
-            Land = 0,
-            Air = 0,
-            Naval = 0
-        }
+        if not playableArea then
+            mapSizeX = scenarioMapSizeX
+            mapSizeZ = scenarioMapSizeZ
+        else
+            mapSizeX = playableArea[3]
+            mapSizeZ = playableArea[4]
+        end
+
         if mapSizeX > 1000 and mapSizeZ > 1000 then
             if self.RNGEXP then
                 if self.MapWaterRatio < 0.10 then
-                    self.DefaultProductionRatios['Land'] = 0.4
-                    self.DefaultProductionRatios['Air'] = 0.3
+                    self.DefaultProductionRatios['Land'] = 0.35
+                    self.DefaultProductionRatios['Air'] = 0.4
                     self.DefaultProductionRatios['Naval'] = 0.0
                 else
                     self.DefaultProductionRatios['Land'] = 0.2
                     self.DefaultProductionRatios['Air'] = 0.3
                     self.DefaultProductionRatios['Naval'] = 0.2
                 end
+            elseif self.BrainIntel.PlayerRole.AirPlayer then
+                if self.MapWaterRatio < 0.10 then
+                    self.DefaultProductionRatios['Land'] = 0.2
+                    self.DefaultProductionRatios['Air'] = 0.5
+                    self.DefaultProductionRatios['Naval'] = 0.0
+                elseif self.MapWaterRatio > 0.60 then
+                    self.DefaultProductionRatios['Land'] = 0.2
+                    self.DefaultProductionRatios['Air'] = 0.40
+                    self.DefaultProductionRatios['Naval'] = 0.35
+                else
+                    self.DefaultProductionRatios['Land'] = 0.2
+                    self.DefaultProductionRatios['Air'] = 0.40
+                    self.DefaultProductionRatios['Naval'] = 0.25
+                end
             else
                 if self.MapWaterRatio < 0.10 then
-                    self.DefaultProductionRatios['Land'] = 0.65
-                    self.DefaultProductionRatios['Air'] = 0.35
+                    self.DefaultProductionRatios['Land'] = 0.3
+                    self.DefaultProductionRatios['Air'] = 0.4
                     self.DefaultProductionRatios['Naval'] = 0.0
                 elseif self.MapWaterRatio > 0.60 then
                     self.DefaultProductionRatios['Land'] = 0.4
@@ -289,17 +301,30 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.DefaultProductionRatios['Naval'] = 0.25
                 end
             end
-            self.MapSize = 20
         elseif mapSizeX > 500 and mapSizeZ > 500 then
             if self.RNGEXP then
                 if self.MapWaterRatio < 0.10 then
-                    self.DefaultProductionRatios['Land'] = 0.65
-                    self.DefaultProductionRatios['Air'] = 0.35
+                    self.DefaultProductionRatios['Land'] = 0.50
+                    self.DefaultProductionRatios['Air'] = 0.4
                     self.DefaultProductionRatios['Naval'] = 0.0
                 else
                     self.DefaultProductionRatios['Land'] = 0.2
                     self.DefaultProductionRatios['Air'] = 0.3
                     self.DefaultProductionRatios['Naval'] = 0.2
+                end
+            elseif self.BrainIntel.PlayerRole.AirPlayer then
+                if self.MapWaterRatio < 0.10 then
+                    self.DefaultProductionRatios['Land'] = 0.3
+                    self.DefaultProductionRatios['Air'] = 0.5
+                    self.DefaultProductionRatios['Naval'] = 0.0
+                elseif self.MapWaterRatio > 0.60 then
+                    self.DefaultProductionRatios['Land'] = 0.3
+                    self.DefaultProductionRatios['Air'] = 0.40
+                    self.DefaultProductionRatios['Naval'] = 0.35
+                else
+                    self.DefaultProductionRatios['Land'] = 0.3
+                    self.DefaultProductionRatios['Air'] = 0.40
+                    self.DefaultProductionRatios['Naval'] = 0.25
                 end
             else
                 if self.MapWaterRatio < 0.10 then
@@ -317,17 +342,30 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
 
             end
-            self.MapSize = 10
         elseif mapSizeX > 200 and mapSizeZ > 200 then
             if self.RNGEXP then
                 if self.MapWaterRatio < 0.10 then
-                    self.DefaultProductionRatios['Land'] = 0.65
-                    self.DefaultProductionRatios['Air'] = 0.35
+                    self.DefaultProductionRatios['Land'] = 0.55
+                    self.DefaultProductionRatios['Air'] = 0.25
                     self.DefaultProductionRatios['Naval'] = 0.0
                 else
                     self.DefaultProductionRatios['Land'] = 0.2
                     self.DefaultProductionRatios['Air'] = 0.3
                     self.DefaultProductionRatios['Naval'] = 0.2
+                end
+            elseif self.BrainIntel.PlayerRole.AirPlayer then
+                if self.MapWaterRatio < 0.10 then
+                    self.DefaultProductionRatios['Land'] = 0.35
+                    self.DefaultProductionRatios['Air'] = 0.5
+                    self.DefaultProductionRatios['Naval'] = 0.0
+                elseif self.MapWaterRatio > 0.60 then
+                    self.DefaultProductionRatios['Land'] = 0.35
+                    self.DefaultProductionRatios['Air'] = 0.40
+                    self.DefaultProductionRatios['Naval'] = 0.35
+                else
+                    self.DefaultProductionRatios['Land'] = 0.35
+                    self.DefaultProductionRatios['Air'] = 0.40
+                    self.DefaultProductionRatios['Naval'] = 0.25
                 end
             else
                 if self.MapWaterRatio < 0.10 then
@@ -343,10 +381,36 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.DefaultProductionRatios['Air'] = 0.15
                     self.DefaultProductionRatios['Naval'] = 0.15
                 end
-
             end
+        end
+    end,
+
+    ConfigureDefaultBrainData = function(self)
+        self.NoRush = {
+            Active = false,
+            Radius = 0
+            }
+        self.MapWaterRatio = self:GetMapWaterRatio()
+
+        self.MapSize = 10
+        local mapSizeX, mapSizeZ = GetMapSize()
+        self.MapDimension = math.max(mapSizeX, mapSizeZ)
+        self.DefaultProductionRatios = {
+            Land = 0,
+            Air = 0,
+            Naval = 0
+        }
+        if mapSizeX > 1000 and mapSizeZ > 1000 then
+            self.MapSize = 20
+        elseif mapSizeX > 500 and mapSizeZ > 500 then
+            self.MapSize = 10
+        elseif mapSizeX > 200 and mapSizeZ > 200 then
             self.MapSize = 5
         end
+        self.DefaultProductionRatios['Land'] = 0.0
+        self.DefaultProductionRatios['Air'] = 0.0
+        self.DefaultProductionRatios['Naval'] = 0.0
+        self:EvaluateDefaultProductionRatios()
 
         self.MapCenterPoint = { (ScenarioInfo.size[1] / 2), GetSurfaceHeight((ScenarioInfo.size[1] / 2), (ScenarioInfo.size[2] / 2)) ,(ScenarioInfo.size[2] / 2) }
 
@@ -360,14 +424,14 @@ AIBrain = Class(RNGAIBrainClass) {
             HasRun = false
         }
         if self.MapSize <= 10 and self.RNGEXP then
-            self.EconomyUpgradeSpendDefault = 0.35
+            self.EconomyUpgradeSpendDefault = 0.40
             self.EconomyUpgradeSpend = 0.35
         elseif self.MapSize <= 10 then
             self.EconomyUpgradeSpendDefault = 0.25
             self.EconomyUpgradeSpend = 0.25
         elseif self.RNGEXP then
-            self.EconomyUpgradeSpendDefault = 0.35
-            self.EconomyUpgradeSpend = 0.35
+            self.EconomyUpgradeSpendDefault = 0.45
+            self.EconomyUpgradeSpend = 0.40
         else
             self.EconomyUpgradeSpendDefault = 0.30
             self.EconomyUpgradeSpend = 0.30
@@ -1187,6 +1251,12 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Intel Data
         self.EnemyIntel = {}
         self.BrainIntel = {}
+        self.BrainIntel.PlayerRole = {
+            AirPlayer = false,
+            NavalPlayer = false,
+            ExperimentalPlayer = false,
+            SpamPlayer = false
+        }
         self.BrainIntel.SuicideModeActive = false
         self.BrainIntel.SuicideModeTarget = false
         self.BrainIntel.TeamCount = 0
@@ -1196,6 +1266,9 @@ AIBrain = Class(RNGAIBrainClass) {
             Position = {},
             Range = 0,
         }
+        if self.RNGEXP then
+            self.BrainIntel.PlayerRole.ExperimentalPlayer = true
+        end
         self.MassMarkersInWater = false
         self.EnemyIntel.FrigateRaid = false
         self.EnemyIntel.FrigateRaidMarkers = {}
@@ -5182,7 +5255,7 @@ AIBrain = Class(RNGAIBrainClass) {
     FactoryEcoManagerRNG = function(self)
         coroutine.yield(Random(1,7))
         while true do
-            if self.EcoManager.EcoManagerStatus == 'ACTIVE' and not self.BrainIntel.SpamPlayer then
+            if self.EcoManager.EcoManagerStatus == 'ACTIVE' and not self.BrainIntel.PlayerRole.SpamPlayer then
                 if GetGameTimeSeconds() < 240 then
                     coroutine.yield(50)
                     continue
@@ -6982,7 +7055,6 @@ AIBrain = Class(RNGAIBrainClass) {
     
         while self.Status ~= 'Defeat' do
             coroutine.yield(30)
-
     
             -- Configurable ratios for economy spend and assist
             local economySpendRatio = 0.05 -- Reserve 5% of the economy for economic upgrades
@@ -6996,6 +7068,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local engineerAssistRatioMax = 0.45 -- Maximum assist allocation
             local brainIntel = self.BrainIntel
             local highestPhase =  math.max(brainIntel.LandPhase, brainIntel.AirPhase, brainIntel.NavalPhase)
+            local ignoreZoneControl = not brainIntel.PlayerRole.AirPlayer and not brainIntel.PlayerRole.ExperimentalPlayer
     
             local isNavalMap = false
             if self.MapWaterRatio > 0.50 then
@@ -7015,7 +7088,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 Air = { Land = 0.7, Air = 1.5, Naval = 0.8 },
                 Naval = { Land = 0.7, Air = 0.8, Naval = 1.5 }
             }
-            local currentBias = brainIntel.AirPlayer and playerBiases.Air or brainIntel.SpamPlayer and playerBiases.Land or isNavalMap and playerBiases.Naval or playerBiases.Default
+            local currentBias = brainIntel.PlayerRole.AirPlayer and playerBiases.Air or brainIntel.SpamPlayer and playerBiases.Land or isNavalMap and playerBiases.Naval or playerBiases.Default
     
             local minAllocation = 0.20
             local maxShiftLandRatio = 0.70
@@ -7025,7 +7098,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 maxShiftLandRatio = 0.80
                 economyUpgradeSpend = 0.05
                 engineerAssistRatio = 0.05
-            elseif brainIntel.PlayerZoneControl < 0.70 and highestPhase < 2 then
+            elseif brainIntel.PlayerZoneControl < 0.70 and highestPhase < 2 and ignoreZoneControl then
                 economyUpgradeSpend = 0.05
                 engineerAssistRatio = 0.05
             end

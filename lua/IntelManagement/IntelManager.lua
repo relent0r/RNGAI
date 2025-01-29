@@ -1615,15 +1615,42 @@ IntelManager = Class {
             
             if closestDistance and furthestPlayerDistance and closestDistance > furthestPlayerDistance then
                 if math.sqrt(closestDistance) - math.sqrt(furthestPlayerDistance) > 50 then
-                    furthestPlayer = true
-                    aiBrain.BrainIntel.AirPlayer = true
+                    if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer and not aiBrain.BrainIntel.PlayerRole.SpamPlayer then
+                        furthestPlayer = true
+                        aiBrain.BrainIntel.PlayerRole.AirPlayer = true
+                        aiBrain:EvaluateDefaultProductionRatios()
+                        return
+                    end
                 end
             end
             if not furthestPlayer then
                 if closestDistance and selfDistanceToEnemy and selfDistanceToEnemy <= closestPlayerDistance then
                     if math.sqrt(selfDistanceToEnemy) - math.sqrt(selfDistanceToTeammates) > 50 then
-                        aiBrain.BrainIntel.SpamPlayer = true
-                        self:ForkThread(self.SpamTriggerDurationThread)
+                        if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer and not aiBrain.BrainIntel.PlayerRole.AirPlayer then
+                            aiBrain.BrainIntel.PlayerRole.SpamPlayer = true
+                            self:ForkThread(self.SpamTriggerDurationThread)
+                            return
+                        end
+                    end
+                end
+            end
+            if not aiBrain.BrainIntel.PlayerRole.AirPlayer and not aiBrain.BrainIntel.PlayerRole.SpamPlayer then
+                if aiBrain.BrainIntel.NavalBaseLabels and aiBrain.BrainIntel.NavalBaseLabelCount > 0 then
+                    -- Check if any enemy start location has a matching water label
+                    for _, b in aiBrain.EnemyIntel.EnemyStartLocations do
+                        for label, state in aiBrain.BrainIntel.NavalBaseLabels do
+                            if b.WaterLabels[label] and state == "Confirmed" then
+                                navalPlayer = true
+                                break
+                            end
+                        end
+                        if navalPlayer then break end
+                    end
+    
+                    if navalPlayer then
+                        aiBrain.BrainIntel.PlayerRole.NavalPlayer = true
+                        aiBrain:EvaluateDefaultProductionRatios()
+                        return
                     end
                 end
             end
@@ -1638,8 +1665,10 @@ IntelManager = Class {
                 local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
                 local OwnIndex = aiBrain:GetArmyIndex()
                 if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' and aiBrain.EnemyIntel.EnemyStartLocations[EnemyIndex].Distance < 348100 then
-                    aiBrain.BrainIntel.SpamPlayer = true
-                    self:ForkThread(self.SpamTriggerDurationThread)
+                    if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer and not aiBrain.BrainIntel.PlayerRole.AirPlayer then
+                        aiBrain.BrainIntel.PlayerRole.SpamPlayer = true
+                        self:ForkThread(self.SpamTriggerDurationThread)
+                    end
                 end
             end
         end
@@ -1656,7 +1685,7 @@ IntelManager = Class {
                 cancelSpam = true
             end
         end
-        aiBrain.BrainIntel.SpamPlayer = false
+        aiBrain.BrainIntel.PlayerRole.SpamPlayer = false
     end,
 
     GetTeamAveragePositions = function(self)

@@ -1808,7 +1808,7 @@ function DefensiveClusterCloseRNG(aiBrain, locationType)
 end
 
 function MinimumFactoryCheckRNG(aiBrain, locationType, structureType)
-    if not aiBrain.BrainIntel.AirPlayer then
+    if not aiBrain.BrainIntel.PlayerRole.AirPlayer then
         local factoryCount = 0
         if not aiBrain:GetCurrentEnemy() then
             return true
@@ -1960,30 +1960,82 @@ function UnfinishedUnitsAtLocationRNG(aiBrain, locationType, category)
 end
 
 function PlayerRoleCheck(aiBrain, locationType, unitCount, unitCategory, checkType)
-    if aiBrain.BrainIntel.AirPlayer and checkType == 'AIR' and aiBrain.BrainIntel.AllyCount > 1 then
-        local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
-        if not factoryManager then
-            WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
-            return true
-        end
-        if factoryManager.LocationActive then
-            local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
-            if  numUnits >= unitCount then
-                --RNGLOG('We are air player and have hit land factory limit')
-                return false
+    for _, v in checkType do
+        if aiBrain.BrainIntel.PlayerRole.AirPlayer and v == 'AIR' and aiBrain.BrainIntel.AllyCount > 1 then
+            local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+            if not factoryManager then
+                WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
+                return true
             end
-        end
-    elseif aiBrain.BrainIntel.SpamPlayer and checkType == 'SPAM' then
-        local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
-        if not factoryManager then
-            WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
-            return true
-        end
-        if factoryManager.LocationActive then
-            local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
-            if  numUnits >= unitCount then
-                --RNGLOG('We are spam player and have hit air factory limit')
-                return false
+            if factoryManager.LocationActive then
+                local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
+                if numUnits >= unitCount then
+                    --RNGLOG('We are air player and have hit land factory limit')
+                    return false
+                end
+                local numBuildingUnits = GetUnitsBeingBuiltLocationRNG(aiBrain,locationType, unitCategory, categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) or 0
+                numUnits = numUnits + numBuildingUnits
+                if  numUnits >= unitCount then
+                    --RNGLOG('We are air player and have hit land factory limit')
+                    return false
+                end
+            end
+        elseif aiBrain.BrainIntel.PlayerRole.SpamPlayer and v == 'SPAM' then
+            local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+            if not factoryManager then
+                WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
+                return true
+            end
+            if factoryManager.LocationActive then
+                local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
+                if numUnits >= unitCount then
+                    --RNGLOG('We are air player and have hit land factory limit')
+                    return false
+                end
+                local numBuildingUnits = GetUnitsBeingBuiltLocationRNG(aiBrain,locationType, unitCategory, categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) or 0
+                numUnits = numUnits + numBuildingUnits
+                if  numUnits >= unitCount then
+                    --RNGLOG('We are air player and have hit land factory limit')
+                    return false
+                end
+            end
+        elseif aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer and v == 'EXPERIMENTAL' then
+            local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+            if not factoryManager then
+                WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
+                return true
+            end
+            if factoryManager.LocationActive then
+                local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
+                if numUnits >= unitCount then
+                    --RNGLOG('We are air player and have hit land factory limit')
+                    return false
+                end
+                local numBuildingUnits = GetUnitsBeingBuiltLocationRNG(aiBrain,locationType, unitCategory, categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) or 0
+                numUnits = numUnits + numBuildingUnits
+                if  numUnits >= unitCount then
+                    --RNGLOG('We are air player and have hit land factory limit')
+                    return false
+                end
+            end
+        elseif aiBrain.BrainIntel.PlayerRole.NavalPlayer and v == 'NAVAL' then
+            local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+            if not factoryManager then
+                WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
+                return true
+            end
+            if factoryManager.LocationActive then
+                local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
+                if numUnits >= unitCount then
+                    --RNGLOG('We are air player and have hit land factory limit')
+                    return false
+                end
+                local numBuildingUnits = GetUnitsBeingBuiltLocationRNG(aiBrain,locationType, unitCategory, categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) or 0
+                numUnits = numUnits + numBuildingUnits
+                if  numUnits >= unitCount then
+                    --RNGLOG('We are air player and have hit land factory limit')
+                    return false
+                end
             end
         end
     end
