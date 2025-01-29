@@ -1635,6 +1635,7 @@ IntelManager = Class {
                 end
             end
             if not aiBrain.BrainIntel.PlayerRole.AirPlayer and not aiBrain.BrainIntel.PlayerRole.SpamPlayer then
+                local navalPlayer
                 if aiBrain.BrainIntel.NavalBaseLabels and aiBrain.BrainIntel.NavalBaseLabelCount > 0 then
                     -- Check if any enemy start location has a matching water label
                     for _, b in aiBrain.EnemyIntel.EnemyStartLocations do
