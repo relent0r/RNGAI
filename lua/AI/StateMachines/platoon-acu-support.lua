@@ -257,7 +257,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local targetPos
             for _,v in units do
                 if v and not v.Dead then
-                    self:LogDebug(string.format('Combat loop, unit role is '..tostring(v['rngdata'].Role)))
+                    --self:LogDebug(string.format('Combat loop, unit role is '..tostring(v['rngdata'].Role)))
                     local unitPos = v:GetPosition()
                     if aiBrain.BrainIntel.SuicideModeActive and not IsDestroyed(aiBrain.BrainIntel.SuicideModeTarget) then
                         target = aiBrain.BrainIntel.SuicideModeTarget
@@ -298,8 +298,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if v['rngdata'].Role == 'Artillery' or v['rngdata'].Role == 'Silo' or v['rngdata'].Role == 'Sniper' then
-                            self:LogDebug(string.format('Ranged Unit has been given attack command target range is '..tostring(unitRange)..' units range is '..tostring(v['rngdata'].MaxWeaponRange)))
-                            self:LogDebug(string.format('Targets range is '..tostring(closestTarget)))
+                            --self:LogDebug(string.format('Ranged Unit has been given attack command target range is '..tostring(unitRange)..' units range is '..tostring(v['rngdata'].MaxWeaponRange)))
+                            --self:LogDebug(string.format('Targets range is '..tostring(closestTarget)))
                             local targetCats = target.Blueprint.CategoriesHash
                             if targetCats.DIRECTFIRE and targetCats.STRUCTURE and targetCats.DEFENSE then
                                 if v['rngdata'].MaxWeaponRange > unitRange then
@@ -322,9 +322,6 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                     IssueAggressiveMove({v},targetPos)
                                 end
                             else
-                                if v['rngdata'].Role == 'Artillery' or v['rngdata'].Role == 'Silo' or v['rngdata'].Role == 'Sniper' then
-                                    self:LogDebug(string.format('Kiting unit '))
-                                end
                                 StateUtils.VariableKite(self,v,target)
                             end
                         end

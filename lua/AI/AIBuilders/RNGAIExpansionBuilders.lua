@@ -31,6 +31,8 @@ local NavalExpansionAdjust = function(self, aiBrain, builderManager)
     end
     if aiBrain.BrainIntel.PlayerRole.AirPlayer then
         return 0
+    elseif aiBrain.BrainIntel.PlayerRole.NavalPlayer then
+        return 1000
     elseif aiBrain.MapWaterRatio < 0.20 and not aiBrain.MassMarkersInWater then
         --RNGLOG('NavalExpansionAdjust return 0')
         return 0

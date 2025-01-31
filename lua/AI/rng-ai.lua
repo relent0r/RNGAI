@@ -202,9 +202,6 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     OnSpawnPreBuiltUnits = function(self)
-        if not self.RNG then
-            return RNGAIBrainClass.OnSpawnPreBuiltUnits(self)
-        end
         local factionIndex = self:GetFactionIndex()
         local resourceStructures = nil
         local initialUnits = nil
@@ -286,6 +283,34 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.DefaultProductionRatios['Air'] = 0.40
                     self.DefaultProductionRatios['Naval'] = 0.25
                 end
+            elseif self.BrainIntel.PlayerRole.SpamPlayer then
+                if self.MapWaterRatio < 0.10 then
+                    self.DefaultProductionRatios['Land'] = 0.70
+                    self.DefaultProductionRatios['Air'] = 0.25
+                    self.DefaultProductionRatios['Naval'] = 0.0
+                elseif self.MapWaterRatio > 0.60 then
+                    self.DefaultProductionRatios['Land'] = 0.50
+                    self.DefaultProductionRatios['Air'] = 0.20
+                    self.DefaultProductionRatios['Naval'] = 0.25
+                else
+                    self.DefaultProductionRatios['Land'] = 0.65
+                    self.DefaultProductionRatios['Air'] = 0.20
+                    self.DefaultProductionRatios['Naval'] = 0.10
+                end
+            elseif self.BrainIntel.PlayerRole.NavalPlayer then
+                if self.MapWaterRatio < 0.10 then
+                    self.DefaultProductionRatios['Land'] = 0.4
+                    self.DefaultProductionRatios['Air'] = 0.5
+                    self.DefaultProductionRatios['Naval'] = 0.0
+                elseif self.MapWaterRatio > 0.60 then
+                    self.DefaultProductionRatios['Land'] = 0.35
+                    self.DefaultProductionRatios['Air'] = 0.25
+                    self.DefaultProductionRatios['Naval'] = 0.45
+                else
+                    self.DefaultProductionRatios['Land'] = 0.35
+                    self.DefaultProductionRatios['Air'] = 0.15
+                    self.DefaultProductionRatios['Naval'] = 0.40
+                end
             else
                 if self.MapWaterRatio < 0.10 then
                     self.DefaultProductionRatios['Land'] = 0.3
@@ -325,6 +350,34 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.DefaultProductionRatios['Land'] = 0.3
                     self.DefaultProductionRatios['Air'] = 0.40
                     self.DefaultProductionRatios['Naval'] = 0.25
+                end
+            elseif self.BrainIntel.PlayerRole.SpamPlayer then
+                if self.MapWaterRatio < 0.10 then
+                    self.DefaultProductionRatios['Land'] = 0.7
+                    self.DefaultProductionRatios['Air'] = 0.25
+                    self.DefaultProductionRatios['Naval'] = 0.0
+                elseif self.MapWaterRatio > 0.60 then
+                    self.DefaultProductionRatios['Land'] = 0.6
+                    self.DefaultProductionRatios['Air'] = 0.25
+                    self.DefaultProductionRatios['Naval'] = 0.25
+                else
+                    self.DefaultProductionRatios['Land'] = 0.65
+                    self.DefaultProductionRatios['Air'] = 0.25
+                    self.DefaultProductionRatios['Naval'] = 0.10
+                end
+            elseif self.BrainIntel.PlayerRole.NavalPlayer then
+                if self.MapWaterRatio < 0.10 then
+                    self.DefaultProductionRatios['Land'] = 0.4
+                    self.DefaultProductionRatios['Air'] = 0.5
+                    self.DefaultProductionRatios['Naval'] = 0.0
+                elseif self.MapWaterRatio > 0.60 then
+                    self.DefaultProductionRatios['Land'] = 0.35
+                    self.DefaultProductionRatios['Air'] = 0.25
+                    self.DefaultProductionRatios['Naval'] = 0.45
+                else
+                    self.DefaultProductionRatios['Land'] = 0.35
+                    self.DefaultProductionRatios['Air'] = 0.15
+                    self.DefaultProductionRatios['Naval'] = 0.40
                 end
             else
                 if self.MapWaterRatio < 0.10 then
@@ -366,6 +419,34 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.DefaultProductionRatios['Land'] = 0.35
                     self.DefaultProductionRatios['Air'] = 0.40
                     self.DefaultProductionRatios['Naval'] = 0.25
+                end
+            elseif self.BrainIntel.PlayerRole.SpamPlayer then
+                if self.MapWaterRatio < 0.10 then
+                    self.DefaultProductionRatios['Land'] = 0.8
+                    self.DefaultProductionRatios['Air'] = 0.2
+                    self.DefaultProductionRatios['Naval'] = 0.0
+                elseif self.MapWaterRatio > 0.60 then
+                    self.DefaultProductionRatios['Land'] = 0.7
+                    self.DefaultProductionRatios['Air'] = 0.1
+                    self.DefaultProductionRatios['Naval'] = 0.2
+                else
+                    self.DefaultProductionRatios['Land'] = 0.65
+                    self.DefaultProductionRatios['Air'] = 0.25
+                    self.DefaultProductionRatios['Naval'] = 0.10
+                end
+            elseif self.BrainIntel.PlayerRole.NavalPlayer then
+                if self.MapWaterRatio < 0.10 then
+                    self.DefaultProductionRatios['Land'] = 0.4
+                    self.DefaultProductionRatios['Air'] = 0.5
+                    self.DefaultProductionRatios['Naval'] = 0.0
+                elseif self.MapWaterRatio > 0.60 then
+                    self.DefaultProductionRatios['Land'] = 0.35
+                    self.DefaultProductionRatios['Air'] = 0.25
+                    self.DefaultProductionRatios['Naval'] = 0.45
+                else
+                    self.DefaultProductionRatios['Land'] = 0.35
+                    self.DefaultProductionRatios['Air'] = 0.15
+                    self.DefaultProductionRatios['Naval'] = 0.40
                 end
             else
                 if self.MapWaterRatio < 0.10 then
@@ -1239,7 +1320,7 @@ AIBrain = Class(RNGAIBrainClass) {
             TacticalLocationFound = false,
             TacticalLocations = {},
             TacticalTimeout = 37,
-            TacticalMonitorTime = 180,
+            TacticalMonitorTime = 160,
             TacticalMassLocations = {},
             TacticalUnmarkedMassGroups = {},
             TacticalSACUMode = false,
@@ -1424,9 +1505,6 @@ AIBrain = Class(RNGAIBrainClass) {
 
     InitializeSkirmishSystems = function(self)
         --LOG('Initialize Skirmish Systems')
-        if not self.RNG then
-            return RNGAIBrainClass.InitializeSkirmishSystems(self)
-        end
         --RNGLOG('* AI-RNG: Custom Skirmish System for '..ScenarioInfo.ArmySetup[self.Name].AIPersonality)
         -- Make sure we don't do anything for the human player!!!
         if self.BrainType == 'Human' then
@@ -1969,9 +2047,6 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
     
     AddBuilderManagers = function(self, position, radius, baseName, useCenter)
-        if not self.RNG then
-            return RNGAIBrainClass.AddBuilderManagers(self, position, radius, baseName, useCenter)
-        end
         local MarkerUtilities = import("/lua/sim/markerutilities.lua")
         local baseRestrictedArea = self.OperatingAreas['BaseRestrictedArea']
 
@@ -3602,6 +3677,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     SetupIntelTriggersRNG = function(self)
+        -- Since I forgot how this worked really easily.
         coroutine.yield(10)
         --RNGLOG('Try to create intel trigger for enemy')
         self:SetupArmyIntelTrigger({
@@ -3623,11 +3699,8 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     OnIntelChange = function(self, blip, reconType, val)
-        if not self.RNG then
-            return RNGAIBrainClass.OnIntelChange(self, blip, reconType, val)
-        end
         if val then
-            if reconType == 'LOSNow' then
+            if reconType == 'LOSNow' or reconType == 'Radar' then
                 if self.IntelTriggerList then
                     for k, v in self.IntelTriggerList do
                         if EntityCategoryContains(v.Category, blip:GetBlueprint().BlueprintId)
@@ -3644,7 +3717,6 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     ACUDetectionRNG = function(self, blip)
-        --LOG('ACUDetection Callback has fired')
         if blip then
             local unit = blip:GetSource()
             if not unit.Dead then
@@ -3699,8 +3771,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 else
                     timeOut = timeOut + 1
                 end
-                --RNGLOG('Maintaining ACU Visual')
-                --RNGLOG(repr(self.EnemyIntel.ACU[index]))
+                --LOG('Maintaining ACU Visual')
+                --LOG(repr(self.EnemyIntel.ACU[index]))
                 coroutine.yield(10)
             end
             acuTable[index].VisualThread = false
@@ -3834,7 +3906,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     for _,v in enemyAir do
                         -- previous method of getting unit ID before the property was added.
                         --local unitbpId = v:GetUnitId()
-                        --RNGLOG('Unit blueprint id test only on dev branch:'..v.UnitId)
                         enemyAirThreat = enemyAirThreat + v.Blueprint.Defense.AirThreatLevel + v.Blueprint.Defense.SubThreatLevel + v.Blueprint.Defense.SurfaceThreatLevel
                         enemyAntiAirThreat = enemyAntiAirThreat + v.Blueprint.Defense.AirThreatLevel
                         enemyAirSurfaceThreat = enemyAirSurfaceThreat + v.Blueprint.Defense.SurfaceThreatLevel
@@ -6911,9 +6982,6 @@ AIBrain = Class(RNGAIBrainClass) {
     InitializePlatoonBuildManager = function(self)
        --('Starting PlatoonBuildManager')
         --LOG('Initialize Skirmish Systems')
-        if not self.RNG then
-            return RNGAIBrainClass.InitializePlatoonBuildManager(self)
-        end
         --RNGLOG('* AI-RNG: Custom Skirmish System for '..ScenarioInfo.ArmySetup[self.Name].AIPersonality)
         -- Make sure we don't do anything for the human player!!!
         if self.BrainType == 'Human' then

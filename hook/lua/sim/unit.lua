@@ -50,7 +50,7 @@ Unit = Class(RNGUnitClass) {
                 end
     
                 if enhancementBp.ZephyrDamageMod and enhancementBp.ZephyrDamageMod > 0 then
-                    threatReturn = threatReturn + 25
+                    threatReturn = threatReturn + 20
                 end
 
                 if enhancementBp.ShieldMaxHealth and enhancementBp.ShieldMaxHealth > 0 then
@@ -59,6 +59,9 @@ Unit = Class(RNGUnitClass) {
 
                 if enhancementBp.NewHealth and enhancementBp.NewHealth > 0 then
                     threatReturn = threatReturn + 12
+                end
+                if enhancementBp.AdditionalDamage and enhancementBp.AdditionalDamage > 500 then
+                    threatReturn = threatReturn + 45
                 end
 
             end

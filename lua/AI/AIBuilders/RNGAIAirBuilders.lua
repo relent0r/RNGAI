@@ -13,16 +13,17 @@ local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local AntiAirUnits = categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK
 
 local AirDefenseMode = function(self, aiBrain, builderManager, builderData)
+    local raidAir = 0
+    if aiBrain.EnemyIntel.EnemyThreatCurrent.Air > 0 then
+        raidAir = math.min(aiBrain.EnemyIntel.EnemyThreatCurrent.Air, 5)
+    end
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
-    local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
+    local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir + raidAir
     local enemyCount = 1
     if aiBrain.EnemyIntel.EnemyCount > 0 then
         enemyCount = aiBrain.EnemyIntel.EnemyCount
     end
     if myAirThreat < (enemyAirThreat * 1.3 / enemyCount) then
-        --LOG('Air Defense Mode')
-        --LOG('Enable Air Intie Pool Builder')
-        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         if builderData.BuilderData.TechLevel == 1 then
             return 880
         elseif builderData.BuilderData.TechLevel == 2 then

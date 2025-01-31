@@ -38,6 +38,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.HealthPercent = 0
     cdr.DistanceToHome = 0
     cdr.Health = 0
+    cdr.ShieldHealth = 0
     cdr.Active = false
     cdr.movetopos = false
     cdr.Retreating = false
@@ -93,6 +94,12 @@ function CDRHealthThread(cdr)
     while not cdr.Dead do
         cdr.HealthPercent = cdr:GetHealthPercent()
         cdr.Health = cdr:GetHealth()
+        if cdr.MyShield and cdr.MyShield.IsUp and cdr.MyShield:IsUp() then
+            cdr.ShieldHealth = cdr.MyShield:GetHealth()
+            cdr.MaxShieldHealth = cdr.MyShield:GetMaxHealth()
+        else
+            cdr.MyShield = 0
+        end
         coroutine.yield(2)
     end
 end
@@ -376,13 +383,13 @@ function CDRThreatAssessmentRNG(cdr)
             cdr.CurrentFriendlyInnerCircle = friendlyUnitThreatInner
             cdr.CurrentEnemyAirThreat = enemyAirThreat
             cdr.CurrentFriendlyAntiAirThreat = friendAntiAirThreat
-            --RNGLOG('Current Enemy Inner Threat '..cdr.CurrentEnemyInnerCircle)
-           --RNGLOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
-           --RNGLOG('Current Friendly Inner Threat '..cdr.CurrentFriendlyInnerCircle)
-           --RNGLOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
-           --RNGLOG('Current CDR Confidence '..cdr.Confidence)
-           --RNGLOG('Enemy Bomber threat '..cdr.CurrentEnemyAirThreat)
-           --RNGLOG('Friendly AA threat '..cdr.CurrentFriendlyAntiAirThreat)
+            --LOG('Current Enemy Inner Threat '..cdr.CurrentEnemyInnerCircle)
+            --LOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
+            --LOG('Current Friendly Inner Threat '..cdr.CurrentFriendlyInnerCircle)
+            --LOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
+            --LOG('Current CDR Confidence '..cdr.Confidence)
+            --LOG('Enemy Bomber threat '..cdr.CurrentEnemyAirThreat)
+            --LOG('Friendly AA threat '..cdr.CurrentFriendlyAntiAirThreat)
             if cdr.EnemyNavalPresent then
                 --RNGLOG('ACU Threat Assessment . Enemy unit is antinaval and hitting me')
                 cdr.Caution = true
@@ -461,34 +468,75 @@ function CDRThreatAssessmentRNG(cdr)
                 return enemyThreatConfidenceModifier
             end
 
+            local function customSurvivability(healthPercent)
+                -- Avoid division by zero
+                local base = 2  -- You can adjust this value to control the rate of change
+                local exponent = 2  -- The higher the exponent, the faster it will drop off at lower health
+                local maxHealth = 1.0
+                local minHealth = 0.0
+            
+                -- Scale the health to the range [0,1]
+                local scaledHealth = (healthPercent - minHealth) / (maxHealth - minHealth)
+            
+                -- Custom curve function
+                return (scaledHealth ^ exponent) * (base - 1) + 1
+            end
+
             -- Main function to calculate cdr.Confidence
             local function calculateConfidence(aiBrain, cdr, friendlyUnitThreat, enemyUnitThreat, cdrDistanceToBase, localEnemyThreatRatio, weights)
                 local friendlyThreatConfidenceModifier = calculateFriendlyThreatModifier(aiBrain, friendlyUnitThreat, cdr, weights)
                 local enemyThreatConfidenceModifier = calculateEnemyThreatModifier(aiBrain, enemyUnitThreat, weights)
 
                 -- Add influence of new metrics with weights
-                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + weights.distanceToBase * (1 / (cdrDistanceToBase + 1))
+                local distanceToEnemyBase
+                if aiBrain.EnemyIntel.ClosestEnemyBase then
+                    distanceToEnemyBase = aiBrain.EnemyIntel.ClosestEnemyBase
+                else
+                    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+                    distanceToEnemyBase = math.max(playableArea[3], playableArea[4])
+                    distanceToEnemyBase = distanceToEnemyBase * distanceToEnemyBase
+                end
+                local normalizedDistance = cdrDistanceToBase / distanceToEnemyBase
+                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + weights.distanceToBase * (1 / (normalizedDistance + 1))
                 enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + weights.localEnemyThreatRatio * localEnemyThreatRatio
 
                 -- Calculate confidence
-                cdr.Confidence = friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier
+                local shieldFactor
+                if cdr.ShieldHealth and cdr.MaxShieldHealth then
+                    shieldFactor = (cdr.ShieldHealth / cdr.MaxShieldHealth) * weights.shieldBoost
+                end
+                
+                    -- **Health + Shield Influence on Confidence**
+                local healthModifer = customSurvivability(cdr.HealthPercent)
+                local survivability = (healthModifer * weights.healthBoost) + (shieldFactor or 0)
+
+                local overchargeFactor = 0
+                local energyStored = aiBrain:GetEconomyStored('ENERGY')
+                if energyStored and cdr.OverCharge.EnergyRequired and energyStored >= cdr.OverchargeEnergyRequired then
+                    overchargeFactor = (weights.overchargeBoost * math.min(1.5, enemyUnitThreat / 50))
+                end
+
+                cdr.Confidence = ((friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier) * survivability) + overchargeFactor
 
                 if aiBrain.EnemyIntel.LandPhase > 2 then
                     cdr.Confidence = cdr.Confidence * weights.phasePenalty
                 end
+                --LOG('Current ACU Confidence '..tostring(cdr.Confidence))
             end
 
             -- Example weights
             local weights = {
-                selfThreat = 1.0,
+                selfThreat = 1.1,
                 allyThreat = 1.0,
                 friendlyUnitThreat = 1.1,
-                healthBoost = 1.3,
-                enemyThreat = 1.0,
+                healthBoost = 1.2,
+                shieldBoost = 1.1,
+                enemyThreat = 0.8,
                 enemyUnitThreat = 1.0,
                 distanceToBase = 0.7,
                 localEnemyThreatRatio = 1.0,
-                phasePenalty = 0.7
+                phasePenalty = 0.7,
+                overchargeBoost = 1.3
             }
             local enemyThreatRatio = friendlyUnitThreat > 0 and (enemyUnitThreat / friendlyUnitThreat) or 0.5
             -- Example call
@@ -1117,7 +1165,6 @@ GetACUSafeZone = function(aiBrain, cdr, baseOnly)
     local teamAveragePositions = aiBrain.IntelManager:GetTeamAveragePositions()
     local currentTeamValue = aiBrain.IntelManager:GetTeamDistanceValue(cdr.Position, teamAveragePositions)
     local cutoff = 225
-    --LOG('Searching for ACU safe zone')
 
     if aiBrain.ZonesInitialized then
         local waterZoneSet
@@ -1126,8 +1173,8 @@ GetACUSafeZone = function(aiBrain, cdr, baseOnly)
         local bestZoneDist
         local bestZone
         local bestZonePos
+        local bestZoneValue
         if RUtils.PositionInWater(cdr.Position) then
-            --LOG('ACU is currently under water, check for a naval base')
             waterZoneSet = aiBrain.Zones.Naval.zones
             for _, v in waterZoneSet do
                 local dx = originPosition[1] - v.pos[1]
@@ -1145,9 +1192,12 @@ GetACUSafeZone = function(aiBrain, cdr, baseOnly)
                             continue
                         end
                     end
-                    bestZoneDist = zoneDist
-                    bestZone = v.id
-                    bestZonePos = v.pos
+                    if v.teamvalue > 0.8 then
+                        bestZoneDist = zoneDist
+                        bestZone = v.id
+                        bestZonePos = v.pos
+                        bestZoneValue = v.teamvalue
+                    end
                 end
             end
             if bestZone then
@@ -1159,14 +1209,12 @@ GetACUSafeZone = function(aiBrain, cdr, baseOnly)
                 return bestZonePos, bestZone, bestZoneDist, cutoff
             end
         end
-        --LOG('ACU is not in water or did not find a water location')
         for _, v in landZoneSet do
             local dx = originPosition[1] - v.pos[1]
             local dz = originPosition[3] - v.pos[3]
             local zoneDist = dx * dx + dz * dz
             if (not bestZoneDist or zoneDist < bestZoneDist) and NavUtils.CanPathTo(movementLayer, originPosition, v.pos) and (v.enemyantisurfacethreat < 10 or v.BuilderManager.FactoryManager.LocationActive) then
                 if currentTeamValue and v.teamvalue < currentTeamValue and not v.BuilderManager.FactoryManager.LocationActive then
-                    --LOG('Zones team value is lower than our current position which indicates its closer to the enemy')
                     continue
                 end
                 if VDist2Sq(cdr.Position[1], cdr.Position[3], v.pos[1], v.pos[3]) < distSqAway and (cdr.CurrentEnemyThreat > 25 and cdr.CurrentFriendlyInnerCircle < 25 or cdr.CurrentEnemyInnerCircle > 40) 
@@ -1177,12 +1225,15 @@ GetACUSafeZone = function(aiBrain, cdr, baseOnly)
                         continue
                     end
                 end
-                bestZoneDist = zoneDist
-                bestZone = v.id
-                bestZonePos = v.pos
+                if v.teamvalue > 0.8 then
+                    bestZoneDist = zoneDist
+                    bestZone = v.id
+                    bestZonePos = v.pos
+                end
             end
         end
         if bestZone then
+            --LOG('Selected a best zone with a team value of '..tostring(landZoneSet[bestZone].teamvalue))
             if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, bestZonePos, 15, 'Ally') > 0 then
                 cutoff = 155
                 local distSqrt = math.sqrt(bestZoneDist)

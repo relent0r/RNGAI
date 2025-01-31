@@ -793,7 +793,7 @@ end
 ---@param aiBrain AIBrain
 ---@param platoon AIPlatoon
 LandScoutThreatThread = function(aiBrain, platoon)
-    local checkRadius = platoon['rngdata'].IntelRange + 5
+    local checkRadius = platoon['rngdata'].IntelRange + 8
     local unitCatCheck
     local scout = platoon.ScoutUnit
     if scout.UnitId == 'xsl0101' then
@@ -947,13 +947,13 @@ LandScoutThreatThread = function(aiBrain, platoon)
                             local originLocation
                             if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
                                 supportUnit = platoon.BuilderData.SupportUnit
-                                if enemyDistance > enemyUnitRange * enemyUnitRange + 25 then
+                                if enemyDistance > enemyUnitRange * enemyUnitRange + 64 then
                                     ignoreUnit = true
                                 end
                             end
                             if platoon.BuilderData.SupportPlatoon and not IsDestroyed(platoon.BuilderData.SupportPlatoon) then
                                 supportPlatoon = platoon.BuilderData.SupportPlatoon
-                                if enemyDistance > enemyUnitRange * enemyUnitRange + 25 then
+                                if enemyDistance > enemyUnitRange * enemyUnitRange + 64 then
                                     ignoreUnit = true
                                 end
                             end

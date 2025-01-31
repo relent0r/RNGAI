@@ -1,3 +1,4 @@
+local RNGAIGLOBALS = import("/mods/RNGAI/lua/AI/RNGAIGlobals.lua")
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
@@ -1465,7 +1466,7 @@ IntelManager = Class {
         end
         coroutine.yield(Random(5,20))
         local teamAveragePositions = self:GetTeamAveragePositions()
-        self:CalculatePlayerSlot()
+        self:ForkThread(self.CalculatePlayerSlot)
         local maximumResourceValue = 0
         local Zones = {
             'Land',
@@ -1579,6 +1580,7 @@ IntelManager = Class {
         local closestPlayer = false
         local aiBrain = self.Brain
         local selfIndex = aiBrain:GetArmyIndex()
+        coroutine.yield(selfIndex)
         if aiBrain.BrainIntel.AllyCount > 2 and aiBrain.EnemyIntel.EnemyCount > 0 then
             local closestIndex
             local closestDistance
@@ -1615,43 +1617,76 @@ IntelManager = Class {
             
             if closestDistance and furthestPlayerDistance and closestDistance > furthestPlayerDistance then
                 if math.sqrt(closestDistance) - math.sqrt(furthestPlayerDistance) > 50 then
-                    if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer and not aiBrain.BrainIntel.PlayerRole.SpamPlayer then
-                        furthestPlayer = true
-                        aiBrain.BrainIntel.PlayerRole.AirPlayer = true
-                        aiBrain:EvaluateDefaultProductionRatios()
-                        return
+                    if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer then
+                        local alreadySelected = false
+                        for _, v in RNGAIGLOBALS.PlayerRoles do
+                            if v == 'AirPlayer' then
+                                alreadySelected = true
+                                break
+                            end
+                        end
+                        if not alreadySelected then
+                            furthestPlayer = true
+                            aiBrain.BrainIntel.PlayerRole.AirPlayer = true
+                            --LOG('Player set to Air Role '..aiBrain.Nickname)
+                            RNGAIGLOBALS.PlayerRoles[selfIndex] = 'AirPlayer'
+                            aiBrain:EvaluateDefaultProductionRatios()
+                            return
+                        end
                     end
                 end
             end
             if not furthestPlayer then
                 if closestDistance and selfDistanceToEnemy and selfDistanceToEnemy <= closestPlayerDistance then
                     if math.sqrt(selfDistanceToEnemy) - math.sqrt(selfDistanceToTeammates) > 50 then
-                        if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer and not aiBrain.BrainIntel.PlayerRole.AirPlayer then
-                            aiBrain.BrainIntel.PlayerRole.SpamPlayer = true
-                            self:ForkThread(self.SpamTriggerDurationThread)
-                            return
+                        if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer then
+                            local alreadySelected = false
+                            for _, v in RNGAIGLOBALS.PlayerRoles do
+                                if v == 'SpamPlayer' then
+                                    alreadySelected = true
+                                    break
+                                end
+                            end
+                            if not alreadySelected then
+                                aiBrain.BrainIntel.PlayerRole.SpamPlayer = true
+                                RNGAIGLOBALS.PlayerRoles[selfIndex] = 'SpamPlayer'
+                                --LOG('Player set to Spam Role '..aiBrain.Nickname)
+                                self:ForkThread(self.SpamTriggerDurationThread, 480)
+                                return
+                            end
                         end
                     end
                 end
             end
-            if not aiBrain.BrainIntel.PlayerRole.AirPlayer and not aiBrain.BrainIntel.PlayerRole.SpamPlayer then
+            if not aiBrain.BrainIntel.PlayerRole.AirPlayer and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and (aiBrain.MapSize > 10 and self.MapWaterRatio > 0.35 or aiBrain.MapSize <= 10 and self.MapWaterRatio > 0.60) then
                 local navalPlayer
-                if aiBrain.BrainIntel.NavalBaseLabels and aiBrain.BrainIntel.NavalBaseLabelCount > 0 then
-                    -- Check if any enemy start location has a matching water label
-                    for _, b in aiBrain.EnemyIntel.EnemyStartLocations do
-                        for label, state in aiBrain.BrainIntel.NavalBaseLabels do
-                            if b.WaterLabels[label] and state == "Confirmed" then
-                                navalPlayer = true
-                                break
-                            end
-                        end
-                        if navalPlayer then break end
+                local alreadySelected = false
+                for _, v in RNGAIGLOBALS.PlayerRoles do
+                    if v == 'NavalPlayer' then
+                        alreadySelected = true
+                        break
                     end
-    
-                    if navalPlayer then
-                        aiBrain.BrainIntel.PlayerRole.NavalPlayer = true
-                        aiBrain:EvaluateDefaultProductionRatios()
-                        return
+                end
+                if not alreadySelected then
+                    if aiBrain.BrainIntel.NavalBaseLabels and aiBrain.BrainIntel.NavalBaseLabelCount > 0 then
+                        -- Check if any enemy start location has a matching water label
+                        for _, b in aiBrain.EnemyIntel.EnemyStartLocations do
+                            for label, state in aiBrain.BrainIntel.NavalBaseLabels do
+                                if b.WaterLabels[label] and state == "Confirmed" then
+                                    navalPlayer = true
+                                    break
+                                end
+                            end
+                            if navalPlayer then break end
+                        end
+        
+                        if navalPlayer then
+                            aiBrain.BrainIntel.PlayerRole.NavalPlayer = true
+                            --LOG('Player set to Naval Role '..aiBrain.Nickname)
+                            RNGAIGLOBALS.PlayerRoles[selfIndex] = 'NavalPlayer'
+                            aiBrain:EvaluateDefaultProductionRatios()
+                            return
+                        end
                     end
                 end
             end
@@ -1668,25 +1703,27 @@ IntelManager = Class {
                 if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' and aiBrain.EnemyIntel.EnemyStartLocations[EnemyIndex].Distance < 348100 then
                     if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer and not aiBrain.BrainIntel.PlayerRole.AirPlayer then
                         aiBrain.BrainIntel.PlayerRole.SpamPlayer = true
-                        self:ForkThread(self.SpamTriggerDurationThread)
+                        RNGAIGLOBALS.PlayerRoles[selfIndex] = 'SpamPlayer'
+                        self:ForkThread(self.SpamTriggerDurationThread, 360)
                     end
                 end
             end
         end
     end,
 
-    SpamTriggerDurationThread = function(self)
+    SpamTriggerDurationThread = function(self, timer)
         -- This function just runs a timed thread for a more spammy approach with some bail outs along the way.
         local aiBrain = self.Brain
         local cancelSpam = false
         local startTime = GetGameTimeSeconds()
         while not cancelSpam do
             coroutine.yield(50)
-            if GetGameTimeSeconds() - startTime > 360 then
+            if GetGameTimeSeconds() - startTime > timer then
                 cancelSpam = true
             end
         end
         aiBrain.BrainIntel.PlayerRole.SpamPlayer = false
+        aiBrain:EvaluateDefaultProductionRatios()
     end,
 
     GetTeamAveragePositions = function(self)

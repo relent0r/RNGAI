@@ -296,7 +296,7 @@ VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride, checkLayer
         dest=KiteDist(pos,tpos,platoon['rngdata'].MaxDirectFireRange-math.random(1,3)-mod,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif unit['rngdata'].Role=='Scout' then
-        dest=KiteDist(pos,tpos,(platoon['rngdata'].IntelRange or platoon['rngdata'].MaxPlatoonWeaponRange),healthmod)
+        dest=KiteDist(pos,tpos,(platoon['rngdata'].MaxPlatoonWeaponRange-2),0)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif maxPlatoonRangeOverride then
         dest=KiteDist(pos,tpos,platoon['rngdata'].MaxPlatoonWeaponRange,healthmod)
