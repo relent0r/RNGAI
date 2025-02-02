@@ -98,7 +98,7 @@ function CDRHealthThread(cdr)
             cdr.ShieldHealth = cdr.MyShield:GetHealth()
             cdr.MaxShieldHealth = cdr.MyShield:GetMaxHealth()
         else
-            cdr.MyShield = 0
+            cdr.ShieldHealth = 0
         end
         coroutine.yield(2)
     end

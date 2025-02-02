@@ -2229,6 +2229,7 @@ IntelManager = Class {
             end
             local disableGunship = true
             local disableBomber = true
+            local acuSnipe = false
             if aiBrain.BrainIntel.AirPhase < 2 then
                 if aiBrain.BrainIntel.SelfThreat.AntiAirNow > 5 then
                     local gunshipMassKilled = aiBrain.IntelManager.UnitStats['Gunship'].Kills.Mass
@@ -2332,7 +2333,7 @@ IntelManager = Class {
             --LOG('Current T3 Gunship demand '..aiBrain.amanager.Demand.Air.T3.gunship)
             if not table.empty(potentialStrikes) then
                 local count = math.ceil(desiredStrikeDamage / 1000)
-                local acuSnipe = false
+                
                 local acuIndex = false
                 local zoneAttack = false
                 for k, v in potentialStrikes do
@@ -2380,6 +2381,9 @@ IntelManager = Class {
                     aiBrain.amanager.Demand.Air.T2.bomber = 0
                     aiBrain.EngineerAssistManagerFocusSnipe = false
                 end
+            end
+            if not acuSnipe then
+                aiBrain.EngineerAssistManagerFocusSnipe = false
             end
         elseif productiontype == 'LandAntiSurface' then
             local acuSnipe = false
