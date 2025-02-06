@@ -1617,21 +1617,33 @@ IntelManager = Class {
             
             if closestDistance and furthestPlayerDistance and closestDistance > furthestPlayerDistance then
                 if math.sqrt(closestDistance) - math.sqrt(furthestPlayerDistance) > 50 then
-                    if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer then
-                        local alreadySelected = false
-                        for _, v in RNGAIGLOBALS.PlayerRoles do
-                            if v == 'AirPlayer' then
-                                alreadySelected = true
+                    local airRestricted = false
+                    if not table.empty(ScenarioInfo.Options.RestrictedCategories) then
+                        for _, v in ScenarioInfo.Options.RestrictedCategories do
+                            if v == "AIR" or string.find(v, "T3_AIR") then
+                                airRestricted = true
                                 break
                             end
                         end
-                        if not alreadySelected then
-                            furthestPlayer = true
-                            aiBrain.BrainIntel.PlayerRole.AirPlayer = true
-                            --LOG('Player set to Air Role '..aiBrain.Nickname)
-                            RNGAIGLOBALS.PlayerRoles[selfIndex] = 'AirPlayer'
-                            aiBrain:EvaluateDefaultProductionRatios()
-                            return
+                    end
+                    if not airRestricted then
+                        if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer then
+                            local alreadySelected = false
+                            for _, v in RNGAIGLOBALS.PlayerRoles do
+                                if v == 'AirPlayer' then
+                                    alreadySelected = true
+                                    break
+                                end
+                            end
+                            if not alreadySelected then
+                                furthestPlayer = true
+                                aiBrain.BrainIntel.PlayerRole.AirPlayer = true
+                                aiBrain.BrainIntel.PlayerStrategy.T3AirRush = true
+                                --LOG('Player set to Air Role '..aiBrain.Nickname)
+                                RNGAIGLOBALS.PlayerRoles[selfIndex] = 'AirPlayer'
+                                aiBrain:EvaluateDefaultProductionRatios()
+                                return
+                            end
                         end
                     end
                 end
@@ -1659,33 +1671,44 @@ IntelManager = Class {
                 end
             end
             if not aiBrain.BrainIntel.PlayerRole.AirPlayer and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and (aiBrain.MapSize > 10 and self.MapWaterRatio > 0.35 or aiBrain.MapSize <= 10 and self.MapWaterRatio > 0.60) then
-                local navalPlayer
-                local alreadySelected = false
-                for _, v in RNGAIGLOBALS.PlayerRoles do
-                    if v == 'NavalPlayer' then
-                        alreadySelected = true
-                        break
+                local navalRestricted = false
+                if not table.empty(ScenarioInfo.Options.RestrictedCategories) then
+                    for _, v in ScenarioInfo.Options.RestrictedCategories do
+                        if v == "NAVAL" then
+                            navalRestricted = true
+                            break
+                        end
                     end
                 end
-                if not alreadySelected then
-                    if aiBrain.BrainIntel.NavalBaseLabels and aiBrain.BrainIntel.NavalBaseLabelCount > 0 then
-                        -- Check if any enemy start location has a matching water label
-                        for _, b in aiBrain.EnemyIntel.EnemyStartLocations do
-                            for label, state in aiBrain.BrainIntel.NavalBaseLabels do
-                                if b.WaterLabels[label] and state == "Confirmed" then
-                                    navalPlayer = true
-                                    break
-                                end
-                            end
-                            if navalPlayer then break end
+                if not navalRestricted then
+                    local navalPlayer
+                    local alreadySelected = false
+                    for _, v in RNGAIGLOBALS.PlayerRoles do
+                        if v == 'NavalPlayer' then
+                            alreadySelected = true
+                            break
                         end
-        
-                        if navalPlayer then
-                            aiBrain.BrainIntel.PlayerRole.NavalPlayer = true
-                            --LOG('Player set to Naval Role '..aiBrain.Nickname)
-                            RNGAIGLOBALS.PlayerRoles[selfIndex] = 'NavalPlayer'
-                            aiBrain:EvaluateDefaultProductionRatios()
-                            return
+                    end
+                    if not alreadySelected then
+                        if aiBrain.BrainIntel.NavalBaseLabels and aiBrain.BrainIntel.NavalBaseLabelCount > 0 then
+                            -- Check if any enemy start location has a matching water label
+                            for _, b in aiBrain.EnemyIntel.EnemyStartLocations do
+                                for label, state in aiBrain.BrainIntel.NavalBaseLabels do
+                                    if b.WaterLabels[label] and state == "Confirmed" then
+                                        navalPlayer = true
+                                        break
+                                    end
+                                end
+                                if navalPlayer then break end
+                            end
+            
+                            if navalPlayer then
+                                aiBrain.BrainIntel.PlayerRole.NavalPlayer = true
+                                --LOG('Player set to Naval Role '..aiBrain.Nickname)
+                                RNGAIGLOBALS.PlayerRoles[selfIndex] = 'NavalPlayer'
+                                aiBrain:EvaluateDefaultProductionRatios()
+                                return
+                            end
                         end
                     end
                 end

@@ -1959,7 +1959,7 @@ function UnfinishedUnitsAtLocationRNG(aiBrain, locationType, category)
     return false
 end
 
-function PlayerRoleCheck(aiBrain, locationType, unitCount, unitCategory, checkType)
+function PlayerRoleCheck(aiBrain, locationType, unitCount, unitCategory, checkType, strategyOverride)
     for _, v in checkType do
         if aiBrain.BrainIntel.PlayerRole.AirPlayer and v == 'AIR' and aiBrain.BrainIntel.AllyCount > 1 then
             local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
@@ -1967,15 +1967,17 @@ function PlayerRoleCheck(aiBrain, locationType, unitCount, unitCategory, checkTy
                 WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
                 return true
             end
+            if not aiBrain.BrainIntel.PlayerStrategy.T3AirRush then
+                strategyOverride = nil
+            end
             if factoryManager.LocationActive then
                 local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
-                if numUnits >= unitCount then
-                    --RNGLOG('We are air player and have hit land factory limit')
+                if numUnits >= (strategyOverride or unitCount) then
                     return false
                 end
                 local numBuildingUnits = GetUnitsBeingBuiltLocationRNG(aiBrain,locationType, unitCategory, categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) or 0
                 numUnits = numUnits + numBuildingUnits
-                if  numUnits >= unitCount then
+                if  numUnits >= (strategyOverride or unitCount) then
                     --RNGLOG('We are air player and have hit land factory limit')
                     return false
                 end
@@ -1988,13 +1990,13 @@ function PlayerRoleCheck(aiBrain, locationType, unitCount, unitCategory, checkTy
             end
             if factoryManager.LocationActive then
                 local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
-                if numUnits >= unitCount then
+                if numUnits >= (strategyOverride or unitCount) then
                     --RNGLOG('We are air player and have hit land factory limit')
                     return false
                 end
                 local numBuildingUnits = GetUnitsBeingBuiltLocationRNG(aiBrain,locationType, unitCategory, categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) or 0
                 numUnits = numUnits + numBuildingUnits
-                if  numUnits >= unitCount then
+                if  numUnits >= (strategyOverride or unitCount) then
                     --RNGLOG('We are air player and have hit land factory limit')
                     return false
                 end
@@ -2005,15 +2007,18 @@ function PlayerRoleCheck(aiBrain, locationType, unitCount, unitCategory, checkTy
                 WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
                 return true
             end
+            if not aiBrain.BrainIntel.PlayerStrategy.ExperimentalRush then
+                strategyOverride = nil
+            end
             if factoryManager.LocationActive then
                 local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
-                if numUnits >= unitCount then
+                if numUnits >= (strategyOverride or unitCount) then
                     --RNGLOG('We are air player and have hit land factory limit')
                     return false
                 end
                 local numBuildingUnits = GetUnitsBeingBuiltLocationRNG(aiBrain,locationType, unitCategory, categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) or 0
                 numUnits = numUnits + numBuildingUnits
-                if  numUnits >= unitCount then
+                if  numUnits >= (strategyOverride or unitCount) then
                     --RNGLOG('We are air player and have hit land factory limit')
                     return false
                 end
@@ -2024,15 +2029,18 @@ function PlayerRoleCheck(aiBrain, locationType, unitCount, unitCategory, checkTy
                 WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
                 return true
             end
+            if not aiBrain.BrainIntel.PlayerStrategy.T2NavalRush then
+                strategyOverride = nil
+            end
             if factoryManager.LocationActive then
                 local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
-                if numUnits >= unitCount then
+                if numUnits >= (strategyOverride or unitCount) then
                     --RNGLOG('We are air player and have hit land factory limit')
                     return false
                 end
                 local numBuildingUnits = GetUnitsBeingBuiltLocationRNG(aiBrain,locationType, unitCategory, categories.ENGINEER * categories.MOBILE - categories.STATIONASSISTPOD) or 0
                 numUnits = numUnits + numBuildingUnits
-                if  numUnits >= unitCount then
+                if  numUnits >= (strategyOverride or unitCount) then
                     --RNGLOG('We are air player and have hit land factory limit')
                     return false
                 end

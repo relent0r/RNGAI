@@ -280,25 +280,6 @@ function FrigateRaidTrue(aiBrain)
     return false
 end
 
-function AirPlayerCheck(aiBrain, locationType, unitCount, unitCategory)
-
-    if aiBrain.BrainIntel.PlayerRole.AirPlayer then
-        local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
-        if not factoryManager then
-            WARN('*AI WARNING: FactoryComparisonAtLocation - Invalid location - ' .. locationType)
-            return true
-        end
-        if factoryManager.LocationActive then
-            local numUnits = factoryManager:GetNumCategoryFactories(unitCategory)
-            if  numUnits >= unitCount then
-                --RNGLOG('We are air player and have hit land factory limit')
-                return false
-            end
-        end
-    end
-    return true
-end
-
 function AirStagingWantedRNG(aiBrain)
     if aiBrain.BrainIntel.AirStagingRequired or GetGameTimeSeconds() > 480 then
         return true
@@ -321,12 +302,13 @@ function GatewayValidation(aiBrain)
     local multiplier = aiBrain.EcoManager.EcoMultiplier
     local numUnits = aiBrain:GetCurrentUnits(categories.FACTORY * categories.GATE * categories.TECH3)
     local gatewayLimit
+    local currentRole = RUtils.GetCurrentRole(aiBrain)
     if aiBrain.RNGEXP then
         gatewayLimit = math.min(100 * (numUnits + 1), 1200)
     else
         gatewayLimit = math.min(200 * (numUnits + 1), 800)
     end
-    if (aiBrain.EcoManager.CoreExtractorT3Percentage >= 1.0 or aiBrain.cmanager.income.r.m > 300) and (aiBrain.cmanager.income.r.m > (gatewayLimit * multiplier) or aiBrain.RNGEXP) then
+    if (aiBrain.EcoManager.CoreExtractorT3Percentage >= 1.0 or aiBrain.cmanager.income.r.m > 300) and (aiBrain.cmanager.income.r.m > (gatewayLimit * multiplier) or aiBrain.RNGEXP or currentRole == 'AirPlayer' ) then
         --LOG('gatewayLimit went true at income of '..tostring(gatewayLimit))
         return true
     end
@@ -363,4 +345,22 @@ function ScoutsRequiredForBase(aiBrain, locationType, baseRatio, scoutCategories
         end
     end
     return false
+end
+
+function DisableOnStrategy(aiBrain, strategyTable)
+    for _,strategy in strategyTable do
+        if aiBrain.BrainIntel.PlayerStrategy[strategy] then
+            return false
+        end
+    end
+    return true
+end
+
+function DisableOnRole(aiBrain, roleTable)
+    for _,role in roleTable do
+        if aiBrain.BrainIntel.PlayerRole[role] then
+            return false
+        end
+    end
+    return true
 end

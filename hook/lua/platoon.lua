@@ -393,9 +393,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         --RNGLOG('Location Type is '..location)
         --RNGLOG('at position '..repr(aiBrain.BuilderManagers[location].Position))
         --RNGLOG('Destiantion Plan is '..destinationPlan)
-        if destinationPlan == 'EngineerAssistManagerRNG' then
-            --RNGLOG('Have been requested to create EngineerAssistManager platoon for '..aiBrain.Nickname)
-        end
         if not destinationPlan then
             return
         end
@@ -459,13 +456,13 @@ Platoon = Class(RNGAIPlatoonClass) {
 
         local aiBrain = self:GetBrain()
         local armyIndex = aiBrain:GetArmyIndex()
-        local platoonUnits
-        local platoonCount = 0
         local locationType = self.PlatoonData.LocationType or 'MAIN'
         local engineerRadius = aiBrain.BuilderManagers[locationType].EngineerManager.Radius
         local managerPosition = aiBrain.BuilderManagers[locationType].Position
-        local totalBuildRate = 0
-        local platoonMaximum = 0
+        local buildMultiplier = 1.0
+        if aiBrain.CheatEnabled then
+            buildMultiplier = aiBrain.EcoManager.BuildMultiplier
+        end
         self.EngineerAssistPlatoon = true
         self.Active = false
         
@@ -493,6 +490,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             local totalTech1BuilderRate = 0
             local totalTech2BuilderRate = 0
             local totalTech3BuilderRate = 0
+            local singleTech1BuilderRate
+            local singleTech2BuilderRate
+            local singleTech3BuilderRate
             local platoonCount = 0
             local platUnits = GetPlatoonUnits(self)
             --LOG('Actual count '..tostring(table.getn(platUnits)))
@@ -500,13 +500,22 @@ Platoon = Class(RNGAIPlatoonClass) {
                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
                     local bp = eng.Blueprint
                     if bp.CategoriesHash.TECH1 then
-                        totalTech1BuilderRate = totalTech1BuilderRate + bp.Economy.BuildRate
+                        if not singleTech1BuilderRate then
+                            singleTech1BuilderRate = (bp.Economy.BuildRate * buildMultiplier)
+                        end
+                        totalTech1BuilderRate = totalTech1BuilderRate + (bp.Economy.BuildRate * buildMultiplier)
                         table.insert(tech1Engineers, eng)
                     elseif bp.CategoriesHash.TECH2 then
-                        totalTech2BuilderRate = totalTech2BuilderRate + bp.Economy.BuildRate
+                        if not singleTech2BuilderRate then
+                            singleTech2BuilderRate = (bp.Economy.BuildRate * buildMultiplier)
+                        end
+                        totalTech2BuilderRate = totalTech2BuilderRate + (bp.Economy.BuildRate * buildMultiplier)
                         table.insert(tech2Engineers, eng)
                     elseif bp.CategoriesHash.TECH3 then
-                        totalTech3BuilderRate = totalTech3BuilderRate + bp.Economy.BuildRate
+                        if not singleTech3BuilderRate then
+                            singleTech3BuilderRate = (bp.Economy.BuildRate * buildMultiplier)
+                        end
+                        totalTech3BuilderRate = totalTech3BuilderRate + (bp.Economy.BuildRate * buildMultiplier)
                         table.insert(tech3Engineers, eng)
                     end
                     --[[
@@ -522,7 +531,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                             end
                         end
                     end]]
-                    totalBuildRate = totalBuildRate + bp.Economy.BuildRate
+                    totalBuildRate = totalBuildRate + (bp.Economy.BuildRate * buildMultiplier)
                     eng.Active = true
                     platoonCount = platoonCount + 1
                 end
@@ -538,22 +547,29 @@ Platoon = Class(RNGAIPlatoonClass) {
             aiBrain.EngineerAssistManagerBuildPowerTech1 = totalTech1BuilderRate
             aiBrain.EngineerAssistManagerBuildPowerTech2 = totalTech2BuilderRate
             aiBrain.EngineerAssistManagerBuildPowerTech3 = totalTech3BuilderRate
-            --[[
-            local debugIdleEng = false
-            for _, engineers in ipairs({tech1Engineers, tech2Engineers, tech3Engineers}) do
-                for _, eng in ipairs(engineers) do
-                    if aiBrain.EngineerAssistManagerBuildPower > aiBrain.EngineerAssistManagerBuildPowerRequired then
-                        self:EngineerAssistRemoveRNG(aiBrain, eng)
-                    else
-                        -- If the power requirement is met, break out of the loop
-                        break
+
+            --local debugIdleEng = false
+            local curentMassStorage = aiBrain:GetEconomyStoredRatio('MASS')
+            if curentMassStorage < 0.30 then
+                local builderRates = {singleTech1BuilderRate, singleTech2BuilderRate, singleTech3BuilderRate}
+                for techlevel, engineers in ipairs({tech1Engineers, tech2Engineers, tech3Engineers}) do
+                    local builderRate = builderRates[techlevel]
+                    for _, eng in ipairs(engineers) do
+                        local potentialNewBuildPower = aiBrain.EngineerAssistManagerBuildPower - builderRate
+                        if potentialNewBuildPower >= aiBrain.EngineerAssistManagerBuildPowerRequired then
+                            self:EngineerAssistRemoveRNG(aiBrain, eng)
+                        else
+                            -- If the power requirement is met, break out of the loop
+                            break
+                        end
+                        --if eng:IsIdleState() then
+                        --    debugIdleEng = true
+                        --end
+                        coroutine.yield(1)
                     end
-                    if eng:IsIdleState() then
-                        debugIdleEng = true
-                    end
-                    coroutine.yield(1)
                 end
             end
+            --[[
             if debugIdleEng then
                 LOG('Current Priority types')
                 for k, assistData in aiBrain.EngineerAssistManagerPriorityTable do

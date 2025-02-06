@@ -7576,6 +7576,37 @@ function CalculatePotentialBrainStartPosition(aiBrain, otherBrain)
     return furtherestHq
 end
 
+function GetCurrentRole(aiBrain)
+    for k, v in pairs(aiBrain.BrainIntel.PlayerRole) do
+        if v == true then
+            return k
+        end
+    end
+end
+
+function SetCurrentRole(aiBrain, newRole)
+    -- Ensure all roles are set to false
+    for k, _ in aiBrain.BrainIntel.PlayerRole do
+        aiBrain.BrainIntel.PlayerRole[k] = false
+    end
+    -- Set the new role to true
+    aiBrain.BrainIntel.PlayerRole[newRole] = true
+end
+
+  --RUtils.AudioMessage('A03_VO', 'A03_Arnold_T01_00847')
+function AudioMessage(sBank, sCue, iDelayInSeconds, iOptionalTeamArmyIndex)
+    local SimSyncUtils = import('/lua/simsyncutils.lua')
+    if iDelayInSeconds then
+        WaitSeconds(iDelayInSeconds)
+    end
+    iTimeOfLastAudioMessage = GetGameTimeSeconds()
+    local SyncVoice = SimSyncUtils.SyncVoice
+    if not(iOptionalTeamArmyIndex) or (GetFocusArmy() > 0 and not(IsEnemy(GetFocusArmy(), iOptionalTeamArmyIndex))) then --Thanks to Jip for explaining this is how to get an audio message to only play for particular players
+        --WARNING: Only affect UI here; any code affecting the SIM will cause a desync (per Jip)
+        SyncVoice({Cue = sCue, Bank = sBank})
+    end
+end
+
 
 --[[
     -- Calculate dot product between two 3D vectors (same as before)

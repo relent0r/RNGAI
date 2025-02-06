@@ -426,7 +426,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
             { UCBC, 'UnitCapCheckLess', { .7 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.ENERGYSTORAGE }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.1 }},
+            { EBC, 'GreaterThanEconEfficiencyOrAirStrategyRNG', { 0.9, 1.1 }},
         },
         BuilderType = 'Any',
         BuilderData = {

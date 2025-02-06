@@ -464,6 +464,9 @@ StructureManager = Class {
             self.Brain.EcoManager.ApproxAirFactoryMassConsumption = totalAirApproxConsumption
             self.Brain.EcoManager.ApproxNavalFactoryMassConsumption = totalNavalApproxConsumption
             self.Brain.EcoManager.ApproxFactoryMassConsumption = totalLandApproxConsumption + totalAirApproxConsumption + totalNavalApproxConsumption
+            if self.Brain.BrainIntel.PlayerStrategy.T3AirRush and FactoryData.TotalT3AIR > 0 then
+                self.Brain.BrainIntel.PlayerStrategy.T3AirRush = false
+            end
             --LOG('Structure Manager')
             --LOG('Number of upgrading T1 Land '..self.Factories.LAND[1].UpgradingCount)
             --LOG('Number of upgrading T2 Land '..self.Factories.LAND[2].UpgradingCount)
@@ -647,12 +650,13 @@ StructureManager = Class {
         local actualMexIncome = aiBrain.cmanager.income.r.m - mexSpend
         local massEfficiencyOverTime = aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime
         local energyEfficiencyOverTime = aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime
+        local disableForT3AirRushStrategy = aiBrain.BrainIntel.PlayerStrategy.T3AirRush
         --RNGLOG('Actual Mex Income '..actualMexIncome)
 
         local t2LandPass = false
-        if totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 then
+        if totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 and not disableForT3AirRushStrategy then
             if aiBrain:GetCurrentUnits(categories.ENGINEER * categories.TECH1) > 2 then
-                local distanceByPass = (aiBrain.EnemyIntel.ClosestEnemyBase and aiBrain.EnemyIntel.ClosestEnemyBase > 422500 or aiBrain.BrainIntel.PlayerRole.AirPlayer) and actualMexIncome >= (15 * multiplier) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 26.0
+                local distanceByPass = (aiBrain.EnemyIntel.ClosestEnemyBase and aiBrain.EnemyIntel.ClosestEnemyBase > 422500 ) and actualMexIncome >= (15 * multiplier) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 26.0
                 if (not aiBrain.RNGEXP and (actualMexIncome > (23 * multiplier) or aiBrain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier)))
                 or aiBrain.RNGEXP and (actualMexIncome > (18 * multiplier) or aiBrain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier)) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 26.0 
                 or aiBrain.EnemyIntel.LandPhase > 1 and actualMexIncome > (12 * multiplier) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 26.0 
@@ -661,7 +665,7 @@ StructureManager = Class {
                     and (energyEfficiencyOverTime >= 0.8 or aiBrain.EnemyIntel.LandPhase > 1 and energyEfficiencyOverTime >= 0.6) then
                         local EnergyEfficiency = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
                         local MassEfficiency = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
-                        if (distanceByPass or MassEfficiency >= 1.015 or aiBrain.EnemyIntel.LandPhase > 1 and MassEfficiency >= 0.7) and (EnergyEfficiency >= 0.8 or aiBrain.EnemyIntel.LandPhase > 1 and EnergyEfficiency >= 0.6) then
+                        if (distanceByPass or MassEfficiency >= 1.015 or aiBrain.EnemyIntel.LandPhase > 1 and MassEfficiency >= 0.7) and (EnergyEfficiency >= 0.8 or ((distanceByPass or aiBrain.EnemyIntel.LandPhase > 1) and EnergyEfficiency >= 0.6)) then
                             local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH1')
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'LAND')
@@ -692,11 +696,9 @@ StructureManager = Class {
             --RNGLOG('Factory T1 Air Upgrade HQ Check passed')
             if self.Factories.LAND[2].Total > 0 then
                 if massEfficiencyOverTime >= 1.025 and energyEfficiencyOverTime >= 1.05 then
-                    --RNGLOG('Factory Upgrade efficiency over time check passed')
                     local EnergyEfficiency = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
                     local MassEfficiency = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
                     if MassEfficiency >= 1.025 and EnergyEfficiency >= 1.0 then
-                        --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
                         local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH1')
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
                             --RNGLOG('Structure Manager Triggering T2 Air HQ Upgrade')
@@ -710,11 +712,14 @@ StructureManager = Class {
         end
         local airRush = (aiBrain.amanager.Demand.Air.T2.torpedo > 0 or aiBrain.RNGEXP or aiBrain.BrainIntel.PlayerRole.AirPlayer or (factionIndex == 2 and actualMexIncome > (25 * multiplier)))
         if airRush and totalAirT2HQCount < 1 and totalAirT3HQCount < 1 and self.Factories.AIR[1].UpgradingCount < 1 then
+            --LOG('Air Player first factory upgrade checking if massEfficiencyOverTime '..tostring(massEfficiencyOverTime)..' energyEfficiencyOverTime '..tostring(energyEfficiencyOverTime))
             if aiBrain:GetCurrentUnits(categories.ENGINEER * categories.TECH1) > 2 then
-                if aiBrain.EconomyOverTimeCurrent.EnergyIncome > 32.0 and massEfficiencyOverTime >= 0.9 and (airRush and energyEfficiencyOverTime >= 0.85 or energyEfficiencyOverTime >= 1.05) then
+                if aiBrain.EconomyOverTimeCurrent.EnergyIncome > 32.0 and massEfficiencyOverTime >= 0.8 and (airRush and energyEfficiencyOverTime >= 0.85 or energyEfficiencyOverTime >= 1.05) then
+                    --LOG('Factory Upgrade efficiency over time check passed for air upgrade')
                     local EnergyEfficiency = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
                     local MassEfficiency = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
-                    if MassEfficiency >= 0.85 and (airRush and EnergyEfficiency >= 0.9 or EnergyEfficiency >= 1.05)  then
+                    --LOG('Air Player first factory upgrade checking if massEfficiency '..tostring(MassEfficiency)..' energyEfficiency '..tostring(EnergyEfficiency))
+                    if MassEfficiency >= 0.8 and (airRush and EnergyEfficiency >= 0.85 or EnergyEfficiency >= 1.05)  then
                         local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH1')
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'AIR')
@@ -1364,6 +1369,9 @@ StructureManager = Class {
                     self.Brain.EngineerAssistManagerFocusAirUpgrade = false
                     if self.Brain.EngineerAssistManagerFocusCategory == categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY then
                         self.Brain.EngineerAssistManagerFocusCategory = false
+                    end
+                    if self.Brain.BrainIntel.PlayerStrategy.T3AirRush and upgradedFactory.Blueprint.CategoriesHash.TECH3 then
+                        self.Brain.BrainIntel.PlayerStrategy.T3AirRush = false
                     end
                 end
                 unit.Upgrading = false

@@ -136,6 +136,22 @@ function GreaterThanEconEfficiencyCombinedRNG(aiBrain, MassEfficiency, EnergyEff
     return false
 end
 
+function GreaterThanEconEfficiencyOrAirStrategyRNG(aiBrain, MassEfficiency, EnergyEfficiency)
+    -- Using eco over time values from the EconomyOverTimeRNG thread.
+    if aiBrain.BrainIntel.PlayerStrategy.T3AirRush then
+        return true
+    end
+    if (aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= MassEfficiency and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= EnergyEfficiency) then
+        --RNGLOG('GreaterThanEconEfficiencyOverTime passed True')
+        local EnergyEfficiencyOverTime = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
+        local MassEfficiencyOverTime = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
+        if (MassEfficiencyOverTime >= MassEfficiency and EnergyEfficiencyOverTime >= EnergyEfficiency) then
+            return true
+        end
+    end
+    return false
+end
+
 function GreaterThanEnergyEfficiencyOverTimeRNG(aiBrain, EnergyEfficiency)
 
     if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= EnergyEfficiency then
