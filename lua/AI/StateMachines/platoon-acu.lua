@@ -156,7 +156,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     brain.BrainIntel.SuicideModeTarget = nil
                 end
             end
-            if cdr.Confidence < 4 and cdr.DistanceToHome > 2500 then
+            if cdr.Confidence < 3.5 and cdr.DistanceToHome > 2500 then
                 local closestEnemyACU = StateUtils.GetClosestEnemyACU(brain, cdr.CDRHome)
                 local enemyAcuOverride = false
                 if closestEnemyACU and not closestEnemyACU.Dead and RUtils.HaveUnitVisual(brain, closestEnemyACU, true) then

@@ -76,7 +76,15 @@ end
 
 local MinimumAntiAirThreat = function(self, aiBrain, builderManager, builderData)
     local myAntiAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
-    if myAntiAirThreat > 12 then
+    local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
+    if myAntiAirThreat > 12 and myAntiAirThreat * 1.5 > enemyAirThreat then
+        if builderData.BuilderData.TechLevel == 1 then
+            return 893
+        elseif builderData.BuilderData.TechLevel == 2 then
+            return 894
+        elseif builderData.BuilderData.TechLevel == 3 then
+            return 895
+        end
         return 893
     end
     return 0
@@ -169,6 +177,9 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 50, categories.ENGINEER - categories.COMMAND } },
         },
         BuilderType = 'Air',
+        BuilderData = {
+            TechLevel = 1
+        },
     },
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Excess Mass',
@@ -204,6 +215,7 @@ BuilderGroup {
         --UnitCategory = categories.TECH2 * categories.ENGINEER,
         --FactoryBuilderType = 'Category',
         Priority = 894,
+        PriorityFunction = MinimumAntiAirThreat,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER * categories.TECH2 } },
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
@@ -211,6 +223,9 @@ BuilderGroup {
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH2 - categories.COMMAND }},
         },
         BuilderType = 'Air',
+        BuilderData = {
+            TechLevel = 2
+        },
     },
     Builder {
         BuilderName = 'RNGAI Factory Engineer T2 Small AirOnly',
@@ -218,6 +233,7 @@ BuilderGroup {
         --UnitCategory = categories.TECH2 * categories.ENGINEER,
         --FactoryBuilderType = 'Category',
         Priority = 910, -- Top factory priority
+
         BuilderConditions = {
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH2 * categories.AIR}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENGINEER * categories.TECH2 - categories.COMMAND } }, -- Build engies until we have 3 of them.
@@ -245,6 +261,7 @@ BuilderGroup {
         --UnitCategory = categories.TECH3 * categories.ENGINEER,
         --FactoryBuilderType = 'Category',
         Priority = 895,
+        PriorityFunction = MinimumAntiAirThreat,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER * categories.TECH3 } },
             { EBC, 'LessThanEnergyTrendRNG', { 0.0 } },
@@ -252,6 +269,9 @@ BuilderGroup {
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH3 - categories.COMMAND }},
         },
         BuilderType = 'Air',
+        BuilderData = {
+            TechLevel = 3
+        },
     },
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Large',
@@ -502,6 +522,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 0.9} },
             { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.ENGINEER * categories.TECH2 } },
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH2 }},
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -538,6 +559,7 @@ BuilderGroup {
         Priority = 500, -- Top factory priority
         BuilderConditions = {
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH3}},
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH3 }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.ENGINEER * categories.TECH3 } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech3' } },
         },

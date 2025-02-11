@@ -442,15 +442,18 @@ IntelManager = Class {
 
         while true do
             --LOG('Running zone expansion check for '..tostring(aiBrain.Nickname))
+            local maxDistance
             local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
-            local maxDistance = math.max(playableArea[2],playableArea[4])
+            if not playableArea then
+                maxDistance = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
+            end
+            maxDistance = math.max(playableArea[3],playableArea[4])
             maxDistance = maxDistance * maxDistance
             local zoneSet = aiBrain.Zones.Land.zones
             local zonePriorityList = {}
             local gameTime = GetGameTimeSeconds()
             local labelBaseValues = {}
             local labelResourceValue = {}
-            local potentialAcuExpansionCount
 
             for k, v in zoneSet do
                 if v.BuilderManager.BaseType and v.BuilderManager.BaseType == 'MAIN' and v.BuilderManager.FactoryManager.LocationActive then
@@ -1595,12 +1598,18 @@ IntelManager = Class {
                     closestIndex = b.Index
                 end
             end
-            
-            selfDistanceToEnemy = VDist3Sq(aiBrain.BrainIntel.StartPos, aiBrain.EnemyIntel.EnemyStartLocations[closestIndex].Position)
+            local teamAveragePositions = self:GetTeamAveragePositions()
+            local teamEnemyAveragePosition
+            local teamAllyAveragePosition
+            if teamAveragePositions['Enemy'].x and teamAveragePositions['Enemy'].z then
+                teamEnemyAveragePosition = {teamAveragePositions['Enemy'].x,GetSurfaceHeight(teamAveragePositions['Enemy'].x, teamAveragePositions['Enemy'].z), teamAveragePositions['Enemy'].z}
+            end
+
+            selfDistanceToEnemy = VDist3Sq(aiBrain.BrainIntel.StartPos, teamEnemyAveragePosition)
             
             for _, v in aiBrain.BrainIntel.AllyStartLocations do
                 if v.Index ~= selfIndex then
-                    local distanceToEnemy = VDist3Sq(v.Position, aiBrain.EnemyIntel.EnemyStartLocations[closestIndex].Position)
+                    local distanceToEnemy = VDist3Sq(v.Position, teamEnemyAveragePosition)
                     local distanceToTeammate = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
                     
                     if not furthestPlayerDistance or distanceToEnemy > furthestPlayerDistance then
@@ -1614,9 +1623,14 @@ IntelManager = Class {
                     end
                 end
             end
+            --LOG('closestDistance '..tostring(math.sqrt(closestDistance)))
+            --LOG('furthestPlayerDistance '..tostring(math.sqrt(furthestPlayerDistance)))
+            --LOG('Difference between the two '..tostring(math.sqrt(closestDistance) - math.sqrt(furthestPlayerDistance)))
+            --LOG('selfDistanceToEnemy '..tostring(math.sqrt(selfDistanceToEnemy)))
+            --LOG('averagedDistanceBetweenTeams '..tostring(averageDistanceBetweenTeams))
             
             if closestDistance and furthestPlayerDistance and closestDistance > furthestPlayerDistance then
-                if math.sqrt(closestDistance) - math.sqrt(furthestPlayerDistance) > 50 then
+                if math.sqrt(closestDistance) - math.sqrt(furthestPlayerDistance) > 35 and selfDistanceToEnemy > furthestPlayerDistance then
                     local airRestricted = false
                     if not table.empty(ScenarioInfo.Options.RestrictedCategories) then
                         for _, v in ScenarioInfo.Options.RestrictedCategories do
@@ -1650,7 +1664,7 @@ IntelManager = Class {
             end
             if not furthestPlayer then
                 if closestDistance and selfDistanceToEnemy and selfDistanceToEnemy <= closestPlayerDistance then
-                    if math.sqrt(selfDistanceToEnemy) - math.sqrt(selfDistanceToTeammates) > 50 then
+                    if math.sqrt(selfDistanceToEnemy) - math.sqrt(selfDistanceToTeammates) > 35 then
                         if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer then
                             local alreadySelected = false
                             for _, v in RNGAIGLOBALS.PlayerRoles do
@@ -2545,12 +2559,12 @@ IntelManager = Class {
             --LOG('selfLandThreatMultiplied '..tostring(selfThreat.LandNow * 1.4))
             --LOG('enemyLandThreat '..tostring(enemyThreat.Land))
             local safeAntiAir = selfThreat.AntiAirNow > 0 and selfThreat.AntiAirNow or 0.1
-            if selfThreat.LandNow * 1.4 > enemyThreat.Land and safeAntiAir < enemyThreat.Air then
+            if selfThreat.LandNow * 1.4 > enemyThreat.Land and safeAntiAir < enemyThreat.Air or enemyThreat.AirSurface > 75 and selfThreat.LandNow * 1.8 > enemyThreat.Land then
                 local zoneCount = aiBrain.BuilderManagers['MAIN'].PathableZones.PathableLandZoneCount
                 -- We are going to look at the threat in the pathable zones and see which ones are in our territory and make sure we have a theoretical number of air units there
                 -- I want to do this on a per base method, but I realised I'm not keeping information.
                 local totalMobileAARequired = 0 
-                if selfThreat.AntiAirNow > 0 then
+                if enemyThreat.Air > 0 then
                     totalMobileAARequired = math.min(math.ceil((zoneCount * 0.65) * (enemyThreat.Air / safeAntiAir)), zoneCount * 1.5) or 0
                 end
                 --LOG('Pathable Zone Count '..tostring(zoneCount))

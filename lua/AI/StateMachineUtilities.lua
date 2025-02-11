@@ -414,8 +414,8 @@ ExitConditions = function(self,aiBrain)
         return true
     end
     if self.navigating then
-        if aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.STRUCTURE, self.Pos, self.EnemyRadius, 'Enemy') > 0 then
-            local enemies=GetUnitsAroundPoint(aiBrain, categories.LAND + categories.STRUCTURE, self.Pos, self.EnemyRadius, 'Enemy')
+        if aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.STRUCTURE - categories.WALL, self.Pos, self.EnemyRadius, 'Enemy') > 0 then
+            local enemies=GetUnitsAroundPoint(aiBrain, categories.LAND + categories.STRUCTURE - categories.WALL, self.Pos, self.EnemyRadius, 'Enemy')
             if enemies and not RNGTableEmpty(enemies) then
                 local enemyThreat = 0
                 for _,enemy in enemies do

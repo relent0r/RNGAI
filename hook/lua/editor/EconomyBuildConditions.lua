@@ -201,10 +201,17 @@ function LessThanEnergyTrendOverTimeRNG(aiBrain, EnergyTrend)
     return false
 end
 
-function LessThanEnergyTrendCombinedRNG(aiBrain, EnergyTrend)
+function LessThanEnergyTrendCombinedRNG(aiBrain, EnergyTrend, lateGameScale)
 
     if aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime < EnergyTrend then
         if GetEconomyTrend(aiBrain, 'ENERGY') < EnergyTrend then
+            return true
+        end
+    end
+    if lateGameScale then
+        local energyIncome = GetEconomyIncome(aiBrain, 'ENERGY')
+        local massIncome = GetEconomyIncome(aiBrain, 'MASS')
+        if massIncome * 50 < energyIncome then
             return true
         end
     end
@@ -605,4 +612,13 @@ function MinimumPowerRequired(aiBrain, trend)
     return false
 end
 
+function LateGamePowerScale(aiBrain)
+    local energyIncome = GetEconomyIncome(aiBrain, 'ENERGY')
+    local massIncome = GetEconomyIncome(aiBrain, 'MASS')
+
+    if massIncome * 4 < energyIncome then
+        return true
+    end
+
+end
     

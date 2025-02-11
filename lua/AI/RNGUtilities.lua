@@ -2183,6 +2183,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                 return TargetUnit, acuPresent, acuUnit, threatTable, TargetsInRange, defensiveStructureTable
             end
         end
+        if platoon.Dead then return end
         coroutine.yield(2)
     end
     --RNGLOG('NO Target Found in target aquisition function')
@@ -5563,7 +5564,7 @@ CheckForExperimental = function(aiBrain, im, platoon, avoid, naval)
     end
 end
 
-CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu, experimentalCheck)
+CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu, experimentalCheck, strategicBomber)
     local platPos
     local closestTarget
     local highestPriority = 0
@@ -5650,7 +5651,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                                     end
                                 end
                             else
-                                if not unitCats.SCOUT then
+                                if not unitCats.SCOUT and (not strategicBomber or (not unitCats.TECH1 or unitCats.COMMAND)) then
                                     local priorityModifier = 1
                                     local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
                                     local tempPoint
@@ -7016,6 +7017,8 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
         end
         if targetFound and missilesConsumed >= maxMissiles then
             --RNGLOG('Valid Nuke Target Position with no Anti Nukes is '..repr(firingPositions))
+            local RNGChat = import("/mods/RNGAI/lua/AI/RNGChat.lua")
+            ForkThread(RNGChat.ConsiderAttackTaunt, aiBrain, 'LaunchNuke', nil, 8)
             return true, firingPositions
         end
     end
@@ -7593,66 +7596,14 @@ function SetCurrentRole(aiBrain, newRole)
     aiBrain.BrainIntel.PlayerRole[newRole] = true
 end
 
-  --RUtils.AudioMessage('A03_VO', 'A03_Arnold_T01_00847')
-function AudioMessage(sBank, sCue, iDelayInSeconds, iOptionalTeamArmyIndex)
-    local SimSyncUtils = import('/lua/simsyncutils.lua')
-    if iDelayInSeconds then
-        WaitSeconds(iDelayInSeconds)
+function GetPoolCountAtLocation(aiBrain, locationType, unitCategory)
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+    local testCat = unitCategory
+    if not engineerManager then
+        WARN('*AI WARNING: HavePoolUnitComparisonAtLocation - Invalid location - ' .. locationType)
+        return false
     end
-    iTimeOfLastAudioMessage = GetGameTimeSeconds()
-    local SyncVoice = SimSyncUtils.SyncVoice
-    if not(iOptionalTeamArmyIndex) or (GetFocusArmy() > 0 and not(IsEnemy(GetFocusArmy(), iOptionalTeamArmyIndex))) then --Thanks to Jip for explaining this is how to get an audio message to only play for particular players
-        --WARNING: Only affect UI here; any code affecting the SIM will cause a desync (per Jip)
-        SyncVoice({Cue = sCue, Bank = sBank})
-    end
+    local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
+    local numUnits = poolPlatoon:GetNumCategoryUnits(testCat, engineerManager:GetLocationCoords(), engineerManager.Radius)
+    return numUnits
 end
-
-
---[[
-    -- Calculate dot product between two 3D vectors (same as before)
-
--- Algorithm function to calculate the second move position and determine left/right
-function calculate_second_move_position(lerped_position, enemy_position, offset_distance, is_on_right)
-    -- Step 1: Calculate the direction vector from the friendly unit to the enemy unit.
-    local direction_vector = {
-        x = enemy_position.x - lerped_position.x,
-        y = enemy_position.y - lerped_position.y,
-        z = enemy_position.z - lerped_position.z
-    }
-
-    -- Step 2: Find a perpendicular vector to the direction vector.
-    local perpendicular_vector = {
-        x = -direction_vector.z,
-        y = direction_vector.y,
-        z = direction_vector.x
-    }
-
-    -- Step 3: Normalize the perpendicular vector.
-    local perpendicular_magnitude = math.sqrt(perpendicular_vector.x * perpendicular_vector.x + perpendicular_vector.y * perpendicular_vector.y + perpendicular_vector.z * perpendicular_vector.z)
-    if perpendicular_magnitude > 0 then
-        perpendicular_vector.x = perpendicular_vector.x / perpendicular_magnitude
-        perpendicular_vector.y = perpendicular_vector.y / perpendicular_magnitude
-        perpendicular_vector.z = perpendicular_vector.z / perpendicular_magnitude
-    end
-
-    -- Step 4: Multiply the normalized perpendicular vector by the fixed offset_distance.
-    local sign = is_on_right and 1 or -1 -- Use 1 for right, -1 for left
-    local second_move_position = {
-        x = lerped_position.x + sign * perpendicular_vector.x * offset_distance,
-        y = lerped_position.y + sign * perpendicular_vector.y * offset_distance,
-        z = lerped_position.z + sign * perpendicular_vector.z * offset_distance
-    }
-
-    return second_move_position
-end
-
--- Example usage
-local lerped_position = { x = 10, y = 0, z = 5 }
-local enemy_position = { x = 15, y = 0, z = 10 }
-local offset_distance = 2 -- Fixed distance of 2 units from the lerped position
-local is_on_right = true -- Set this to true for the second move position to be on the right side, false for left side
-
-local second_move_position = calculate_second_move_position(lerped_position, enemy_position, offset_distance, is_on_right)
-print(second_move_position.x, second_move_position.y, second_move_position.z)
-
-]]

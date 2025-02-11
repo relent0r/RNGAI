@@ -474,11 +474,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             SACU = 56
             SACU + eng = 98
         ]]
-        local ExtractorCostSpec = {
-            TECH1 = ALLBPS['ueb1103'].Economy.BuildCostMass,
-            TECH2 = ALLBPS['ueb1202'].Economy.BuildCostMass,
-            TECH3 = ALLBPS['ueb1302'].Economy.BuildCostMass,
-        }
+        local singleTech1BuilderRate
+        local singleTech2BuilderRate
+        local singleTech3BuilderRate
 
         while aiBrain:PlatoonExists(self) do
             coroutine.yield(1)
@@ -490,11 +488,9 @@ Platoon = Class(RNGAIPlatoonClass) {
             local totalTech1BuilderRate = 0
             local totalTech2BuilderRate = 0
             local totalTech3BuilderRate = 0
-            local singleTech1BuilderRate
-            local singleTech2BuilderRate
-            local singleTech3BuilderRate
             local platoonCount = 0
             local platUnits = GetPlatoonUnits(self)
+            local builderRates = {singleTech1BuilderRate, singleTech2BuilderRate, singleTech3BuilderRate}
             --LOG('Actual count '..tostring(table.getn(platUnits)))
             for _, eng in platUnits do
                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
@@ -551,22 +547,59 @@ Platoon = Class(RNGAIPlatoonClass) {
             --local debugIdleEng = false
             local curentMassStorage = aiBrain:GetEconomyStoredRatio('MASS')
             if curentMassStorage < 0.30 then
-                local builderRates = {singleTech1BuilderRate, singleTech2BuilderRate, singleTech3BuilderRate}
                 for techlevel, engineers in ipairs({tech1Engineers, tech2Engineers, tech3Engineers}) do
                     local builderRate = builderRates[techlevel]
-                    for _, eng in ipairs(engineers) do
-                        local potentialNewBuildPower = aiBrain.EngineerAssistManagerBuildPower - builderRate
-                        if potentialNewBuildPower >= aiBrain.EngineerAssistManagerBuildPowerRequired then
-                            self:EngineerAssistRemoveRNG(aiBrain, eng)
-                        else
-                            -- If the power requirement is met, break out of the loop
-                            break
+                    if builderRate then
+                        for _, eng in ipairs(engineers) do
+                            local potentialNewBuildPower = aiBrain.EngineerAssistManagerBuildPower - builderRate
+                            if potentialNewBuildPower >= aiBrain.EngineerAssistManagerBuildPowerRequired then
+                                self:EngineerAssistRemoveRNG(aiBrain, eng)
+                            else
+                                -- If the power requirement is met, break out of the loop
+                                break
+                            end
+                            --if eng:IsIdleState() then
+                            --    debugIdleEng = true
+                            --end
+                            coroutine.yield(1)
                         end
-                        --if eng:IsIdleState() then
-                        --    debugIdleEng = true
-                        --end
-                        coroutine.yield(1)
                     end
+                end
+            elseif curentMassStorage > 0.30 and (aiBrain.BrainIntel.LandPhase > 2 or aiBrain.BrainIntel.AirPhase > 2) and ( aiBrain.EngineerAssistManagerBuildPowerTech1 > 0 or aiBrain.EngineerAssistManagerBuildPowerTech2 > 0 ) then
+                local poolCount = RUtils.GetPoolCountAtLocation(aiBrain, 'MAIN', categories.ENGINEER * categories.TECH3)
+                --LOG('This pool count of T3 engineers is '..tostring(poolCount))
+                if poolCount > 2 and builderRates[3] then
+                    --LOG('We have going to try Removing Engineers to allow space for T3, build power is '..tostring(aiBrain.EngineerAssistManagerBuildPower))
+                    --LOG('We have a pool count greater than 2 and a tech 3 builderRate')
+                    local maxBuildPowerToGain = (poolCount - 2) * builderRates[3]
+                    --LOG('maxBuildPowerToGain is '..tostring(maxBuildPowerToGain))
+                    if maxBuildPowerToGain > 0 and aiBrain.EngineerAssistManagerBuildPowerTech1 > 0 then
+                        local builderRate = builderRates[1]
+                        if builderRate then
+                            for _, eng in tech1Engineers do
+                                maxBuildPowerToGain = maxBuildPowerToGain - builderRate
+                                if maxBuildPowerToGain > 0 then
+                                    --LOG('removing tech1 engineer, new build power is '..tostring(maxBuildPowerToGain))
+                                    self:EngineerAssistRemoveRNG(aiBrain, eng)
+                                    coroutine.yield(1)
+                                end
+                            end
+                        end
+                    end
+                    if maxBuildPowerToGain > 0 and aiBrain.EngineerAssistManagerBuildPowerTech2 > 0 then
+                        local builderRate = builderRates[2]
+                        if builderRate then
+                            for _, eng in tech2Engineers do
+                                maxBuildPowerToGain = maxBuildPowerToGain - builderRate
+                                if maxBuildPowerToGain > 0 then
+                                    --LOG('removing tech2 engineer, new build power is '..tostring(maxBuildPowerToGain))
+                                    self:EngineerAssistRemoveRNG(aiBrain, eng)
+                                    coroutine.yield(1)
+                                end
+                            end
+                        end
+                    end
+                    --LOG('We have Completed Removing Engineers to allow space for T3, build power is '..tostring(aiBrain.EngineerAssistManagerBuildPower))
                 end
             end
             --[[

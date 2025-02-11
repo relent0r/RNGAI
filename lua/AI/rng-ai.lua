@@ -2,6 +2,7 @@
 local AIDefaultPlansList = import("/lua/aibrainplans.lua").AIPlansList
 local AIUtils = import("/lua/ai/aiutilities.lua")
 local RNGAIGLOBALS = import("/mods/RNGAI/lua/AI/RNGAIGlobals.lua")
+local RNGChat = import("/mods/RNGAI/lua/AI/RNGChat.lua")
 
 local Utilities = import("/lua/utilities.lua")
 local ScenarioUtils = import("/lua/sim/scenarioutilities.lua")
@@ -1574,9 +1575,15 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.SetMinimumBasePower)
         self:ForkThread(self.CalculateMassMarkersRNG)
         self:ForkThread(self.AdjustEconomicAllocation)
+        self:ForkThread(self.SendGameStartTaunt)
         if self.RNGDEBUG then
             self:ForkThread(self.LogDataThreadRNG)
         end
+    end,
+
+    SendGameStartTaunt = function(self)
+        coroutine.yield(160)
+        self:ForkThread(RNGChat.ConsiderRandomTaunt, 'GameStart')
     end,
 
     LogDataThreadRNG = function(self)
@@ -2581,7 +2588,6 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Waiting for MapIntelGrid to exist...')
             coroutine.yield(30)
         end
-        RUtils.AudioMessage('X03', 'X03_T01_010_010')
         local baseRestrictedArea = self.OperatingAreas['BaseRestrictedArea']
         local baseMilitaryArea = self.OperatingAreas['BaseMilitaryArea']
         local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
@@ -7164,7 +7170,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local economyUpgradeSpendMin = 0.02 -- Minimum economy allocation
             local economyUpgradeSpendMax = 0.45 -- Maximum economy allocation
             local engineerAssistRatioMin = 0.02 -- Minimum assist allocation
-            local engineerAssistRatioMax = 0.45 -- Maximum assist allocation
+            local engineerAssistRatioMax = 0.60 -- Maximum assist allocation
             local brainIntel = self.BrainIntel
             local highestPhase =  math.max(brainIntel.LandPhase, brainIntel.AirPhase, brainIntel.NavalPhase)
             local ignoreZoneControl = not brainIntel.PlayerRole.AirPlayer and not brainIntel.PlayerRole.ExperimentalPlayer

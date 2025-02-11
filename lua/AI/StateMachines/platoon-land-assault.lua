@@ -675,7 +675,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                     unit['rngdata'].TargetPos = targetPosition
                 -- in case we don't move, check if we can fire at the target
                 else
-                    if unitPos and unit['rngdata'].WeaponArc then
+                    if unitPos and unit['rngdata'].WeaponArc and unit['rngdata'].Role ~= 'Artillery' and unit['rngdata'].Role ~= 'Silo' then
                         if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit['rngdata'].WeaponArc) then
                             IssueMove({unit}, targetPosition )
                         end
@@ -771,7 +771,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                     unit['rngdata'].TargetPos = targetPosition
                 -- in case we don't move, check if we can fire at the target
                 else
-                    if unitPos and unit['rngdata'].WeaponArc then
+                    if unitPos and unit['rngdata'].WeaponArc and unit['rngdata'].Role ~= 'Artillery' and unit['rngdata'].Role ~= 'Silo' then
                         if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, unit['rngdata'].WeaponArc) then
                             IssueMove({unit}, targetPosition )
                         end

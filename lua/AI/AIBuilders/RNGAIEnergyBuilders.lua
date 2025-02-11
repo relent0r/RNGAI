@@ -221,7 +221,7 @@ BuilderGroup {
         InstanceCount = 1,
         DelayEqualBuildPlattons = {'EnergyT3', 6},
         BuilderConditions = {
-            { EBC, 'LessThanEnergyTrendCombinedRNG', { 500.0 } },
+            { EBC, 'LessThanEnergyTrendCombinedRNG', { 500.0, true } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.8 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.10}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3 - categories.HYDROCARBON }},

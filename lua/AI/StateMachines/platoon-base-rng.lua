@@ -85,6 +85,9 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                                 end
                             end
                         end
+                        if unitCats.STRATEGICBOMBER then
+                            self.StratBomberPresent = true
+                        end
                         --LOG('Have set units DamageRadius to '..maxPlatoonStrikeRadius)
                     end
                     if unitCats.GUNSHIP and not unit['rngdata'].ApproxDPS then

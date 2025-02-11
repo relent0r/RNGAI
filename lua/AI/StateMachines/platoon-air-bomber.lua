@@ -99,7 +99,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.AttackTarget)
                 return
             end
-            if self.PlatoonData.Defensive and homeDist and homeDist > 25600 and self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Dead then
+            if not self.StratBomberPresent and self.PlatoonData.Defensive and homeDist and homeDist > 25600 and self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Dead then
                 local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, nil, nil, nil, true)
                 if target then
                     --LOG('Gunship high Priority Target Found '..target.UnitId)
@@ -161,7 +161,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             end
             if not target then
                 ----self:LogDebug(string.format('Checking for High Priority Target'))
-                local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, false, false, true)
+                local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, false, false, true, self.StratBomberPresent)
                 if target then
                     self.BuilderData = {
                         AttackTarget = target,
@@ -269,7 +269,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            if not target and not self.PlatoonData.Defensive then
+            if not target and not self.PlatoonData.Defensive and not self.StratBomberPresent then
                 if aiBrain:GetCurrentEnemy() then
                     local enemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
                     if enemyIndex then

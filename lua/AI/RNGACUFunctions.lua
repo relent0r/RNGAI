@@ -467,19 +467,14 @@ function CDRThreatAssessmentRNG(cdr)
 
                 return enemyThreatConfidenceModifier
             end
-
+            
             local function customSurvivability(healthPercent)
-                -- Avoid division by zero
-                local base = 2  -- You can adjust this value to control the rate of change
-                local exponent = 2  -- The higher the exponent, the faster it will drop off at lower health
-                local maxHealth = 1.0
-                local minHealth = 0.0
-            
-                -- Scale the health to the range [0,1]
-                local scaledHealth = (healthPercent - minHealth) / (maxHealth - minHealth)
-            
-                -- Custom curve function
-                return (scaledHealth ^ exponent) * (base - 1) + 1
+                local k = 15  -- Steepness factor
+                -- Apply a sigmoid function that starts at 2.0 for health = 1.0
+                local sigmoid = 1 / (1 + math.exp(k * (healthPercent - 0.5)))
+                -- Scale and shift the result to match the target values
+                local result = 2 - (sigmoid * 1.5)
+                return result
             end
 
             -- Main function to calculate cdr.Confidence
@@ -490,14 +485,27 @@ function CDRThreatAssessmentRNG(cdr)
                 -- Add influence of new metrics with weights
                 local distanceToEnemyBase
                 if aiBrain.EnemyIntel.ClosestEnemyBase then
+                    for k, v in aiBrain.EnemyIntel.EnemyStartLocations do
+                        local rx = cdr.Position[1] - v.Position[1]
+                        local rz = cdr.Position[3] - v.Position[3]
+                        local tmpDistance = rx * rx + rz * rz
+                        if not distanceToEnemyBase or tmpDistance < distanceToEnemyBase then
+                            distanceToEnemyBase = tmpDistance
+                        end
+                    end
                     distanceToEnemyBase = aiBrain.EnemyIntel.ClosestEnemyBase
                 else
                     local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
                     distanceToEnemyBase = math.max(playableArea[3], playableArea[4])
                     distanceToEnemyBase = distanceToEnemyBase * distanceToEnemyBase
                 end
-                local normalizedDistance = cdrDistanceToBase / distanceToEnemyBase
-                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + weights.distanceToBase * (1 / (normalizedDistance + 1))
+                --LOG('Distance to enemy base for '..tostring(aiBrain.Nickname)..' is '..tostring(distanceToEnemyBase)..' distance to AI base '..tostring(cdrDistanceToBase))
+                local distanceFactor = math.sqrt(cdrDistanceToBase) / (math.sqrt(distanceToEnemyBase) + 0.1)
+                local scale = 2 - (distanceFactor / (distanceFactor + 1)) 
+                --LOG('Friendly threat before '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
+                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier - (weights.distanceToBase * scale)
+                --LOG('Friendly threat after '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
+                --LOG('Distance to enemy base scaled factor for '..tostring(aiBrain.Nickname)..' is '..tostring((weights.distanceToBase * scale)))
                 enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + weights.localEnemyThreatRatio * localEnemyThreatRatio
 
                 -- Calculate confidence
@@ -508,39 +516,42 @@ function CDRThreatAssessmentRNG(cdr)
                 
                     -- **Health + Shield Influence on Confidence**
                 local healthModifer = customSurvivability(cdr.HealthPercent)
+                --LOG('healthModifer ratio for '..tostring(aiBrain.Nickname)..' is '..tostring(healthModifer))
                 local survivability = (healthModifer * weights.healthBoost) + (shieldFactor or 0)
+                --LOG('Survivability ratio for '..tostring(aiBrain.Nickname)..' is '..tostring(survivability))
 
                 local overchargeFactor = 0
                 local energyStored = aiBrain:GetEconomyStored('ENERGY')
                 if energyStored and cdr.OverCharge.EnergyRequired and energyStored >= cdr.OverchargeEnergyRequired then
-                    overchargeFactor = (weights.overchargeBoost * math.min(1.5, enemyUnitThreat / 50))
+                    overchargeFactor = (weights.overchargeBoost * math.min(2.0, math.max(0.75, enemyUnitThreat / 50)))
                 end
+                --LOG('AI '..tostring(aiBrain.Nickname)..' health percent '..tostring(cdr.HealthPercent)..' friendlyThreatConfidenceModifier '..tostring(friendlyThreatConfidenceModifier)..' enemyThreatConfidenceModifier '..tostring(enemyThreatConfidenceModifier)..' ratio '..tostring(friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier)..' survivability '..tostring(survivability)..' overcharge '..tostring(overchargeFactor))
 
                 cdr.Confidence = ((friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier) * survivability) + overchargeFactor
 
                 if aiBrain.EnemyIntel.LandPhase > 2 then
                     cdr.Confidence = cdr.Confidence * weights.phasePenalty
                 end
-                --LOG('Current ACU Confidence '..tostring(cdr.Confidence))
+                --LOG('Current ACU Confidence for '..tostring(aiBrain.Nickname)..' is '..tostring(cdr.Confidence))
             end
 
             -- Example weights
             local weights = {
-                selfThreat = 1.1,
-                allyThreat = 1.0,
-                friendlyUnitThreat = 1.1,
-                healthBoost = 1.2,
-                shieldBoost = 1.1,
-                enemyThreat = 0.8,
-                enemyUnitThreat = 1.0,
-                distanceToBase = 0.7,
-                localEnemyThreatRatio = 1.0,
-                phasePenalty = 0.7,
-                overchargeBoost = 1.3
+                selfThreat = 1.1, -- higher means more confidence
+                allyThreat = 1.0, -- higher means more confidence
+                friendlyUnitThreat = 1.1, -- higher means more confidence
+                healthBoost = 1.4, -- higher means more confidence
+                shieldBoost = 1.1, -- higher means more confidence
+                enemyThreat = 0.8, -- higher means less confidence
+                enemyUnitThreat = 1.0, -- higher means less confidence
+                distanceToBase = 0.8, -- higher means less confidence
+                localEnemyThreatRatio = 0.9, -- higher means less confidence
+                phasePenalty = 0.7, -- higher means less confidence
+                overchargeBoost = 1.3 -- higher means more confidence
             }
             local enemyThreatRatio = friendlyUnitThreat > 0 and (enemyUnitThreat / friendlyUnitThreat) or 0.5
             -- Example call
-            calculateConfidence(aiBrain, cdr, friendlyUnitThreat, enemyUnitThreat, cdr.DistanceToHome, enemyThreatRatio, weights)
+            calculateConfidence(aiBrain, cdr, friendlyUnitThreat, (enemyUnitThreat + enemyAirThreat), cdr.DistanceToHome, enemyThreatRatio, weights)
 
             --LOG('Current cdr confidence is '..tostring(cdr.Confidence))
 
