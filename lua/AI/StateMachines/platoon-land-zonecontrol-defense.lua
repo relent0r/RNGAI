@@ -50,6 +50,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 self.MovementLayer = self:GetNavigationalLayer()
             end
             local aiBrain = self:GetBrain()
+            self.MergeType = 'LandAAStateMachine'
             self.ZoneType = self.PlatoonData.ZoneType or 'aadefense'
             if aiBrain.EnemyIntel.LandPhase > 1 then
                 self.EnemyRadius = 75
@@ -124,7 +125,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            local threat=RUtils.GrabPosDangerRNG(aiBrain,platPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false)
+            local threat=RUtils.GrabPosDangerRNG(aiBrain,platPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false, true)
             if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then
                 --self:LogDebug(string.format('DecideWhatToDo high threat retreating'))
                 self.retreat=true
@@ -218,6 +219,18 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 coroutine.yield(Random(5,35))
                 targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType, true)
                 if targetZone then
+                    if self.LocationType and aiBrain.BuilderManagers[self.LocationType].Zone then
+                        if targetZone == aiBrain.BuilderManagers[self.LocationType].Zone then
+                            self:LogDebug(string.format('Zone detected was our starting base, go to loiter mode'))
+                            self.BuilderData = {
+                                TargetZone = targetZone,
+                                Position = aiBrain.Zones.Land.zones[targetZone].pos,
+                                CutOff = 400
+                            }
+                            self:ChangeState(self.Loiter)
+                            return
+                        end
+                    end
                     --self:LogDebug(string.format('DecideWhatToDo Target zone '..targetZone))
                     self.BuilderData = {
                         TargetZone = targetZone,
@@ -278,12 +291,20 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonZoneControlDefenseBehavior
         Main = function(self)
             --LOG('ACUSupport trying to use transport')
-            local brain = self:GetBrain()
+            local aiBrain = self:GetBrain()
             local builderData = self.BuilderData
             if not builderData.Position then
                 WARN('No position passed to ZoneControlDefense')
                 self:ChangeState(self.DecideWhatToDo)
                 return false
+            end
+            if aiBrain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint then
+                --LOG('Zone Control is moving to factory manager rally point')
+                local platUnits = self:GetPlatoonUnits()
+                for _, v in platUnits do
+                    StateUtils.IssueNavigationMove(v, aiBrain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint)
+                end
+                coroutine.yield(25)
             end
             local counter = 0
             while counter < 10 do
@@ -338,7 +359,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         self.target = target
                         if not (unitRole == 'Sniper' or unitRole == 'Silo') and VDist3Sq(unitPos,target:GetPosition())>(unitRange+20)*(unitRange+20) then
                             if not approxThreat then
-                                approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false)
+                                approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false, true)
                             end
                             if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface then
                                 IssueClearCommands({v}) 
@@ -529,7 +550,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
-            while PlatoonExists(aiBrain, self) do
+            while not IsDestroyed(self) do
                 if VDist3Sq(self.BuilderData.Position,self.Pos) < 400 then
                     self.path = false
                     self.navigating = false
@@ -584,7 +605,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     for _,v in platoonUnits do
                         if v and not v.Dead then
                             local unitPos = v:GetPosition()
-                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>self.MaxPlatoonWeaponRange*self.MaxPlatoonWeaponRange+900 then
+                            if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>self['rngdata'].MaxPlatoonWeaponRange*self['rngdata'].MaxPlatoonWeaponRange+900 then
                                 local vec={}
                                 vec[1],vec[2],vec[3]=v:GetVelocity()
                                 if VDist3Sq({0,0,0},vec)<1 then
@@ -596,27 +617,13 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             end
                             if VDist2Sq(unitPos[1],unitPos[3],self.Pos[1],self.Pos[3])>v['rngdata'].MaxWeaponRange/3*v['rngdata'].MaxWeaponRange/3+platoonNum*platoonNum then
                                 if self.dest then
-                                    if v.GetNavigator then
-                                        local navigator = v:GetNavigator()
-                                        if navigator then
-                                            navigator:SetGoal(RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)}))
-                                        end
-                                    else
-                                        IssueClearCommands({v})
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)}))
-                                    end
+                                    local movePos = RUtils.lerpy(self.Pos,self.dest,{VDist3(self.dest,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)})
+                                    StateUtils.IssueNavigationMove(v, movePos)
                                     spread=spread+VDist3Sq(unitPos,self.Pos)/v['rngdata'].MaxWeaponRange/v['rngdata'].MaxWeaponRange
                                     snum=snum+1
                                 else
-                                    if v.GetNavigator then
-                                        local navigator = v:GetNavigator()
-                                        if navigator then
-                                            navigator:SetGoal(RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)}))
-                                        end
-                                    else
-                                        IssueClearCommands({v})
-                                        IssueMove({v},RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)}))
-                                    end
+                                    local movePos = RUtils.lerpy(self.Pos,self.Home,{VDist3(self.Home,self.Pos),v['rngdata'].MaxWeaponRange/4+math.sqrt(platoonNum)})
+                                    StateUtils.IssueNavigationMove(v, movePos)
                                     spread=spread+VDist3Sq(unitPos,self.Pos)/v['rngdata'].MaxWeaponRange/v['rngdata'].MaxWeaponRange
                                     snum=snum+1
                                 end
@@ -712,9 +719,6 @@ AssignToUnitsMachine = function(data, platoon, units)
                     platoonthreat = platoonthreat + v.Blueprint.Defense.SurfaceThreatLevel*StateUtils.GetWeightedHealthRatio(v)*mult
                 end
             end
-        end
-        if not platoon.MaxPlatoonWeaponRange then
-            platoon.MaxPlatoonWeaponRange=20
         end
         platoon:OnUnitsAddedToPlatoon()
         -- start the behavior

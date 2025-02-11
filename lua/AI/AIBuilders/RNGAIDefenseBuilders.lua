@@ -91,6 +91,34 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T1 Defence Engineer Restricted Breach Air Single',
+        PlatoonTemplate = 'EngineerStateT1RNG',
+        Priority = 970,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.DEFENSE * categories.ANTIAIR}},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 0.8 }},
+            { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 1, 'AIR'}},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                BuildClose = true,
+                EmergencyBuild = true,
+                BuildStructures = {
+                    { Unit = 'T1AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH1 },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T1 Defence Engineer Restricted Breach Air',
         PlatoonTemplate = 'EngineerStateT1RNG',
         Priority = 950,
@@ -358,8 +386,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.TACTICALMISSILEPLATFORM}},
-            { UCBC, 'CheckTargetInRangeRNG', { 'LocationType', 'T2StrategicMissile', categories.COMMAND + categories.STRUCTURE * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'CheckTMLRequiredRNG', { 'LocationType', 'T2StrategicMissile', categories.COMMAND + categories.STRUCTURE * (categories.TECH2 + categories.TECH3), 1, 3 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1}},
             --{ EBC, 'GreaterThanEconStorageCurrentRNG', { 400, 4000 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.9}},
@@ -440,12 +467,13 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Defence High Value Land Expansion',
         PlatoonTemplate = 'EngineerStateT1RNG',
-        Priority = 950,
+        Priority = 951,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'HighValueZone', {'LocationType' }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.DEFENSE * categories.DIRECTFIRE, 45}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
+            { EBC, 'GreaterThanMassStorageOrEfficiency', { 150, 0.8 }},
+            { EBC, 'GreaterThanEnergyEfficiencyOverTimeRNG', { 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
@@ -696,9 +724,8 @@ BuilderGroup {
         PriorityFunction = ActiveExpansion,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 720 } },
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.TACTICALMISSILEPLATFORM}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.05}},
-            { UCBC, 'CheckTargetInRangeRNG', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'CheckTMLRequiredRNG', { 'LocationType', 'T2StrategicMissile', categories.STRUCTURE * (categories.TECH2 + categories.TECH3), 1, 3 } },
             { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',

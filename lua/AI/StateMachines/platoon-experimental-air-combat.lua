@@ -73,9 +73,9 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             self.ExperimentalUnit = self:GetSquadUnits('Attack')[1]
             if self.ExperimentalUnit and not self.ExperimentalUnit.Dead then
                 -- Set the platoon max weapon range for the platoon and modify the categories on the Gauss Cannon
-                self.MaxPlatoonWeaponRange = self.ExperimentalUnit.Blueprint.Weapon[1].MaxRadius
-                if not self.MaxPlatoonWeaponRange then
-                    self.MaxPlatoonWeaponRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Direct Fire')
+                self['rngdata'].MaxPlatoonWeaponRange = self.ExperimentalUnit.Blueprint.Weapon[1].MaxRadius
+                if not self['rngdata'].MaxPlatoonWeaponRange then
+                    self['rngdata'].MaxPlatoonWeaponRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Direct Fire')
                 end
                 for i = 1, self.ExperimentalUnit:GetWeaponCount() do
                     local wep = self.ExperimentalUnit:GetWeapon(i)
@@ -332,7 +332,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                 local distance = dx * dx + dz * dz
                 --self:LogDebug(string.format('Target is '..repr(target.UnitId)))
                 --self:LogDebug(string.format('Target distance is '..distance))
-                if distance > self.MaxPlatoonWeaponRange * self.MaxPlatoonWeaponRange then
+                if distance > self['rngdata'].MaxPlatoonWeaponRange * self['rngdata'].MaxPlatoonWeaponRange then
                     self.BuilderData = {
                         Position = targetPos,
                         AttackTarget = target
@@ -412,14 +412,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     local dz = origin[3] - destination[3]
                     endPoint = true
                     if dx * dx + dz * dz < navigateDistanceCutOff then
-                        if experimental.GetNavigator then
-                            local navigator = experimental:GetNavigator()
-                            if navigator then
-                                navigator:SetGoal(destination)
-                            end
-                        else
-                            IssueMove({experimental},destination)
-                        end
+                        StateUtils.IssueNavigationMove(experimental, destination)
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
@@ -430,20 +423,12 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
-                if experimental.GetNavigator then
-                    local navigator = experimental:GetNavigator()
-                    if navigator then
-                        self:LogWarning(string.format('Navigator goal is  '..tostring(waypoint[1])..":"..tostring(waypoint[3])))
-                        navigator:SetGoal(waypoint)
-                    end
-                else
-                    IssueMove({experimental},waypoint)
-                end
+                StateUtils.IssueNavigationMove(experimental, waypoint)
                 -- check for opportunities
                 local wx = waypoint[1]
                 local wz = waypoint[3]
-                local lastDist
-                local timeout = 0
+                local movementTimeout = 0
+                local distanceTimeout
                 while not IsDestroyed(experimental) do
                     WaitTicks(20)
                     
@@ -465,14 +450,13 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                         --LOG('CutOff is '..navigateDistanceCutOff)
                         break
                     end
-                    if not lastDist or lastDist == wayPointDist then
-                        timeout = timeout + 1
-                        if timeout > 6 then
+                    if not distanceTimeout or distanceTimeout == wayPointDist then
+                        movementTimeout = movementTimeout + 1
+                        if movementTimeout > 5 then
                             break
                         end
                     end
-                    lastDist = wayPointDist
-                    self:LogWarning(string.format('Inside navigation loop, distance to waypoint is  '..tostring(dx * dx + dz * dz)))
+                    distanceTimeout = wayPointDist
                     --LOG('Current TotalSuroundingThreat '..repr(self.EnemyThreatTable.TotalSuroundingThreat))
                     -- check for threats
                     WaitTicks(10)
@@ -491,7 +475,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local experimental = self.ExperimentalUnit
             local target = self.BuilderData.AttackTarget
-            local maxPlatoonRange = self.MaxPlatoonWeaponRange
+            local maxPlatoonRange = self['rngdata'].MaxPlatoonWeaponRange
             local threatTable = self.EnemyThreatTable
             while experimental and not IsDestroyed(experimental) do
                 if experimental.ShieldCaution and not experimental.HoldPosition then
@@ -514,8 +498,8 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     local unitPos = experimental:GetPosition()
                     if StateUtils.PositionInWater(unitPos) and experimental.Blueprint.CategoriesHash.ANTINAVY then
                         maxPlatoonRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Anti Navy')
-                    elseif maxPlatoonRange < self.MaxPlatoonWeaponRange then
-                        maxPlatoonRange = self.MaxPlatoonWeaponRange
+                    elseif maxPlatoonRange < self['rngdata'].MaxPlatoonWeaponRange then
+                        maxPlatoonRange = self['rngdata'].MaxPlatoonWeaponRange
                     end
                     --self:LogDebug(string.format('Experimental of unit '..self.ExperimentalUnit.UnitId..' has a max platoon range of '..repr(maxPlatoonRange)))
                     local targetDistance = VDist3Sq(unitPos, targetPosition)
@@ -542,14 +526,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     else
                         if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental['rngdata'].WeaponArc) then
                             --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
-                            if experimental.GetNavigator then
-                                local navigator = experimental:GetNavigator()
-                                if navigator then
-                                    navigator:SetGoal(targetPosition)
-                                end
-                            else
-                                IssueMove({experimental},targetPosition)
-                            end
+                            StateUtils.IssueNavigationMove(experimental, targetPosition)
                             coroutine.yield(30)
                         else
                             --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
@@ -590,14 +567,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     local targetPosition = target:GetPosition()
                     local unitPos = experimental:GetPosition()
                     if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental['rngdata'].WeaponArc) then
-                        if experimental.GetNavigator then
-                            local navigator = experimental:GetNavigator()
-                            if navigator then
-                                navigator:SetGoal(targetPosition)
-                            end
-                        else
-                            IssueMove({experimental},targetPosition)
-                        end
+                        StateUtils.IssueNavigationMove(experimental, targetPosition)
                         coroutine.yield(30)
                     else
                         IssueAttack({experimental}, target)
@@ -635,7 +605,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local experimental = self.ExperimentalUnit
             local target = self.BuilderData.AttackTarget
-            local maxPlatoonRange = self.MaxPlatoonWeaponRange
+            local maxPlatoonRange = self['rngdata'].MaxPlatoonWeaponRange
             local threatTable = self.EnemyThreatTable
             if not self.BuilderData then
                 WARN('Land HoldPosition is missing builder data')
@@ -682,14 +652,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if VDist3Sq(experimentalPosition, builderData.Position) > 625 then
-                if experimental.GetNavigator then
-                    local navigator = experimental:GetNavigator()
-                    if navigator then
-                        navigator:SetGoal(builderData.Position)
-                    end
-                else
-                    IssueMove({experimental},builderData.Position)
-                end
+                StateUtils.IssueNavigationMove(experimental, builderData.Position)
                 coroutine.yield(25)
             end
             local HoldPositionGameTime = GetGameTimeSeconds()
@@ -700,14 +663,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     distanceLimit = protectionRadius - 5
                 end
                 if VDist3Sq(experimentalPosition, defensivePosition) > distanceLimit then
-                    if experimental.GetNavigator then
-                        local navigator = experimental:GetNavigator()
-                        if navigator then
-                            navigator:SetGoal(defensivePosition)
-                        end
-                    else
-                        IssueMove({experimental},defensivePosition)
-                    end
+                    StateUtils.IssueNavigationMove(experimental, defensivePosition)
                     coroutine.yield(25)
                 end
                 if threatTable.TotalSuroundingThreat < 15 or HoldPositionGameTime + 60 < GetGameTimeSeconds() then

@@ -13,15 +13,17 @@ local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local AntiAirUnits = categories.AIR * categories.MOBILE * (categories.TECH1 + categories.TECH2 + categories.TECH3) * categories.ANTIAIR - categories.BOMBER - categories.TRANSPORTFOCUS - categories.EXPERIMENTAL - categories.GROUNDATTACK
 
 local AirDefenseMode = function(self, aiBrain, builderManager, builderData)
+    local raidAir = 0
+    if aiBrain.EnemyIntel.EnemyThreatCurrent.Air > 0 then
+        raidAir = math.min(aiBrain.EnemyIntel.EnemyThreatCurrent.Air, 5)
+    end
     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
-    local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
+    local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir + raidAir
     local enemyCount = 1
     if aiBrain.EnemyIntel.EnemyCount > 0 then
         enemyCount = aiBrain.EnemyIntel.EnemyCount
     end
     if myAirThreat < (enemyAirThreat * 1.3 / enemyCount) then
-        --RNGLOG('Enable Air Intie Pool Builder')
-        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         if builderData.BuilderData.TechLevel == 1 then
             return 880
         elseif builderData.BuilderData.TechLevel == 2 then
@@ -31,8 +33,8 @@ local AirDefenseMode = function(self, aiBrain, builderManager, builderData)
         end
         return 890
     else
-        --RNGLOG('Disable Air Intie Pool Builder')
-        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        --LOG('Disable Air Intie Pool Builder')
+        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         return 0
     end
 end
@@ -45,8 +47,9 @@ local AirDefenseScramble = function(self, aiBrain, builderManager, builderData)
         enemyCount = aiBrain.EnemyIntel.EnemyCount
     end
     if math.max(myAirThreat, 15) < (enemyAirThreat / enemyCount) then
-        --RNGLOG('Enable Air ASF Scramble Pool Builder')
-        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        --LOG('Air Scramble Mode')
+        --LOG('Enable Air ASF Scramble Pool Builder')
+        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         if builderData.BuilderData.TechLevel == 1 then
             return 880
         elseif builderData.BuilderData.TechLevel == 2 then
@@ -56,8 +59,8 @@ local AirDefenseScramble = function(self, aiBrain, builderManager, builderData)
         end
         return 870
     else
-        --RNGLOG('Disable Air ASF Scramble Pool Builder')
-        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
+        --LOG('Disable Air ASF Scramble Pool Builder')
+        --LOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
         return 0
     end
 end
@@ -290,7 +293,7 @@ BuilderGroup {
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             NeverGuardEngineers = true,
-            PlatoonLimit = 25,
+            PlatoonLimit = 35,
             PrioritizedCategories = {
                 categories.EXPERIMENTAL * categories.AIR - categories.UNTARGETABLE,
                 categories.GROUNDATTACK * categories.AIR,

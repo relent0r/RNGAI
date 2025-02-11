@@ -80,12 +80,6 @@ BaseBuilderTemplate {
         if markerType ~= 'Zone Expansion' then
             return -1
         end
-        local EnemyIndex
-        local OwnIndex = aiBrain:GetArmyIndex()
-        local EnemyArmy = aiBrain:GetCurrentEnemy()
-        if EnemyArmy then
-            EnemyIndex = EnemyArmy:GetArmyIndex()
-        end
         if aiBrain.BuilderManagers['MAIN'].GraphArea then
             local NavUtils = import('/lua/sim/NavUtils.lua')
             local mainBaseLabel = aiBrain.BuilderManagers['MAIN'].GraphArea

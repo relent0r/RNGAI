@@ -740,7 +740,7 @@ function EngineerTryReclaimCaptureArea(aiBrain, eng, pos, pointRadius)
         Reclaiming = true
     end
     -- reclaim rocks etc or we can't build mexes or hydros
-    local Reclaimables = GetReclaimablesInRect(Rect(pos[1], pos[3], pos[1], pos[3]))
+    local Reclaimables = GetReclaimablesInRect(Rect(pos[1]-pointRadius, pos[3]-pointRadius, pos[1]+pointRadius, pos[3]+pointRadius))
     if Reclaimables and not table.empty( Reclaimables ) then
         for k,v in Reclaimables do
             if v.MaxMassReclaim and v.MaxMassReclaim >= 5 or v.MaxEnergyReclaim and v.MaxEnergyReclaim > 5 then
@@ -1866,7 +1866,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                     end
                 end
             end
-            if retUnit and targetShields > 0 then
+            if retUnit and targetShields > 0 and platoon.CurrentPlatoonThreatAntiSurface > 0 then
                 local platoonUnits = platoon:GetPlatoonUnits()
                 for _, w in platoonUnits do
                     if not w.Dead then
@@ -2183,6 +2183,7 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
                 return TargetUnit, acuPresent, acuUnit, threatTable, TargetsInRange, defensiveStructureTable
             end
         end
+        if platoon.Dead then return end
         coroutine.yield(2)
     end
     --RNGLOG('NO Target Found in target aquisition function')
@@ -3080,83 +3081,6 @@ DisplayBaseMexAllocationRNG = function(aiBrain)
     end
 end
 
-CountSoonMassSpotsRNG = function(aiBrain)
-    local enemies={}
-    local VDist2Sq = VDist2Sq
-    for i,v in ArmyBrains do
-        if ArmyIsCivilian(v:GetArmyIndex()) or not IsEnemy(aiBrain:GetArmyIndex(),v:GetArmyIndex()) or v.Status=="defeat" then continue end
-        local index = v:GetArmyIndex()
-        local astartX, astartZ = v:GetArmyStartPos()
-        local aiBrainstart = {Position={astartX, GetTerrainHeight(astartX, astartZ), astartZ},army=i}
-        table.insert(enemies,aiBrainstart)
-    end
-    local startX, startZ = aiBrain:GetArmyStartPos()
-    local adaptiveResourceMarkers = GetMarkersRNG()
-    table.sort(enemies,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],startX,startZ)<VDist2Sq(b.Position[1],b.Position[3],startX,startZ) end)
-    while not aiBrain.cmanager do coroutine.yield(20) end
-    if not aiBrain.expansionMex or not aiBrain.expansionMex[1].priority then
-        --initialize expansion priority
-        local starts = AIUtils.AIGetMarkerLocationsRNG(aiBrain, 'Start Location')
-        local Expands = AIUtils.AIGetMarkerLocationsRNG(aiBrain, 'Expansion Area')
-        local BigExpands = AIUtils.AIGetMarkerLocationsRNG(aiBrain, 'Large Expansion Area')
-        if not aiBrain.emanager then aiBrain.emanager={} end
-        aiBrain.emanager.expands = {}
-        aiBrain.emanager.enemies=enemies
-        aiBrain.emanager.enemy=enemies[1]
-        for _, v in Expands do
-            v.expandtype='expand'
-            v.mexnum=0
-            v.mextable={}
-            v.relevance=0
-            v.owner=nil
-            table.insert(aiBrain.emanager.expands,v)
-        end
-        for _, v in BigExpands do
-            v.expandtype='bigexpand'
-            v.mexnum=0
-            v.mextable={}
-            v.relevance=0
-            v.owner=nil
-            table.insert(aiBrain.emanager.expands,v)
-        end
-        for _, v in starts do
-            v.expandtype='start'
-            v.mexnum=0
-            v.mextable={}
-            v.relevance=0
-            v.owner=nil
-            table.insert(aiBrain.emanager.expands,v)
-        end
-        aiBrain.expansionMex={}
-        local expands={}
-        for k, v in adaptiveResourceMarkers do
-            if v.type == 'Mass' then
-                table.sort(aiBrain.emanager.expands,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],v.position[1],v.position[3])<VDist2Sq(b.Position[1],b.Position[3],v.position[1],v.position[3]) end)
-                if aiBrain.emanager.expands[1].Position and VDist3Sq(aiBrain.emanager.expands[1].Position,v.position)<25*25 then
-                    table.insert(aiBrain.emanager.expands[1].mextable,{v,Position = v.position, Name = k})
-                    aiBrain.emanager.expands[1].mexnum=aiBrain.emanager.expands[1].mexnum+1
-                    table.insert(aiBrain.expansionMex, {v,Position = v.position, Name = k,ExpandMex=true})
-                else
-                    table.insert(aiBrain.expansionMex, {v,Position = v.position, Name = k})
-                end
-            end
-        end
-        for _,v in aiBrain.expansionMex do
-            table.sort(aiBrain.emanager.expands,function(a,b) return VDist2Sq(a.Position[1],a.Position[3],v.Position[1],v.Position[3])<VDist2Sq(b.Position[1],b.Position[3],v.Position[1],v.Position[3]) end)
-            if aiBrain.emanager.expands[1].Position then
-                v.distsq=VDist2Sq(aiBrain.emanager.expands[1].Position[1],aiBrain.emanager.expands[1].Position[2],v.Position[1],v.Position[3])
-            end
-            if aiBrain.emanager.expands[1] and v.ExpandMex then
-                v.priority=aiBrain.emanager.expands[1].mexnum
-                v.expand=aiBrain.emanager.expands[1]
-                v.expand.taken=0
-                v.expand.takentime=0
-            else
-                v.priority=1
-            end
-        end
-    end
-end
 -- start of supporting functions for zone area thingy
 GenerateDistinctColorTable = function(num)
     local function factorial(n,min)
@@ -3304,24 +3228,24 @@ GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface
                     brainThreats.enemySurface = brainThreats.enemySurface + commanderThreat
                     brainThreats.enemyTotal = brainThreats.enemyTotal + commanderThreat
                 else
-                    if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil then
+                    if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil and not bp.CategoriesHash.STRUCTURE then
                         brainThreats.enemySurface = brainThreats.enemySurface + bp.Defense.SurfaceThreatLevel*mult
                         brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.SurfaceThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > enemyMaxRadius then
                             enemyMaxRadius = bp.Weapon[1].MaxRadius
                         end
-                        if includeStructure and bp.CategoriesHash.STRUCTURE then
-                            if bp.CategoriesHash.TACTICALMISSILEPLATFORM then
-                                mult=0.1
-                            else
-                                mult=1.5
+                    end
+                    if includeStructure and bp.Defense.SurfaceThreatLevel ~= nil and bp.CategoriesHash.STRUCTURE then
+                        if bp.CategoriesHash.TACTICALMISSILEPLATFORM then
+                            mult=0.1
+                        else
+                            mult=1.5
+                        end
+                        if v.GetFractionComplete and v:GetFractionComplete() > 0.7 then
+                            if bp.CategoriesHash.DIRECTFIRE then
+                                RNGINSERT(brainThreats.enemyStructureUnits, v)
                             end
-                            if v.GetFractionComplete and v:GetFractionComplete() > 0.7 then
-                                if bp.CategoriesHash.DIRECTFIRE then
-                                    RNGINSERT(brainThreats.enemyStructureUnits, v)
-                                end
-                                brainThreats.enemyStructure = brainThreats.enemyStructure + bp.Defense.SurfaceThreatLevel
-                            end
+                            brainThreats.enemyStructure = brainThreats.enemyStructure + bp.Defense.SurfaceThreatLevel
                         end
                     end
                     if includeSub and bp.Defense.SubThreatLevel ~= nil then
@@ -3365,15 +3289,15 @@ GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface
                     brainThreats.allyTotal = brainThreats.allyTotal + commanderThreat
                     RNGINSERT(brainThreats.allyACUUnits, v)
                 else
-                    if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil then
+                    if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil and not bp.CategoriesHash.STRUCTURE then
                         brainThreats.allySurface = brainThreats.allySurface + bp.Defense.SurfaceThreatLevel*mult
                         brainThreats.allyTotal = brainThreats.allyTotal + bp.Defense.SurfaceThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > allyMaxRadius then
                             allyMaxRadius = bp.Weapon[1].MaxRadius
                         end
-                        if includeStructure and bp.CategoriesHash.STRUCTURE then
-                            brainThreats.allyStructure = brainThreats.allyStructure + bp.Defense.SurfaceThreatLevel
-                        end
+                    end
+                    if includeStructure and bp.CategoriesHash.STRUCTURE and bp.Defense.SurfaceThreatLevel ~= nil then
+                        brainThreats.allyStructure = brainThreats.allyStructure + bp.Defense.SurfaceThreatLevel
                     end
                     if includeSub and bp.Defense.SubThreatLevel ~= nil then
                         brainThreats.allySub = brainThreats.allySub + bp.Defense.SubThreatLevel*mult
@@ -3929,8 +3853,8 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
         end
         return circlePoints
     end
-    --LOG('Platoon Strike radius is '..repr(platoon.PlatoonStrikeRadius))
-    local pointTable = DrawCirclePoints(8, platoon.PlatoonStrikeRadius, targetPosition)
+    --LOG('Platoon Strike radius is '..repr(platoon['rngdata'].PlatoonStrikeRadius))
+    local pointTable = DrawCirclePoints(8, platoon['rngdata'].PlatoonStrikeRadius, targetPosition)
     local maxDamage = target.Blueprint.Economy.BuildCostMass
     local setPointPos = false
     local strikeCategories = categories.STRUCTURE
@@ -3938,7 +3862,7 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
         strikeCategories = categories.STRUCTURE + categories.ENGINEER
     end
     -- Check radius of target position to set the minimum damage
-    local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, strikeCategories, targetPosition, platoon.PlatoonStrikeRadius + 4, 'Enemy')
+    local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, strikeCategories, targetPosition, platoon['rngdata'].PlatoonStrikeRadius + 4, 'Enemy')
     local damage = 0
     for _, unit in enemiesAroundTarget do
         if not unit.Dead then
@@ -3947,9 +3871,9 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
             --RNGLOG('Unit is '..unit.UnitId)
             --RNGLOG('unitPos is '..repr(unitPos))
             --RNGLOG('Distance between units '..VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]))
-            --RNGLOG('strike radius + damage radius '..(platoon.PlatoonStrikeRadius + damageRadius))
-            if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (platoon.PlatoonStrikeRadius * 1.9 + damageRadius) then
-                if platoon.PlatoonStrikeDamage > unit.Blueprint.Defense.MaxHealth or platoon.PlatoonStrikeDamage > (unit:GetHealth() / 3) then
+            --RNGLOG('strike radius + damage radius '..(platoon['rngdata'].PlatoonStrikeRadius + damageRadius))
+            if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (platoon['rngdata'].PlatoonStrikeRadius * 1.9 + damageRadius) then
+                if platoon['rngdata'].PlatoonStrikeDamage > unit.Blueprint.Defense.MaxHealth or platoon['rngdata'].PlatoonStrikeDamage > (unit:GetHealth() / 3) then
                     damage = damage + unit.Blueprint.Economy.BuildCostMass
                 else
                     --RNGLOG('Strike will not kill target or 3 passes')
@@ -3966,7 +3890,7 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
         --RNGLOG('pointPos distance from targetpos is '..VDist2(pointPos[1],pointPos[2],targetPosition[1],targetPosition[3]))
         
         local damage = 0
-        local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, strikeCategories, {pointPos[1], 0, pointPos[3]}, platoon.PlatoonStrikeRadius + 4, 'Enemy')
+        local enemiesAroundTarget = GetUnitsAroundPoint(aiBrain, strikeCategories, {pointPos[1], 0, pointPos[3]}, platoon['rngdata'].PlatoonStrikeRadius + 4, 'Enemy')
         --RNGLOG('Table count of enemies at pointPos '..table.getn(enemiesAroundTarget))
         for _, unit in enemiesAroundTarget do
             if not unit.Dead then
@@ -3975,9 +3899,9 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
                 --RNGLOG('Unit is '..unit.UnitId)
                 --RNGLOG('unitPos is '..repr(unitPos))
                 --RNGLOG('Distance between units '..VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]))
-                --RNGLOG('strike radius + damage radius '..(platoon.PlatoonStrikeRadius + damageRadius))
-                if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (platoon.PlatoonStrikeRadius * 1.9 + damageRadius) then
-                    if platoon.PlatoonStrikeDamage > unit.Blueprint.Defense.MaxHealth or platoon.PlatoonStrikeDamage > (unit:GetHealth() / 3) then
+                --RNGLOG('strike radius + damage radius '..(platoon['rngdata'].PlatoonStrikeRadius + damageRadius))
+                if VDist2(targetPosition[1], targetPosition[3], unitPos[1], unitPos[3]) <= (platoon['rngdata'].PlatoonStrikeRadius * 1.9 + damageRadius) then
+                    if platoon['rngdata'].PlatoonStrikeDamage > unit.Blueprint.Defense.MaxHealth or platoon['rngdata'].PlatoonStrikeDamage > (unit:GetHealth() / 3) then
                         damage = damage + unit.Blueprint.Economy.BuildCostMass
                     else
                         --RNGLOG('Strike will not kill target or 3 passes')
@@ -3995,10 +3919,10 @@ function GetBomberGroundAttackPosition(aiBrain, platoon, target, platoonPosition
     end
     if setPointPos then
         setPointPos = {setPointPos[1], GetTerrainHeight(setPointPos[1], setPointPos[3]), setPointPos[3]} 
-        local movePoint = lerpy(platoonPosition, targetPosition, {targetDistance, targetDistance - (platoon.PlatoonStrikeRadiusDistance + 25)})
+        local movePoint = lerpy(platoonPosition, targetPosition, {targetDistance, targetDistance - (platoon['rngdata'].PlatoonStrikeRadiusDistance + 25)})
         if aiBrain.RNGDEBUG then
-            platoon:ForkThread(platoon.DrawTargetRadius, movePoint, platoon.PlatoonStrikeRadius)
-            platoon:ForkThread(platoon.DrawTargetRadius, setPointPos, platoon.PlatoonStrikeRadius)
+            platoon:ForkThread(platoon.DrawTargetRadius, movePoint, platoon['rngdata'].PlatoonStrikeRadius)
+            platoon:ForkThread(platoon.DrawTargetRadius, setPointPos, platoon['rngdata'].PlatoonStrikeRadius)
         end
         return setPointPos, movePoint
     end
@@ -4937,7 +4861,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     end
 
     if aiBrain.CDRUnit.Active then
-        if not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead then
+        if (not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead) and aiBrain.CDRUnit.DistanceToHome > 900 then
             --LOG('LAND-SCOUT Land scout getting acu position')
             if NavUtils.CanPathTo(platoon.MovementLayer, scoutPos, aiBrain.CDRUnit.Position) then
                 --LOG('LAND-SCOUT Can path to acu, return unit')
@@ -4945,6 +4869,41 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
                 scoutType = 'AssistUnit'
                 return aiBrain.CDRUnit, scoutType
             end
+        end
+    end
+    if platoon.FindPlatoonCounter and (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
+        coroutine.yield(3)
+        platoonNeedScout, supportPlatoon = ScoutFindNearbyPlatoonsRNG(platoon, 125)
+        platoon.FindPlatoonCounter = platoon.FindPlatoonCounter + 1
+    end
+    if platoonNeedScout then
+        if supportPlatoon and PlatoonExists(aiBrain, supportPlatoon) then
+            scoutType = 'AssistPlatoon'
+            return supportPlatoon, scoutType
+        end
+    end
+    if (not platoonNeedScout) and (not platoon.ZonesValidated) then
+        scoutPos = scout:GetPosition()
+        local scoutMarker
+        for k, zone in aiBrain.Zones.Land.zones do
+            if zone.teamvalue > 1.5 and zone.intelassignment then
+                local ia = zone.intelassignment
+                if (not ia.RadarCoverage) and (not ia.ScoutUnit or ia.ScoutUnit.Dead) and (not ia.StartPosition) then
+                    if NavUtils.CanPathTo(platoon.MovementLayer, scoutPos, zone.pos) then
+                        scoutMarker = { Position = zone.pos }
+                        ia.ScoutUnit = scout
+                        break
+                    else
+                        coroutine.yield(5)
+                    end
+                end
+            end
+        end
+        if scoutMarker then
+            --RNGLOG('Scout Marker Found, moving to position')
+            scoutType = 'ZoneLocation'
+            --RNGLOG('ScoutDest is zone location')
+            return scoutMarker, scoutType
         end
     end
     if platoon.FindPlatoonCounter and (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
@@ -5010,7 +4969,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
                         if im.MapIntelGrid[i][k].TimeScouted == 0 then
                             im.MapIntelGrid[i][k].TimeScouted = 1
                         end
-                        local priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].TimeScouted ) / im.MapIntelGrid[i][k].DistanceToMain
+                        local priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].ScoutPriority) / im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain
                         local cellStatus = aiBrain.GridPresence:GetInferredStatus(im.MapIntelGrid[i][k].Position)
                         if cellStatus == 'Allied' then
                             priority = priority * 0.80
@@ -5053,7 +5012,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
                         if im.MapIntelGrid[i][k].DistanceToMain == 0 then
                             im.MapIntelGrid[i][k].DistanceToMain = 1
                         end
-                        local priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].TimeScouted ) / im.MapIntelGrid[i][k].DistanceToMain
+                        local priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].ScoutPriority) / im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain
                         local cellStatus = aiBrain.GridPresence:GetInferredStatus(im.MapIntelGrid[i][k].Position)
                         if cellStatus == 'Allied' then
                             priority = priority * 0.80
@@ -5178,7 +5137,7 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout, optics)
                         else
                             mustScoutPriority = im.MapIntelGrid[i][k].ScoutPriority
                         end
-                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].TimeScouted * mustScoutPriority) / im.MapIntelGrid[i][k].DistanceToMain }
+                        currentGrid = {x = i, z = k, Priority = (mustScoutPriority * mustScoutPriority) / im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain }
                         if currentGrid.Priority > highestGrid.Priority then
                             highestGrid = currentGrid
                         end
@@ -5197,6 +5156,7 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout, optics)
             im.MapIntelStats.MustScoutArea = false
         end
         if highestGrid.Priority > 0 then
+            --LOG('Highest Grid priority was '..tostring(highestGrid.Priority))
             --RNGLOG('AirScout MustScoutArea is greater than 0 and being set')
             scoutingData = im.MapIntelGrid[highestGrid.x][highestGrid.z]
             if not optics then
@@ -5228,7 +5188,7 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout, optics)
                         if im.MapIntelGrid[i][k].TimeScouted == 0 then
                             im.MapIntelGrid[i][k].TimeScouted = 1
                         end
-                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].TimeScouted ) / im.MapIntelGrid[i][k].DistanceToMain }
+                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].ScoutPriority) / im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain }
                         --RNGLOG('AirScouting CurrentGrid Priority is '..currentGrid.Priority)
                         --RNGLOG('AirScouting TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
                         if currentGrid.Priority > highestGrid.Priority then
@@ -5265,7 +5225,7 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout, optics)
                         if im.MapIntelGrid[i][k].DistanceToMain == 0 then
                             im.MapIntelGrid[i][k].DistanceToMain = 1
                         end
-                        currentGrid = {x = i, z = k, Priority = im.MapIntelGrid[i][k].ScoutPriority * (im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].TimeScouted) / im.MapIntelGrid[i][k].DistanceToMain }
+                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].ScoutPriority) / im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain }
                         --RNGLOG('CurrentGrid Priority is '..currentGrid.Priority)
                         --RNGLOG(im.MapIntelGrid[i][k].ScoutPriority..','..im.MapIntelGrid[i][k].LastScouted..','..im.MapIntelGrid[i][k].DistanceToMain..','..im.MapIntelGrid[i][k].TimeScouted..','..currentGrid.Priority)
                         --RNGLOG('TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
@@ -5516,7 +5476,7 @@ CheckACUSnipe = function(aiBrain, layerType)
     for k, v in aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe do
         if layerType == 'Land' then
             if v.LAND and v.LAND.GameTime then
-                if v.LAND.GameTime + 500 > GetGameTimeSeconds()then
+                if v.LAND.GameTime + 300 > GetGameTimeSeconds() then
                     if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
                         potentialTarget = aiBrain.EnemyIntel.ACU[k].Unit
                         requiredCount = v.LAND.CountRequired
@@ -5527,7 +5487,7 @@ CheckACUSnipe = function(aiBrain, layerType)
             end
         elseif layerType == 'Air' then
             if v.AIR and v.AIR.GameTime then
-                if v.AIR.GameTime + 500 > GetGameTimeSeconds() then
+                if v.AIR.GameTime + 300 > GetGameTimeSeconds() then
                     local unit = aiBrain.EnemyIntel.ACU[k].Unit
                     if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) then
                         potentialTarget = aiBrain.EnemyIntel.ACU[k].Unit
@@ -5541,7 +5501,7 @@ CheckACUSnipe = function(aiBrain, layerType)
             end
         elseif layerType == 'AirAntiNavy' then
             if v.AIR and v.AIR.GameTime then
-                if v.AIR.GameTime + 500 > GetGameTimeSeconds() then
+                if v.AIR.GameTime + 300 > GetGameTimeSeconds() then
                     if HaveUnitVisual(aiBrain, aiBrain.EnemyIntel.ACU[k].Unit, true) and PositionInWater(aiBrain.EnemyIntel.ACU[k].Position) then
                         potentialTarget = aiBrain.EnemyIntel.ACU[k].Unit
                         requiredCount = v.AIR.CountRequired
@@ -5604,13 +5564,18 @@ CheckForExperimental = function(aiBrain, im, platoon, avoid, naval)
     end
 end
 
-CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu, experimentalCheck)
+CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu, experimentalCheck, strategicBomber)
     local platPos
     local closestTarget
     local highestPriority = 0
     local operatingArea = aiBrain.OperatingAreas['BaseDMZArea']
     local baseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea'] * 1.5
     local homeLocation = platoon.Home or aiBrain.BrainIntel.StartPos
+    local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
+    local zoneType
+    if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
+        zoneType = 'Land'
+    end
     if aiBrain.EnemyIntel.HighPriorityTargetAvailable then
         if platoon then
             platPos = platoon.Pos or platoon:GetPlatoonPosition()
@@ -5620,6 +5585,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
         if avoid then
             rangeCheck = 9
         end
+
         if platPos then
             local platDistance = VDist3Sq(platPos, aiBrain.BrainIntel.StartPos)
             if platDistance < (aiBrain.EnemyIntel.ClosestEnemyBase / rangeCheck) then
@@ -5630,7 +5596,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                         local unitPos = v.object:GetPosition()
                         local unitDist = VDist3Sq(unitPos,homeLocation)
                         if naval then
-                            if not unitCats.HOVER and not unitCats.AIR and PositionInWater(v.position) then
+                            if (not unitCats.HOVER or unitCats.HOVER and platoon.CurrentPlatoonThreatAntiSurface > 0) and (not unitCats.AIR or unitCats.AIR and platoon.CurrentPlatoonThreatAntiAir > 0) and PositionInWater(unitPos) then
                                 closestTarget = v.object
                             end
                         elseif platoon.MovementLayer == 'Air' then
@@ -5674,7 +5640,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                                 end
                             end
                             if naval then
-                                if not unitCats.HOVER and PositionInWater(v.Position) then
+                                if (not unitCats.HOVER or unitCats.HOVER and platoon.CurrentPlatoonThreatAntiSurface > 0) and (not unitCats.AIR or unitCats.AIR and platoon.CurrentPlatoonThreatAntiAir > 0) and PositionInWater(v.Position) then
                                     local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
                                     local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
                                     if tempPoint > highestPriority then
@@ -5685,13 +5651,31 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                                     end
                                 end
                             else
-                                if not unitCats.SCOUT then
+                                if not unitCats.SCOUT and (not strategicBomber or (not unitCats.TECH1 or unitCats.COMMAND)) then
+                                    local priorityModifier = 1
                                     local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
-                                    local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
-                                    if tempPoint > highestPriority then
-                                        if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
-                                            highestPriority = tempPoint
-                                            closestTarget = v.unit
+                                    local tempPoint
+                                    if zoneType == 'Land' then
+                                        local enemyThreat = 0
+                                        local zoneId = MAP:GetZoneID(v.Position,aiBrain.Zones.Land.index)
+                                        local landZone = aiBrain.Zones.Land.zones[zoneId]
+                                        if landZone then
+                                            enemyThreat = enemyThreat + landZone.enemylandthreat
+                                            for _, v in landZone.edges do
+                                                enemyThreat = enemyThreat + v.zone.enemylandthreat
+                                            end
+                                            if landZone.friendlydirectfireantisurfacethreat > enemyThreat * 1.5 then
+                                                priorityModifier = 0.5
+                                            end
+                                        end
+                                    end
+                                    if v.priority * priorityModifier >= 250 then
+                                        tempPoint = (v.priority * priorityModifier + (v.danger or 0))/RNGMAX(targetDistance,30*30)
+                                        if tempPoint > highestPriority and highestPriority >= 250 then
+                                            if NavUtils.CanPathTo(platoon.MovementLayer, platPos, v.Position) then
+                                                highestPriority = tempPoint
+                                                closestTarget = v.unit
+                                            end
                                         end
                                     end
                                 end
@@ -6410,8 +6394,8 @@ ConfigurePlatoon = function(platoon)
                     if not v['rngdata'].MaxWeaponRange then
                         v['rngdata'].MaxWeaponRange = weapon.MaxRadius
                     end
-                    if not platoon.MaxPlatoonWeaponRange or platoon.MaxPlatoonWeaponRange < v['rngdata'].MaxWeaponRange then
-                        platoon.MaxPlatoonWeaponRange = v['rngdata'].MaxWeaponRange
+                    if not platoon['rngdata'].MaxPlatoonWeaponRange or platoon['rngdata'].MaxPlatoonWeaponRange < v['rngdata'].MaxWeaponRange then
+                        platoon['rngdata'].MaxPlatoonWeaponRange = v['rngdata'].MaxWeaponRange
                     end
                 end
                 if v:TestToggleCaps('RULEUTC_StealthToggle') then
@@ -6431,16 +6415,16 @@ ConfigurePlatoon = function(platoon)
         end
     end
     if maxPlatoonStrikeDamage > 0 then
-        platoon.PlatoonStrikeDamage = maxPlatoonStrikeDamage
+        platoon['rngdata'].PlatoonStrikeDamage = maxPlatoonStrikeDamage
     end
     if maxPlatoonStrikeRadius > 0 then
-        platoon.PlatoonStrikeRadius = maxPlatoonStrikeRadius
+        platoon['rngdata'].PlatoonStrikeRadius = maxPlatoonStrikeRadius
     end
     if maxPlatoonStrikeRadiusDistance > 0 then
-        platoon.PlatoonStrikeRadiusDistance = maxPlatoonStrikeRadiusDistance
+        platoon['rngdata'].PlatoonStrikeRadiusDistance = maxPlatoonStrikeRadiusDistance
     end
     if maxPlatoonDPS > 0 then
-        platoon.MaxPlatoonDPS = maxPlatoonDPS
+        platoon['rngdata'].MaxPlatoonDPS = maxPlatoonDPS
     end
     if not platoon.Zone then
         if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
@@ -7033,6 +7017,8 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
         end
         if targetFound and missilesConsumed >= maxMissiles then
             --RNGLOG('Valid Nuke Target Position with no Anti Nukes is '..repr(firingPositions))
+            local RNGChat = import("/mods/RNGAI/lua/AI/RNGChat.lua")
+            ForkThread(RNGChat.ConsiderAttackTaunt, aiBrain, 'LaunchNuke', nil, 8)
             return true, firingPositions
         end
     end
@@ -7572,52 +7558,52 @@ function CalculateThreatWithDynamicDecay(aiBrain, baseName, layer, baseZoneId, m
     return threatData
 end
 
-
---[[
-    -- Calculate dot product between two 3D vectors (same as before)
-
--- Algorithm function to calculate the second move position and determine left/right
-function calculate_second_move_position(lerped_position, enemy_position, offset_distance, is_on_right)
-    -- Step 1: Calculate the direction vector from the friendly unit to the enemy unit.
-    local direction_vector = {
-        x = enemy_position.x - lerped_position.x,
-        y = enemy_position.y - lerped_position.y,
-        z = enemy_position.z - lerped_position.z
-    }
-
-    -- Step 2: Find a perpendicular vector to the direction vector.
-    local perpendicular_vector = {
-        x = -direction_vector.z,
-        y = direction_vector.y,
-        z = direction_vector.x
-    }
-
-    -- Step 3: Normalize the perpendicular vector.
-    local perpendicular_magnitude = math.sqrt(perpendicular_vector.x * perpendicular_vector.x + perpendicular_vector.y * perpendicular_vector.y + perpendicular_vector.z * perpendicular_vector.z)
-    if perpendicular_magnitude > 0 then
-        perpendicular_vector.x = perpendicular_vector.x / perpendicular_magnitude
-        perpendicular_vector.y = perpendicular_vector.y / perpendicular_magnitude
-        perpendicular_vector.z = perpendicular_vector.z / perpendicular_magnitude
+-- Used for Campaign where there is no start position available
+function CalculatePotentialBrainStartPosition(aiBrain, otherBrain)
+    local numberOfHqs = 0
+    local furtherestHq
+    local furtherestDistance
+    local aiStartPos = aiBrain.BrainIntel.StartPos
+    local hqStructures = otherBrain:GetListOfUnits(categories.STRUCTURE * categories.FACTORY * categories.TECH3 * (categories.AIR + categories.LAND) - categories.SUPPORTFACTORY, false)
+    for _, v in hqStructures do
+        numberOfHqs = numberOfHqs + 1
+        local hqPos = v:GetPosition()
+        local dx = aiStartPos[1] - hqPos[1]
+        local dz = aiStartPos[3] - hqPos[3]
+        local distanceToMain = dx * dx + dz * dz
+        if not furtherestDistance or distanceToMain > furtherestDistance then
+            furtherestDistance = distanceToMain
+            furtherestHq = hqPos
+        end
     end
-
-    -- Step 4: Multiply the normalized perpendicular vector by the fixed offset_distance.
-    local sign = is_on_right and 1 or -1 -- Use 1 for right, -1 for left
-    local second_move_position = {
-        x = lerped_position.x + sign * perpendicular_vector.x * offset_distance,
-        y = lerped_position.y + sign * perpendicular_vector.y * offset_distance,
-        z = lerped_position.z + sign * perpendicular_vector.z * offset_distance
-    }
-
-    return second_move_position
+    return furtherestHq
 end
 
--- Example usage
-local lerped_position = { x = 10, y = 0, z = 5 }
-local enemy_position = { x = 15, y = 0, z = 10 }
-local offset_distance = 2 -- Fixed distance of 2 units from the lerped position
-local is_on_right = true -- Set this to true for the second move position to be on the right side, false for left side
+function GetCurrentRole(aiBrain)
+    for k, v in pairs(aiBrain.BrainIntel.PlayerRole) do
+        if v == true then
+            return k
+        end
+    end
+end
 
-local second_move_position = calculate_second_move_position(lerped_position, enemy_position, offset_distance, is_on_right)
-print(second_move_position.x, second_move_position.y, second_move_position.z)
+function SetCurrentRole(aiBrain, newRole)
+    -- Ensure all roles are set to false
+    for k, _ in aiBrain.BrainIntel.PlayerRole do
+        aiBrain.BrainIntel.PlayerRole[k] = false
+    end
+    -- Set the new role to true
+    aiBrain.BrainIntel.PlayerRole[newRole] = true
+end
 
-]]
+function GetPoolCountAtLocation(aiBrain, locationType, unitCategory)
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+    local testCat = unitCategory
+    if not engineerManager then
+        WARN('*AI WARNING: HavePoolUnitComparisonAtLocation - Invalid location - ' .. locationType)
+        return false
+    end
+    local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
+    local numUnits = poolPlatoon:GetNumCategoryUnits(testCat, engineerManager:GetLocationCoords(), engineerManager.Radius)
+    return numUnits
+end

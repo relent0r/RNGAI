@@ -33,6 +33,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             self.LocationType = self.PlatoonData.LocationType or self.PlatoonData.Construction.LocationType
             self.MovementLayer = self:GetNavigationalLayer()
             local platoonUnits = self:GetPlatoonUnits()
+            self.MergeType = 'EngineerStateMachine'
             for _, eng in platoonUnits do
                 if not eng.BuilderManagerData then
                    eng.BuilderManagerData = {}
@@ -78,6 +79,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             end
             local aiBrain = self:GetBrain()
             local data = self.PlatoonData
+            --LOG('Engineer State Machine started, platoon data is '..tostring(repr(data)))
             self.LastActive = GetGameTimeSeconds()
             -- how should we handle multipleself.engineers?
             local unit = self:GetPlatoonUnits()[1]
@@ -356,12 +358,12 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local builderData = self.BuilderData
             local pos = eng:GetPosition()
             local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, pos, builderData.Position, 30 , 30)
-            --self:LogDebug(string.format('Navigating to position, path reason is '..tostring(reason)))
+            self:LogDebug(string.format('Navigating to position, path reason is '..tostring(reason)))
             local result, navReason
             local whatToBuildM = self.ExtractorBuildID
             local bUsedTransports
             if reason ~= 'PathOK' then
-                --self:LogDebug(string.format('Path is not ok '))
+                self:LogDebug(string.format('Path is not ok '))
                 -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
                 if reason == 'NoGraph' then
                     result = true
@@ -392,7 +394,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     return
                 elseif VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 512 * 512 then
                     -- If over 512 and no transports dont try and walk!
-                    --self:LogDebug(string.format('No transport available and distance is greater than 512, decide what to do'))
+                    self:LogDebug(string.format('No transport available and distance is greater than 512, decide what to do'))
                     --LOG('We didnt use transports and its very far')
                     --if self.ZoneExpansionSet and aiBrain.TransportRequested and aiBrain:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then
                     --    LOG('ZoneExpansionTransportRequested set to true')
@@ -449,7 +451,14 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                         end
-                        if (i - math.floor(i/2)*2)==0 or VDist3Sq(builderData.Position,path[i])<40*40 then continue end
+                        if (i - math.floor(i/2)*2)==0 or VDist3Sq(builderData.Position,path[i])<40*40 then 
+                            if i==pathLength then
+                                local distanceToDest = VDist3Sq(pos, builderData.Position)
+                                local engMovePos = RUtils.lerpy(pos, builderData.Position, {math.sqrt(distanceToDest), math.sqrt(distanceToDest) - 5})
+                                IssueMove({eng}, engMovePos)
+                            end
+                            continue 
+                        end
                         --self:LogDebug(string.format('We are issuing the move command to path node '..tostring(i)))
                         IssueMove({eng}, path[i])
                     end
@@ -526,7 +535,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                         if eng:IsIdleState() then
-                          --self:LogDebug(string.format('We are idle for some reason, go back to decide what to do'))
+                          self:LogDebug(string.format('We are idle for some reason, go back to decide what to do'))
                           self:ChangeState(self.DecideWhatToDo)
                           return
                         end
@@ -541,6 +550,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         if eng:IsUnitState("Moving") then
                             if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.MOBILE, pos, 45, 'Enemy') > 0 then
                                 local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.MOBILE, pos, 45, 'Enemy')
+                                local reclaimUnit
                                 for _, eunit in enemyUnits do
                                     local enemyUnitPos = eunit:GetPosition()
                                     if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, eunit) then
@@ -551,6 +561,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                                     IssueClearCommands({eng})
                                                     IssueReclaim({eng}, eunit)
                                                     brokenPathMovement = true
+                                                    reclaimUnit = eunit
+                                                    coroutine.yield(25)
                                                     break
                                                 end
                                             end
@@ -564,13 +576,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                                     IssueClearCommands({eng})
                                                     IssueReclaim({eng}, eunit)
                                                     brokenPathMovement = true
-                                                    coroutine.yield(20)
-                                                    if not IsDestroyed(eunit) and VDist3Sq(eng:GetPosition(), eunit:GetPosition()) < 100 then
-                                                        IssueClearCommands({eng})
-                                                        IssueReclaim({eng}, eunit)
-                                                        coroutine.yield(30)
-                                                    end
-                                                    coroutine.yield(40)
+                                                    reclaimUnit = eunit
+                                                    coroutine.yield(25)
                                                     break
                                                 end
                                             end
@@ -578,8 +585,15 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                             IssueClearCommands({eng})
                                             IssueMove({eng}, RUtils.AvoidLocation(enemyUnitPos, pos, 50))
                                             brokenPathMovement = true
-                                            coroutine.yield(60)
+                                            reclaimUnit = eunit
+                                            coroutine.yield(45)
                                         end
+                                    end
+                                    
+                                end
+                                if brokenPathMovement and reclaimUnit and eng:IsUnitState('Reclaiming') then
+                                    while not IsDestroyed(reclaimUnit) and not IsDestroyed(eng) do
+                                        coroutine.yield(20)
                                     end
                                 end
                             end
@@ -1114,7 +1128,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     if movementRequired then
                         IssueClearCommands({eng})
                     -- check to see if we need to reclaim or capture...
-                        RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation, 10)
+                        local unitSize = aiBrain:GetUnitBlueprint(whatToBuild).Physics
+                        local reclaimRadius = (unitSize.SkirtSizeX and unitSize.SkirtSizeX / 2) or 5
+                        RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, buildLocation, reclaimRadius)
                             -- check to see if we can repair
                         RUtils.EngineerTryRepair(aiBrain, eng, whatToBuild, buildLocation)
                                 -- otherwise, go ahead and build the next structure there

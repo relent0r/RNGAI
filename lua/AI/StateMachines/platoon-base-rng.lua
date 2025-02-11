@@ -1,5 +1,6 @@
 local AIBasePlatoon = import("/lua/aibrains/platoons/platoon-base.lua").AIPlatoon
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 
 ---@class AIPlatoon : moho.platoon_methods
 ---@field BuilderData table
@@ -28,6 +29,9 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
         local maxPlatoonStrikeRadius = 20
         local maxPlatoonStrikeRadiusDistance = 0
         local intelrange = 0
+        if not self['rngdata'] then
+            self['rngdata'] = {}
+        end
         for k, unit in units do
             if not unit['rngdata'] then
                 unit['rngdata'] = {}
@@ -44,80 +48,63 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
             if not unit.Dead and unit:TestToggleCaps('RULEUTC_CloakToggle') then
                 unit:SetScriptBit('RULEUTC_CloakToggle', false)
             end
-            if unitBp.Weapon then
-                if unitCats.BOMBER then
-                    for _, weapon in unitBp.Weapon or {} do
-                        if (weapon.WeaponCategory == 'Bomb' or weapon.RangeCategory == 'UWRC_DirectFire') then
-                            unit['rngdata'].DamageRadius = weapon.DamageRadius
-                            unit['rngdata'].StrikeDamage = weapon.Damage * weapon.MuzzleSalvoSize
-                            if weapon.InitialDamage then
-                                unit['rngdata'].StrikeDamage = unit['rngdata'].StrikeDamage + (weapon.InitialDamage * weapon.MuzzleSalvoSize)
-                            end
-                            unit['rngdata'].StrikeRadiusDistance = weapon.MaxRadius
-                            maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + unit['rngdata'].StrikeDamage
-                            --LOG('Bomber Weapon radius is '..repr(weapon.DamageRadius))
-                            if weapon.DamageRadius > 0 or  weapon.DamageRadius < maxPlatoonStrikeRadius then
-                                maxPlatoonStrikeRadius = weapon.DamageRadius
-                            end
-                            if unit['rngdata'].StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
-                                maxPlatoonStrikeRadiusDistance = unit['rngdata'].StrikeRadiusDistance
-                            end
-                        elseif weapon.WeaponCategory == 'Anti Navy' and unitCats.AIR then
-                            unit['rngdata'].DamageRadius = weapon.DamageRadius
-                            unit['rngdata'].StrikeDamage = weapon.Damage * weapon.MuzzleSalvoSize
-                            if weapon.InitialDamage then
-                                unit['rngdata'].StrikeDamage = unit['rngdata'].StrikeDamage + (weapon.InitialDamage * weapon.MuzzleSalvoSize)
-                            end
-                            unit['rngdata'].StrikeRadiusDistance = weapon.MaxRadius
-                            maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + unit['rngdata'].StrikeDamage
-                            --LOG('Torp Bomber Weapon radius is '..repr(weapon.DamageRadius))
-                            if weapon.DamageRadius > 0 or  weapon.DamageRadius < maxPlatoonStrikeRadius then
-                                maxPlatoonStrikeRadius = weapon.DamageRadius
-                            end
-                            if unit['rngdata'].StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
-                                maxPlatoonStrikeRadiusDistance = unit['rngdata'].StrikeRadiusDistance
+            StateUtils.SetUnitCategoryRanges(unit)
+            if unitCats.BOMBER or unitCats.GUNSHIP then
+                if unitBp.Weapon then
+                    if unitCats.BOMBER then
+                        for _, weapon in unitBp.Weapon or {} do
+                            if (weapon.WeaponCategory == 'Bomb' or weapon.RangeCategory == 'UWRC_DirectFire') then
+                                unit['rngdata'].DamageRadius = weapon.DamageRadius
+                                unit['rngdata'].StrikeDamage = weapon.Damage * weapon.MuzzleSalvoSize
+                                if weapon.InitialDamage then
+                                    unit['rngdata'].StrikeDamage = unit['rngdata'].StrikeDamage + (weapon.InitialDamage * weapon.MuzzleSalvoSize)
+                                end
+                                unit['rngdata'].StrikeRadiusDistance = weapon.MaxRadius
+                                maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + unit['rngdata'].StrikeDamage
+                                --LOG('Bomber Weapon radius is '..repr(weapon.DamageRadius))
+                                if weapon.DamageRadius > 0 or  weapon.DamageRadius < maxPlatoonStrikeRadius then
+                                    maxPlatoonStrikeRadius = weapon.DamageRadius
+                                end
+                                if unit['rngdata'].StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
+                                    maxPlatoonStrikeRadiusDistance = unit['rngdata'].StrikeRadiusDistance
+                                end
+                            elseif weapon.WeaponCategory == 'Anti Navy' and unitCats.AIR then
+                                unit['rngdata'].DamageRadius = weapon.DamageRadius
+                                unit['rngdata'].StrikeDamage = weapon.Damage * weapon.MuzzleSalvoSize
+                                if weapon.InitialDamage then
+                                    unit['rngdata'].StrikeDamage = unit['rngdata'].StrikeDamage + (weapon.InitialDamage * weapon.MuzzleSalvoSize)
+                                end
+                                unit['rngdata'].StrikeRadiusDistance = weapon.MaxRadius
+                                maxPlatoonStrikeDamage = maxPlatoonStrikeDamage + unit['rngdata'].StrikeDamage
+                                --LOG('Torp Bomber Weapon radius is '..repr(weapon.DamageRadius))
+                                if weapon.DamageRadius > 0 or  weapon.DamageRadius < maxPlatoonStrikeRadius then
+                                    maxPlatoonStrikeRadius = weapon.DamageRadius
+                                end
+                                if unit['rngdata'].StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
+                                    maxPlatoonStrikeRadiusDistance = unit['rngdata'].StrikeRadiusDistance
+                                end
                             end
                         end
+                        if unitCats.STRATEGICBOMBER then
+                            self.StratBomberPresent = true
+                        end
+                        --LOG('Have set units DamageRadius to '..maxPlatoonStrikeRadius)
                     end
-                    --LOG('Have set units DamageRadius to '..maxPlatoonStrikeRadius)
-                end
-                if unitCats.GUNSHIP and not unit['rngdata'].ApproxDPS then
-                    for _, weapon in unitBp.Weapon or {} do
-                        if not weapon.CannotAttackGround and weapon.RangeCategory == 'UWRC_DirectFire' then
-                            unit['rngdata'].ApproxDPS = RUtils.CalculatedDPSRNG(weapon) --weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
-                            maxPlatoonDPS = maxPlatoonDPS + unit['rngdata'].ApproxDPS
-                        end
-                    end
-                end
-                if not unit['rngdata'].MaxWeaponRange and unitBp.Weapon[1].MaxRadius and not unitBp.Weapon[1].ManualFire then
-                    unit['rngdata'].MaxWeaponRange = unitBp.Weapon[1].MaxRadius
-                end
-                if not unit['rngdata'].MaxWeaponRange then
-                    for _, weapon in unitBp.Weapon or {} do
-                        -- unit can have MaxWeaponRange entry from the last platoon
-                        if weapon.WeaponCategory == 'Anti Air' then
-                            continue
-                        end
-                        if not unit['rngdata'].MaxWeaponRange or weapon.MaxRadius > unit['rngdata'].MaxWeaponRange then
-                            -- save the weaponrange 
-                            unit['rngdata'].MaxWeaponRange = weapon.MaxRadius * 0.9 -- maxrange minus 10%
-                            -- save the weapon balistic arc, we need this later to check if terrain is blocking the weapon line of sight
-                            if weapon.BallisticArc == 'RULEUBA_LowArc' then
-                                unit['rngdata'].WeaponArc = 'low'
-                            elseif weapon.BallisticArc == 'RULEUBA_HighArc' then
-                                unit['rngdata'].WeaponArc = 'high'
-                            else
-                                unit['rngdata'].WeaponArc = 'none'
+                    if unitCats.GUNSHIP and not unit['rngdata'].ApproxDPS then
+                        for _, weapon in unitBp.Weapon or {} do
+                            if not weapon.CannotAttackGround and weapon.RangeCategory == 'UWRC_DirectFire' then
+                                unit['rngdata'].ApproxDPS = RUtils.CalculatedDPSRNG(weapon) --weaponBlueprint.RateOfFire * (weaponBlueprint.MuzzleSalvoSize or 1) *  weaponBlueprint.Damage
+                                maxPlatoonDPS = maxPlatoonDPS + unit['rngdata'].ApproxDPS
                             end
                         end
                     end
                 end
-                if unit['rngdata'].MaxWeaponRange and (unitBp.Weapon and unitBp.Weapon[1].RangeCategory == 'UWRC_DirectFire' and not self.MaxDirectFireRange or self.MaxDirectFireRange < unit['rngdata'].MaxWeaponRange) and not unitCats.SCOUT then
-                    self.MaxDirectFireRange = unit['rngdata'].MaxWeaponRange
-                end
-                if unit['rngdata'].MaxWeaponRange and (not self.MaxPlatoonWeaponRange or self.MaxPlatoonWeaponRange < unit['rngdata'].MaxWeaponRange) then
-                    self.MaxPlatoonWeaponRange = unit['rngdata'].MaxWeaponRange
-                end
+            end
+            if (unit['rngdata'].CategoryDirectFireRange and not self['rngdata'].MaxDirectFireRange or self['rngdata'].MaxDirectFireRange and self['rngdata'].MaxDirectFireRange < unit['rngdata'].CategoryDirectFireRange) and not unitCats.SCOUT then
+                self['rngdata'].MaxDirectFireRange = unit['rngdata'].MaxWeaponRange
+            end
+            if unit['rngdata'].MaxWeaponRange and (not self['rngdata'].MaxPlatoonWeaponRange or self['rngdata'].MaxPlatoonWeaponRange < unit['rngdata'].MaxWeaponRange) then
+                 self['rngdata'].MaxPlatoonWeaponRange = unit['rngdata'].MaxWeaponRange
             end
             if not unit['rngdata'].MaxWeaponRange then
                 unit['rngdata'].MaxWeaponRange = 0
@@ -131,8 +118,8 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                 end
             end
             if unitCats.ARTILLERY and ( unitCats.STRUCTURE and unitCats.TECH3 or unitCats.EXPERIMENTAL ) then
-                if unit.Blueprint.Weapon[1].MaxRadius > self.MaxPlatoonWeaponRange then
-                    self.MaxPlatoonWeaponRange = unit.Blueprint.Weapon[1].MaxRadius
+                if unit.Blueprint.Weapon[1].MaxRadius > self['rngdata'].MaxPlatoonWeaponRange then
+                    self['rngdata'].MaxPlatoonWeaponRange = unit.Blueprint.Weapon[1].MaxRadius
                 end
                 if not self.ArtilleryUnits then
                     self.ArtilleryUnits = {}
@@ -196,22 +183,22 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
             end
         end
         if maxPlatoonStrikeDamage > 0 then
-            self.PlatoonStrikeDamage = maxPlatoonStrikeDamage
+            self['rngdata'].PlatoonStrikeDamage = maxPlatoonStrikeDamage
         end
         if maxPlatoonStrikeRadius > 0 then
-            self.PlatoonStrikeRadius = maxPlatoonStrikeRadius
+            self['rngdata'].PlatoonStrikeRadius = maxPlatoonStrikeRadius
         end
         if maxPlatoonStrikeRadiusDistance > 0 then
-            self.PlatoonStrikeRadiusDistance = maxPlatoonStrikeRadiusDistance
+            self['rngdata'].PlatoonStrikeRadiusDistance = maxPlatoonStrikeRadiusDistance
         end
         if maxPlatoonDPS > 0 then
-            self.MaxPlatoonDPS = maxPlatoonDPS
+            self['rngdata'].MaxPlatoonDPS = maxPlatoonDPS
         end
         if intelrange > 0 then
-            self.IntelRange = intelrange
+            self['rngdata'].IntelRange = intelrange
         end
-        if not self.MaxPlatoonWeaponRange then
-            self.MaxPlatoonWeaponRange=20
+        if not self['rngdata'].MaxPlatoonWeaponRange then
+            self['rngdata'].MaxPlatoonWeaponRange = 20
         end
     end,
 
@@ -255,12 +242,12 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                     unit.BuildFailedCount = nil
                     unit.AIPlatoonReference = nil
                     unit.Active = nil
-                    if unit:IsPaused() then
+                    if not unit.Dead and unit:IsPaused() then
                         unit:SetPaused(false)
                     end
                     if not unit.Dead and unit.BuilderManagerData then
                         if unit.BuilderManagerData.EngineerManager then
-                            unit.BuilderManagerData.EngineerManager:TaskFinishedRNG(unit)
+                            unit.BuilderManagerData.EngineerManager:TaskFinished(unit)
                             if unit.PlatoonHandle.Home and unit.PlatoonHandle.LocationType and unit.PlatoonHandle.LocationType ~= 'FLOATING' then
                                 local hx = unit.PlatoonHandle.Pos[1] - unit.PlatoonHandle.Home[1]
                                 local hz = unit.PlatoonHandle.Pos[3] - unit.PlatoonHandle.Home[3]

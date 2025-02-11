@@ -92,9 +92,9 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                 --self:LogDebug(string.format('Current status at position is '..tostring(currentStatus)))
             end
             if threat.allySub and threat.enemySub and threat.enemyrange > 0 
-            and (threat.allySub*1.1 < threat.enemySub and threat.enemyrange >= self.MaxPlatoonWeaponRange or threat.allySub*1.3 < threat.enemySub) and currentStatus ~= 'Allied'
+            and (threat.allySub*1.1 < threat.enemySub and threat.enemyrange >= self['rngdata'].MaxPlatoonWeaponRange or threat.allySub*1.3 < threat.enemySub) and currentStatus ~= 'Allied'
             or threat.allySub and threat.enemySub and threat.allySurface and threat.enemySurface and threat.enemyrange > 0 and (threat.allySurface*1.1 < threat.enemySurface 
-            and threat.allySub*1.1 < threat.enemySub and threat.enemyrange >= self.MaxPlatoonWeaponRange or threat.allySub*1.3 < threat.enemySub and threat.allySurface*1.1 < threat.enemySurface) and currentStatus ~= 'Allied' then
+            and threat.allySub*1.1 < threat.enemySub and threat.enemyrange >= self['rngdata'].MaxPlatoonWeaponRange or threat.allySub*1.3 < threat.enemySub and threat.allySurface*1.1 < threat.enemySurface) and currentStatus ~= 'Allied' then
                 --self:LogDebug(string.format('Retreating due to threat'))
                 --self:LogDebug(string.format('Enemy Threat '..threat.enemyTotal..' max enemy weapon range '..threat.enemyrange))
                 --self:LogDebug(string.format('Ally Threat '..threat.allyTotal..' max ally weapon range '..threat.allyrange))
@@ -145,10 +145,8 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                 local targetCandidates
                 local searchFilter = (categories.NAVAL + categories.AMPHIBIOUS + categories.HOVER + categories.HOVER + categories.STRUCTURE) - categories.INSIGNIFICANTUNIT
                 if self.CurrentPlatoonThreatAntiSurface == 0 then
-                    --self:LogDebug(string.format('Looking for sub target via IMAP'))
                     targetCandidates = StateUtils.GetClosestTargetByIMAP(aiBrain, self, self.Home, 'Naval', searchFilter, 'AntiSub', 'Sub')
                 else
-                    --self:LogDebug(string.format('Looking for target via IMAP'))
                     targetCandidates = StateUtils.GetClosestTargetByIMAP(aiBrain, self, self.Home, 'Naval', searchFilter, 'AntiSub', 'Water')
                 end
                 if targetCandidates then
@@ -303,8 +301,8 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             end
             --self:LogDebug(string.format('Navigating platoon'))
             local searchRange
-            if self.MaxDirectFireRange then
-                searchRange = math.max(self.MaxDirectFireRange, self.EnemyRadius)
+            if self['rngdata'].MaxDirectFireRange then
+                searchRange = math.max(self['rngdata'].MaxDirectFireRange, self.EnemyRadius)
             else
                 searchRange = self.EnemyRadius
             end
@@ -317,7 +315,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
             IssueClearCommands(platUnits)
             local waypoint, length
             local endPoint = false
-            local navigateDistanceCutOff = math.max((self.MaxPlatoonWeaponRange * self.MaxPlatoonWeaponRange), 900)
+            local navigateDistanceCutOff = math.max((self['rngdata'].MaxPlatoonWeaponRange * self['rngdata'].MaxPlatoonWeaponRange), 900)
             while not IsDestroyed(self) do
                 local origin = self:GetPlatoonPosition()
                 local platoonUnits = self:GetPlatoonUnits()
@@ -401,7 +399,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                                 if dist < 225 then
                                     self:Stop()
                                     if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
-                                        local merged = StateUtils.MergeWithNearbyPlatoonsRNG(self, 'NavalCombatBehavior', 60, 25, false)
+                                        local merged = StateUtils.MergeWithNearbyPlatoonsRNG(self, 'NavalCombatBehavior', 65, 25, false)
                                         if not merged then
                                             --self:LogDebug(string.format('We didnt merge for some reason'))
                                         end
@@ -578,7 +576,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                     if dist < 225 then
                         self:Stop()
                         if mergePlatoon and PlatoonExists(aiBrain, mergePlatoon) then
-                            StateUtils.MergeWithNearbyPlatoonsRNG(self, 'NavalCombatBehavior', 60, 25, true)
+                            StateUtils.MergeWithNearbyPlatoonsRNG(self, 'NavalCombatBehavior', 65, 25, true)
                         end
                         self:ChangeState(self.DecideWhatToDo)
                         return
@@ -597,7 +595,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                     end
                     if baseRetreat then
                         local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false)
-                        if threat.allyTotal and threat.enemyTotal and threat.enemyrange > 0 and (threat.allyTotal > threat.enemyTotal*1.1 and threat.enemyrange <= self.MaxPlatoonWeaponRange or threat.allySub > threat.enemySub*1.2) then
+                        if threat.allyTotal and threat.enemyTotal and threat.enemyrange > 0 and (threat.allyTotal > threat.enemyTotal*1.1 and threat.enemyrange <= self['rngdata'].MaxPlatoonWeaponRange or threat.allySub > threat.enemySub*1.2) then
                             self:ChangeState(self.DecideWhatToDo)
                             return
                         end
@@ -725,7 +723,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                                 continue
                             end
                         end
-                        StateUtils.VariableKite(self,v,target)
+                        StateUtils.VariableKite(self,v,target,nil,true)
                     end
                 end
             end

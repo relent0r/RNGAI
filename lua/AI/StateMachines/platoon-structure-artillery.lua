@@ -77,7 +77,7 @@ AIArtilleryBehavior = Class(AIPlatoonRNG) {
             self.LocationType = self.PlatoonData.LocationType or 'MAIN'
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             local platoonUnits = self:GetPlatoonUnits()
-            self.MaxPlatoonWeaponRange = 0
+            self['rngdata'].MaxPlatoonWeaponRange = 0
             self.AdjacentShields = {}
             self.AdjacentPower = {}
             self.ArtilleryUnits = {}
@@ -92,7 +92,7 @@ AIArtilleryBehavior = Class(AIPlatoonRNG) {
                              categories.ALLUNITS,
                         }
             self:SetPrioritizedTargetList('artillery',atkPri)
-            --self:LogDebug(string.format('Strategic Artillery Max Weapon Range is '..tostring(self.MaxPlatoonWeaponRange)))
+            --self:LogDebug(string.format('Strategic Artillery Max Weapon Range is '..tostring(self['rngdata'].MaxPlatoonWeaponRange)))
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -142,7 +142,7 @@ AIArtilleryBehavior = Class(AIPlatoonRNG) {
                 local artilleryCount = 0
                 local targetCount = 0
                 --self:LogDebug(string.format('Strategic Artillery No director target, searching for prioritized'))
-                local target = self:FindPrioritizedUnit('artillery', 'Enemy', true, self.Home, self.MaxPlatoonWeaponRange + 50)
+                local target = self:FindPrioritizedUnit('artillery', 'Enemy', true, self.Home, self['rngdata'].MaxPlatoonWeaponRange + 50)
                 if target and not target.Dead then
                     --self:LogDebug(string.format('Strategic Artillery Prioritized Target Found'))
                     local targetPos = target:GetPosition()
@@ -189,7 +189,7 @@ AIArtilleryBehavior = Class(AIPlatoonRNG) {
         ---@param self AIArtilleryBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
-            local maxPlatoonRange = self.MaxPlatoonWeaponRange
+            local maxPlatoonRange = self['rngdata'].MaxPlatoonWeaponRange
             local targetRotation = 0
             self:Stop()
             local breakRotation = false

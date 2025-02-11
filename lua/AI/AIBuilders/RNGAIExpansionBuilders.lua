@@ -29,8 +29,10 @@ local NavalExpansionAdjust = function(self, aiBrain, builderManager)
             validAttackPriorityModifier = validAttackPriorityModifier + 100
         end
     end
-    if aiBrain.BrainIntel.AirPlayer then
+    if aiBrain.BrainIntel.PlayerRole.AirPlayer then
         return 0
+    elseif aiBrain.BrainIntel.PlayerRole.NavalPlayer then
+        return 1000
     elseif aiBrain.MapWaterRatio < 0.20 and not aiBrain.MassMarkersInWater then
         --RNGLOG('NavalExpansionAdjust return 0')
         return 0
@@ -83,7 +85,7 @@ end
 
 local FrigateRaid = function(self, aiBrain, builderManager)
     -- Will return the rush naval build if it can raid mexes
-    if aiBrain.EnemyIntel.FrigateRaid and not aiBrain.BrainIntel.AirPlayer then
+    if aiBrain.EnemyIntel.FrigateRaid and not aiBrain.BrainIntel.PlayerRole.AirPlayer then
         --RNGLOG('Frigate Raid priority function is 995')
         --LOG('Returning Naval Frigate Raid Expansion Priority of 1000')
         return 1000
@@ -101,6 +103,7 @@ BuilderGroup {
         Priority = 997,
         InstanceCount = 1,
         BuilderConditions = {
+            { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'ZoneAvailableRNG', { 'LocationType' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -132,6 +135,7 @@ BuilderGroup {
         Priority = 995,
         InstanceCount = 1,
         BuilderConditions = {
+            { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'ZoneAvailableRNG', { 'LocationType' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
@@ -169,6 +173,7 @@ BuilderGroup {
         PriorityFunction = FrigateRaid,
         InstanceCount = 1,
         BuilderConditions = {
+            { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
             { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', false, 250, -1000, 100, 1, 'AntiSurface' } },
@@ -204,6 +209,7 @@ BuilderGroup {
         PriorityFunction = NavalExpansionAdjust,
         InstanceCount = 1,
         BuilderConditions = {
+            { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'NavalBaseLimitRNG', { 2 } }, -- Forces limit to the number of naval expansions
             { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 3,  categories.FACTORY * categories.STRUCTURE }},
             { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', true, 250, -1000, 100, 1, 'AntiSurface' } },
@@ -247,6 +253,7 @@ BuilderGroup {
         PriorityFunction = FrigateRaid,
         InstanceCount = 1,
         BuilderConditions = {
+            { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
             { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', false, 250, -1000, 100, 1, 'AntiSurface' } },
@@ -282,6 +289,7 @@ BuilderGroup {
         Priority = 750,
         InstanceCount = 1,
         BuilderConditions = {
+            { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'NavalBaseLimitRNG', { 3 } }, -- Forces limit to the number of naval expansions
             { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', true, 650, -1000, 100, 1, 'AntiSurface' } },

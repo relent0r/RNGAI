@@ -12,7 +12,7 @@ BuilderGroup {
         Priority = 710,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Engineer', 'T3', 'sacueng'} },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading', nil, true}},
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
@@ -53,7 +53,7 @@ BuilderGroup {
         Priority = 710,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Engineer', 'T3', 'sacueng'} },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading', nil, true}},
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 3.0, 450.0 } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

@@ -6,6 +6,12 @@ Unit = Class(RNGUnitClass) {
         RNGUnitClass.OnStopBeingCaptured(self, captor)
         RNGEventCallbacks.OnStopBeingCaptured(self, captor)
     end,
+    --[[
+    OnCreate = function(self)
+        RNGUnitClass.OnCreate(self)
+        if RNGUnitClass.OnCreate then ForkThread(RNGEventCallbacks.OnCreate, self) end
+    end,
+    ]]
 
     OnKilled = function(self, instigator, type, overkillRatio)
         RNGEventCallbacks.OnKilled(self, instigator, type, overkillRatio)
@@ -44,7 +50,7 @@ Unit = Class(RNGUnitClass) {
                 end
     
                 if enhancementBp.ZephyrDamageMod and enhancementBp.ZephyrDamageMod > 0 then
-                    threatReturn = threatReturn + 25
+                    threatReturn = threatReturn + 20
                 end
 
                 if enhancementBp.ShieldMaxHealth and enhancementBp.ShieldMaxHealth > 0 then
@@ -53,6 +59,9 @@ Unit = Class(RNGUnitClass) {
 
                 if enhancementBp.NewHealth and enhancementBp.NewHealth > 0 then
                     threatReturn = threatReturn + 12
+                end
+                if enhancementBp.AdditionalDamage and enhancementBp.AdditionalDamage > 500 then
+                    threatReturn = threatReturn + 45
                 end
 
             end

@@ -231,19 +231,16 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                 for _, unit in self:GetPlatoonUnits() do
                     local fuel = unit:GetFuelRatio()
                     local health = unit:GetHealthPercent()
-                    if (not unit.Loading or (fuel >= 1.0 and health >= 1.0)) and (not unit:IsUnitState('Attached')) then
-                        ----self:LogDebug(string.format('Air Refuel complete is true '))
+                    if (not unit.Loading or (fuel >= 0.98 and health >= 1.0)) and (not unit:IsUnitState('Attached')) then
                         refuelComplete = true
                         unit.Loading = false
                     end
-                    ----self:LogDebug(string.format('Air Refuel fuel is '..fuel))
-                    ----self:LogDebug(string.format('Air Refuel health is '..health))
                 end
+                
                 if IsDestroyed(self) then
                     return
                 end
                 refuelTimeout = refuelTimeout + 1
-                ----self:LogDebug(string.format('Air Refuel timeout is '..refuelTimeout))
             end
             local platUnits = self:GetPlatoonUnits()
             if refuelTimeout >= 30 then

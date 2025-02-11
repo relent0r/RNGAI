@@ -1,3 +1,4 @@
+local RNGAIGLOBALS = import("/mods/RNGAI/lua/AI/RNGAIGlobals.lua")
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
@@ -20,7 +21,7 @@ local CategoriesEnergy = categories.ENERGYPRODUCTION * (categories.TECH2 + categ
 local CategoriesDefense = categories.DEFENSE * categories.STRUCTURE - categories.WALL - categories.SILO
 local CategoriesStrategic = categories.STRATEGIC * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL)
 local CategoriesIntelligence = categories.INTELLIGENCE * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL)
-local CategoriesFactory = categories.FACTORY * (categories.TECH2 + categories.TECH3 ) - categories.SUPPORTFACTORY - categories.EXPERIMENTAL - categories.CRABEGG - categories.CARRIER
+local CategoriesFactory = categories.FACTORY * categories.STRUCTURE - categories.SUPPORTFACTORY - categories.EXPERIMENTAL - categories.CRABEGG - categories.CARRIER
 local CategoriesShield = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE
 local CategoriesLandDefense = categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE
 local CategoriesSMD = categories.TECH3 * categories.ANTIMISSILE * categories.SILO
@@ -62,7 +63,6 @@ IntelManager = Class {
             ScoutLocationsBuilt = false,
             IntelCoverage = 0,
             MustScoutArea = false,
-            PerimeterExpired = false
         }
         self.MapMaximumValues = {
             MaximumResourceValue = 0,
@@ -97,6 +97,18 @@ IntelManager = Class {
                     }
                 },
                 Kills = {}
+            },
+            ExperimentalLand = {
+                Deaths = {
+                    Mass = 0
+                },
+                Kills = {
+                    Mass = 0
+                },
+                Built = {
+                    Mass = 0
+                },
+                Efficiency = 0
             },
             Gunship = {
                 Deaths = {
@@ -275,6 +287,7 @@ IntelManager = Class {
         self:ForkThread(self.IntelGridThread, self.Brain)
         self:ForkThread(self.ZoneExpansionThreadRNG)
         self:ForkThread(self.TacticalIntelCheck)
+        self.Brain:ForkThread(self.Brain.BuildScoutLocationsRNG)
         --self:ForkThread(self.DrawZoneArmyValue)
         if self.Debug then
             self:ForkThread(self.IntelDebugThread)
@@ -429,15 +442,18 @@ IntelManager = Class {
 
         while true do
             --LOG('Running zone expansion check for '..tostring(aiBrain.Nickname))
+            local maxDistance
             local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
-            local maxDistance = math.max(playableArea[2],playableArea[4])
+            if not playableArea then
+                maxDistance = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
+            end
+            maxDistance = math.max(playableArea[3],playableArea[4])
             maxDistance = maxDistance * maxDistance
             local zoneSet = aiBrain.Zones.Land.zones
             local zonePriorityList = {}
             local gameTime = GetGameTimeSeconds()
             local labelBaseValues = {}
             local labelResourceValue = {}
-            local potentialAcuExpansionCount
 
             for k, v in zoneSet do
                 if v.BuilderManager.BaseType and v.BuilderManager.BaseType == 'MAIN' and v.BuilderManager.FactoryManager.LocationActive then
@@ -522,7 +538,7 @@ IntelManager = Class {
                         local higherValueExists = false
                         if zone.Label ~= mainBaseLabel then
                             for _, resValue in ipairs(labelResourceValue[zone.Label] or {}) do
-                                if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive and zoneSet[resValue.ZoneID].BuilderManager.Location ~= 'MAIN' then
+                                if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive and zoneSet[resValue.ZoneID].BuilderManager.BaseType ~= 'MAIN' then
                                     --LOG('Already have an active factory manager there on label '..tostring(zone.Label))
                                     --LOG('Location is '..tostring(zoneSet[resValue.ZoneID].pos[1])..' : '..tostring(zoneSet[resValue.ZoneID].pos[3]))
                                     higherValueExists = true
@@ -629,11 +645,11 @@ IntelManager = Class {
             local bestZone
             local control
             for k, v in zoneSet do
-                if controlRequired then
-                    control = aiBrain.GridPresence:GetInferredStatus(v.pos)
-                end
                 if minimumResourceValue and v.resourcevalue < minimumResourceValue then
                     continue
+                end
+                if controlRequired then
+                    control = aiBrain.GridPresence:GetInferredStatus(v.pos)
                 end
                 local dx = originPosition[1] - v.pos[1]
                 local dz = originPosition[3] - v.pos[3]
@@ -642,8 +658,8 @@ IntelManager = Class {
                     if enemyPosition then 
                         local ex = enemyPosition[1] - v.pos[1]
                         local ez = enemyPosition[3] - v.pos[3]
-                        local enemyDistDist = ex * ex + ez * ez
-                        if enemyDistDist < zoneDist or RUtils.GetAngleRNG(originPosition[1], originPosition[3], v.pos[1], v.pos[3], enemyPosition[1], enemyPosition[3]) < 0.4 then
+                        local enemyDist = ex * ex + ez * ez
+                        if enemyDist < zoneDist or RUtils.GetAngleRNG(originPosition[1], originPosition[3], v.pos[1], v.pos[3], enemyPosition[1], enemyPosition[3]) < 0.4 or (not controlRequired and enemyDist < 400) then
                             continue
                         end
                     end
@@ -666,6 +682,42 @@ IntelManager = Class {
         end
     end,
 
+    CalculateZoneModifiers = function(self, zone)
+        local GetControlValue = function(status)
+            if status == 'Allied' then
+                return 1
+            elseif status == 'Hostile' then
+                return 0
+            elseif status == 'Contested' then
+                return 0.5
+            elseif status == 'Unoccupied' then
+                return 0.25
+            else
+                return 0  -- Default in case of an unexpected value
+            end
+        end
+        -- Transport Modifier
+        local aiBrain = self.Brain
+        local transportModifier = 1
+    
+        -- Distance Modifier
+        local dx = zone.pos[1] - aiBrain.BrainIntel.StartPos[1]
+        local dz = zone.pos[3] - aiBrain.BrainIntel.StartPos[3]
+        local distanceModifier = math.sqrt(dx * dx + dz * dz)
+    
+        -- Threat Modifier
+        local friendlyThreat = (zone.friendlyantisurfacethreat or 0) + 0.1 -- Only the zone's current friendly threat
+        local threatRatio = zone.enemyantisurfacethreat / friendlyThreat
+        local enemyModifier = 1 / (1 + threatRatio)
+    
+        -- Control Status Modifier
+        local contestedWeight = 0.5 -- Adjust as needed
+        local controlValue = GetControlValue(aiBrain.GridPresence:GetInferredStatus(zone.pos))
+        local controlModifier = (1 - controlValue) + contestedWeight
+    
+        return transportModifier, distanceModifier, enemyModifier, controlModifier
+    end,
+
     SelectZoneRNG = function(self, aiBrain, platoon, type, requireSameLabel)
         -- Tricky subject. Distance + threat + percentage of zones owned. If own a high value position do we pay more attention to the edges of that zone? 
         --A multiplier to adjacent edges if you would. We know how many and of what tier extractors we have in a zone. Actually getting an engineer to expand by zone would be interesting.
@@ -677,12 +729,11 @@ IntelManager = Class {
             local selection
             local platoonLabel = platoon.Label
             local currentPlatoonPos = platoon.Pos
+            local enemyDanger = 1.0
             if requireSameLabel and platoon.MovementLayer == 'Amphibious' then
                 local myLabel = NavUtils.GetLabel('Land', platoon.Pos)
                 platoonLabel = myLabel
             end
-            local enemyMexmodifier = 0.1
-            local enemyDanger = 1.0
             local enemyX, enemyZ
             if not platoon.Zone then
                 WARN('RNGAI : Select Zone platoon has no zone attribute '..platoon.PlanName)
@@ -852,12 +903,6 @@ IntelManager = Class {
                                 controlValue = 0.25
                             end
                             local resourceValue = v.resourcevalue or 1
-                            if resourceValue then
-                            --RNGLOG('Current platoon zone '..platoon.Zone..' target zone is '..v.zone.id..' enemythreat is '..v.enemylandthreat..' friendly threat is '..v.friendlyantisurfacethreat)
-                            --RNGLOG('Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(v.pos)..' Enemy Modifier is '..enemyModifier)
-                            else
-                                --RNGLOG('No resource against zone '..v.zone.id)
-                            end
                             if v.startpositionclose then
                                 startPos = 0.7
                             end
@@ -888,6 +933,7 @@ IntelManager = Class {
                         end
                     end
                     if not selection then
+                        --LOG('No Selection was found')
                         for k, v in zoneSet do
                             if v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
                                 if requireSameLabel and platoonLabel and v.label > 0 and platoonLabel ~= v.label then
@@ -930,6 +976,7 @@ IntelManager = Class {
                         end
                     end
                     if selection then
+                        --LOG('Zone Selection was '..tostring(zoneSelection))
                         return zoneSelection
                     else
                        --RNGLOG('RNGAI : Zone Control Selection Query did not select zone')
@@ -969,6 +1016,8 @@ IntelManager = Class {
                     local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
                     local myAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow
                     local enemyThreatRatio = 0
+                    local ignoreHomeBase = platoon.Zone and aiBrain.BuilderManagers[platoon.LocationType].Zone and platoon.Zone == aiBrain.BuilderManagers[platoon.LocationType].Zone and 
+                        aiBrain.BasePerimeterMonitor[platoon.LocationType].AirThreat and aiBrain.BasePerimeterMonitor[platoon.LocationType].AirThreat < 1
                     if zoneCount > 0 and enemyAirThreat > 0 and myAirThreat > 0 then
                         enemyThreatRatio = math.min((enemyAirThreat / myAirThreat * zoneCount), 25)
                     end
@@ -978,6 +1027,9 @@ IntelManager = Class {
                     for k, v in zoneSet do
                         if v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
                             if requireSameLabel and platoonLabel and v.label > 0 and platoonLabel ~= v.label then
+                                continue
+                            end
+                            if ignoreHomeBase then
                                 continue
                             end
                             if v.friendlyantiairallocatedthreat > math.max(v.enemyairthreat, enemyThreatRatio) then
@@ -1078,10 +1130,19 @@ IntelManager = Class {
         self:WaitForZoneInitialization()
         coroutine.yield(Random(5,20))
         local aiBrain = self.Brain
+        local selfIndex = aiBrain:GetArmyIndex()
+        local ownedZones = 0
+        local totalZones = 0
         while aiBrain.Status ~= "Defeat" do
             for k, v in Zones do
                 for k1, v1 in aiBrain.Zones[v].zones do
                     local status = aiBrain.GridPresence:GetInferredStatus(v1.pos)
+                    if v1.bestarmy == selfIndex then
+                        totalZones = totalZones + 1
+                        if status == 'Allied' then
+                            ownedZones = ownedZones + 1
+                        end
+                    end
                     if not v1.startpositionclose and status == 'Allied' and v1.enemylandthreat > 0 then
                         --RNGLOG('Try create zone alert for threat')
                         aiBrain:BaseMonitorZoneThreatRNG(v1.id, v1.enemylandthreat)
@@ -1089,6 +1150,11 @@ IntelManager = Class {
                     coroutine.yield(5)
                 end
                 coroutine.yield(3)
+            end
+            if ownedZones > 0 then
+                aiBrain.BrainIntel.PlayerZoneControl = ownedZones / totalZones
+            else 
+                aiBrain.BrainIntel.PlayerZoneControl = 0
             end
             coroutine.yield(40)
         end
@@ -1403,15 +1469,15 @@ IntelManager = Class {
         end
         coroutine.yield(Random(5,20))
         local teamAveragePositions = self:GetTeamAveragePositions()
-        self:CalculatePlayerSlot()
+        self:ForkThread(self.CalculatePlayerSlot)
         local maximumResourceValue = 0
         local Zones = {
             'Land',
             'Naval'
         }
         local expansionSize = math.min((aiBrain.MapDimension / 2), 180)
-        for k, v in Zones do
-            for k1, v1 in aiBrain.Zones[v].zones do
+        for _, v in Zones do
+            for _, v1 in aiBrain.Zones[v].zones do
                 v1.label = self:ZoneSetLabelAssignment(v, v1.pos)
                 if v1.resourcevalue > maximumResourceValue then
                     maximumResourceValue = v1.resourcevalue
@@ -1517,6 +1583,7 @@ IntelManager = Class {
         local closestPlayer = false
         local aiBrain = self.Brain
         local selfIndex = aiBrain:GetArmyIndex()
+        coroutine.yield(selfIndex)
         if aiBrain.BrainIntel.AllyCount > 2 and aiBrain.EnemyIntel.EnemyCount > 0 then
             local closestIndex
             local closestDistance
@@ -1531,12 +1598,18 @@ IntelManager = Class {
                     closestIndex = b.Index
                 end
             end
-            
-            selfDistanceToEnemy = VDist3Sq(aiBrain.BrainIntel.StartPos, aiBrain.EnemyIntel.EnemyStartLocations[closestIndex].Position)
+            local teamAveragePositions = self:GetTeamAveragePositions()
+            local teamEnemyAveragePosition
+            local teamAllyAveragePosition
+            if teamAveragePositions['Enemy'].x and teamAveragePositions['Enemy'].z then
+                teamEnemyAveragePosition = {teamAveragePositions['Enemy'].x,GetSurfaceHeight(teamAveragePositions['Enemy'].x, teamAveragePositions['Enemy'].z), teamAveragePositions['Enemy'].z}
+            end
+
+            selfDistanceToEnemy = VDist3Sq(aiBrain.BrainIntel.StartPos, teamEnemyAveragePosition)
             
             for _, v in aiBrain.BrainIntel.AllyStartLocations do
                 if v.Index ~= selfIndex then
-                    local distanceToEnemy = VDist3Sq(v.Position, aiBrain.EnemyIntel.EnemyStartLocations[closestIndex].Position)
+                    local distanceToEnemy = VDist3Sq(v.Position, teamEnemyAveragePosition)
                     local distanceToTeammate = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
                     
                     if not furthestPlayerDistance or distanceToEnemy > furthestPlayerDistance then
@@ -1550,18 +1623,107 @@ IntelManager = Class {
                     end
                 end
             end
+            --LOG('closestDistance '..tostring(math.sqrt(closestDistance)))
+            --LOG('furthestPlayerDistance '..tostring(math.sqrt(furthestPlayerDistance)))
+            --LOG('Difference between the two '..tostring(math.sqrt(closestDistance) - math.sqrt(furthestPlayerDistance)))
+            --LOG('selfDistanceToEnemy '..tostring(math.sqrt(selfDistanceToEnemy)))
+            --LOG('averagedDistanceBetweenTeams '..tostring(averageDistanceBetweenTeams))
             
             if closestDistance and furthestPlayerDistance and closestDistance > furthestPlayerDistance then
-                if math.sqrt(closestDistance) - math.sqrt(furthestPlayerDistance) > 50 then
-                    furthestPlayer = true
-                    aiBrain.BrainIntel.AirPlayer = true
+                if math.sqrt(closestDistance) - math.sqrt(furthestPlayerDistance) > 35 and selfDistanceToEnemy > furthestPlayerDistance then
+                    local airRestricted = false
+                    if not table.empty(ScenarioInfo.Options.RestrictedCategories) then
+                        for _, v in ScenarioInfo.Options.RestrictedCategories do
+                            if v == "AIR" or string.find(v, "T3_AIR") then
+                                airRestricted = true
+                                break
+                            end
+                        end
+                    end
+                    if not airRestricted then
+                        if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer then
+                            local alreadySelected = false
+                            for _, v in RNGAIGLOBALS.PlayerRoles do
+                                if v == 'AirPlayer' then
+                                    alreadySelected = true
+                                    break
+                                end
+                            end
+                            if not alreadySelected then
+                                furthestPlayer = true
+                                aiBrain.BrainIntel.PlayerRole.AirPlayer = true
+                                aiBrain.BrainIntel.PlayerStrategy.T3AirRush = true
+                                --LOG('Player set to Air Role '..aiBrain.Nickname)
+                                RNGAIGLOBALS.PlayerRoles[selfIndex] = 'AirPlayer'
+                                aiBrain:EvaluateDefaultProductionRatios()
+                                return
+                            end
+                        end
+                    end
                 end
             end
             if not furthestPlayer then
                 if closestDistance and selfDistanceToEnemy and selfDistanceToEnemy <= closestPlayerDistance then
-                    if math.sqrt(selfDistanceToEnemy) - math.sqrt(selfDistanceToTeammates) > 50 then
-                        aiBrain.BrainIntel.SpamPlayer = true
-                        self:ForkThread(self.SpamTriggerDurationThread)
+                    if math.sqrt(selfDistanceToEnemy) - math.sqrt(selfDistanceToTeammates) > 35 then
+                        if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer then
+                            local alreadySelected = false
+                            for _, v in RNGAIGLOBALS.PlayerRoles do
+                                if v == 'SpamPlayer' then
+                                    alreadySelected = true
+                                    break
+                                end
+                            end
+                            if not alreadySelected then
+                                aiBrain.BrainIntel.PlayerRole.SpamPlayer = true
+                                RNGAIGLOBALS.PlayerRoles[selfIndex] = 'SpamPlayer'
+                                --LOG('Player set to Spam Role '..aiBrain.Nickname)
+                                self:ForkThread(self.SpamTriggerDurationThread, 480)
+                                return
+                            end
+                        end
+                    end
+                end
+            end
+            if not aiBrain.BrainIntel.PlayerRole.AirPlayer and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and (aiBrain.MapSize > 10 and self.MapWaterRatio > 0.35 or aiBrain.MapSize <= 10 and self.MapWaterRatio > 0.60) then
+                local navalRestricted = false
+                if not table.empty(ScenarioInfo.Options.RestrictedCategories) then
+                    for _, v in ScenarioInfo.Options.RestrictedCategories do
+                        if v == "NAVAL" then
+                            navalRestricted = true
+                            break
+                        end
+                    end
+                end
+                if not navalRestricted then
+                    local navalPlayer
+                    local alreadySelected = false
+                    for _, v in RNGAIGLOBALS.PlayerRoles do
+                        if v == 'NavalPlayer' then
+                            alreadySelected = true
+                            break
+                        end
+                    end
+                    if not alreadySelected then
+                        if aiBrain.BrainIntel.NavalBaseLabels and aiBrain.BrainIntel.NavalBaseLabelCount > 0 then
+                            -- Check if any enemy start location has a matching water label
+                            for _, b in aiBrain.EnemyIntel.EnemyStartLocations do
+                                for label, state in aiBrain.BrainIntel.NavalBaseLabels do
+                                    if b.WaterLabels[label] and state == "Confirmed" then
+                                        navalPlayer = true
+                                        break
+                                    end
+                                end
+                                if navalPlayer then break end
+                            end
+            
+                            if navalPlayer then
+                                aiBrain.BrainIntel.PlayerRole.NavalPlayer = true
+                                --LOG('Player set to Naval Role '..aiBrain.Nickname)
+                                RNGAIGLOBALS.PlayerRoles[selfIndex] = 'NavalPlayer'
+                                aiBrain:EvaluateDefaultProductionRatios()
+                                return
+                            end
+                        end
                     end
                 end
             end
@@ -1576,25 +1738,29 @@ IntelManager = Class {
                 local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
                 local OwnIndex = aiBrain:GetArmyIndex()
                 if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' and aiBrain.EnemyIntel.EnemyStartLocations[EnemyIndex].Distance < 348100 then
-                    aiBrain.BrainIntel.SpamPlayer = true
-                    self:ForkThread(self.SpamTriggerDurationThread)
+                    if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer and not aiBrain.BrainIntel.PlayerRole.AirPlayer then
+                        aiBrain.BrainIntel.PlayerRole.SpamPlayer = true
+                        RNGAIGLOBALS.PlayerRoles[selfIndex] = 'SpamPlayer'
+                        self:ForkThread(self.SpamTriggerDurationThread, 360)
+                    end
                 end
             end
         end
     end,
 
-    SpamTriggerDurationThread = function(self)
+    SpamTriggerDurationThread = function(self, timer)
         -- This function just runs a timed thread for a more spammy approach with some bail outs along the way.
         local aiBrain = self.Brain
         local cancelSpam = false
         local startTime = GetGameTimeSeconds()
         while not cancelSpam do
             coroutine.yield(50)
-            if GetGameTimeSeconds() - startTime > 360 then
+            if GetGameTimeSeconds() - startTime > timer then
                 cancelSpam = true
             end
         end
-        aiBrain.BrainIntel.SpamPlayer = false
+        aiBrain.BrainIntel.PlayerRole.SpamPlayer = false
+        aiBrain:EvaluateDefaultProductionRatios()
     end,
 
     GetTeamAveragePositions = function(self)
@@ -1619,7 +1785,6 @@ IntelManager = Class {
             local intelCoverage = 0
             local mapOwnership = 0
             local mustScoutPresent = false
-            local perimeterExpired = false
             for i=self.MapIntelGridXMin, self.MapIntelGridXMax do
                 local time = GetGameTimeSeconds()
                 for k=self.MapIntelGridZMin, self.MapIntelGridZMax do
@@ -1634,17 +1799,21 @@ IntelManager = Class {
                             intelCoverage = intelCoverage + 1
                         end
                     end
-                    if self.MapIntelGrid[i][k].Perimeter == 'Restricted' and self.MapIntelGrid[i][k].TimeScouted > 180 and self.MapIntelGrid[i][k].Graphs['MAIN'].Land then
-                        perimeterExpired = true
-                    end
+                    local unitsToRemove = {}
                     if not table.empty(self.MapIntelGrid[i][k].EnemyUnits) then
                         for c,b in self.MapIntelGrid[i][k].EnemyUnits do
                             if (b.object and b.object.Dead) then
-                                self.MapIntelGrid[i][k].EnemyUnits[c]=nil
+                                table.insert(unitsToRemove, c)
                             elseif time-b.time>120 or (time-b.time>15 and GetNumUnitsAroundPoint(aiBrain,categories.MOBILE,b.Position,20,'Ally')>3) then
                                 self.MapIntelGrid[i][k].EnemyUnits[c].recent=false
+                                if time-b.time>300 then
+                                    table.insert(unitsToRemove, c)
+                                end
                             end
                         end
+                    end
+                    for _, c in unitsToRemove do
+                        self.MapIntelGrid[i][k].EnemyUnits[c]=nil
                     end
                     local cellStatus = aiBrain.GridPresence:GetInferredStatus(self.MapIntelGrid[i][k].Position)
                     if cellStatus == 'Allied' then
@@ -1655,18 +1824,12 @@ IntelManager = Class {
             end
             self.MapIntelStats.IntelCoverage = intelCoverage / (self.MapIntelGridXRes * self.MapIntelGridZRes) * 100
             self.MapIntelStats.MustScoutArea = mustScoutPresent
-            self.MapIntelStats.PerimeterExpired = perimeterExpired
             aiBrain.BrainIntel.MapOwnership = mapOwnership / aiBrain.IntelManager.CellCount * 100
             if aiBrain.RNGDEBUG then
                 if mustScoutPresent then
                     RNGLOG('mustScoutPresent is true after loop')
                 else
                     RNGLOG('mustScoutPresent is false after loop')
-                end
-                if perimeterExpired then
-                    RNGLOG('perimeterExpired is true after loop')
-                else
-                    RNGLOG('perimeterExpired is false after loop')
                 end
             end
             --LOG('Current Map ownership '..aiBrain.BrainIntel.MapOwnership)
@@ -1852,8 +2015,9 @@ IntelManager = Class {
                     if (not v.Unit.Dead) and (not v.Ally) and v.HP ~= 0 and v.Position[1] and v.LastSpotted + 120 > gameTime then
                         if v.HP < 12000 and minThreatRisk >= 50 and VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos) < (aiBrain.EnemyIntel.ClosestEnemyBase / 4.84) then
                             if GetThreatBetweenPositions(aiBrain, aiBrain.BrainIntel.StartPos, v.Position, nil, threatType) < 5 then
-                                --RNGLOG('ACU ClosestEnemy base distance is '..(aiBrain.EnemyIntel.ClosestEnemyBase /2))
-                                --RNGLOG('ACU Distance from start position '..VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos))
+                                --LOG('Enemy ACU is close to our base and I think we could snipe him')
+                                --LOG('ACU ClosestEnemy base distance is '..(aiBrain.EnemyIntel.ClosestEnemyBase / 4.84))
+                                --LOG('ACU Distance from start position '..VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos))
                                 local gridX, gridZ = self:GetIntelGrid(v.Position)
                                 local scoutRequired = true
                                 if self.MapIntelGrid[gridX][gridZ].MustScout and self.MapIntelGrid[gridX][gridZ].ACUIndexes[k] then
@@ -1869,10 +2033,11 @@ IntelManager = Class {
                                 else
                                     desiredStrikeDamage = desiredStrikeDamage + 6000
                                 end
-                                --RNGLOG('Adding ACU to potential strike target')
+                                --LOG('Adding ACU to potential strike target')
                                 table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'ACU', Index = k} )
                             end
                         elseif v.HP < 7000 and aiBrain.BrainIntel.AirPhase == 3 then
+                            --LOG('Enemy ACU is less than 7000 HP and we are air phase 3')
                             local gridX, gridZ = self:GetIntelGrid(v.Position)
                             local scoutRequired = true
                             if self.MapIntelGrid[gridX][gridZ].MustScout and self.MapIntelGrid[gridX][gridZ].ACUIndexes[k] then
@@ -1888,7 +2053,7 @@ IntelManager = Class {
                             else
                                 desiredStrikeDamage = desiredStrikeDamage + 6000
                             end
-                            --RNGLOG('Adding ACU to potential strike target')
+                            --LOG('Adding ACU to potential strike target')
                             table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'ACU', Index = k} )
                         end
                     end
@@ -2002,7 +2167,7 @@ IntelManager = Class {
                                     else
                                         desiredStrikeDamage = desiredStrikeDamage + 4000
                                     end
-                                    --RNGLOG('Adding ACU to antinaval potential strike target')
+                                    --LOG('Adding ACU to antinaval potential strike target')
                                     table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'ACU', Index = k} )
                                 end
                             end
@@ -2101,6 +2266,7 @@ IntelManager = Class {
             end
             local disableGunship = true
             local disableBomber = true
+            local acuSnipe = false
             if aiBrain.BrainIntel.AirPhase < 2 then
                 if aiBrain.BrainIntel.SelfThreat.AntiAirNow > 5 then
                     local gunshipMassKilled = aiBrain.IntelManager.UnitStats['Gunship'].Kills.Mass
@@ -2204,7 +2370,7 @@ IntelManager = Class {
             --LOG('Current T3 Gunship demand '..aiBrain.amanager.Demand.Air.T3.gunship)
             if not table.empty(potentialStrikes) then
                 local count = math.ceil(desiredStrikeDamage / 1000)
-                local acuSnipe = false
+                
                 local acuIndex = false
                 local zoneAttack = false
                 for k, v in potentialStrikes do
@@ -2221,6 +2387,9 @@ IntelManager = Class {
                     --RNGLOG('Set game time '..gameTime)
                     aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe[acuIndex]['AIR'] = { GameTime = gameTime, CountRequired = count, StrikeDamage = desiredStrikeDamage }
                     aiBrain.amanager.Demand.Air.T2.bomber = count
+                    if aiBrain.BrainIntel.AirPhase == 3 then
+                        aiBrain.amanager.Demand.Air.T3.bomber = count
+                    end
                     --maybe one day they'll put the Mercy back to a sniping unit, until then the build logic is disabled
                     --aiBrain.amanager.Demand.Air.T2.mercy = count
                     aiBrain.EngineerAssistManagerFocusSnipe = true
@@ -2249,6 +2418,9 @@ IntelManager = Class {
                     aiBrain.amanager.Demand.Air.T2.bomber = 0
                     aiBrain.EngineerAssistManagerFocusSnipe = false
                 end
+            end
+            if not acuSnipe then
+                aiBrain.EngineerAssistManagerFocusSnipe = false
             end
         elseif productiontype == 'LandAntiSurface' then
             local acuSnipe = false
@@ -2285,6 +2457,7 @@ IntelManager = Class {
                 end
             end
             local disableRangedBot = true
+            local disableExperimentalLand = true
             if aiBrain.BrainIntel.LandPhase < 2 then
                 
             elseif aiBrain.BrainIntel.LandPhase < 3 then
@@ -2310,12 +2483,22 @@ IntelManager = Class {
                     aiBrain.amanager.Demand.Land.T3.sniper = aiBrain.amanager.Current['Land']['T3']['sniper'] + 1
                     disableRangedBot = false
                 end
+                local experimentalLandMassKilled = aiBrain.IntelManager.UnitStats['ExperimentalLand'].Kills.Mass
+                local experimentalLandMassBuilt = aiBrain.IntelManager.UnitStats['ExperimentalLand'].Built.Mass
+                local experimentalLandBuilt = aiBrain:GetBlueprintStat("Units_History", categories.MOBILE * categories.LAND * categories.EXPERIMENTAL - categories.ARTILLERY)
+                if experimentalLandBuilt < 2 or experimentalLandMassKilled > 0 and experimentalLandMassBuilt > 0 and math.min(experimentalLandMassKilled / experimentalLandMassBuilt, 2) > 0.7 then
+                    aiBrain.amanager.Demand.Land.T4.experimentalland = aiBrain.amanager.Current['Land']['T4']['experimentalland'] + 1
+                    disableExperimentalLand = false
+                end
             end
-            if disableRangedBot and aiBrain.amanager.Current['Land']['T2']['bot'] > 1 then
+            if disableRangedBot and aiBrain.amanager.Current['Land']['T2']['bot'] > 0 then
                 aiBrain.amanager.Demand.Land.T2.bot = 0
             end
-            if disableRangedBot and aiBrain.amanager.Current['Land']['T3']['sniper'] > 1 then
+            if disableRangedBot and aiBrain.amanager.Current['Land']['T3']['sniper'] > 0 then
                 aiBrain.amanager.Demand.Land.T3.sniper = 0
+            end
+            if disableExperimentalLand and aiBrain.amanager.Current['Land']['T4']['experimentalland'] > 0 then
+                aiBrain.amanager.Demand.Land.T4.experimentalland = 0
             end
         elseif productiontype == 'AirAntiNaval' then
             if not table.empty(potentialStrikes) then
@@ -2376,12 +2559,12 @@ IntelManager = Class {
             --LOG('selfLandThreatMultiplied '..tostring(selfThreat.LandNow * 1.4))
             --LOG('enemyLandThreat '..tostring(enemyThreat.Land))
             local safeAntiAir = selfThreat.AntiAirNow > 0 and selfThreat.AntiAirNow or 0.1
-            if selfThreat.LandNow * 1.4 > enemyThreat.Land and safeAntiAir < enemyThreat.Air then
+            if selfThreat.LandNow * 1.4 > enemyThreat.Land and safeAntiAir < enemyThreat.Air or enemyThreat.AirSurface > 75 and selfThreat.LandNow * 1.8 > enemyThreat.Land then
                 local zoneCount = aiBrain.BuilderManagers['MAIN'].PathableZones.PathableLandZoneCount
                 -- We are going to look at the threat in the pathable zones and see which ones are in our territory and make sure we have a theoretical number of air units there
                 -- I want to do this on a per base method, but I realised I'm not keeping information.
                 local totalMobileAARequired = 0 
-                if selfThreat.AntiAirNow > 0 then
+                if enemyThreat.Air > 0 then
                     totalMobileAARequired = math.min(math.ceil((zoneCount * 0.65) * (enemyThreat.Air / safeAntiAir)), zoneCount * 1.5) or 0
                 end
                 --LOG('Pathable Zone Count '..tostring(zoneCount))
@@ -2689,6 +2872,8 @@ IntelManager = Class {
                     end
                 end
             end
+        elseif productiontype == 'NavalAntiAir' then
+            
         elseif productiontype == 'EngineerBuildPower' then
             local mainEngineers = aiBrain.BuilderManagers['MAIN'].EngineerManager.ConsumptionUnits.Engineers.UnitsList
             local mainBuildPower = 0
@@ -2746,7 +2931,12 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit)
             local valueGained
             local sourceCat = sourceUnit.Blueprint.CategoriesHash
             if sourceCat.EXPERIMENTAL then
-                data.sourcecat = 'Experimental'
+                if sourceCat.MOBILE and sourceCat.LAND and sourceCat.EXPERIMENTAL and not sourceCat.ARTILLERY then
+                    data.sourcecat = 'ExperimentalLand'
+                    if targetUnit.Blueprint.Economy.BuildCostMass then
+                        valueGained = targetUnit.Blueprint.Economy.BuildCostMass or 0
+                    end
+                end
             elseif sourceCat.AIR then
                 if sourceCat.GROUNDATTACK then
                     data.sourcecat = 'Gunship'
@@ -2811,7 +3001,7 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit)
     end
 end
 
-function ProcessSourceOnDeath(targetBrain, targetUnit)
+function ProcessSourceOnDeath(targetBrain, targetUnit, sourceUnit, damageType)
     local data = {
         targetcat = false,
         sourcecat = false
@@ -2820,8 +3010,14 @@ function ProcessSourceOnDeath(targetBrain, targetUnit)
     if targetBrain.RNG then
         local valueLost
         local targetCat = targetUnit.Blueprint.CategoriesHash
+        local sourceCat = sourceUnit.Blueprint.CategoriesHash
         if targetCat.EXPERIMENTAL then
-            data.targetcat = 'Experimental'
+            if sourceCat.MOBILE and sourceCat.LAND and sourceCat.EXPERIMENTAL and not sourceCat.ARTILLERY then
+                data.targetcat = 'ExperimentalLand'
+                if targetUnit.Blueprint.Economy.BuildCostMass then
+                    valueLost = targetUnit.Blueprint.Economy.BuildCostMass
+                end
+            end
         elseif targetCat.AIR then
             if targetCat.SCOUT then
                 RecordUnitDeath(targetUnit, 'SCOUT')
@@ -2848,6 +3044,14 @@ function ProcessSourceOnDeath(targetBrain, targetUnit)
                     RUtils.RemoveDefenseUnit(targetBrain, locationType, targetUnit)
                 else
                     WARN('AI RNG : No location type in defensive unit on death, may have been gifted. Unit is '..targetUnit.UnitId)
+                end
+            end
+            if sourceCat.TACTICALMISSILEPLATFORM then
+                local tmlPos = sourceUnit:GetPosition()
+                if targetBrain.EnemyIntel.TML and not targetBrain.EnemyIntel.TML[sourceUnit.EntityId] then
+                    targetBrain.EnemyIntel.TML[sourceUnit.EntityId] = {object = sourceUnit, position=tmlPos, validated=false, range=sourceUnit.Blueprint.Weapon[1].MaxRadius }
+                    local sm = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua').GetStructureManager(targetBrain)
+                    ForkThread(sm.ValidateTML, sm, targetBrain, targetBrain.EnemyIntel.TML[sourceUnit.EntityId])
                 end
             end
         elseif targetCat.NAVAL then
@@ -3000,6 +3204,11 @@ function InitialNavalAttackCheck(aiBrain)
             end
             if not table.empty(validNavalLabels) then
                 aiBrain.BrainIntel.NavalBaseLabels = validNavalLabels
+                local labelCount = 0
+                for _, v in validNavalLabels do
+                    labelCount = labelCount + 1
+                end
+                aiBrain.BrainIntel.NavalBaseLabelCount = labelCount
                 --LOG('Label Table '..repr(validNavalLabels))
             end
         end
@@ -3616,19 +3825,26 @@ TacticalThreatAnalysisRNG = function(aiBrain)
 
     if not RNGTableEmpty(factoryUnits) then
         for k, unit in factoryUnits do
-            if aiBrain.EnemyIntel.AirPhase < 2 and unit.Object.Blueprint.CategoriesHash.AIR and unit.Object.Blueprint.CategoriesHash.TECH2 then
+            local isUpgradng = unit.Object:IsUnitState('Upgrading')
+            if aiBrain.EnemyIntel.AirPhase < 2 and unit.Object.Blueprint.CategoriesHash.AIR and 
+            (unit.Object.Blueprint.CategoriesHash.TECH2 or unit.Object.Blueprint.CategoriesHash.TECH1 and isUpgradng) then
                 aiBrain.EnemyIntel.AirPhase = 2
-            elseif aiBrain.EnemyIntel.AirPhase < 3 and unit.Object.Blueprint.CategoriesHash.AIR and unit.Object.Blueprint.CategoriesHash.TECH3 then
+            elseif aiBrain.EnemyIntel.AirPhase < 3 and unit.Object.Blueprint.CategoriesHash.AIR and 
+            (unit.Object.Blueprint.CategoriesHash.TECH3 or unit.Object.Blueprint.CategoriesHash.TECH2 and isUpgradng) then
                 aiBrain.EnemyIntel.AirPhase = 3
             end
-            if aiBrain.EnemyIntel.LandPhase < 2 and unit.Object.Blueprint.CategoriesHash.LAND and unit.Object.Blueprint.CategoriesHash.TECH2 then
+            if aiBrain.EnemyIntel.LandPhase < 2 and unit.Object.Blueprint.CategoriesHash.LAND and 
+            (unit.Object.Blueprint.CategoriesHash.TECH2 or unit.Object.Blueprint.CategoriesHash.TECH1 and isUpgradng) then
                 aiBrain.EnemyIntel.LandPhase = 2
-            elseif aiBrain.EnemyIntel.LandPhase < 3 and unit.Object.Blueprint.CategoriesHash.LAND and unit.Object.Blueprint.CategoriesHash.TECH3 then
+            elseif aiBrain.EnemyIntel.LandPhase < 3 and unit.Object.Blueprint.CategoriesHash.LAND and 
+            (unit.Object.Blueprint.CategoriesHash.TECH3 or unit.Object.Blueprint.CategoriesHash.TECH2 and isUpgradng) then
                 aiBrain.EnemyIntel.LandPhase = 3
             end
-            if aiBrain.EnemyIntel.NavalPhase < 2 and unit.Object.Blueprint.CategoriesHash.NAVAL and unit.Object.Blueprint.CategoriesHash.TECH2 then
+            if aiBrain.EnemyIntel.NavalPhase < 2 and unit.Object.Blueprint.CategoriesHash.NAVAL and 
+            (unit.Object.Blueprint.CategoriesHash.TECH2 or unit.Object.Blueprint.CategoriesHash.TECH1 and isUpgradng) then
                 aiBrain.EnemyIntel.NavalPhase = 2
-            elseif aiBrain.EnemyIntel.NavalPhase < 3 and unit.Object.Blueprint.CategoriesHash.NAVAL and unit.Object.Blueprint.CategoriesHash.TECH3 then
+            elseif aiBrain.EnemyIntel.NavalPhase < 3 and unit.Object.Blueprint.CategoriesHash.NAVAL and 
+            (unit.Object.Blueprint.CategoriesHash.TECH3 or unit.Object.Blueprint.CategoriesHash.TECH2 and isUpgradng) then
                 aiBrain.EnemyIntel.NavalPhase = 3
             end
         end
@@ -3677,14 +3893,11 @@ LastKnownThread = function(aiBrain)
         coroutine.yield(20)
     end
     local sm = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua').GetStructureManager(aiBrain)
-    while not aiBrain.emanager.enemies do coroutine.yield(20) end
     while aiBrain.Status ~= "Defeat" do
         local time=GetGameTimeSeconds()
         for _=0,10 do
             local enemyMexes = {}
             local mexcount = 0
-            local enemyGunshipThreat = 0
-            local enemyBomberThreat = 0
             local eunits=aiBrain:GetUnitsAroundPoint((categories.NAVAL + categories.AIR + categories.LAND + categories.STRUCTURE) - categories.INSIGNIFICANTUNIT, {0,0,0}, math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])*1.5, 'Enemy')
             for _,v in eunits do
                 if not v or v.Dead then continue end
@@ -3939,7 +4152,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                                 if b.type == 'arty' or b.type == 'exp' or b.type == 'pointdefense' then
                                     priority = priority + 100
                                 end
-                                aiBrain.prioritypointshighvalue[c..i..k]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object,time=b.time}
+                                aiBrain.prioritypointshighvalue[c..i..k]={type='raid',Position=b.Position,priority=math.max(priority,250),danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object,time=b.time}
                             end
                         end
                     end

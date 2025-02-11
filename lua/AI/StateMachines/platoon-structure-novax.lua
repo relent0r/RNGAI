@@ -46,7 +46,7 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
             self.MachineStarted = true
             self.LocationType = self.PlatoonData.LocationType or 'MAIN'
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
-            self.MaxPlatoonWeaponRange = 0
+            self['rngdata'].MaxPlatoonWeaponRange = 0
             self.AdjacentShields = {}
             self.AdjacentPower = {}
             self.atkPri = {    categories.STRUCTURE * categories.ANTIMISSILE * categories.TECH3, 
@@ -76,7 +76,7 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
                 self.MaxSearchRadius = self.PlatoonData.SearchRadius or 50
             end
             self:SetPrioritizedTargetList('attack',self.atkPri)
-            --self:LogDebug(string.format('Novax Max Weapon Range is '..tostring(self.MaxPlatoonWeaponRange)))
+            --self:LogDebug(string.format('Novax Max Weapon Range is '..tostring(self['rngdata'].MaxPlatoonWeaponRange)))
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -94,7 +94,7 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
             if not targetsAssigned then
                 local novaxCount = 0
                 local targetCount = 0
-                local target = aiBrain:CheckDirectorTargetAvailable(false, false, 'SATELLITE', false, self.MaxPlatoonDPS, self.Home)
+                local target = aiBrain:CheckDirectorTargetAvailable(false, false, 'SATELLITE', false, self['rngdata'].MaxPlatoonDPS, self.Home)
                 if target and not target.Dead then
                     --self:LogDebug(string.format('Novax Director Target Found'))
                     for _, v in self.NovaxUnits do
@@ -231,7 +231,7 @@ ThreatThread = function(aiBrain, platoon)
     end
 
     while aiBrain:PlatoonExists(platoon) do
-        platoon.MaxPlatoonDPS = GetPlatoonDPS(platoon)
+        platoon['rngdata'].MaxPlatoonDPS = GetPlatoonDPS(platoon)
         coroutine.yield(35)
     end
 end

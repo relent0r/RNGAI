@@ -36,6 +36,7 @@ end
 BuilderGroup {
     BuilderGroupName = 'RNGAI Initial ACU Builder Small',
     BuildersType = 'EngineerBuilder',
+    --[[
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Small',
         PlatoonTemplate = 'CommanderInitializeRNG',
@@ -54,7 +55,7 @@ BuilderGroup {
                 BaseTemplate = 'ACUBaseTemplate',
             }
         }
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Small',
         PlatoonTemplate = 'CommanderStateMachineRNG',
@@ -97,6 +98,7 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI Initial ACU Builder Large',
     BuildersType = 'EngineerBuilder',
+    --[[
     Builder {
         BuilderName = 'RNGAI CDR Initial Land Standard Large',
         PlatoonTemplate = 'CommanderInitializeRNG',
@@ -115,7 +117,7 @@ BuilderGroup {
                 BaseTemplate = 'ACUBaseTemplate',
             }
         }
-    },
+    },]]
     Builder {
         BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Large',
         PlatoonTemplate = 'CommanderStateMachineRNG',
@@ -191,6 +193,7 @@ BuilderGroup {
         Priority = 1005,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
+            { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * (categories.TECH1 + categories.TECH2 + categories.TECH3) }},
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.5, 5.0}},
@@ -221,7 +224,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageCurrentRNG', { 240, 1050 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.70, 0.80 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
-            { UCBC, 'PlayerRoleCheck', {'LocationType', 3, categories.FACTORY * categories.LAND, 'AIR' } },
+            { UCBC, 'PlayerRoleCheck', {'LocationType', 2, categories.FACTORY * categories.LAND, {'AIR', 'EXPERIMENTAL'}, 1 } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
@@ -252,6 +255,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.30, 'FACTORY'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { UCBC, 'PlayerRoleCheck', {'LocationType', 2, categories.FACTORY * categories.LAND, {'AIR', 'EXPERIMENTAL'}, 1 } },
             { EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'UnitCapCheckLess', { .8 } },

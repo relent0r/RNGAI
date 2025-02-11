@@ -78,7 +78,6 @@ PlatoonTemplate {
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.MOBILE * (categories.SHIELD + categories.STEALTHFIELD) - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
           { categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL, 0, 3, 'guard', 'none' },
-          { categories.LAND * categories.SCOUT - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
     },
 }
 
@@ -87,7 +86,6 @@ PlatoonTemplate {
     Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL, 1, 2, 'attack', 'none' },
-        { categories.LAND * categories.SCOUT - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
     },
 }
 
@@ -142,7 +140,6 @@ PlatoonTemplate {
           'attack', -- platoon types: 'support', 'attack', 'scout',
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
-          { categories.LAND * categories.SCOUT, 0, 1, 'guard', 'none' },
           { categories.LAND * categories.ANTIAIR - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
     },
 }
@@ -158,7 +155,6 @@ PlatoonTemplate {
           'None' }, -- platoon move formations: 'None', 'AttackFormation', 'GrowthFormation',
           { categories.LAND * categories.MOBILE * categories.SHIELD - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 2, 'guard', 'none' },
           { categories.LAND * categories.MOBILE * categories.ANTIAIR - categories.SCOUT - categories.ENGINEER - categories.EXPERIMENTAL, 0, 1, 'guard', 'none' },
-          { categories.LAND * categories.SCOUT, 0, 1, 'guard', 'none' },
     },
 }
 
@@ -166,7 +162,15 @@ PlatoonTemplate {
     Name = 'T4ExperimentalLandRNG',
     Plan = 'StateMachineAIRNG',
     GlobalSquads = {
-        { categories.EXPERIMENTAL * categories.LAND * categories.MOBILE - categories.INSIGNIFICANTUNIT, 1, 1, 'attack', 'none' }
+        { categories.EXPERIMENTAL * categories.LAND * categories.MOBILE - categories.INSIGNIFICANTUNIT - categories.url0401, 1, 1, 'attack', 'none' }
+    },
+}
+
+PlatoonTemplate {
+    Name = 'T4ExperimentalMobileArtilleryRNG',
+    Plan = 'StateMachineAIRNG',
+    GlobalSquads = {
+        {categories.MOBILE * categories.LAND * categories.EXPERIMENTAL * categories.ARTILLERY * categories.CYBRAN, 1, 1, 'attack', 'none' }
     },
 }
 

@@ -78,11 +78,11 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
             self.ExperimentalUnit = self:GetSquadUnits('Attack')[1]
             if self.ExperimentalUnit and not self.ExperimentalUnit.Dead then
                 -- Set the platoon max weapon range for the platoon and modify the categories on the Gauss Cannon
-                self.MaxPlatoonWeaponRange = self.ExperimentalUnit.Blueprint.Weapon[1].MaxRadius
-                if not self.MaxPlatoonWeaponRange then
-                    self.MaxPlatoonWeaponRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Direct Fire')
+                self['rngdata'].MaxPlatoonWeaponRange = self.ExperimentalUnit.Blueprint.Weapon[1].MaxRadius
+                if not self['rngdata'].MaxPlatoonWeaponRange then
+                    self['rngdata'].MaxPlatoonWeaponRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Direct Fire')
                 end
-                self.MaxPlatoonWeaponRangeSq = self.MaxPlatoonWeaponRange * self.MaxPlatoonWeaponRange
+                self['rngdata'].MaxPlatoonWeaponRangeSq = self['rngdata'].MaxPlatoonWeaponRange * self['rngdata'].MaxPlatoonWeaponRange
                 for i = 1, self.ExperimentalUnit:GetWeaponCount() do
                     local wep = self.ExperimentalUnit:GetWeapon(i)
                     local weaponBlueprint = wep:GetBlueprint()
@@ -174,6 +174,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                             RetreatReason = 'NoShield'
                         }
                         --self:LogDebug(string.format('Experimental has low shield, retreating'))
+                        --LOG('Experimental is retreating because no shield')
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -185,6 +186,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                             RetreatReason = 'NoShield'
                         }
                         --self:LogDebug(string.format('Experimental shield is low and there is artillery threat, retreat'))
+                        --LOG('Experimental is retreating because no shield')
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -195,6 +197,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         RetreatReason = 'LowHealth'
                     }
                     --self:LogDebug(string.format('Experimental retreating due to very low health 0.20'))
+                    --LOG('Experimental is retreating because low health')
                     self:ChangeState(self.Retreating)
                     return
                 end
@@ -211,6 +214,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                 CutOff = 625,
                             }
                             --self:LogDebug(string.format('Experimental retreating due to health below 0.35'))
+                            --LOG('Experimental is retreating because low health')
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -220,6 +224,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         RetreatReason = 'LowHealth'
                     }
                     --self:LogDebug(string.format('Experimental retreating due to very low health 0.35'))
+                    --LOG('Experimental is retreating because low health')
                     self:ChangeState(self.Retreating)
                     return
                 end
@@ -227,6 +232,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     local antiAirSupportNeeded = false
                     local closestUnit
                     local closestUnitDistance
+                    local highPriorityTarget
                     local overRangedCount = 0
                     local overRangedThreat = 0
                     if threatTable.AirSurfaceThreat.TotalThreat > 200 and self.CurrentAntiAirThreat < 50 and not self.SuicideModeActive or experimentalHealthPercent < 0.40 and threatTable.AirSurfaceThreat.TotalThreat > 100 and not self.SuicideModeActive then
@@ -238,6 +244,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                             }
                             antiAirSupportNeeded = true
                             --self:LogDebug(string.format('Experimental has high air surface threat around it, retreat'))
+                            --LOG('Experimental is retreating because of air surface threat of '..tostring(threatTable.AirSurfaceThreat.TotalThreat))
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -248,7 +255,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                             for _, enemyUnit in threatTable.DefenseThreat.Units do
                                 if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored then
                                     local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object) or 10
-                                    if (not closestUnit and unitRange < self.MaxPlatoonWeaponRange and enemyUnit.Distance < self.MaxPlatoonWeaponRangeSq + 40 * 40) or (unitRange < self.MaxPlatoonWeaponRange and (enemyUnit.Distance < closestUnitDistance and closestUnitDistance > 25)) then
+                                    if (not closestUnit and unitRange < self['rngdata'].MaxPlatoonWeaponRange and enemyUnit.Distance < self['rngdata'].MaxPlatoonWeaponRangeSq + 40 * 40) or (unitRange < self['rngdata'].MaxPlatoonWeaponRange and (enemyUnit.Distance < closestUnitDistance and closestUnitDistance > 25)) then
                                         closestUnit = enemyUnit.Object
                                         closestUnitDistance = enemyUnit.Distance
                                         target = enemyUnit.Object
@@ -257,7 +264,8 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                             AttackTarget = target,
                                             Position = target:GetPosition()
                                         }
-                                        --self:LogDebug(string.format('Experimental ACU in range, going for suicide distance is '..tostring(enemyUnit.Distance)..' cutoff is '..tostring((self.MaxPlatoonWeaponRangeSq + 40 * 40))))
+                                        --self:LogDebug(string.format('Experimental ACU in range, going for suicide distance is '..tostring(enemyUnit.Distance)..' cutoff is '..tostring((self['rngdata'].MaxPlatoonWeaponRangeSq + 40 * 40))))
+                                        --LOG('Experimental is in suicide mode')
                                         self:ChangeState(self.SuicideMode)
                                         return
                                     end
@@ -268,6 +276,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                 RetreatReason = 'DefenseThreat'
                             }
                             --self:LogDebug(string.format('Experimental enemy defense threat of '..threatTable.DefenseThreat.TotalThreat..' and friendly surface threat of '..localFriendlyLandThreat..' retreating'))
+                            --LOG('Experimental is retreating because of defense threat of '..tostring(threatTable.DefenseThreat.TotalThreat))
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -280,7 +289,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     if not target and threatTable.CommandThreat.TotalThreat > 0 then
                         for _, enemyUnit in threatTable.CommandThreat.Units do
                             if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored then
-                                if not closestUnit and enemyUnit.Distance < (self.MaxPlatoonWeaponRangeSq + 35 * 35) then
+                                if not closestUnit and enemyUnit.Distance < (self['rngdata'].MaxPlatoonWeaponRangeSq + 35 * 35) then
                                     closestUnit = enemyUnit.Object
                                     closestUnitDistance = enemyUnit.Distance
                                     target = enemyUnit.Object
@@ -289,7 +298,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                         AttackTarget = target,
                                         Position = target:GetPosition()
                                     }
-                                    --self:LogDebug(string.format('Experimental ACU in range, going for suicide distance is '..tostring(enemyUnit.Distance)..' cutoff is '..tostring((self.MaxPlatoonWeaponRangeSq + 35 * 35))))
+                                    --self:LogDebug(string.format('Experimental ACU in range, going for suicide distance is '..tostring(enemyUnit.Distance)..' cutoff is '..tostring((self['rngdata'].MaxPlatoonWeaponRangeSq + 35 * 35))))
                                     self:ChangeState(self.SuicideMode)
                                     return
                                 end
@@ -300,7 +309,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         for _, enemyUnit in threatTable.ExperimentalThreat.Units do
                             if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored and enemyUnit.Object:GetFractionComplete() >= 1 then
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object) or 10
-                                if unitRange > self.MaxPlatoonWeaponRange then
+                                if unitRange > self['rngdata'].MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
                                 end
                                 if overRangedCount > 1 then
@@ -310,10 +319,12 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                         AttackTarget = enemyUnit.Object
                                     }
                                     --self:LogDebug(string.format('Experimental has experimental threat that outranges it, retreat'))
+                                    --LOG('Experimental is retreating because of experimental threat that outranges us'..tostring(threatTable.ExperimentalThreat.TotalThreat)..' unit range '..tostring(unitRange))
                                     self:ChangeState(self.Retreating)
                                 end
-                                if not closestUnit or (enemyUnit.Distance < closestUnitDistance and closestUnitDistance > 25) then
+                                if (not highPriorityTarget or not closestUnit) or (enemyUnit.Distance < closestUnitDistance and closestUnitDistance > 25) then
                                     closestUnit = enemyUnit.Object
+                                    highPriorityTarget = enemyUnit.Object
                                     closestUnitDistance = enemyUnit.Distance
                                 end
                             end
@@ -327,7 +338,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                             if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored and enemyUnit.Object:GetFractionComplete() >= 1 then
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object) or 10
                                 --LOG('Artillery Range is greater than Experimental')
-                                if unitRange > self.MaxPlatoonWeaponRange then
+                                if unitRange > self['rngdata'].MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
                                     overRangedThreat = overRangedThreat + (enemyUnit.Blueprint.Defense.SurfaceThreatLevel or 35)
                                 end
@@ -338,6 +349,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                         AttackTarget = enemyUnit.Object
                                     }
                                     --self:LogDebug(string.format('Experimental has more than one T2 arty within range of it, retreat'))
+                                    --LOG('Experimental is retreating because of artillery threat that outranges us'..tostring(threatTable.RangedUnitThreat.TotalThreat)..' unit range '..tostring(unitRange))
                                     self:ChangeState(self.Retreating)
                                 end
                                 if not closestUnit or (enemyUnit.Distance < closestUnitDistance and closestUnitDistance > 25) then
@@ -349,7 +361,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         for _, enemyUnit in threatTable.RangedUnitThreat.Units do
                             if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored then
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object) or 10
-                                if unitRange > self.MaxPlatoonWeaponRange then
+                                if unitRange > self['rngdata'].MaxPlatoonWeaponRange then
                                     local unitCats = enemyUnit.Blueprint.CategoriesHash
                                     overRangedCount = overRangedCount + 1
                                     if enemyUnit.Blueprint.Defense.SurfaceThreatLevel then
@@ -364,10 +376,10 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                 if overRangedCount > 6 and overRangedThreat > 200 and not self.SuicideModeActive then
                                     self.BuilderData = {
                                         Retreat = true,
-                                        RetreatReason = 'ArtilleryThreat',
+                                        RetreatReason = 'RangedThreat',
                                         AttackTarget = enemyUnit.Object
                                     }
-                                    --LOG('Experimental has more than 3 units with more range than the Experimental count is'..tostring(overRangedCount)..', retreat threat is '..tostring(overRangedThreat))
+                                    --LOG('Experimental has more than 3 units with more range than the Experimental count is'..tostring(overRangedCount)..', retreat threat is '..tostring(overRangedThreat)..' unit range is '..tostring(unitRange))
                                     --self:LogDebug(string.format('Experimental has more than 3 units with more range than the Experimental count is'..tostring(overRangedCount)..', retreat threat is '..tostring(overRangedThreat)))
                                     self:ChangeState(self.Retreating)
                                 end
@@ -400,7 +412,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         for _, enemyUnit in threatTable.NavalUnitThreat.Units do
                             if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored then
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object) or 10
-                                if unitRange > self.MaxPlatoonWeaponRange then
+                                if unitRange > self['rngdata'].MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
                                 end
                                 if overRangedCount > 2 then
@@ -419,7 +431,9 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    if not target and closestUnit and not IsDestroyed(closestUnit) then
+                    if highPriorityTarget then
+                        target = highPriorityTarget
+                    elseif not target and closestUnit and not IsDestroyed(closestUnit) then
                         target = closestUnit
                         --LOG('We have a target from threattable')
                     end
@@ -443,7 +457,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                 local dx = targetPos[1] - experimentalPosition[1]
                 local dz = targetPos[3] - experimentalPosition[3]
                 local distance = dx * dx + dz * dz
-                if distance > self.MaxPlatoonWeaponRangeSq then
+                if distance > self['rngdata'].MaxPlatoonWeaponRangeSq then
                     self.BuilderData = {
                         Position = targetPos,
                         AttackTarget = target
@@ -587,7 +601,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local experimental = self.ExperimentalUnit
             local target = self.BuilderData.AttackTarget
-            local maxPlatoonRange = self.MaxPlatoonWeaponRange
+            local maxPlatoonRange = self['rngdata'].MaxPlatoonWeaponRange
             local threatTable = self.EnemyThreatTable
             while experimental and not IsDestroyed(experimental) do
                 if (experimental.ShieldCaution or threatTable.ArtilleryThreat.TotalThreat > 0) and not experimental.HoldPosition then
@@ -625,8 +639,8 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     local unitPos = experimental:GetPosition()
                     if StateUtils.PositionInWater(unitPos) and experimental.Blueprint.CategoriesHash.ANTINAVY then
                         maxPlatoonRange = StateUtils.GetUnitMaxWeaponRange(self.ExperimentalUnit, 'Anti Navy')
-                    elseif maxPlatoonRange < self.MaxPlatoonWeaponRange then
-                        maxPlatoonRange = self.MaxPlatoonWeaponRange
+                    elseif maxPlatoonRange < self['rngdata'].MaxPlatoonWeaponRange then
+                        maxPlatoonRange = self['rngdata'].MaxPlatoonWeaponRange
                     end
                     local tx = unitPos[1] - targetPosition[1]
                     local tz = unitPos[3] - targetPosition[3]
@@ -637,10 +651,10 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     local smartPos = { x, GetTerrainHeight( x, y), y }
                     -- check if the move position is new or target has moved
                     local expTargetBlocked = aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental['rngdata'].WeaponArc)
-                    if (targetDistance < self.MaxPlatoonWeaponRangeSq and maxPlatoonRange >= targetMaxWeaponRange or target.Blueprint.CategoriesHash.EXPERIMENTAL) and not expTargetBlocked then
+                    if (targetDistance < self['rngdata'].MaxPlatoonWeaponRangeSq and maxPlatoonRange >= targetMaxWeaponRange or target.Blueprint.CategoriesHash.EXPERIMENTAL) and not expTargetBlocked then
                         IssueAggressiveMove({experimental}, targetPosition)
                         coroutine.yield(45)
-                    elseif not expTargetBlocked and VDist2Sq( smartPos[1], smartPos[3], experimental['rngdata'].smartPos[1], experimental['rngdata'].smartPos[3] ) > 9 or targetDistance > self.MaxPlatoonWeaponRangeSq then
+                    elseif not expTargetBlocked and VDist2Sq( smartPos[1], smartPos[3], experimental['rngdata'].smartPos[1], experimental['rngdata'].smartPos[3] ) > 9 or targetDistance > self['rngdata'].MaxPlatoonWeaponRangeSq then
                         -- clear move commands if we have queued more than 4
                         if RNGGETN(experimental:GetCommandQueue()) > 2 then
                             IssueClearCommands({experimental})
@@ -725,7 +739,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local experimental = self.ExperimentalUnit
             local target = self.BuilderData.AttackTarget
-            local maxPlatoonRange = self.MaxPlatoonWeaponRange
+            local maxPlatoonRange = self['rngdata'].MaxPlatoonWeaponRange
             local threatTable = self.EnemyThreatTable
             if not self.BuilderData then
                 WARN('Land HoldPosition is missing builder data')

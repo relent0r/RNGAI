@@ -136,6 +136,22 @@ function GreaterThanEconEfficiencyCombinedRNG(aiBrain, MassEfficiency, EnergyEff
     return false
 end
 
+function GreaterThanEconEfficiencyOrAirStrategyRNG(aiBrain, MassEfficiency, EnergyEfficiency)
+    -- Using eco over time values from the EconomyOverTimeRNG thread.
+    if aiBrain.BrainIntel.PlayerStrategy.T3AirRush then
+        return true
+    end
+    if (aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime >= MassEfficiency and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= EnergyEfficiency) then
+        --RNGLOG('GreaterThanEconEfficiencyOverTime passed True')
+        local EnergyEfficiencyOverTime = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
+        local MassEfficiencyOverTime = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
+        if (MassEfficiencyOverTime >= MassEfficiency and EnergyEfficiencyOverTime >= EnergyEfficiency) then
+            return true
+        end
+    end
+    return false
+end
+
 function GreaterThanEnergyEfficiencyOverTimeRNG(aiBrain, EnergyEfficiency)
 
     if aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= EnergyEfficiency then
@@ -185,10 +201,17 @@ function LessThanEnergyTrendOverTimeRNG(aiBrain, EnergyTrend)
     return false
 end
 
-function LessThanEnergyTrendCombinedRNG(aiBrain, EnergyTrend)
+function LessThanEnergyTrendCombinedRNG(aiBrain, EnergyTrend, lateGameScale)
 
     if aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime < EnergyTrend then
         if GetEconomyTrend(aiBrain, 'ENERGY') < EnergyTrend then
+            return true
+        end
+    end
+    if lateGameScale then
+        local energyIncome = GetEconomyIncome(aiBrain, 'ENERGY')
+        local massIncome = GetEconomyIncome(aiBrain, 'MASS')
+        if massIncome * 50 < energyIncome then
             return true
         end
     end
@@ -328,75 +351,17 @@ function HighValueGateRNG(aiBrain)
 end
 
 
-function MassIncomeToFactoryRNG(aiBrain, compareType, factoryDrain, requireBuilt, baseName)
+function MassIncomeToFactoryRNG(aiBrain, compareType)
 
-    local factoryList = aiBrain:GetListOfUnits(categories.STRUCTURE * categories.FACTORY)
-    local t1LandFactories = 0
-    local t2LandFactories = 0
-    local t3LandFactories = 0
-    local t1AirFactories = 0
-    local t2AirFactories = 0
-    local t3AirFactories = 0
-    local t1NavalFactories = 0
-    local t2NavalFactories = 0
-    local t3NavalFactories = 0
-
-    for _, v in factoryList do
-        if requireBuilt and v:GetFractionComplete() ~= 1 then
-            continue
-        end
-        if v.Blueprint.CategoriesHash.TECH1 then
-            if v.Blueprint.CategoriesHash.LAND then
-                t1LandFactories = t1LandFactories + 1
-            elseif v.Blueprint.CategoriesHash.AIR then
-                t1AirFactories = t1AirFactories + 1
-            elseif v.Blueprint.CategoriesHash.NAVAL then
-                t1NavalFactories = t1NavalFactories + 1
-            end
-        elseif v.Blueprint.CategoriesHash.TECH2 then
-            if v.Blueprint.CategoriesHash.LAND then
-                t2LandFactories = t2LandFactories + 1
-            elseif v.Blueprint.CategoriesHash.AIR then
-                t2AirFactories = t2AirFactories + 1
-            elseif v.Blueprint.CategoriesHash.NAVAL then
-                t2NavalFactories = t2NavalFactories + 1
-            end
-        elseif v.Blueprint.CategoriesHash.TECH3 then
-            if v.Blueprint.CategoriesHash.LAND then
-                t3LandFactories = t3LandFactories + 1
-            elseif v.Blueprint.CategoriesHash.AIR then
-                t3AirFactories = t3AirFactories + 1
-            elseif v.Blueprint.CategoriesHash.NAVAL then
-                t3NavalFactories = t3NavalFactories + 1
-            end
-        end
-    end
-    --RNGLOG('T1 Land Factories '..t1LandFactories)
-    --RNGLOG('T2 Land Factories '..t2LandFactories)
-    --RNGLOG('T3 Land Factories '..t3LandFactories)
-    --RNGLOG('T1 Air Factories '..t1AirFactories)
-    --RNGLOG('T2 Air Factories '..t2AirFactories)
-    --RNGLOG('T3 Air Factories '..t3AirFactories)
-    --RNGLOG('T1 Naval Factories '..t1NavalFactories)
-    --RNGLOG('T2 Naval Factories '..t2NavalFactories)
-    --RNGLOG('T3 Naval Factories '..t3NavalFactories)
-
-    local massTotal = (t1LandFactories * factoryDrain.t1LandDrain) + (t2LandFactories * factoryDrain.t2LandDrain) + (t3LandFactories * factoryDrain.t3LandDrain)
-    --RNGLOG('massTotal land '..massTotal)
-    massTotal = massTotal + (t1AirFactories * factoryDrain.t1AirDrain) + (t2AirFactories * factoryDrain.t2AirDrain) + (t3AirFactories * factoryDrain.t3AirDrain)
-    --RNGLOG('massTotal air '..massTotal)
-    massTotal = massTotal + (t1NavalFactories * factoryDrain.t1NavalDrain) + (t2NavalFactories * factoryDrain.t2NavalDrain) + (t3NavalFactories * factoryDrain.t3NavalDrain)
-    --RNGLOG('massTotal naval '..massTotal)
-    
-    -- T4 Test
+    local totalFactoryConsumption = aiBrain.EcoManager.ApproxLandFactoryMassConsumption + aiBrain.EcoManager.ApproxAirFactoryMassConsumption + aiBrain.EcoManager.ApproxNavalFactoryMassConsumption
     local unitCount = aiBrain:GetEngineerManagerUnitsBeingBuilt(categories.EXPERIMENTAL + (categories.STRATEGIC * categories.TECH3))
-    massTotal = massTotal + (unitCount * 40)
+    totalFactoryConsumption = totalFactoryConsumption + (unitCount * 40)
 
-    aiBrain.EcoManager.ApproxFactoryMassConsumption = massTotal
-    if not CompareBody((aiBrain.EconomyOverTimeCurrent.MassIncome * 10), massTotal, compareType) then
-        --RNGLOG('Mass to factory ratio false, mass consumption is '..massTotal)
+    if not CompareBody((aiBrain.EconomyOverTimeCurrent.MassIncome * 10), totalFactoryConsumption, compareType) then
+        --LOG('Mass to factory ratio false, mass consumption is '..tostring(totalFactoryConsumption)..' total income over time is '..tostring(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
         return false
     end
+    --LOG('Mass to factory ratio true mass consumption is '..tostring(totalFactoryConsumption)..' total income over time is '..tostring(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
     return true
 end
 
@@ -535,7 +500,15 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, layer, requireBu
         --LOG('availableResources '..tostring(availableResources))
         --LOG('Current ratio '..tostring(massSpendTotal / availableResources))
         --LOG('Expected ratio '..tostring(aiBrain.ProductionRatios[layer]))
-        if massSpendTotal / availableResources < aiBrain.ProductionRatios[layer] then
+        local productionRatio 
+        if aiBrain.ProductionRatios[layer] == 0 then
+            productionRatio = aiBrain.DefaultProductionRatios[layer]
+        else
+            productionRatio = aiBrain.ProductionRatios[layer]
+        end
+        --LOG('Production rato is '..tostring(productionRatio))
+
+        if massSpendTotal / availableResources < productionRatio then
             return true
         end
     end
@@ -564,33 +537,7 @@ function GreaterThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType, requir
     end
     --RNGLOG('Location Type '..locationType)
 
-    local factoryDrain = {}
-    local massToFactoryValues = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues
-    local ecoMultiplier = aiBrain.EcoManager.EcoMultiplier
-    if aiBrain.CheatEnabled then
-        factoryDrain.t1LandDrain = (massToFactoryValues.T1LandValue or 8) * ecoMultiplier
-        factoryDrain.t2LandDrain = (massToFactoryValues.T2LandValue or 20) * ecoMultiplier
-        factoryDrain.t3LandDrain = (massToFactoryValues.T3LandValue or 30) * ecoMultiplier
-        factoryDrain.t1AirDrain = (massToFactoryValues.T1AirValue or 8) * ecoMultiplier
-        factoryDrain.t2AirDrain = (massToFactoryValues.T2AirValue or 20) * ecoMultiplier
-        factoryDrain.t3AirDrain = (massToFactoryValues.T3AirValue or 30) * ecoMultiplier
-        factoryDrain.t1NavalDrain = (massToFactoryValues.T1NavalValue or 8) * ecoMultiplier
-        factoryDrain.t2NavalDrain = (massToFactoryValues.T2NavalValue or 20) * ecoMultiplier
-        factoryDrain.t3NavalDrain = (massToFactoryValues.T3NavalValue or 30) * ecoMultiplier
-    else
-        factoryDrain.t1LandDrain = massToFactoryValues.T1LandValue or 8
-        factoryDrain.t2LandDrain = massToFactoryValues.T2LandValue or 20
-        factoryDrain.t3LandDrain = massToFactoryValues.T3LandValue or 30
-        factoryDrain.t1AirDrain = massToFactoryValues.T1AirValue or 8
-        factoryDrain.t2AirDrain = massToFactoryValues.T2AirValue or 20
-        factoryDrain.t3AirDrain = massToFactoryValues.T3AirValue or 30
-        factoryDrain.t1NavalDrain = massToFactoryValues.T1NavalValue or 8
-        factoryDrain.t2NavalDrain = massToFactoryValues.T2NavalValue or 20
-        factoryDrain.t3NavalDrain = massToFactoryValues.T3NavalValue or 30
-    end
-    --RNGLOG('Total Factory Drain '..repr(factoryDrain))
-
-    return MassIncomeToFactoryRNG(aiBrain,'>', factoryDrain, requireBuilt, locationType)
+    return MassIncomeToFactoryRNG(aiBrain,'>')
 end
 
 function LessThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType,requireBuilt)
@@ -601,39 +548,14 @@ function LessThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType,requireBui
     end
     --RNGLOG('Location Type '..locationType)
 
-    local factoryDrain = {}
-    local massToFactoryValues = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues
-    local ecoMultiplier = aiBrain.EcoManager.EcoMultiplier
-    if aiBrain.CheatEnabled then
-        factoryDrain.t1LandDrain = (massToFactoryValues.T1LandValue or 8) * ecoMultiplier
-        factoryDrain.t2LandDrain = (massToFactoryValues.T2LandValue or 20) * ecoMultiplier
-        factoryDrain.t3LandDrain = (massToFactoryValues.T3LandValue or 30) * ecoMultiplier
-        factoryDrain.t1AirDrain = (massToFactoryValues.T1AirValue or 8) * ecoMultiplier
-        factoryDrain.t2AirDrain = (massToFactoryValues.T2AirValue or 20) * ecoMultiplier
-        factoryDrain.t3AirDrain = (massToFactoryValues.T3AirValue or 30) * ecoMultiplier
-        factoryDrain.t1NavalDrain = (massToFactoryValues.T1NavalValue or 8) * ecoMultiplier
-        factoryDrain.t2NavalDrain = (massToFactoryValues.T2NavalValue or 20) * ecoMultiplier
-        factoryDrain.t3NavalDrain = (massToFactoryValues.T3NavalValue or 30) * ecoMultiplier
-    else
-        factoryDrain.t1LandDrain = massToFactoryValues.T1LandValue or 8
-        factoryDrain.t2LandDrain = massToFactoryValues.T2LandValue or 20
-        factoryDrain.t3LandDrain = massToFactoryValues.T3LandValue or 30
-        factoryDrain.t1AirDrain = massToFactoryValues.T1AirValue or 8
-        factoryDrain.t2AirDrain = massToFactoryValues.T2AirValue or 20
-        factoryDrain.t3AirDrain = massToFactoryValues.T3AirValue or 30
-        factoryDrain.t1NavalDrain = massToFactoryValues.T1NavalValue or 8
-        factoryDrain.t2NavalDrain = massToFactoryValues.T2NavalValue or 20
-        factoryDrain.t3NavalDrain = massToFactoryValues.T3NavalValue or 30
-    end
-    --RNGLOG('Total Factory Drain '..repr(factoryDrain))
-
-    return MassIncomeToFactoryRNG(aiBrain,'<', factoryDrain, requireBuilt)
+    return MassIncomeToFactoryRNG(aiBrain,'<')
 end
 
-function FactorySpendRatioRNG(aiBrain,uType,upgradeType, noStorageCheck)
+function FactorySpendRatioRNG(aiBrain,uType,upgradeType, noStorageCheck, demandBuilder)
     local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3) or 0
     local currentFactorySpend = aiBrain.cmanager.categoryspend.fact[uType] - aiBrain.cmanager.categoryspend.fact[upgradeType]
-    if currentFactorySpend / ( aiBrain.cmanager.income.r.m - (mexSpend * 0.5)) < aiBrain.ProductionRatios[uType] then
+    local productionRatio = demandBuilder and math.max(aiBrain.ProductionRatios[uType], aiBrain.DefaultProductionRatios[uType]) or aiBrain.ProductionRatios[uType]
+    if currentFactorySpend / ( aiBrain.cmanager.income.r.m - (mexSpend * 0.5)) < productionRatio then
         if aiBrain.EnemyIntel.ChokeFlag and uType == 'Land' then 
             if (GetEconomyStoredRatio(aiBrain, 'MASS') >= 0.10 and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= 0.95) then
                 return true
@@ -645,7 +567,7 @@ function FactorySpendRatioRNG(aiBrain,uType,upgradeType, noStorageCheck)
                 return true
             end
         elseif uType == 'Land' then
-            if GetEconomyStored(aiBrain, 'MASS') >= 5 and GetEconomyStored(aiBrain, 'ENERGY') >= 100 or aiBrain.BrainIntel.SpamPlayer then
+            if GetEconomyStored(aiBrain, 'MASS') >= 5 and GetEconomyStored(aiBrain, 'ENERGY') >= 100 or aiBrain.BrainIntel.PlayerRole.SpamPlayer then
                 return true
             end
         else
@@ -690,4 +612,13 @@ function MinimumPowerRequired(aiBrain, trend)
     return false
 end
 
+function LateGamePowerScale(aiBrain)
+    local energyIncome = GetEconomyIncome(aiBrain, 'ENERGY')
+    local massIncome = GetEconomyIncome(aiBrain, 'MASS')
+
+    if massIncome * 4 < energyIncome then
+        return true
+    end
+
+end
     

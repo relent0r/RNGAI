@@ -36,6 +36,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             self:LogDebug(string.format('Welcome to the GunshipBehavior StateMachine'))
             local aiBrain = self:GetBrain()
+            self.MergeType = 'AirGunshipMergeStateMachine'
             if self.PlatoonData.LocationType then
                 self.LocationType = self.PlatoonData.LocationType
             else
@@ -220,7 +221,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             end
             if not target then
                 local target = RUtils.CheckACUSnipe(aiBrain, 'Land')
-                if target and self.MaxPlatoonDPS > 250 then
+                if target and self['rngdata'].MaxPlatoonDPS > 250 then
                     self.BuilderData = {
                         AttackTarget = target,
                         Position = table.copy(target:GetPosition())
@@ -309,8 +310,6 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
         --- The platoon retreats from a threat
         ---@param self AIPlatoonGunshipBehavior
         Main = function(self)
-            local aiBrain = self:GetBrain()
-            local armyIndex = aiBrain:GetArmyIndex()
             local platoonUnits = self:GetPlatoonUnits()
             local builderData = self.BuilderData
             local destination = builderData.Position
@@ -336,6 +335,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             local cache = { 0, 0, 0 }
 
             while not IsDestroyed(self) do
+                self:LogDebug(string.format('Gunship Navigating top loop'))
                 local origin = self:GetPlatoonPosition()
                 local platoonUnits = self:GetPlatoonUnits()
                 waypoint, length = NavUtils.DirectionTo('Air', origin, destination, 80)
@@ -346,28 +346,13 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                     if dx * dx + dz * dz < navigateDistanceCutOff then
                         local movementPositions = StateUtils.GenerateGridPositions(destination, 6, self.PlatoonCount)
                         for k, unit in platoonUnits do
-                            if not unit.Dead and movementPositions[k] then
-                                --IssueMove({platoonUnits[k]}, movementPositions[k])
-                                if unit.GetNavigator then
-                                    local navigator = unit:GetNavigator()
-                                    if navigator then
-                                        navigator:SetGoal(movementPositions[k])
-                                    end
+                            if not unit.Dead then 
+                                if movementPositions[k] then
+                                    --IssueMove({platoonUnits[k]}, movementPositions[k])
+                                    StateUtils.IssueNavigationMove(unit, movementPositions[k])
                                 else
-                                    IssueClearCommands({unit})
-                                    IssueMove({unit},movementPositions[k])
+                                    StateUtils.IssueNavigationMove(unit, destination)
                                 end
-                            else
-                                if unit.GetNavigator then
-                                    local navigator = unit:GetNavigator()
-                                    if navigator then
-                                        navigator:SetGoal(destination)
-                                    end
-                                else
-                                    IssueClearCommands({unit})
-                                    IssueMove({unit},destination)
-                                end
-                                --IssueMove({platoonUnits[k]}, destination)
                             end
                         end
                         self:ChangeState(self.DecideWhatToDo)
@@ -381,15 +366,19 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 end
                 local movementPositions = StateUtils.GenerateGridPositions(waypoint, 5, self.PlatoonCount)
                 for k, unit in platoonUnits do
-                    if not unit.Dead and movementPositions[k] then
-                        IssueMove({platoonUnits[k]}, movementPositions[k])
-                    else
-                        IssueMove({platoonUnits[k]}, waypoint)
+                    if not unit.Dead then
+                        if movementPositions[k] then
+                            StateUtils.IssueNavigationMove(unit, movementPositions[k])
+                        else
+                            StateUtils.IssueNavigationMove(unit, waypoint)
+                        end
                     end
                 end
                 -- check for opportunities
                 local wx = waypoint[1]
                 local wz = waypoint[3]
+                local movementTimeout = 0
+                local distanceTimeout
                 while not IsDestroyed(self) do
                     WaitTicks(20)
                     if IsDestroyed(self) then
@@ -399,7 +388,8 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                     -- check if we're near our current waypoint
                     local dx = position[1] - wx
                     local dz = position[3] - wz
-                    if dx * dx + dz * dz < navigateDistanceCutOff then
+                    local distance = dx * dx + dz * dz
+                    if distance < navigateDistanceCutOff then
                         --LOG('close to waypoint position in second loop')
                         --LOG('distance is '..(dx * dx + dz * dz))
                         --LOG('CutOff is '..navigateDistanceCutOff)
@@ -408,8 +398,14 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                         end
                         break
                     end
-                    -- check for threats
                     WaitTicks(10)
+                    if not distanceTimeout or distanceTimeout == distance then
+                        movementTimeout = movementTimeout + 1
+                        if movementTimeout > 5 then
+                            break
+                        end
+                    end
+                    distanceTimeout = distance
                 end
                 if targetNavigation and attackTarget.Dead then
                     if self.BuilderData then
@@ -497,27 +493,9 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 local movementPositions = StateUtils.GenerateGridPositions(targetPos, 6, self.PlatoonCount)
                 for k, unit in platoonUnits do
                     if not unit.Dead and movementPositions[k] then
-                        --IssueMove({platoonUnits[k]}, movementPositions[k])
-                        if unit.GetNavigator then
-                            local navigator = unit:GetNavigator()
-                            if navigator then
-                                navigator:SetGoal(movementPositions[k])
-                            end
-                        else
-                            IssueClearCommands({unit})
-                            IssueMove({unit},movementPositions[k])
-                        end
+                        StateUtils.IssueNavigationMove(unit, movementPositions[k])
                     else
-                        --IssueMove({platoonUnits[k]}, targetPos)
-                        if unit.GetNavigator then
-                            local navigator = unit:GetNavigator()
-                            if navigator then
-                                navigator:SetGoal(targetPos)
-                            end
-                        else
-                            IssueClearCommands({unit})
-                            IssueMove({unit},targetPos)
-                        end
+                        StateUtils.IssueNavigationMove(unit, targetPos)
                     end
                 end
                 coroutine.yield(35)
@@ -613,7 +591,7 @@ GunshipThreatThreads = function(aiBrain, platoon)
                 end
             end
             platoon.PlatoonCount = unitCount
-            platoon.MaxPlatoonDPS = maxPlatoonDPS
+            platoon['rngdata'].MaxPlatoonDPS = maxPlatoonDPS
             platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
             platoon.CurrentPlatoonThreatAntiSurface = platoon:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
         end
