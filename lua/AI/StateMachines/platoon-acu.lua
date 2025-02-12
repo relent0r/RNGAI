@@ -1534,7 +1534,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         local enemyThreat = GetThreatAtPosition(brain, targetPos, brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
                         if enemyThreat > 0 then
                             local realThreat = RUtils.GrabPosDangerRNG(brain,targetPos, 45,45, true, true, false)
-                            if realThreat.enemySurface > realThreat.allySurface and realThreat.enemySurface > cdr.CurrentFriendlyInnerCircle and not cdr.SuicideMode then
+                            if realThreat.enemySurface > realThreat.allySurface and realThreat.enemySurface > cdr.CurrentFriendlyInnerCircle and not cdr.SuicideMode and cdr.Confidence < 5 then
                                 if VDist2Sq(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3]) < 2025 then
                                     cdr.Caution = true
                                     cdr.CautionReason = 'acuOverChargeTargetCheck'

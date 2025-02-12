@@ -468,6 +468,7 @@ end
 function EnemyStructuresGreaterThanMobileAtPerimeter(aiBrain, locationType)
     local perimeterMonitor = aiBrain.BasePerimeterMonitor[locationType]
     if perimeterMonitor.StructureUnits > 0 then
+        --LOG('Structure Units detected at perimeter')
         if perimeterMonitor.StructureThreat > perimeterMonitor.LandThreat then
             return true
         end
@@ -479,9 +480,30 @@ function EnemyStructuresGreaterThanMobileAtPerimeter(aiBrain, locationType)
         --LOG('Perimeter threat is '..tostring(perimeterMonitor.LandThreat))
         if (perimeterMonitor.ClosestDefenseClusterThreat > perimeterMonitor.ClosestZoneIntelLandThreat or perimeterMonitor.ClosestDefenseClusterDistance < perimeterMonitor.ClosestZoneIntelLandThreatDistance) and perimeterMonitor.ClosestDefenseClusterThreat > perimeterMonitor.LandThreat then
             --LOG('Base detected that defense cluster threat is greater than land threat')
+            --LOG('Cluster threat is '..tostring(perimeterMonitor.ClosestDefenseClusterThreat))
             --LOG('Cluster distance is '..tostring(perimeterMonitor.ClosestDefenseClusterDistance))
             --LOG('ZoneAntiSurface distance is '..tostring(perimeterMonitor.ClosestZoneIntelLandThreatDistance))
-            return true
+            local minDist = 9999
+            local maxDist = 0
+            for k, base in aiBrain.BasePerimeterMonitor do
+                if base.ClosestDefenseClusterDistance then
+                    if base.ClosestDefenseClusterDistance < minDist then
+                        minDist = base.ClosestDefenseClusterDistance
+                    end
+                    if base.ClosestDefenseClusterDistance > maxDist then
+                        maxDist = base.ClosestDefenseClusterDistance
+                    end
+                end
+            end
+            -- Ensure we have a valid range
+            local distanceRange = math.max(maxDist - minDist, 1)
+            local distWeight = 1 - ((perimeterMonitor.ClosestDefenseClusterDistance - minDist) / distanceRange)
+            local threshold = 0.3 -- Adjust this threshold based on testing
+            --LOG('distWeight '..tostring(distWeight)..' question is larger than '..tostring(threshold))
+            if distWeight > threshold and perimeterMonitor.ClosestDefenseClusterThreat > perimeterMonitor.LandThreat then
+                --LOG('Yes triggering build for base '..tostring(locationType))
+                return true
+            end
         end
     end
     return false
@@ -1770,7 +1792,6 @@ function DefensivePointShieldRequired(aiBrain, locationType)
 end
 
 function UnitBuildDemand(aiBrain, locationType, type, tier, unit)
-    --LOG('Unit demand for unit '..tostring(unit)..' is '..tostring(aiBrain.amanager.Demand[type][tier][unit])..' current is '..tostring(aiBrain.amanager.Current[type][tier][unit]))
     if aiBrain.amanager.Demand[type][tier][unit] > aiBrain.amanager.Current[type][tier][unit] then
         return true
     end
