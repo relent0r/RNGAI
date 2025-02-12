@@ -477,6 +477,29 @@ function CDRThreatAssessmentRNG(cdr)
                 return result
             end
 
+            local function distanceFearMultiplier(cdrDistanceToBase, distanceToEnemyBase)
+                if not cdrDistanceToBase or not distanceToEnemyBase then
+                    return 1
+                end
+                local k = 8  -- Controls how sharply the penalty increases
+                local distanceRatio = distanceToEnemyBase / (cdrDistanceToBase + distanceToEnemyBase)
+            
+                if distanceRatio >= 0.5 then
+                    return 1  -- No penalty when less than halfway to enemy base
+                end
+            
+                -- Map from 0.5 to 0.0
+                local mappedRatio = (0.5 - distanceRatio) / 0.5  -- Converts range [0.5, 0] to [0, 1]
+            
+                -- Sigmoid-based scaling
+                local sigmoid = 1 / (1 + math.exp(-k * (mappedRatio - 0.5)))  -- Centered sigmoid at 50% of remaining range
+            
+                -- Reverse scaling: 1 → 0.5 instead of 1 → 0.4
+                local multiplier = 1 - (sigmoid * 0.5)  -- Scale from 1 to 0.5
+            
+                return multiplier
+            end
+
             -- Main function to calculate cdr.Confidence
             local function calculateConfidence(aiBrain, cdr, friendlyUnitThreat, enemyUnitThreat, cdrDistanceToBase, localEnemyThreatRatio, weights)
                 local friendlyThreatConfidenceModifier = calculateFriendlyThreatModifier(aiBrain, friendlyUnitThreat, cdr, weights)
@@ -493,19 +516,17 @@ function CDRThreatAssessmentRNG(cdr)
                             distanceToEnemyBase = tmpDistance
                         end
                     end
-                    distanceToEnemyBase = aiBrain.EnemyIntel.ClosestEnemyBase
                 else
                     local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
                     distanceToEnemyBase = math.max(playableArea[3], playableArea[4])
                     distanceToEnemyBase = distanceToEnemyBase * distanceToEnemyBase
                 end
                 --LOG('Distance to enemy base for '..tostring(aiBrain.Nickname)..' is '..tostring(distanceToEnemyBase)..' distance to AI base '..tostring(cdrDistanceToBase))
-                local distanceFactor = math.sqrt(cdrDistanceToBase) / (math.sqrt(distanceToEnemyBase) + 0.1)
-                local scale = 2 - (distanceFactor / (distanceFactor + 1)) 
+                local distanceFearFactor = distanceFearMultiplier(math.sqrt(cdrDistanceToBase), math.sqrt(distanceToEnemyBase))
                 --LOG('Friendly threat before '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
-                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier - (weights.distanceToBase * scale)
+                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier * distanceFearFactor
                 --LOG('Friendly threat after '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
-                --LOG('Distance to enemy base scaled factor for '..tostring(aiBrain.Nickname)..' is '..tostring((weights.distanceToBase * scale)))
+                --LOG('Distance to enemy base scaled factor for '..tostring(aiBrain.Nickname)..' is '..tostring(distanceFearFactor))
                 enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + weights.localEnemyThreatRatio * localEnemyThreatRatio
 
                 -- Calculate confidence
@@ -540,7 +561,7 @@ function CDRThreatAssessmentRNG(cdr)
                 selfThreat = 1.1, -- higher means more confidence
                 allyThreat = 1.0, -- higher means more confidence
                 friendlyUnitThreat = 1.1, -- higher means more confidence
-                healthBoost = 1.4, -- higher means more confidence
+                healthBoost = 1.3, -- higher means more confidence
                 shieldBoost = 1.1, -- higher means more confidence
                 enemyThreat = 0.8, -- higher means less confidence
                 enemyUnitThreat = 1.0, -- higher means less confidence

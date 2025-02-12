@@ -204,6 +204,20 @@ BuilderGroup {
         },
     },
     Builder {
+        BuilderName = 'RNGAI T2 Shield Demand',
+        PlatoonTemplate = 'T2MobileShields',
+        Priority = 755,
+        BuilderConditions = {
+            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T2', 'shield'} },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 2
+        },
+    },
+    Builder {
         BuilderName = 'RNGAI T2 MML Demand',
         PlatoonTemplate = 'T2LandArtillery',
         Priority = 751,

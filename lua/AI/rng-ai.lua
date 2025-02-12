@@ -467,6 +467,23 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    EvaluateDefaultEconomyRatios = function(self)
+
+        if self.MapSize <= 10 and self.RNGEXP then
+            self.EconomyUpgradeSpendDefault = 0.40
+            self.EconomyUpgradeSpend = 0.35
+        elseif self.MapSize <= 10 then
+            self.EconomyUpgradeSpendDefault = 0.25
+            self.EconomyUpgradeSpend = 0.25
+        elseif self.RNGEXP then
+            self.EconomyUpgradeSpendDefault = 0.45
+            self.EconomyUpgradeSpend = 0.40
+        else
+            self.EconomyUpgradeSpendDefault = 0.30
+            self.EconomyUpgradeSpend = 0.30
+        end
+    end,
+
     ConfigureDefaultBrainData = function(self)
         self.NoRush = {
             Active = false,
@@ -489,10 +506,13 @@ AIBrain = Class(RNGAIBrainClass) {
         elseif mapSizeX > 200 and mapSizeZ > 200 then
             self.MapSize = 5
         end
+        self.EconomyUpgradeSpendDefault = 0.0
+        self.EconomyUpgradeSpend = 0.0
         self.DefaultProductionRatios['Land'] = 0.0
         self.DefaultProductionRatios['Air'] = 0.0
         self.DefaultProductionRatios['Naval'] = 0.0
         self:EvaluateDefaultProductionRatios()
+        self:EvaluateDefaultEconomyRatios()
 
         self.MapCenterPoint = { (ScenarioInfo.size[1] / 2), GetSurfaceHeight((ScenarioInfo.size[1] / 2), (ScenarioInfo.size[2] / 2)) ,(ScenarioInfo.size[2] / 2) }
 
@@ -505,19 +525,6 @@ AIBrain = Class(RNGAIBrainClass) {
             FirstRun = true,
             HasRun = false
         }
-        if self.MapSize <= 10 and self.RNGEXP then
-            self.EconomyUpgradeSpendDefault = 0.40
-            self.EconomyUpgradeSpend = 0.35
-        elseif self.MapSize <= 10 then
-            self.EconomyUpgradeSpendDefault = 0.25
-            self.EconomyUpgradeSpend = 0.25
-        elseif self.RNGEXP then
-            self.EconomyUpgradeSpendDefault = 0.45
-            self.EconomyUpgradeSpend = 0.40
-        else
-            self.EconomyUpgradeSpendDefault = 0.30
-            self.EconomyUpgradeSpend = 0.30
-        end
         self.EconomyTicksMonitor = 80
         self.EconomyCurrentTick = 1
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
@@ -7158,7 +7165,7 @@ AIBrain = Class(RNGAIBrainClass) {
             -- Configurable ratios for economy spend and assist
             local economySpendRatio = 0.05 -- Reserve 5% of the economy for economic upgrades
             local assistRatio = 0.05 -- Reserve 5% of the economy for assisting tasks
-            local economyUpgradeSpend = self.EconomyUpgradeSpend or 0.05
+            local economyUpgradeSpend = self.EconomyUpgradeSpendDefault or 0.05
             local engineerAssistRatio = self.EngineerAssistRatioDefault or 0.05
             if self.BrainIntel.HighestPhase > 1 then
                 economyUpgradeSpend = economyUpgradeSpend + (0.03 * self.BrainIntel.HighestPhase)
@@ -7193,13 +7200,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 Air = { Land = 0.7, Air = 1.5, Naval = 0.8 },
                 Naval = { Land = 0.7, Air = 0.8, Naval = 1.5 }
             }
-            local currentBias = brainIntel.PlayerRole.AirPlayer and playerBiases.Air or brainIntel.SpamPlayer and playerBiases.Land or isNavalMap and playerBiases.Naval or playerBiases.Default
+            local currentBias = brainIntel.PlayerRole.AirPlayer and playerBiases.Air or brainIntel.PlayerRole.SpamPlayer and playerBiases.Land or isNavalMap and playerBiases.Naval or playerBiases.Default
     
             local minAllocation = 0.20
             local maxShiftLandRatio = 0.70
             local maxShiftAirRatio = 0.70
             local maxShiftNavalRatio = 0.70
-            if brainIntel.SpamPlayer then
+            if brainIntel.PlayerRole.SpamPlayer then
                 maxShiftLandRatio = 0.80
                 economyUpgradeSpend = 0.05
                 engineerAssistRatio = 0.05
@@ -7222,7 +7229,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local totalIncome = self.cmanager.income.r.m
             local extractorValues = self.EcoManager.ExtractorValues
             local maxEconomyAllocation = (extractorValues.TECH1.TeamValue * extractorValues.TECH1.ConsumptionValue) + (extractorValues.TECH2.TeamValue * extractorValues.TECH2.ConsumptionValue)
-            if totalIncome > 0 then
+            if maxEconomyAllocation > 0 and totalIncome > 0 then
                 economyUpgradeSpendMax = math.min(self.EconomyUpgradeSpend, maxEconomyAllocation / totalIncome)
             end
     
@@ -7382,8 +7389,8 @@ AIBrain = Class(RNGAIBrainClass) {
     
             -- Logging
             --[[
-            LOG('Current Best Army ownership is '..tostring(brainIntel.PlayerZoneControl))
             LOG('AI Name '..tostring(self.Nickname))
+            LOG('Current Best Army ownership is '..tostring(brainIntel.PlayerZoneControl))
             LOG('Current game time '..tostring(GetGameTimeSeconds()))
             LOG('Are we a naval map '..tostring(isNavalMap))
             LOG('Has Land Production: '..tostring(hasLandProduction))
@@ -7414,10 +7421,6 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('self.EcoManager.ExtractorsUpgrading.TECH1 '..tostring(self.EcoManager.ExtractorsUpgrading.TECH1))
             LOG('self.EcoManager.ExtractorsUpgrading.TECH2 '..tostring(self.EcoManager.ExtractorsUpgrading.TECH2))
             LOG('self.EcoManager.TotalMexSpend '..tostring(self.EcoManager.TotalMexSpend))
-            LOG('aiBrain.EcoManager.ExtractorValues.TECH1.ConsumptionValue '..tostring(self.EcoManager.ExtractorValues.TECH1.ConsumptionValue))
-            LOG('aiBrain.EcoManager.ExtractorValues.TECH2.ConsumptionValue '..tostring(self.EcoManager.ExtractorValues.TECH2.ConsumptionValue))
-            LOG('aiBrain.EcoManager.ExtractorValues.TECH1.TeamValue '..tostring(self.EcoManager.ExtractorValues.TECH1.TeamValue))
-            LOG('aiBrain.EcoManager.ExtractorValues.TECH2.TeamValue '..tostring(self.EcoManager.ExtractorValues.TECH2.TeamValue))
             LOG('In theory we can allocate this much spend max '..tostring((self.EcoManager.ExtractorValues.TECH1.TeamValue * self.EcoManager.ExtractorValues.TECH1.ConsumptionValue) + (self.EcoManager.ExtractorValues.TECH2.TeamValue * self.EcoManager.ExtractorValues.TECH2.ConsumptionValue)))
             LOG('EconomyUpdate Spend Max Ratio is '..tostring(economyUpgradeSpendMax))
             LOG('----- Spend Metrics ------')
@@ -7426,12 +7429,10 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('ECOLOG: RequestedSpendNaval * totalIncome: '..tostring(self.ProductionRatios.Naval * totalIncome))
             LOG('ECOLOG: Economy Spend Ratio: '..tostring(economyUpgradeSpend))
             LOG('ECOLOG: Current Spend desired: '..tostring(self.cmanager.income.r.m*self.EconomyUpgradeSpend))
-            LOG('Economy Spend Ratio * totalIncome according to allocation: '..tostring(economyUpgradeSpend * totalIncome))
-            LOG('ECOLOG: Current Spend actual: '..tostring(self.EcoManager.TotalMexSpend))
+            LOG('ECOLOG: Current Extractor upgrade Spend to allocate: '..tostring(economyUpgradeSpend * totalIncome))
+            LOG('ECOLOG: Current Extractor upgrade Spend actual: '..tostring(self.EcoManager.TotalMexSpend))
             LOG('ECOLOG: Assist Ratio: '..tostring(engineerAssistRatio))
-            LOG('Compared fund allocation for assist '..tostring(math.ceil(math.max(self.cmanager.income.r.m * engineerAssistRatio, 5))))
-            LOG('Assist Ratio * totalIncome according to allocation: '..tostring(engineerAssistRatio * totalIncome))
-            LOG('Does the engineer manager have more build power than required '..tostring(self.EngineerAssistManagerBuildPower > self.EngineerAssistManagerBuildPowerRequired))
+            LOG('Assist Economy allocation: '..tostring(engineerAssistRatio * totalIncome))
             LOG('Builder Power '..tostring(self.EngineerAssistManagerBuildPower))
             LOG('Required '..tostring(self.EngineerAssistManagerBuildPowerRequired))
             LOG('Excess Allocation at the end of loop was '..tostring(excessAllocation))

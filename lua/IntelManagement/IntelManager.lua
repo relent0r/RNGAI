@@ -2659,7 +2659,7 @@ IntelManager = Class {
                 end
             end
         elseif productiontype == 'LandIndirectFire' then
-            local threatDillutionRatio = 17
+            local threatDillutionRatio = 15
             local enemyDefenseThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.DefenseSurface or 0
             --if EnemyIndex and OwnIndex and aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] ~= 'LAND' then
                 for k, v in aiBrain.BuilderManagers do
@@ -2737,6 +2737,8 @@ IntelManager = Class {
                         local indirectFireCount = 0
                         local threatRatio = 1
                         if totalEnemyStructureThreat > 0 then
+                            --LOG('Structure threat detected for base '..tostring(k))
+                            --LOG('Structure Threat for pathable zones '..tostring(totalEnemyStructureThreat))
                             if totalEnemyLandThreat > 0 then
                                 if totalFriendlyDirectFireThreat > 0 then
                                     threatRatio = totalFriendlyDirectFireThreat / totalEnemyLandThreat
@@ -2765,6 +2767,7 @@ IntelManager = Class {
                                 end
                             end
                             if indirectFireCount > 0 then
+                                --LOG('Indirect Fire Count desired'..tostring(indirectFireCount))
                                 if v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH1) > 0 then
                                     --LOG('Intel Manage requesting '..tostring(indirectFireCount)..' T1 artillery for base '..tostring(k))
                                     aiBrain.amanager.Demand.Bases[k].Land.T1.arty= math.ceil(indirectFireCount * 1.5)
