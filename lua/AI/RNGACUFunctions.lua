@@ -558,8 +558,8 @@ function CDRThreatAssessmentRNG(cdr)
 
             -- Example weights
             local weights = {
-                selfThreat = 1.1, -- higher means more confidence
-                allyThreat = 1.0, -- higher means more confidence
+                selfThreat = 1.0, -- higher means more confidence
+                allyThreat = 0.9, -- higher means more confidence
                 friendlyUnitThreat = 1.1, -- higher means more confidence
                 healthBoost = 1.3, -- higher means more confidence
                 shieldBoost = 1.1, -- higher means more confidence

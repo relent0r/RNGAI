@@ -1699,6 +1699,7 @@ StructureManager = Class {
             end
             while extractorUnit and not extractorUnit.Dead and fractionComplete < 1 do
                 --LOG('Unit is '..fractionComplete..' fraction complete')
+                local upgradeSpend = aiBrain.cmanager.income.r.m*aiBrain.EconomyUpgradeSpend
                 if not aiBrain.CentralBrainExtractorUnitUpgradeClosest or aiBrain.CentralBrainExtractorUnitUpgradeClosest.Dead then
                     aiBrain.CentralBrainExtractorUnitUpgradeClosest = extractorUnit
                     aiBrain.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase = distanceToBase
@@ -1716,7 +1717,9 @@ StructureManager = Class {
                     bypassEcoManager = true
                 end
                 if not bypassEcoManager and fractionComplete < 0.65 then
-                    if (GetEconomyTrend(aiBrain, 'MASS') <= 0.0 and GetEconomyStored(aiBrain, 'MASS') <= 150) or GetEconomyStored( aiBrain, 'ENERGY') < 200 then
+                    if GetEconomyStored(aiBrain, 'ENERGY') < 200 or ((GetEconomyTrend(aiBrain, 'MASS') <= 0.0 
+                        and GetEconomyStored(aiBrain, 'MASS') <= 150) and (aiBrain.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase ~= distanceToBase 
+                        or upgradeSpend > aiBrain.EcoManager.TotalMexSpend)) then
                         if not extractorUnit.Dead and not extractorUnit:IsPaused() then
                             extractorUnit:SetPaused(true)
                             coroutine.yield(10)
