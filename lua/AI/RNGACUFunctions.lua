@@ -481,23 +481,23 @@ function CDRThreatAssessmentRNG(cdr)
                 if not cdrDistanceToBase or not distanceToEnemyBase then
                     return 1
                 end
-                local k = 8  -- Controls how sharply the penalty increases
-                local distanceRatio = distanceToEnemyBase / (cdrDistanceToBase + distanceToEnemyBase)
             
-                if distanceRatio >= 0.5 then
-                    return 1  -- No penalty when less than halfway to enemy base
+                local k = 8  -- sharpness of scaling
+                local ratio = cdrDistanceToBase / (cdrDistanceToBase + distanceToEnemyBase)
+            
+                if ratio < 0.35 then
+                    local mapped = (0.5 - ratio) / 0.5 
+                    local sig = 1 / (1 + math.exp(-k * (mapped - 0.5)))
+                    local bonus = 1 + (sig * 0.5) 
+                    return bonus
+                elseif ratio < 0.6 then
+                    return 1
+                else
+                    local mapped = (ratio - 0.5) / 0.5 
+                    local sig = 1 / (1 + math.exp(-k * (mapped - 0.5)))
+                    local penalty = 1 - (sig * 0.5)
+                    return penalty
                 end
-            
-                -- Map from 0.5 to 0.0
-                local mappedRatio = (0.5 - distanceRatio) / 0.5  -- Converts range [0.5, 0] to [0, 1]
-            
-                -- Sigmoid-based scaling
-                local sigmoid = 1 / (1 + math.exp(-k * (mappedRatio - 0.5)))  -- Centered sigmoid at 50% of remaining range
-            
-                -- Reverse scaling: 1 → 0.5 instead of 1 → 0.4
-                local multiplier = 1 - (sigmoid * 0.5)  -- Scale from 1 to 0.5
-            
-                return multiplier
             end
 
             -- Main function to calculate cdr.Confidence
@@ -523,6 +523,7 @@ function CDRThreatAssessmentRNG(cdr)
                 end
                 --LOG('Distance to enemy base for '..tostring(aiBrain.Nickname)..' is '..tostring(distanceToEnemyBase)..' distance to AI base '..tostring(cdrDistanceToBase))
                 local distanceFearFactor = distanceFearMultiplier(math.sqrt(cdrDistanceToBase), math.sqrt(distanceToEnemyBase))
+                --LOG('Distance featFactor '..tostring(distanceFearFactor))
                 --LOG('Friendly threat before '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier * distanceFearFactor
                 --LOG('Friendly threat after '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
@@ -543,7 +544,7 @@ function CDRThreatAssessmentRNG(cdr)
 
                 local overchargeFactor = 0
                 local energyStored = aiBrain:GetEconomyStored('ENERGY')
-                if energyStored and cdr.OverCharge.EnergyRequired and energyStored >= cdr.OverchargeEnergyRequired then
+                if energyStored and cdr.OverCharge.EnergyRequired and energyStored >= cdr.OverCharge.EnergyRequired then
                     overchargeFactor = (weights.overchargeBoost * math.min(2.0, math.max(0.75, enemyUnitThreat / 50)))
                 end
                 --LOG('AI '..tostring(aiBrain.Nickname)..' health percent '..tostring(cdr.HealthPercent)..' friendlyThreatConfidenceModifier '..tostring(friendlyThreatConfidenceModifier)..' enemyThreatConfidenceModifier '..tostring(enemyThreatConfidenceModifier)..' ratio '..tostring(friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier)..' survivability '..tostring(survivability)..' overcharge '..tostring(overchargeFactor))

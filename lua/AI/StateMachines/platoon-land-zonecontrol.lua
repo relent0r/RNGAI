@@ -143,7 +143,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             --self:LogDebug(string.format('DecideWhatToDo threat data ally multiplier surface '..tostring(threat.allySurface*threatMultiplier)))
             --self:LogDebug(string.format('DecideWhatToDo enemy range '..tostring(threat.enemyrange)))
             --self:LogDebug(string.format('DecideWhatToDo friendly range '..tostring(threat.allyrange)))
-            if threat.allySurface and threat.enemySurface and threat.allySurface*threatMultiplier < threat.enemySurface or self.Raid and threat.allyrange < threat.enemyrange then
+            if threat.allySurface and threat.enemySurface and threat.allySurface*threatMultiplier < (threat.enemyStructure + threat.enemySurface) and threat.allySurface < 450 or self.Raid and threat.allyrange < threat.enemyrange then
                 if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*1.5 > (threat.enemySurface - threat.enemyStructure) or 
                 threat.allyrange > threat.enemyrange and threat.allySurface*1.5 > threat.enemySurface then
                     rangedAttack = true
@@ -526,7 +526,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false, true)
                         end
                         if (unitRole ~= 'Sniper' and unitRole ~= 'Silo' and unitRole ~= 'Scout' and unitRole ~= 'Artillery') and closestTarget>(unitRange*unitRange+400)*(unitRange*unitRange+400) then
-                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface and not self.Raid then
+                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > (approxThreat.enemyStructure + approxThreat.enemySurface) and not self.Raid then
                                 IssueClearCommands({v}) 
                                 if unitRole == 'Shield' and closestTarget then
                                     --LOG('UnitRole is Shield')

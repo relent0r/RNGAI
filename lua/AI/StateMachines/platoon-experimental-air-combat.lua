@@ -156,6 +156,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             local target
             local acuSnipeUnit = RUtils.CheckACUSnipe(aiBrain, 'Air')
             if acuSnipeUnit and not acuSnipeUnit.Dead then
+                --LOG('Experimental air has an ACU target')
                 local targetPos = acuSnipeUnit:GetPosition()
                 local dx = targetPos[1] - experimentalPosition[1]
                 local dz = targetPos[3] - experimentalPosition[3]
@@ -322,6 +323,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             if not target then
                 --self:LogDebug(string.format('No target, searching for standard experimental target'))
                 target, _ = StateUtils.FindExperimentalTargetRNG(aiBrain, self, self.MovementLayer, experimentalPosition)
+                --LOG('Experimental air has a target of '..tostring(target.UnitId)..' from  StateUtils.FindExperimentalTargetRNG')
             end
             if target and not IsDestroyed(target) then
                 --self:LogDebug(string.format('Target found'))
@@ -337,6 +339,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                         Position = targetPos,
                         AttackTarget = target
                     }
+                    --LOG('Experimental Bomber navigating to target')
                     self:ChangeState(self.Navigating)
                     return
                 else
@@ -345,6 +348,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                         Position = target:GetPosition()
                     }
                     if self.Bomber then
+                        --LOG('Experimental Bomber performing attackrun')
                         self:ChangeState(self.AttackRun)
                     else
                         self:ChangeState(self.AttackTarget)
@@ -357,6 +361,36 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             return
         end,
     },
+
+
+    ReleasedBomb = State {
+
+        StateName = 'ReleasedBomb',
+
+        --- This will be used for performing seiges on firebases and the like
+        ---@param self AIExperimentalAirBehavior
+        Main = function(self)
+            --LOG('Bomber has released bomb')
+            local aiBrain = self:GetBrain()
+            local bomber = self.ExperimentalUnit
+            if StateUtils.ShouldBomberRetreat(self) then
+                IssueClearCommands({bomber})
+                local retreatLocation = StateUtils.GetAirRetreatLocation(aiBrain, bomber)
+                if retreatLocation then
+                    IssueMove({bomber}, retreatLocation)
+                else
+                    --LOG('Issuing move command back to base')
+                    IssueMove({bomber}, self.Home)
+                end
+                coroutine.yield(30)
+            end
+            --LOG('Deciding what to do')
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+
+    },
+
 
     SeigeMode = State {
 
@@ -412,7 +446,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     local dz = origin[3] - destination[3]
                     endPoint = true
                     if dx * dx + dz * dz < navigateDistanceCutOff then
-                        StateUtils.IssueNavigationMove(experimental, destination)
+                        StateUtils.IssueNavigationMove(experimental, destination, true)
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
@@ -423,7 +457,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
-                StateUtils.IssueNavigationMove(experimental, waypoint)
+                StateUtils.IssueNavigationMove(experimental, waypoint, true)
                 -- check for opportunities
                 local wx = waypoint[1]
                 local wz = waypoint[3]
@@ -526,7 +560,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     else
                         if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental['rngdata'].WeaponArc) then
                             --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
-                            StateUtils.IssueNavigationMove(experimental, targetPosition)
+                            StateUtils.IssueNavigationMove(experimental, targetPosition, true)
                             coroutine.yield(30)
                         else
                             --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
@@ -567,7 +601,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     local targetPosition = target:GetPosition()
                     local unitPos = experimental:GetPosition()
                     if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental['rngdata'].WeaponArc) then
-                        StateUtils.IssueNavigationMove(experimental, targetPosition)
+                        StateUtils.IssueNavigationMove(experimental, targetPosition, true)
                         coroutine.yield(30)
                     else
                         IssueAttack({experimental}, target)
@@ -652,7 +686,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if VDist3Sq(experimentalPosition, builderData.Position) > 625 then
-                StateUtils.IssueNavigationMove(experimental, builderData.Position)
+                StateUtils.IssueNavigationMove(experimental, builderData.Position, true)
                 coroutine.yield(25)
             end
             local HoldPositionGameTime = GetGameTimeSeconds()
@@ -663,7 +697,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     distanceLimit = protectionRadius - 5
                 end
                 if VDist3Sq(experimentalPosition, defensivePosition) > distanceLimit then
-                    StateUtils.IssueNavigationMove(experimental, defensivePosition)
+                    StateUtils.IssueNavigationMove(experimental, defensivePosition, true)
                     coroutine.yield(25)
                 end
                 if threatTable.TotalSuroundingThreat < 15 or HoldPositionGameTime + 60 < GetGameTimeSeconds() then

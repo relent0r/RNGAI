@@ -63,8 +63,21 @@ function WaitForManagers(aiBrain, unit, manager)
 end
 
 function OnBombReleased(weapon, projectile)
-    -- Placeholder
+    if RNGAIGLOBALS.RNGAIPresent then
+        local weaponUnit = weapon.unit
+        if weapon.Brain and weapon.Brain.RNG then
+            if IsExperimentalBomber(weaponUnit.UnitId) and weaponUnit.PlatoonHandle then
+                weaponUnit.PlatoonHandle:ChangeState(weaponUnit.PlatoonHandle.ReleasedBomb)
+            end
+        end
+    end
+end
 
+function IsExperimentalBomber(unitId)
+    local experimentalBombers = {
+        ['xsa0402'] = true,
+    }
+    return experimentalBombers[unitId] or false
 end
 
 function OnKilled(self, instigator, type, overkillRatio)

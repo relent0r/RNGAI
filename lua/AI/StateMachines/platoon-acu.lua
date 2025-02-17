@@ -489,7 +489,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         ----self:LogDebug(string.format('Found a close base and the threat is '..threat))
                         if threat > 30 then
                             local realThreat = RUtils.GrabPosDangerRNG(brain,closestPos,120,120, true, true, false)
-                            if realThreat.enemySurface > 30 and realThreat.enemySurface > realThreat.allySurface then
+                            if (realThreat.enemyStructure + realThreat.enemySurface) > 30 and (realThreat.enemyStructure + realThreat.enemySurface) > realThreat.allySurface then
                                 self:LogDebug(string.format('no close base retreat'))
                                 self.BuilderData = {}
                                 self:ChangeState(self.Retreating)
@@ -571,7 +571,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             if threat > 35 then
                                 ----self:LogDebug(string.format('high threat validate real threat'))
                                 local realThreat = RUtils.GrabPosDangerRNG(brain,closestPos,120,120, true, true, false)
-                                if realThreat.enemySurface > 35 and realThreat.enemySurface > realThreat.allySurface then
+                                if (realThreat.enemyStructure + realThreat.enemySurface) > 35 and (realThreat.enemyStructure + realThreat.enemySurface) > realThreat.allySurface then
                                     self:LogDebug(string.format('high threat retreat'))
                                     self.BuilderData = {}
                                     self:ChangeState(self.Retreating)

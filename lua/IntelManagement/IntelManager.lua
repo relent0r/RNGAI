@@ -449,6 +449,12 @@ IntelManager = Class {
             end
             maxDistance = math.max(playableArea[3],playableArea[4])
             maxDistance = maxDistance * maxDistance
+            local skipDistance
+            if maxDistance > 262144 then
+                skipDistance = 10000
+            else
+                skipDistance = 8100
+            end
             local zoneSet = aiBrain.Zones.Land.zones
             local zonePriorityList = {}
             local gameTime = GetGameTimeSeconds()
@@ -480,21 +486,20 @@ IntelManager = Class {
                         local closeAllyStart = false
                         local edgeSkip = false
                         for _, e in  v.enemystartdata do
-                            if e.startdistance < 10000 then
+                            if e.startdistance < skipDistance then
                                 closeEnemyStart = true
                                 break
                             end
                         end
                         for _, a in  v.allystartdata do
-                            if a.startdistance < 10000 then
+                            if a.startdistance < skipDistance then
                                 closeAllyStart = true
-                                --LOG('Start Position too close for position '..tostring(v.pos[1])..':'..tostring(v.pos[3])..' distance is '..tostring(a.startdistance))
                                 break
                             end
                         end
                         
                         if not closeEnemyStart and not closeAllyStart then
-                            if mainBaseDistance > 10000 then
+                            if mainBaseDistance > skipDistance then
                                 if not edgeSkip then
                                     if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) and (not v.engineerplatoonallocated or IsDestroyed(v.engineerplatoonallocated)) and (v.lastexpansionattempt == 0 or gameTime >= v.lastexpansionattempt + 30 ) then
                                         local normalizedDistanceValue = mainBaseDistance / maxDistance

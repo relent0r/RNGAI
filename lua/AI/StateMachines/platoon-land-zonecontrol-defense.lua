@@ -126,7 +126,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 end
             end
             local threat=RUtils.GrabPosDangerRNG(aiBrain,platPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false, true)
-            if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then
+            if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < (threat.enemyStructure + threat.enemySurface) then
                 --self:LogDebug(string.format('DecideWhatToDo high threat retreating'))
                 self.retreat=true
                 self:ChangeState(self.Retreating)
@@ -361,7 +361,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             if not approxThreat then
                                 approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false, true)
                             end
-                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface then
+                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > (approxThreat.enemyStructure + approxThreat.enemySurface) then
                                 IssueClearCommands({v}) 
                                 IssueMove({v},target:GetPosition())
                                 continue

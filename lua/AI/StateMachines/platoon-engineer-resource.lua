@@ -191,7 +191,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             end
             if aiBrain:GetThreatAtPosition(currentmarker.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 2 then
                 local threat = RUtils.GrabPosDangerRNG(aiBrain, currentmarker.position, 30,30, true, false, false)
-                if threat.enemySurface > threat.allySurface then
+                if (threat.enemyStructure + threat.enemySurface) > threat.allySurface then
                     table.remove(self.ZoneMarkers[self.CurentZoneIndex].ResourceMarkers,self.CurrentMarkerIndex)
                     --self:LogDebug(string.format('Threat too high at destination mass marker '..tostring(currentmarker.position[1])..' '..tostring(currentmarker.position[3])))
                     coroutine.yield(1)

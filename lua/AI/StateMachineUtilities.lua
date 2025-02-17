@@ -637,7 +637,7 @@ GetNearExtractorRNG = function(aiBrain, platoon, platoonPosition, enemyPosition,
                             if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition,unitPos) then
                                 if threatCheck then
                                     local threat = RUtils.GrabPosDangerRNG(aiBrain,unitPos,platoon.EnemyRadius,platoon.EnemyRadius, true, false, false)
-                                    if threat.enemySurface < threat.allySurface then
+                                    if (threat.enemyStructure + threat.enemySurface ) < threat.allySurface then
                                         --RNGLOG('Trueplatoon is going to try retreat towards an enemy unit')
                                         location = unitPos
                                         --RNGLOG('Retreat Position found for mex or engineer')
@@ -653,7 +653,7 @@ GetNearExtractorRNG = function(aiBrain, platoon, platoonPosition, enemyPosition,
                         if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition,unitPos) then
                             if threatCheck then
                                 local threat = RUtils.GrabPosDangerRNG(aiBrain,unitPos,platoon.EnemyRadius, platoon.EnemyRadius, true, false, false)
-                                if threat.enemySurface < threat.allySurface then
+                                if (threat.enemyStructure + threat.enemySurface ) < threat.allySurface then
                                     --RNGLOG('Trueplatoon is going to try retreat towards an enemy unit')
                                     location = unitPos
                                     --RNGLOG('Retreat Position found for mex or engineer')
@@ -705,7 +705,7 @@ GetClosestUnitRNG = function(aiBrain, platoon, platoonPosition, unitCat, pathChe
                             end
                             if threatCheck then
                                 local threat = RUtils.GrabPosDangerRNG(aiBrain,unitPos,platoon.EnemyRadius, platoon.EnemyRadius, true, false, false)
-                                if threat.enemyTotal > threat.allyTotal then
+                                if (threat.enemyStructure + threat.enemySurface ) > threat.allyTotal then
                                     threatable = false
                                 end
                             end
@@ -1240,6 +1240,7 @@ FindExperimentalTargetRNG = function(aiBrain, platoon, layer, experimentalPositi
     if experimentalPosition and VDist3Sq(experimentalPosition, aiBrain.BuilderManagers['MAIN'].Position) < 22500 then
         if not bestUnit then
             if layer == 'Air' or layer == 'Water' then
+                --LOG('Air experimental looking for high priority target, current distance from main base is '..tostring(VDist3Sq(experimentalPosition, aiBrain.BuilderManagers['MAIN'].Position)))
                 bestUnit = RUtils.CheckHighPriorityTarget(aiBrain, nil, platoon, false, true)
             else
                 bestUnit = RUtils.CheckHighPriorityTarget(aiBrain, nil, platoon, false, false)
@@ -2346,11 +2347,11 @@ function GetBestPlatoonShieldPos(platoonUnits, shieldUnit, shieldPos, target)
     end
 end
 
-function IssueNavigationMove(unit, position)
+function IssueNavigationMove(unit, position, forceNonNavigator)
     if unit.Dead then
         return
     end
-    if unit.GetNavigator then
+    if not forceNonNavigator and unit.GetNavigator then
         local navigator = unit:GetNavigator()
         if navigator then
             navigator:SetGoal(position)
@@ -2485,4 +2486,12 @@ function DrawPosition(pos, colour, radius)
         counter = counter + 1
         WaitTicks(2)
     end
+end
+
+function ShouldBomberRetreat(platoon)
+    return true
+end
+
+function GetAirRetreatLocation(aiBrain, unit)
+    return false
 end

@@ -1059,7 +1059,7 @@ function MoveInDirection(tStart, iAngle, iDistance, bKeepInMapBounds, bTravelUnd
     local iTheta = ConvertAngleToRadians(iAngle)
     --if bDebugMessages == true then LOG(sFunctionRef..': iAngle='..(iAngle or 'nil')..'; iTheta='..(iTheta or 'nil')..'; iDistance='..(iDistance or 'nil')) end
     local iXAdj = math.sin(iTheta) * iDistance
-    local iZAdj = math.cos(iTheta) * iDistance
+    local iZAdj = -math.cos(iTheta) * iDistance
     --local iXAdj = math.cos(iTheta) * iDistance * iFactor[1]
     --local iZAdj = math.sin(iTheta) * iDistance * iFactor[2]
 
@@ -3284,7 +3284,11 @@ GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface
                             if bp.CategoriesHash.DIRECTFIRE then
                                 RNGINSERT(brainThreats.enemyStructureUnits, v)
                             end
-                            brainThreats.enemyStructure = brainThreats.enemyStructure + bp.Defense.SurfaceThreatLevel
+                            if bp.Weapon[1].MaxRadius > enemyMaxRadius then
+                                enemyMaxRadius = bp.Weapon[1].MaxRadius
+                            end
+                            brainThreats.enemyStructure = brainThreats.enemyStructure + bp.Defense.SurfaceThreatLevel*mult
+                            brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.SurfaceThreatLevel*mult
                         end
                     end
                     if includeSub and bp.Defense.SubThreatLevel ~= nil then
@@ -3297,13 +3301,6 @@ GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface
                     if includeAir and bp.Defense.AirThreatLevel ~= nil then
                         brainThreats.enemyAir = brainThreats.enemyAir + bp.Defense.AirThreatLevel*mult
                         brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.AirThreatLevel*mult
-                        if bp.Weapon[1].MaxRadius > enemyMaxRadius then
-                            enemyMaxRadius = bp.Weapon[1].MaxRadius
-                        end
-                    end
-                    if includeStructure and bp.CategoriesHash.STRUCTURE and bp.Defense.SurfaceThreatLevel ~= nil then
-                        brainThreats.enemyStructure = brainThreats.enemyStructure + bp.Defense.SurfaceThreatLevel*mult
-                        brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.SurfaceThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > enemyMaxRadius then
                             enemyMaxRadius = bp.Weapon[1].MaxRadius
                         end
