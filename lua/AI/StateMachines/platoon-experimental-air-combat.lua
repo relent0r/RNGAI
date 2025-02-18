@@ -303,7 +303,6 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     end
                     if not target and closestUnit and not IsDestroyed(closestUnit) then
                         target = closestUnit
-                        --LOG('We have a target from threattable')
                     end
                 end
             end
@@ -323,21 +322,20 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             if not target then
                 --self:LogDebug(string.format('No target, searching for standard experimental target'))
                 target, _ = StateUtils.FindExperimentalTargetRNG(aiBrain, self, self.MovementLayer, experimentalPosition)
-                --LOG('Experimental air has a target of '..tostring(target.UnitId)..' from  StateUtils.FindExperimentalTargetRNG')
             end
             if target and not IsDestroyed(target) then
                 --self:LogDebug(string.format('Target found'))
-                --LOG('We have a target from FindExperimentalTargetRNG')
                 local targetPos = target:GetPosition()
                 local dx = targetPos[1] - experimentalPosition[1]
                 local dz = targetPos[3] - experimentalPosition[3]
                 local distance = dx * dx + dz * dz
                 --self:LogDebug(string.format('Target is '..repr(target.UnitId)))
                 --self:LogDebug(string.format('Target distance is '..distance))
-                if distance > self['rngdata'].MaxPlatoonWeaponRange * self['rngdata'].MaxPlatoonWeaponRange then
+                if distance > 14400 then
                     self.BuilderData = {
                         Position = targetPos,
-                        AttackTarget = target
+                        AttackTarget = target,
+                        CutOff = 14000
                     }
                     --LOG('Experimental Bomber navigating to target')
                     self:ChangeState(self.Navigating)
@@ -593,9 +591,10 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             local experimental = self.ExperimentalUnit
             local target = self.BuilderData.AttackTarget
             local threatTable = self.EnemyThreatTable
+            local attackIssued = false
             while experimental and not IsDestroyed(experimental) do
                 if target and not target.Dead then
-                    if not table.empty(experimental:GetCommandQueue()) then
+                    if not attackIssued and not table.empty(experimental:GetCommandQueue()) then
                         IssueClearCommands({experimental})
                     end
                     local targetPosition = target:GetPosition()
@@ -603,11 +602,12 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental['rngdata'].WeaponArc) then
                         StateUtils.IssueNavigationMove(experimental, targetPosition, true)
                         coroutine.yield(30)
-                    else
+                    elseif not attackIssued then
                         IssueAttack({experimental}, target)
+                        attackIssued = true
                     -- in case we don't move, check if we can fire at the target
                     end
-                    if not target.Dead and threatTable.ClosestUnitDistance + 25 < VDist3Sq(unitPos, targetPosition) then
+                    if not self.Bomber and not target.Dead and threatTable.ClosestUnitDistance + 25 < VDist3Sq(unitPos, targetPosition) then
                         coroutine.yield(10)
                         --LOG('Another unit is closer to the Experimental, DecideWhatToDo')
                         self:ChangeState(self.DecideWhatToDo)

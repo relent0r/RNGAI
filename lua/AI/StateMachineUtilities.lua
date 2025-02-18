@@ -1273,8 +1273,9 @@ FindExperimentalTargetRNG = function(aiBrain, platoon, layer, experimentalPositi
 
     local enemyBases = aiBrain.EnemyIntel.EnemyThreatLocations
     
-    local mostUnits = 0
-    local highestMassValue = 0
+    local highestPriorityValue = 0
+    local airThreatWeightFactor = 0.75
+    local aaThreatWeightFactor = 1.25
     -- Now we look at bases of any sort and find the highest mass worth then selecting the most valuable unit in that base.
         
     for _, x in enemyBases do
@@ -1307,13 +1308,22 @@ FindExperimentalTargetRNG = function(aiBrain, platoon, layer, experimentalPositi
                         end
                     end
                 end
+                local priorityValue
 
-                if massValue > 0 then
-                    if massValue > highestMassValue then
+                if layer == 'Air' then
+                    local aaThreat = z.AntiAir or 0
+                    local airThreat = z.Air or 0
+                    priorityValue = massValue - ((airThreat * airThreatWeightFactor) + (aaThreat * aaThreatWeightFactor))
+                else
+                    priorityValue = massValue
+                end
+
+                if priorityValue > 0 then
+                    if priorityValue > highestPriorityValue then
                         bestBase = z
-                        highestMassValue = massValue
+                        highestPriorityValue = priorityValue
                         bestUnit = targetUnit
-                    elseif massValue == highestMassValue then
+                    elseif priorityValue == highestPriorityValue then
                         local dist1 = VDist2Sq(experimentalPosition[1], experimentalPosition[3], z.Position[1], z.Position[3])
                         local dist2 = VDist2Sq(experimentalPosition[1], experimentalPosition[3], bestBase.Position[1], bestBase.Position[3])
                         if dist1 < dist2 then

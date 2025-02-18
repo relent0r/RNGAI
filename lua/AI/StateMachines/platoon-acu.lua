@@ -1402,7 +1402,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                         if zx * zx + zz * zz < maxMarkerDistance then
                                             table.insert(zoneMarkers, { Position = z.pos, ResourceMarkers = table.copy(z.resourcemarkers), ResourceValue = z.resourcevalue, ZoneID = z.id })
                                         end
-                                        table.insert(zoneMarkers, { Position = z.pos, ResourceMarkers = table.copy(z.resourcemarkers), ResourceValue = z.resourcevalue, ZoneID = z.id })
                                     end
                                 end
                                 local zoneFound
