@@ -1810,18 +1810,18 @@ StructureManager = Class {
         else
             multiplier = 1
         end
+        local maxDelay = (60 / multiplier)
         --LOG('Initial Delay loop starting')
-        while initial_delay < (60 / multiplier) do
+        while initial_delay < maxDelay do
             if not unit.Dead and GetEconomyStored( aiBrain, 'ENERGY') >= 250 and unit:GetFractionComplete() == 1 then
                 initial_delay = initial_delay + 10
                 if (GetGameTimeSeconds() - ecoStartTime) > ecoTimeOut then
-                    initial_delay = 50
+                    initial_delay = maxDelay
                 end
             end
             --RNGLOG('* AI-RNG: Initial Delay loop trigger for '..aiBrain.Nickname..' is : '..initial_delay..' out of 90')
             coroutine.yield(100)
         end
-        --LOG('Initial Delay loop completing')
         unit.InitialDelayCompleted = true
     end,
 

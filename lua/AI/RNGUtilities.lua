@@ -3689,6 +3689,32 @@ function AIBuildBaseTemplateFromLocationRNG(baseTemplate, location)
     return baseT
 end
 
+function GetBuildUnit(aiBrain, eng, buildingTemplate, buildUnit)
+    local IsRestricted = import('/lua/game.lua').IsRestricted
+    local index = aiBrain:GetArmyIndex()
+    local whatToBuild = aiBrain:DecideWhatToBuild(eng, buildUnit, buildingTemplate)
+    if not whatToBuild then
+        local BuildUnitWithID
+        for Key, Data in buildingTemplate do
+            if Data[1] and Data[2] and Data[1] == buildUnit then
+                BuildUnitWithID = Data[2]
+                break
+            end
+        end
+        if IsRestricted(BuildUnitWithID, index) then
+            WARN('AI-RNG : Unit '..tostring(BuildUnitWithID)..' is restricted, cannot build')
+            return false
+        end
+        if BuildUnitWithID then
+            whatToBuild = BuildUnitWithID
+        else
+            WARN('AI-RNG : Unable to find unit to build, type was '..tostring(buildUnit))
+            return false
+        end
+    end
+    return whatToBuild
+end
+
 function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit, eng, adjacent, category, radius, relative, increaseSearch)
     -- A small note that caught me out.
     -- Always set the engineers position to zero in the build location otherwise youll get buildings are super strange angles
@@ -3702,7 +3728,10 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
     if not relative then
         relative = true
     end
-    local whatToBuild = aiBrain:DecideWhatToBuild(eng, buildUnit, buildingTemplate)
+    local whatToBuild = GetBuildUnit(aiBrain, eng, buildingTemplate, buildUnit)
+    if not whatToBuild then
+        return false
+    end
     local engPos = eng:GetPosition()
     local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     local function normalposition(vec)
@@ -6498,15 +6527,21 @@ function AIFindNavalAreaNeedsEngineerRNG(aiBrain, locationType, enemyLabelCheck,
     local retPos, retName
     local positions = AIUtils.AIFilterAlliedBasesRNG(aiBrain, positions)
     local shortList = {}
-    local labelRejected = false
+    local closestLabelDistance
+    local closestLabel
     for _, v in positions do
+        local labelRejected = false
         local distance
         local inWater = PositionInWater(v.Position)
         if inWater then
             if shortestDistance then
                 local path, msg, pathDistance = NavUtils.PathTo('Amphibious', pos, v.Position)
                 if path then
-                    distance = pathDistance
+                    distance = pathDistance * pathDistance
+                else
+                    local mx = v.Position[1] - pos[1]
+                    local mz = v.Position[3] - pos[3]
+                    distance = mx * mx + mz * mz
                 end
             else
                 local mx = v.Position[1] - pos[1]
@@ -6516,8 +6551,18 @@ function AIFindNavalAreaNeedsEngineerRNG(aiBrain, locationType, enemyLabelCheck,
             if distance then
                 if enemyLabelCheck then
                     local label= NavUtils.GetLabel('Water', {v.Position[1], v.Position[2], v.Position[3]})
-                    if label and aiBrain.BrainIntel.NavalBaseLabels[label] ~= 'Confirmed' then
-                        labelRejected = true
+                    if label and aiBrain.BrainIntel.NavalBaseLabels[label].State then
+                        local labelState = aiBrain.BrainIntel.NavalBaseLabels[label].State
+                        if labelState ~= 'Confirmed' then
+                            labelRejected = true
+                        end
+                        if not closestLabel or distance < closestLabelDistance then
+                            closestLabelDistance = distance
+                            closestLabel = label
+                        end
+                        if closestLabel and label ~= closestLabel then
+                            labelRejected = true
+                        end
                     end
                 end
                 if not labelRejected and not aiBrain.BuilderManagers[v.Name] then

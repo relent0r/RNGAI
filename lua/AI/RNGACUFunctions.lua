@@ -516,12 +516,18 @@ function CDRThreatAssessmentRNG(cdr)
                             distanceToEnemyBase = tmpDistance
                         end
                     end
-                else
+                end
+                if not distanceToEnemyBase then
                     local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
                     distanceToEnemyBase = math.max(playableArea[3], playableArea[4])
                     distanceToEnemyBase = distanceToEnemyBase * distanceToEnemyBase
+                    if not distanceToEnemyBase then
+                        local scenarioMapSizeX, scenarioMapSizeZ = GetMapSize()
+                        if not playableArea then
+                            distanceToEnemyBase = math.max(scenarioMapSizeX[3], scenarioMapSizeZ[4])
+                        end
+                    end
                 end
-                --LOG('Distance to enemy base for '..tostring(aiBrain.Nickname)..' is '..tostring(distanceToEnemyBase)..' distance to AI base '..tostring(cdrDistanceToBase))
                 local distanceFearFactor = distanceFearMultiplier(math.sqrt(cdrDistanceToBase), math.sqrt(distanceToEnemyBase))
                 --LOG('Distance featFactor '..tostring(distanceFearFactor))
                 --LOG('Friendly threat before '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))

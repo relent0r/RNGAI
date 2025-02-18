@@ -1933,7 +1933,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local buildingTmplFile = import(self.BuilderData.Construction.BuildingTemplateFile or '/lua/BuildingTemplates.lua')
             local factionIndex = ACUFunc.GetEngineerFactionIndexRNG(cdr)
             local buildingTmpl = buildingTmplFile[('BuildingTemplates')][factionIndex]
-            local whatToBuild = brain:DecideWhatToBuild(cdr, 'T1Resource', buildingTmpl)
+            local whatToBuild = RUtils.GetBuildUnit(brain, cdr, buildingTmpl, 'T1Resource')
             --LOG('ACU Looping through markers')
             local massMarkerCount = 0
             local expansionMarkerCount = 0
@@ -2013,7 +2013,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             local highPri = false
                             local markerType
                             local abortBuild = false
-
                             for templateName, baseData in BaseBuilderTemplates do
                                 local baseValue = baseData.ExpansionFunction(brain, object.pos, 'Zone Expansion')
                                 RNGINSERT(baseValues, { Base = templateName, Value = baseValue })
@@ -2050,8 +2049,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 if i == 2 and brain.EconomyOverTimeCurrent.MassEfficiencyOverTime < 0.85 then
                                     break
                                 end
-                                
-                                local whatToBuild = brain:DecideWhatToBuild(cdr, 'T1LandFactory', buildingTmpl)
+                                local whatToBuild = RUtils.GetBuildUnit(brain, cdr, buildingTmpl, 'T1LandFactory')
                                 if CanBuildStructureAt(brain, whatToBuild, object.pos) then
                                     local newEntry = {whatToBuild, {object.pos[1], object.pos[3], 0}, false, Position=object.pos}
                                     RNGINSERT(cdr.EngineerBuildQueue, newEntry)
@@ -2122,7 +2120,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     break
                                 end
                                 
-                                local whatToBuild = brain:DecideWhatToBuild(cdr, 'T1LandFactory', buildingTmpl)
+                                local whatToBuild = RUtils.GetBuildUnit(brain, cdr, buildingTmpl, 'T1LandFactory')
                                 if CanBuildStructureAt(brain, whatToBuild, object.pos) then
                                     local newEntry = {whatToBuild, {object.pos[1], object.pos[3], 0}, false, Position=object.pos}
                                     RNGINSERT(cdr.EngineerBuildQueue, newEntry)

@@ -1589,6 +1589,10 @@ IntelManager = Class {
         local aiBrain = self.Brain
         local selfIndex = aiBrain:GetArmyIndex()
         coroutine.yield(selfIndex)
+        local myArmy = ScenarioInfo.ArmySetup[aiBrain.Name]
+        if not RNGAIGLOBALS.PlayerRoles[myArmy.Team] then
+            RNGAIGLOBALS.PlayerRoles[myArmy.Team] = {}
+        end
         if aiBrain.BrainIntel.AllyCount > 2 and aiBrain.EnemyIntel.EnemyCount > 0 then
             local closestIndex
             local closestDistance
@@ -1605,7 +1609,6 @@ IntelManager = Class {
             end
             local teamAveragePositions = self:GetTeamAveragePositions()
             local teamEnemyAveragePosition
-            local teamAllyAveragePosition
             if teamAveragePositions['Enemy'].x and teamAveragePositions['Enemy'].z then
                 teamEnemyAveragePosition = {teamAveragePositions['Enemy'].x,GetSurfaceHeight(teamAveragePositions['Enemy'].x, teamAveragePositions['Enemy'].z), teamAveragePositions['Enemy'].z}
             end
@@ -1648,7 +1651,7 @@ IntelManager = Class {
                     if not airRestricted then
                         if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer then
                             local alreadySelected = false
-                            for _, v in RNGAIGLOBALS.PlayerRoles do
+                            for _, v in RNGAIGLOBALS.PlayerRoles[myArmy.Team] do
                                 if v == 'AirPlayer' then
                                     alreadySelected = true
                                     break
@@ -1659,7 +1662,7 @@ IntelManager = Class {
                                 aiBrain.BrainIntel.PlayerRole.AirPlayer = true
                                 aiBrain.BrainIntel.PlayerStrategy.T3AirRush = true
                                 --LOG('Player set to Air Role '..aiBrain.Nickname)
-                                RNGAIGLOBALS.PlayerRoles[selfIndex] = 'AirPlayer'
+                                RNGAIGLOBALS.PlayerRoles[myArmy.Team][selfIndex] = 'AirPlayer'
                                 aiBrain:EvaluateDefaultProductionRatios()
                                 return
                             end
@@ -1672,7 +1675,7 @@ IntelManager = Class {
                     if math.sqrt(selfDistanceToEnemy) - math.sqrt(selfDistanceToTeammates) > 35 then
                         if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer then
                             local alreadySelected = false
-                            for _, v in RNGAIGLOBALS.PlayerRoles do
+                            for _, v in RNGAIGLOBALS.PlayerRoles[myArmy.Team] do
                                 if v == 'SpamPlayer' then
                                     alreadySelected = true
                                     break
@@ -1680,7 +1683,7 @@ IntelManager = Class {
                             end
                             if not alreadySelected then
                                 aiBrain.BrainIntel.PlayerRole.SpamPlayer = true
-                                RNGAIGLOBALS.PlayerRoles[selfIndex] = 'SpamPlayer'
+                                RNGAIGLOBALS.PlayerRoles[myArmy.Team][selfIndex] = 'SpamPlayer'
                                 --LOG('Player set to Spam Role '..aiBrain.Nickname)
                                 self:ForkThread(self.SpamTriggerDurationThread, 480)
                                 return
@@ -1689,7 +1692,7 @@ IntelManager = Class {
                     end
                 end
             end
-            if not aiBrain.BrainIntel.PlayerRole.AirPlayer and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and (aiBrain.MapSize > 10 and self.MapWaterRatio > 0.35 or aiBrain.MapSize <= 10 and self.MapWaterRatio > 0.60) then
+            if not aiBrain.BrainIntel.PlayerRole.AirPlayer and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and (aiBrain.MapSize > 10 and aiBrain.MapWaterRatio > 0.35 or aiBrain.MapSize <= 10 and aiBrain.MapWaterRatio > 0.60) then
                 local navalRestricted = false
                 if not table.empty(ScenarioInfo.Options.RestrictedCategories) then
                     for _, v in ScenarioInfo.Options.RestrictedCategories do
@@ -1702,8 +1705,9 @@ IntelManager = Class {
                 if not navalRestricted then
                     local navalPlayer
                     local alreadySelected = false
-                    for _, v in RNGAIGLOBALS.PlayerRoles do
+                    for _, v in RNGAIGLOBALS.PlayerRoles[myArmy.Team] do
                         if v == 'NavalPlayer' then
+                            --LOG('Naval Player already exist in team '..tostring(repr(RNGAIGLOBALS.PlayerRoles[myArmy.Team])))
                             alreadySelected = true
                             break
                         end
@@ -1712,8 +1716,8 @@ IntelManager = Class {
                         if aiBrain.BrainIntel.NavalBaseLabels and aiBrain.BrainIntel.NavalBaseLabelCount > 0 then
                             -- Check if any enemy start location has a matching water label
                             for _, b in aiBrain.EnemyIntel.EnemyStartLocations do
-                                for label, state in aiBrain.BrainIntel.NavalBaseLabels do
-                                    if b.WaterLabels[label] and state == "Confirmed" then
+                                for label, data in aiBrain.BrainIntel.NavalBaseLabels do
+                                    if b.WaterLabels[label] and data.State == "Confirmed" then
                                         navalPlayer = true
                                         break
                                     end
@@ -1724,7 +1728,7 @@ IntelManager = Class {
                             if navalPlayer then
                                 aiBrain.BrainIntel.PlayerRole.NavalPlayer = true
                                 --LOG('Player set to Naval Role '..aiBrain.Nickname)
-                                RNGAIGLOBALS.PlayerRoles[selfIndex] = 'NavalPlayer'
+                                RNGAIGLOBALS.PlayerRoles[myArmy.Team][selfIndex] = 'NavalPlayer'
                                 aiBrain:EvaluateDefaultProductionRatios()
                                 return
                             end
@@ -1745,7 +1749,7 @@ IntelManager = Class {
                 if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' and aiBrain.EnemyIntel.EnemyStartLocations[EnemyIndex].Distance < 348100 then
                     if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer and not aiBrain.BrainIntel.PlayerRole.AirPlayer then
                         aiBrain.BrainIntel.PlayerRole.SpamPlayer = true
-                        RNGAIGLOBALS.PlayerRoles[selfIndex] = 'SpamPlayer'
+                        RNGAIGLOBALS.PlayerRoles[myArmy.Team][selfIndex] = 'SpamPlayer'
                         self:ForkThread(self.SpamTriggerDurationThread, 360)
                     end
                 end
@@ -3159,7 +3163,6 @@ function InitialNavalAttackCheck(aiBrain)
         local maxRadius = 30
         local maxValue = 0
         local maxNavalStartRange
-        local confirmedAttackLabel
         local unitTable = {
             Frigate = { Template = 'T1SeaFrigate', UnitID = 'ues0103',Range = 0 },
             Destroyer = { Template = 'T2SeaDestroyer', UnitID = 'ues0201',Range = 0 },
@@ -3185,16 +3188,25 @@ function InitialNavalAttackCheck(aiBrain)
                 for _, v in selfNavalPositions do
                     local label = NavUtils.GetLabel('Water', {v[1], v[2], v[3]})
                     if label and not validNavalLabels[label] then
-                        validNavalLabels[label] = 'Unconfirmed'
+                        validNavalLabels[label] = {
+                            State = 'Unconfirmed',
+                            AllyPlayerCount = 0,
+                            EnemyPlayerCount = 0
+                        }
                     end
                 end
                 for _, b in aiBrain.EnemyIntel.EnemyStartLocations do
+                    local enemyStartAdded = {}
                     local enemyNavalPositions = NavUtils.GetPositionsInRadius('Water', b.Position, 256, 10)
                     if enemyNavalPositions then
                         for _, v in enemyNavalPositions do
                             local label = NavUtils.GetLabel('Water', {v[1], v[2], v[3]})
                             if label and validNavalLabels[label] then
-                                validNavalLabels[label] = 'Confirmed'
+                                validNavalLabels[label].State = 'Confirmed'
+                                if not enemyStartAdded[label] then
+                                    validNavalLabels[label].EnemyPlayerCount = validNavalLabels[label].EnemyPlayerCount + 1
+                                    enemyStartAdded[label] = true
+                                end
                                 if not b.WaterLabels[label] then
                                     b.WaterLabels[label] = true
                                 end
@@ -3204,7 +3216,6 @@ function InitialNavalAttackCheck(aiBrain)
                                 if not maxNavalStartRange or posDist < maxNavalStartRange then
                                     maxNavalStartRange = posDist
                                 end
-
                             end
                         end
                     end
@@ -3217,7 +3228,6 @@ function InitialNavalAttackCheck(aiBrain)
                     labelCount = labelCount + 1
                 end
                 aiBrain.BrainIntel.NavalBaseLabelCount = labelCount
-                --LOG('Label Table '..repr(validNavalLabels))
             end
         end
         if markers then

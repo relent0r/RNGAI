@@ -19,7 +19,7 @@ local NavalExpansionAdjust = function(self, aiBrain, builderManager)
     local validAttackPriorityModifier = 0
     if aiBrain.BrainIntel.NavalBaseLabels then
         for _, v in aiBrain.BrainIntel.NavalBaseLabels do
-            if v == 'Confirmed' then
+            if v.State == 'Confirmed' then
                 validAttackPriorityModifier = validAttackPriorityModifier + 100
             end
         end
