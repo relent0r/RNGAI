@@ -314,8 +314,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             else
                 if self.MapWaterRatio < 0.10 then
-                    self.DefaultProductionRatios['Land'] = 0.3
-                    self.DefaultProductionRatios['Air'] = 0.4
+                    self.DefaultProductionRatios['Land'] = 0.60
+                    self.DefaultProductionRatios['Air'] = 0.40
                     self.DefaultProductionRatios['Naval'] = 0.0
                 elseif self.MapWaterRatio > 0.60 then
                     self.DefaultProductionRatios['Land'] = 0.4
@@ -3841,11 +3841,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 --LOG('LandPhase greater than 2')
                 --LOG('Incomine '..tostring(self.cmanager.income.r.m))
                 --LOG('Core extractor count '..tostring(self.EcoManager.CoreExtractorT3Count))
-                --LOG('Number of high value buildng '..tostring(RUtils.GetNumberUnitsBuilding(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC))))
-                if not self.RNGEXP and self.cmanager.income.r.m > (120 * multiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBuilding(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC)) >= 1 then
+                --LOG('Number of high value buildng '..tostring(RUtils.GetNumberUnitsBeingBuilt(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC))))
+                if not self.RNGEXP and self.cmanager.income.r.m > (120 * multiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBeingBuilt(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC)) >= 1 then
                     --LOG('Land Phase > 2 and eco is above 120 and number units building for exp is 1')
                     self.EngineerAssistManagerFocusHighValue = true
-                elseif self.RNGEXP and self.cmanager.income.r.m > (90 * multiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBuilding(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC)) >= 1 then
+                elseif self.RNGEXP and self.cmanager.income.r.m > (90 * multiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBeingBuilt(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC)) >= 1 then
                     self.EngineerAssistManagerFocusHighValue = true
                 else
                     self.EngineerAssistManagerFocusHighValue = false
@@ -4556,7 +4556,7 @@ AIBrain = Class(RNGAIBrainClass) {
         coroutine.yield(Random(1,7))
         while true do
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
-                if GetGameTimeSeconds() < 210 then
+                if GetGameTimeSeconds() < 150 then
                     coroutine.yield(50)
                     continue
                 end
@@ -4791,7 +4791,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, TMLs, 'pause', 'MASS')
                         end
-                        coroutine.yield(20)
+                        coroutine.yield(15)
                         massStateCaution = self:EcoManagerMassStateCheck()
                         if massStateCaution then
                             --RNGLOG('Power State Caution still true after first pass')
@@ -4876,7 +4876,7 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Watches for low power states
         while true do
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
-                if GetGameTimeSeconds() < 210 then
+                if GetGameTimeSeconds() < 150 then
                     coroutine.yield(50)
                     continue
                 end
@@ -5103,7 +5103,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             local Nukes = GetListOfUnits(self, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
                             self:EcoSelectorManagerRNG(priorityUnit, Nukes, 'pause', 'ENERGY')
                         end
-                        coroutine.yield(20)
+                        coroutine.yield(15)
                         powerStateCaution = self:EcoManagerPowerStateCheck()
                         if powerStateCaution then
                             --RNGLOG('Power State Caution still true after first pass')
@@ -5158,6 +5158,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif v == 'MASSFABRICATION' then
                             local MassFabricators = GetListOfUnits(self, categories.STRUCTURE * categories.MASSFABRICATION, false, false)
                             self:EcoSelectorManagerRNG(v, MassFabricators, 'unpause', 'ENERGY')
+                        elseif v == 'RADAR' then
+                            local Radars = GetListOfUnits(self, categories.STRUCTURE * (categories.RADAR + categories.SONAR), false, false)
+                            self:EcoSelectorManagerRNG(v, Radars, 'unpause', 'ENERGY')
                         elseif v == 'NUKE' then
                             local Nukes = GetListOfUnits(self, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
                             self:EcoSelectorManagerRNG(v, Nukes, 'unpause', 'ENERGY')
@@ -5669,13 +5672,14 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('Eco selector manager for '..priorityUnit..' is '..action..' Type is '..type)
         local engineerCats
         if self.BrainIntel.MapOwnership > 50 then
-            engineerCats = categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE + categories.OPTICS)
+            engineerCats = categories.STRUCTURE * (categories.ENERGYPRODUCTION + categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE + categories.OPTICS)
         else
-            engineerCats = categories.STRUCTURE * (categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE + categories.OPTICS)
+            engineerCats = categories.STRUCTURE * (categories.ENERGYPRODUCTION + categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE + categories.OPTICS)
         end
         
         for k, v in units do
             if not v.Dead then  
+                if v:GetFractionComplete() ~= 1 then continue end
                 if priorityUnit == 'ENGINEER' then
                     --RNGLOG('Priority Unit Is Engineer')
                     if action == 'unpause' then
@@ -5685,8 +5689,19 @@ AIBrain = Class(RNGAIBrainClass) {
                         continue
                     end
                     if v.PlatoonHandle.PlatoonData.Construction.NoPause then continue end
-                    if EntityCategoryContains( engineerCats , v.UnitBeingBuilt) then
-                        v:SetPaused(true)
+                    if type == 'MASS' and EntityCategoryContains( engineerCats , v.UnitBeingBuilt) then
+                        if EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION, v.UnitBeingBuilt) then
+                            if self:GetEconomyTrend('MASS') <= 0 and self:GetEconomyStored('MASS') == 0 and self:GetEconomyTrend('ENERGY') > 2 then
+                                v:SetPaused(true)
+                            end
+                        else
+                            v:SetPaused(true)
+                        end
+                        continue
+                    elseif type == 'ENERGY' and EntityCategoryContains( engineerCats , v.UnitBeingBuilt) then
+                        if not EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION, v.UnitBeingBuilt) then
+                            v:SetPaused(true)
+                        end
                         continue
                     end
                     if not v.PlatoonHandle.PlatoonData.Assist.AssisteeType then continue end
@@ -5697,7 +5712,13 @@ AIBrain = Class(RNGAIBrainClass) {
                         v:SetPaused(true)
                         continue
                     elseif type == 'MASS' then
-                        v:SetPaused(true)
+                        if EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION, v.UnitBeingAssist) then
+                            if self:GetEconomyTrend('MASS') <= 0 and self:GetEconomyStored('MASS') == 0 and self:GetEconomyTrend('ENERGY') > 2 then
+                                v:SetPaused(true)
+                            end
+                        else
+                            v:SetPaused(true)
+                        end
                         continue
                     end
                 elseif priorityUnit == 'STATIONPODS' then
@@ -5880,19 +5901,42 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('pausing LAND')
                     v:SetPaused(true)
                     continue
-                elseif priorityUnit == 'MASSFABRICATION' or priorityUnit == 'SHIELD' or priorityUnit == 'RADAR' then
+                elseif priorityUnit == 'MASSFABRICATION' then
                     --RNGLOG('Priority Unit Is MASSFABRICATION or SHIELD')
                     if action == 'unpause' then
                         if v.MaintenanceConsumption then continue end
                         --RNGLOG('Unpausing MASSFABRICATION or SHIELD')
-                        v:OnProductionUnpaused()
+                        v:SetPaused(false)
                         continue
                     end
-                    if v.Dead then continue end
-                    if v:GetFractionComplete() ~= 1 then continue end
+                    
+                    if not v.MaintenanceConsumption then continue end
+                    v:SetPaused(true)
+                elseif priorityUnit == 'RADAR' then
+                    --RNGLOG('Priority Unit Is MASSFABRICATION or SHIELD')
+                    if action == 'unpause' then
+                        if v.MaintenanceConsumption then continue end
+                        --RNGLOG('Unpausing MASSFABRICATION or SHIELD')
+                        v:SetPaused(false)
+                        v:OnScriptBitClear(3)
+                        continue
+                    end
+                    
                     if not v.MaintenanceConsumption then continue end
                     --RNGLOG('pausing MASSFABRICATION or SHIELD '..v.UnitId)
-                    v:OnProductionPaused()
+                    v:SetPaused(true)
+                    v:OnScriptBitSet(3)
+                elseif priorityUnit == 'SHIELD' then
+                    --RNGLOG('Priority Unit Is MASSFABRICATION or SHIELD')
+                    if v.MyShield and v.MyShield:GetMaxHealth() > 0 then
+                        if action == 'unpause' then
+                            --RNGLOG('Unpausing MASSFABRICATION or SHIELD')
+                            v:EnableShield()
+                            continue
+                        end
+                        --RNGLOG('pausing MASSFABRICATION or SHIELD '..v.UnitId)
+                        v:DisableShield()
+                    end
                 elseif priorityUnit == 'NUKE' then
                     --RNGLOG('Priority Unit Is Nuke')
                     if action == 'unpause' then
@@ -5901,8 +5945,6 @@ AIBrain = Class(RNGAIBrainClass) {
                         v:SetPaused(false)
                         continue
                     end
-                    if v.Dead then continue end
-                    if v:GetFractionComplete() ~= 1 then continue end
                     if v:IsPaused() then continue end
                     --RNGLOG('pausing Nuke')
                     v:SetPaused(true)
@@ -5918,8 +5960,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     if v.LimitPause then
                         continue
                     end
-                    if v.Dead then continue end
-                    if v:GetFractionComplete() ~= 1 then continue end
                     if v:IsPaused() then continue end
                     --RNGLOG('pausing TML')
                     v:SetPaused(true)

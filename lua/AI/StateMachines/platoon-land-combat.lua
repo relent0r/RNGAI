@@ -116,7 +116,8 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 aiBrain:PlatoonReinforcementRequestRNG(self, 'AntiAir', closestBase, label)
             end
             if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < (threat.enemySurface - threat.enemyStructure) and threat.allySurface < 450 then
-                if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*1.5 > (threat.enemySurface - threat.enemyStructure) then
+                if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*3 > (threat.enemySurface - threat.enemyStructure) or 
+                   threat.allyrange > threat.enemyrange and threat.allySurface*3 > threat.enemySurface then
                     rangedAttack = true
                 else
                     --self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
@@ -239,15 +240,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 if not table.empty(aiBrain.prioritypoints) then
-                    local pointHighest = 0
-                    local point = false
-                    for _, v in aiBrain.prioritypoints do
-                        local tempPoint = v.priority/(RNGMAX(VDist2Sq(self.Pos[1],self.Pos[3],v.Position[1],v.Position[3]),30*30)+(v.danger or 0))
-                        if tempPoint > pointHighest then
-                            pointHighest = tempPoint
-                            point = v
-                        end
-                    end
+                    local point = RUtils.CheckPriorityTarget(aiBrain, false, self)
                     if point then
                     --RNGLOG('point pos '..repr(point.Position)..' with a priority of '..point.priority)
                         if VDist2Sq(point.Position[1],point.Position[3],self.Pos[1],self.Pos[3])>(self['rngdata'].MaxPlatoonWeaponRange+20)*(self['rngdata'].MaxPlatoonWeaponRange+20) then

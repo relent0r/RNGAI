@@ -67,6 +67,7 @@ function OnBombReleased(weapon, projectile)
         local weaponUnit = weapon.unit
         if weapon.Brain and weapon.Brain.RNG then
             if IsExperimentalBomber(weaponUnit.UnitId) and weaponUnit.PlatoonHandle then
+                weaponUnit['rngdata'].BombLastReleased = GetGameTimeSeconds()
                 weaponUnit.PlatoonHandle:ChangeState(weaponUnit.PlatoonHandle.ReleasedBomb)
             end
         end

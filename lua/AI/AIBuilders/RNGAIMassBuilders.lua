@@ -16,7 +16,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 45',
-        PlatoonTemplate = 'EngineerBuilderRNGMex',
+        PlatoonTemplate = 'EngineerBuilderRNGMexT1',
         Priority = 1005,
         InstanceCount = 2,
         BuilderConditions = { 
@@ -42,7 +42,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 120',
-        PlatoonTemplate = 'EngineerBuilderRNGMex',
+        PlatoonTemplate = 'EngineerBuilderRNGMexT1',
         Priority = 997,
         InstanceCount = 3,
         BuilderConditions = { 
@@ -72,7 +72,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T2Engineer Mass 120',
-        PlatoonTemplate = 'EngineerBuilderRNGMex',
+        PlatoonTemplate = 'EngineerBuilderRNGMexT2',
         Priority = 850,
         InstanceCount = 1,
         BuilderConditions = { 
@@ -99,7 +99,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 240',
-        PlatoonTemplate = 'EngineerBuilderRNGMex',
+        PlatoonTemplate = 'EngineerBuilderRNGMexT1',
         Priority = 800,
         InstanceCount = 4,
         BuilderConditions = { 
@@ -129,7 +129,7 @@ BuilderGroup {
 
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 480',
-        PlatoonTemplate = 'EngineerBuilderRNGMex',
+        PlatoonTemplate = 'EngineerBuilderRNGMexT1',
         Priority = 700,
         InstanceCount = 4,
         BuilderConditions = { 
@@ -162,7 +162,7 @@ BuilderGroup {
 
     Builder {
         BuilderName = 'RNGAI T1Engineer Mass 2000',
-        PlatoonTemplate = 'EngineerBuilderRNGMex',
+        PlatoonTemplate = 'EngineerBuilderRNGMexT1',
         Priority = 300,
         InstanceCount = 4,
         BuilderConditions = { 
@@ -275,7 +275,7 @@ BuilderGroup {
     
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 2000 Floating',
-        PlatoonTemplate = 'EngineerBuilderRNGMex',
+        PlatoonTemplate = 'EngineerBuilderRNGMexT1',
         Priority = 910,
         InstanceCount = 5,
         BuilderConditions = {
@@ -301,7 +301,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 2000 Floating Excess',
-        PlatoonTemplate = 'EngineerBuilderRNGMex',
+        PlatoonTemplate = 'EngineerBuilderRNGMexT1',
         Priority = 890,
         InstanceCount = 10,
         BuilderConditions = {
@@ -332,7 +332,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 30 Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNGMex',
+        PlatoonTemplate = 'EngineerBuilderRNGMexT1',
         Priority = 850,
         InstanceCount = 2,
         BuilderConditions = {
@@ -358,7 +358,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 150 Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNGMex',
+        PlatoonTemplate = 'EngineerBuilderRNGMexT1',
         Priority = 700,
         InstanceCount = 2,
         BuilderConditions = {
@@ -383,7 +383,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T1ResourceEngineer 2000 Expansion',
-        PlatoonTemplate = 'EngineerBuilderRNGMex',
+        PlatoonTemplate = 'EngineerBuilderRNGMexT1',
         Priority = 550,
         InstanceCount = 2,
         BuilderConditions = {

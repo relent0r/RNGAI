@@ -161,7 +161,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI ACU Structure Builders',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNG ACU Factory Builder Land T1 Primary Small',
+        BuilderName = 'RNG ACU Factory Builder Land T1 Primary',
         PlatoonTemplate = 'CommanderDummyRNG',
         Priority = 1050,
         DelayEqualBuildPlattons = {'Factories', 3},
@@ -252,6 +252,7 @@ BuilderGroup {
         Priority = 750,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
+            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.30, 'FACTORY'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
@@ -268,6 +269,35 @@ BuilderGroup {
                 BuildClose = true,
                 BuildStructures = {
                     'T1LandFactory',
+                },
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI ACU T1 Air Factory Primary',
+        PlatoonTemplate = 'CommanderDummyRNG',
+        Priority = 1045,
+        DelayEqualBuildPlattons = {'Factories', 3},
+        BuilderConditions = {
+            { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.7, 12.0}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.85 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) }},
+            { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.AIR * categories.TECH1 }},
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomACUBaseTemplates.lua',
+                BaseTemplate = 'ACUCustomBaseTemplates',
+                BuildClose = true,
+                AdjacencyPriority = {
+                    categories.HYDROCARBON,
+                    categories.ENERGYPRODUCTION * categories.STRUCTURE,
+                },
+                BuildStructures = {
+                    'T1AirFactory',
                 },
             }
         }

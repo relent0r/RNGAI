@@ -3,6 +3,7 @@ local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.l
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local NavUtils = import("/lua/sim/navutils.lua")
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
+local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local ACUFunc = import('/mods/RNGAI/lua/AI/RNGACUFunctions.lua')
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
@@ -157,6 +158,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if cdr.Confidence < 3.5 and cdr.DistanceToHome > 2500 then
+                self:LogDebug(string.format('cdr has low confidence'))
                 local closestEnemyACU = StateUtils.GetClosestEnemyACU(brain, cdr.CDRHome)
                 local enemyAcuOverride = false
                 if closestEnemyACU and not closestEnemyACU.Dead and RUtils.HaveUnitVisual(brain, closestEnemyACU, true) then
@@ -895,6 +897,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if cdr.EnemyNavalPresent then
                     cdr.EnemyNavalPresent = nil
                 end
+                self:LogDebug(string.format('No destiantion break out of Navigating'))
                 --LOG('No destiantion break out of Navigating')
                 self:ChangeState(self.DecideWhatToDo)
                 return
@@ -951,6 +954,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     if cdr.EnemyNavalPresent then
                         cdr.EnemyNavalPresent = nil
                     end
+                    self:LogDebug(string.format('No waypoint, break out of navigation'))
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
@@ -972,6 +976,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         StateUtils.IssueNavigationMove(cdr, destination)
                         --LOG('ACU at position '..repr(destination))
                         --LOG('Cutoff distance was '..navigateDistanceCutOff)
+                        self:LogDebug(string.format('Were at destination break from navigating'))
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
@@ -1071,9 +1076,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 self.BuilderData = {}
                                 --LOG('acu close to support platoon, stopping retreat')
                                 --LOG('Outside maxrange, aborting and resetting builderdata')
+                                self:LogDebug(string.format('We think its safe to abort retreat due to support platoon in navigation'))
                                 self:ChangeState(self.DecideWhatToDo)
                                 return
                             end
+                        end
+                        if builderData.ZoneRetreat and cdr.CurrentEnemyInnerCircle * 1.2 < cdr.CurrentFriendlyInnerCircle and cdr.Confidence > 3.5 then
+                            self:LogDebug(string.format('We were told to retreat to zone but we are feeling confident'))
+                            self:ChangeState(self.DecideWhatToDo)
+                            return
                         end
                     end
                     if not endPoint and (not cdr.GunUpgradeRequired) and (not cdr.HighThreatUpgradeRequired) and cdr.Health > 6000 and (not builderData.Retreat and cdr.CurrentEnemyInnerCircle < 10 and cdr.CurrentEnemyThreat < 50) and GetEconomyStoredRatio(brain, 'MASS') < 0.70 then
@@ -1774,7 +1785,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             cdr.Retreat = false
                             self.BuilderData = {
                                 Position = zonePos,
-                                CutOff = 144
+                                CutOff = 144,
+                                Retreat = true
                             }
                             self:ChangeState(self.Navigating)
                             return
@@ -1884,6 +1896,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         self.BuilderData = {
                             Position = closestAPlatPos,
                             CutOff = 400,
+                            Retreat = true,
                             SupportPlatoon = closestPlatoon
                         }
                         self:ChangeState(self.Navigating)
@@ -1908,12 +1921,32 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     self.BuilderData = {
                         Position = closestAPlatPos,
                         CutOff = 400,
-                        SupportPlatoon = closestPlatoon
+                        SupportPlatoon = closestPlatoon,
+                        Retreat = true
                     }
                     self:ChangeState(self.Navigating)
                     return
                 end
             end
+            local zoneRetreat = brain.IntelManager:GetClosestZone(brain, self, false, currentTargetPosition, true)
+            local closestDistance
+            local zonePos
+            if zoneRetreat then
+                zonePos = brain.Zones.Land.zones[zoneRetreat].pos
+                closestDistance = VDist3Sq(zonePos, cdr.Position)
+            end
+            if closestDistance < VDist3Sq(cdr.Position, cdr.CDRHome) then
+                cdr.Retreat = false
+                self.BuilderData = {
+                    Position = zonePos,
+                    ZoneRetreat  = true,
+                    CutOff = 144,
+                    Retreat = true
+                }
+                self:ChangeState(self.Navigating)
+                return
+            end
+            self:LogDebug(string.format('No command was issued during retreat request, moving back to decidewhattodo'))
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -2399,6 +2432,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local buildingTmpl, buildingTmplFile, baseTmpl, baseTmplFile, baseTmplDefault, templateKey
             local whatToBuild, location, relativeLoc
             local hydroPresent = false
+            local hydroDistance
             local airFactoryBuilt = false
             local buildLocation = false
             local buildMassPoints = {}
@@ -2469,6 +2503,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             if closestHydro and NavUtils.CanPathTo('Amphibious', engPos, closestHydro.Position) then
                 --RNGLOG('CommanderInitializeAIRNG : Hydro Within 65 units of spawn')
                 hydroPresent = true
+                hydroDistance = closestHydro.Distance
             end
             local inWater = RUtils.PositionInWater(engPos)
             if inWater then
@@ -2766,8 +2801,17 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             --RNGLOG('Hydro is present we shouldnt need any more pgens during initialization')
             end
             if not hydroPresent and closeMarkers > 3 then
+                local factoryType = 'T1LandFactory'
+                local currenEnemy = aiBrain:GetCurrentEnemy()
+                if currenEnemy then
+                    local EnemyIndex = currenEnemy:GetArmyIndex()
+                    local OwnIndex = aiBrain:GetArmyIndex()
+                    if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] ~= 'LAND' then
+                        factoryType = 'T1AirFactory'
+                    end
+                end
                 --RNGLOG('CommanderInitializeAIRNG : not hydro and close markers greater than 3, Try to build land factory')
-                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1LandFactory', eng, true, categories.MASSEXTRACTION, 15, true)
+                buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], factoryType, eng, true, categories.MASSEXTRACTION, 15, true)
                 if borderWarning and buildLocation and whatToBuild then
                     IssueBuildMobile({eng}, {buildLocation[1],GetTerrainHeight(buildLocation[1], buildLocation[2]),buildLocation[2]}, whatToBuild, {})
                     borderWarning = false

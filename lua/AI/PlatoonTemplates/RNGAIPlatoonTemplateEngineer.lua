@@ -151,10 +151,18 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'EngineerBuilderRNGMex',
+    Name = 'EngineerBuilderRNGMexT1',
     Plan = 'StateMachineAIRNG',
     GlobalSquads = {
         { categories.ENGINEER * categories.TECH1 - categories.COMMAND , 1, 1, 'support', 'None' }
+    },
+}
+
+PlatoonTemplate {
+    Name = 'EngineerBuilderRNGMexT2',
+    Plan = 'StateMachineAIRNG',
+    GlobalSquads = {
+        { categories.ENGINEER * categories.TECH2 - categories.COMMAND , 1, 1, 'support', 'None' }
     },
 }
 

@@ -56,6 +56,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             else
                 self.LocationType = 'MAIN'
             end
+            self.MassRaidTable = {}
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             self.ScoutSupported = true
             self.ScoutUnit = false
@@ -219,6 +220,62 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                     end
                 else
                     self:LogDebug(string.format('No targetCandidate table'))
+                end
+            end
+            if not target and self.CurrentPlatoonThreatDirectFireAntiSurface > 0 then
+                local frigateRaidMarkers = aiBrain.EnemyIntel.FrigateRaidMarkers
+                --LOG('Frigate raid maker table size is '..tostring(table.getn(frigateRaidMarkers)))
+                local gameTime = GetGameTimeSeconds()
+                for _, v in frigateRaidMarkers do
+                    local firingDistance = VDist3Sq(v.Position, v.RaidPosition)
+                    --LOG('Firing Distance '..tostring(firingDistance)..' Max direct fire range '..tostring(self['rngdata'].MaxDirectFireRange))
+                    if math.sqrt(firingDistance) <= self['rngdata'].MaxDirectFireRange and NavUtils.CanPathTo(self.MovementLayer, self.Pos, v.RaidPosition) then
+                        if v.LastRaidTime + 30 > gameTime then
+                            --LOG('Position already raided recently')
+                            self:LogDebug(string.format('Position has already been raided recently'))
+                            coroutine.yield(1)
+                            continue
+                        else
+                            local surfaceThreat = aiBrain:GetThreatAtPosition(v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+                            if surfaceThreat > 0 then
+                                local threat=RUtils.GrabPosDangerRNG(aiBrain,v.Position,self.EnemyRadius,self.EnemyRadius, true, true, false, true)
+                                if threat.enemyTotal and threat.enemyrange > 0 and threat.enemyTotal*1.1 > self.CurrentPlatoonThreatAntiSurface and threat.enemyrange > self['rngdata'].MaxPlatoonWeaponRange or threat.enemySub > 0 and self.CurrentPlatoonThreatAntiNavy < threat.enemySub*1.2 then
+                                    --LOG('Positon is too scary for naval platoon')
+                                    coroutine.yield(1)
+                                    continue
+                                end
+                            end
+                            v.LastRaidTime = gameTime
+                        end
+                        --LOG('Trying to raid position')
+                        local rx = self.Pos[1] - v.RaidPosition[1]
+                        local rz = self.Pos[3] - v.RaidPosition[3]
+                        local posDistance = rx * rx + rz * rz
+                        if posDistance > 400 then
+                            --LOG('Distance is greater than 400 units, navigating')
+                            self:LogDebug(string.format('Moving to target'))
+                            self.BuilderData = {
+                                Position = v.RaidPosition,
+                                CutOff = 400
+                            }
+                            self.dest = self.BuilderData.Position
+                            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', self.Pos, self.BuilderData.Position, 1000, 160)
+                            if path and RNGGETN(path) > 0 then
+                                self.path = path
+                                self:ChangeState(self.Navigating)
+                                return
+                            else
+                                self:LogDebug(string.format('No path or no entries in path returned'..tostring(self.Pos)))
+                            end
+                        else
+                            --self:LogDebug(string.format('target is close, combat loop'))
+                            --LOG('Distance is less than 400 units, navigating')
+                            self:MoveToLocation(v.RaidPosition, false)
+                            coroutine.yield(50)
+                            self:ChangeState(self.DecideWhatToDo)
+                            return
+                        end
+                    end
                 end
             end
             --LOG('Naval Platoon found no target positions so they are retreating, our max platoon range was '..tostring(self['rngdata'].MaxPlatoonWeaponRange))

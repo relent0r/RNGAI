@@ -4035,6 +4035,19 @@ function GetAngleToPosition(Pos1, Pos2)
     return angle
 end
 
+function GetPointOffset(position, angle, distance)
+    local radians = math.rad(angle)  -- Convert angle to radians
+    local offsetX = distance * math.cos(radians)  -- X offset
+    local offsetZ = distance * math.sin(radians)  -- Z offset
+    return { position[1] + offsetX, position[2], position[3] + offsetZ }
+end
+
+function GetHeadingAngle(unit)
+    if unit and not unit.Dead then
+        return modulo(450 - unit:GetHeading() * (180 / math.pi), 360)
+    end
+end
+
 function modulo(a, b)
     return a - math.floor(a / b) * b
 end
@@ -4201,6 +4214,27 @@ function PerformEngReclaim(aiBrain, eng, minimumReclaim)
         end
     end
     return reclaimed
+end
+
+function GetNumberUnitsBeingBuilt(aiBrain, category)
+    local unitsBuilding = aiBrain:GetListOfUnits(categories.CONSTRUCTION + category, false)
+    local catNumBuilding = 0
+    for _, unit in unitsBuilding do
+        if not unit.Dead then
+            if unit:IsUnitState('Building') then
+                if unit.UnitBeingBuilt and unit.UnitBeingBuilt ~= unit.UnitBeingAssist then
+                    local buildingUnit = unit.UnitBeingBuilt
+                    if buildingUnit and not buildingUnit.Dead and EntityCategoryContains(category, buildingUnit) then
+                        catNumBuilding = catNumBuilding + 1
+                    end
+                end
+            elseif EntityCategoryContains(category, unit) and unit:GetFractionComplete() < 1 then
+                catNumBuilding = catNumBuilding + 1
+            end
+        end
+    end
+    --RNGLOG('Number of units building from GetNumberUnitsBuilding (which is experimentals right now) is '..catNumBuilding)
+    return catNumBuilding
 end
 
 function GetNumberUnitsBuilding(aiBrain, category)
@@ -4912,8 +4946,7 @@ end
 GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     local scoutingData
     local scoutType
-    local platoonNeedScout
-    local supportPlatoon
+    local platoonNeedScout, supportPlatoon, supportPlatoonDistance
     local currentGameTime = GetGameTimeSeconds()
     local scoutPos = scout:GetPosition()
     local im = IntelManagerRNG.GetIntelManager(aiBrain)
@@ -4925,8 +4958,14 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         aiBrain:BuildScoutLocationsRNG()
     end
 
+    if platoon.FindPlatoonCounter and (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
+        coroutine.yield(3)
+        platoonNeedScout, supportPlatoon, supportPlatoonDistance = ScoutFindNearbyPlatoonsRNG(platoon, 125)
+        platoon.FindPlatoonCounter = platoon.FindPlatoonCounter + 1
+    end
     if aiBrain.CDRUnit.Active then
-        if (not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead) and aiBrain.CDRUnit.DistanceToHome > 900 then
+        if (not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead) and aiBrain.CDRUnit.DistanceToHome > 900 
+            and (not platoonNeedScout or platoonNeedScout and supportPlatoonDistance > 3025) then
             --LOG('LAND-SCOUT Land scout getting acu position')
             if NavUtils.CanPathTo(platoon.MovementLayer, scoutPos, aiBrain.CDRUnit.Position) then
                 --LOG('LAND-SCOUT Can path to acu, return unit')
@@ -4935,11 +4974,6 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
                 return aiBrain.CDRUnit, scoutType
             end
         end
-    end
-    if platoon.FindPlatoonCounter and (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
-        coroutine.yield(3)
-        platoonNeedScout, supportPlatoon = ScoutFindNearbyPlatoonsRNG(platoon, 125)
-        platoon.FindPlatoonCounter = platoon.FindPlatoonCounter + 1
     end
     if platoonNeedScout then
         if supportPlatoon and PlatoonExists(aiBrain, supportPlatoon) then
@@ -5145,12 +5179,13 @@ ScoutFindNearbyPlatoonsRNG = function(platoon, radius)
                 if platoon.MovementLayer ~= 'Amphibious' and platoon.MovementLayer ~= aPlat.MovementLayer then
                     continue
                 end
-                if  VDist3Sq(platPos, allyPlatPos) <= radiusSq then
+                local allyPlatDistance = VDist3Sq(platPos, allyPlatPos)
+                if  allyPlatDistance <= radiusSq then
                     if not NavUtils.CanPathTo(platoon.MovementLayer, platPos, allyPlatPos) then continue end
                     if aiBrain.RNGDEBUG then
                         RNGLOG("*AI DEBUG: Scout moving to allied platoon position for plan "..aPlat.PlanName)
                     end
-                    return true, aPlat
+                    return true, aPlat, allyPlatDistance
                 end
             end
         end
@@ -5629,7 +5664,7 @@ CheckForExperimental = function(aiBrain, im, platoon, avoid, naval)
     end
 end
 
-CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu, experimentalCheck, strategicBomber)
+CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu, experimentalCheck, strategicBomber, airOnly)
     local platPos
     local closestTarget
     local highestPriority = 0
@@ -5715,8 +5750,18 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                                         end
                                     end
                                 end
+                            elseif airOnly then
+                                if unitCats.AIR and (v.type == 'bomber' or v.type == 'gunship') then
+                                    if v.priority * priorityModifier >= 250 then
+                                        tempPoint = (v.priority * priorityModifier + (v.danger or 0))/RNGMAX(targetDistance,30*30)
+                                        if tempPoint > highestPriority and highestPriority >= 250 then
+                                            highestPriority = tempPoint
+                                            closestTarget = v.unit
+                                        end
+                                    end
+                                end
                             else
-                                if not unitCats.SCOUT and (not strategicBomber or (not unitCats.TECH1 or unitCats.COMMAND)) then
+                                if not unitCats.SCOUT and (not strategicBomber or (not unitCats.TECH1 or unitCats.COMMAND)) and not (v.type == 'gunship' or v.type == 'bomber') then
                                     local priorityModifier = 1
                                     local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
                                     local tempPoint
@@ -5756,6 +5801,46 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
     end
     return false
 end
+
+CheckPriorityTarget = function(aiBrain, im, platoon, threatType, threatAmount, presenceCheck, ignoreScouts, airOnly)
+
+    local pointHighest = 0
+    local point = false
+    local platPos = platoon.Pos or platoon:GetPlatoonPosition()
+    for _, v in aiBrain.prioritypoints do
+        local dx = platPos[1] - v.Position[1]
+        local dz = platPos[3] - v.Position[3]
+        local distance = dx * dx + dz * dz
+        local tempPoint = v.priority/(RNGMAX(distance,30*30)+(v.danger or 0))
+        if tempPoint > pointHighest then
+            local validated = true
+            if presenceCheck and aiBrain.GridPresence:GetInferredStatus(v.Position) ~= presenceCheck then
+                validated = false
+            end
+            if threatType and GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, threatType) > threatAmount then
+                validated = false
+            end
+            if ignoreScouts then
+                local unitCats = v.unit.Blueprint.CategoriesHash
+                if unitCats.SCOUT then
+                    validated = false
+                end
+            end
+            if airOnly then
+                local unitCats = v.unit.Blueprint.CategoriesHash
+                if not unitCats.AIR then
+                    validated = false
+                end
+            end
+            if validated then
+                pointHighest = tempPoint
+                point = v
+            end
+        end
+    end
+    return point
+end
+
 
 GetPlatUnitEnemyBias = function(aiBrain, platoon, acuSupport)
 
@@ -6704,7 +6789,7 @@ function GetShieldPosition(aiBrain, eng, locationType, whatToBuild, unitTable)
     --LOG('Getting Shield Position')
     --LOG('Structure table requiring shield has this many '..table.getn(unitTable))
     if not table.empty(unitTable)then
-        table.sort(unitTable,function(a,b) return VDist3Sq(engPos,a:GetPosition())<VDist3Sq(engPos,b:GetPosition()) end)
+        --table.sort(unitTable,function(a,b) return VDist3Sq(engPos,a:GetPosition())<VDist3Sq(engPos,b:GetPosition()) end)
         local buildPositions = {}
         local shieldRequired 
         local shieldPosFound = false
@@ -6713,17 +6798,23 @@ function GetShieldPosition(aiBrain, eng, locationType, whatToBuild, unitTable)
             --LOG('Unit that needs protecting '..v.UnitId)
             --LOG('Entity '..v.EntityId)
             if not v.Dead then
+                if not v['rngdata'] then
+                    v['rngdata'] = {}
+                end
+                --LOG('Looking for shield position from unit list, number of shields unit currently has '..tostring(table.getn(v['rngdata'].ShieldsInRange)))
                 local shieldSpaceTimeout = false
-                if v['rngdata'].NoShieldSpace then
-                    if v['rngdata'].NoShieldSpace < 5 then
-                        --LOG('unit has not shield space, incrementing by 1')
-                        shieldSpaceTimeout = true
-                        v['rngdata'].NoShieldSpace = v['rngdata'].NoShieldSpace + 1
-                    else
-                        v['rngdata'].NoShieldSpace = 0
+                if v['rngdata'].NoShieldSpace and v['rngdata'].NoShieldSpace > 0 then
+                    shieldSpaceTimeout = true
+                end
+                local shieldCount = 0
+                if v['rngdata'].ShieldsInRange then
+                    for _, s in v['rngdata'].ShieldsInRange do
+                        if not s.Dead then
+                           shieldCount = shieldCount + 1
+                        end
                     end
-                end 
-                if not v['rngdata'].ShieldsInRange or v['rngdata'].ShieldsInRange and table.empty(v['rngdata'].ShieldsInRange) and not shieldSpaceTimeout then
+                end
+                if not v['rngdata'].ShieldsInRange or v['rngdata'].ShieldsInRange and shieldCount < 4 and not shieldSpaceTimeout then
                     local targetSize = v.Blueprint.Physics
                     local targetPos = v:GetPosition()
                     local differenceX=math.abs(targetSize.SkirtSizeX-unitSize.SkirtSizeX)
@@ -6741,11 +6832,13 @@ function GetShieldPosition(aiBrain, eng, locationType, whatToBuild, unitTable)
                         -- check if the buildplace is to close to the border or inside buildable area
                         if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
                             if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos)) then
+                                v['rngdata'].NoShieldSpace = 0
                                 return normalposition(testPos)
                             end
                         end
                         if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
                             if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos2)) then
+                                v['rngdata'].NoShieldSpace = 0
                                 return normalposition(testPos2)
                             end
                         end
@@ -6756,21 +6849,29 @@ function GetShieldPosition(aiBrain, eng, locationType, whatToBuild, unitTable)
                         local testPos2 = { targetPos[1]+targetSize.SkirtSizeX/2+(unitSize.SkirtSizeX/2)+offsetfactory, targetPos[3] + (i * 1), 0 }
                         if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
                             if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos)) then
+                                v['rngdata'].NoShieldSpace = 0
                                 return normalposition(testPos)
                             end
                         end
                         if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
                             if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos2)) then
+                                v['rngdata'].NoShieldSpace = 0
                                 return normalposition(testPos2)
                             end
                         end
                     end
                 end
-                if not v['rngdata'] then
-                    v['rngdata'] = {}
-                end
                 --LOG('No build position, setting noshieldspace to zero')
-                v['rngdata'].NoShieldSpace = 0
+                if shieldCount < 4 then
+                    if not v['rngdata'].NoShieldSpace then
+                        v['rngdata'].NoShieldSpace = 0
+                    end
+                    if v['rngdata'].NoShieldSpace < 5 then
+                        v['rngdata'].NoShieldSpace = v['rngdata'].NoShieldSpace + 1
+                    else
+                        v['rngdata'].NoShieldSpace = 0
+                    end
+                end
             end
         end
     end
@@ -7486,6 +7587,37 @@ UpdateShieldsProtectingUnit = function(aiBrain, finishedUnit)
         local height = shield.Blueprint.Defense.Shield.ShieldVerticalOffset
         return width - height
     end
+    local function IsUnitCoveredByShield(unitPos, unitSizeX, unitSizeZ, shieldPos, shieldRadiusSq)
+        local halfX = (unitSizeX or 1) * 0.5
+        local halfZ = (unitSizeZ or 1) * 0.5
+    
+        -- Calculate the four corners of the unit
+        local checkPoints = {
+            {unitPos[1] - halfX, unitPos[3] - halfZ}, -- Bottom-left
+            {unitPos[1] + halfX, unitPos[3] - halfZ}, -- Bottom-right
+            {unitPos[1] - halfX, unitPos[3] + halfZ}, -- Top-left
+            {unitPos[1] + halfX, unitPos[3] + halfZ}  -- Top-right
+        }
+    
+        local coveredPoints = 0
+    
+        -- Check if each corner is inside the shield radius
+        for _, point in ipairs(checkPoints) do
+            local dx = shieldPos[1] - point[1]
+            local dz = shieldPos[3] - point[2]
+            local distSq = dx * dx + dz * dz  -- Squared distance
+    
+            if distSq <= shieldRadiusSq then
+                coveredPoints = coveredPoints + 1
+                -- If at least 3 corners are covered, we can return early
+                if coveredPoints >= 3 then
+                    return true
+                end
+            end
+        end
+    
+        return false
+    end
     if not finishedUnit['rngdata'] then
         finishedUnit['rngdata'] = {}
     end
@@ -7494,7 +7626,7 @@ UpdateShieldsProtectingUnit = function(aiBrain, finishedUnit)
             for _, v in pairs(unit['rngdata'].ShieldsInRange) do
                 if v and not v.Dead and v['rngdata'].UnitsDefended then
                     local keyToDelete
-                    for l, c in pairs(unit['rngdata'].UnitsDefended) do
+                    for l, c in pairs(v['rngdata'].UnitsDefended) do
                         if unit.EntityId == c.EntityId then
                             --LOG('Removing Unit from shield unitsdefended table')
                             keyToDelete = l
@@ -7511,26 +7643,34 @@ UpdateShieldsProtectingUnit = function(aiBrain, finishedUnit)
     end
     import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, finishedUnit)
     local finishedUnitPos = finishedUnit:GetPosition()
-    local units = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.SHIELD, finishedUnitPos, 50, 'Ally')
-    if not table.empty(units) then
-        for _, v in units do
-            if v['rngdata']['UnitsDefended'] then
-                local defenseRadius = GetShieldRadiusAboveGroundSquaredRNG(v)
-                
+    local shields = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.SHIELD, finishedUnitPos, 50, 'Ally')
+    if not table.empty(shields) then
+        for _, v in shields do
+            if v and not v.Dead then
+                if not v['rngdata'] then
+                    v['rngdata'] = {}
+                end
+                if not v['rngdata'].UnitsDefended then
+                    v['rngdata'].UnitsDefended = setmetatable({}, WeakValueTable)
+                end
+                local shieldPos = v:GetPosition()
+                local dx = finishedUnitPos[1] - shieldPos[1]
+                local dz = finishedUnitPos[3] - shieldPos[3]
+                local distSquared = dx * dx + dz * dz
+                local unitSizeX = finishedUnit.Blueprint.SizeX or 1
+                local unitSizeZ = finishedUnit.Blueprint.SizeZ or 1
+                if v['rngdata']['UnitsDefended'] then
+                    local defenseRadiusSquared = GetShieldRadiusAboveGroundSquaredRNG(v)
+                    if distSquared <= defenseRadiusSquared and IsUnitCoveredByShield(finishedUnitPos, unitSizeX, unitSizeZ, shieldPos, defenseRadiusSquared) then
+                        -- Ensure finishedUnit has ShieldsInRange table
+                        if not finishedUnit['rngdata'].ShieldsInRange then
+                            finishedUnit['rngdata'].ShieldsInRange = setmetatable({}, WeakValueTable)
+                        end
+                        finishedUnit['rngdata'].ShieldsInRange[shield.EntityId] = v
+                        v['rngdata']['UnitsDefended'][finishedUnit.EntityId] = finishedUnit
+                    end
+                end
             end
-        end
-    end
-    finishedUnit['rngdata']['UnitsDefended'] = {}
-    if not table.empty(units) then
-        for _, v in units do
-            if not v['rngdata'] then
-                v['rngdata'] = {}
-            end
-            if not v['rngdata'].ShieldsInRange then
-                v['rngdata'].ShieldsInRange = setmetatable({}, WeakValueTable)
-            end
-            v['rngdata'].ShieldsInRange[finishedUnit.EntityId] = finishedUnit
-            table.insert(finishedUnit['rngdata'].UnitsDefended, v)
         end
     end
 end
@@ -7539,44 +7679,83 @@ UpdateUnitsProtectedByShield = function(aiBrain, finishedUnit)
     if not finishedUnit['rngdata'] then
         finishedUnit['rngdata'] = {}
     end
+
     local deathFunction = function(unit)
         if unit['rngdata'].UnitsDefended then
             for _, v in pairs(unit['rngdata'].UnitsDefended) do
-                if v and not v.Dead then
-                    if v.ShieldsInRange then
-                        if v.ShieldsInRange[unit.EntityId] then
-                            v.ShieldsInRange[unit.EntityId] = nil
-                            --LOG('Shield has been destroyed, removed from '..v.UnitId)
-                        end
-                    end
+                if v and not v.Dead and v.ShieldsInRange then
+                    v.ShieldsInRange[unit.EntityId] = nil
                 end
             end
         end
     end
     import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, finishedUnit)
+
     if not finishedUnit['rngdata']['UnitsDefended'] then
         finishedUnit['rngdata']['UnitsDefended'] = {}
     end
-    finishedUnit.UnitsDefended = {}
+
     local function GetShieldRadiusAboveGroundSquaredRNG(shield)
         local width = shield.Blueprint.Defense.Shield.ShieldSize
         local height = shield.Blueprint.Defense.Shield.ShieldVerticalOffset
-    
-        return width - height
+        local radius = width - height
+        return radius * radius  -- Return squared value for direct comparison
     end
-    local defenseRadius = GetShieldRadiusAboveGroundSquaredRNG(finishedUnit)
-    local units = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, finishedUnit:GetPosition(), defenseRadius, 'Ally')
-    --LOG('Number of units around TMD '..table.getn(units))
+
+    local function IsUnitCoveredByShield(unitPos, unitSizeX, unitSizeZ, shieldPos, shieldRadiusSq)
+        local halfX = (unitSizeX or 1) * 0.5
+        local halfZ = (unitSizeZ or 1) * 0.5
+    
+        -- Calculate the four corners of the unit
+        local checkPoints = {
+            {unitPos[1] - halfX, unitPos[3] - halfZ}, -- Bottom-left
+            {unitPos[1] + halfX, unitPos[3] - halfZ}, -- Bottom-right
+            {unitPos[1] - halfX, unitPos[3] + halfZ}, -- Top-left
+            {unitPos[1] + halfX, unitPos[3] + halfZ}  -- Top-right
+        }
+    
+        local coveredPoints = 0
+    
+        -- Check if each corner is inside the shield radius
+        for _, point in ipairs(checkPoints) do
+            local dx = shieldPos[1] - point[1]
+            local dz = shieldPos[3] - point[2]
+            local distSq = dx * dx + dz * dz  -- Squared distance
+    
+            if distSq <= shieldRadiusSq then
+                coveredPoints = coveredPoints + 1
+                -- If at least 3 corners are covered, we can return early
+                if coveredPoints >= 3 then
+                    return true
+                end
+            end
+        end
+    
+        return false
+    end
+
+    local defenseRadiusSq = GetShieldRadiusAboveGroundSquaredRNG(finishedUnit)
+    local finishedUnitPos = finishedUnit:GetPosition()
+    local units = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, finishedUnitPos, math.sqrt(defenseRadiusSq), 'Ally')
+
     if not table.empty(units) then
         for _, v in units do
-            if not v['rngdata'] then
-                v['rngdata'] = {}
+            if v and not v.Dead then
+                local unitPos = v:GetPosition()
+                local unitSizeX = v.Blueprint.SizeX or 1
+                local unitSizeZ = v.Blueprint.SizeZ or 1
+
+                if IsUnitCoveredByShield(unitPos, unitSizeX, unitSizeZ, finishedUnitPos, defenseRadiusSq) then
+                    if not v['rngdata'] then
+                        v['rngdata'] = {}
+                    end
+                    if not v['rngdata'].ShieldsInRange then
+                        v['rngdata'].ShieldsInRange = setmetatable({}, WeakValueTable)
+                    end
+                    v['rngdata'].ShieldsInRange[finishedUnit.EntityId] = finishedUnit
+                    finishedUnit['rngdata']['UnitsDefended'][v.EntityId] = v
+                end
             end
-            if not v['rngdata'].ShieldsInRange then
-                v['rngdata'].ShieldsInRange = setmetatable({}, WeakValueTable)
-            end
-            v['rngdata'].ShieldsInRange[finishedUnit.EntityId] = finishedUnit
-            table.insert(finishedUnit['rngdata'].UnitsDefended, v)
         end
     end
 end

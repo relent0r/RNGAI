@@ -310,11 +310,13 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                eng.WaitingForTransport = false
 
                 if bUsedTransports then
-                    --self:LogDebug(string.format('Used a transport'))
+                    self:LogDebug(string.format('Used a transport'))
+                    self.UsedTransports = true
                     coroutine.yield(10)
                     self:ChangeState(self.Constructing)
                     return
                 elseif reason == 'Unpathable' or VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 512 * 512 then
+                    self:LogDebug(string.format('We didnt use a transport so are clearing commands'))
                     -- If over 512 and no transports dont try and walk!
                     table.remove(self.ZoneMarkers[self.CurentZoneIndex].ResourceMarkers,self.CurrentMarkerIndex)
                     --self:LogDebug(string.format('No path to position or greater than 500 and unable to use transport'))
@@ -534,11 +536,23 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local eng = self.eng
             local aiBrain = self:GetBrain()
-
+            --self:LogDebug(string.format('Current build queue length '..tostring(table.getn(eng.EngineerBuildQueue))))
+            if self.UsedTransports then
+                if eng.EngineerBuildQueue and RNGGETN(eng:GetCommandQueue()) == 0 and table.getn(eng.EngineerBuildQueue) > 0 then
+                    for k, v in eng.EngineerBuildQueue do
+                        if eng.EngineerBuildQueue[k][5] then
+                            IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
+                        else
+                            aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                        end
+                    end
+                end
+                self.UsedTransports = false
+            end
+            --LOG('Engineer build queue length is '..table.getn(eng.EngineerBuildQueue))
             while not IsDestroyed(eng) and (0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving")) do
                 coroutine.yield(1)
                 --RNGLOG('MexBuildAI waiting for mex build completion')
-                --RNGLOG('Engineer build queue length is '..table.getn(eng.EngineerBuildQueue))
                 local platPos = self:GetPlatoonPosition()
                 if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                     if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.MOBILE, platPos, 30, 'Enemy') > 0 then

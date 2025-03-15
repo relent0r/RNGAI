@@ -607,7 +607,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     return
                 end
                 local enemyUnitRange = builderData.RetreatFrom and StateUtils.GetUnitMaxWeaponRange(builderData.RetreatFrom, 'Direct Fire') or 0
-                local avoidRange = math.max(enemyUnitRange + 3, self['rngdata'].IntelRange - 2)
+                local avoidRange = math.max(enemyUnitRange + 5, self['rngdata'].IntelRange - 2)
                 if builderData.RetreatFrom then
                     self.retreatTarget = builderData.RetreatFrom
                 end
@@ -638,7 +638,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                     local enemyPos = enemyUnit:GetPosition()
-                    platPos = self:GetPlatoonPosition()
+                    platPos = scout:GetPosition()
                     if not platPos then
                         return
                     end
@@ -646,16 +646,17 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     local rz = platPos[3] - enemyPos[3]
                     local enemyDistance = rx * rx + rz * rz
                     if enemyDistance < avoidRange * avoidRange then
-                        self:LogDebug(string.format('Enemy is within avoid range'))
+                        self:LogDebug(string.format('Enemy is within avoid range, distance '..tostring(math.sqrt(enemyDistance))))
                         local idealRange
                         if self.BuilderData.RetreatFromWeaponRange and self.BuilderData.RetreatFromWeaponRange < avoidRange then
-                            idealRange = math.min(self.BuilderData.RetreatFromWeaponRange + 8, avoidRange)
+                            idealRange = math.min(self.BuilderData.RetreatFromWeaponRange + 14, avoidRange)
                         else
                             idealRange = avoidRange
                         end
+                        self:LogDebug(string.format('Ideal avoid range is '..tostring(idealRange)))
                         local movePos = RUtils.AvoidLocation(enemyPos, platPos, idealRange)
                         StateUtils.IssueNavigationMove(scout, movePos)
-                        coroutine.yield(15)
+                        coroutine.yield(10)
                         local allyScouts = aiBrain:GetNumUnitsAroundPoint( categories.SCOUT * categories.LAND, platPos, 10, 'Ally')
                         if allyScouts > 2 then
                             if builderData.OriginLocation then
@@ -717,7 +718,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                             local movePos = RUtils.MoveInDirection(platPos, pointAngle, 20, true, false)
                             self:LogDebug('movePosition for support platoon is '..tostring(movePos[1])..':'..tostring(movePos[3]))
                             StateUtils.IssueNavigationMove(scout, movePos)
-                            coroutine.yield(30)
+                            coroutine.yield(20)
                         end
                     end
                     if builderData.OriginLocation then
@@ -732,7 +733,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                             coroutine.yield(30)
                         end
                     end
-                    coroutine.yield(20)
+                    coroutine.yield(15)
                 end
             end
             --LOG('Retreating to platoon')

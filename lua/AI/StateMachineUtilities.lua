@@ -579,7 +579,7 @@ SetUnitCategoryRanges = function(unit)
                 -- unit can have MaxWeaponRange entry from the last platoon
                 if weapon.MaxRadius and not weapon.DummyWeapon then
                     local weaponRange = weapon.MaxRadius
-                    if weapon.WeaponCategory == 'Direct Fire' or weapon.WeaponCategory == 'Direct Fire Experimental' then
+                    if weapon.WeaponCategory == 'Direct Fire' or weapon.WeaponCategory == 'Direct Fire Experimental' or weapon.WeaponCategory == 'Direct Fire Naval' then
                         if not weapon.EnabledByEnhancement or (weapon.EnabledByEnhancement and unit.HasEnhancement and unit:HasEnhancement(weapon.EnabledByEnhancement)) then
                             if not unitData.CategoryDirectFireRange or weaponRange > unitData.CategoryDirectFireRange then
                                 unitData.CategoryDirectFireRange = weaponRange
@@ -597,7 +597,7 @@ SetUnitCategoryRanges = function(unit)
                                 unitData.CategoryAntiNavyRange = weaponRange
                             end
                         end
-                    elseif weapon.WeaponCategory == 'Indirect Fire' or weapon.WeaponCategory == 'Artillery' then
+                    elseif weapon.WeaponCategory == 'Indirect Fire' or weapon.WeaponCategory == 'Artillery' or weapon.WeaponCategory == 'Missile' then
                         if not weapon.EnabledByEnhancement or (weapon.EnabledByEnhancement and unit.HasEnhancement and unit:HasEnhancement(weapon.EnabledByEnhancement)) then
                             if not unitData.CategoryIndirectFireRange or weaponRange > unitData.CategoryIndirectFireRange then
                                 unitData.CategoryIndirectFireRange = weaponRange
@@ -1235,13 +1235,19 @@ FindExperimentalTargetRNG = function(aiBrain, platoon, layer, experimentalPositi
 
     local bestUnit
     local bestBase
+    local highPriorityDistanceLimit = 22500
+    if layer == 'Air' then
+        highPriorityDistanceLimit = 40000
+    end
     -- If we haven't found a target check the main bases radius for any units, 
     -- Check if there are any high priority units from the main base position. But only if we came online around that position.
-    if experimentalPosition and VDist3Sq(experimentalPosition, aiBrain.BuilderManagers['MAIN'].Position) < 22500 then
+    if experimentalPosition and VDist3Sq(experimentalPosition, aiBrain.BuilderManagers['MAIN'].Position) < highPriorityDistanceLimit then
         if not bestUnit then
-            if layer == 'Air' or layer == 'Water' then
-                --LOG('Air experimental looking for high priority target, current distance from main base is '..tostring(VDist3Sq(experimentalPosition, aiBrain.BuilderManagers['MAIN'].Position)))
+            if layer == 'Air' then
+                bestUnit = RUtils.CheckHighPriorityTarget(aiBrain, nil, platoon, false, true, false, false, true)
+            elseif layer == 'Water' then
                 bestUnit = RUtils.CheckHighPriorityTarget(aiBrain, nil, platoon, false, true)
+                --LOG('Air experimental looking for high priority target, current distance from main base is '..tostring(VDist3Sq(experimentalPosition, aiBrain.BuilderManagers['MAIN'].Position)))
             else
                 bestUnit = RUtils.CheckHighPriorityTarget(aiBrain, nil, platoon, false, false)
             end
@@ -2503,5 +2509,68 @@ function ShouldBomberRetreat(platoon)
 end
 
 function GetAirRetreatLocation(aiBrain, unit)
+    local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
+    local unitPos = unit:GetPosition()
+    local zoneId = MAP:GetZoneID(unitPos, aiBrain.Zones.Land.index)  -- Use Land zones
+    local landZones = aiBrain.Zones.Land.zones  -- Access land zones
+
+    if not zoneId or not landZones[zoneId] then
+        return false
+    end
+
+    local checkedZones = {}
+    local bestRetreatZone = nil
+    local lowestEnemyThreat
+    local highestFriendlyAA = 0
+
+    -- Function to evaluate a zone for retreat
+    local function evaluateZone(zone)
+        local enemyThreat = zone.enemyantiairthreat or 0
+        local friendlyAA = zone.friendlyThreatAntiAir or 0
+
+        -- Prefer zones with lower enemy AA threat, but favor those with friendly AA support
+        if not lowestEnemyThreat or enemyThreat < lowestEnemyThreat or (enemyThreat == lowestEnemyThreat and friendlyAA > highestFriendlyAA) then
+            lowestEnemyThreat = enemyThreat
+            highestFriendlyAA = friendlyAA
+            bestRetreatZone = zone
+        end
+    end
+
+    -- Get the current zone
+    local currentZone = landZones[zoneId]
+
+    -- First-layer search (directly connected zones)
+    if currentZone.edges and table.getn(currentZone.edges) > 0 then
+        for _, edge in currentZone.edges do
+            local adjacentZone = landZones[edge.zone]
+            if adjacentZone and not checkedZones[edge.zone] then
+                checkedZones[edge.zone] = true
+                evaluateZone(adjacentZone)
+            end
+        end
+    end
+
+    -- Second-layer search (zones connected to adjacent zones)
+    for checkedZoneId in pairs(checkedZones) do
+        local adjZone = landZones[checkedZoneId]
+        if adjZone.edges and table.getn(adjZone.edges) > 0 then
+            for _, edge in adjZone.edges do
+                local secondLayerZone = landZones[edge.zone]
+                if secondLayerZone and not checkedZones[edge.zone] then
+                    checkedZones[edge.zone] = true
+                    evaluateZone(secondLayerZone)
+                end
+            end
+        end
+    end
+    --LOG('Friendly zone selected')
+    --LOG('Friendly AA was '..tostring(highestFriendlyAA))
+    --LOG('Enemy AA was '..tostring(lowestEnemyThreat))
+
+    -- If a suitable retreat zone is found, return its position; otherwise, fallback
+    if bestRetreatZone then
+        return bestRetreatZone.pos
+    end
+
     return false
 end

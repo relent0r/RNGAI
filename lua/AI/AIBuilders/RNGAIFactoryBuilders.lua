@@ -155,7 +155,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
-            --{ UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
+            { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land', false, true } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -1231,9 +1231,8 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 900,
         BuilderConditions = {
-            { MIBC, 'AirStagingWantedRNG', { } },
+            { UCBC, 'AirStagingWantedRNG', { } },
             -- When do we want to build this ?
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.AIRSTAGINGPLATFORM }},
             -- Do we need additional conditions to build it ?
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 20.0 }},
             -- Have we the eco to build it ?

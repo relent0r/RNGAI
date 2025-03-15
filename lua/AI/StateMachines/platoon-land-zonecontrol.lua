@@ -144,8 +144,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             --self:LogDebug(string.format('DecideWhatToDo enemy range '..tostring(threat.enemyrange)))
             --self:LogDebug(string.format('DecideWhatToDo friendly range '..tostring(threat.allyrange)))
             if threat.allySurface and threat.enemySurface and threat.allySurface*threatMultiplier < (threat.enemyStructure + threat.enemySurface) and threat.allySurface < 450 or self.Raid and threat.allyrange < threat.enemyrange then
-                if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*1.5 > (threat.enemySurface - threat.enemyStructure) or 
-                threat.allyrange > threat.enemyrange and threat.allySurface*1.5 > threat.enemySurface then
+                if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*2 > (threat.enemySurface - threat.enemyStructure) or 
+                threat.allyrange > threat.enemyrange and threat.allySurface*3 > threat.enemySurface then
                     rangedAttack = true
                 else
                     self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
@@ -292,6 +292,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     local currentLabel = false
                     if self.MovementLayer == 'Land' and aiBrain:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then
                         currentLabel = true
+                    end
+                    if currentLabel then
+                        --LOG('We are requesting a position on our current label, which is '..tostring(self.Label))
                     end
                     targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType, currentLabel)
                     self:LogDebug(string.format('Looked for zone at the current label'))

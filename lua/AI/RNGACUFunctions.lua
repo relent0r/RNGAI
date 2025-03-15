@@ -168,7 +168,17 @@ function CDRBrainThread(cdr)
         end
         if cdr.Active then
             if cdr.DistanceToHome > 900 and cdr.CurrentEnemyThreat > 0 then
-                if cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat and (not cdr.SupportPlatoon or IsDestroyed(cdr.SupportPlatoon) and (gameTime - 15) > lastPlatoonCall) then
+                if cdr.Confidence < 3.5 and (not cdr.SupportPlatoon or IsDestroyed(cdr.SupportPlatoon) and (gameTime - 15) > lastPlatoonCall) then
+                                        --LOG('Calling platoon, last call was '..tostring(lastPlatoonCall)..' game time is '..tostring(gameTime))
+                    --RNGLOG('CDR Support Platoon doesnt exist and I need it, calling platoon')
+                    --RNGLOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
+                    cdr.PlatoonHandle:LogDebug(string.format('ACU confidence low, CDRCallPlatoon'))
+                    --LOG('CDR is calling for support platoon '..aiBrain.Nickname)
+                    --LOG('Game time 15 seconds ago '..tostring((gameTime - 15)))
+                    --LOG('LastPlatoon Call time '..tostring(lastPlatoonCall))
+                    CDRCallPlatoon(cdr, math.max(0,cdr.CurrentEnemyThreat * 1.3 - cdr.CurrentFriendlyThreat), math.max(0,cdr.CurrentEnemyAirThreat - cdr.CurrentFriendlyAntiAirThreat))
+                    lastPlatoonCall = gameTime
+                elseif cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat and (not cdr.SupportPlatoon or IsDestroyed(cdr.SupportPlatoon) and (gameTime - 15) > lastPlatoonCall) then
                     --LOG('Calling platoon, last call was '..tostring(lastPlatoonCall)..' game time is '..tostring(gameTime))
                     --RNGLOG('CDR Support Platoon doesnt exist and I need it, calling platoon')
                     --RNGLOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
@@ -446,11 +456,12 @@ function CDRThreatAssessmentRNG(cdr)
             end
 
             -- Calculate Friendly Threat Confidence Modifier
-            local function calculateFriendlyThreatModifier(aiBrain, friendlyUnitThreat, cdr, weights)
+            local function calculateFriendlyThreatModifier(aiBrain, friendlyUnitThreatInner, friendlyUnitThreatOuter, cdr, weights)
                 local friendlyThreatConfidenceModifier = 0
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + (weights.selfThreat * getThreatValue(aiBrain.BrainIntel.SelfThreat.LandNow, 0.1))
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + (weights.allyThreat * getThreatValue(aiBrain.BrainIntel.SelfThreat.AllyLandThreat, 0.1))
-                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + (weights.friendlyUnitThreat * friendlyUnitThreat)
+                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + (weights.friendlyUnitThreatOuter * friendlyUnitThreatOuter)
+                friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + (weights.friendlyUnitThreatInner * friendlyUnitThreatInner)
 
                 if cdr.Health > 7000 and aiBrain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
                     friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier * weights.healthBoost
@@ -460,10 +471,11 @@ function CDRThreatAssessmentRNG(cdr)
             end
 
             -- Calculate Enemy Threat Confidence Modifier
-            local function calculateEnemyThreatModifier(aiBrain, enemyUnitThreat, weights)
+            local function calculateEnemyThreatModifier(aiBrain, enemyUnitThreatInner, enemyUnitThreatOuter, weights)
                 local enemyThreatConfidenceModifier = 0
                 enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + (weights.enemyThreat * getThreatValue(aiBrain.EnemyIntel.EnemyThreatCurrent.Land, 0.1))
-                enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + (weights.enemyUnitThreat * enemyUnitThreat)
+                enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + (weights.enemyUnitThreatOuter * enemyUnitThreatOuter)
+                enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + (weights.enemyUnitThreatInner * enemyUnitThreatInner)
 
                 return enemyThreatConfidenceModifier
             end
@@ -484,8 +496,9 @@ function CDRThreatAssessmentRNG(cdr)
             
                 local k = 8  -- sharpness of scaling
                 local ratio = cdrDistanceToBase / (cdrDistanceToBase + distanceToEnemyBase)
+                --LOG('Distance Ratio '..tostring(ratio))
             
-                if ratio < 0.35 then
+                if ratio < 0.4 then
                     local mapped = (0.5 - ratio) / 0.5 
                     local sig = 1 / (1 + math.exp(-k * (mapped - 0.5)))
                     local bonus = 1 + (sig * 0.5) 
@@ -501,9 +514,9 @@ function CDRThreatAssessmentRNG(cdr)
             end
 
             -- Main function to calculate cdr.Confidence
-            local function calculateConfidence(aiBrain, cdr, friendlyUnitThreat, enemyUnitThreat, cdrDistanceToBase, localEnemyThreatRatio, weights)
-                local friendlyThreatConfidenceModifier = calculateFriendlyThreatModifier(aiBrain, friendlyUnitThreat, cdr, weights)
-                local enemyThreatConfidenceModifier = calculateEnemyThreatModifier(aiBrain, enemyUnitThreat, weights)
+            local function calculateConfidence(aiBrain, cdr, friendlyUnitThreatInner, friendlyUnitThreatOuter, enemyUnitThreatInner, enemyUnitThreatOuter, cdrDistanceToBase, localEnemyThreatRatio, weights)
+                local friendlyThreatConfidenceModifier = calculateFriendlyThreatModifier(aiBrain, friendlyUnitThreatInner, friendlyUnitThreatOuter, cdr, weights)
+                local enemyThreatConfidenceModifier = calculateEnemyThreatModifier(aiBrain, enemyUnitThreatInner, enemyUnitThreatOuter, weights)
 
                 -- Add influence of new metrics with weights
                 local distanceToEnemyBase
@@ -529,7 +542,6 @@ function CDRThreatAssessmentRNG(cdr)
                     end
                 end
                 local distanceFearFactor = distanceFearMultiplier(math.sqrt(cdrDistanceToBase), math.sqrt(distanceToEnemyBase))
-                --LOG('Distance featFactor '..tostring(distanceFearFactor))
                 --LOG('Friendly threat before '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier * distanceFearFactor
                 --LOG('Friendly threat after '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
@@ -566,12 +578,14 @@ function CDRThreatAssessmentRNG(cdr)
             -- Example weights
             local weights = {
                 selfThreat = 1.0, -- higher means more confidence
-                allyThreat = 0.9, -- higher means more confidence
-                friendlyUnitThreat = 1.1, -- higher means more confidence
+                allyThreat = 0.8, -- higher means more confidence
+                friendlyUnitThreatInner = 1.2, -- higher means more confidence
+                friendlyUnitThreatOuter = 0.9, -- higher means more confidence
                 healthBoost = 1.3, -- higher means more confidence
                 shieldBoost = 1.1, -- higher means more confidence
-                enemyThreat = 0.8, -- higher means less confidence
-                enemyUnitThreat = 1.0, -- higher means less confidence
+                enemyThreat = 0.7, -- higher means less confidence
+                enemyUnitThreatOuter = 0.9, -- higher means less confidence
+                enemyUnitThreatInner = 1.1, -- higher means less confidence
                 distanceToBase = 0.8, -- higher means less confidence
                 localEnemyThreatRatio = 0.9, -- higher means less confidence
                 phasePenalty = 0.7, -- higher means less confidence
@@ -579,7 +593,7 @@ function CDRThreatAssessmentRNG(cdr)
             }
             local enemyThreatRatio = friendlyUnitThreat > 0 and (enemyUnitThreat / friendlyUnitThreat) or 0.5
             -- Example call
-            calculateConfidence(aiBrain, cdr, friendlyUnitThreat, (enemyUnitThreat + enemyAirThreat), cdr.DistanceToHome, enemyThreatRatio, weights)
+            calculateConfidence(aiBrain, cdr, friendlyUnitThreatInner, friendlyUnitThreat, enemyUnitThreatInner, (enemyUnitThreat + enemyAirThreat), cdr.DistanceToHome, enemyThreatRatio, weights)
 
             --LOG('Current cdr confidence is '..tostring(cdr.Confidence))
 

@@ -55,10 +55,12 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                         --RNGLOG('AirStaging Units found '..table.getn(plats))
                         if not table.empty(plats) then
                             local closest, distance
+                            local noSpaceAvailable = false
                             for _, v in plats do
                                 if not v.Dead and v:GetFractionComplete() == 1 then
                                     local roomAvailable = false
-                                    if not EntityCategoryContains(categories.CARRIER, v) then
+                                    local isCarrier = EntityCategoryContains(categories.CARRIER, v)
+                                    if not isCarrier then
                                         roomAvailable = v:TransportHasSpaceFor(unit)
                                     end
                                     if roomAvailable then
@@ -68,6 +70,8 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                             closest = v
                                             distance = tempDist
                                         end
+                                    elseif not isCarrier then
+                                        noSpaceAvailable = true
                                     end
                                 end
                             end
@@ -103,6 +107,8 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                 safecall("Unable to IssueTransportLoad units are "..tostring(unit.EntityId), IssueTransportLoad, {unit}, closest )
                                 refuel = true
                                 unit.Loading = true
+                            elseif not closest and noSpaceAvailable then
+                                aiBrain.BrainIntel.AirStagingRequired = true
                             end
                             ----self:LogDebug(string.format('Air Refuel we have an air staging platform but we didnt use it'))
                         else

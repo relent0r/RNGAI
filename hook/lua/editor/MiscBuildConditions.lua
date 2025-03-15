@@ -280,12 +280,7 @@ function FrigateRaidTrue(aiBrain)
     return false
 end
 
-function AirStagingWantedRNG(aiBrain)
-    if aiBrain.BrainIntel.AirStagingRequired or GetGameTimeSeconds() > 480 then
-        return true
-    end
-    return false
-end
+
 
 function BaseCouldBuildMobileAA(aiBrain, locationType)
     local basePosition = aiBrain.BuilderManagers[locationType].Position
