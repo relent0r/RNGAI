@@ -365,7 +365,7 @@ function MassIncomeToFactoryRNG(aiBrain, compareType)
     return true
 end
 
-function ZoneBasedFactoryToMassSupported(aiBrain, locationType, layer, requireBuilt)
+function ZoneBasedFactoryToMassSupported(aiBrain, locationType, layer, requireBuilt, storageBuild)
     local manager = aiBrain.BuilderManagers[locationType]
     if not manager.FactoryManager then
         WARN('*AI WARNING: No Factory Manager at location - ' .. locationType)
@@ -492,7 +492,7 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, layer, requireBu
         end
          
         local availableResources = math.max(resourceCount * 2, rawIncome)
-        --LOG('Zone based factory spend availability for location '..tostring(locationType))
+        --LOG('Zone based factory spend availability for '..tostring(aiBrain.Nickname)..' at location '..tostring(locationType)..' for layer '..tostring(layer))
         --LOG('massSpendTotal '..tostring(massSpendTotal))
         --LOG('mexSpend '..tostring(mexSpend))
         --LOG('rawIncome '..tostring(rawIncome))
@@ -507,6 +507,12 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, layer, requireBu
             productionRatio = aiBrain.ProductionRatios[layer]
         end
         --LOG('Production rato is '..tostring(productionRatio))
+
+        if storageBuild then
+            if (massSpendTotal / availableResources) * 1.5 < productionRatio then
+                return true
+            end
+        end
 
         if massSpendTotal / availableResources < productionRatio then
             return true

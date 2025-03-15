@@ -115,8 +115,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 local label = NavUtils.GetLabel('Land', self.Pos)
                 aiBrain:PlatoonReinforcementRequestRNG(self, 'AntiAir', closestBase, label)
             end
-            if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then
-                if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*1.5 > (threat.enemySurface - threat.enemyStructure) then
+            if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < (threat.enemySurface - threat.enemyStructure) and threat.allySurface < 450 then
+                if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*3 > (threat.enemySurface - threat.enemyStructure) or 
+                   threat.allyrange > threat.enemyrange and threat.allySurface*3 > threat.enemySurface then
                     rangedAttack = true
                 else
                     --self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
@@ -239,15 +240,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 if not table.empty(aiBrain.prioritypoints) then
-                    local pointHighest = 0
-                    local point = false
-                    for _, v in aiBrain.prioritypoints do
-                        local tempPoint = v.priority/(RNGMAX(VDist2Sq(self.Pos[1],self.Pos[3],v.Position[1],v.Position[3]),30*30)+(v.danger or 0))
-                        if tempPoint > pointHighest then
-                            pointHighest = tempPoint
-                            point = v
-                        end
-                    end
+                    local point = RUtils.CheckPriorityTarget(aiBrain, false, self)
                     if point then
                     --RNGLOG('point pos '..repr(point.Position)..' with a priority of '..point.priority)
                         if VDist2Sq(point.Position[1],point.Position[3],self.Pos[1],self.Pos[3])>(self['rngdata'].MaxPlatoonWeaponRange+20)*(self['rngdata'].MaxPlatoonWeaponRange+20) then
@@ -445,7 +438,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false, true)
                         end
                         if (unitRole ~= 'Sniper' and unitRole ~= 'Silo' and unitRole ~= 'Scout' and unitRole ~= 'Artillery') and closestTarget>(unitRange*unitRange+400)*(unitRange*unitRange+400) then
-                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface and not self.Raid then
+                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > (approxThreat.enemyStructure + approxThreat.enemySurface) and not self.Raid then
                                 IssueClearCommands({v}) 
                                 if unitRole == 'Shield' and closestTarget then
                                     --LOG('UnitRole is Shield')

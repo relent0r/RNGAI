@@ -89,6 +89,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                 return
             end
             if self.ExperimentalUnit.ExternalFactory then
+                self:LogDebug(string.format('We have an external factory with id '..tostring(self.ExperimentalUnit.ExternalFactory.UnitId)))
                 --LOG('Factory ID is '..self.ExperimentalUnit.ExternalFactory.UnitId)
                 local factoryWorkFinish = function(experimentalFactory, finishedUnit)
                     
@@ -156,13 +157,27 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             local target
             local acuSnipeUnit = RUtils.CheckACUSnipe(aiBrain, 'Air')
             if acuSnipeUnit and not acuSnipeUnit.Dead then
+                --LOG('Experimental air has an ACU target')
                 local targetPos = acuSnipeUnit:GetPosition()
                 local dx = targetPos[1] - experimentalPosition[1]
                 local dz = targetPos[3] - experimentalPosition[3]
                 local distance = dx * dx + dz * dz
-                if distance < 14400 then
+                if distance < 25600 then
+                    self:LogDebug(string.format('ACU Found with radius, set to suicide mode'))
                     target = acuSnipeUnit
                     self.SuicideMode = true
+                    self.BuilderData = {
+                        AttackTarget = target,
+                        Position = target:GetPosition(),
+                        HoverBomb = true
+                    }
+                    --self:LogDebug(string.format('Experimental Attacking target'))
+                    if self.Bomber then
+                        self:ChangeState(self.AttackRun)
+                    else
+                        self:ChangeState(self.AttackTarget)
+                    end
+                    return
                 end
             end
             if threatTable then
@@ -229,58 +244,11 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                     end
-                    local closestUnit
-                    local closestUnitDistance
-                    if not target and threatTable.CommanderThreat.TotalThreat > 0 then
-                        for _, enemyUnit in threatTable.CommanderThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) then
-                                if not closestUnit or enemyUnit.Distance < closestUnitDistance then
-                                    closestUnit = enemyUnit.Object
-                                    closestUnitDistance = enemyUnit.Distance
-                                end
-                            end
-                        end
-                    end
-                    if not target and threatTable.ExperimentalThreat.TotalThreat > 0 then
-                        for _, enemyUnit in threatTable.ExperimentalThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) then
-                                if not closestUnit or enemyUnit.Distance < closestUnitDistance then
-                                    closestUnit = enemyUnit.Object
-                                    closestUnitDistance = enemyUnit.Distance
-                                end
-                            end
-                        end
-                    end
-                    if not target and threatTable.DefenseThreat.TotalThreat > 0 then
-                        for _, enemyUnit in threatTable.DefenseThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) then
-                                if not closestUnit or enemyUnit.Distance < closestUnitDistance then
-                                    closestUnit = enemyUnit.Object
-                                    closestUnitDistance = enemyUnit.Distance
-                                end
-                            end
-                        end
-                    end
-                    if not target and threatTable.AirSurfaceThreat.TotalThreat > 0 then
-                        for _, enemyUnit in threatTable.AirSurfaceThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) then
-                                if not closestUnit or enemyUnit.Distance < closestUnitDistance then
-                                    closestUnit = enemyUnit.Object
-                                    closestUnitDistance = enemyUnit.Distance
-                                end
-                            end
-                        end
-                    end
-                    local bypassSecondary = false
-                    if closestUnit and closestUnit.Blueprint.CategoriesHash.ANTIAIR then
-                        local closestUnitWeaponRange = StateUtils.GetUnitMaxWeaponRange(closestUnit, 'Anti Air')
-                        if closestUnitWeaponRange and closestUnitWeaponRange <= closestUnitDistance then
-                            bypassSecondary = true
-                        end
-                    end
-                    if not bypassSecondary then
-                        if not target and threatTable.LandUnitThreat.TotalThreat > 0 then
-                            for _, enemyUnit in threatTable.LandUnitThreat.Units do
+                    if not self.Bomber then
+                        local closestUnit
+                        local closestUnitDistance
+                        if not target and threatTable.CommanderThreat.TotalThreat > 0 then
+                            for _, enemyUnit in threatTable.CommanderThreat.Units do
                                 if not IsDestroyed(enemyUnit.Object) then
                                     if not closestUnit or enemyUnit.Distance < closestUnitDistance then
                                         closestUnit = enemyUnit.Object
@@ -289,8 +257,8 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                         end
-                        if not target and threatTable.StructureUnitThreat.TotalThreat > 0 then
-                            for _, enemyUnit in threatTable.StructureUnitThreat.Units do
+                        if not target and threatTable.ExperimentalThreat.TotalThreat > 0 then
+                            for _, enemyUnit in threatTable.ExperimentalThreat.Units do
                                 if not IsDestroyed(enemyUnit.Object) then
                                     if not closestUnit or enemyUnit.Distance < closestUnitDistance then
                                         closestUnit = enemyUnit.Object
@@ -299,17 +267,65 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                         end
-                    end
-                    if not target and closestUnit and not IsDestroyed(closestUnit) then
-                        target = closestUnit
-                        --LOG('We have a target from threattable')
+                        if not target and threatTable.DefenseThreat.TotalThreat > 0 then
+                            for _, enemyUnit in threatTable.DefenseThreat.Units do
+                                if not IsDestroyed(enemyUnit.Object) then
+                                    if not closestUnit or enemyUnit.Distance < closestUnitDistance then
+                                        closestUnit = enemyUnit.Object
+                                        closestUnitDistance = enemyUnit.Distance
+                                    end
+                                end
+                            end
+                        end
+                        if not target and threatTable.AirSurfaceThreat.TotalThreat > 0 then
+                            for _, enemyUnit in threatTable.AirSurfaceThreat.Units do
+                                if not IsDestroyed(enemyUnit.Object) then
+                                    if not closestUnit or enemyUnit.Distance < closestUnitDistance then
+                                        closestUnit = enemyUnit.Object
+                                        closestUnitDistance = enemyUnit.Distance
+                                    end
+                                end
+                            end
+                        end
+                        local bypassSecondary = false
+                        if closestUnit and closestUnit.Blueprint.CategoriesHash.ANTIAIR then
+                            local closestUnitWeaponRange = StateUtils.GetUnitMaxWeaponRange(closestUnit, 'Anti Air')
+                            if closestUnitWeaponRange and closestUnitWeaponRange <= closestUnitDistance then
+                                bypassSecondary = true
+                            end
+                        end
+                        if not bypassSecondary then
+                            if not target and threatTable.LandUnitThreat.TotalThreat > 0 then
+                                for _, enemyUnit in threatTable.LandUnitThreat.Units do
+                                    if not IsDestroyed(enemyUnit.Object) then
+                                        if not closestUnit or enemyUnit.Distance < closestUnitDistance then
+                                            closestUnit = enemyUnit.Object
+                                            closestUnitDistance = enemyUnit.Distance
+                                        end
+                                    end
+                                end
+                            end
+                            if not target and threatTable.StructureUnitThreat.TotalThreat > 0 then
+                                for _, enemyUnit in threatTable.StructureUnitThreat.Units do
+                                    if not IsDestroyed(enemyUnit.Object) then
+                                        if not closestUnit or enemyUnit.Distance < closestUnitDistance then
+                                            closestUnit = enemyUnit.Object
+                                            closestUnitDistance = enemyUnit.Distance
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                        if not target and closestUnit and not IsDestroyed(closestUnit) then
+                            target = closestUnit
+                        end
                     end
                 end
             end
             if target and not IsDestroyed(target) then
                 self.BuilderData = {
                     AttackTarget = target,
-                    Position = target:GetPosition()
+                    Position = target:GetPosition(),
                 }
                 --self:LogDebug(string.format('Experimental Attacking target'))
                 if self.Bomber then
@@ -325,26 +341,28 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             end
             if target and not IsDestroyed(target) then
                 --self:LogDebug(string.format('Target found'))
-                --LOG('We have a target from FindExperimentalTargetRNG')
                 local targetPos = target:GetPosition()
                 local dx = targetPos[1] - experimentalPosition[1]
                 local dz = targetPos[3] - experimentalPosition[3]
                 local distance = dx * dx + dz * dz
                 --self:LogDebug(string.format('Target is '..repr(target.UnitId)))
                 --self:LogDebug(string.format('Target distance is '..distance))
-                if distance > self['rngdata'].MaxPlatoonWeaponRange * self['rngdata'].MaxPlatoonWeaponRange then
+                if distance > 14400 then
                     self.BuilderData = {
                         Position = targetPos,
-                        AttackTarget = target
+                        AttackTarget = target,
+                        CutOff = 14000
                     }
+                    --LOG('Experimental Bomber navigating to target')
                     self:ChangeState(self.Navigating)
                     return
                 else
                     self.BuilderData = {
                         AttackTarget = target,
-                        Position = target:GetPosition()
+                        Position = target:GetPosition(),
                     }
                     if self.Bomber then
+                        --LOG('Experimental Bomber performing attackrun')
                         self:ChangeState(self.AttackRun)
                     else
                         self:ChangeState(self.AttackTarget)
@@ -357,6 +375,132 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             return
         end,
     },
+
+
+    ReleasedBomb = State {
+
+        StateName = 'ReleasedBomb',
+
+        --- This will be used for performing seiges on firebases and the like
+        ---@param self AIExperimentalAirBehavior
+        Main = function(self)
+            --LOG('Bomber has released bomb')
+            local aiBrain = self:GetBrain()
+            local bomber = self.ExperimentalUnit
+            if self.BuilderData.HoverBomb then
+                self:ChangeState(self.HoverBombing)
+                return
+            end
+            if StateUtils.ShouldBomberRetreat(self) then
+                IssueClearCommands({bomber})
+                local retreatLocation = StateUtils.GetAirRetreatLocation(aiBrain, bomber)
+                if retreatLocation then
+                    --LOG('We got given a retreat location of '..tostring(retreatLocation[1])..':'..tostring(retreatLocation[3]))
+                    IssueMove({bomber}, retreatLocation)
+                else
+                    --LOG('no retreat location, going home')
+                    IssueMove({bomber}, self.Home)
+                end
+                coroutine.yield(30)
+            end
+            --LOG('Deciding what to do')
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
+    HoverBombing = State {
+
+        StateName = 'HoverBombing',
+
+        --- Handles hovering and bomb dropping on a designated target
+        ---@param self AIExperimentalAirBehavior
+        Main = function(self)
+            --LOG('Attempting to hoverbomb target')
+            local aiBrain = self:GetBrain()
+            local bomber = self.ExperimentalUnit
+            local target = self.BuilderData.AttackTarget
+            local airData = bomber.Blueprint.Air
+            local turnSpeed = airData.CombatTurnSpeed or 0.8
+            local maxSpeed = airData.MaxAirspeed or 18
+            local breakOffDistance = airData.BreakOffDistance or 60
+            local bombCoolDownTimer = bomber['rngdata'].BombCoolDown or 14
+
+            -- Base tolerance on turn speed, with a scaling factor
+            local tolerance = math.max(5, math.min(15, 10 / turnSpeed))
+
+            -- Adjust tolerance based on speed (slower = more tolerance)
+            tolerance = tolerance + (20 / maxSpeed)
+
+            -- Ensure it does not exceed 15 degrees
+            tolerance = math.min(tolerance, 15)
+            --LOG('tolerance is '..tostring(tolerance))
+
+            if not target or target.Dead then
+                self:ChangeState(self.DecideWhatToDo)
+                return
+            end
+            local directionToggle = true
+            while target and not target.Dead do
+                local weaponReady = (not bomber['rngdata'].BombLastReleased) or ((GetGameTimeSeconds() - bomber['rngdata'].BombLastReleased) >= bombCoolDownTimer)
+
+                local bomberPos = bomber:GetPosition()
+                local targetPos = target:GetPosition()
+
+                local unitFacingAngle = RUtils.GetHeadingAngle(bomber)
+                local desiredFacingAngle = RUtils.GetAngleToPosition(bomberPos, targetPos)
+
+                local angleDiff = math.abs(unitFacingAngle - desiredFacingAngle)
+                --LOG('Current angleDiff '..tostring(angleDiff))
+                IssueClearCommands({bomber})
+
+                if not weaponReady then
+                    --LOG('Bomb is not ready to fire, current time '..tostring(GetGameTimeSeconds() - bomber['rngdata'].BombLastReleased))
+                    --LOG('Weapon is not ready, do silly turns, direction toggle is '..tostring(directionToggle))
+                    local sideStepAngle = unitFacingAngle + (directionToggle and 15 or -15) + math.random(-5, 5)  -- Randomize by -5 to +5 degrees
+                    if math.abs(unitFacingAngle - desiredFacingAngle) <= tolerance then
+                        local sideStep = RUtils.GetPointOffset(bomberPos, sideStepAngle, 5)
+                        -- If within tolerance, allow side-stepping while staying aligned to target
+                        IssueMove({bomber}, sideStep)
+                    else
+                        -- If not within tolerance, steer towards the target
+                        local targetMove = RUtils.GetPointOffset(bomberPos, desiredFacingAngle, 5)
+                        IssueMove({bomber}, targetMove)
+                    end
+                elseif angleDiff <= tolerance then
+                    --LOG('We are within tolerance')
+                    local targetDistance = VDist3(bomberPos, targetPos)
+                    if targetDistance > breakOffDistance then
+                        --LOG('We are outside the breakOffDistance')
+                        IssueMove({bomber}, targetPos)
+                        coroutine.yield(5)
+                    elseif targetDistance < 25 then
+                        --LOG('We are inside the breakOffTrigger, lerp')
+                        local movePos = RUtils.lerpy(targetPos, bomberPos, {targetDistance, targetDistance - breakOffDistance})
+                        IssueMove({bomber}, movePos)
+                        coroutine.yield(5)
+                    elseif weaponReady then
+                        --LOG('Weapon is ready, perform attack')
+                        IssueAttack({bomber}, targetPos)
+                        coroutine.yield(5)
+                    else
+                        --LOG('Weapon is not ready, do silly turns')
+                        local sideStepAngle = unitFacingAngle + (directionToggle and 15 or -15) + math.random(-5, 5)  -- Randomize by -5 to +5 degrees
+                        local sideStep = RUtils.GetPointOffset(bomberPos, sideStepAngle, 5)
+                        IssueMove({bomber}, sideStep)
+                    end
+                else
+                    local targetMove = RUtils.GetPointOffset(bomberPos, desiredFacingAngle, 5)
+                    IssueMove({bomber}, targetMove)
+                end
+                directionToggle = not directionToggle
+                coroutine.yield(25)
+            end
+            -- If hover bombing is no longer required, return to decision state
+            self:ChangeState(self.DecideWhatToDo)
+        end,
+    },
+
 
     SeigeMode = State {
 
@@ -412,7 +556,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     local dz = origin[3] - destination[3]
                     endPoint = true
                     if dx * dx + dz * dz < navigateDistanceCutOff then
-                        StateUtils.IssueNavigationMove(experimental, destination)
+                        StateUtils.IssueNavigationMove(experimental, destination, true)
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
@@ -423,7 +567,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
-                StateUtils.IssueNavigationMove(experimental, waypoint)
+                StateUtils.IssueNavigationMove(experimental, waypoint, true)
                 -- check for opportunities
                 local wx = waypoint[1]
                 local wz = waypoint[3]
@@ -526,7 +670,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     else
                         if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental['rngdata'].WeaponArc) then
                             --unit:SetCustomName('Fight micro WEAPON BLOCKED!!! ['..repr(target.UnitId)..'] dist: '..dist)
-                            StateUtils.IssueNavigationMove(experimental, targetPosition)
+                            StateUtils.IssueNavigationMove(experimental, targetPosition, true)
                             coroutine.yield(30)
                         else
                             --unit:SetCustomName('Fight micro SHOOTING ['..repr(target.UnitId)..'] dist: '..dist)
@@ -559,21 +703,23 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
             local experimental = self.ExperimentalUnit
             local target = self.BuilderData.AttackTarget
             local threatTable = self.EnemyThreatTable
+            local attackIssued = false
             while experimental and not IsDestroyed(experimental) do
                 if target and not target.Dead then
-                    if not table.empty(experimental:GetCommandQueue()) then
+                    if not attackIssued and not table.empty(experimental:GetCommandQueue()) then
                         IssueClearCommands({experimental})
                     end
                     local targetPosition = target:GetPosition()
                     local unitPos = experimental:GetPosition()
                     if aiBrain:CheckBlockingTerrain(unitPos, targetPosition, experimental['rngdata'].WeaponArc) then
-                        StateUtils.IssueNavigationMove(experimental, targetPosition)
+                        StateUtils.IssueNavigationMove(experimental, targetPosition, true)
                         coroutine.yield(30)
-                    else
+                    elseif not attackIssued then
                         IssueAttack({experimental}, target)
+                        attackIssued = true
                     -- in case we don't move, check if we can fire at the target
                     end
-                    if not target.Dead and threatTable.ClosestUnitDistance + 25 < VDist3Sq(unitPos, targetPosition) then
+                    if not self.Bomber and not target.Dead and threatTable.ClosestUnitDistance + 25 < VDist3Sq(unitPos, targetPosition) then
                         coroutine.yield(10)
                         --LOG('Another unit is closer to the Experimental, DecideWhatToDo')
                         self:ChangeState(self.DecideWhatToDo)
@@ -652,7 +798,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if VDist3Sq(experimentalPosition, builderData.Position) > 625 then
-                StateUtils.IssueNavigationMove(experimental, builderData.Position)
+                StateUtils.IssueNavigationMove(experimental, builderData.Position, true)
                 coroutine.yield(25)
             end
             local HoldPositionGameTime = GetGameTimeSeconds()
@@ -663,7 +809,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     distanceLimit = protectionRadius - 5
                 end
                 if VDist3Sq(experimentalPosition, defensivePosition) > distanceLimit then
-                    StateUtils.IssueNavigationMove(experimental, defensivePosition)
+                    StateUtils.IssueNavigationMove(experimental, defensivePosition, true)
                     coroutine.yield(25)
                 end
                 if threatTable.TotalSuroundingThreat < 15 or HoldPositionGameTime + 60 < GetGameTimeSeconds() then

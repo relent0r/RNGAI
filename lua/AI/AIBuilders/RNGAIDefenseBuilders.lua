@@ -713,6 +713,38 @@ BuilderGroup {
             }
         }
     },
+    Builder {
+        BuilderName = 'RNGAI T3 Defence Engineer Restricted Breach Air Expansion',
+        PlatoonTemplate = 'EngineerStateT3RNG',
+        Priority = 951,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.TECH3 * categories.ANTIAIR}},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                AdjacencyPriority = {categories.STRUCTURE * categories.SHIELD},
+                AvoidCategory = categories.STRUCTURE * categories.FACTORY * categories.TECH2,
+                EmergencyBuild = true,
+                maxUnits = 1,
+                maxRadius = 5,
+                BuildClose = false,
+                NearDefensivePoints = false,
+                BuildStructures = {
+                    { Unit = 'T3AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH3 },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
 }
 BuilderGroup {
     BuilderGroupName = 'RNGAI T2 Expansion TML',

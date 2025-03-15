@@ -345,7 +345,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                             approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false, true)
                         end
                         if (unitRole ~= 'Sniper' and unitRole ~= 'Silo' and unitRole ~= 'Scout' and unitRole ~= 'Artillery') and closestTarget>(unitRange*unitRange+400)*(unitRange*unitRange+400) then
-                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface and not self.Raid then
+                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > ( approxThreat.enemyStructure + approxThreat.enemySurface ) and not self.Raid then
                                 IssueClearCommands({v}) 
                                 if unitRole == 'Shield' and closestTarget then
                                     --LOG('UnitRole is Shield')
@@ -373,7 +373,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if not skipKite then
-                            if approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > approxThreat.enemySurface*1.5 and not targetCats.INDIRECTFIRE and targetCats.MOBILE and unitRange <= targetRange then
+                            if approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > ( approxThreat.enemyStructure + approxThreat.enemySurface )*1.5 and not targetCats.INDIRECTFIRE and targetCats.MOBILE and unitRange <= targetRange then
                                 IssueClearCommands({v})
                                 if unitRole == 'Shield' and closestTarget then
                                     --LOG('UnitRole is Shield')

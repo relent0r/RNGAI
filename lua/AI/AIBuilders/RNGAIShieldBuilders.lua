@@ -115,21 +115,12 @@ BuilderGroup {
             JobType = 'BuildStructure',
             NumAssistees = 8,
             Construction = {
+                UseShieldTable = false,
+                UseBaseTable = true,
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
+                BaseTemplate = 'BaseTemplates',
                 DesiresAssist = true,
                 BuildClose = false,
-                --AdjacencyCategory = (categories.ENERGYPRODUCTION * categories.TECH3) + (categories.ENERGYPRODUCTION * categories.EXPERIMENTAL) + (categories.STRUCTURE * categories.FACTORY),
-                --AvoidCategory = categories.STRUCTURE * categories.SHIELD,
-                AdjacencyPriority = {
-                    categories.EXPERIMENTAL * categories.STRUCTURE,
-                    categories.STRATEGIC * categories.STRUCTURE - categories.AIRSTAGINGPLATFORM - categories.TECH2,
-                    categories.FACTORY * categories.STRUCTURE * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY,
-                    categories.ENERGYPRODUCTION * categories.TECH3,
-                    categories.ENERGYPRODUCTION * categories.TECH2,
-                    categories.FACTORY * categories.STRUCTURE,
-                    categories.MASSFABRICATION * categories.TECH3,
-                },
-                --maxUnits = 1,
-                --maxRadius = 35,
                 LocationType = 'LocationType',
                 BuildStructures = {
                     { Unit = 'T2ShieldDefense', Categories = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE * categories.TECH2 },
@@ -142,7 +133,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 650,
         DelayEqualBuildPlattons = {'Shield', 5},
-        InstanceCount = 2,
+        InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2, 5 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.95 } },
@@ -159,23 +150,17 @@ BuilderGroup {
             JobType = 'BuildStructure',
             NumAssistees = 8,
             Construction = {
+                UseShieldTable = false,
+                UseBaseTable = true,
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
+                BaseTemplate = 'BaseTemplates',
                 DesiresAssist = true,
                 BuildClose = false,
-                Centered = true,
-                AdjacencyPriority = {
-                    categories.EXPERIMENTAL * categories.STRUCTURE,
-                    categories.STRATEGIC * categories.STRUCTURE - categories.AIRSTAGINGPLATFORM - categories.TECH2,
-                    categories.FACTORY * categories.STRUCTURE * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY,
-                    categories.ENERGYPRODUCTION * categories.TECH3,
-                    categories.ENERGYPRODUCTION * categories.TECH2,
-                    categories.FACTORY * categories.STRUCTURE,
-                    categories.MASSFABRICATION * categories.TECH3,
-                },
                 LocationType = 'LocationType',
                 BuildStructures = {
                     { Unit = 'T3ShieldDefense', Categories = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE * categories.TECH3 },
-                }
-            }
+                },
+            },
         }
     },
     Builder {

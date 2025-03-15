@@ -126,6 +126,16 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
             end
         end
     end
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+    local mapSizeX, mapSizeZ
+
+    if not playableArea then
+        mapSizeX = ScenarioInfo.size[1]
+        mapSizeZ = ScenarioInfo.size[2]
+    else
+        mapSizeX = playableArea[3]
+        mapSizeZ = playableArea[4]
+    end
 
     --RNGLOG('* AI-RNG: Start Reclaim Function')
     if aiBrain.StartReclaimTaken then
@@ -138,6 +148,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
     local createTick = GetGameTick()
     local reclaimLoop = 0
     local VDist2 = VDist2
+    local maxReclaimRadius = self.Blueprint.Economy.MaxBuildDistance or 5
 
     self.BadReclaimables = self.BadReclaimables or {}
 
@@ -159,7 +170,7 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
         local minRec = platoon.PlatoonData.MinimumReclaim
         if not aiBrain.StartReclaimTaken then
             --self:SetCustomName('StartReclaim Logic Start')
-            --RNGLOG('Reclaim Function - Starting reclaim is false')
+            --LOG('Reclaim Function - Starting reclaim is false')
             local tableSize = RNGGETN(aiBrain.StartReclaimTable)
             --LOG('Start reclaim table size '..tableSize)
             if tableSize > 0 then
@@ -168,24 +179,30 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                 while tableSize > 0 do
                     coroutine.yield(1)
                     aiBrain.StartReclaimTaken = true
-                    local closestReclaimDistance = false
+                    local closestReclaimDistance
                     local closestReclaim
                     local closestReclaimKey
                     local highestValue = 0
                     if not firstReclaim then
+                        --LOG('This is first reclaim so we are looking for the highest value')
                         for k, r in aiBrain.StartReclaimTable do
                             if r.Reclaim and not IsDestroyed(r.Reclaim) then
                                 local reclaimValue
                                 if needEnergy then
-                                    reclaimValue = r.Reclaim.MaxEnergyReclaim
-                                    reclaimValue = reclaimValue + r.Reclaim.MaxMassReclaim
+                                    reclaimValue = r.Reclaim.MaxEnergyReclaim + r.Reclaim.MaxMassReclaim
                                 else
                                     reclaimValue = r.Reclaim.MaxMassReclaim
                                 end
-                                if reclaimValue > highestValue and NavUtils.CanPathTo('Amphibious', engPos, r.Reclaim.CachePosition) then
-                                    closestReclaim = r.Reclaim
-                                    closestReclaimKey = k
-                                    highestValue  = reclaimValue
+                        
+                                local reclaimDistance = VDist3Sq(engPos, r.Reclaim.CachePosition)
+                        
+                                if NavUtils.CanPathTo('Amphibious', engPos, r.Reclaim.CachePosition) then
+                                    if reclaimValue > highestValue or (reclaimValue == highestValue and reclaimDistance < closestDistance) then
+                                        closestReclaim = r.Reclaim
+                                        closestReclaimKey = k
+                                        highestValue = reclaimValue
+                                        closestDistance = reclaimDistance
+                                    end
                                 end
                             end
                         end
@@ -203,15 +220,20 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             end
                         end
                     end
+                    --LOG('Reclaim selected with a highestValue of '..tostring(highestValue).. ' at a distance of '..tostring(closestReclaimDistance))
                     if closestReclaim then
-                        --RNGLOG('Closest Reclaim is true we are going to try reclaim it')
+                        --LOG('Closest Reclaim is true we are going to try reclaim it')
                         reclaimCount = reclaimCount + 1
-                        --RNGLOG('Reclaim Function - Issuing reclaim')
-                        IssueReclaim({self}, closestReclaim)
+                        --LOG('Reclaim Function - Issuing reclaim')
+                        IssueMove({self}, closestReclaim.CachePosition)
                         coroutine.yield(15)
                         local reclaimTimeout = 0
                         local massOverflow = false
                         while aiBrain:PlatoonExists(platoon) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 40) do
+                            local reclaimDistance = VDist3Sq(engPos, closestReclaim.CachePosition)
+                            if reclaimDistance < maxReclaimRadius then
+                                IssueReclaim({self}, closestReclaim)
+                            end
                             local brokenPathMovement = false
                             coroutine.yield(1)
                             reclaimTimeout = reclaimTimeout + 1
@@ -219,9 +241,9 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                             if self:IsUnitState('Reclaiming') and reclaimTimeout > 0 then
                                 reclaimTimeout = reclaimTimeout - 1
                             end
-                            brokenPathMovement = PerformEngReclaim(aiBrain, self, 2.5)
+                            brokenPathMovement = PerformEngReclaim(aiBrain, self, maxReclaimRadius)
                             if brokenPathMovement and closestReclaim and (not IsDestroyed(closestReclaim)) then
-                                IssueReclaim({self}, closestReclaim)
+                                IssueMove({self}, closestReclaim.CachePosition)
                             end
                             coroutine.yield(15)
                         end
@@ -342,92 +364,109 @@ function ReclaimRNGAIThread(platoon, self, aiBrain)
                                 coroutine.yield(1)
                                 return
                             end
-                            engPos = self:GetPosition()
-                            -- reclaim grid for a better reclaim position 9 points with 1 being the current engineer position
-                            -- we create a grid of 8 squares around the engineer that it will search after each grid square is reclaim it is removed.
-                            local reclaimGrid = {
-                                {engPos[1], 0 ,engPos[3]},
-                                {engPos[1], 0 ,engPos[3] + 15},
-                                {engPos[1] + 15, 0 ,engPos[3] + 15},
-                                {engPos[1] + 15, 0, engPos[3]},
-                                {engPos[1] + 15, 0, engPos[3] - 15},
-                                {engPos[1], 0, engPos[3] - 15},
-                                {engPos[1] - 15, 0, engPos[3] - 15},
-                                {engPos[1] - 15, 0, engPos[3]},
-                                {engPos[1] - 15, 0, engPos[3] + 15},
-                                {engPos[1], 0 ,engPos[3] + 25},
-                                {engPos[1] + 15, 0 ,engPos[3] + 25},
-                                {engPos[1] + 25, 0 ,engPos[3] + 25},
-                                {engPos[1] + 25, 0 ,engPos[3] + 15},
-                                {engPos[1] + 25, 0, engPos[3]},
-                                {engPos[1] + 25, 0, engPos[3] - 15},
-                                {engPos[1] + 25, 0, engPos[3] - 25},
-                                {engPos[1] + 15, 0, engPos[3] - 25},
-                                {engPos[1], 0, engPos[3] - 25},
-                                {engPos[1] - 15, 0, engPos[3] - 25},
-                                {engPos[1] - 25, 0, engPos[3] - 25},
-                                {engPos[1] - 25, 0, engPos[3] - 15},
-                                {engPos[1] - 25, 0, engPos[3]},
-                                {engPos[1] - 25, 0, engPos[3] + 15},
-                                {engPos[1] - 15, 0, engPos[3] + 25},
-                                {engPos[1] - 25, 0, engPos[3] + 25},
-                            }
-                            --LOG('EngineerReclaimGrid '..repr(reclaimGrid))
-                            if reclaimGrid and not table.empty( reclaimGrid ) then
-                                --LOG('We are going to try reclaim within the grid')
-                                local reclaimCount = 0
-                                for k, square in reclaimGrid do
-                                    local squarePos = {square[1], GetTerrainHeight(square[1], square[3]), square[3]}
-                                    if NavUtils.CanPathTo('Amphibious', engPos, squarePos) then
-                                        if square[1] - 8 <= 3 or square[1] + 8 >= ScenarioInfo.size[1] - 3 or square[3] - 8 <= 3 or square[3] + 8 >= ScenarioInfo.size[1] - 3 then
-                                            --LOG('Grid square position outside of map border')
-                                            continue
-                                        end
-                                        --LOG('reclaimGrid square table is '..repr(square))
-                                        local rectDef = Rect(square[1] - 8, square[3] - 8, square[1] + 8, square[3] + 8)
-                                        local reclaimRect = GetReclaimablesInRect(rectDef)
-                                        local engReclaiming = false
-                                        if reclaimRect then
-                                            for c, b in reclaimRect do
-                                                if not IsProp(b) or self.BadReclaimables[b] then continue end
-                                                -- Start Blacklisted Props
-                                                local blacklisted = false
-                                                for _, BlackPos in PropBlacklist do
-                                                    if b.CachePosition[1] == BlackPos[1] and b.CachePosition[3] == BlackPos[3] then
-                                                        blacklisted = true
-                                                        break
+                            local reclaimAvailable = true
+                            local maxRetries = 20
+                            local reclaimRetryCount = 0
+                            while reclaimAvailable and not self.Dead do
+                                engPos = self:GetPosition()
+                                -- reclaim grid for a better reclaim position 9 points with 1 being the current engineer position
+                                -- we create a grid of 8 squares around the engineer that it will search after each grid square is reclaim it is removed.
+                                local reclaimGrid = {
+                                    {engPos[1], 0 ,engPos[3]},
+                                    {engPos[1], 0 ,engPos[3] + 15},
+                                    {engPos[1] + 15, 0 ,engPos[3] + 15},
+                                    {engPos[1] + 15, 0, engPos[3]},
+                                    {engPos[1] + 15, 0, engPos[3] - 15},
+                                    {engPos[1], 0, engPos[3] - 15},
+                                    {engPos[1] - 15, 0, engPos[3] - 15},
+                                    {engPos[1] - 15, 0, engPos[3]},
+                                    {engPos[1] - 15, 0, engPos[3] + 15},
+                                    {engPos[1], 0 ,engPos[3] + 25},
+                                    {engPos[1] + 15, 0 ,engPos[3] + 25},
+                                    {engPos[1] + 25, 0 ,engPos[3] + 25},
+                                    {engPos[1] + 25, 0 ,engPos[3] + 15},
+                                    {engPos[1] + 25, 0, engPos[3]},
+                                    {engPos[1] + 25, 0, engPos[3] - 15},
+                                    {engPos[1] + 25, 0, engPos[3] - 25},
+                                    {engPos[1] + 15, 0, engPos[3] - 25},
+                                    {engPos[1], 0, engPos[3] - 25},
+                                    {engPos[1] - 15, 0, engPos[3] - 25},
+                                    {engPos[1] - 25, 0, engPos[3] - 25},
+                                    {engPos[1] - 25, 0, engPos[3] - 15},
+                                    {engPos[1] - 25, 0, engPos[3]},
+                                    {engPos[1] - 25, 0, engPos[3] + 15},
+                                    {engPos[1] - 15, 0, engPos[3] + 25},
+                                    {engPos[1] - 25, 0, engPos[3] + 25},
+                                }
+                                --LOG('EngineerReclaimGrid '..repr(reclaimGrid))
+                                if reclaimGrid and not table.empty( reclaimGrid ) then
+                                    local reclaimCount = 0
+                                    local engineerHasReclaimed = false
+                                    for k, square in reclaimGrid do
+                                        local squarePos = {square[1], GetTerrainHeight(square[1], square[3]), square[3]}
+                                        if NavUtils.CanPathTo('Amphibious', engPos, squarePos) then
+                                            local minX = math.max(square[1] - 8, 0)
+                                            local maxX = math.min(square[1] + 8, mapSizeX)
+                                            local minZ = math.max(square[3] - 8, 0)
+                                            local maxZ = math.min(square[3] + 8, mapSizeZ) -- Assuming square map size
+                                            local rectDef = Rect(minX, minZ, maxX, maxZ)
+                                            local reclaimRect = GetReclaimablesInRect(rectDef)
+                                            local engReclaiming = false
+                                            if reclaimRect then
+                                                for c, b in reclaimRect do
+                                                    if not IsProp(b) or self.BadReclaimables[b] then continue end
+                                                    -- Start Blacklisted Props
+                                                    local blacklisted = false
+                                                    for _, BlackPos in PropBlacklist do
+                                                        if b.CachePosition[1] == BlackPos[1] and b.CachePosition[3] == BlackPos[3] then
+                                                            blacklisted = true
+                                                            break
+                                                        end
+                                                    end
+                                                    if blacklisted then continue end
+                                                    if b.MaxMassReclaim and b.MaxMassReclaim >= 5 then
+                                                        engReclaiming = true
+                                                        engineerHasReclaimed = true
+                                                        reclaimCount = reclaimCount + 1
+                                                        IssueReclaim({self}, b)
                                                     end
                                                 end
-                                                if blacklisted then continue end
-                                                if b.MaxMassReclaim and b.MaxMassReclaim >= 5 then
-                                                    engReclaiming = true
-                                                    reclaimCount = reclaimCount + 1
-                                                    IssueReclaim({self}, b)
-                                                end
                                             end
-                                        end
-                                        if engReclaiming then
-                                            local idleCounter = 0
-                                            while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
+                                            if engReclaiming then
                                                 coroutine.yield(1)
-                                                if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
-                                                    --RNGLOG('We are not reclaiming or moving in the reclaim loop')
-                                                    --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
-                                                    idleCounter = idleCounter + 1
-                                                    if idleCounter > 10 then
-                                                        --RNGLOG('idleCounter hit, breaking loop')
-                                                        break
+                                                local idleCounter = 0
+                                                while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
+                                                    if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
+                                                        --RNGLOG('We are not reclaiming or moving in the reclaim loop')
+                                                        --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
+                                                        idleCounter = idleCounter + 1
+                                                        if idleCounter > 10 then
+                                                            --RNGLOG('idleCounter hit, breaking loop')
+                                                            break
+                                                        end
                                                     end
+                                                    --RNGLOG('We are reclaiming stuff')
+                                                    coroutine.yield(30)
                                                 end
-                                                --RNGLOG('We are reclaiming stuff')
-                                                coroutine.yield(30)
                                             end
+                                        end
+                                        MexBuild(platoon, self, aiBrain)
+                                        if engineerHasReclaimed then
+                                            break
                                         end
                                     end
-                                    MexBuild(platoon, self, aiBrain)
+                                    if not engineerHasReclaimed then
+                                        reclaimAvailable = false
+                                    end
+                                    --RNGLOG('reclaim grid loop has finished')
+                                    --RNGLOG('Total things that should have be issued reclaim are '..reclaimCount)
+                                else
+                                    reclaimAvailable = false
                                 end
-                                --RNGLOG('reclaim grid loop has finished')
-                                --RNGLOG('Total things that should have be issued reclaim are '..reclaimCount)
+                                reclaimRetryCount = reclaimRetryCount + 1
+                                if reclaimRetryCount > maxRetries then
+                                    break
+                                end
                             end
                         end
                     end
@@ -1020,7 +1059,7 @@ function MoveInDirection(tStart, iAngle, iDistance, bKeepInMapBounds, bTravelUnd
     local iTheta = ConvertAngleToRadians(iAngle)
     --if bDebugMessages == true then LOG(sFunctionRef..': iAngle='..(iAngle or 'nil')..'; iTheta='..(iTheta or 'nil')..'; iDistance='..(iDistance or 'nil')) end
     local iXAdj = math.sin(iTheta) * iDistance
-    local iZAdj = math.cos(iTheta) * iDistance
+    local iZAdj = -math.cos(iTheta) * iDistance
     --local iXAdj = math.cos(iTheta) * iDistance * iFactor[1]
     --local iZAdj = math.sin(iTheta) * iDistance * iFactor[2]
 
@@ -3245,7 +3284,11 @@ GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface
                             if bp.CategoriesHash.DIRECTFIRE then
                                 RNGINSERT(brainThreats.enemyStructureUnits, v)
                             end
-                            brainThreats.enemyStructure = brainThreats.enemyStructure + bp.Defense.SurfaceThreatLevel
+                            if bp.Weapon[1].MaxRadius > enemyMaxRadius then
+                                enemyMaxRadius = bp.Weapon[1].MaxRadius
+                            end
+                            brainThreats.enemyStructure = brainThreats.enemyStructure + bp.Defense.SurfaceThreatLevel*mult
+                            brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.SurfaceThreatLevel*mult
                         end
                     end
                     if includeSub and bp.Defense.SubThreatLevel ~= nil then
@@ -3258,13 +3301,6 @@ GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface
                     if includeAir and bp.Defense.AirThreatLevel ~= nil then
                         brainThreats.enemyAir = brainThreats.enemyAir + bp.Defense.AirThreatLevel*mult
                         brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.AirThreatLevel*mult
-                        if bp.Weapon[1].MaxRadius > enemyMaxRadius then
-                            enemyMaxRadius = bp.Weapon[1].MaxRadius
-                        end
-                    end
-                    if includeStructure and bp.CategoriesHash.STRUCTURE and bp.Defense.SurfaceThreatLevel ~= nil then
-                        brainThreats.enemyStructure = brainThreats.enemyStructure + bp.Defense.SurfaceThreatLevel*mult
-                        brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.SurfaceThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > enemyMaxRadius then
                             enemyMaxRadius = bp.Weapon[1].MaxRadius
                         end
@@ -3653,6 +3689,32 @@ function AIBuildBaseTemplateFromLocationRNG(baseTemplate, location)
     return baseT
 end
 
+function GetBuildUnit(aiBrain, eng, buildingTemplate, buildUnit)
+    local IsRestricted = import('/lua/game.lua').IsRestricted
+    local index = aiBrain:GetArmyIndex()
+    local whatToBuild = aiBrain:DecideWhatToBuild(eng, buildUnit, buildingTemplate)
+    if not whatToBuild then
+        local BuildUnitWithID
+        for Key, Data in buildingTemplate do
+            if Data[1] and Data[2] and Data[1] == buildUnit then
+                BuildUnitWithID = Data[2]
+                break
+            end
+        end
+        if IsRestricted(BuildUnitWithID, index) then
+            WARN('AI-RNG : Unit '..tostring(BuildUnitWithID)..' is restricted, cannot build')
+            return false
+        end
+        if BuildUnitWithID then
+            whatToBuild = BuildUnitWithID
+        else
+            WARN('AI-RNG : Unable to find unit to build, type was '..tostring(buildUnit))
+            return false
+        end
+    end
+    return whatToBuild
+end
+
 function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit, eng, adjacent, category, radius, relative, increaseSearch)
     -- A small note that caught me out.
     -- Always set the engineers position to zero in the build location otherwise youll get buildings are super strange angles
@@ -3666,7 +3728,10 @@ function GetBuildLocationRNG(aiBrain, buildingTemplate, baseTemplate, buildUnit,
     if not relative then
         relative = true
     end
-    local whatToBuild = aiBrain:DecideWhatToBuild(eng, buildUnit, buildingTemplate)
+    local whatToBuild = GetBuildUnit(aiBrain, eng, buildingTemplate, buildUnit)
+    if not whatToBuild then
+        return false
+    end
     local engPos = eng:GetPosition()
     local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     local function normalposition(vec)
@@ -3970,6 +4035,19 @@ function GetAngleToPosition(Pos1, Pos2)
     return angle
 end
 
+function GetPointOffset(position, angle, distance)
+    local radians = math.rad(angle)  -- Convert angle to radians
+    local offsetX = distance * math.cos(radians)  -- X offset
+    local offsetZ = distance * math.sin(radians)  -- Z offset
+    return { position[1] + offsetX, position[2], position[3] + offsetZ }
+end
+
+function GetHeadingAngle(unit)
+    if unit and not unit.Dead then
+        return modulo(450 - unit:GetHeading() * (180 / math.pi), 360)
+    end
+end
+
 function modulo(a, b)
     return a - math.floor(a / b) * b
 end
@@ -4136,6 +4214,27 @@ function PerformEngReclaim(aiBrain, eng, minimumReclaim)
         end
     end
     return reclaimed
+end
+
+function GetNumberUnitsBeingBuilt(aiBrain, category)
+    local unitsBuilding = aiBrain:GetListOfUnits(categories.CONSTRUCTION + category, false)
+    local catNumBuilding = 0
+    for _, unit in unitsBuilding do
+        if not unit.Dead then
+            if unit:IsUnitState('Building') then
+                if unit.UnitBeingBuilt and unit.UnitBeingBuilt ~= unit.UnitBeingAssist then
+                    local buildingUnit = unit.UnitBeingBuilt
+                    if buildingUnit and not buildingUnit.Dead and EntityCategoryContains(category, buildingUnit) then
+                        catNumBuilding = catNumBuilding + 1
+                    end
+                end
+            elseif EntityCategoryContains(category, unit) and unit:GetFractionComplete() < 1 then
+                catNumBuilding = catNumBuilding + 1
+            end
+        end
+    end
+    --RNGLOG('Number of units building from GetNumberUnitsBuilding (which is experimentals right now) is '..catNumBuilding)
+    return catNumBuilding
 end
 
 function GetNumberUnitsBuilding(aiBrain, category)
@@ -4847,8 +4946,7 @@ end
 GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
     local scoutingData
     local scoutType
-    local platoonNeedScout
-    local supportPlatoon
+    local platoonNeedScout, supportPlatoon, supportPlatoonDistance
     local currentGameTime = GetGameTimeSeconds()
     local scoutPos = scout:GetPosition()
     local im = IntelManagerRNG.GetIntelManager(aiBrain)
@@ -4860,8 +4958,14 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         aiBrain:BuildScoutLocationsRNG()
     end
 
+    if platoon.FindPlatoonCounter and (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
+        coroutine.yield(3)
+        platoonNeedScout, supportPlatoon, supportPlatoonDistance = ScoutFindNearbyPlatoonsRNG(platoon, 125)
+        platoon.FindPlatoonCounter = platoon.FindPlatoonCounter + 1
+    end
     if aiBrain.CDRUnit.Active then
-        if (not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead) and aiBrain.CDRUnit.DistanceToHome > 900 then
+        if (not aiBrain.CDRUnit.Scout or aiBrain.CDRUnit.Scout.Dead) and aiBrain.CDRUnit.DistanceToHome > 900 
+            and (not platoonNeedScout or platoonNeedScout and supportPlatoonDistance > 3025) then
             --LOG('LAND-SCOUT Land scout getting acu position')
             if NavUtils.CanPathTo(platoon.MovementLayer, scoutPos, aiBrain.CDRUnit.Position) then
                 --LOG('LAND-SCOUT Can path to acu, return unit')
@@ -4870,11 +4974,6 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
                 return aiBrain.CDRUnit, scoutType
             end
         end
-    end
-    if platoon.FindPlatoonCounter and (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
-        coroutine.yield(3)
-        platoonNeedScout, supportPlatoon = ScoutFindNearbyPlatoonsRNG(platoon, 125)
-        platoon.FindPlatoonCounter = platoon.FindPlatoonCounter + 1
     end
     if platoonNeedScout then
         if supportPlatoon and PlatoonExists(aiBrain, supportPlatoon) then
@@ -5080,12 +5179,13 @@ ScoutFindNearbyPlatoonsRNG = function(platoon, radius)
                 if platoon.MovementLayer ~= 'Amphibious' and platoon.MovementLayer ~= aPlat.MovementLayer then
                     continue
                 end
-                if  VDist3Sq(platPos, allyPlatPos) <= radiusSq then
+                local allyPlatDistance = VDist3Sq(platPos, allyPlatPos)
+                if  allyPlatDistance <= radiusSq then
                     if not NavUtils.CanPathTo(platoon.MovementLayer, platPos, allyPlatPos) then continue end
                     if aiBrain.RNGDEBUG then
                         RNGLOG("*AI DEBUG: Scout moving to allied platoon position for plan "..aPlat.PlanName)
                     end
-                    return true, aPlat
+                    return true, aPlat, allyPlatDistance
                 end
             end
         end
@@ -5564,7 +5664,7 @@ CheckForExperimental = function(aiBrain, im, platoon, avoid, naval)
     end
 end
 
-CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu, experimentalCheck, strategicBomber)
+CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu, experimentalCheck, strategicBomber, airOnly)
     local platPos
     local closestTarget
     local highestPriority = 0
@@ -5650,8 +5750,18 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                                         end
                                     end
                                 end
+                            elseif airOnly then
+                                if unitCats.AIR and (v.type == 'bomber' or v.type == 'gunship') then
+                                    if v.priority * priorityModifier >= 250 then
+                                        tempPoint = (v.priority * priorityModifier + (v.danger or 0))/RNGMAX(targetDistance,30*30)
+                                        if tempPoint > highestPriority and highestPriority >= 250 then
+                                            highestPriority = tempPoint
+                                            closestTarget = v.unit
+                                        end
+                                    end
+                                end
                             else
-                                if not unitCats.SCOUT and (not strategicBomber or (not unitCats.TECH1 or unitCats.COMMAND)) then
+                                if not unitCats.SCOUT and (not strategicBomber or (not unitCats.TECH1 or unitCats.COMMAND)) and not (v.type == 'gunship' or v.type == 'bomber') then
                                     local priorityModifier = 1
                                     local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
                                     local tempPoint
@@ -5691,6 +5801,46 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
     end
     return false
 end
+
+CheckPriorityTarget = function(aiBrain, im, platoon, threatType, threatAmount, presenceCheck, ignoreScouts, airOnly)
+
+    local pointHighest = 0
+    local point = false
+    local platPos = platoon.Pos or platoon:GetPlatoonPosition()
+    for _, v in aiBrain.prioritypoints do
+        local dx = platPos[1] - v.Position[1]
+        local dz = platPos[3] - v.Position[3]
+        local distance = dx * dx + dz * dz
+        local tempPoint = v.priority/(RNGMAX(distance,30*30)+(v.danger or 0))
+        if tempPoint > pointHighest then
+            local validated = true
+            if presenceCheck and aiBrain.GridPresence:GetInferredStatus(v.Position) ~= presenceCheck then
+                validated = false
+            end
+            if threatType and GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, threatType) > threatAmount then
+                validated = false
+            end
+            if ignoreScouts then
+                local unitCats = v.unit.Blueprint.CategoriesHash
+                if unitCats.SCOUT then
+                    validated = false
+                end
+            end
+            if airOnly then
+                local unitCats = v.unit.Blueprint.CategoriesHash
+                if not unitCats.AIR then
+                    validated = false
+                end
+            end
+            if validated then
+                pointHighest = tempPoint
+                point = v
+            end
+        end
+    end
+    return point
+end
+
 
 GetPlatUnitEnemyBias = function(aiBrain, platoon, acuSupport)
 
@@ -6462,15 +6612,21 @@ function AIFindNavalAreaNeedsEngineerRNG(aiBrain, locationType, enemyLabelCheck,
     local retPos, retName
     local positions = AIUtils.AIFilterAlliedBasesRNG(aiBrain, positions)
     local shortList = {}
-    local labelRejected = false
+    local closestLabelDistance
+    local closestLabel
     for _, v in positions do
+        local labelRejected = false
         local distance
         local inWater = PositionInWater(v.Position)
         if inWater then
             if shortestDistance then
                 local path, msg, pathDistance = NavUtils.PathTo('Amphibious', pos, v.Position)
                 if path then
-                    distance = pathDistance
+                    distance = pathDistance * pathDistance
+                else
+                    local mx = v.Position[1] - pos[1]
+                    local mz = v.Position[3] - pos[3]
+                    distance = mx * mx + mz * mz
                 end
             else
                 local mx = v.Position[1] - pos[1]
@@ -6480,8 +6636,18 @@ function AIFindNavalAreaNeedsEngineerRNG(aiBrain, locationType, enemyLabelCheck,
             if distance then
                 if enemyLabelCheck then
                     local label= NavUtils.GetLabel('Water', {v.Position[1], v.Position[2], v.Position[3]})
-                    if label and aiBrain.BrainIntel.NavalBaseLabels[label] ~= 'Confirmed' then
-                        labelRejected = true
+                    if label and aiBrain.BrainIntel.NavalBaseLabels[label].State then
+                        local labelState = aiBrain.BrainIntel.NavalBaseLabels[label].State
+                        if labelState ~= 'Confirmed' then
+                            labelRejected = true
+                        end
+                        if not closestLabel or distance < closestLabelDistance then
+                            closestLabelDistance = distance
+                            closestLabel = label
+                        end
+                        if closestLabel and label ~= closestLabel then
+                            labelRejected = true
+                        end
                     end
                 end
                 if not labelRejected and not aiBrain.BuilderManagers[v.Name] then
@@ -6623,7 +6789,7 @@ function GetShieldPosition(aiBrain, eng, locationType, whatToBuild, unitTable)
     --LOG('Getting Shield Position')
     --LOG('Structure table requiring shield has this many '..table.getn(unitTable))
     if not table.empty(unitTable)then
-        table.sort(unitTable,function(a,b) return VDist3Sq(engPos,a:GetPosition())<VDist3Sq(engPos,b:GetPosition()) end)
+        --table.sort(unitTable,function(a,b) return VDist3Sq(engPos,a:GetPosition())<VDist3Sq(engPos,b:GetPosition()) end)
         local buildPositions = {}
         local shieldRequired 
         local shieldPosFound = false
@@ -6632,17 +6798,23 @@ function GetShieldPosition(aiBrain, eng, locationType, whatToBuild, unitTable)
             --LOG('Unit that needs protecting '..v.UnitId)
             --LOG('Entity '..v.EntityId)
             if not v.Dead then
+                if not v['rngdata'] then
+                    v['rngdata'] = {}
+                end
+                --LOG('Looking for shield position from unit list, number of shields unit currently has '..tostring(table.getn(v['rngdata'].ShieldsInRange)))
                 local shieldSpaceTimeout = false
-                if v['rngdata'].NoShieldSpace then
-                    if v['rngdata'].NoShieldSpace < 5 then
-                        --LOG('unit has not shield space, incrementing by 1')
-                        shieldSpaceTimeout = true
-                        v['rngdata'].NoShieldSpace = v['rngdata'].NoShieldSpace + 1
-                    else
-                        v['rngdata'].NoShieldSpace = 0
+                if v['rngdata'].NoShieldSpace and v['rngdata'].NoShieldSpace > 0 then
+                    shieldSpaceTimeout = true
+                end
+                local shieldCount = 0
+                if v['rngdata'].ShieldsInRange then
+                    for _, s in v['rngdata'].ShieldsInRange do
+                        if not s.Dead then
+                           shieldCount = shieldCount + 1
+                        end
                     end
-                end 
-                if not v['rngdata'].ShieldsInRange or v['rngdata'].ShieldsInRange and table.empty(v['rngdata'].ShieldsInRange) and not shieldSpaceTimeout then
+                end
+                if not v['rngdata'].ShieldsInRange or v['rngdata'].ShieldsInRange and shieldCount < 4 and not shieldSpaceTimeout then
                     local targetSize = v.Blueprint.Physics
                     local targetPos = v:GetPosition()
                     local differenceX=math.abs(targetSize.SkirtSizeX-unitSize.SkirtSizeX)
@@ -6660,11 +6832,13 @@ function GetShieldPosition(aiBrain, eng, locationType, whatToBuild, unitTable)
                         -- check if the buildplace is to close to the border or inside buildable area
                         if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
                             if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos)) then
+                                v['rngdata'].NoShieldSpace = 0
                                 return normalposition(testPos)
                             end
                         end
                         if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
                             if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos2)) then
+                                v['rngdata'].NoShieldSpace = 0
                                 return normalposition(testPos2)
                             end
                         end
@@ -6675,21 +6849,29 @@ function GetShieldPosition(aiBrain, eng, locationType, whatToBuild, unitTable)
                         local testPos2 = { targetPos[1]+targetSize.SkirtSizeX/2+(unitSize.SkirtSizeX/2)+offsetfactory, targetPos[3] + (i * 1), 0 }
                         if testPos[1] > 8 and testPos[1] < ScenarioInfo.size[1] - 8 and testPos[2] > 8 and testPos[2] < ScenarioInfo.size[2] - 8 then
                             if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos)) then
+                                v['rngdata'].NoShieldSpace = 0
                                 return normalposition(testPos)
                             end
                         end
                         if testPos2[1] > 8 and testPos2[1] < ScenarioInfo.size[1] - 8 and testPos2[2] > 8 and testPos2[2] < ScenarioInfo.size[2] - 8 then
                             if aiBrain:CanBuildStructureAt(whatToBuild, normalposition(testPos2)) then
+                                v['rngdata'].NoShieldSpace = 0
                                 return normalposition(testPos2)
                             end
                         end
                     end
                 end
-                if not v['rngdata'] then
-                    v['rngdata'] = {}
-                end
                 --LOG('No build position, setting noshieldspace to zero')
-                v['rngdata'].NoShieldSpace = 0
+                if shieldCount < 4 then
+                    if not v['rngdata'].NoShieldSpace then
+                        v['rngdata'].NoShieldSpace = 0
+                    end
+                    if v['rngdata'].NoShieldSpace < 5 then
+                        v['rngdata'].NoShieldSpace = v['rngdata'].NoShieldSpace + 1
+                    else
+                        v['rngdata'].NoShieldSpace = 0
+                    end
+                end
             end
         end
     end
@@ -7405,6 +7587,37 @@ UpdateShieldsProtectingUnit = function(aiBrain, finishedUnit)
         local height = shield.Blueprint.Defense.Shield.ShieldVerticalOffset
         return width - height
     end
+    local function IsUnitCoveredByShield(unitPos, unitSizeX, unitSizeZ, shieldPos, shieldRadiusSq)
+        local halfX = (unitSizeX or 1) * 0.5
+        local halfZ = (unitSizeZ or 1) * 0.5
+    
+        -- Calculate the four corners of the unit
+        local checkPoints = {
+            {unitPos[1] - halfX, unitPos[3] - halfZ}, -- Bottom-left
+            {unitPos[1] + halfX, unitPos[3] - halfZ}, -- Bottom-right
+            {unitPos[1] - halfX, unitPos[3] + halfZ}, -- Top-left
+            {unitPos[1] + halfX, unitPos[3] + halfZ}  -- Top-right
+        }
+    
+        local coveredPoints = 0
+    
+        -- Check if each corner is inside the shield radius
+        for _, point in ipairs(checkPoints) do
+            local dx = shieldPos[1] - point[1]
+            local dz = shieldPos[3] - point[2]
+            local distSq = dx * dx + dz * dz  -- Squared distance
+    
+            if distSq <= shieldRadiusSq then
+                coveredPoints = coveredPoints + 1
+                -- If at least 3 corners are covered, we can return early
+                if coveredPoints >= 3 then
+                    return true
+                end
+            end
+        end
+    
+        return false
+    end
     if not finishedUnit['rngdata'] then
         finishedUnit['rngdata'] = {}
     end
@@ -7413,7 +7626,7 @@ UpdateShieldsProtectingUnit = function(aiBrain, finishedUnit)
             for _, v in pairs(unit['rngdata'].ShieldsInRange) do
                 if v and not v.Dead and v['rngdata'].UnitsDefended then
                     local keyToDelete
-                    for l, c in pairs(unit['rngdata'].UnitsDefended) do
+                    for l, c in pairs(v['rngdata'].UnitsDefended) do
                         if unit.EntityId == c.EntityId then
                             --LOG('Removing Unit from shield unitsdefended table')
                             keyToDelete = l
@@ -7430,26 +7643,34 @@ UpdateShieldsProtectingUnit = function(aiBrain, finishedUnit)
     end
     import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, finishedUnit)
     local finishedUnitPos = finishedUnit:GetPosition()
-    local units = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.SHIELD, finishedUnitPos, 50, 'Ally')
-    if not table.empty(units) then
-        for _, v in units do
-            if v['rngdata']['UnitsDefended'] then
-                local defenseRadius = GetShieldRadiusAboveGroundSquaredRNG(v)
-                
+    local shields = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.SHIELD, finishedUnitPos, 50, 'Ally')
+    if not table.empty(shields) then
+        for _, v in shields do
+            if v and not v.Dead then
+                if not v['rngdata'] then
+                    v['rngdata'] = {}
+                end
+                if not v['rngdata'].UnitsDefended then
+                    v['rngdata'].UnitsDefended = setmetatable({}, WeakValueTable)
+                end
+                local shieldPos = v:GetPosition()
+                local dx = finishedUnitPos[1] - shieldPos[1]
+                local dz = finishedUnitPos[3] - shieldPos[3]
+                local distSquared = dx * dx + dz * dz
+                local unitSizeX = finishedUnit.Blueprint.SizeX or 1
+                local unitSizeZ = finishedUnit.Blueprint.SizeZ or 1
+                if v['rngdata']['UnitsDefended'] then
+                    local defenseRadiusSquared = GetShieldRadiusAboveGroundSquaredRNG(v)
+                    if distSquared <= defenseRadiusSquared and IsUnitCoveredByShield(finishedUnitPos, unitSizeX, unitSizeZ, shieldPos, defenseRadiusSquared) then
+                        -- Ensure finishedUnit has ShieldsInRange table
+                        if not finishedUnit['rngdata'].ShieldsInRange then
+                            finishedUnit['rngdata'].ShieldsInRange = setmetatable({}, WeakValueTable)
+                        end
+                        finishedUnit['rngdata'].ShieldsInRange[shield.EntityId] = v
+                        v['rngdata']['UnitsDefended'][finishedUnit.EntityId] = finishedUnit
+                    end
+                end
             end
-        end
-    end
-    finishedUnit['rngdata']['UnitsDefended'] = {}
-    if not table.empty(units) then
-        for _, v in units do
-            if not v['rngdata'] then
-                v['rngdata'] = {}
-            end
-            if not v['rngdata'].ShieldsInRange then
-                v['rngdata'].ShieldsInRange = setmetatable({}, WeakValueTable)
-            end
-            v['rngdata'].ShieldsInRange[finishedUnit.EntityId] = finishedUnit
-            table.insert(finishedUnit['rngdata'].UnitsDefended, v)
         end
     end
 end
@@ -7458,44 +7679,83 @@ UpdateUnitsProtectedByShield = function(aiBrain, finishedUnit)
     if not finishedUnit['rngdata'] then
         finishedUnit['rngdata'] = {}
     end
+
     local deathFunction = function(unit)
         if unit['rngdata'].UnitsDefended then
             for _, v in pairs(unit['rngdata'].UnitsDefended) do
-                if v and not v.Dead then
-                    if v.ShieldsInRange then
-                        if v.ShieldsInRange[unit.EntityId] then
-                            v.ShieldsInRange[unit.EntityId] = nil
-                            --LOG('Shield has been destroyed, removed from '..v.UnitId)
-                        end
-                    end
+                if v and not v.Dead and v.ShieldsInRange then
+                    v.ShieldsInRange[unit.EntityId] = nil
                 end
             end
         end
     end
     import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, finishedUnit)
+
     if not finishedUnit['rngdata']['UnitsDefended'] then
         finishedUnit['rngdata']['UnitsDefended'] = {}
     end
-    finishedUnit.UnitsDefended = {}
+
     local function GetShieldRadiusAboveGroundSquaredRNG(shield)
         local width = shield.Blueprint.Defense.Shield.ShieldSize
         local height = shield.Blueprint.Defense.Shield.ShieldVerticalOffset
-    
-        return width - height
+        local radius = width - height
+        return radius * radius  -- Return squared value for direct comparison
     end
-    local defenseRadius = GetShieldRadiusAboveGroundSquaredRNG(finishedUnit)
-    local units = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, finishedUnit:GetPosition(), defenseRadius, 'Ally')
-    --LOG('Number of units around TMD '..table.getn(units))
+
+    local function IsUnitCoveredByShield(unitPos, unitSizeX, unitSizeZ, shieldPos, shieldRadiusSq)
+        local halfX = (unitSizeX or 1) * 0.5
+        local halfZ = (unitSizeZ or 1) * 0.5
+    
+        -- Calculate the four corners of the unit
+        local checkPoints = {
+            {unitPos[1] - halfX, unitPos[3] - halfZ}, -- Bottom-left
+            {unitPos[1] + halfX, unitPos[3] - halfZ}, -- Bottom-right
+            {unitPos[1] - halfX, unitPos[3] + halfZ}, -- Top-left
+            {unitPos[1] + halfX, unitPos[3] + halfZ}  -- Top-right
+        }
+    
+        local coveredPoints = 0
+    
+        -- Check if each corner is inside the shield radius
+        for _, point in ipairs(checkPoints) do
+            local dx = shieldPos[1] - point[1]
+            local dz = shieldPos[3] - point[2]
+            local distSq = dx * dx + dz * dz  -- Squared distance
+    
+            if distSq <= shieldRadiusSq then
+                coveredPoints = coveredPoints + 1
+                -- If at least 3 corners are covered, we can return early
+                if coveredPoints >= 3 then
+                    return true
+                end
+            end
+        end
+    
+        return false
+    end
+
+    local defenseRadiusSq = GetShieldRadiusAboveGroundSquaredRNG(finishedUnit)
+    local finishedUnitPos = finishedUnit:GetPosition()
+    local units = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, finishedUnitPos, math.sqrt(defenseRadiusSq), 'Ally')
+
     if not table.empty(units) then
         for _, v in units do
-            if not v['rngdata'] then
-                v['rngdata'] = {}
+            if v and not v.Dead then
+                local unitPos = v:GetPosition()
+                local unitSizeX = v.Blueprint.SizeX or 1
+                local unitSizeZ = v.Blueprint.SizeZ or 1
+
+                if IsUnitCoveredByShield(unitPos, unitSizeX, unitSizeZ, finishedUnitPos, defenseRadiusSq) then
+                    if not v['rngdata'] then
+                        v['rngdata'] = {}
+                    end
+                    if not v['rngdata'].ShieldsInRange then
+                        v['rngdata'].ShieldsInRange = setmetatable({}, WeakValueTable)
+                    end
+                    v['rngdata'].ShieldsInRange[finishedUnit.EntityId] = finishedUnit
+                    finishedUnit['rngdata']['UnitsDefended'][v.EntityId] = v
+                end
             end
-            if not v['rngdata'].ShieldsInRange then
-                v['rngdata'].ShieldsInRange = setmetatable({}, WeakValueTable)
-            end
-            v['rngdata'].ShieldsInRange[finishedUnit.EntityId] = finishedUnit
-            table.insert(finishedUnit['rngdata'].UnitsDefended, v)
         end
     end
 end

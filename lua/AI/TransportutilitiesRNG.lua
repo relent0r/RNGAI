@@ -1306,7 +1306,7 @@ function SendPlatoonWithTransports(aiBrain, platoon, destination, attempts, bSki
 
 		-- set path to destination if we landed anywhere else but the destination
 		-- All platoons except engineers (which move themselves) get this behavior
-		if (not IsEngineer) and GetPlatoonPosition(platoon) != destination then
+		if (not IsEngineer) and GetPlatoonPosition(platoon) ~= destination then
 			if not PlatoonExists( aiBrain, platoon ) or not GetPlatoonPosition(platoon) then
 				return false
 			end
@@ -1316,7 +1316,7 @@ function SendPlatoonWithTransports(aiBrain, platoon, destination, attempts, bSki
 
 			if PlatoonExists( aiBrain, platoon ) then
 				-- if no path then fail otherwise use it
-				if not path and destination != nil then
+				if not path and destination ~= nil then
 					return false
 				elseif path then
 					platoon.MoveThread = platoon:ForkThread( platoon.MovePlatoon, path, 'AttackFormation', true )

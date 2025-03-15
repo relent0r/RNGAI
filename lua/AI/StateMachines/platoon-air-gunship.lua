@@ -164,7 +164,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if not target then
-                local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, nil, nil, nil, true)
+                local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, nil, nil, nil, false)
                 if target then
                     --LOG('Gunship high Priority Target Found '..target.UnitId)
                     self.BuilderData = {
@@ -247,23 +247,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             end
             if not target then
                 if not table.empty(aiBrain.prioritypoints) then
-                    local pointHighest = 0
-                    local point = false
-                    --LOG('Checking priority points')
-                    for _, v in aiBrain.prioritypoints do
-                        if v.unit and not v.unit.Dead then
-                            local dx = platPos[1] - v.Position[1]
-                            local dz = platPos[3] - v.Position[3]
-                            local distance = dx * dx + dz * dz
-                            local tempPoint = v.priority/(RNGMAX(distance,30*30)+(v.danger or 0))
-                            if tempPoint > pointHighest and aiBrain.GridPresence:GetInferredStatus(v.Position) == 'Allied' then
-                                if GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') < 12 then
-                                    pointHighest = tempPoint
-                                    point = v
-                                end
-                            end
-                        end
-                    end
+                    local point = RUtils.CheckPriorityTarget(aiBrain, false, self, 'AntiAir', 12, 'Allied')
                     if point then
                         if not self.retreat then
                             self.BuilderData = {

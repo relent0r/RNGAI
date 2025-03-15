@@ -100,7 +100,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 return
             end
             if not self.StratBomberPresent and self.PlatoonData.Defensive and homeDist and homeDist > 25600 and self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Dead then
-                local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, nil, nil, nil, true)
+                local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, nil, nil, nil, false, self.StratBomberPresent)
                 if target then
                     --LOG('Gunship high Priority Target Found '..target.UnitId)
                     self.BuilderData = {
@@ -161,7 +161,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             end
             if not target then
                 ----self:LogDebug(string.format('Checking for High Priority Target'))
-                local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, false, false, true, self.StratBomberPresent)
+                local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, false, false, false, self.StratBomberPresent)
                 if target then
                     self.BuilderData = {
                         AttackTarget = target,
@@ -223,26 +223,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             if not target and not self.PlatoonData.Defensive then
                 ----self:LogDebug(string.format('Checking priority points'))
                 if not table.empty(aiBrain.prioritypoints) then
-                    local pointHighest = 0
-                    local point = false
-                    --LOG('Checking priority points')
-                    for _, v in aiBrain.prioritypoints do
-                        if v.unit and not v.unit.Dead then
-                            local unitCats = v.Blueprint.CategoriesHash
-                            if not unitCats.SCOUT then
-                                local dx = platPos[1] - v.Position[1]
-                                local dz = platPos[3] - v.Position[3]
-                                local distance = dx * dx + dz * dz
-                                local tempPoint = v.priority/(RNGMAX(distance,30*30)+(v.danger or 0))
-                                if tempPoint > pointHighest and aiBrain.GridPresence:GetInferredStatus(v.Position) == 'Allied' then
-                                    if GetThreatAtPosition(aiBrain, v.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') < 12 then
-                                        pointHighest = tempPoint
-                                        point = v
-                                    end
-                                end
-                            end
-                        end
-                    end
+                    local point = RUtils.CheckPriorityTarget(aiBrain, false, self, 'AntiAir', 12, 'Allied', true)
                     if point then
                     --LOG('Bomber point pos '..repr(point.Position)..' with a priority of '..point.priority)
                         if not self.retreat then
@@ -311,35 +292,44 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            if not target and self.PlatoonData.Defensive and not not self.retreat then
+
+            if not target and self.PlatoonData.Defensive and not self.retreat then
                 --LOG('Defensive bomber looking for enemy units in adjacent zones')
-                local potentialTargetZone = StateUtils.SearchTargetFromZone(aiBrain, platPos, 'land', 'antiair')
-                if potentialTargetZone then
-                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, potentialTargetZone.pos, self, 'Attack', 120, {categories.MOBILE * (categories.LAND + categories.AMPHIBIOUS)}, false, self.CurrentPlatoonThreatAntiSurface)
-                    --LOG('Defensive bomber found target in adjacent zone to current '..tostring(repr(potentialTargetZone)))
-                    if target and not target.Dead then
-                        self.BuilderData = {
-                            AttackTarget = target,
-                            Position = target:GetPosition()
-                        }
-                        --LOG('Bomber navigating to target')
-                        --LOG('Retreating to platoon')
-                        local targetPosition = self.BuilderData.Position
-                        local tx = platPos[1] - targetPosition[1]
-                        local tz = platPos[3] - targetPosition[3]
-                        local targetDistance = tx * tx + tz * tz
-                        if targetDistance < 22500 then
-                            ----self:LogDebug(string.format('Bomber AttackTarget on high priority points'))
-                            self:ChangeState(self.AttackTarget)
-                            return
-                        else
-                            ----self:LogDebug(string.format('Bomber navigating on high priority points'))
-                            self:ChangeState(self.Navigating)
-                            return
-                        end
-                    end
+                local baseRadius
+                local baseRestrictedArea = aiBrain.OperatingAreas['BaseRestrictedArea']
+                local basePos = aiBrain.BuilderManagers[self.LocationType].Position
+                if self.LocationType == 'MAIN' then
+                    baseRadius = baseRestrictedArea * 1.3
                 else
-                    --LOG('No zone found with potential target')
+                    baseRadius = baseRestrictedArea
+                end
+                target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, basePos, self, 'Attack', baseRadius, {categories.STRUCTURE - categories.WALL + categories.MOBILE * (categories.LAND + categories.AMPHIBIOUS)}, false, self.CurrentPlatoonThreatAntiSurface)
+                if not target then
+                    local potentialTargetZone = StateUtils.SearchTargetFromZone(aiBrain, basePos, 'land', 'antiair')
+                    if potentialTargetZone then
+                        target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, potentialTargetZone.pos, self, 'Attack', 120, {categories.STRUCTURE - categories.WALL +  categories.MOBILE * (categories.LAND + categories.AMPHIBIOUS)}, false, self.CurrentPlatoonThreatAntiSurface)
+                    end
+                end
+            end
+            if target and not target.Dead then
+                self.BuilderData = {
+                    AttackTarget = target,
+                    Position = target:GetPosition()
+                }
+                --LOG('Bomber navigating to target')
+                --LOG('Retreating to platoon')
+                local targetPosition = self.BuilderData.Position
+                local tx = platPos[1] - targetPosition[1]
+                local tz = platPos[3] - targetPosition[3]
+                local targetDistance = tx * tx + tz * tz
+                if targetDistance < 22500 then
+                    ----self:LogDebug(string.format('Bomber AttackTarget on high priority points'))
+                    self:ChangeState(self.AttackTarget)
+                    return
+                else
+                    ----self:LogDebug(string.format('Bomber navigating on high priority points'))
+                    self:ChangeState(self.Navigating)
+                    return
                 end
             end
             coroutine.yield(25)
@@ -526,9 +516,9 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                             local movementPositions = StateUtils.GenerateGridPositions(path[i], 6, self.PlatoonCount)
                             for k, unit in platoonUnits do
                                 if not unit.Dead and movementPositions[k] then
-                                    StateUtils.IssueNavigationMove(unit, movementPositions[k])
+                                    StateUtils.IssueNavigationMove(unit, movementPositions[k], true)
                                 else
-                                    StateUtils.IssueNavigationMove(unit, path[i])
+                                    StateUtils.IssueNavigationMove(unit, path[i], true)
                                 end
                             end
                             local movementTimeout = 0

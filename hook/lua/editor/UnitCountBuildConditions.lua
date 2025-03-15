@@ -101,6 +101,20 @@ function UnitToThreatRatio(aiBrain, ratio, category, threatType, compareType)
     return false
 end
 
+function AirStagingWantedRNG(aiBrain)
+    local airStagingCount = GetCurrentUnits(aiBrain, categories.AIRSTAGINGPLATFORM * categories.STRUCTURE)
+    if airStagingCount < 1 and GetGameTimeSeconds() > 480 then
+        return true
+    end
+    if aiBrain.BrainIntel.AirStagingRequired then
+        local factoryCount = GetCurrentUnits(aiBrain, categories.AIR * categories.FACTORY * categories.STRUCTURE)
+        if airStagingCount < factoryCount / 2 then
+            return true
+        end
+    end
+    return false
+end
+
 function HaveUnitRatioRNG(aiBrain, ratio, categoryOne, compareType, categoryTwo)
     local numOne = aiBrain:GetCurrentUnits(categoryOne)
     local numTwo = aiBrain:GetCurrentUnits(categoryTwo)
@@ -2073,7 +2087,7 @@ end
 
 function CheckBaseShieldsRequired(aiBrain, locationType)
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
-    if not table.empty(engineerManager.ConsumptionUnits.EnergyProduction) then
+    if engineerManager.ConsumptionUnits.EnergyProduction and not table.empty(engineerManager.ConsumptionUnits.EnergyProduction) then
         for _, v in engineerManager.ConsumptionUnits.EnergyProduction do
             if v and not v.Dead then
                 if v['rngdata'].NoShieldSpace and v['rngdata'].NoShieldSpace < 5 then
@@ -2083,8 +2097,68 @@ function CheckBaseShieldsRequired(aiBrain, locationType)
                 if unitCats.TECH2 or unitCats.TECH3 then
                     local needShield = true
                     if v['rngdata'].ShieldsInRange then
+                        local shieldCount = 0
                         for _, s in v['rngdata'].ShieldsInRange do
                             if s and not s.Dead then
+                                shieldCount = shieldCount + 1
+                            end
+                            if shieldCount > 1 then
+                                needShield = false
+                                break
+                            end
+                        end
+                    end
+                    if needShield then
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    if engineerManager.ConsumptionUnits.Strategic and not table.empty(engineerManager.ConsumptionUnits.Strategic) then
+        for _, v in engineerManager.ConsumptionUnits.Strategic do
+            if v and not v.Dead then
+                if v['rngdata'].NoShieldSpace and v['rngdata'].NoShieldSpace < 5 then
+                    continue
+                end
+                local unitCats = v.Blueprint.CategoriesHash
+                if unitCats.TECH2 or unitCats.TECH3 then
+                    local needShield = true
+                    if v['rngdata'].ShieldsInRange then
+                        local shieldCount = 0
+                        for _, s in v['rngdata'].ShieldsInRange do
+                            if s and not s.Dead then
+                                shieldCount = shieldCount + 1
+                            end
+                            if shieldCount > 1 then
+                                needShield = false
+                                break
+                            end
+                        end
+                    end
+                    if needShield then
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    if engineerManager.ConsumptionUnits.AntiNuke and not table.empty(engineerManager.ConsumptionUnits.AntiNuke) then
+        for _, v in engineerManager.ConsumptionUnits.AntiNuke do
+            if v and not v.Dead then
+                if v['rngdata'].NoShieldSpace and v['rngdata'].NoShieldSpace < 5 then
+                    continue
+                end
+                local unitCats = v.Blueprint.CategoriesHash
+                if unitCats.TECH2 or unitCats.TECH3 then
+                    local needShield = true
+                    if v['rngdata'].ShieldsInRange then
+                        local shieldCount = 0
+                        for _, s in v['rngdata'].ShieldsInRange do
+                            if s and not s.Dead then
+                                shieldCount = shieldCount + 1
+                            end
+                            if shieldCount > 1 then
                                 needShield = false
                                 break
                             end
@@ -2108,8 +2182,12 @@ function CheckBaseShieldsRequired(aiBrain, locationType)
                 if unitCats.TECH2 or unitCats.TECH3 then
                     local needShield = true
                     if v['rngdata'].ShieldsInRange then
+                        local shieldCount = 0
                         for _, s in v['rngdata'].ShieldsInRange do
                             if s and not s.Dead then
+                                shieldCount = shieldCount + 1
+                            end
+                            if shieldCount > 1 then
                                 needShield = false
                                 break
                             end

@@ -24,6 +24,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
     OnUnitsAddedToPlatoon = function(self)
         local units = self:GetPlatoonUnits()
         self.Units = units
+        local bombCoolDown
         local maxPlatoonStrikeDamage = 0
         local maxPlatoonDPS = 0
         local maxPlatoonStrikeRadius = 20
@@ -68,6 +69,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                                 if unit['rngdata'].StrikeRadiusDistance > maxPlatoonStrikeRadiusDistance then
                                     maxPlatoonStrikeRadiusDistance = unit['rngdata'].StrikeRadiusDistance
                                 end
+                                bombCoolDown = math.max(weapon.RackReloadTimeout or 0, 1 / weapon.RateOfFire)
                             elseif weapon.WeaponCategory == 'Anti Navy' and unitCats.AIR then
                                 unit['rngdata'].DamageRadius = weapon.DamageRadius
                                 unit['rngdata'].StrikeDamage = weapon.Damage * weapon.MuzzleSalvoSize
@@ -88,6 +90,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                         if unitCats.STRATEGICBOMBER then
                             self.StratBomberPresent = true
                         end
+                        unit['rngdata'].BombCoolDown = bombCoolDown
                         --LOG('Have set units DamageRadius to '..maxPlatoonStrikeRadius)
                     end
                     if unitCats.GUNSHIP and not unit['rngdata'].ApproxDPS then

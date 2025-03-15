@@ -285,7 +285,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                                 if unitRange > self['rngdata'].MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
                                 end
-                                if overRangedCount > 0 then
+                                if overRangedCount > 1 then
                                     self.BuilderData = {
                                         Retreat = true,
                                         RetreatReason = 'NavalThreat',
@@ -308,7 +308,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                                 if unitRange > self['rngdata'].MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
                                 end
-                                if overRangedCount > 0 then
+                                if overRangedCount > 1 then
                                     self.BuilderData = {
                                         Retreat = true,
                                         RetreatReason = 'AntiSurfaceThreat',
@@ -710,6 +710,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
             end
             local retreatReason = self.BuilderData.RetreatReason
             local retreatTarget = self.BuilderData.AttackTarget or false
+            --[[
             if retreatReason then
                 if retreatReason == 'AirThreat' then
                     if self.CurrentAntiAirThreat > 80 then
@@ -718,7 +719,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                         self.SupportT3MobileAA = 2
                     end
                 end
-            end
+            end]]
             local experimentalPosition = self.ExperimentalUnit:GetPosition()
             local aiBrain = self:GetBrain()
             local distanceToHome = VDist2Sq(experimentalPosition[1], experimentalPosition[3], self.Home[1], self.Home[3])
@@ -1063,7 +1064,10 @@ ThreatThread = function(aiBrain, platoon)
         elseif experimental.MyShield and experimental.ShieldCaution then
             experimental.ShieldCaution = false
         end
-
+        if platoon.EnemyThreatTable.AirSurfaceThreat.TotalThreat and platoon.EnemyThreatTable.AirSurfaceThreat.TotalThreat > 30 then
+            platoon.SupportT2MobileAA = math.min(8, math.ceil(platoon.EnemyThreatTable.AirSurfaceThreat.TotalThreat / 20))
+            platoon.SupportT3MobileAA = math.min(8, math.ceil(platoon.EnemyThreatTable.AirSurfaceThreat.TotalThreat / 25))
+        end
         coroutine.yield(35)
     end
 end

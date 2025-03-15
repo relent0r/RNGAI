@@ -126,6 +126,9 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 if not target or target.Dead then
+                    target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, true, false, false, false, false, true)
+                end
+                if not target or target.Dead then
                     --RNGLOG('FighterBehavior DecideWhatToDo Check targets at max radius')
                 -- Params aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted
                     target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, platPos, self, 'Attack', self.MaxRadius, self.AttackPriorities, true, self.CurrentPlatoonThreatAntiAir, false, false, true)
@@ -574,11 +577,15 @@ FighterThreatThreads = function(aiBrain, platoon)
         end
         if platoon.CurrentPlatoonThreatAntiAir < 15 and (aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat) < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
             platoon.MaxRadius = platoon.BaseRestrictedArea * 1.5
+            --LOG('Air Fighter Max Radius is set to BaseRestricted')
         elseif (aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat) * 1.3 < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
             platoon.MaxRadius = platoon.BaseMilitaryArea
+            --LOG('Air Fighter Max Radius is set to BaseMilitary')
         elseif (aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat) < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
             platoon.MaxRadius = platoon.BaseDMZArea
+            --LOG('Air Fighter Max Radius is set to BaseDMZ')
         else
+            --LOG('Air Fighter Max Radius is set to BaseEnemy')
             platoon.MaxRadius = platoon.BaseEnemyArea
         end
         if not aiBrain.BrainIntel.SuicideModeActive then

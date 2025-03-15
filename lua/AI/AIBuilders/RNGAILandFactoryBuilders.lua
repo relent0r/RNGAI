@@ -80,7 +80,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 AA Demand',
         PlatoonTemplate = 'T1LandAA',
-        Priority = 743,
+        Priority = 746,
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', {'LocationType', 'MAIN' } },
             { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading', nil, true}},

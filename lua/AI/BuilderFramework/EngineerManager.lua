@@ -46,6 +46,8 @@ EngineerManager = Class(BuilderManager) {
             MobileShields = { Category = categories.SHIELD * categories.MOBILE, Units = {}, UnitsList = {}, Count = 0, },
             Intel = { Category = categories.STRUCTURE * (categories.SONAR + categories.RADAR + categories.OMNI), Units = {}, UnitsList = {}, Count = 0, },
             MobileIntel = { Category = categories.MOBILE - categories.ENGINEER - categories.SHIELD, Units = {}, UnitsList = {}, Count = 0, },
+            AntiNuke = { Category = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, Units = {}, UnitsList = {}, Count = 0, },
+            Strategic = { Category = categories.STRUCTURE * categories.STRATEGIC * categories.TECH3, Units = {}, UnitsList = {}, Count = 0, },
         }
         self.QueuedStructures = setmetatable({}, WeakValueTable)
         self.QueuedStructures = {
@@ -340,6 +342,12 @@ EngineerManager = Class(BuilderManager) {
                 end
             elseif EntityCategoryContains(categories.SHIELD * categories.STRUCTURE, finishedUnit) then
                 RUtils.UpdateUnitsProtectedByShield(aiBrain, finishedUnit)
+            elseif EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), finishedUnit) then
+                RUtils.UpdateShieldsProtectingUnit(aiBrain, finishedUnit)
+            elseif EntityCategoryContains(categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, finishedUnit) then
+                RUtils.UpdateShieldsProtectingUnit(aiBrain, finishedUnit)
+            elseif EntityCategoryContains(categories.STRUCTURE * categories.STRATEGIC * categories.TECH3, finishedUnit) then
+                RUtils.UpdateShieldsProtectingUnit(aiBrain, finishedUnit)
             elseif EntityCategoryContains(categories.MASSEXTRACTION * categories.STRUCTURE, finishedUnit) then
                 local unitZone
                 if not unitZone and aiBrain.ZonesInitialized then
@@ -363,6 +371,8 @@ EngineerManager = Class(BuilderManager) {
                         end
                     end
                 end
+            elseif EntityCategoryContains(categories.AIRSTAGINGPLATFORM * categories.STRUCTURE, finishedUnit) then
+                self.Brain.BrainIntel.AirStagingRequired = false
             end
             local unitStats = self.Brain.IntelManager.UnitStats
             local unitValue = finishedUnit.Blueprint.Economy.BuildCostMass or 0

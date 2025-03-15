@@ -31,6 +31,13 @@ local SeaDefenseForm = function(self, aiBrain, manager)
     end
 end
 
+local EnemyNavalAvailable = function(self, aiBrain, manager)
+    if aiBrain.EnemyIntel.EnemyThreatCurrent.Naval > 0 then
+        return 500
+    end
+    return 0
+end
+
 local SeaRangedMode = function(self, aiBrain)
     if aiBrain.EnemyIntel.NavalRange.Range > 0 and aiBrain.EnemyIntel.NavalRange.Range < 165 then
         --RNGLOG('Enable Ranged Naval Builder')
@@ -101,7 +108,8 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Sea Sub Initial',
         PlatoonTemplate = 'T1SeaSub',
-        Priority = 500,
+        Priority = 0,
+        PriorityFunction =  EnemyNavalAvailable,
         BuilderConditions = {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.SUBMERSIBLE } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
