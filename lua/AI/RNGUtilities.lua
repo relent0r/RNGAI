@@ -5699,14 +5699,16 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                             if (not unitCats.HOVER or unitCats.HOVER and platoon.CurrentPlatoonThreatAntiSurface > 0) and (not unitCats.AIR or unitCats.AIR and platoon.CurrentPlatoonThreatAntiAir > 0) and PositionInWater(unitPos) then
                                 closestTarget = v.object
                             end
-                        elseif platoon.MovementLayer == 'Air' then
-                            if unitDist > operatingArea * operatingArea then
-                                local currentThreat = aiBrain:GetThreatAtPosition( unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir' )
-                                if currentThreat < 30 then
+                        elseif airOnly then
+                            if unitCats.AIR then
+                                if unitDist > operatingArea * operatingArea then
+                                    local currentThreat = aiBrain:GetThreatAtPosition( unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir' )
+                                    if currentThreat < 30 then
+                                        closestTarget = v.object
+                                    end
+                                else
                                     closestTarget = v.object
                                 end
-                            else
-                                closestTarget = v.object
                             end
                         else
                             if unitDist < baseRestrictedArea * baseRestrictedArea then
@@ -7182,6 +7184,7 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
     --LOG('GetNukeStrikePosition targetpositions after acu check'..repr(targetPositions))
 
     --RNGLOG(' ACUs detected are '..table.getn(targetPositions))
+    local targetShortList = {}
 
     if not table.empty(acuTargetPositions) then
         local targetFound = false
@@ -7191,22 +7194,13 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
                 if antiNukes < 1 or experimentalLauncherAvailable then
                     targetFound = true
                     --LOG('Adding firing position for acu')
-                    table.insert(firingPositions, { Launcher = v.Launcher, Position = pos,  TimeStamp = gameTime })
-                    missilesConsumed = missilesConsumed + 1
-                    break
+                    RNGINSERT(targetShortList, { threat = 10000, position = pos, massvalue = 0, ACU=true })
                 end
             end
-        end
-        if targetFound and missilesConsumed >= maxMissiles then
-            --RNGLOG('Valid Nuke Target Position with no Anti Nukes is '..repr(firingPositions))
-            local RNGChat = import("/mods/RNGAI/lua/AI/RNGChat.lua")
-            ForkThread(RNGChat.ConsiderAttackTaunt, aiBrain, 'LaunchNuke', nil, 8)
-            return true, firingPositions
         end
     end
 
     -- Now look through the bases for the highest economic threat and largest cluster of units
-    local targetShortList = {}
     local enemyBases = aiBrain.EnemyIntel.EnemyThreatLocations
     for _, x in enemyBases do
         for _, z in x do
@@ -7243,7 +7237,6 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
         local maxValue = 0
         local lookAroundTable = {-2, -1, 0, 1, 2}
         local squareRadius = (ScenarioInfo.size[1] / 16) / RNGGETN(lookAroundTable)
-        local missileAllocated = false
         for ix, offsetX in lookAroundTable do
             for iz, offsetZ in lookAroundTable do
                 local searchPos = {finalTarget.position[1] + offsetX*squareRadius, 0, finalTarget.position[3]+offsetZ*squareRadius}
@@ -7262,10 +7255,15 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
                             end
                         end
                     end
-                    --RNGLOG('Current UnitValue at location '..repr(currentValue))
+                    if finalTarget.ACU then
+                        currentValue = currentValue + 25000
+                        --LOG('Adding ACU mass value to shortlist validation')
+                    end
                     --LOG('Must be greater than '..missileCost)
+                    --LOG('Current value '..tostring(currentValue)..' max value '..tostring(maxValue))
                     if currentValue > missileCost and currentValue > maxValue then
                         maxValue = currentValue
+                        --LOG('Value is higher than max value, set maxValue to '..tostring(maxValue))
                         for _, v in smlLaunchers do
                             local experimental = v.Launcher.Blueprint.CategoriesHash.EXPERIMENTAL or false
                             local smdBetweenPos
@@ -7278,8 +7276,7 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
                                     --LOG('No SMD between positions for target pos '..repr(searchPos))
                                     --LOG('Adding firing position for searchtargetarea')
                                     --LOG('SMD positions known '..repr(knownSMDUnits))
-                                    table.insert(finalShortList, { Launcher = v.Launcher, Position = searchPos,  MassValue = currentValue, TimeStamp = gameTime, EntityId = v.Launcher.EntityId, IMAP = finalTarget.position})
-                                    missileAllocated = true
+                                    table.insert(finalShortList, { Launcher = v.Launcher, Position = searchPos,  MassValue = currentValue, TimeStamp = gameTime, EntityId = v.Launcher.EntityId, IMAPPos = finalTarget.position})
                                     break
                                 else
                                     --LOG('Found SMD along path to position I was trying to nuke, switch to different position')
@@ -7293,26 +7290,35 @@ GetNukeStrikePositionRNG = function(aiBrain, maxMissiles, smlLaunchers, experime
             end
             --LOG('missileAllocated current max value is '..maxValue)
         end
-        RNGSORT( finalShortList, function(a,b) return a.MassValue > b.MassValue  end )
-        --LOG('Looping through final shortlist for highest mass value')
-        for k, v in finalShortList do
-            for _, l in smlLaunchers do
-                if v.EntityId == l.Launcher.EntityId and l.Count > 0 then
-                    --LOG('Adding final position for launcher '..v.EntityId)
-                    --LOG('Mass value of position is '..v.MassValue)
-                    table.insert(firingPositions, finalShortList[k])
-                    l.Count = l.Count - 1
-                end
+        coroutine.yield(1)
+    end
+    RNGSORT( finalShortList, function(a,b) return a.MassValue > b.MassValue end )
+    --LOG('Looping through final shortlist for highest mass value')
+    for k, v in finalShortList do
+        --LOG('First value is '..tostring(v.MassValue))
+        for _, l in smlLaunchers do
+            if v.EntityId == l.Launcher.EntityId and l.Count > 0 then
+                --LOG('Adding final position for launcher '..v.EntityId)
+                --LOG('Mass value of position is '..v.MassValue)
+                missilesConsumed = missilesConsumed + 1
+                table.insert(firingPositions, finalShortList[k])
+                l.Count = l.Count - 1
             end
         end
-        coroutine.yield(1)
+        if missilesConsumed >= maxMissiles then
+            --LOG('We have used all our missiles')
+            break
+        end
     end
     if not table.empty(firingPositions) then
         --RNGLOG('Best pos found with a mass value of '..maxValue)
         --RNGLOG('Best pos position is '..repr(bestPos))
+        --LOG('Returning firing positions '..tostring(repr(firingPositions)))
+        local RNGChat = import("/mods/RNGAI/lua/AI/RNGChat.lua")
+        ForkThread(RNGChat.ConsiderAttackTaunt, aiBrain, 'LaunchNuke', nil, 8)
         return true, firingPositions
     end
-    --RNGLOG('No target list any firing positions '..repr(firingPositions))
+    --LOG('No target list any firing positions '..repr(firingPositions))
     return false
 end
 
@@ -7866,4 +7872,72 @@ function GetPoolCountAtLocation(aiBrain, locationType, unitCategory)
     local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
     local numUnits = poolPlatoon:GetNumCategoryUnits(testCat, engineerManager:GetLocationCoords(), engineerManager.Radius)
     return numUnits
+end
+
+function ValidateFactoryManager(aiBrain, locationType, layer, unit)
+    local locationRadius
+    local graphArea
+    local unitPos = unit:GetPosition()
+    local friendlyLocation
+    local markerType
+    if layer == 'Water' then
+        locationRadius = 70
+        graphArea = NavUtils.GetLabel('Water', unitPos)
+        markerType = 'Naval Area'
+    else
+        locationRadius = 120
+        graphArea = NavUtils.GetLabel('Land', unitPos)
+        markerType = 'Zone Expansion'
+    end
+    local friendlyBaseClose = false
+    if not aiBrain.BuilderManagers[locationType] then
+        --LOG('Validate factory manager for unit')
+        for k, v in aiBrain.BuilderManagers do
+            if layer == 'Water' and v.Layer ~= 'Water' then
+                continue
+            end
+            if v.GraphArea ==  graphArea then
+                local rx = v.Position[1] - unitPos[1]
+                local rz = v.Position[3] - unitPos[3]
+                local baseDistance = rx * rx + rz * rz
+                if baseDistance < locationRadius * locationRadius then
+                    friendlyBaseClose = true
+                    friendlyLocation = k
+                    break
+                end
+            end
+        end
+        if not friendlyBaseClose then
+            --LOG('No friendly base within radius, attempting to add new builder managers for unit')
+            aiBrain:AddBuilderManagers(unitPos, locationRadius, locationType, false)
+            local baseValues = {}
+            local highPri = false
+            for templateName, baseData in BaseBuilderTemplates do
+                local baseValue = baseData.ExpansionFunction(aiBrain, unitPos, markerType)
+                table.insert(baseValues, { Base = templateName, Value = baseValue })
+                --SPEW('*AI DEBUG: AINewExpansionBase(): Scann next Base. baseValue= ' .. tostring(baseValue) .. ' ('..tostring(templateName)..')')
+                if not highPri or baseValue > highPri then
+                    --SPEW('*AI DEBUG: AINewExpansionBase(): Possible next Base. baseValue= ' .. tostring(baseValue) .. ' ('..tostring(templateName)..')')
+                    highPri = baseValue
+                end
+            end
+            local validNames = {}
+            for k,v in baseValues do
+                if v.Value == highPri then
+                    table.insert(validNames, v.Base)
+                end
+            end
+            local pick = validNames[ Random(1, table.getn(validNames)) ]
+            --LOG('Base pick is '..tostring(pick))
+            import("/lua/ai/aiaddbuildertable.lua").AddGlobalBaseTemplate(aiBrain, locationType, pick)
+            local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+            factoryManager:AddFactory(unit)
+        else
+            local factoryManager = aiBrain.BuilderManagers[friendlyLocation].FactoryManager
+            if factoryManager then
+                --LOG('friendly base within radius, attempting to add factory to base')
+                factoryManager:AddFactory(unit)
+            end
+        end
+    end
 end

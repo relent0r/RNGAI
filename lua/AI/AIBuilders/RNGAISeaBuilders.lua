@@ -144,7 +144,7 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH2 * categories.DESTROYER } }, -- Build engies until we have 3 of them.
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
-            { UCBC, 'UnitCapCheckLess', { 0.95 } },
+            { UCBC, 'UnitCapCheckLess', { 0.8 } },
         },
         BuilderType = 'Sea',
     },
@@ -215,7 +215,7 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.MOBILE * categories.NAVAL * categories.TECH2 * categories.SHIELD } }, -- Build engies until we have 3 of them.
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
-            { UCBC, 'UnitCapCheckLess', { 0.95 } },
+            { UCBC, 'UnitCapCheckLess', { 0.8 } },
         },
         BuilderType = 'Sea',
     },
@@ -227,7 +227,7 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.MOBILE * categories.NAVAL * categories.TECH2 * categories.COUNTERINTELLIGENCE } }, -- Build engies until we have 3 of them.
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
-            { UCBC, 'UnitCapCheckLess', { 0.95 } },
+            { UCBC, 'UnitCapCheckLess', { 0.8 } },
         },
         BuilderType = 'Sea',
     },
@@ -293,6 +293,20 @@ BuilderGroup {
         Priority = 791,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Naval', 'T3', 'nukesub'} },
+            { EBC, 'FactorySpendRatioRNG', {'Naval', 'NavalUpgrading', nil, true}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Sea',
+        BuilderData = {
+            TechLevel = 3
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Carrier Demand',
+        PlatoonTemplate = 'T3SeaCarrier',
+        Priority = 791,
+        BuilderConditions = {
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Naval', 'T3', 'carrier'} },
             { EBC, 'FactorySpendRatioRNG', {'Naval', 'NavalUpgrading', nil, true}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

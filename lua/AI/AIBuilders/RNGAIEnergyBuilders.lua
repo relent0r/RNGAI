@@ -401,7 +401,7 @@ BuilderGroup {
         Priority = 1000,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 240 } },
-            { UCBC, 'UnitCapCheckLess', { .7 } },
+            { UCBC, 'UnitCapCheckLess', { .75 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYSTORAGE }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
         },
@@ -424,7 +424,7 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
-            { UCBC, 'UnitCapCheckLess', { .7 } },
+            { UCBC, 'UnitCapCheckLess', { .75 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.ENERGYSTORAGE }},
             { EBC, 'GreaterThanEconEfficiencyOrAirStrategyRNG', { 0.9, 1.1 }},
         },
@@ -446,7 +446,7 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 960 } },
-            { UCBC, 'UnitCapCheckLess', { .7 } },
+            { UCBC, 'UnitCapCheckLess', { .75 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.3 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.95}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENERGYSTORAGE }},

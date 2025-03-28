@@ -86,7 +86,7 @@ AINukeBehavior = Class(AIPlatoonRNG) {
                 --LOG('NukeAIRNG : Issuing Clear Commands')
                 IssueClearCommands({sml})
                 local missileCount = sml:GetNukeSiloAmmoCount() or 0
-                --RNGLOG('NukeAIRNG : SML has '..missileCount..' missiles')
+                --LOG('NukeAIRNG : SML has '..missileCount..' missiles')
                 if missileCount > 0 then
                     readySmlLauncherCount = readySmlLauncherCount + 1
                     RNGINSERT(readySmlLaunchers, {Launcher = sml, Count = missileCount})
@@ -100,7 +100,7 @@ AINukeBehavior = Class(AIPlatoonRNG) {
                 end
                 experimentalPresent = sml.Blueprint.CategoriesHash.EXPERIMENTAL or false
             end
-            --RNGLOG('NukeAIRNG : readySmlLauncherCount '..readySmlLauncherCount)
+            --LOG('NukeAIRNG : readySmlLauncherCount '..readySmlLauncherCount)
             if readySmlLauncherCount < 1 then
                 aiBrain.BrainIntel.SMLReady = false
                 coroutine.yield(60)
@@ -111,6 +111,7 @@ AINukeBehavior = Class(AIPlatoonRNG) {
             end
             local validTarget, nukePosTable = RUtils.GetNukeStrikePositionRNG(aiBrain, readySmlLauncherCount, readySmlLaunchers, experimentalPresent)
             if validTarget then
+                --LOG('We have a value target, moving to AttackTarget state')
                 self.BuilderData = {
                     AttackTarget = validTarget,
                     PositionTable = nukePosTable
@@ -144,7 +145,7 @@ AINukeBehavior = Class(AIPlatoonRNG) {
             local gameTime = GetGameTimeSeconds()
             local rebuildTable = false
             for k, v in aiBrain.BrainIntel.SMLTargetPositions do
-                if v.Time > gameTime - 180 then
+                if gameTime - v.Time > 180 then
                     aiBrain.BrainIntel.SMLTargetPositions[k] = nil
                     rebuildTable = true
                 end

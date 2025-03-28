@@ -25,7 +25,7 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'RNGAI Factory AirScout T1',
+        BuilderName = 'RNGAI Factory AirScout T1 Demand',
         PlatoonTemplate = 'T1AirScout',
         Priority = 895,
         BuilderConditions = {
@@ -50,7 +50,7 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'RNGAI Factory AirScout T3',
+        BuilderName = 'RNGAI Factory AirScout T3 Demand',
         PlatoonTemplate = 'T3AirScout',
         Priority = 897,
         BuilderConditions = {

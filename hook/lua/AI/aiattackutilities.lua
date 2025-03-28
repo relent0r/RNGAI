@@ -493,10 +493,11 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
 
     --no pathable threat found (or no threats at all)
     if not foundPathableThreat or curMaxThreat == 0 then
+        --LOG('No naval attack position found to attack')
         return false
     end
     table.sort(finalTargetSelectionTable, function(a,b) return a[3] > b[3] end)
-    --LOG('Returning threat table with '..tostring(table.getn(threatTable))..' entries')
+    --LOG('Returning naval threat table with '..tostring(table.getn(threatTable))..' entries')
     --local pathablePos = CheckNavalPathingRNG(aiBrain, platoon, {x, y, z}, maxRange, selectedWeaponArc)
     
     return finalTargetSelectionTable

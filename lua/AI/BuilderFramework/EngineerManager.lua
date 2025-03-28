@@ -303,7 +303,20 @@ EngineerManager = Class(BuilderManager) {
             if EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, finishedUnit) then
                 RUtils.UpdateShieldsProtectingUnit(aiBrain, finishedUnit)
                 if finishedUnit.LocationType and finishedUnit.LocationType ~= self.LocationType then
+                    local factoryLayer = 'Land'
+                    if finishedUnit.Blueprint.CategoriesHash.NAVAL then
+                        --LOG('Naval factory with base '..tostring(finishedUnit.LocationType)..' does not belong to the current base, return '..tostring(self.LocationType))
+                        factoryLayer = 'Water'
+                    end
+                    --LOG('Check if factory manager exist')
+                    if not aiBrain.BuilderManagers[finishedUnit.LocationType] then
+                        --LOG('Builder Manager does not exist, validating requirement')
+                        RUtils.ValidateFactoryManager(aiBrain, finishedUnit.LocationType, factoryLayer, finishedUnit)
+                    end
                     return
+                end
+                if finishedUnit.Blueprint.CategoriesHash.NAVAL then
+                    --LOG('Adding naval factory to base name '..tostring(self.LocationType))
                 end
                 aiBrain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
             end

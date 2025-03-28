@@ -83,7 +83,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T3 Artillery Hi Pri',
         PlatoonTemplate = 'EngineerStateT3SACURNG',
-        Priority = 600,
+        Priority = 650,
         DelayEqualBuildPlattons = {'HighValue', 20},
         BuilderConditions = {
             { EBC, 'HighValueGateRNG', {}},

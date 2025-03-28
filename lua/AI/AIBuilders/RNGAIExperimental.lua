@@ -258,6 +258,37 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI Experimental1 Novax 1st',
+        PlatoonTemplate = 'EngineerStateUEFT3SACURNG',
+        Priority = 700,
+        InstanceCount = 1,
+        DelayEqualBuildPlattons = {'HighValue', 20},
+        BuilderConditions = {
+            { EBC, 'HighValueGateRNG', {}},
+            { UCBC, 'ValidateLateGameBuild', { 'LocationType' }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
+            { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } },
+            { EBC, 'GreaterThanEconIncomeCombinedRNG', { 7.0, 600.0 }},                    -- Base income
+            { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.EXPERIMENTAL}},
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.ORBITALSYSTEM  * categories.STRUCTURE * categories.UEF } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            NumAssistees = 10,
+            Construction = {
+                DesiresAssist = true,
+                BuildClose = true,
+                HighValue = true,
+                BuildStructures = {
+                    { Unit = 'T4SatelliteExperimental', Categories = categories.EXPERIMENTAL * categories.ORBITALSYSTEM  * categories.STRUCTURE * categories.UEF },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI Experimental1 Novax',
         PlatoonTemplate = 'EngineerStateUEFT3SACURNG',
         Priority = 650,

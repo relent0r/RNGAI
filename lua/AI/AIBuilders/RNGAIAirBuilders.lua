@@ -133,6 +133,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Air',
     },
@@ -158,7 +159,8 @@ BuilderGroup {
         PriorityFunction = BomberResponse,
         BuilderConditions = {	
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.7 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.5}},	
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.5}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
         },	
         BuilderType = 'Air',	
         BuilderData = {
@@ -194,6 +196,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Air',
     },
@@ -210,6 +213,7 @@ BuilderGroup {
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.7 }},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Air',
     },
@@ -221,6 +225,7 @@ BuilderGroup {
         BuilderConditions = { 
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Air',
         BuilderData = {
@@ -293,7 +298,7 @@ BuilderGroup {
             SearchRadius = 'BaseEnemyArea',
             LocationType = 'LocationType',
             NeverGuardEngineers = true,
-            PlatoonLimit = 35,
+            PlatoonLimit = 55,
             PrioritizedCategories = {
                 categories.EXPERIMENTAL * categories.AIR - categories.UNTARGETABLE,
                 categories.GROUNDATTACK * categories.AIR,

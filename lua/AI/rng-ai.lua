@@ -1235,12 +1235,18 @@ AIBrain = Class(RNGAIBrainClass) {
                         T2=0,
                         T3=0,
                     },
+                    experimental= {
+                        novax=0
+                    }
                 }
             },
             Demand = {
                 Structure = {
                     intel = {
                         Optics=0
+                    },
+                    experimental = {
+                        novax=0
                     }
                 }
             }
@@ -1930,7 +1936,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         missileship = 0,
                         battleship = 0,
                         nukesub = 0,
-                        subhunter = 0
+                        subhunter = 0,
+                        carrier = 0
                     }
                 },
                 Engineer = {
@@ -6031,6 +6038,7 @@ AIBrain = Class(RNGAIBrainClass) {
             --LOG('Performing chokepoint loop')
             if self.EnemyIntel.EnemyCount > 0 then
                 --LOG('Enemy count is '..tostring(self.EnemyIntel.EnemyCount))
+                local chokePointInvalid = true
                 for k, v in self.EnemyIntel.ChokePoints do
                     --LOG('Checkpoint check '..tostring(k)..' detail is '..tostring(repr(v)))
                     local path, reason, distance, threats = PlatoonGenerateSafePathToRNG(self, 'Land', selfStartPos, v.StartPosition, 1500, 20 )
@@ -6062,23 +6070,19 @@ AIBrain = Class(RNGAIBrainClass) {
                             --LOG('EnemyDenseThreatSurface '..self.EnemyIntel.EnemyThreatCurrent.DefenseSurface..' should be greater than LandNow'..self.BrainIntel.SelfThreat.LandNow)
                             --LOG('Total Threat '..totalThreat..' Should be greater than LandNow '..self.BrainIntel.SelfThreat.LandNow)
                             if self.EnemyIntel.EnemyFireBaseDetected then
-                                --RNGLOG('Firebase flag is true')
+                                --LOG('Firebase flag is true')
                             else
-                                --RNGLOG('Firebase flag is false')
+                                --LOG('Firebase flag is false')
                             end
                             if self.BrainIntel.SelfThreat.LandNow > (self.EnemyIntel.EnemyThreatCurrent.Land / self.EnemyIntel.EnemyCount) 
                             and (self.EnemyIntel.EnemyThreatCurrent.DefenseSurface + self.EnemyIntel.EnemyThreatCurrent.DefenseAir) > self.BrainIntel.SelfThreat.LandNow
                             and totalThreat > self.BrainIntel.SelfThreat.LandNow 
                             and self.EnemyIntel.EnemyFireBaseDetected then
                                 self.EnemyIntel.ChokeFlag = true
-                                self.ProductionRatios.Land = 0.2
-                                self.ProductionRatios.Air = 0.2
-                                self.ProductionRatios.Naval = 0.2
                                 --LOG('ChokeFlag is true')
                             elseif self.EnemyIntel.ChokeFlag then
                                 --LOG('ChokeFlag is false')
                                 self.EnemyIntel.ChokeFlag = false
-                                self.ProductionRatios.Land = self.DefaultProductionRatios['Land']
                             end
                         end
 
@@ -6092,10 +6096,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     elseif v.NoPath and path then
                         self.EnemyIntel.ChokePoints[k].NoPath = false
                         self.EnemyIntel.ChokeFlag = false
-                        self.ProductionRatios.Land = self.DefaultProductionRatios['Land']
+                        --LOG('ChokeFlag is false')
                     end
-                    --RNGLOG('Current enemy chokepoint data for index '..k)
-                    --RNGLOG(repr(self.EnemyIntel.ChokePoints[k]))
+                    --LOG('Current enemy chokepoint data for index '..tostring(k))
+                    --LOG(tostring(repr(self.EnemyIntel.ChokePoints[k])))
                     coroutine.yield(20)
                 end
             end
@@ -7211,9 +7215,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 Default = { Land = 1.0, Air = 1.0, Naval = 1.0 },
                 Land = { Land = 1.5, Air = 0.8, Naval = 0.7 },
                 Air = { Land = 0.7, Air = 1.5, Naval = 0.8 },
-                Naval = { Land = 0.7, Air = 0.8, Naval = 1.5 }
+                Naval = { Land = 0.7, Air = 0.8, Naval = 1.5 },
+                ChokePoint = { Land = 0.3, Air = 1.0, Naval = 1.0 }
             }
-            local currentBias = brainIntel.PlayerRole.AirPlayer and playerBiases.Air or brainIntel.PlayerRole.SpamPlayer and playerBiases.Land or isNavalMap and playerBiases.Naval or playerBiases.Default
+            local currentBias = brainIntel.PlayerRole.AirPlayer and playerBiases.Air or brainIntel.PlayerRole.SpamPlayer and playerBiases.Land or isNavalMap and playerBiases.Naval 
+            or self.EnemyIntel.ChokeFlag and playerBiases.ChokePoint or playerBiases.Default
     
             local minAllocation = 0.20
             local maxShiftLandRatio = 0.70
@@ -7449,6 +7455,7 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('Builder Power '..tostring(self.EngineerAssistManagerBuildPower))
             LOG('Required '..tostring(self.EngineerAssistManagerBuildPowerRequired))
             LOG('Excess Allocation at the end of loop was '..tostring(excessAllocation))
+            LOG('Current Bias '..tostring(repr(currentBias)))
             ]]
         end
     end,

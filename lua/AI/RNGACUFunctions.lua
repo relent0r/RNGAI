@@ -286,8 +286,6 @@ function CDRThreatAssessmentRNG(cdr)
             local friendAntiAirThreat = 0
             local friendlyUnitThreat = 0
             local friendlyUnitThreatInner = 0
-            local friendlyThreatConfidenceModifier = 0
-            local enemyThreatConfidenceModifier = 0
             for k,v in friendlyUnits do
                 if v and not v.Dead then
                     local unitPos = v:GetPosition()
@@ -317,6 +315,7 @@ function CDRThreatAssessmentRNG(cdr)
                 end
             end
             friendlyUnitThreat = friendlyUnitThreat + friendlyUnitThreatInner
+            local enemyOverRangedPDCount = 0
             local enemyACUHealthModifier = 1.0
             for k,v in enemyUnits do
                 if v and not v.Dead then
@@ -328,7 +327,15 @@ function CDRThreatAssessmentRNG(cdr)
                     if unitDist < 1225 then
                         if EntityCategoryContains(CategoryT2Defense, v) then
                             if v.Blueprint.Defense.SurfaceThreatLevel then
-                                enemyUnitThreatInner = enemyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel * 1.5
+                                local weaponRange = StateUtils.GetUnitMaxWeaponRange(v, false, false) or 10
+                                if unitDist < weaponRange * weaponRange then
+                                    enemyOverRangedPDCount = enemyOverRangedPDCount + 1
+                                end
+                                if enemyOverRangedPDCount > 2 then
+                                    enemyDefenseThreat = enemyDefenseThreat + v.Blueprint.Defense.SurfaceThreatLevel * 2.5
+                                else
+                                    enemyDefenseThreat = enemyDefenseThreat + v.Blueprint.Defense.SurfaceThreatLevel * 1.5
+                                end
                             end
                         end
                         if v.Blueprint.CategoriesHash.COMMAND then
@@ -353,9 +360,14 @@ function CDRThreatAssessmentRNG(cdr)
                     else
                         if EntityCategoryContains(CategoryT2Defense, v) then
                             if v.Blueprint.Defense.SurfaceThreatLevel then
-                                enemyUnitThreatInner = enemyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel * 1.5
-                                if unitDist < 3025 then
-                                    enemyDefenseThreat = enemyDefenseThreat + v.Blueprint.Defense.SurfaceThreatLevel
+                                local weaponRange = StateUtils.GetUnitMaxWeaponRange(v, false, false) or 10
+                                if unitDist < weaponRange * weaponRange then
+                                    enemyOverRangedPDCount = enemyOverRangedPDCount + 1
+                                end
+                                if enemyOverRangedPDCount > 2 then
+                                    enemyDefenseThreat = enemyDefenseThreat + v.Blueprint.Defense.SurfaceThreatLevel * 2.5
+                                else
+                                    enemyDefenseThreat = enemyDefenseThreat + v.Blueprint.Defense.SurfaceThreatLevel * 1.5
                                 end
                             end
                         end
@@ -555,7 +567,7 @@ function CDRThreatAssessmentRNG(cdr)
                 end
                 
                     -- **Health + Shield Influence on Confidence**
-                local healthModifer = customSurvivability(cdr.HealthPercent)
+                local healthModifer = customSurvivability(math.min(cdr.HealthPercent, 1))
                 --LOG('healthModifer ratio for '..tostring(aiBrain.Nickname)..' is '..tostring(healthModifer))
                 local survivability = (healthModifer * weights.healthBoost) + (shieldFactor or 0)
                 --LOG('Survivability ratio for '..tostring(aiBrain.Nickname)..' is '..tostring(survivability))

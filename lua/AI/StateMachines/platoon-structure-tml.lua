@@ -55,7 +55,7 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                 categories.COMMAND,
                 categories.STRUCTURE * categories.ENERGYPRODUCTION * ( categories.TECH2 + categories.TECH3 ),
                 categories.MOBILE * categories.LAND * categories.EXPERIMENTAL,
-                categories.STRUCTURE * categories.DEFENSE * categories.TACTICALMISSILEPLATFORM,
+                categories.STRUCTURE * categories.TECH2 * categories.STRATEGIC,
                 categories.STRUCTURE * categories.DEFENSE * ( categories.TECH2 + categories.TECH3 ),
                 categories.MOBILE * categories.NAVAL * ( categories.TECH2 + categories.TECH3 ),
                 categories.STRUCTURE * categories.FACTORY * ( categories.TECH2 + categories.TECH3 ),

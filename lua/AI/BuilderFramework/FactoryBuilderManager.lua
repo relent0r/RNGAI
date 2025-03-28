@@ -576,6 +576,19 @@ FactoryBuilderManager = Class(BuilderManager) {
             if ( unitCat.UEF or unitCat.CYBRAN ) and unitCat.BOT and unitCat.TECH2 and unitCat.DIRECTFIRE or unitCat.SNIPER and unitCat.TECH3 then
                 unitStats['RangedBot'].Built.Mass = unitStats['RangedBot'].Built.Mass + unitValue
             end
+        elseif finishedUnit.Blueprint.CategoriesHash.NAVAL then
+            local unitStats = self.Brain.IntelManager.UnitStats
+            local unitCat = finishedUnit.Blueprint.CategoriesHash
+            local unitValue = finishedUnit.Blueprint.Economy.BuildCostMass or 0
+            if unitCat.CRUISER then
+                unitStats['Cruiser'].Built.Mass = unitStats['Cruiser'].Built.Mass + unitValue
+            elseif unitCat.CARRIER then
+                unitStats['Carrier'].Built.Mass = unitStats['Carrier'].Built.Mass + unitValue
+            elseif unitCat.MISSILESHIP then
+                unitStats['MissileShip'].Built.Mass = unitStats['MissileShip'].Built.Mass + unitValue
+            elseif unitCat.NUKESUB then
+                unitStats['NukeSub'].Built.Mass = unitStats['NukeSub'].Built.Mass + unitValue
+            end
         end
         self:AssignBuildOrder(factory, factory.BuilderManagerData.BuilderType)
     end,

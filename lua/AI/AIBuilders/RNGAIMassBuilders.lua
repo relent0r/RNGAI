@@ -209,8 +209,8 @@ BuilderGroup {
             { UCBC, 'CoreExtractorCountEqualsTotalExtractors', { }},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 60 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
             { UCBC, 'AdjacencyFabricatorCheckRNG', { 'LocationType', categories.MASSEXTRACTION * categories.TECH3, 60 } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -247,6 +247,7 @@ BuilderGroup {
             { EBC, 'LessThanEconStorageRatioRNG', { 0.10, 2 } },
             -- Don't build it if...
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.MASSFABRICATION } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Any',
         BuilderData = {
