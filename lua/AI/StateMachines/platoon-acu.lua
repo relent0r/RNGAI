@@ -1877,6 +1877,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             if distanceToHome > (cdr.MaxBaseRange * cdr.MaxBaseRange) or cdr.Phase > 2 or brain.EnemyIntel.LandPhase > 2 then
                 baseRetreat = true
             end
+            local threatLocations = brain:GetThreatsAroundPosition(cdr.Position, 16, true, 'AntiSurface')
             local supportPlatoon = brain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
             if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
                 currentTargetPosition = self.BuilderData.AttackTarget:GetPosition()
@@ -1934,11 +1935,25 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     local threat = aPlat:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
                                     if threat > 10 then
                                         local platoonValue = aPlatDistance * aPlatDistance / threat
+                                        local threatened = false
+                                        
+                                        for _, threatPos in threatLocations do
+                                            if threatPos[3] > 30 and RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], aPlatPos[1], aPlatPos[3], threatPos[1], threatPos[2]) < 0.35 then
+                                                threatened = true
+                                                break
+                                            end
+                                        end
+                    
+                                        -- Penalize if path is threatened
+                                        if threatened then
+                                            --LOG('Risky platoon, increase platoonValue')
+                                            platoonValue = platoonValue * 2  -- Increase value (less desirable)
+                                        end
                                         if not closestPlatoonDistance then
                                             closestPlatoonDistance = platoonValue
                                         end
-                                        --RNGLOG('Platoon Distance '..aPlatDistance)
-                                        --RNGLOG('Weighting is '..platoonValue)
+                                        --LOG('Platoon Distance '..tostring(aPlatDistance)..' for '..tostring(brain.Nickname))
+                                        --LOG('Weighting is '..tostring(platoonValue)..' for '..tostring(brain.Nickname))
                                         if platoonValue <= closestPlatoonDistance then
                                             closestPlatoon = aPlat
                                             closestPlatoonDistance = platoonValue
@@ -1991,6 +2006,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             end
             if closestBase and closestPlatoon then
                 if closestBaseDistance < closestPlatoonDistance then
+                    --LOG('We have a base or platoon to retreat to '..tostring(brain.Nickname))
                     if NavUtils.CanPathTo('Amphibious', cdr.Position, brain.BuilderManagers[closestBase].Position) then
                         cdr.Retreat = false
                         cdr.BaseLocation = true
@@ -2003,8 +2019,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                 else
+                    --LOG('We have an alt platoon to retreat to '..tostring(brain.Nickname))
                     if closestAPlatPos and NavUtils.CanPathTo('Amphibious', cdr.Position,closestAPlatPos) then
-                        --RNGLOG('Retreating to platoon')
+                        --LOG('Retreating to platoon '..tostring(brain.Nickname))
                         cdr.Retreat = false
                         self.BuilderData = {
                             Position = closestAPlatPos,
@@ -2029,6 +2046,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             elseif closestPlatoon then
+                --LOG('We have a platoon to retreat to '..tostring(brain.Nickname))
                 if closestAPlatPos and NavUtils.CanPathTo('Amphibious', cdr.Position,closestAPlatPos) then
                     cdr.Retreat = false
                     self.BuilderData = {

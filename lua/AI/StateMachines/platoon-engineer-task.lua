@@ -95,7 +95,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     if cons.Type == 'TMD' then
                         local tmdPositions = RUtils.GetTMDPosition(aiBrain, unit, cons.LocationType)
                         for _, v in tmdPositions do
-                            reference = v
+                            reference = v.Position
                             break
                         end
                     else

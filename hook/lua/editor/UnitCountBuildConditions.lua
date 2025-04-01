@@ -1910,7 +1910,7 @@ function RequireTMDCheckRNG(aiBrain, locationType)
     end
     if locationType ~= 'FLOATING' and aiBrain.BasePerimeterMonitor[locationType].EnemyMobileSiloDetected then
         local basePos = aiBrain.BuilderManagers[locationType].Position
-        local numUnits = aiBrain:GetNumUnitsAroundPoint( categories.ANTIMISSILE * categories.TECH2, basePos, 120, 'Ally' )
+        local numUnits = aiBrain:GetNumUnitsAroundPoint( categories.ANTIMISSILE * categories.TECH2, basePos, 65, 'Ally' )
         if numUnits < 4 then
             return true
         end

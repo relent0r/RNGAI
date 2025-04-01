@@ -1546,15 +1546,28 @@ StructureManager = Class {
 
     StructureTMLCheck = function(self, structure)
         local defended = true
+        local TMLInRange = 0
+        local TMDCount = 0
         if structure.TMLInRange and not table.empty(structure.TMLInRange) then
             for k, v in pairs(structure.TMLInRange) do
                 if not self.Brain.EnemyIntel.TML[k] or self.Brain.EnemyIntel.TML[k].object.Dead then
                     structure.TMLInRange[k] = nil
                     continue
-                end    
+                end   
+                TMLInRange = TMLInRange + 1 
             end
             if not structure.TMDInRange then
                 defended = false
+            else
+                for _, c in structure.TMDInRange do
+                    if not c.Dead then
+                        TMDCount = TMDCount + 1
+                    end
+                end
+                if TMLInRange > TMDCount then
+                    --LOG('More TML than TMD, TML count is '..tostring(TMLInRange)..' TMD Count '..tostring(TMDCount))
+                    defended = false
+                end
             end
         end
         return defended
@@ -1895,10 +1908,11 @@ StructureManager = Class {
                 end
             end
             if not table.empty(tmdRequired) then
-                --LOG('Set TMD Required on structure manager')
+                --LOG('Set TMD Required on structure manager for ai '..tostring(self.Brain.Nickname))
                 self.TMDRequired = true
                 self.StructuresRequiringTMD = tmdRequired
             else
+                --LOG('Set TMD Not Required for '..tostring(self.Brain.Nickname))
                 self.TMDRequired = false
             end
             if not table.empty(shieldRequired) then

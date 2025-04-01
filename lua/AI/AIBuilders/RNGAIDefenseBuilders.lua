@@ -351,7 +351,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Defence Reactive TMD',
         PlatoonTemplate = 'EngineerStateT23RNG',
-        Priority = 825,
+        Priority = 915,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'RequireTMDCheckRNG', { 'LocationType' }},
@@ -777,7 +777,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T2 Defence Reactive TMD Expansion',
         PlatoonTemplate = 'EngineerStateT23RNG',
-        Priority = 845,
+        Priority = 915,
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'RequireTMDCheckRNG', { 'LocationType' }},

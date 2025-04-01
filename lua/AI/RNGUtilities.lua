@@ -6906,12 +6906,12 @@ function GetTMDPosition(aiBrain, eng, locationType)
                         end
                     end
                     tmdRequired = math.ceil(tmlCount / 2)
-                    --LOG('We need this many TMD '..tmdRequired)
+                    --LOG('We need this many TMD '..tostring(tmdRequired)..' for '..tostring(aiBrain.Nickname))
                     for c, b in v.TMLInRange do
                         if not b.Dead then
                             --LOG('CalculateTMDPositions for unit '..v.UnitId)
                             local buildPos = CalculateTMDPositions(aiBrain, v, b)
-                            table.insert(buildPositions, buildPos)
+                            table.insert(buildPositions, {Position = buildPos, Count = tmdRequired})
                             tmdPosFound = true
                             break
                         end
@@ -6925,7 +6925,7 @@ function GetTMDPosition(aiBrain, eng, locationType)
                         end
                     end
                     tmdRequired = math.ceil(tmlCount / 2)
-                    --LOG('We need this many TMD '..tmdRequired)
+                    --LOG('We need this many TMD '..tostring(tmdRequired)..' for '..tostring(aiBrain.Nickname))
                     local tmdCount = 0
                     for _, c in v.TMDInRange do
                         if not c.Dead then

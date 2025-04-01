@@ -653,12 +653,14 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         --LOG('Reference returned '..tostring(repr(reference)))
                     else
                         local tmdPositions = RUtils.GetTMDPosition(aiBrain, eng, cons.LocationType)
+                        --LOG('Try to get TMD position')
                         if tmdPositions then
                             for _, v in tmdPositions do
-                                reference = v
+                                reference = v.Position
                                 break
                             end
                         end
+                        --LOG('tmdPositions '..tostring(repr(tmdPositions)))
                     end
                 else
                     reference = RUtils.GetDefensivePointRNG(aiBrain, cons.LocationType or 'MAIN', cons.Tier or 2, cons.Type)

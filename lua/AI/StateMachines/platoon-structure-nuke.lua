@@ -141,7 +141,7 @@ AINukeBehavior = Class(AIPlatoonRNG) {
                 --self:LogDebug(string.format('Triggering launch for '..tostring(firingPosition.Launcher.EntityId)))
                 IssueNuke({firingPosition.Launcher}, firingPosition.Position)
             end
-            coroutine.yield(70)
+            coroutine.yield(120)
             local gameTime = GetGameTimeSeconds()
             local rebuildTable = false
             for k, v in aiBrain.BrainIntel.SMLTargetPositions do
